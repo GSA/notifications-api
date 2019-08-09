@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from notifications_utils.statsd_decorators import statsd
 
-from app import db, DATETIME_FORMAT, encryption
+from app import db, DATETIME_FORMAT, encryption, zendesk_client
 from app.aws import s3
 from app.celery.tasks import record_daily_sorted_counts
 from app.celery.nightly_tasks import send_total_sent_notifications_to_performance_platform
@@ -893,3 +893,25 @@ def fix_billable_units():
         )
     db.session.commit()
     print("End fix_billable_units")
+
+
+@notify_command(name='get-zendesk-tickets')
+def get_zendesk_tickets():
+    results = zendesk_client.get_zendesk_tickets()
+    with open("zendesk_ticket_data.csv", 'w') as csvfile:
+        fieldnames = [
+            'Service id',
+            'Ticket id',
+            'Date ticket created',
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in results:
+            service_url = [x for x in row["description"].split('\n')
+                           if x.startswith("https://www.notifications.service.gov.uk/services/")]
+            service_url = service_url[0][50:] if len(service_url) > 0 else None
+            if service_url:
+                writer.writerow({'Service id': service_url,
+                                 'Ticket id': row['id'],
+                                 'Date ticket created': row["created_at"]})
+    print("Finished writing {} rows to the csv file called zendesk_ticket_data.csv".format(len(results)))
