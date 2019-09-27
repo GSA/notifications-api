@@ -77,7 +77,7 @@ def test_send_pdf_letter_notification_creates_notification_and_moves_letter(
     post_data = {'filename': filename, 'created_by': user.id, 'file_id': file_id}
 
     mocker.patch('app.service.send_notification.utils_s3download')
-    mocker.patch('app.service.send_notification.get_page_count', return_value=1)
+    mocker.patch('app.service.send_notification.get_billable_units_for_pdf', return_value=1)
     s3_mock = mocker.patch('app.service.send_notification.move_uploaded_pdf_to_letters_bucket')
 
     result = send_pdf_letter_notification(sample_service_full_permissions.id, post_data)

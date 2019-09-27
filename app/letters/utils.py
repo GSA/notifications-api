@@ -211,8 +211,12 @@ def letter_print_day(created_at):
         return 'on {}'.format(print_date)
 
 
-def get_page_count(pdf):
-    pages = pdf_page_count(io.BytesIO(pdf))
+def get_page_count_for_pdf(pdf):
+    return pdf_page_count(io.BytesIO(pdf))
+
+
+def get_billable_units_for_pdf(pdf):
+    pages = get_page_count_for_pdf(pdf)
     pages_per_sheet = 2
     billable_units = math.ceil(pages / pages_per_sheet)
     return billable_units

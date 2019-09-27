@@ -2275,7 +2275,7 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
 
 def test_create_pdf_letter(mocker, sample_service_full_permissions, client, fake_uuid, notify_user):
     mocker.patch('app.service.send_notification.utils_s3download')
-    mocker.patch('app.service.send_notification.get_page_count', return_value=1)
+    mocker.patch('app.service.send_notification.get_billable_units_for_pdf', return_value=1)
     mocker.patch('app.service.send_notification.move_uploaded_pdf_to_letters_bucket')
 
     user = sample_service_full_permissions.users[0]

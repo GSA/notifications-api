@@ -12,7 +12,7 @@ from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames, TaskNames
 from app.dao.notifications_dao import update_notification_status_by_reference
 from app.dao.templates_dao import get_precompiled_letter_template
-from app.letters.utils import upload_letter_pdf
+from app.letters.utils import upload_letter_pdf, get_page_count_for_pdf
 from app.models import (
     SMS_TYPE,
     EMAIL_TYPE,

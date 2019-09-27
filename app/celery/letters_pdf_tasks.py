@@ -38,7 +38,7 @@ from app.letters.utils import (
     move_scan_to_invalid_pdf_bucket,
     move_error_pdf_to_scan_bucket,
     get_file_names_from_error_bucket,
-    get_page_count,
+    get_billable_units_for_pdf,
 )
 from app.models import (
     KEY_TYPE_TEST,
@@ -211,7 +211,7 @@ def process_virus_scan_passed(self, filename):
     old_pdf = scan_pdf_object.get()['Body'].read()
 
     try:
-        billable_units = get_page_count(old_pdf)
+        billable_units = get_billable_units_for_pdf(old_pdf)
     except PdfReadError:
         current_app.logger.exception(msg='Invalid PDF received for notification_id: {}'.format(notification.id))
         _move_invalid_letter_and_update_status(notification, filename, scan_pdf_object)
