@@ -15,6 +15,7 @@ from requests import (
 from celery.exceptions import MaxRetriesExceededError
 from notifications_utils.statsd_decorators import statsd
 from notifications_utils.s3 import s3upload
+from notifications_utils import is_letter_too_long
 
 from app import notify_celery
 from app.aws import s3
@@ -49,6 +50,7 @@ from app.models import (
     NOTIFICATION_VIRUS_SCAN_FAILED,
 )
 from app.cronitor import cronitor
+from app.utils import get_billable_units
 from json import JSONDecodeError
 
 
@@ -57,14 +59,19 @@ from json import JSONDecodeError
 def create_letters_pdf(self, notification_id):
     try:
         notification = get_notification_by_id(notification_id, _raise=True)
-        pdf_data, billable_units = get_letters_pdf(
+        pdf_data, page_count = get_letters_pdf(
             notification.template,
             contact_block=notification.reply_to_text,
             filename=notification.service.letter_branding and notification.service.letter_branding.filename,
             values=notification.personalisation
         )
 
+        billable_units = get_billable_units(page_count)
         upload_letter_pdf(notification, pdf_data)
+
+        if is_letter_too_long(page_count):
+            notification.status = NOTIFICATION_VALIDATION_FAILED
+            notification.billable_units = 0
 
         if notification.key_type != KEY_TYPE_TEST:
             notification.billable_units = billable_units
@@ -108,10 +115,9 @@ def get_letters_pdf(template, contact_block, filename, values):
     )
     resp.raise_for_status()
 
-    pages_per_sheet = 2
-    billable_units = math.ceil(int(resp.headers.get("X-pdf-page-count", 0)) / pages_per_sheet)
+    page_count = int(resp.headers.get("X-pdf-page-count", 0))
 
-    return resp.content, billable_units
+    return resp.content, page_count
 
 
 @notify_celery.task(name='collate-letter-pdfs-for-day')
