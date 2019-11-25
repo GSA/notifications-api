@@ -21,7 +21,6 @@ from app.dao.templates_dao import dao_get_template_by_id
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     SMS_TYPE,
-    KEY_TYPE_TEST,
     BRANDING_BOTH,
     BRANDING_ORG_BANNER,
     EMAIL_TYPE,
@@ -50,7 +49,7 @@ def send_sms_to_provider(notification):
             show_prefix=service.prefix_sms,
         )
 
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
+        if service.research_mode or notification.dont_send_to_provider:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.get_name(), str(notification.id), notification.to)
 
@@ -96,7 +95,7 @@ def send_email_to_provider(notification):
             values=notification.personalisation
         )
 
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
+        if service.research_mode or notification.dont_send_to_provider:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
             send_email_response(notification.reference, notification.to)

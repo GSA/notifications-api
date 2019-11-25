@@ -75,7 +75,15 @@ def test_delivered_mmg_callback(phone_number):
     assert data['CID'] == "1234"
 
 
-@pytest.mark.parametrize("phone_number", ["07700900002", "+447700900002", "7700900002", "+44 7700900002"])
+@pytest.mark.parametrize("phone_number", [
+    "07700900002",
+    "+447700900002",
+    "7700900002",
+    "+44 7700900002",
+    "07700900001",
+    "07700900456",
+    "07700900999",
+])
 def test_perm_failure_mmg_callback(phone_number):
     data = json.loads(mmg_callback("1234", phone_number))
     assert data['MSISDN'] == phone_number
@@ -105,10 +113,29 @@ def test_delivered_firetext_callback(phone_number):
 
 
 @pytest.mark.parametrize("phone_number", ["07700900002", "+447700900002", "7700900002", "+44 7700900002"])
-def test_failure_firetext_callback(phone_number):
+def test_temp_failure_firetext_callback(phone_number):
     assert firetext_callback('1234', phone_number) == {
         'mobile': phone_number,
         'status': '1',
+        'time': '2016-03-10 14:17:00',
+        'reference': '1234'
+    }
+
+
+@pytest.mark.parametrize("phone_number", [
+    "07700900002",
+    "+447700900002",
+    "7700900002",
+    "+44 7700900002",
+    "07700900 000",
+    "07700900 001",
+    "07700900 456",
+    "07700900 999",
+])
+def test_perm_failure_firetext_callback(phone_number):
+    assert firetext_callback('1234', phone_number) == {
+        'mobile': phone_number,
+        'status': '2',
         'time': '2016-03-10 14:17:00',
         'reference': '1234'
     }

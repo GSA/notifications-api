@@ -9,7 +9,7 @@ from notifications_utils.s3 import s3upload
 
 from app import notify_celery
 from app.aws.s3 import file_exists
-from app.models import SMS_TYPE
+from app.models import EXAMPLE_DOMAINS, OFCOM_PHONE_NUMBER_RANGE, SMS_TYPE
 from app.config import QueueNames
 from app.celery.process_ses_receipts_tasks import process_ses_results
 
@@ -48,6 +48,8 @@ def send_email_response(reference, to):
         body = ses_hard_bounce_callback(reference)
     elif to == temp_fail_email:
         body = ses_soft_bounce_callback(reference)
+    elif to.lower().endswith(EXAMPLE_DOMAINS):
+        body = ses_hard_bounce_callback(reference)
     else:
         body = ses_notification_callback(reference)
 
@@ -88,9 +90,13 @@ def mmg_callback(notification_id, to):
         status: 5 - rejected (perm failure)
     """
 
-    if to.strip().endswith(temp_fail):
+    if to.strip().endswith(delivered):
+        status = "3"
+    elif to.strip().endswith(temp_fail):
         status = "4"
     elif to.strip().endswith(perm_fail):
+        status = "5"
+    elif to.startswith(OFCOM_PHONE_NUMBER_RANGE):
         status = "5"
     else:
         status = "3"
@@ -107,10 +113,14 @@ def firetext_callback(notification_id, to):
         status: 0 - delivered
         status: 1 - perm failure
     """
-    if to.strip().endswith(perm_fail):
+    if to.strip().endswith(delivered):
+        status = "0"
+    elif to.strip().endswith(perm_fail):
         status = "1"
     elif to.strip().endswith(temp_fail):
         status = "2"
+    elif to.startswith(OFCOM_PHONE_NUMBER_RANGE):
+        status = "1"
     else:
         status = "0"
     return {

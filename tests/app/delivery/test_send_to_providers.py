@@ -5,7 +5,10 @@ from unittest.mock import ANY
 
 import pytest
 from flask import current_app
-from notifications_utils.recipients import validate_and_format_phone_number
+from notifications_utils.recipients import (
+    format_email_address,
+    validate_and_format_phone_number,
+)
 from requests import HTTPError
 
 import app
@@ -227,6 +230,88 @@ def test_should_call_send_sms_response_task_if_research_mode(
     assert persisted_notification.sent_at <= datetime.utcnow()
     assert persisted_notification.sent_by == 'mmg'
     assert not persisted_notification.personalisation
+
+
+@pytest.mark.parametrize('recipient', [
+    '+44 07700-900-000',
+    '07700 900 000',
+    '07700 900 001',
+    '07700 900 555',
+    '07700 900 999',
+    pytest.param('07700 901 000', marks=pytest.mark.xfail),
+])
+def test_should_not_send_to_known_fake_phone_numbers(
+    notify_db,
+    sample_template,
+    sample_user,
+    mocker,
+    recipient,
+):
+    mocker.patch('app.mmg_client.send_sms')
+    mocker.patch('app.delivery.send_to_providers.send_sms_response')
+
+    notification = create_notification(
+        to_field=recipient,
+        normalised_to=validate_and_format_phone_number(recipient),
+        template=sample_template,
+        status='created',
+        billable_units=0,
+    )
+
+    send_to_providers.send_sms_to_provider(notification)
+
+    assert notification.key_type == 'normal'
+    assert mmg_client.send_sms.called is False
+
+    app.delivery.send_to_providers.send_sms_response.assert_called_once_with(
+        'mmg', str(notification.id), notification.to
+    )
+
+    persisted_notification = notifications_dao.get_notification_by_id(notification.id)
+    assert persisted_notification.to == recipient
+    assert persisted_notification.status == 'sending'
+    assert persisted_notification.sent_by == 'mmg'
+    assert persisted_notification.billable_units == 0
+
+
+@pytest.mark.parametrize('recipient', [
+    'test@example.com',
+    'test@test.example.net',
+    'test@eXaMPlE.OrG',
+    pytest.param('test@some-example.org', marks=pytest.mark.xfail),
+])
+def test_should_not_send_to_known_fake_email_domains(
+    notify_db,
+    sample_email_template,
+    sample_user,
+    mocker,
+    recipient,
+):
+    mocker.patch('app.aws_ses_client.send_email')
+    mocker.patch('app.delivery.send_to_providers.send_email_response')
+    reference = uuid.uuid4()
+    mocker.patch('app.uuid.uuid4', return_value=reference)
+
+    notification = create_notification(
+        to_field=recipient,
+        normalised_to=format_email_address(recipient),
+        template=sample_email_template,
+        status='created',
+    )
+
+    send_to_providers.send_email_to_provider(notification)
+
+    assert notification.key_type == 'normal'
+    assert app.aws_ses_client.send_email.called is False
+
+    app.delivery.send_to_providers.send_email_response.assert_called_once_with(
+        str(reference), notification.to
+    )
+
+    persisted_notification = notifications_dao.get_notification_by_id(notification.id)
+    assert persisted_notification.to == recipient
+    assert persisted_notification.status == 'sending'
+    assert persisted_notification.sent_by == 'ses'
 
 
 def test_should_have_sending_status_if_fake_callback_function_fails(sample_notification, mocker):

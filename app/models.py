@@ -61,6 +61,13 @@ DELIVERY_STATUS_CALLBACK_TYPE = 'delivery_status'
 COMPLAINT_CALLBACK_TYPE = 'complaint'
 SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
 
+EXAMPLE_DOMAINS = (
+    '@example.com', '@example.net', '@example.org',
+    '.example.com', '.example.net', '.example.org'
+)
+
+OFCOM_PHONE_NUMBER_RANGE = '447700900'
+
 
 def filter_null_value_fields(obj):
     return dict(
@@ -1498,6 +1505,16 @@ class Notification(db.Model):
         if self.notification_type != SMS_TYPE:
             template_object = get_template_instance(self.template.__dict__, self.personalisation)
             return template_object.subject
+
+    @property
+    def dont_send_to_provider(self):
+        if self.key_type == KEY_TYPE_TEST:
+            return True
+        if self.notification_type == EMAIL_TYPE:
+            return self.normalised_to.endswith(EXAMPLE_DOMAINS)
+        if self.notification_type == SMS_TYPE:
+            return self.normalised_to.startswith(OFCOM_PHONE_NUMBER_RANGE)
+        return False
 
     @property
     def formatted_status(self):
