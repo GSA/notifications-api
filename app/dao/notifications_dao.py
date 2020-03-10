@@ -731,6 +731,7 @@ def notifications_not_yet_sent(should_be_sending_after_seconds, notification_typ
     return notifications
 
 
+@statsd(namespace="dao")
 def dao_get_letters_to_be_printed(print_run_deadline):
     """
     Return all letters created before the print run deadline that have not yet been sent

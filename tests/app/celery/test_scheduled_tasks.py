@@ -15,10 +15,10 @@ from app.celery.scheduled_tasks import (
     send_scheduled_notifications,
     replay_created_notifications,
     check_precompiled_letter_state,
-    check_templated_letter_state,
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     switch_current_sms_provider_on_slow_delivery,
+    check_letters_created_yesterday_are_sending
 )
 from app.config import QueueNames, TaskNames, Config
 from app.dao.jobs_dao import dao_get_job_by_id
@@ -385,7 +385,7 @@ def test_check_precompiled_letter_state(mocker, sample_letter_template):
 
 
 @freeze_time("2019-05-30 14:00:00")
-def test_check_templated_letter_state_during_bst(mocker, sample_letter_template):
+def test_check_letters_created_yesterday_are_sending(mocker, sample_letter_template):
     mock_logger = mocker.patch('app.celery.tasks.current_app.logger.exception')
     mock_create_ticket = mocker.patch('app.celery.nightly_tasks.zendesk_client.create_ticket')
 
@@ -396,7 +396,7 @@ def test_check_templated_letter_state_during_bst(mocker, sample_letter_template)
     create_notification(template=sample_letter_template, status='delivered', created_at=datetime(2019, 5, 28, 10, 0))
     create_notification(template=sample_letter_template, created_at=datetime(2019, 5, 30, 10, 0))
 
-    check_templated_letter_state()
+    check_letters_created_yesterday_are_sending()
 
     message = "2 letters were created before 17.30 yesterday and still have 'created' status. " \
               "Notifications: ['{}', '{}']".format(noti_1.id, noti_2.id)
@@ -410,7 +410,7 @@ def test_check_templated_letter_state_during_bst(mocker, sample_letter_template)
 
 
 @freeze_time("2019-01-30 14:00:00")
-def test_check_templated_letter_state_during_utc(mocker, sample_letter_template):
+def test_check_letters_created_yesterday_are_sending_during_utc(mocker, sample_letter_template):
     mock_logger = mocker.patch('app.celery.tasks.current_app.logger.exception')
     mock_create_ticket = mocker.patch('app.celery.scheduled_tasks.zendesk_client.create_ticket')
 
@@ -421,7 +421,7 @@ def test_check_templated_letter_state_during_utc(mocker, sample_letter_template)
     create_notification(template=sample_letter_template, status='delivered', created_at=datetime(2019, 1, 29, 10, 0))
     create_notification(template=sample_letter_template, created_at=datetime(2019, 1, 30, 10, 0))
 
-    check_templated_letter_state()
+    check_letters_created_yesterday_are_sending()
 
     message = "2 letters were created before 17.30 yesterday and still have 'created' status. " \
               "Notifications: ['{}', '{}']".format(noti_1.id, noti_2.id)

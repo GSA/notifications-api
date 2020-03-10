@@ -232,6 +232,13 @@ def check_precompiled_letter_state():
 @notify_celery.task(name='check-templated-letter-state')
 @statsd(namespace="tasks")
 def check_templated_letter_state():
+    # renaming task for clarity. Next deploy will remove this task.
+    check_letters_created_yesterday_are_sending()
+
+
+@notify_celery.task(name='check-letters-created-yesterday-are-sending')
+@statsd(namespace="tasks")
+def check_letters_created_yesterday_are_sending():
     letters = dao_old_letters_with_created_status()
 
     if len(letters) > 0:
