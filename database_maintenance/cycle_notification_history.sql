@@ -8,12 +8,14 @@ RETURNS TRIGGER
 LANGUAGE plpgsql AS 
 $$
 BEGIN
-    UPDATE notification_history_pivot SET   notification_history_pivot.notification_status = NEW.notification_status,
-                                            notification_history_pivot.billable_units = NEW.billable_units,
-                                            notification_history_pivot.updated_at = NEW.updated_at,
-                                            notification_history_pivot.sent_by = NEW.sent_by,
-                                            notification_history_pivot.sent_at = NEW.sent_at
+    UPDATE notification_history_pivot SET   notification_status = NEW.notification_status,
+                                            billable_units = NEW.billable_units,
+                                            updated_at = NEW.updated_at,
+                                            sent_by = NEW.sent_by,
+                                            sent_at = NEW.sent_at
     WHERE notification_history_pivot.id = NEW.id;
+
+    RETURN NEW;
 END
 $$;
 
