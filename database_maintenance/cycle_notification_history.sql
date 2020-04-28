@@ -1,36 +1,23 @@
-
-create table temp_notification_history (
-  id                      | uuid                        | not null
-job_id                  | uuid                        |
-job_row_number          | integer                     |
-service_id              | uuid                        |
-template_id             | uuid                        |
-template_version        | integer                     | not null
-api_key_id              | uuid                        |
-key_type                | character varying           | not null
-notification_type       | notification_type           | not null
-created_at              | timestamp without time zone | not null
-sent_at                 | timestamp without time zone |
-sent_by                 | character varying           |
-updated_at              | timestamp without time zone |
-reference               | character varying           |
-billable_units          | integer                     | not null
-client_reference        | character varying           |
-international           | boolean                     |
-phone_prefix            | character varying           |
-rate_multiplier         | numeric                     |
-notification_status     | text                        |
-created_by_id           | uuid                        |
-postage                 | character varying           |
-document_download_count | integer                     |
-
-)
-with indexes
+-- Create new notification_history table and primary key.
+CREATE TABLE notification_history_pivot AS SELECT * FROM notification_history WHERE 1=2;
+ALTER TABLE notification_history_pivot ADD PRIMARY KEY (id);
 
 create trigger to update temp_notification_history when update to notification_history
 
+create foreign key constraints in notification_history_pivot
+
 insert data into temp_notification_history in batches
 
+create remaining indices
+
+-- Run basic sanity checks on data in notification_history_pivot, ensuring same number of entries present in notification_history and notification_history_pivot
+
+rename table notification_history to notification_history_old
+rename table notification_history_pivot to notification_history;
+
+-- Run sanity checks on data in notification_history_pivot
+-- 1. Ensure same number of entries in notification_history and notification_history_pivot
+-- If not then reconcile entries and add remaining entries to notification_history
+
+-- When sure data in new notification_history table are ok:
 drop table notification_history;
---- potential for data loss in this step.
-rename table temp_notification_history to notification_history;
