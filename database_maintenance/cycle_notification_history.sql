@@ -2,13 +2,13 @@
 CREATE TABLE notification_history_pivot AS SELECT * FROM notification_history WHERE 1=2;
 ALTER TABLE notification_history_pivot ADD PRIMARY KEY (id);
 
-create trigger to update temp_notification_history when update to notification_history
+create trigger to update notification_history_pivot when update to notification_history
 
 create foreign key constraints in notification_history_pivot
 
-insert data into temp_notification_history in batches
+insert data into notification_history_pivot in batches
 
-create remaining indices
+create remaining indices on notification_history_pivot
 
 -- Run basic sanity checks on data in notification_history_pivot, ensuring same number of entries present in notification_history and notification_history_pivot
 
