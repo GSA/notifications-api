@@ -14,6 +14,7 @@ create remaining indices on notification_history_pivot
 -- Run basic sanity checks on data in notification_history_pivot, ensuring same number of entries present in notification_history and notification_history_pivot
 
 ALTER TABLE notification_history RENAME TO notification_history_old;
+-- TODO: Drop constraints on notification_history_old
 ALTER TABLE notification_history_pivot RENAME TO notification_history;
 
 -- Run sanity checks on data in notification_history_pivot
