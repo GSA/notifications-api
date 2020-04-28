@@ -2,8 +2,25 @@
 CREATE TABLE notification_history_pivot AS SELECT * FROM notification_history WHERE 1=2;
 ALTER TABLE notification_history_pivot ADD PRIMARY KEY (id);
 
--- CREATE TRIGGER update_pivot BEFORE UPDATE ON notification_history
-create trigger to update notification_history_pivot when update to notification_history
+-- Update values of notification_status, billable_units, updated_at, sent_by, sent_at based on new updates coming into the notification_history table.
+CREATE OR REPLACE FUNCTION update_pivot_table()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS 
+$$
+BEGIN
+    UPDATE notification_history_pivot SET   notification_history_pivot.notification_status = NEW.notification_status,
+                                            notification_history_pivot.billable_units = NEW.billable_units,
+                                            notification_history_pivot.updated_at = NEW.updated_at,
+                                            notification_history_pivot.sent_by = NEW.sent_by,
+                                            notification_history_pivot.sent_at = NEW.sent_at
+    WHERE notification_history_pivot.id = NEW.id;
+END
+$$;
+
+DROP TRIGGER IF EXISTS update_pivot on notification_history;
+CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units, updated_at, sent_by, sent_at ON notification_history
+FOR EACH ROW
+  EXECUTE PROCEDURE update_pivot_table();
 
 Create foreign key constraints in notification_history_pivot with dummy names - prefix with "nh_"
 
