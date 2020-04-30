@@ -900,3 +900,25 @@ def process_row_from_job(job_id, job_row_number):
             notification_id = process_row(row, template, job, job.service)
             current_app.logger.info("Process row {} for job {} created notification_id: {}".format(
                 job_row_number, job_id, notification_id))
+
+
+@notify_command()
+@click.option('-l', '--limit_row_count', required=True, help='Limit row count for the insert stmt')
+def cycle_notification_history_table(limit_row_count):
+    # This relies on the notification_history_pivot table being created
+    # and a trigger on notification_history has been created
+    # what limit should we use here
+    insert_sql = """
+     INSERT INTO notification_history_pivot
+      SELECT *
+       FROM notification_history h
+      WHERE not exists (select id from notification_history_pivot where id = h.id)
+      LIMIT :limit_row_count;
+    """
+    print('start population of notification_history_pivot table')
+    row_count = -1
+    while row_count != 0:
+        r = db.session.execute(insert_sql, {"limit_row_count": limit_row_count})
+        row_count = r.rowcount
+        db.session.commit()
+    print('end population of notification_history_pivot table')
