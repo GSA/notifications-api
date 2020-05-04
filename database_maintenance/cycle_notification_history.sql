@@ -24,7 +24,7 @@ CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units,
 FOR EACH ROW
   EXECUTE PROCEDURE update_pivot_table();
 
-Create foreign key constraints in notification_history_pivot with dummy names - prefix with "nh_"
+Create foreign key constraints in notification_history_pivot using same names as used in notification_history
 
 insert data into notification_history_pivot in batches
 
@@ -33,10 +33,7 @@ create remaining indices on notification_history_pivot
 -- Run basic sanity checks on data in notification_history_pivot, ensuring same number of entries present in notification_history and notification_history_pivot
 
 ALTER TABLE notification_history RENAME TO notification_history_old;
-Drop constraints on notification_history_old
 ALTER TABLE notification_history_pivot RENAME TO notification_history;
-Create foreign key constraints in notification_history using correct names. Names of constraints will now be available after step above ("Drop constraints on notification_history_old").
-Drop constraints in notification_history that are prefixed with "nh_".
 
 -- Run sanity checks on data in notification_history_pivot
 -- 1. Ensure same number of entries in notification_history and notification_history_pivot
