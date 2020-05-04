@@ -908,17 +908,28 @@ def cycle_notification_history_table(limit_row_count):
     # This relies on the notification_history_pivot table being created
     # and a trigger on notification_history has been created
     # what limit should we use here
-    insert_sql = """
-     INSERT INTO notification_history_pivot
-      SELECT *
-       FROM notification_history h
-      WHERE not exists (select id from notification_history_pivot where id = h.id)
-      LIMIT :limit_row_count;
+
+    populate_temp_table = """
+        SELECT id
+        INTO nh_temp
+        FROM notification_history    
     """
-    print('start population of notification_history_pivot table')
-    row_count = -1
-    while row_count != 0:
-        r = db.session.execute(insert_sql, {"limit_row_count": limit_row_count})
-        row_count = r.rowcount
-        db.session.commit()
-    print('end population of notification_history_pivot table')
+    rows_to_insert = "SELECT COUNT(*) FROM nh_temp"
+
+    delete_temp_rows = """
+        DELETE FROM nh_temp t
+        USING notification_history_pivot p
+        WHERE t.id = p.id    
+    """
+    rows_remaining = "SELECT COUNT(*) FROM nh_temp"
+    # In each function call, using same database connection as used for the above SQL
+    # (needs to be in a transaction; this can be inside a stored function or in a transaction from the code)
+
+    insert_sql = """
+        INSERT INTO notification_history_pivot
+        SELECT n.*
+        FROM notification_history n,
+             nh_temp t
+        WHERE n.id = t.id    
+    """
+
