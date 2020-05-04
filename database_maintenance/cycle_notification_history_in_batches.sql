@@ -12,6 +12,8 @@ WHERE t.id = p.id;
 
 SELECT COUNT(*) AS "Number of rows remaining that need moving across from nh to nh_pivot" FROM nh_temp;
 
+CREATE INDEX nh_temp_idx ON nh_temp (id);
+
 -- In each function call, using same database connection as used for the above SQL (needs to be in a transaction; this can be inside a stored function or in a transaction from the code)
 
 INSERT INTO notification_history_pivot
