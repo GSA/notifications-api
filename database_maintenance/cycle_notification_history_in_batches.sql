@@ -2,9 +2,7 @@
 
 CREATE TABLE notification_history_pivot AS SELECT * from notification_history WHERE 1=2;
 
-SELECT id
-INTO nh_temp
-FROM notification_history;
+CREATE TEMPORARY TABLE nh_temp AS SELECT id FROM notification_history;
 
 SELECT COUNT(*) AS 'Total number of rows in nh' FROM nh_temp;
 
