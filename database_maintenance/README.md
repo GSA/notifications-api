@@ -16,3 +16,5 @@ CF_APP=notify-cycle-history CF_SPACE=staging make generate-manifest > cycle-hist
 cf v3-create-app notify-cycle-history 
 cf v3-apply-manifest -f cycle-history-manifest.yml
 cf v3-push notify-cycle-history
+
+cf run-task notify-cycle-history "flask command cycle-notification-history-table -l 100000"

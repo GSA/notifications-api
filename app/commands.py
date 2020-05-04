@@ -904,24 +904,30 @@ def process_row_from_job(job_id, job_row_number):
 
 @notify_command()
 @click.option('-l', '--limit_row_count', required=True, help='Limit row count for the insert stmt')
+@click.option('-s', '--start_date', required=True, help='Start')
+@click.option('-e', '--end_date', required=True, help='Limit row count for the insert stmt')
 def cycle_notification_history_table(limit_row_count):
     # This relies on the notification_history_pivot table being created
     # and a trigger on notification_history has been created
     # what limit should we use here
 
+    # If this command needs to be run more than once you will need to drop nh_temp.
+    # Especially if the nightly task to delete notifications has run (more data has been added to notification_history)
     populate_temp_table = """
-        SELECT id
-        INTO nh_temp
-        FROM notification_history    
+       CREATE TABLE IF NOT EXISTS nh_temp AS SELECT id FROM notification_history
     """
-    rows_to_insert = "SELECT COUNT(*) FROM nh_temp"
+    index_temp_table = """
+        CREATE INDEX IF NOT EXISTS nh_temp_idx ON nh_temp (id)   
+    """
+
+    rows_in_temp = "SELECT COUNT(*) FROM nh_temp"
 
     delete_temp_rows = """
         DELETE FROM nh_temp t
         USING notification_history_pivot p
         WHERE t.id = p.id    
     """
-    rows_remaining = "SELECT COUNT(*) FROM nh_temp"
+
     # In each function call, using same database connection as used for the above SQL
     # (needs to be in a transaction; this can be inside a stored function or in a transaction from the code)
 
@@ -931,5 +937,23 @@ def cycle_notification_history_table(limit_row_count):
         FROM notification_history n,
              nh_temp t
         WHERE n.id = t.id    
+        limit :limit_row_count
     """
+    print("Starting cycle notification history: ", datetime.utcnow())
+    db.session.execute(populate_temp_table)
+    db.session.execute(delete_temp_rows)
+    db.session.execute(index_temp_table)
+    rows_remaining = db.session.execute(rows_in_temp).fetchall()[0][0]
+    while rows_remaining > 0:
+        print("rows_remaining: ", rows_remaining)
+        db.session.execute(insert_sql, {"limit_row_count": limit_row_count})
+        db.session.execute(delete_temp_rows)
+        db.session.commit()
+
+        rows_remaining = db.session.execute(rows_in_temp).fetchall()[0][0]
+
+    db.session.execute("DROP TABLE nh_temp")
+    db.session.commit()
+    print("End cycle notification history: ", datetime.utcnow())
+
 
