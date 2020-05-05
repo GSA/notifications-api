@@ -22,6 +22,7 @@ END
 $$;
 
 DROP TRIGGER IF EXISTS update_pivot on notification_history;
+-- Following may be blocked if running vacuum.
 CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units, updated_at, sent_by, sent_at ON notification_history
 FOR EACH ROW
   EXECUTE PROCEDURE update_pivot_table();
