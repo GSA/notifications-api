@@ -1,6 +1,0 @@
-ALTER TABLE notification_history_pivot ADD CONSTRAINT fk_notification_history_notification_status FOREIGN KEY (notification_status) REFERENCES notification_status_types(name)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_api_key_id_fkey FOREIGN KEY (api_key_id) REFERENCES api_keys(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_job_id_fkey FOREIGN KEY (job_id) REFERENCES jobs(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_key_type_fkey FOREIGN KEY (key_type) REFERENCES key_types(name)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_templates_history_fkey FOREIGN KEY (template_id, template_version) REFERENCES templates_history(id, version)
