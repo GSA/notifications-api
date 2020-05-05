@@ -23,7 +23,7 @@ $$;
 
 DROP TRIGGER IF EXISTS update_pivot on notification_history;
 -- Following may be blocked if running vacuum.
--- select pg_cancel_backend(pid);
+-- SELECT pg_cancel_backend(pid);
 CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units, updated_at, sent_by, sent_at ON notification_history
 FOR EACH ROW
   EXECUTE PROCEDURE update_pivot_table();
@@ -38,8 +38,6 @@ ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_servi
 ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_templates_history_fkey FOREIGN KEY (template_id, template_version) REFERENCES templates_history(id, version);
 
 -- Index used for data population
--- May need to cancel autovacuum
--- select pg_cancel_backend(pid);
 create index CONCURRENTLY created_id_nh on notification_history (created_at, id);
 
 -----
@@ -51,10 +49,7 @@ cf run-task notify-cycle-history "flask command cycle-notification-history-table
  ... etc emd = May 11
  ... On Monday - run again to get last nights inserts
 
--- insert data into notification_history_pivot in batches
--- This is handled by a python process
-
--- Once the Python process has completed, then,
+-- Once this Python process has completed, then,
 
 -- Stage 3 - manual process
 
@@ -77,16 +72,8 @@ ALTER TABLE notification_history_pivot RENAME TO notification_history;
 
 
 
-
-
-
--- Run sanity checks on data in notification_history_pivot
--- 1. Ensure same number of entries in notification_history and notification_history_pivot
--- If not then reconcile entries and add remaining entries to notification_history
-
 -- When sure data in new notification_history table are ok:
--- ALTER TABLE notification_history_old DROP CONSTRAINT notification_history_pkey; -- May not need this step.
-DROP TABLE notification_history_old;
+-- This can be done later: DROP TABLE notification_history_old;
 
 -- Could rename primary key on new notification_history table.
 ALTER TABLE notification_history DROP CONSTRAINT notification_history_pivot_pkey;
@@ -99,5 +86,3 @@ CREATE INDEX CONCURRENTLY ix_notification_history_job_id ON notification_history
 CREATE INDEX CONCURRENTLY ix_notification_history_reference ON notification_history (reference);
 CREATE INDEX CONCURRENTLY ix_notification_history_template_id ON notification_history (template_id);
 CREATE INDEX CONCURRENTLY ix_notifications_service_id_composite ON notification_history (service_id, key_type, notification_type, created_at);
-
--- Note that the only impact of these changes
