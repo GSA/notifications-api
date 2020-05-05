@@ -22,20 +22,24 @@ END
 $$;
 
 DROP TRIGGER IF EXISTS update_pivot on notification_history;
+-- may need to cancel the autovacuum
+-- select pg_cancel_backend(pid);
 CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units, updated_at, sent_by, sent_at ON notification_history
 FOR EACH ROW
   EXECUTE PROCEDURE update_pivot_table();
 
 
 -- Create foreign key constraints in notification_history_pivot using same names as used in notification_history
-ALTER TABLE notification_history_pivot ADD CONSTRAINT fk_notification_history_notification_status FOREIGN KEY (notification_status) REFERENCES notification_status_types(name)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_api_key_id_fkey FOREIGN KEY (api_key_id) REFERENCES api_keys(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_job_id_fkey FOREIGN KEY (job_id) REFERENCES jobs(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_key_type_fkey FOREIGN KEY (key_type) REFERENCES key_types(name)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id)
-ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_templates_history_fkey FOREIGN KEY (template_id, template_version) REFERENCES templates_history(id, version)
+ALTER TABLE notification_history_pivot ADD CONSTRAINT fk_notification_history_notification_status FOREIGN KEY (notification_status) REFERENCES notification_status_types(name);
+ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_api_key_id_fkey FOREIGN KEY (api_key_id) REFERENCES api_keys(id);
+ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_job_id_fkey FOREIGN KEY (job_id) REFERENCES jobs(id);
+ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_key_type_fkey FOREIGN KEY (key_type) REFERENCES key_types(name);
+ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
+ALTER TABLE notification_history_pivot ADD CONSTRAINT notification_history_templates_history_fkey FOREIGN KEY (template_id, template_version) REFERENCES templates_history(id, version);
 
 -- Index used for data population
+-- May need to cancel autovacuum
+-- select pg_cancel_backend(pid);
 create index CONCURRENTLY created_id_nh on notification_history (created_at, id);
 
 -----
@@ -43,6 +47,7 @@ create index CONCURRENTLY created_id_nh on notification_history (created_at, id)
 -- Stage 2 - automated process
 
 cf run-task notify-cycle-history "flask command cycle-notification-history-table -l 100000 -s '2019-10-01 00:00' -e '2019-12-01 00:00'"
+cf run-task notify-cycle-history "flask command cycle-notification-history-table -l 100000 -s '2020-03-19 00:00' -e '2020-03-29 00:00'"
  ... etc emd = May 11
  ... On Monday - run again to get last nights inserts
 
