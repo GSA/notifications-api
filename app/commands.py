@@ -907,6 +907,17 @@ def process_row_from_job(job_id, job_row_number):
 @click.option('-s', '--start_date', required=True, help='Start date', type=click_dt(format='%Y-%m-%d %H:%M'))
 @click.option('-e', '--end_date', required=True, help='End date', type=click_dt(format='%Y-%m-%d %H:%M'))
 def cycle_notification_history_table(limit_row_count, start_date, end_date):
+    print(f"Starting cycle_notification_history_table for {start_date} to {end_date}")
+    day_start = start_date
+    day_end = start_date + timedelta(days=1)
+
+    while day_end < end_date:
+        populate_notification_history_pivot(limit_row_count, day_start, day_end)
+        day_start = day_start + timedelta(days=1)
+        day_end = day_end + timedelta(days=1)
+
+
+def populate_notification_history_pivot(limit_row_count, start_date, end_date):
     # This relies on the notification_history_pivot table being created
     # and a trigger on notification_history has been created
     # what limit should we use here
