@@ -22,7 +22,7 @@ END
 $$;
 
 DROP TRIGGER IF EXISTS update_pivot on notification_history;
--- may need to cancel the autovacuum
+-- Following may be blocked if running vacuum.
 -- select pg_cancel_backend(pid);
 CREATE TRIGGER update_pivot AFTER UPDATE OF notification_status, billable_units, updated_at, sent_by, sent_at ON notification_history
 FOR EACH ROW

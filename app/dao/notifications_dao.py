@@ -372,6 +372,14 @@ def insert_notification_history_delete_notifications(
           ON CONFLICT ON CONSTRAINT notification_history_pkey
           DO NOTHING
     """
+    # Insert data into the pivot table as well. Only needed while we are trying to cycle the history table.
+    insert_pivot_query = """
+           insert into notification_history_pivot
+            SELECT * from NOTIFICATION_ARCHIVE
+             ON CONFLICT ON CONSTRAINT notification_history_pivot_pkey
+             DO NOTHING
+       """
+
     delete_query = """
         DELETE FROM notifications
         where id in (select id from NOTIFICATION_ARCHIVE)
@@ -389,6 +397,8 @@ def insert_notification_history_delete_notifications(
     result = db.session.execute("select * from NOTIFICATION_ARCHIVE")
 
     db.session.execute(insert_query)
+
+    db.session.execute(insert_pivot_query)
 
     db.session.execute(delete_query)
 
