@@ -904,9 +904,9 @@ def process_row_from_job(job_id, job_row_number):
 
 @notify_command()
 @click.option('-l', '--limit_row_count', required=True, help='Limit row count for the insert stmt')
-@click.option('-s', '--start_date', required=True, help='Start')
-@click.option('-e', '--end_date', required=True, help='Limit row count for the insert stmt')
-def cycle_notification_history_table(limit_row_count):
+@click.option('-s', '--start_date', required=True, help='Start date', type=click_dt(format='%Y-%m-%d %H:%M'))
+@click.option('-e', '--end_date', required=True, help='End date', type=click_dt(format='%Y-%m-%d %H:%M'))
+def cycle_notification_history_table(limit_row_count, start_date, end_date):
     # This relies on the notification_history_pivot table being created
     # and a trigger on notification_history has been created
     # what limit should we use here
@@ -914,7 +914,9 @@ def cycle_notification_history_table(limit_row_count):
     # If this command needs to be run more than once you will need to drop nh_temp.
     # Especially if the nightly task to delete notifications has run (more data has been added to notification_history)
     populate_temp_table = """
-       CREATE TABLE IF NOT EXISTS nh_temp AS SELECT id FROM notification_history
+       CREATE TABLE IF NOT EXISTS nh_temp AS SELECT id FROM notification_history 
+       where created_at >= :start_date
+       and created_at < :end_date
     """
     index_temp_table = """
         CREATE INDEX IF NOT EXISTS nh_temp_idx ON nh_temp (id)   
@@ -939,8 +941,10 @@ def cycle_notification_history_table(limit_row_count):
         WHERE n.id = t.id    
         limit :limit_row_count
     """
-    print("Starting cycle notification history: ", datetime.utcnow())
-    db.session.execute(populate_temp_table)
+    print(f"Starting cycle notification history for start_date: {start_date} and "
+          f"end_date {end_date} and limit: {limit_row_count}")
+
+    db.session.execute(populate_temp_table, {"start_date": start_date, "end_date": end_date})
     db.session.execute(delete_temp_rows)
     db.session.execute(index_temp_table)
     rows_remaining = db.session.execute(rows_in_temp).fetchall()[0][0]
