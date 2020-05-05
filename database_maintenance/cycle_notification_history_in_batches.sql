@@ -1,5 +1,7 @@
 -- Call once at the start of the process
 
+create index created_id_nh on notification_history (created_at, id);
+
 CREATE TABLE notification_history_pivot AS SELECT * from notification_history WHERE 1=2;
 
 CREATE TEMPORARY TABLE nh_temp AS SELECT id FROM notification_history;
