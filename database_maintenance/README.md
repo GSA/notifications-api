@@ -32,6 +32,9 @@ cf run-task notify-cycle-history "flask command cycle-notification-history-table
 -- all data in NH
 - 
 
+2020-05-05T14:35:47.18+0100 [APP/TASK/6a5ea53b/0] OUT Starting cycle notification history for start_date: 2020-03-19 00:00:00 and end_date 2020-03-29 00:00:00 and limit: 100000
+2020-05-05T14:41:21.16+0100 [APP/TASK/6a5ea53b/0] OUT rows_remaining:  67800240
+2020-05-06T02:48:36.84+0100 [APP/TASK/6a5ea53b/0] OUT End cycle notification history:  2020-05-06 01:48:36.849611
 
 
-
+5,650,020
