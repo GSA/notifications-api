@@ -7,7 +7,9 @@ from flask import _request_ctx_stack, request, g, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
+from flask_opentracing import FlaskTracer
 from gds_metrics import GDSMetrics
+from jaeger_client import Config as JaegerConfig
 from time import monotonic
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 from notifications_utils.clients.statsd.statsd_client import StatsdClient
@@ -63,6 +65,7 @@ clients = Clients()
 
 api_user = LocalProxy(lambda: _request_ctx_stack.top.api_user)
 authenticated_service = LocalProxy(lambda: _request_ctx_stack.top.authenticated_service)
+flask_tracer = FlaskTracer(initialize_tracer, False)
 
 
 def create_app(application):
@@ -103,6 +106,9 @@ def create_app(application):
 
     register_blueprint(application)
     register_v2_blueprints(application)
+
+    flask_tracer = FlaskTracer(initialize_tracer, True, application)
+
 
     # avoid circular imports by importing this file later
     from app.commands import setup_commands
@@ -311,3 +317,12 @@ def process_user_agent(user_agent_string):
         return "non-notify-user-agent"
     else:
         return "unknown"
+
+def initialize_tracer():
+    config = JaegerConfig(
+        config={
+            "sampler": {"type": "const", "param": 1}
+        },
+        service_name="notify-api"
+    )
+    return config.initialize_tracer()

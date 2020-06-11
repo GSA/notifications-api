@@ -1,6 +1,6 @@
 from sqlalchemy.sql.expression import func
 
-from app import db
+from app import db, flask_tracer
 from app.dao.dao_utils import VersionOptions, transactional, version_class
 from app.models import (
     Organisation,
@@ -17,6 +17,7 @@ def dao_get_organisations():
     ).all()
 
 
+@flask_tracer.trace()
 def dao_count_organisations_with_live_services():
     return db.session.query(Organisation.id).join(Organisation.services).filter(
         Service.active.is_(True),
