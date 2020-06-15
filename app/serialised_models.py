@@ -24,6 +24,29 @@ class SerialisedModel(ABC):
         return super().__dir__() + list(sorted(self.ALLOWED_PROPERTIES))
 
 
+class SerialisedModelCollection(ABC):
+
+    """
+    A SerialisedModelCollection takes a list of dictionaries, typically
+    created by serialising database objects. When iterated over it
+    returns a SerialisedModel instance for each of the items in the list.
+    """
+
+    @property
+    @abstractmethod
+    def model(self):
+        pass
+
+    def __init__(self, items):
+        self.items = items
+
+    def __bool__(self):
+        return bool(self.items)
+
+    def __getitem__(self, index):
+        return self.model(self.items[index])
+
+
 class SerialisedTemplate(SerialisedModel):
     ALLOWED_PROPERTIES = {
         'archived',
@@ -36,3 +59,28 @@ class SerialisedTemplate(SerialisedModel):
         'template_type',
         'version',
     }
+
+
+class SerialisedService(SerialisedModel):
+    ALLOWED_PROPERTIES = {
+        'id',
+        'active',
+        'contact_link',
+        'email_from',
+        'permissions',
+        'research_mode',
+        'restricted',
+    }
+
+
+class SerialisedAPIKey(SerialisedModel):
+    ALLOWED_PROPERTIES = {
+        'id',
+        'secret',
+        'expiry_date',
+        'key_type',
+    }
+
+
+class SerialisedAPIKeyCollection(SerialisedModelCollection):
+    model = SerialisedAPIKey

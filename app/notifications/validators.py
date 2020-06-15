@@ -90,7 +90,7 @@ def service_can_send_to_recipient(send_to, key_type, service, allow_whitelisted_
 
 
 def service_has_permission(notify_type, permissions):
-    return notify_type in [p.permission for p in permissions]
+    return notify_type in permissions
 
 
 def check_service_has_permission(notify_type, permissions):
@@ -124,7 +124,7 @@ def validate_and_format_recipient(send_to, key_type, service, notification_type,
         international_phone_info = get_international_phone_info(send_to)
 
         if international_phone_info.international and \
-                INTERNATIONAL_SMS_TYPE not in [p.permission for p in service.permissions]:
+                INTERNATIONAL_SMS_TYPE not in service.permissions:
             raise BadRequestError(message="Cannot send to international mobile numbers")
 
         return validate_and_format_phone_number(

@@ -818,8 +818,8 @@ def test_post_notification_with_document_upload(client, notify_db_session, mocke
     assert validate(resp_json, post_email_response) == resp_json
 
     assert document_download_mock.upload_document.call_args_list == [
-        call(service.id, 'abababab', csv_param.get('is_csv')),
-        call(service.id, 'cdcdcdcd', csv_param.get('is_csv'))
+        call(str(service.id), 'abababab', csv_param.get('is_csv')),
+        call(str(service.id), 'cdcdcdcd', csv_param.get('is_csv'))
     ]
 
     notification = Notification.query.one()

@@ -8,7 +8,13 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 from gds_metrics import Histogram
 
-from app.dao.services_dao import dao_fetch_service_by_id_with_api_keys
+from app.dao.services_dao import dao_fetch_service_by_id
+from app.dao.api_key_dao import get_model_api_keys
+from app.serialised_models import (
+    SerialisedAPIKey,
+    SerialisedAPIKeyCollection,
+    SerialisedService,
+)
 
 
 GENERAL_TOKEN_ERROR_MESSAGE = 'Invalid token: make sure your API token matches the example at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header'  # noqa
@@ -86,6 +92,28 @@ def requires_admin_auth():
         raise AuthError('Unauthorized: admin authentication token required', 401)
 
 
+def get_service_dict(issuer):
+    from app.schemas import service_schema
+    with AUTH_DB_CONNECTION_DURATION_SECONDS.time():
+        fetched = dao_fetch_service_by_id(issuer)
+    return service_schema.dump(fetched).data
+
+
+def get_service_model(issuer):
+    return SerialisedService(get_service_dict(issuer))
+
+
+def get_api_keys_dict(issuer):
+    return [
+        {k: getattr(key, k) for k in SerialisedAPIKey.ALLOWED_PROPERTIES}
+        for key in get_model_api_keys(issuer)
+    ]
+
+
+def get_api_keys_models(issuer):
+    return SerialisedAPIKeyCollection(get_api_keys_dict(issuer))
+
+
 def requires_auth():
     request_helper.check_proxy_header_before_request()
 
@@ -93,8 +121,8 @@ def requires_auth():
     issuer = __get_token_issuer(auth_token)  # ie the `iss` claim which should be a service ID
 
     try:
-        with AUTH_DB_CONNECTION_DURATION_SECONDS.time():
-            service = dao_fetch_service_by_id_with_api_keys(issuer)
+        service = get_service_model(issuer)
+        service.api_keys = get_api_keys_models(issuer)
     except DataError:
         raise AuthError("Invalid token: service id is not the right data type", 403)
     except NoResultFound:
@@ -129,7 +157,7 @@ def requires_auth():
         if api_key.expiry_date:
             raise AuthError("Invalid token: API key revoked", 403, service_id=service.id, api_key_id=api_key.id)
 
-        g.service_id = api_key.service_id
+        g.service_id = service.id
         _request_ctx_stack.top.authenticated_service = service
         _request_ctx_stack.top.api_user = api_key
 

@@ -164,7 +164,7 @@ def _service_can_send_internationally(service, number):
     international_phone_info = get_international_phone_info(number)
 
     if international_phone_info.international and \
-            INTERNATIONAL_SMS_TYPE not in [p.permission for p in service.permissions]:
+            INTERNATIONAL_SMS_TYPE not in service.permissions:
         raise InvalidRequest(
             {'to': ["Cannot send to international mobile numbers"]},
             status_code=400
