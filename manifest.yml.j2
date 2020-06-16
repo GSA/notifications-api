@@ -1,6 +1,6 @@
 {%- set app_vars = {
-  'notify-api': {
-    'NOTIFY_APP_NAME': 'api',
+  'notify-api-canary1': {
+    'NOTIFY_APP_NAME': 'api-canary1',
     'disk_quota': '2G',
     'sqlalchemy_pool_size': 30,
     'routes': {
@@ -12,8 +12,8 @@
     'health-check-invocation-timeout': 3,
     'instances': {
       'preview': None,
-      'staging': None,
-      'production': 25
+      'staging': 1,
+      'production': 1
     },
   },
   'notify-api-db-migration': {

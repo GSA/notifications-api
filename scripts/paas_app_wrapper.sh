@@ -1,6 +1,6 @@
 #!/bin/bash
 case $NOTIFY_APP_NAME in
-  api)
+  api|api-canary1)
     unset GUNICORN_CMD_ARGS
     exec scripts/run_app_paas.sh gunicorn -c /home/vcap/app/gunicorn_config.py application
     ;;
