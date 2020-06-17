@@ -8,6 +8,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 from gds_metrics import Histogram
 
+from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.api_key_dao import get_model_api_keys
 from app.serialised_models import (
@@ -123,6 +124,7 @@ def requires_auth():
     try:
         service = get_service_model(issuer)
         service.api_keys = get_api_keys_models(issuer)
+        db.session.commit()
     except DataError:
         raise AuthError("Invalid token: service id is not the right data type", 403)
     except NoResultFound:

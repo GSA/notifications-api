@@ -8,6 +8,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.clients.redis import rate_limit_cache_key, daily_limit_cache_key
 
+from app import db
 from app.dao import services_dao, templates_dao
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
@@ -160,7 +161,10 @@ def get_template_dict(template_id, service_id):
         raise BadRequestError(message=message,
                               fields=[{'template': message}])
 
-    return template_schema.dump(fetched_template).data
+    template_dict = template_schema.dump(fetched_template).data
+
+    db.session.commit()
+    return template_dict
 
 
 def get_template_model(template_id, service_id):
