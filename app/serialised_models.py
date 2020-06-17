@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class JSONModel(ABC):
+class SerialisedModel(ABC):
 
     @property
     @abstractmethod
@@ -16,7 +16,7 @@ class JSONModel(ABC):
         return super().__dir__() + list(sorted(self.ALLOWED_PROPERTIES))
 
 
-class TemplateJSONModel(JSONModel):
+class SerialisedTemplate(SerialisedModel):
     ALLOWED_PROPERTIES = {
         'archived',
         'content',
