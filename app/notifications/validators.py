@@ -8,8 +8,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.clients.redis import rate_limit_cache_key, daily_limit_cache_key
 
-from app import db
-from app.dao import services_dao, templates_dao
+from app.dao import services_dao
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
     INTERNATIONAL_SMS_TYPE, SMS_TYPE, EMAIL_TYPE, LETTER_TYPE,
@@ -149,31 +148,14 @@ def check_notification_content_is_not_empty(template_with_content):
         raise BadRequestError(message=message)
 
 
-def get_template_dict(template_id, service_id):
-    from app.schemas import template_schema
+def validate_template(template_id, personalisation, service, notification_type):
+
     try:
-        fetched_template = templates_dao.dao_get_template_by_id_and_service_id(
-            template_id=template_id,
-            service_id=service_id
-        )
+        template = SerialisedTemplate.from_template_id_and_service_id(template_id, service.id)
     except NoResultFound:
         message = 'Template not found'
         raise BadRequestError(message=message,
                               fields=[{'template': message}])
-
-    template_dict = template_schema.dump(fetched_template).data
-
-    db.session.commit()
-    return template_dict
-
-
-@SerialisedTemplate.cache
-def get_template_model(template_id, service_id):
-    return SerialisedTemplate(get_template_dict(template_id, service_id))
-
-
-def validate_template(template_id, personalisation, service, notification_type):
-    template = get_template_model(template_id, service.id)
 
     check_template_is_for_notification_type(notification_type, template.template_type)
     check_template_is_active(template)

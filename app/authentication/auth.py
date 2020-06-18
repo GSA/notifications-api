@@ -6,24 +6,16 @@ from notifications_python_client.errors import (
 from notifications_utils import request_helper
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
-from gds_metrics import Histogram
 
 from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.dao.api_key_dao import get_model_api_keys
 from app.serialised_models import (
-    SerialisedAPIKey,
     SerialisedAPIKeyCollection,
     SerialisedService,
 )
 
 
 GENERAL_TOKEN_ERROR_MESSAGE = 'Invalid token: make sure your API token matches the example at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header'  # noqa
-
-AUTH_DB_CONNECTION_DURATION_SECONDS = Histogram(
-    'auth_db_connection_duration_seconds',
-    'Time taken to get DB connection and fetch service from database',
-)
 
 
 class AuthError(Exception):
@@ -93,30 +85,6 @@ def requires_admin_auth():
         raise AuthError('Unauthorized: admin authentication token required', 401)
 
 
-def get_service_dict(issuer):
-    from app.schemas import service_schema
-    with AUTH_DB_CONNECTION_DURATION_SECONDS.time():
-        fetched = dao_fetch_service_by_id(issuer)
-    return service_schema.dump(fetched).data
-
-
-@SerialisedService.cache
-def get_service_model(issuer):
-    return SerialisedService(get_service_dict(issuer))
-
-
-def get_api_keys_dict(issuer):
-    return [
-        {k: getattr(key, k) for k in SerialisedAPIKey.ALLOWED_PROPERTIES}
-        for key in get_model_api_keys(issuer)
-    ]
-
-
-@SerialisedAPIKeyCollection.cache
-def get_api_keys_models(issuer):
-    return SerialisedAPIKeyCollection(get_api_keys_dict(issuer))
-
-
 def requires_auth():
     request_helper.check_proxy_header_before_request()
 
@@ -124,8 +92,8 @@ def requires_auth():
     issuer = __get_token_issuer(auth_token)  # ie the `iss` claim which should be a service ID
 
     try:
-        service = get_service_model(issuer)
-        service.api_keys = get_api_keys_models(issuer)
+        service = SerialisedService.from_id(issuer)
+        service.api_keys = SerialisedAPIKeyCollection.from_service_id(issuer)
         db.session.commit()
     except DataError:
         raise AuthError("Invalid token: service id is not the right data type", 403)

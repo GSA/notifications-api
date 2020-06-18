@@ -5,23 +5,34 @@ from threading import RLock
 
 import cachetools
 
+from gds_metrics import Histogram
+
+from app import db
+from app.dao.services_dao import dao_fetch_service_by_id
+from app.dao.api_key_dao import get_model_api_keys
+
 caches = defaultdict(partial(cachetools.TTLCache, maxsize=1024, ttl=2))
 locks = defaultdict(RLock)
 
 
-class CacheMixin:
-
-    @classmethod
-    def cache(cls, func):
-
-        @cachetools.cached(cache=caches[cls.__name__], lock=locks[cls.__name__])
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper
+AUTH_DB_CONNECTION_DURATION_SECONDS = Histogram(
+    'auth_db_connection_duration_seconds',
+    'Time taken to get DB connection and fetch service from database',
+)
 
 
-class SerialisedModel(ABC, CacheMixin):
+def cache(func):
+    @cachetools.cached(
+        cache=caches[func.__qualname__],
+        lock=locks[func.__qualname__],
+    )
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+class SerialisedModel(ABC):
 
     """
     A SerialisedModel takes a dictionary, typically created by
@@ -44,7 +55,7 @@ class SerialisedModel(ABC, CacheMixin):
         return super().__dir__() + list(sorted(self.ALLOWED_PROPERTIES))
 
 
-class SerialisedModelCollection(ABC, CacheMixin):
+class SerialisedModelCollection(ABC):
 
     """
     A SerialisedModelCollection takes a list of dictionaries, typically
@@ -68,6 +79,7 @@ class SerialisedModelCollection(ABC, CacheMixin):
 
 
 class SerialisedTemplate(SerialisedModel):
+
     ALLOWED_PROPERTIES = {
         'archived',
         'content',
@@ -79,6 +91,23 @@ class SerialisedTemplate(SerialisedModel):
         'template_type',
         'version',
     }
+
+    @classmethod
+    @cache
+    def from_template_id_and_service_id(cls, template_id, service_id):
+
+        from app.dao.templates_dao import dao_get_template_by_id_and_service_id
+        from app.schemas import template_schema
+
+        fetched_template = dao_get_template_by_id_and_service_id(
+            template_id=template_id,
+            service_id=service_id
+        )
+
+        template_dict = template_schema.dump(fetched_template).data
+
+        db.session.commit()
+        return cls(template_dict)
 
 
 class SerialisedService(SerialisedModel):
@@ -92,6 +121,14 @@ class SerialisedService(SerialisedModel):
         'restricted',
     }
 
+    @classmethod
+    @cache
+    def from_id(cls, service_id):
+        from app.schemas import service_schema
+        with AUTH_DB_CONNECTION_DURATION_SECONDS.time():
+            fetched = dao_fetch_service_by_id(service_id)
+        return cls(service_schema.dump(fetched).data)
+
 
 class SerialisedAPIKey(SerialisedModel):
     ALLOWED_PROPERTIES = {
@@ -104,3 +141,11 @@ class SerialisedAPIKey(SerialisedModel):
 
 class SerialisedAPIKeyCollection(SerialisedModelCollection):
     model = SerialisedAPIKey
+
+    @classmethod
+    @cache
+    def from_service_id(cls, service_id):
+        return cls([
+            {k: getattr(key, k) for k in SerialisedAPIKey.ALLOWED_PROPERTIES}
+            for key in get_model_api_keys(service_id)
+        ])
