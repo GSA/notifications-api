@@ -8,11 +8,13 @@ import pytest
 from flask import json, current_app, request
 from freezegun import freeze_time
 from notifications_python_client.authentication import create_jwt_token
+from unittest.mock import call
 
 from app import api_user
 from app.dao.api_key_dao import get_unsigned_secrets, save_model_api_key, get_unsigned_secret, expire_api_key
 from app.models import ApiKey, KEY_TYPE_NORMAL
 from app.authentication.auth import AuthError, requires_admin_auth, requires_auth, GENERAL_TOKEN_ERROR_MESSAGE
+from app.serialised_models import caches, get_model_api_keys, dao_fetch_service_by_id
 
 from tests.conftest import set_config
 
@@ -457,3 +459,34 @@ def test_proxy_key_on_admin_auth_endpoint(notify_api, check_proxy_header, header
                 ]
             )
         assert response.status_code == expected_status
+
+
+def test_should_cache_service_and_api_key_lookups(mocker, client, sample_api_key):
+
+    mock_get_api_keys = mocker.patch(
+        'app.serialised_models.get_model_api_keys',
+        wraps=get_model_api_keys,
+    )
+    mock_get_service = mocker.patch(
+        'app.serialised_models.dao_fetch_service_by_id',
+        wraps=dao_fetch_service_by_id,
+    )
+
+    for i in range(5):
+        token = __create_token(sample_api_key.service_id)
+        client.get('/notifications', headers={
+            'Authorization': f'Bearer {token}'
+        })
+
+    assert mock_get_api_keys.call_args_list == [
+        call(str(sample_api_key.service_id))
+    ]
+    assert mock_get_service.call_args_list == [
+        call(str(sample_api_key.service_id))
+    ]
+
+    assert caches['SerialisedService.from_id'].currsize == 1
+    assert caches['SerialisedService.from_id'].ttl == 2
+
+    assert caches['SerialisedAPIKeyCollection.from_service_id'].currsize == 1
+    assert caches['SerialisedAPIKeyCollection.from_service_id'].ttl == 2

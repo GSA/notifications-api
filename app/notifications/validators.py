@@ -167,6 +167,7 @@ def get_template_dict(template_id, service_id):
     return template_dict
 
 
+@SerialisedTemplate.cache
 def get_template_model(template_id, service_id):
     return SerialisedTemplate(get_template_dict(template_id, service_id))
 

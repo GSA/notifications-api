@@ -1,7 +1,27 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from functools import partial
+from threading import RLock
+
+import cachetools
+
+caches = defaultdict(partial(cachetools.TTLCache, maxsize=1024, ttl=2))
+locks = defaultdict(RLock)
 
 
-class SerialisedModel(ABC):
+class CacheMixin:
+
+    @classmethod
+    def cache(cls, func):
+
+        @cachetools.cached(cache=caches[cls.__name__], lock=locks[cls.__name__])
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+
+class SerialisedModel(ABC, CacheMixin):
 
     """
     A SerialisedModel takes a dictionary, typically created by
@@ -24,7 +44,7 @@ class SerialisedModel(ABC):
         return super().__dir__() + list(sorted(self.ALLOWED_PROPERTIES))
 
 
-class SerialisedModelCollection(ABC):
+class SerialisedModelCollection(ABC, CacheMixin):
 
     """
     A SerialisedModelCollection takes a list of dictionaries, typically

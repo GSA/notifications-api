@@ -100,6 +100,7 @@ def get_service_dict(issuer):
     return service_schema.dump(fetched).data
 
 
+@SerialisedService.cache
 def get_service_model(issuer):
     return SerialisedService(get_service_dict(issuer))
 
@@ -111,6 +112,7 @@ def get_api_keys_dict(issuer):
     ]
 
 
+@SerialisedAPIKeyCollection.cache
 def get_api_keys_models(issuer):
     return SerialisedAPIKeyCollection(get_api_keys_dict(issuer))
 
