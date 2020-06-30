@@ -1,5 +1,6 @@
 import csv
 import functools
+import gzip
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -10,6 +11,7 @@ import itertools
 from click_datetime import Datetime as click_dt
 from flask import current_app, json
 from notifications_utils.recipients import RecipientCSV
+from notifications_utils.s3 import s3upload
 from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -927,3 +929,42 @@ def process_row_from_job(job_id, job_row_number):
             notification_id = process_row(row, template, job, job.service)
             current_app.logger.info("Process row {} for job {} created notification_id: {}".format(
                 job_row_number, job_id, notification_id))
+
+
+@notify_command(name='backup-postgres-table')
+@click.option('-q', '--query', required=True, help='Query for backup data')
+@click.option('-f', '--file', required=True, help='Output file name')
+def backup_postgres_table(query, file):
+    """
+    Copy the results of the SQL query passed in (query) to a file (dest_file).
+    """
+    try:
+        # Create temporary file to contain database data.
+        dest_filehandle = open(file, 'w+')
+        current_app.logger.info("Opened temporary file {} for storing data from database".format(file))
+    except Exception as e:
+        current_app.logger.error("Unable to create temporary file {}: {}".format(file, e))
+        return None
+
+    current_app.logger.info("Writing data from '{}' to {}".format(query, file))
+
+    # Note that need to create dest_file as a writeable file before calling the following method:
+    copy_out = "COPY ({}) TO STDOUT WITH CSV DELIMITER '|' HEADER".format(query)
+    # copy_out="COPY testtable TO STDOUT WITH CSV HEADER"
+    curs = db.session.connection().connection.cursor()
+    curs.copy_expert(sql=copy_out, file=dest_filehandle)
+
+    dest_filehandle.close()
+
+    compressed_file = compress_file(file)
+
+    s3upload()
+
+
+def compress_file(src_file):
+    compressed_file = "{}.gz".format(str(src_file))
+    with open(src_file, 'rb') as f_in:
+        with gzip.open(compressed_file, 'wb') as f_out:
+            for line in f_in:
+                f_out.write(line)
+    return compressed_file
