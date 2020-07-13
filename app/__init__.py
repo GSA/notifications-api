@@ -78,12 +78,14 @@ def create_app(application):
     from app.config import configs
 
     notify_environment = os.environ['NOTIFY_ENVIRONMENT']
-    print(notify_environment)
 
     application.config.from_object(configs[notify_environment])
 
     application.config['NOTIFY_APP_NAME'] = application.name
     init_app(application)
+
+    # Metrics intentionally high up to give the most accurate timing and reliability that the metric is recorded
+    metrics.init_app(application)
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
@@ -109,7 +111,6 @@ def create_app(application):
     redis_store.init_app(application)
     performance_platform_client.init_app(application)
     document_download_client.init_app(application)
-    metrics.init_app(application)
 
     register_blueprint(application)
     register_v2_blueprints(application)
@@ -153,6 +154,7 @@ def register_blueprint(application):
     from app.template_folder.rest import template_folder_blueprint
     from app.letter_branding.letter_branding_rest import letter_branding_blueprint
     from app.upload.rest import upload_blueprint
+    from app.broadcast_message.rest import broadcast_message_blueprint
 
     service_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_blueprint, url_prefix='/service')
@@ -237,6 +239,9 @@ def register_blueprint(application):
 
     upload_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(upload_blueprint)
+
+    broadcast_message_blueprint.before_request(requires_admin_auth)
+    application.register_blueprint(broadcast_message_blueprint)
 
 
 def register_v2_blueprints(application):

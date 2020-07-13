@@ -20,6 +20,8 @@ marshmallow==2.21.0 # pyup: <3 # v3 throws errors
 psycopg2-binary==2.8.5
 PyJWT==1.7.1
 SQLAlchemy==1.3.17
+strict-rfc3339==0.7
+rfc3987==1.3.8
 cachetools==4.1.0
 
 notifications-python-client==5.5.1
@@ -31,4 +33,4 @@ git+https://github.com/alphagov/notifications-utils.git@40.2.1#egg=notifications
 
 # gds-metrics requires prometheseus 0.2.0, override that requirement as 0.7.1 brings significant performance gains
 prometheus-client==0.7.1
-gds-metrics==0.2.0
+gds-metrics==0.2.2
