@@ -144,8 +144,8 @@ class Config(object):
 
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
-        'mmg': 50,
-        'firetext': 50
+        'mmg': 70,
+        'firetext': 30
     }
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
@@ -459,7 +459,7 @@ class Preview(Config):
     INVALID_PDF_BUCKET_NAME = 'preview-letters-invalid-pdf'
     TRANSIENT_UPLOADED_LETTERS = 'preview-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'preview-letters-sanitise'
-    CBC_PROXY_URL = 'https://notify-stub-cbc-sandbox.cloudapps.digital'
+    CBC_PROXY_URL = 'https://notify-stub-cbc-preview.cloudapps.digital'
     FROM_NUMBER = 'preview'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = False
@@ -477,7 +477,7 @@ class Staging(Config):
     INVALID_PDF_BUCKET_NAME = 'staging-letters-invalid-pdf'
     TRANSIENT_UPLOADED_LETTERS = 'staging-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'staging-letters-sanitise'
-    CBC_PROXY_URL = 'https://notify-stub-cbc-sandbox.cloudapps.digital'
+    CBC_PROXY_URL = 'https://notify-stub-cbc-staging.cloudapps.digital'
     FROM_NUMBER = 'stage'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = True
@@ -496,7 +496,7 @@ class Live(Config):
     INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf'
     TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise'
-    CBC_PROXY_URL = 'https://notify-stub-cbc-sandbox.cloudapps.digital'
+    CBC_PROXY_URL = 'https://notify-stub-cbc-production.cloudapps.digital'
     FROM_NUMBER = 'GOVUK'
     PERFORMANCE_PLATFORM_ENABLED = True
     API_RATE_LIMIT_ENABLED = True
