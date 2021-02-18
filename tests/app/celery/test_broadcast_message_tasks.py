@@ -679,6 +679,51 @@ def test_check_provider_message_should_send_raises_if_older_event_hasnt_started_
 
 
 @freeze_time('2021-01-01 12:00')
+def test_check_provider_message_should_send_raises_if_older_event_is_in_tech_failure(sample_template):
+    broadcast_message = create_broadcast_message(sample_template)
+    # event approved at midnight
+    past_tech_failure_event = create_broadcast_event(
+        broadcast_message,
+        message_type='alert',
+        sent_at=datetime(2021, 1, 1, 0, 0),
+    )
+    current_event = create_broadcast_event(
+        broadcast_message,
+        message_type='update',
+        sent_at=datetime(2021, 1, 1, 7, 0),
+    )
+
+    create_broadcast_provider_message(past_tech_failure_event, provider='ee', status=BroadcastProviderMessageStatus.TECHNICAL_FAILURE)  # noqa
+
+    # the previous message never sent so we shouldn't try and send this one (since we can't reference it on cbc side)
+    with pytest.raises(CBCProxyFatalException) as exc:
+        check_provider_message_should_send(current_event, 'ee')
+
+    assert f'Previous event {past_still_sending_event.id} (type update) has not finished sending to provider ee' in str(exc.value)  # noqa
+
+
+@freeze_time('2021-01-01 12:00')
+def test_check_provider_message_should_send_doesnt_raise_if_older_event_has_received_ack(sample_template):
+    broadcast_message = create_broadcast_message(sample_template)
+    # event approved at midnight
+    past_succesful_event = create_broadcast_event(
+        broadcast_message,
+        message_type='alert',
+        sent_at=datetime(2021, 1, 1, 0, 0),
+    )
+    current_event = create_broadcast_event(
+        broadcast_message,
+        message_type='update',
+        sent_at=datetime(2021, 1, 1, 7, 0),
+    )
+
+    create_broadcast_provider_message(past_succesful_event, provider='ee', status=BroadcastProviderMessageStatus.ACK)
+
+    # we have sent the previous alert, so we're good to proceed with the new message
+    check_provider_message_should_send(current_event, 'ee')
+
+
+@freeze_time('2021-01-01 12:00')
 def test_check_provider_message_should_send_doesnt_raise_if_newer_event_not_acked_yet(sample_template):
     broadcast_message = create_broadcast_message(sample_template)
     # event approved at midnight
