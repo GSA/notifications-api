@@ -59,7 +59,14 @@ export PATH=${PATH}:/Applications/Postgres.app/Contents/Versions/11/bin/
 To switch redis on you'll need to install it locally. On a OSX we've used brew for this. To use redis caching you need to switch it on by changing the config for development:
 
         REDIS_ENABLED = True
+        
+### Other dependencies
 
+Shapely, a subdependency required by notifications-utils, will fail to install unless you install its dependencies
+
+```
+brew install geos
+```
 
 ##  To run the application
 
