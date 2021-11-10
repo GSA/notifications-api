@@ -2069,6 +2069,35 @@ class DailySortedLetter(db.Model):
 
 
 class FactBilling(db.Model):
+    """
+    These are grouped by date, template, notificaiton type, provider, rate_multiplier, international, rate, and postage.
+
+    For SMS:
+
+    rate = cost per billable unit. Will only change when we change our pricing.
+    rate_multiplier = international rate multiplier as defined in notifications_utils/international_billing_rates.yml
+
+    billable_units = sum of billable units (fragments) for that grouping
+    notifications_sent = sum of notifications sent for that grouping
+
+    For letters:
+
+    rate = the cost to send a single notification, which will vary based on postage and page count.
+    rate_multiplier = always 1
+
+    billable_units = sum of sheets of paper sent for that grouping
+    notifications_sent = sum of notifications sent for that grouping
+
+    handy letter calculations:
+
+    number_of_sheets_per_letter = billable_units / notifications_sent
+    letter_cost = notifications_sent * ft_billing.rate
+
+    For emails:
+
+    rate_multiplier = 0
+    everything's free!
+    """
     __tablename__ = "ft_billing"
 
     bst_date = db.Column(db.Date, nullable=False, primary_key=True, index=True)
