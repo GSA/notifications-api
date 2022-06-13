@@ -25,18 +25,18 @@ def upgrade():
     password = hashpw(str(uuid.uuid4()))
     op.get_bind()
     user_insert = """INSERT INTO users (id, name, email_address, created_at, failed_login_count, _password, mobile_number, state, platform_admin)
-                     VALUES ('{}', 'Notify service user', 'notify-service-user@digital.cabinet-office', '{}', 0,'{}', '+441234123412', 'active', False)
+                     VALUES ('{}', 'Notify service user', 'testsender@dispostable.com', '{}', 0,'{}', '+441234123412', 'active', False)
                   """
     op.execute(user_insert.format(user_id, datetime.utcnow(), password))
     service_history_insert = """INSERT INTO services_history (id, name, created_at, active, message_limit, restricted, research_mode, email_from, created_by_id, reply_to_email_address, version)
-                        VALUES ('{}', 'Notify service', '{}', True, 1000, False, False, 'notify@digital.cabinet-office.gov.uk',
-                        '{}', 'notify@digital.cabinet-office.gov.uk', 1)
+                        VALUES ('{}', 'Notify service', '{}', True, 1000, False, False, 'testsender@dispostable.com',
+                        '{}', 'testsender@dispostable.com', 1)
 
                      """
     op.execute(service_history_insert.format(service_id, datetime.utcnow(), user_id))
     service_insert = """INSERT INTO services (id, name, created_at, active, message_limit, restricted, research_mode, email_from, created_by_id, reply_to_email_address, version)
-                        VALUES ('{}', 'Notify service', '{}', True, 1000, False, False, 'notify@digital.cabinet-office.gov.uk',
-                        '{}', 'notify@digital.cabinet-office.gov.uk', 1)
+                        VALUES ('{}', 'Notify service', '{}', True, 1000, False, False, 'testsender@dispostable.com',
+                        '{}', 'testsender@dispostable.com', 1)
                     """
     op.execute(service_insert.format(service_id, datetime.utcnow(), user_id))
     user_to_service_insert = """INSERT INTO user_to_service (user_id, service_id) VALUES ('{}', '{}')"""

@@ -64,7 +64,7 @@ It’s only an emergency if:
 *   a 500 response code appears when you try to send messages using the API
 
 If you have one of these emergencies, email details to:
-ooh-gov-uk-notify-support@digital.cabinet-office.gov.uk
+testsender@dispostable.com
 
 ^Only use this email address for out of hours emergencies. Don’t share this address with people outside of your team.
 

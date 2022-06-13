@@ -39,7 +39,7 @@ class CBCProxyClient:
         if app.config.get('CBC_PROXY_ENABLED'):
             self._lambda_client = boto3.client(
                 'lambda',
-                region_name='eu-west-2',
+                region_name='us-west-2',
                 aws_access_key_id=app.config['CBC_PROXY_AWS_ACCESS_KEY_ID'],
                 aws_secret_access_key=app.config['CBC_PROXY_AWS_SECRET_ACCESS_KEY'],
             )

@@ -102,7 +102,7 @@ function start_application {
 
 function start_aws_logs_agent {
   echo "Starting aws logs agent..."
-  exec aws logs push --region eu-west-1 --config-file /home/vcap/app/awslogs.conf &
+  exec aws logs push --region us-west-2 --config-file /home/vcap/app/awslogs.conf &
   AWSLOGS_AGENT_PID=$!
   echo "AWS logs agent pid: ${AWSLOGS_AGENT_PID}"
 }

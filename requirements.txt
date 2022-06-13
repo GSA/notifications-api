@@ -77,6 +77,8 @@ docopt==0.6.2
     # via notifications-python-client
 docutils==0.16
     # via awscli
+python-dotenv==0.20.0
+    # via -r requirements.in
 eventlet==0.33.1
     # via gunicorn
 flask==2.1.2
