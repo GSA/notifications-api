@@ -1,0 +1,42 @@
+{
+	"name": "notification-worker",
+	"dockerComposeFile": "../docker-compose.devcontainer.yml",
+	"service": "worker",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	"remoteEnv": {
+		"PATH": "/home/vscode/.local/bin:${containerEnv:PATH}" // give our installed Python modules precedence
+	},
+	"settings": {
+		"[python]": {
+			"editor.formatOnSave": true
+		},
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": true,
+		"python.pythonPath": "/usr/local/bin/python"
+	},
+	"features": {
+		"docker-from-docker": {
+			"version": "latest",
+			"moby": true
+		}
+	},
+	"extensions": [
+		"ms-python.black-formatter",
+		"donjayamanne.python-extension-pack",
+		"ms-azuretools.vscode-docker",
+		"ms-python.vscode-pylance",
+		"eamodio.gitlens",
+		"wholroyd.jinja",
+		"pmbenjamin.vscode-snyk",
+		"visualstudioexptteam.vscodeintellicode",
+		"yzhang.markdown-all-in-one",
+		"ms-ossdata.vscode-postgresql",
+		"GitHub.copilot",
+		"ms-vsliveshare.vsliveshare",
+		"mtxr.sqltools",
+		"mtxr.sqltools-driver-pg"
+	],
+	"postCreateCommand": "notify-worker-entrypoint.sh",
+	"remoteUser": "vscode"
+}

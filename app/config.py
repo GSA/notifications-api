@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import timedelta
-
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
@@ -100,14 +99,19 @@ class Config(object):
     DANGEROUS_SALT = os.getenv('DANGEROUS_SALT')
 
     # DB conection string
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api',
+    )
 
     # MMG API Key
     MMG_API_KEY = os.getenv('MMG_API_KEY')
 
     # Firetext API Key
-    FIRETEXT_API_KEY = os.getenv("FIRETEXT_API_KEY")
-    FIRETEXT_INTERNATIONAL_API_KEY = os.getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
+    FIRETEXT_API_KEY = os.getenv('FIRETEXT_API_KEY')
+    FIRETEXT_INTERNATIONAL_API_KEY = os.getenv(
+        'FIRETEXT_INTERNATIONAL_API_KEY', 'placeholder'
+    )
 
     # Prefix to identify queues in SQS
     NOTIFICATION_QUEUE_PREFIX = os.getenv('NOTIFICATION_QUEUE_PREFIX')
@@ -137,7 +141,7 @@ class Config(object):
     ###########################
 
     NOTIFY_ENVIRONMENT = 'development'
-    AWS_REGION = 'eu-west-1'
+    AWS_REGION = 'us-west-2'
     INVITATION_EXPIRATION_DAYS = 2
     NOTIFY_APP_NAME = 'api'
     SQLALCHEMY_RECORD_QUERIES = False
@@ -160,10 +164,7 @@ class Config(object):
     CHECK_PROXY_HEADER = False
 
     # these should always add up to 100%
-    SMS_PROVIDER_RESTING_POINTS = {
-        'mmg': 50,
-        'firetext': 50
-    }
+    SMS_PROVIDER_RESTING_POINTS = {'mmg': 50, 'firetext': 50}
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'
@@ -179,10 +180,16 @@ class Config(object):
     ORGANISATION_INVITATION_EMAIL_TEMPLATE_ID = '203566f0-d835-47c5-aa06-932439c86573'
     TEAM_MEMBER_EDIT_EMAIL_TEMPLATE_ID = 'c73f1d71-4049-46d5-a647-d013bdeca3f0'
     TEAM_MEMBER_EDIT_MOBILE_TEMPLATE_ID = '8a31520f-4751-4789-8ea1-fe54496725eb'
-    REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID = 'a42f1d17-9404-46d5-a647-d013bdfca3e1'
+    REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID = (
+        'a42f1d17-9404-46d5-a647-d013bdfca3e1'
+    )
     MOU_SIGNER_RECEIPT_TEMPLATE_ID = '4fd2e43c-309b-4e50-8fb8-1955852d9d71'
-    MOU_SIGNED_ON_BEHALF_SIGNER_RECEIPT_TEMPLATE_ID = 'c20206d5-bf03-4002-9a90-37d5032d9e84'
-    MOU_SIGNED_ON_BEHALF_ON_BEHALF_RECEIPT_TEMPLATE_ID = '522b6657-5ca5-4368-a294-6b527703bd0b'
+    MOU_SIGNED_ON_BEHALF_SIGNER_RECEIPT_TEMPLATE_ID = (
+        'c20206d5-bf03-4002-9a90-37d5032d9e84'
+    )
+    MOU_SIGNED_ON_BEHALF_ON_BEHALF_RECEIPT_TEMPLATE_ID = (
+        '522b6657-5ca5-4368-a294-6b527703bd0b'
+    )
     NOTIFY_INTERNATIONAL_SMS_SENDER = '07984404008'
     LETTERS_VOLUME_EMAIL_TEMPLATE_ID = '11fad854-fd38-4a7c-bd17-805fb13dfc12'
     NHS_EMAIL_BRANDING_ID = 'a7dc4e56-660b-4db7-8cff-12c37b12b5ea'
@@ -205,80 +212,85 @@ class Config(object):
         ],
         # this is overriden by the -Q command, but locally, we should read from all queues
         'task_queues': [
-            Queue(queue, Exchange('default'), routing_key=queue) for queue in QueueNames.all_queues()
+            Queue(queue, Exchange('default'), routing_key=queue)
+            for queue in QueueNames.all_queues()
         ],
         'beat_schedule': {
             # app/celery/scheduled_tasks.py
             'run-scheduled-jobs': {
                 'task': 'run-scheduled-jobs',
                 'schedule': crontab(minute='0,15,30,45'),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'delete-verify-codes': {
                 'task': 'delete-verify-codes',
                 'schedule': timedelta(minutes=63),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'delete-invitations': {
                 'task': 'delete-invitations',
                 'schedule': timedelta(minutes=66),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'switch-current-sms-provider-on-slow-delivery': {
                 'task': 'switch-current-sms-provider-on-slow-delivery',
                 'schedule': crontab(),  # Every minute
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'check-job-status': {
                 'task': 'check-job-status',
                 'schedule': crontab(),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'tend-providers-back-to-middle': {
                 'task': 'tend-providers-back-to-middle',
                 'schedule': crontab(minute='*/5'),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'check-for-missing-rows-in-completed-jobs': {
                 'task': 'check-for-missing-rows-in-completed-jobs',
                 'schedule': crontab(minute='*/10'),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'replay-created-notifications': {
                 'task': 'replay-created-notifications',
                 'schedule': crontab(minute='0, 15, 30, 45'),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             # app/celery/nightly_tasks.py
             'timeout-sending-notifications': {
                 'task': 'timeout-sending-notifications',
                 'schedule': crontab(hour=0, minute=5),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'create-nightly-billing': {
                 'task': 'create-nightly-billing',
                 'schedule': crontab(hour=0, minute=15),
-                'options': {'queue': QueueNames.REPORTING}
+                'options': {'queue': QueueNames.REPORTING},
             },
             'create-nightly-notification-status': {
                 'task': 'create-nightly-notification-status',
-                'schedule': crontab(hour=0, minute=30),  # after 'timeout-sending-notifications'
-                'options': {'queue': QueueNames.REPORTING}
+                'schedule': crontab(
+                    hour=0, minute=30
+                ),  # after 'timeout-sending-notifications'
+                'options': {'queue': QueueNames.REPORTING},
             },
             'delete-notifications-older-than-retention': {
                 'task': 'delete-notifications-older-than-retention',
-                'schedule': crontab(hour=3, minute=0),  # after 'create-nightly-notification-status'
-                'options': {'queue': QueueNames.REPORTING}
+                'schedule': crontab(
+                    hour=3, minute=0
+                ),  # after 'create-nightly-notification-status'
+                'options': {'queue': QueueNames.REPORTING},
             },
             'delete-inbound-sms': {
                 'task': 'delete-inbound-sms',
                 'schedule': crontab(hour=1, minute=40),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'save-daily-notification-processing-time': {
                 'task': 'save-daily-notification-processing-time',
                 'schedule': crontab(hour=2, minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
@@ -294,51 +306,51 @@ class Config(object):
             'check-if-letters-still-in-created': {
                 'task': 'check-if-letters-still-in-created',
                 'schedule': crontab(day_of_week='mon-fri', hour=7, minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'check-if-letters-still-pending-virus-check': {
                 'task': 'check-if-letters-still-pending-virus-check',
                 'schedule': crontab(day_of_week='mon-fri', hour='9,15', minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {
                 'task': 'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers',
                 'schedule': crontab(day_of_week='mon-fri', hour=10, minute=30),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'raise-alert-if-letter-notifications-still-sending': {
                 'task': 'raise-alert-if-letter-notifications-still-sending',
                 'schedule': crontab(hour=17, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             # The collate-letter-pdf does assume it is called in an hour that BST does not make a
             # difference to the truncate date which translates to the filename to process
             'collate-letter-pdfs-to-be-sent': {
                 'task': 'collate-letter-pdfs-to-be-sent',
                 'schedule': crontab(hour=17, minute=50),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'raise-alert-if-no-letter-ack-file': {
                 'task': 'raise-alert-if-no-letter-ack-file',
                 'schedule': crontab(hour=23, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'trigger-link-tests': {
                 'task': 'trigger-link-tests',
                 'schedule': timedelta(minutes=15),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'auto-expire-broadcast-messages': {
                 'task': 'auto-expire-broadcast-messages',
                 'schedule': timedelta(minutes=5),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
             'remove-yesterdays-planned-tests-on-govuk-alerts': {
                 'task': 'remove-yesterdays-planned-tests-on-govuk-alerts',
                 'schedule': crontab(hour=00, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
+                'options': {'queue': QueueNames.PERIODIC},
             },
-        }
+        },
     }
 
     # we can set celeryd_prefetch_multiplier to be 1 for celery apps which handle only long running tasks
@@ -364,32 +376,53 @@ class Config(object):
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
     SMS_INBOUND_WHITELIST = json.loads(os.environ.get('SMS_INBOUND_WHITELIST', '[]'))
-    FIRETEXT_INBOUND_SMS_AUTH = json.loads(os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
+    FIRETEXT_INBOUND_SMS_AUTH = json.loads(
+        os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]')
+    )
     MMG_INBOUND_SMS_AUTH = json.loads(os.environ.get('MMG_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_USERNAME = json.loads(os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]'))
+    MMG_INBOUND_SMS_USERNAME = json.loads(
+        os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]')
+    )
     ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', '')
     ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', '')
 
     HIGH_VOLUME_SERVICE = json.loads(os.environ.get('HIGH_VOLUME_SERVICE', '[]'))
 
-    TEMPLATE_PREVIEW_API_HOST = os.environ.get('TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013')
-    TEMPLATE_PREVIEW_API_KEY = os.environ.get('TEMPLATE_PREVIEW_API_KEY', 'my-secret-key')
+    TEMPLATE_PREVIEW_API_HOST = os.environ.get(
+        'TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013'
+    )
+    TEMPLATE_PREVIEW_API_KEY = os.environ.get(
+        'TEMPLATE_PREVIEW_API_KEY', 'my-secret-key'
+    )
 
-    DOCUMENT_DOWNLOAD_API_HOST = os.environ.get('DOCUMENT_DOWNLOAD_API_HOST', 'http://localhost:7000')
-    DOCUMENT_DOWNLOAD_API_KEY = os.environ.get('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
+    DOCUMENT_DOWNLOAD_API_HOST = os.environ.get(
+        'DOCUMENT_DOWNLOAD_API_HOST', 'http://localhost:7000'
+    )
+    DOCUMENT_DOWNLOAD_API_KEY = os.environ.get(
+        'DOCUMENT_DOWNLOAD_API_KEY', 'auth-token'
+    )
 
     # these environment vars aren't defined in the manifest so to set them on paas use `cf set-env`
-    MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
-    FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
-    SES_STUB_URL = os.environ.get("SES_STUB_URL")
+    MMG_URL = os.environ.get('MMG_URL', 'https://api.mmg.co.uk/jsonv2a/api.php')
+    FIRETEXT_URL = os.environ.get(
+        'FIRETEXT_URL', 'https://www.firetext.co.uk/api/sendsms/json'
+    )
+    SES_STUB_URL = os.environ.get('SES_STUB_URL')
 
-    AWS_REGION = 'eu-west-1'
+    AWS_REGION = 'us-west-2'
 
     CBC_PROXY_ENABLED = True
     CBC_PROXY_AWS_ACCESS_KEY_ID = os.environ.get('CBC_PROXY_AWS_ACCESS_KEY_ID', '')
-    CBC_PROXY_AWS_SECRET_ACCESS_KEY = os.environ.get('CBC_PROXY_AWS_SECRET_ACCESS_KEY', '')
+    CBC_PROXY_AWS_SECRET_ACCESS_KEY = os.environ.get(
+        'CBC_PROXY_AWS_SECRET_ACCESS_KEY', ''
+    )
 
-    ENABLED_CBCS = {BroadcastProvider.EE, BroadcastProvider.THREE, BroadcastProvider.O2, BroadcastProvider.VODAFONE}
+    ENABLED_CBCS = {
+        BroadcastProvider.EE,
+        BroadcastProvider.THREE,
+        BroadcastProvider.O2,
+        BroadcastProvider.VODAFONE,
+    }
 
     # as defined in api db migration 0331_add_broadcast_org.py
     BROADCAST_ORGANISATION_ID = '38e4bf69-93b0-445d-acee-53ea53fe02df'
@@ -398,6 +431,7 @@ class Config(object):
 ######################
 # Config overrides ###
 ######################
+
 
 class Development(Config):
     DEBUG = True
@@ -417,7 +451,7 @@ class Development(Config):
 
     INTERNAL_CLIENT_API_KEYS = {
         Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
-        Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
+        Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key'],
     }
 
     SECRET_KEY = 'dev-notify-secret-key'
@@ -428,10 +462,13 @@ class Development(Config):
 
     NOTIFY_ENVIRONMENT = 'development'
     NOTIFY_LOG_PATH = 'application.log'
-    NOTIFY_EMAIL_DOMAIN = "notify.tools"
+    NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'dispostable.com')
 
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://localhost/notification_api')
-    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api',
+    )
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 
     ANTIVIRUS_ENABLED = os.getenv('ANTIVIRUS_ENABLED') == '1'
 
@@ -466,17 +503,20 @@ class Test(Development):
     LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in jenkins and on cloudfoundry
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://localhost/test_notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api',
+    )
 
     CELERY = {
         **Config.CELERY,
-        'broker_url': 'you-forgot-to-mock-celery-in-your-tests://'
+        'broker_url': 'you-forgot-to-mock-celery-in-your-tests://',
     }
 
     ANTIVIRUS_ENABLED = True
 
     API_RATE_LIMIT_ENABLED = True
-    API_HOST_NAME = "http://localhost:6011"
+    API_HOST_NAME = 'http://localhost:6011'
 
     SMS_INBOUND_WHITELIST = ['203.0.113.195']
     FIRETEXT_INBOUND_SMS_AUTH = ['testkey']
@@ -486,7 +526,10 @@ class Test(Development):
     FIRETEXT_URL = 'https://example.com/firetext'
 
     CBC_PROXY_ENABLED = True
-    DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
+    DVLA_EMAIL_ADDRESSES = [
+        'success@simulator.amazonses.com',
+        'success+2@simulator.amazonses.com',
+    ]
 
 
 class Preview(Config):
@@ -569,5 +612,5 @@ configs = {
     'production': Live,
     'staging': Staging,
     'preview': Preview,
-    'sandbox': Sandbox
+    'sandbox': Sandbox,
 }
