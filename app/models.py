@@ -122,7 +122,7 @@ class User(db.Model):
     state = db.Column(db.String, nullable=False, default='pending')
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
-    auth_type = db.Column(db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=SMS_AUTH_TYPE)
+    auth_type = db.Column(db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=EMAIL_AUTH_TYPE)
     email_access_validated_at = db.Column(
         db.DateTime, index=False, unique=False, nullable=False, default=datetime.datetime.utcnow
     )
@@ -1841,7 +1841,7 @@ class InvitedUser(db.Model):
         db.ForeignKey('auth_type.name'),
         index=True,
         nullable=False,
-        default=SMS_AUTH_TYPE
+        default=EMAIL_AUTH_TYPE
     )
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
 

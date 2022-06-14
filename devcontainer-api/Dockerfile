@@ -32,6 +32,7 @@ RUN apt-get update \
 RUN pip install --upgrade pip
 
 COPY devcontainer-api/scripts/notify-dev-entrypoint.sh /usr/local/bin/
+COPY devcontainer-api/scripts/notify-worker-entrypoint.sh /usr/local/bin/
 
 ENV SHELL /bin/zsh
 

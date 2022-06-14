@@ -16,8 +16,8 @@ import sqlalchemy as sa
 service_id = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
 def upgrade():
     op.get_bind()
-    op.execute("update services set email_from = 'gov.uk.notify' where id = '{}'".format(service_id))
-    op.execute("update services_history set email_from = 'gov.uk.notify' where id = '{}'".format(service_id))
+    op.execute("update services set email_from = 'testsender' where id = '{}'".format(service_id))
+    op.execute("update services_history set email_from = 'testsender' where id = '{}'".format(service_id))
 
 
 def downgrade():

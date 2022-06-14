@@ -152,6 +152,8 @@ class Config(object):
     ONE_OFF_MESSAGE_FILENAME = 'Report'
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
+    
+    SES_STUB_URL = None # TODO: set to a URL in env and remove this to use a stubbed SES service
 
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
@@ -381,7 +383,6 @@ class Config(object):
     # these environment vars aren't defined in the manifest so to set them on paas use `cf set-env`
     MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
     FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
-    SES_STUB_URL = os.environ.get("SES_STUB_URL")
 
     AWS_REGION = 'us-west-2'
 

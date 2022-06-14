@@ -24,7 +24,7 @@ services:
     container_name: redis
     image: redis:6.2
     restart: always
-    command: redis-server --port 6380
+    command: sh -c "rm -f /data/dump.rdb && redis-server --port 6380" # disable persistence
     ports:
       - "6380:6380"
     expose:
