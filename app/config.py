@@ -530,7 +530,7 @@ class Staging(Config):
 
 
 class Live(Config):
-    NOTIFY_EMAIL_DOMAIN = 'notifications.service.gov.uk'
+    NOTIFY_EMAIL_DOMAIN = os.environ.get('NOTIFY_EMAIL_DOMAIN')
     NOTIFY_ENVIRONMENT = 'live'
     CSV_UPLOAD_BUCKET_NAME = 'live-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'production-contact-list'
