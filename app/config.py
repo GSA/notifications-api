@@ -137,7 +137,7 @@ class Config(object):
     ###########################
 
     NOTIFY_ENVIRONMENT = 'development'
-    AWS_REGION = 'eu-west-1'
+    AWS_REGION = 'us-west-2'
     INVITATION_EXPIRATION_DAYS = 2
     NOTIFY_APP_NAME = 'api'
     SQLALCHEMY_RECORD_QUERIES = False
@@ -152,6 +152,8 @@ class Config(object):
     ONE_OFF_MESSAGE_FILENAME = 'Report'
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
+    
+    SES_STUB_URL = None # TODO: set to a URL in env and remove this to use a stubbed SES service
 
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
@@ -381,9 +383,8 @@ class Config(object):
     # these environment vars aren't defined in the manifest so to set them on paas use `cf set-env`
     MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
     FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
-    SES_STUB_URL = os.environ.get("SES_STUB_URL")
 
-    AWS_REGION = 'eu-west-1'
+    AWS_REGION = 'us-west-2'
 
     CBC_PROXY_ENABLED = True
     CBC_PROXY_AWS_ACCESS_KEY_ID = os.environ.get('CBC_PROXY_AWS_ACCESS_KEY_ID', '')
@@ -428,9 +429,9 @@ class Development(Config):
 
     NOTIFY_ENVIRONMENT = 'development'
     NOTIFY_LOG_PATH = 'application.log'
-    NOTIFY_EMAIL_DOMAIN = "notify.tools"
+    NOTIFY_EMAIL_DOMAIN = "dispostable.com"
 
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://localhost/notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
     REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
     ANTIVIRUS_ENABLED = os.getenv('ANTIVIRUS_ENABLED') == '1'
@@ -466,7 +467,7 @@ class Test(Development):
     LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in jenkins and on cloudfoundry
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://localhost/test_notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
 
     CELERY = {
         **Config.CELERY,

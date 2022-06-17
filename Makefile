@@ -25,7 +25,7 @@ NOTIFY_CREDENTIALS ?= ~/.notify-credentials
 bootstrap: generate-version-file ## Set up everything to run the app
 	pip3 install -r requirements_for_test.txt
 	createdb notification_api || true
-	(. environment.sh && flask db upgrade) || true
+	(flask db upgrade) || true
 
 .PHONY: bootstrap-with-docker
 bootstrap-with-docker: ## Build the image to run the app in Docker
@@ -33,11 +33,12 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 
 .PHONY: run-flask
 run-flask: ## Run flask
-	. environment.sh && flask run -p 6011
+	flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
-run-celery: ## Run celery
-	. environment.sh && celery \
+run-celery: ## Run celery, TODO remove purge for staging/prod
+	celery -A run_celery.notify_celery purge -f
+	celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
@@ -49,9 +50,9 @@ run-celery-with-docker: ## Run celery in Docker container (useful if you can't i
 
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
-	. environment.sh && celery \
-		-A run_celery.notify_celery beat \
-		--loglevel=INFO
+	celery \
+	-A run_celery.notify_celery beat \
+	--loglevel=INFO
 
 .PHONY: run-celery-beat-with-docker
 run-celery-beat-with-docker: ## Run celery beat in Docker container (useful if you can't install pycurl locally)

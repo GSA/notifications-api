@@ -17,7 +17,7 @@ import sqlalchemy as sa
 def upgrade():
     op.execute("""
         UPDATE users
-        SET email_address = 'notify-service-user@digital.cabinet-office.gov.uk'
+        SET email_address = 'testsender@dispostable.com'
         WHERE email_address = 'notify-service-user@digital.cabinet-office'
     """)
 
@@ -26,5 +26,5 @@ def downgrade():
     op.execute("""
         UPDATE users
         SET email_address = 'notify-service-user@digital.cabinet-office'
-        WHERE email_address = 'notify-service-user@digital.cabinet-office.gov.uk'
+        WHERE email_address = 'testsender@dispostable.com'
     """)

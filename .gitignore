@@ -69,6 +69,8 @@ target/
 *.DS_Store
 environment.sh
 .envrc
+.env
+.env*
 
 celerybeat-schedule
 

@@ -22,7 +22,7 @@ def upgrade():
         INSERT INTO service_email_reply_to
         (id, service_id, email_address, is_default, created_at)
         VALUES
-        ('{}','{}', 'notify+1@digital.cabinet-office.gov.uk', 'f', NOW())
+        ('{}','{}', 'testsender@dispostable.com', 'f', NOW())
     """.format(EMAIL_REPLY_TO_ID, NOTIFY_SERVICE_ID))
 
 
