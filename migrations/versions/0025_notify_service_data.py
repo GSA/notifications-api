@@ -73,7 +73,7 @@ def upgrade():
                                       'email', datetime.utcnow(), invitation_content, service_id,
                                       invitation_subject, user_id))
 
-    sms_code_content = '((verify_code)) is your Notify authentication code'
+    sms_code_content = '((verify_code)) is your US Notify authentication code'
     op.execute(template_history_insert.format('36fb0730-6259-4da1-8a80-c8de22ad4246', 'Notify SMS verify code',
                                               'sms', datetime.utcnow(), sms_code_content, service_id, None, user_id))
 

@@ -77,6 +77,8 @@ def requires_internal_auth(expected_client_id):
     client_id = _get_token_issuer(auth_token)
 
     if client_id != expected_client_id:
+        current_app.logger.info('client_id: %s', client_id)
+        current_app.logger.info('expected_client_id: %s', expected_client_id)
         raise AuthError("Unauthorized: not allowed to perform this action", 401)
 
     api_keys = [

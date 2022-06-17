@@ -44,6 +44,9 @@ def upgrade():
         "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'AWS SES', 'ses', 10, 'email', true)".format(str(uuid.uuid4()))
     )
     op.execute(
+        "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'AWS SNS', 'sns', 10, 'sms', true)".format(str(uuid.uuid4()))
+    )
+    op.execute(
         "UPDATE provider_rates set provider_id = (select id from provider_details where identifier = 'mmg') where provider = 'mmg'"
     )
     op.execute(
@@ -53,6 +56,9 @@ def upgrade():
         "UPDATE provider_rates set provider_id = (select id from provider_details where identifier = 'ses') where provider = 'ses'"
     )
     op.execute(
+        "UPDATE provider_rates set provider_id = (select id from provider_details where identifier = 'sns') where provider = 'sns'"
+    )
+    op.execute(
         "UPDATE provider_statistics set provider_id = (select id from provider_details where identifier = 'mmg') where provider = 'mmg'"
     )
     op.execute(
@@ -60,6 +66,9 @@ def upgrade():
     )
     op.execute(
         "UPDATE provider_statistics set provider_id = (select id from provider_details where identifier = 'ses') where provider = 'ses'"
+    )
+    op.execute(
+        "UPDATE provider_statistics set provider_id = (select id from provider_details where identifier = 'sns') where provider = 'sns'"
     )
 
 def downgrade():

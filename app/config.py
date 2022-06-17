@@ -96,11 +96,16 @@ class Config(object):
     )
 
     # encyption secret/salt
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    DANGEROUS_SALT = os.getenv('DANGEROUS_SALT')
+    ADMIN_CLIENT_SECRET = os.getenv('ADMIN_CLIENT_SECRET', 'dev-notify-secret-key')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-notify-secret-key')
+    DANGEROUS_SALT = os.getenv('DANGEROUS_SALT', 'dev-notify-salt ')
 
     # DB conection string
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    
+    # AWS SMS
+    AWS_PINPOINT_REGION = os.getenv("AWS_PINPOINT_REGION", "us-west-2")
+    AWS_US_TOLL_FREE_NUMBER = os.getenv("AWS_US_TOLL_FREE_NUMBER", "+18446120782")
 
     # MMG API Key
     MMG_API_KEY = os.getenv('MMG_API_KEY')
