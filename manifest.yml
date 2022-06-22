@@ -8,39 +8,42 @@ applications:
     disk_quota: 1G
     health-check-type: process
     health-check-invocation-timeout: 1
+    routes:
+    - route: notifications-api.app.cloud.gov
 
     services:
       - api-psql
       - api-redis
 
     env:
-      NOTIFY_APP_NAME: '{{ NOTIFY_APP_NAME }}'
+      NOTIFY_APP_NAME: ((NOTIFY_APP_NAME))
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
-      NOTIFY_ENVIRONMENT: '{{ NOTIFY_ENVIRONMENT }}'
+      FLASK_ENV: production
+      NOTIFY_ENVIRONMENT: ((NOTIFY_ENVIRONMENT))
 
       # Credentials variables
-      ADMIN_BASE_URL: '{{ ADMIN_BASE_URL }}'
-      API_HOST_NAME: '{{ API_HOST_NAME }}'
-      DANGEROUS_SALT: '{{ DANGEROUS_SALT }}'
-      SECRET_KEY: '{{ SECRET_KEY }}'
+      ADMIN_BASE_URL: notifications-admin.app.cloud.gov
+      API_HOST_NAME: notifications-api.app.cloud.gov
+      DANGEROUS_SALT: ((DANGEROUS_SALT))
+      SECRET_KEY: ((SECRET_KEY))
 
-      NOTIFICATION_QUEUE_PREFIX: '{{ NOTIFICATION_QUEUE_PREFIX }}'
-      AWS_ACCESS_KEY_ID: '{{ AWS_ACCESS_KEY_ID }}'
-      AWS_SECRET_ACCESS_KEY: '{{ AWS_SECRET_ACCESS_KEY }}'
+      NOTIFICATION_QUEUE_PREFIX: prototype_10x
+      AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
+      AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
 
-      STATSD_HOST: "notify-statsd-exporter-{{ NOTIFY_ENVIRONMENT }}.apps.internal"
+      STATSD_HOST: "notify-statsd-exporter-((NOTIFY_ENVIRONMENT)).apps.internal"
 
-      ZENDESK_API_KEY: '{{ ZENDESK_API_KEY }}'
+      ZENDESK_API_KEY: ((ZENDESK_API_KEY))
 
-      MMG_API_KEY: '{{ MMG_API_KEY }}'
-      MMG_INBOUND_SMS_AUTH: '{{ MMG_INBOUND_SMS_AUTH | tojson }}'
-      MMG_INBOUND_SMS_USERNAME: '{{ MMG_INBOUND_SMS_USERNAME | tojson }}'
+      MMG_API_KEY: ((MMG_API_KEY))
+      MMG_INBOUND_SMS_AUTH: {}
+      MMG_INBOUND_SMS_USERNAME: {}
 
-      FIRETEXT_API_KEY: '{{ FIRETEXT_API_KEY }}'
-      FIRETEXT_INTERNATIONAL_API_KEY: '{{ FIRETEXT_INTERNATIONAL_API_KEY }}'
-      FIRETEXT_INBOUND_SMS_AUTH: '{{ FIRETEXT_INBOUND_SMS_AUTH | tojson }}'
+      FIRETEXT_API_KEY: ((FIRETEXT_API_KEY))
+      FIRETEXT_INTERNATIONAL_API_KEY: ((FIRETEXT_INTERNATIONAL_API_KEY))
+      FIRETEXT_INBOUND_SMS_AUTH: {}
 
-      DVLA_EMAIL_ADDRESSES: '{{ DVLA_EMAIL_ADDRESSES | tojson  }}'
+      DVLA_EMAIL_ADDRESSES: []
 
-      NOTIFY_EMAIL_DOMAIN: '{{ NOTIFY_EMAIL_DOMAIN }}'
+      NOTIFY_EMAIL_DOMAIN: ((NOTIFY_EMAIL_DOMAIN))
