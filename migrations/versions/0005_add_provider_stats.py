@@ -18,14 +18,14 @@ def upgrade():
     op.create_table('provider_rates',
     sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('valid_from', sa.DateTime(), nullable=False),
-    sa.Column('provider', sa.Enum('mmg', 'twilio', 'firetext', 'ses', name='providers'), nullable=False),
+    sa.Column('provider', sa.Enum('mmg', 'twilio', 'firetext', 'ses', 'sns', name='providers'), nullable=False),
     sa.Column('rate', sa.Numeric(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('provider_statistics',
     sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('day', sa.Date(), nullable=False),
-    sa.Column('provider', sa.Enum('mmg', 'twilio', 'firetext', 'ses', name='providers'), nullable=False),
+    sa.Column('provider', sa.Enum('mmg', 'twilio', 'firetext', 'ses', 'sns', name='providers'), nullable=False),
     sa.Column('service_id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('unit_count', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['service_id'], ['services.id'], ),

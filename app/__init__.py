@@ -34,8 +34,7 @@ from app.clients.cbc_proxy import CBCProxyClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
-from app.clients.sms.firetext import FiretextClient
-from app.clients.sms.mmg import MMGClient
+from app.clients.sms.aws_sns import AwsSnsClient
 
 
 class SQLAlchemy(_SQLAlchemy):
@@ -54,10 +53,9 @@ db = SQLAlchemy()
 migrate = Migrate()
 ma = Marshmallow()
 notify_celery = NotifyCelery()
-firetext_client = FiretextClient()
-mmg_client = MMGClient()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
+aws_sns_client = AwsSnsClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
 statsd_client = StatsdClient()
@@ -96,8 +94,7 @@ def create_app(application):
     zendesk_client.init_app(application)
     statsd_client.init_app(application)
     logging.init_app(application, statsd_client)
-    firetext_client.init_app(application, statsd_client=statsd_client)
-    mmg_client.init_app(application, statsd_client=statsd_client)
+    aws_sns_client.init_app(application, statsd_client=statsd_client)
 
     aws_ses_client.init_app(application.config['AWS_REGION'], statsd_client=statsd_client)
     aws_ses_stub_client.init_app(
@@ -108,7 +105,7 @@ def create_app(application):
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = [aws_ses_stub_client] if application.config['SES_STUB_URL'] else [aws_ses_client]
     notification_provider_clients.init_app(
-        sms_clients=[firetext_client, mmg_client],
+        sms_clients=[aws_sns_client],
         email_clients=email_clients
     )
 

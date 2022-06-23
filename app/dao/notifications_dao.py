@@ -21,9 +21,6 @@ from sqlalchemy.sql.expression import case
 from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db, statsd_client
-from app.clients.sms.firetext import (
-    get_message_status_and_reason_from_firetext_code,
-)
 from app.dao.dao_utils import autocommit
 from app.letters.utils import LetterPDFNotFound, find_letter_pdf_in_s3
 from app.models import (
@@ -84,25 +81,6 @@ def dao_create_notification(notification):
         notification.status = NOTIFICATION_CREATED
 
     db.session.add(notification)
-
-
-def _decide_permanent_temporary_failure(status, notification, detailed_status_code=None):
-    # Firetext will send us a pending status, followed by a success or failure status.
-    # When we get a failure status we need to look at the detailed_status_code to determine if the failure type
-    # is a permanent-failure or temporary-failure.
-    if notification.sent_by == 'firetext':
-        if status == NOTIFICATION_PERMANENT_FAILURE and detailed_status_code:
-            try:
-                status, reason = get_message_status_and_reason_from_firetext_code(detailed_status_code)
-                current_app.logger.info(
-                    f'Updating notification id {notification.id} to status {status}, reason: {reason}')
-                return status
-            except KeyError:
-                current_app.logger.warning(f'Failure code {detailed_status_code} from Firetext not recognised')
-        # fallback option:
-        if status == NOTIFICATION_PERMANENT_FAILURE and notification.status == NOTIFICATION_PENDING:
-            status = NOTIFICATION_TEMPORARY_FAILURE
-    return status
 
 
 def country_records_delivery(phone_prefix):

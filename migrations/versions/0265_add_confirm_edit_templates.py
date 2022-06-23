@@ -76,7 +76,7 @@ def upgrade():
         )
     )
 
-    mobile_template_content = """Your mobile number was changed by ((servicemanagername)). Next time you sign in, your Notify authentication code will be sent to this phone."""
+    mobile_template_content = """Your mobile number was changed by ((servicemanagername)). Next time you sign in, your US Notify authentication code will be sent to this phone."""
 
     mobile_template_name = "Phone number changed by service manager"
 
