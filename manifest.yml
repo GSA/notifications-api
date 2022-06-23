@@ -16,34 +16,26 @@ applications:
       - api-redis
 
     env:
-      NOTIFY_APP_NAME: ((NOTIFY_APP_NAME))
+      NOTIFY_APP_NAME: api
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
-      NOTIFY_ENVIRONMENT: ((NOTIFY_ENVIRONMENT))
 
-      # Credentials variables
-      ADMIN_BASE_URL: notifications-admin.app.cloud.gov
+      NOTIFY_ENVIRONMENT: live
       API_HOST_NAME: notifications-api.app.cloud.gov
+      ADMIN_BASE_URL: notifications-admin.app.cloud.gov
+      NOTIFICATION_QUEUE_PREFIX: prototype_10x
+      STATSD_HOST: localhost
+      
+      # Credentials variables
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
-
-      NOTIFICATION_QUEUE_PREFIX: prototype_10x
+      AWS_REGION: us-west-2
+      AWS_PINPOINT_REGION: us-west-2
       AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
       AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
-
-      STATSD_HOST: localhost
-
-      ZENDESK_API_KEY: ((ZENDESK_API_KEY))
-
-      MMG_API_KEY: ((MMG_API_KEY))
-      MMG_INBOUND_SMS_AUTH: {}
-      MMG_INBOUND_SMS_USERNAME: {}
-
-      FIRETEXT_API_KEY: ((FIRETEXT_API_KEY))
-      FIRETEXT_INTERNATIONAL_API_KEY: ((FIRETEXT_INTERNATIONAL_API_KEY))
-      FIRETEXT_INBOUND_SMS_AUTH: {}
+      AWS_US_TOLL_FREE_NUMBER: +18446120782
 
       DVLA_EMAIL_ADDRESSES: []
 
-      NOTIFY_EMAIL_DOMAIN: ((NOTIFY_EMAIL_DOMAIN))
+      NOTIFY_EMAIL_DOMAIN: dispostable.com
