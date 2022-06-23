@@ -32,7 +32,7 @@ applications:
       AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
       AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
 
-      STATSD_HOST: "notify-statsd-exporter-((NOTIFY_ENVIRONMENT)).apps.internal"
+      STATSD_HOST: localhost
 
       ZENDESK_API_KEY: ((ZENDESK_API_KEY))
 
