@@ -411,8 +411,8 @@ class Development(Config):
 
     REDIS_ENABLED = os.getenv('REDIS_ENABLED') == '1'
 
-    CSV_UPLOAD_BUCKET_NAME = 'development-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'development-contact-list'
+    CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
+    CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
     TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
     DVLA_RESPONSE_BUCKET_NAME = 'notify.tools-ftp'
     LETTERS_PDF_BUCKET_NAME = 'development-letters-pdf'
