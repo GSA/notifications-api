@@ -71,6 +71,7 @@ environment.sh
 .envrc
 .env
 .env*
+varsfile
 
 celerybeat-schedule
 
