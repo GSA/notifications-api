@@ -72,7 +72,6 @@ def requires_internal_auth(expected_client_id):
     if expected_client_id not in current_app.config.get('INTERNAL_CLIENT_API_KEYS'):
         raise TypeError("Unknown client_id for internal auth")
 
-    current_app.logger.info('Authorised for internal client_id {}'.format(expected_client_id)) # TODO remove
     request_helper.check_proxy_header_before_request()
     auth_token = _get_auth_token(request)
     client_id = _get_token_issuer(auth_token)
