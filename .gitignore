@@ -77,5 +77,6 @@ celerybeat-schedule
 
 # CloudFoundry
 .cf
+varsfile*
 
 /scripts/run_my_tests.sh

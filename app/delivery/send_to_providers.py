@@ -45,6 +45,9 @@ def send_sms_to_provider(notification):
 
     if notification.status == 'created':
         provider = provider_to_use(SMS_TYPE, notification.international)
+        if not provider:
+            technical_failure(notification=notification)
+            return
 
         template_model = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id, service_id=service.id, version=notification.template_version
@@ -169,9 +172,10 @@ provider_cache = TTLCache(maxsize=8, ttl=10)
 
 @cached(cache=provider_cache)
 def provider_to_use(notification_type, international=True):
-    international = True # TODO: remove or resolve the functionality of this
+    international = False # TODO: remove or resolve the functionality of this flag
+    # TODO rip firetext and mmg out of early migrations and clean up the expression below
     active_providers = [
-        p for p in get_provider_details_by_notification_type(notification_type, international) if p.active
+        p for p in get_provider_details_by_notification_type(notification_type, international) if p.active and p.identifier not in ['firetext','mmg']
     ]
 
     if not active_providers:
@@ -181,11 +185,10 @@ def provider_to_use(notification_type, international=True):
         raise Exception("No active {} providers".format(notification_type))
 
     if len(active_providers) == 1:
-        weights = [100]
+        chosen_provider = active_providers[0]
     else:
         weights = [p.priority for p in active_providers]
-
-    chosen_provider = random.choices(active_providers, weights=weights)[0]
+        chosen_provider = random.choices(active_providers, weights=weights)[0]
 
     return notification_provider_clients.get_client_by_name_and_type(chosen_provider.identifier, notification_type)
 
