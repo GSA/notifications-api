@@ -82,7 +82,7 @@ class TaskNames(object):
 
 class Config(object):
     # URL of admin app
-    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:6012')
+    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL')
 
     # URL of api app (on AWS this is the internal api endpoint)
     API_HOST_NAME = os.getenv('API_HOST_NAME')
@@ -102,6 +102,9 @@ class Config(object):
 
     # DB conection string
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    
+    # Redis conection string
+    REDIS_URL = os.getenv('REDIS_URL')
     
     # AWS SMS
     AWS_PINPOINT_REGION = os.getenv("AWS_PINPOINT_REGION", "us-west-2")

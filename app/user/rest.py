@@ -370,13 +370,19 @@ def send_user_confirm_new_email(user_id):
 
 @user_blueprint.route('/<uuid:user_id>/email-verification', methods=['POST'])
 def send_new_user_email_verification(user_id):
+    current_app.logger.info('Sending email verification for user {}'.format(user_id))
     request_json = request.get_json()
 
     # when registering, we verify all users' email addresses using this function
     user_to_send_to = get_user_by_id(user_id=user_id)
+    current_app.logger.info('user_to_send_to is {}'.format(user_to_send_to))
+    current_app.logger.info('user_to_send_to.email_address is {}'.format(user_to_send_to.email_address))
 
     template = dao_get_template_by_id(current_app.config['NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID'])
     service = Service.query.get(current_app.config['NOTIFY_SERVICE_ID'])
+    
+    current_app.logger.info('template.id is {}'.format(template.id))
+    current_app.logger.info('service.id is {}'.format(service.id))
 
     saved_notification = persist_notification(
         template_id=template.id,
@@ -395,18 +401,27 @@ def send_new_user_email_verification(user_id):
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=service.get_default_reply_to_email_address()
     )
+    current_app.logger.info('Sending notification to queue')
 
     send_notification_to_queue(saved_notification, False, queue=QueueNames.NOTIFY)
+    
+    current_app.logger.info('Sent notification to queue')
 
     return jsonify({}), 204
 
 
 @user_blueprint.route('/<uuid:user_id>/email-already-registered', methods=['POST'])
 def send_already_registered_email(user_id):
+    current_app.logger.info('Email already registered for user {}'.format(user_id))
     to = email_data_request_schema.load(request.get_json())
+    
+    current_app.logger.info('To email is {}'.format(to['email']))
 
     template = dao_get_template_by_id(current_app.config['ALREADY_REGISTERED_EMAIL_TEMPLATE_ID'])
     service = Service.query.get(current_app.config['NOTIFY_SERVICE_ID'])
+    
+    current_app.logger.info('template.id is {}'.format(template.id))
+    current_app.logger.info('service.id is {}'.format(service.id))
 
     saved_notification = persist_notification(
         template_id=template.id,
@@ -423,8 +438,12 @@ def send_already_registered_email(user_id):
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=service.get_default_reply_to_email_address()
     )
+    
+    current_app.logger.info('Sending notification to queue')
 
     send_notification_to_queue(saved_notification, False, queue=QueueNames.NOTIFY)
+    
+    current_app.logger.info('Sent notification to queue')
 
     return jsonify({}), 204
 
