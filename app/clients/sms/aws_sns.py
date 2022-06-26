@@ -20,9 +20,12 @@ class AwsSnsClient(SmsClient):
         self.current_app = current_app
         self.statsd_client = statsd_client
         self.long_code_regex = re.compile(r"^\+1\d{10}$")
-
+        
     @property
     def name(self):
+        return 'sns'
+
+    def get_name(self):
         return 'sns'
 
     def send_sms(self, to, content, reference, sender=None, international=False):

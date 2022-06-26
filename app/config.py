@@ -92,7 +92,7 @@ class Config(object):
     GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts'
 
     INTERNAL_CLIENT_API_KEYS = json.loads(
-        os.environ.get('INTERNAL_CLIENT_API_KEYS', '{}')
+        os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
     )
 
     # encyption secret/salt
@@ -377,8 +377,8 @@ class Config(object):
     FIRETEXT_INBOUND_SMS_AUTH = json.loads(os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
     MMG_INBOUND_SMS_AUTH = json.loads(os.environ.get('MMG_INBOUND_SMS_AUTH', '[]'))
     MMG_INBOUND_SMS_USERNAME = json.loads(os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]'))
-    ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', '')
-    ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', '')
+    ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
+    ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
 
     HIGH_VOLUME_SERVICE = json.loads(os.environ.get('HIGH_VOLUME_SERVICE', '[]'))
 
@@ -424,10 +424,10 @@ class Development(Config):
     TRANSIENT_UPLOADED_LETTERS = 'development-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'development-letters-sanitise'
 
-    INTERNAL_CLIENT_API_KEYS = {
-        Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
-        Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
-    }
+    # INTERNAL_CLIENT_API_KEYS = {
+    #     Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
+    #     Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
+    # }
 
     SECRET_KEY = 'dev-notify-secret-key'
     DANGEROUS_SALT = 'dev-notify-salt'

@@ -18,8 +18,8 @@ def upgrade():
     op.add_column('provider_details', sa.Column('supports_international', sa.Boolean(), nullable=False, server_default=sa.false()))
     op.add_column('provider_details_history', sa.Column('supports_international', sa.Boolean(), nullable=False, server_default=sa.false()))
 
-    op.execute("UPDATE provider_details SET supports_international=True WHERE identifier='mmg'")
-    op.execute("UPDATE provider_details_history SET supports_international=True WHERE identifier='mmg'")
+    op.execute("UPDATE provider_details SET supports_international=True WHERE identifier='sns'")
+    op.execute("UPDATE provider_details_history SET supports_international=True WHERE identifier='sns'")
 
 
 def downgrade():
