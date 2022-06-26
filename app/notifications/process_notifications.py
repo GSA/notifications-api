@@ -105,9 +105,14 @@ def persist_notification(
     document_download_count=None,
     updated_at=None
 ):
+    current_app.logger.info('Presisting notification')
+    
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
+    
+    current_app.logger.info('Presisting notification with id {}'.format(notification_id))
+    
     notification = Notification(
         id=notification_id,
         template_id=template_id,
@@ -130,6 +135,8 @@ def persist_notification(
         document_download_count=document_download_count,
         updated_at=updated_at
     )
+    
+    current_app.logger.info('Presisting notification with to address: {}'.format(notification.to))
 
     if notification_type == SMS_TYPE:
         formatted_recipient = validate_and_format_phone_number(recipient, international=True)
@@ -139,7 +146,9 @@ def persist_notification(
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == EMAIL_TYPE:
+        current_app.logger.info('Presisting notification with type: {}'.format(EMAIL_TYPE))
         notification.normalised_to = format_email_address(notification.to)
+        current_app.logger.info('Presisting notification to formatted email: {}'.format(notification.normalised_to))
     elif notification_type == LETTER_TYPE:
         notification.postage = postage
         notification.international = postage in INTERNATIONAL_POSTAGE_TYPES
@@ -147,17 +156,24 @@ def persist_notification(
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
+        current_app.logger.info('Firing dao_create_notification')
         dao_create_notification(notification)
         if key_type != KEY_TYPE_TEST and current_app.config['REDIS_ENABLED']:
+            current_app.logger.info('Redis enabled, querying cache key for service id: {}'.format(service.id))
             cache_key = redis.daily_limit_cache_key(service.id)
+            current_app.logger.info('Redis daily limit cache key: {}'.format(cache_key))
             if redis_store.get(cache_key) is None:
+                current_app.logger.info('Redis daily limit cache key does not exist')
                 # if cache does not exist set the cache to 1 with an expiry of 24 hours,
                 # The cache should be set by the time we create the notification
                 # but in case it is this will make sure the expiry is set to 24 hours,
                 # where if we let the incr method create the cache it will be set a ttl.
                 redis_store.set(cache_key, 1, ex=86400)
+                current_app.logger.info('Set redis daily limit cache key to 1')
             else:
+                current_app.logger.info('Redis daily limit cache key does exist')
                 redis_store.incr(cache_key)
+                current_app.logger.info('Redis daily limit cache key has been incremented')
         current_app.logger.info(
             "{} {} created at {}".format(notification_type, notification_id, notification_created_at)
         )

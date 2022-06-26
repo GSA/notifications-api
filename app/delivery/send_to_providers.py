@@ -169,9 +169,9 @@ provider_cache = TTLCache(maxsize=8, ttl=10)
 
 @cached(cache=provider_cache)
 def provider_to_use(notification_type, international=True):
-    international = True # TODO: remove or resolve the functionality of this
+    international = False # TODO: remove or resolve the functionality of this
     active_providers = [
-        p for p in get_provider_details_by_notification_type(notification_type, international) if p.active
+        p for p in get_provider_details_by_notification_type(notification_type, international) if p.active and p.identifier not in ['firetext','mmg']
     ]
 
     if not active_providers:

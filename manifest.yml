@@ -22,10 +22,12 @@ applications:
       FLASK_ENV: production
 
       NOTIFY_ENVIRONMENT: live
-      API_HOST_NAME: notifications-api.app.cloud.gov
-      ADMIN_BASE_URL: notifications-admin.app.cloud.gov
+      API_HOST_NAME: https://notifications-api.app.cloud.gov
+      ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
       NOTIFICATION_QUEUE_PREFIX: prototype_10x
       STATSD_HOST: localhost
+
+      INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["dev-notify-secret-key"]}'
       
       # Credentials variables
       DANGEROUS_SALT: ((DANGEROUS_SALT))
