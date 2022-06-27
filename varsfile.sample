@@ -1,5 +1,4 @@
 SECRET_KEY: "dev-notify-secret-key" # pragma: allowlist secret
-SECRET_TEST: "nfn3ofubgrp93aowt44o8tgvbaie7a+asdfacblaibg+afce?asdgarw/" # pragma: allowlist secret
 DANGEROUS_SALT: "dev-notify-salt"
 AWS_ACCESS_KEY_ID: <replace me>
 AWS_SECRET_ACCESS_KEY: <replace me>
