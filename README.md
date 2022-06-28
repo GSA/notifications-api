@@ -47,6 +47,26 @@ notify-pass credentials/firetext
 notify-pass credentials/mmg
 ```
 
+### Secrets Detection
+
+```
+brew install detect-secrets # or pip install detect-secrets
+detect-secrets scan
+#review output of above, make sure none of the baseline entries are sensitive
+detect-secrets scan > .secrets.baseline
+#creates the baseline file
+```
+
+Ideally, you'll install `detect-secrets` so that it's accessible from any environment from which you _might_ commit. You can use `brew install` to make it available globally. You could also install via `pip install` inside a virtual environment, if you're sure you'll _only_ commit from that environment.
+
+If you open .git/hooks/pre-commit you should see a simple bash script that runs the command below, reads the output and aborts before committing if detect-secrets finds a secret. You should be able to test it by staging a file with any high-entropy string like `"bblfwk3u4bt484+afw4avev5ae+afr4?/fa"` (it also has other ways to detect secrets, this is just the most straightforward to test). 
+
+You can permit exceptions by adding an inline comment containing `pragma: allowlist secret`
+
+The command that is actually run by the pre-commit hook is: `git diff --staged --name-only -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline`
+
+You can also run against all tracked files staged or not: `git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline`
+
 ### Postgres
 
 Install [Postgres.app](http://postgresapp.com/).
