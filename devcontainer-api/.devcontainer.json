@@ -13,7 +13,8 @@
 		},
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
-		"python.pythonPath": "/usr/local/bin/python"
+		"python.pythonPath": "/usr/local/bin/python",
+		"python.linting.pylintPath": "/usr/local/share/pip-global/bin/pylint"
 	},
 	"features": {
 		"docker-from-docker": {
@@ -22,7 +23,7 @@
 		}
 	},
 	"extensions": [
-		"ms-python.black-formatter",
+		"ms-python.python",
 		"donjayamanne.python-extension-pack",
 		"ms-azuretools.vscode-docker",
 		"ms-python.vscode-pylance",
@@ -35,7 +36,7 @@
 		"GitHub.copilot",
 		"ms-vsliveshare.vsliveshare",
 		"mtxr.sqltools",
-		"mtxr.sqltools-driver-pg",
+		"mtxr.sqltools-driver-pg"
 	],
 	"postCreateCommand": "notify-dev-entrypoint.sh",
 	"remoteUser": "vscode"
