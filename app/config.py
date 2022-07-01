@@ -471,8 +471,8 @@ class Test(Development):
     TRANSIENT_UPLOADED_LETTERS = 'test-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
-    # this is overriden in jenkins and on cloudfoundry
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    # this is overriden in CI
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
 
     CELERY = {
         **Config.CELERY,
