@@ -441,6 +441,8 @@ class Development(Config):
 
     ANTIVIRUS_ENABLED = os.getenv('ANTIVIRUS_ENABLED') == '1'
 
+    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:6012')
+
     API_HOST_NAME = os.getenv('API_HOST_NAME', 'http://localhost:6011')
     API_RATE_LIMIT_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
