@@ -13,14 +13,17 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_DB: db
-          POSTGRES_USER: postgres
+          POSTGRES_USER: user
           POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_notification_api
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
 
     steps:
     - name: Install container dependencies
@@ -36,7 +39,7 @@ jobs:
     - name: Install application dependencies
       run: make bootstrap
       env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://postgres:password@db:5432/test_notification_api
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
     # - name: Run style checks
     #   run: flake8 .
     # - name: Check imports alphabetized
@@ -44,4 +47,4 @@ jobs:
     - name: Run tests
       run: pytest -n4 --maxfail=10
       env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://postgres:password@db:5432/test_notification_api
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
