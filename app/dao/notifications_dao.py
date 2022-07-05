@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from itertools import groupby
 from operator import attrgetter
 
+import pytest
 from botocore.exceptions import ClientError
 from flask import current_app
 from notifications_utils.international_billing_rates import (
@@ -88,12 +89,13 @@ def country_records_delivery(phone_prefix):
     return dlr and dlr.lower() == 'yes'
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Status updates not yet implemented for AWS")
 def _update_notification_status(notification, status, detailed_status_code=None):
-    status = _decide_permanent_temporary_failure(
-        status=status, notification=notification, detailed_status_code=detailed_status_code
-    )
-    notification.status = status
-    dao_update_notification(notification)
+    # status = _decide_permanent_temporary_failure(
+    #     status=status, notification=notification, detailed_status_code=detailed_status_code
+    # )
+    # notification.status = status
+    # dao_update_notification(notification)
     return notification
 
 

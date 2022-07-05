@@ -3467,6 +3467,7 @@ def test_cancel_notification_for_service_raises_invalid_request_when_letter_is_i
     assert response['result'] == 'error'
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 @pytest.mark.parametrize('notification_status', ['created', 'pending-virus-check'])
 @freeze_time('2018-07-07 16:00:00')
 def test_cancel_notification_for_service_updates_letter_if_letter_is_in_cancellable_state(
@@ -3502,6 +3503,7 @@ def test_cancel_notification_for_service_raises_error_if_its_too_late_to_cancel(
     assert response['result'] == 'error'
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 @pytest.mark.parametrize('created_at', [
     datetime(2018, 7, 6, 22, 30),  # yesterday evening
     datetime(2018, 7, 6, 23, 30),  # this morning early hours (in bst)

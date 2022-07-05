@@ -68,8 +68,8 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: ## Run tests
-	flake8 .
-	isort --check-only ./app ./tests
+	# flake8 .
+	# isort --check-only ./app ./tests
 	pytest -n4 --maxfail=10
 
 .PHONY: freeze-requirements

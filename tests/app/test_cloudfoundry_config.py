@@ -9,12 +9,12 @@ from app.cloudfoundry_config import extract_cloudfoundry_config
 @pytest.fixture
 def vcap_services():
     return {
-        'postgres': [{
+        'aws-rds': [{
             'credentials': {
                 'uri': 'postgres uri'
             }
         }],
-        'redis': [{
+        'aws-elasticache-redis': [{
             'credentials': {
                 'uri': 'redis uri'
             }

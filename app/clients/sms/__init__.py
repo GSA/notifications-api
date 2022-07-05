@@ -18,6 +18,9 @@ class SmsClient(Client):
     Base Sms client for sending smss.
     """
 
+    def init_app(self, *args, **kwargs):
+        raise NotImplementedError("TODO Need to implement.")
+
     def send_sms(self, *args, **kwargs):
         raise NotImplementedError("TODO Need to implement.")
 
