@@ -32,6 +32,11 @@ jobs:
       run: |
         curl -v -L -o cf-cli_amd64.deb 'https://packages.cloudfoundry.org/stable?release=debian64&version=v7&source=github'
         sudo dpkg -i cf-cli_amd64.deb
+    - name: Log into cloud.gov with service account
+      run: |
+        cf login -a api.fr.cloud.gov \
+          -u ${{ secrets.cloudgov_username }} \
+          -p ${{ secrets.cloudgov_password }}
     - name: Deploy to gsa-10x-prototyping api
       run: make cf-deploy
       env:
