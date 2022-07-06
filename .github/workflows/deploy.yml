@@ -21,32 +21,43 @@ jobs:
         sudo apt-get update \
         && sudo apt-get install -y --no-install-recommends \
         libcurl4-openssl-dev
+
     - uses: actions/checkout@v3
+
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
+
     - name: Install application dependencies
       run: make bootstrap
-    - name: Install Cloud Foundry CLI
-      run: |
-        curl -v -L -o cf-cli_amd64.deb 'https://packages.cloudfoundry.org/stable?release=debian64&version=v7&source=github'
-        sudo dpkg -i cf-cli_amd64.deb
-    - name: Log into cloud.gov with service account
-      run: |
-        cf login -a api.fr.cloud.gov \
-          -u ${{ secrets.cloudgov_username }} \
-          -p ${{ secrets.cloudgov_password }}
-    - name: Deploy to gsa-10x-prototyping api
-      run: make cf-deploy
+
+    - name: Deploy to cloud.gov
+      uses: 18f/cg-deploy-action@main
       env:
-        CF_ORG: gsa-10x-prototyping
-        CF_SPACE: 10x-notifications
-        CF_APP: notifications-api
         DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      with:
+        cf_username: ${{ secrets.cloudgov_username }}
+        cf_password: ${{ secrets.cloudgov_password }}
+        cf_org: gsa-10x-prototyping
+        cf_space: 10x-notifications
+        push_arguments: |
+          --var DANGEROUS_SALT=$DANGEROUS_SALT \
+          --var SECRET_KEY=$SECRET_KEY \
+          --var AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+          --var AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+
+      # - name: Set environment variable
+      #   uses: 18f/cg-deploy-action@main
+      #   with:
+      #     cf_username: ${{ secrets.CF_USERNAME }}
+      #     cf_password: ${{ secrets.CF_PASSWORD }}
+      #     cf_org: my-org-name
+      #     cf_space: my-space-name
+      #     full_command: "cf set-env APP_NAME DEPLOYED_SHA $GITHUB_SHA"
 
   # bail:
   #   runs-on: ubuntu-latest
