@@ -50,15 +50,6 @@ jobs:
           --var AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
           --var AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 
-      # - name: Set environment variable
-      #   uses: 18f/cg-deploy-action@main
-      #   with:
-      #     cf_username: ${{ secrets.CF_USERNAME }}
-      #     cf_password: ${{ secrets.CF_PASSWORD }}
-      #     cf_org: my-org-name
-      #     cf_space: my-space-name
-      #     full_command: "cf set-env APP_NAME DEPLOYED_SHA $GITHUB_SHA"
-
   # bail:
   #   runs-on: ubuntu-latest
   #   if: ${{ github.event.workflow_run.conclusion == 'failure' }}
