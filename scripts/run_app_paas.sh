@@ -54,7 +54,6 @@ function on_exit {
       break
     fi
   done
-  cat ${LOGS_DIR}/gunicorn_error.log
   echo "Terminating remaining subprocesses.."
   kill 0
 }
