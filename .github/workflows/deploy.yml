@@ -44,7 +44,8 @@ jobs:
         cf_password: ${{ secrets.cloudgov_password }}
         cf_org: gsa-10x-prototyping
         cf_space: 10x-notifications
-        push_arguments: |
+        full_command: |
+          cf push --strategy rolling \
           --var DANGEROUS_SALT="$DANGEROUS_SALT" \
           --var SECRET_KEY="$SECRET_KEY" \
           --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
