@@ -45,10 +45,10 @@ jobs:
         cf_org: gsa-10x-prototyping
         cf_space: 10x-notifications
         push_arguments: |
-          --var DANGEROUS_SALT=$DANGEROUS_SALT \
-          --var SECRET_KEY=$SECRET_KEY \
-          --var AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-          --var AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+          --var DANGEROUS_SALT="$DANGEROUS_SALT" \
+          --var SECRET_KEY="$SECRET_KEY" \
+          --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+          --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
 
   # bail:
   #   runs-on: ubuntu-latest
