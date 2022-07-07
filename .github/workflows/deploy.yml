@@ -1,10 +1,10 @@
 name: Deploy to prototype environment
 
-on: [push]
-  # workflow_run:
-  #   workflows: [ Run checks ]
-  #   types:
-  #     - completed
+on:
+  workflow_run:
+    workflows: [ Run checks ]
+    types:
+      - completed
     # branches: [ main ]
 
 permissions:
