@@ -103,9 +103,6 @@ class Config(object):
     # DB conection string
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
     
-    # Redis conection string
-    REDIS_URL = os.getenv('REDIS_URL')
-    
     # AWS SMS
     AWS_PINPOINT_REGION = os.getenv("AWS_PINPOINT_REGION", "us-west-2")
     AWS_US_TOLL_FREE_NUMBER = os.getenv("AWS_US_TOLL_FREE_NUMBER", "+18446120782")
@@ -122,7 +119,7 @@ class Config(object):
 
     # URL of redis instance
     REDIS_URL = os.getenv('REDIS_URL')
-    REDIS_ENABLED = True
+    REDIS_ENABLED = 1
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
@@ -548,8 +545,13 @@ class Live(Config):
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = True
     SES_STUB_URL = None
-
     CRONITOR_ENABLED = True
+    
+    # DEBUG = True
+    REDIS_ENABLED = os.getenv('REDIS_ENABLED') == '1'
+
+    NOTIFY_LOG_PATH = os.getenv('NOTIFY_LOG_PATH', 'application.log')
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 
 class CloudFoundryConfig(Config):

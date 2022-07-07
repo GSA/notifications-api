@@ -23,7 +23,7 @@ echo -e "alias lt='exa -al -T -L 2'" >> ~/.zshrc
 # echo -e "source <(kubectl completion zsh)" >> ~/.zshrc
 # echo -e "complete -F __start_kubectl k" >> ~/.zshrc
 
-cd /workspace 
+cd /workspace
 
 # Warm up git index prior to display status in prompt else it will 
 # be quite slow on every invocation of starship.
