@@ -89,6 +89,8 @@ function check_disk_space {
 
 function run {
   while true; do
+    echo "APP_PID ${APP_PID}"
+    echo "AWSLOGS_AGENT_PID ${AWSLOGS_AGENT_PID}"
     kill -0 ${APP_PID} 2&>/dev/null || break
     kill -0 ${AWSLOGS_AGENT_PID} 2&>/dev/null || start_aws_logs_agent
     check_disk_space
