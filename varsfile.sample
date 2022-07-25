@@ -1,16 +1,12 @@
 SECRET_KEY: "dev-notify-secret-key" # pragma: allowlist secret
 DANGEROUS_SALT: "dev-notify-salt"
-AWS_ACCESS_KEY_ID: <replace me>
-AWS_SECRET_ACCESS_KEY: <replace me>
 
 ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
 ADMIN_CLIENT_ID: notify-admin
 ADMIN_CLIENT_SECRET: dev-notify-secret-key
 API_HOST_NAME: https://notifications-api.app.cloud.gov
-AWS_ACCESS_KEY_ID: placeholder
 AWS_PINPOINT_REGION: us-west-2
 AWS_REGION: us-west-2
-AWS_SECRET_ACCESS_KEY: placeholder
 AWS_US_TOLL_FREE_NUMBER: 18446120782
 DANGEROUS_SALT: dev-notify-salt
 DVLA_EMAIL_ADDRESSES: []

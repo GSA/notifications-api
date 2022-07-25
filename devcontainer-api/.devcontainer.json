@@ -23,9 +23,9 @@
 		}
 	},
 	"extensions": [
-		"ms-python.python",
+		// "ms-python.python",
 		"donjayamanne.python-extension-pack",
-		"ms-azuretools.vscode-docker",
+		// "ms-azuretools.vscode-docker",
 		"ms-python.vscode-pylance",
 		"eamodio.gitlens",
 		"wholroyd.jinja",
@@ -33,10 +33,13 @@
 		"visualstudioexptteam.vscodeintellicode",
 		"yzhang.markdown-all-in-one",
 		"ms-ossdata.vscode-postgresql",
-		"GitHub.copilot",
-		"ms-vsliveshare.vsliveshare",
-		"mtxr.sqltools",
-		"mtxr.sqltools-driver-pg"
+		"GitHub.copilot"
+		// "ms-vsliveshare.vsliveshare",
+		// "mtxr.sqltools",
+		// "mtxr.sqltools-driver-pg"
+	],
+	"forwardPorts": [
+		6011
 	],
 	"postCreateCommand": "notify-dev-entrypoint.sh",
 	"remoteUser": "vscode"

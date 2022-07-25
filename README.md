@@ -1,6 +1,7 @@
 # GOV.UK Notify API
 
 Contains:
+
 - the public-facing REST API for GOV.UK Notify, which teams can integrate with using [our clients](https://www.notifications.service.gov.uk/documentation)
 - an internal-only REST API built using Flask to manage services, users, templates, etc (this is what the [admin app](http://github.com/alphagov/notifications-admin) talks to)
 - asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc
@@ -19,33 +20,37 @@ We run python 3.9 both locally and in production.
 
 To run the API you will need appropriate AWS credentials. See the [Wiki](https://github.com/alphagov/notifications-manuals/wiki/aws-accounts#how-to-set-up-local-development) for more details.
 
-### `environment.sh`
+### `.env` file
 
-Creating and edit an environment.sh file.
-
-```
-echo "
-export NOTIFY_ENVIRONMENT='development'
-
-export MMG_API_KEY='MMG_API_KEY'
-export FIRETEXT_API_KEY='FIRETEXT_ACTUAL_KEY'
-export NOTIFICATION_QUEUE_PREFIX='YOUR_OWN_PREFIX'
-
-export FLASK_APP=application.py
-export FLASK_ENV=development
-export WERKZEUG_DEBUG_PIN=off
-"> environment.sh
-```
+Create and edit a .env file, based on sample.env
 
 Things to change:
 
-* Replace `YOUR_OWN_PREFIX` with `local_dev_<first name>`.
-* Run the following in the credentials repo to get the API keys.
+- Replace `YOUR_OWN_PREFIX` with `local_dev_<first name>`
+- Replace `NOTIFY_EMAIL_DOMAIN` with the domain your emails will come from (i.e. the "origination email" in your SES project)
+- Replace `SECRET_KEY` and `DANGEROUS_SALT` with high-entropy secret values
+- Set up AWS SES and SNS as indicated in next section (AWS Setup), fill in missing AWS env vars
 
-```
-notify-pass credentials/firetext
-notify-pass credentials/mmg
-```
+### AWS Setup
+
+**Steps to prepare SES**
+
+1. Go to SES console for \$AWS_REGION and create new origin and destination emails. AWS will send a verification via email which you'll need to complete.
+2. Find and replace instances in the repo of "testsender", "testreceiver" and "dispostable.com", with your origin and destination email addresses, which you verified in step 1 above.
+
+TODO: create env vars for these origin and destination email addresses for the root service, and create new migrations to update postgres seed fixtures
+
+**Steps to prepare SNS**
+
+1. Go to Pinpoints console for \$AWS_PINPOINT_REGION and choose "create new project", then "configure for sms"
+2. Tick the box at the top to enable SMS, choose "transactional" as the default type and save
+3. In the lefthand sidebar, go the "SMS and Voice" (bottom) and choose "Phone Numbers"
+4. Under "Number Settings" choose "Request Phone Number"
+5. Choose Toll-free number, tick SMS, untick Voice, choose "transactional", hit next and then "request"
+6. Go to SNS console for \$AWS_PINPOINT_REGION, look at lefthand sidebar under "Mobile" and go to "Text Messaging (SMS)"
+7. Scroll down to "Sandbox destination phone numbers" and tap "Add phone number" then follow the steps to verify (you'll need to be able to retrieve a code sent to each number)
+
+At this point, you _should_ be able to complete both the email and phone verification steps of the Notify user sign up process! 🎉
 
 ### Secrets Detection
 
@@ -59,7 +64,7 @@ detect-secrets scan > .secrets.baseline
 
 Ideally, you'll install `detect-secrets` so that it's accessible from any environment from which you _might_ commit. You can use `brew install` to make it available globally. You could also install via `pip install` inside a virtual environment, if you're sure you'll _only_ commit from that environment.
 
-If you open .git/hooks/pre-commit you should see a simple bash script that runs the command below, reads the output and aborts before committing if detect-secrets finds a secret. You should be able to test it by staging a file with any high-entropy string like `"bblfwk3u4bt484+afw4avev5ae+afr4?/fa"` (it also has other ways to detect secrets, this is just the most straightforward to test). 
+If you open .git/hooks/pre-commit you should see a simple bash script that runs the command below, reads the output and aborts before committing if detect-secrets finds a secret. You should be able to test it by staging a file with any high-entropy string like `"bblfwk3u4bt484+afw4avev5ae+afr4?/fa"` (it also has other ways to detect secrets, this is just the most straightforward to test).
 
 You can permit exceptions by adding an inline comment containing `pragma: allowlist secret`
 
@@ -67,7 +72,7 @@ The command that is actually run by the pre-commit hook is: `git diff --staged -
 
 You can also run against all tracked files staged or not: `git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline`
 
-### Postgres
+### Postgres [DEPRECATED]
 
 Install [Postgres.app](http://postgresapp.com/).
 
@@ -79,7 +84,7 @@ Currently the API works with PostgreSQL 11. After installation, open the Postgre
 export PATH=${PATH}:/Applications/Postgres.app/Contents/Versions/11/bin/
 ```
 
-### Redis
+### Redis [DEPRECATED]
 
 To switch redis on you'll need to install it locally. On a Mac you can do:
 
@@ -95,36 +100,31 @@ To use redis caching you need to switch it on with an environment variable:
 export REDIS_ENABLED=1
 ```
 
-##  To run the application
+## To run the application
 
 ```
-# install dependencies, etc.
-make bootstrap
+# set up AWS SES/SNS as instructed above
 
-# run the web app
+# create .env file as instructed above
+
+# download vscode and install the Remote-Containers plug-in from Microsoft
+
+# create the external docker network
+docker network create notify-network
+
+# Using the command pallette, search "Remote Containers: Open folder in project" and choose devcontainer-api, then wait for docker to build
+
+# Open a terminal in vscode and run the web server
 make run-flask
 
-# run the background tasks
+# Open another terminal in vscode and run the background tasks
 make run-celery
 
-# run scheduled tasks (optional)
+# Open a third terminal in vscode and run scheduled tasks (optional)
 make run-celery-beat
 ```
 
-We've had problems running Celery locally due to one of its dependencies: pycurl. Due to the complexity of the issue, we also support running Celery via Docker:
-
-```
-# install dependencies, etc.
-make bootstrap-with-docker
-
-# run the background tasks
-make run-celery-with-docker
-
-# run scheduled tasks
-make run-celery-beat-with-docker
-```
-
-##  To test the application
+## To test the application
 
 ```
 # install dependencies, etc.
@@ -140,11 +140,13 @@ care about: `flask db` contains alembic migration commands, and `flask command` 
 example, to purge all dynamically generated functional test data, do the following:
 
 Locally
+
 ```
 flask command purge_functional_test_data -u <functional tests user name prefix>
 ```
 
 On the server
+
 ```
 cf run-task notify-api "flask command purge_functional_test_data -u <functional tests user name prefix>"
 ```
