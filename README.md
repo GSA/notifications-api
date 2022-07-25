@@ -72,7 +72,7 @@ The command that is actually run by the pre-commit hook is: `git diff --staged -
 
 You can also run against all tracked files staged or not: `git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline`
 
-### Postgres
+### Postgres [DEPRECATED]
 
 Install [Postgres.app](http://postgresapp.com/).
 
@@ -84,7 +84,7 @@ Currently the API works with PostgreSQL 11. After installation, open the Postgre
 export PATH=${PATH}:/Applications/Postgres.app/Contents/Versions/11/bin/
 ```
 
-### Redis
+### Redis [DEPRECATED]
 
 To switch redis on you'll need to install it locally. On a Mac you can do:
 
@@ -103,30 +103,25 @@ export REDIS_ENABLED=1
 ## To run the application
 
 ```
-# install dependencies, etc.
-make bootstrap
+# set up AWS SES/SNS as instructed above
 
-# run the web app
+# create .env file as instructed above
+
+# download vscode and install the Remote-Containers plug-in from Microsoft
+
+# create the external docker network
+docker network create notify-network
+
+# Using the command pallette, search "Remote Containers: Open folder in project" and choose devcontainer-api, then wait for docker to build
+
+# Open a terminal in vscode and run the web server
 make run-flask
 
-# run the background tasks
+# Open another terminal in vscode and run the background tasks
 make run-celery
 
-# run scheduled tasks (optional)
+# Open a third terminal in vscode and run scheduled tasks (optional)
 make run-celery-beat
-```
-
-We've had problems running Celery locally due to one of its dependencies: pycurl. Due to the complexity of the issue, we also support running Celery via Docker:
-
-```
-# install dependencies, etc.
-make bootstrap-with-docker
-
-# run the background tasks
-make run-celery-with-docker
-
-# run scheduled tasks
-make run-celery-beat-with-docker
 ```
 
 ## To test the application
