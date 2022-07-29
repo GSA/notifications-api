@@ -88,17 +88,15 @@ class Config(object):
     API_HOST_NAME = os.environ.get('API_HOST_NAME')
 
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
-    ADMIN_CLIENT_ID = 'notify-admin'
+    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID')
     GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts' # TODO: can remove?
-
-    INTERNAL_CLIENT_API_KEYS = json.loads(
-        os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    ) # TODO: handled by varsfile?
-
-    # encyption secret/salt
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
     SECRET_KEY = os.environ.get('SECRET_KEY')
     DANGEROUS_SALT = os.environ.get('DANGEROUS_SALT')
+    
+    INTERNAL_CLIENT_API_KEYS = json.loads(
+        os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"'+ADMIN_CLIENT_ID+'":["'+ADMIN_CLIENT_SECRET+'"]}')
+    ) # TODO: better handled in manifest?
 
     # DB conection string
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
@@ -119,7 +117,7 @@ class Config(object):
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')
-    REDIS_ENABLED = True
+    REDIS_ENABLED = False
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
@@ -409,8 +407,6 @@ class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
 
-    REDIS_ENABLED = True
-
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
     TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
@@ -549,9 +545,6 @@ class Live(Config):
     CHECK_PROXY_HEADER = True
     SES_STUB_URL = None
     CRONITOR_ENABLED = True
-    
-    # DEBUG = True
-    REDIS_ENABLED = True
 
     NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
     REDIS_URL = os.environ.get('REDIS_URL')

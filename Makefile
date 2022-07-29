@@ -35,6 +35,10 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 run-flask: ## Run flask
 	flask run -p 6011 --host=0.0.0.0
 
+.PHONY: purge-celery
+purge-celery: ## cf run-task notifications-api --command="celery -A run_celery.notify_celery purge -f" --name api_purge_celery
+	celery -A run_celery.notify_celery purge -f
+
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
 	celery -A run_celery.notify_celery purge -f
