@@ -1,4 +1,4 @@
-# GOV.UK Notify API
+# US Notify API
 
 Cloned from the brilliant work of the team at [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
 
