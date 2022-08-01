@@ -42,7 +42,7 @@ NOTE: when you change .env in the future, you'll need to rebuild the devcontaine
 
 Things to change:
 
-- If you're not the first to deploy, only replace the aws creds
+- If you're not the first to deploy, only replace the aws creds, get these from team lead
 - Replace `NOTIFICATION_QUEUE_PREFIX` with `local_dev_<your org>_`
 - Replace `NOTIFY_EMAIL_DOMAIN` with the domain your emails will come from (i.e. the "origination email" in your SES project)
 - Replace `SECRET_KEY` and `DANGEROUS_SALT` with high-entropy secret values
