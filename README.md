@@ -1,32 +1,49 @@
 # GOV.UK Notify API
 
+Cloned from the brilliant work of the team at [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
+
 Contains:
 
-- the public-facing REST API for GOV.UK Notify, which teams can integrate with using [our clients](https://www.notifications.service.gov.uk/documentation)
-- an internal-only REST API built using Flask to manage services, users, templates, etc (this is what the [admin app](http://github.com/alphagov/notifications-admin) talks to)
+- the public-facing REST API for US Notify, which teams can integrate with using [our clients](https://www.notifications.service.gov.uk/documentation) [DOCS ARE STILL UK]
+- an internal-only REST API built using Flask to manage services, users, templates, etc (this is what the [admin app](http://github.com/18F/notifications-admin) talks to)
 - asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc
+
+
+## QUICK START
+```
+# If you are the first on your team to deploy, set up AWS SES/SNS as instructed below
+
+# create .env file as instructed below
+
+# download vscode and install the Remote-Containers plug-in from Microsoft
+
+# make sure your docker daemon is running
+
+# create the external docker network
+docker network create notify-network
+
+# Using the command pallette (cmd+p), search "Remote Containers: Open folder in project" 
+# choose devcontainer-api folder, after reload, hit "show logs" in bottom-right
+
+# Check vscode panel > ports, await green dot, open a new terminal and run the web server
+make run-flask
+
+# Open another terminal and run the background tasks
+make run-celery
+```
 
 ## Setting Up
 
-### Python version
-
-We run python 3.9 both locally and in production.
-
-### psycopg2
-
-[Follow these instructions on Mac M1 machines](https://github.com/psycopg/psycopg2/issues/1216#issuecomment-1068150544).
-
-### AWS credentials
-
-To run the API you will need appropriate AWS credentials. See the [Wiki](https://github.com/alphagov/notifications-manuals/wiki/aws-accounts#how-to-set-up-local-development) for more details.
-
 ### `.env` file
 
-Create and edit a .env file, based on sample.env
+Create and edit a .env file, based on sample.env. 
+
+NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
 Things to change:
 
-- Replace `YOUR_OWN_PREFIX` with `local_dev_<first name>`
+- If you're not the first to deploy, only replace the aws creds
+- Replace `NOTIFICATION_QUEUE_PREFIX` with `local_dev_<your org>_`
 - Replace `NOTIFY_EMAIL_DOMAIN` with the domain your emails will come from (i.e. the "origination email" in your SES project)
 - Replace `SECRET_KEY` and `DANGEROUS_SALT` with high-entropy secret values
 - Set up AWS SES and SNS as indicated in next section (AWS Setup), fill in missing AWS env vars
@@ -72,57 +89,13 @@ The command that is actually run by the pre-commit hook is: `git diff --staged -
 
 You can also run against all tracked files staged or not: `git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline`
 
-### Postgres [DEPRECATED]
+### Postgres
 
-Install [Postgres.app](http://postgresapp.com/).
+Local postgres implementation is handled by [docker compose](https://github.com/18F/notifications-api/blob/main/docker-compose.devcontainer.yml)
 
-Currently the API works with PostgreSQL 11. After installation, open the Postgres app, open the sidebar, and update or replace the default server with a compatible version.
+### Redis
 
-**Note:** you may need to add the following directory to your PATH in order to bootstrap the app.
-
-```
-export PATH=${PATH}:/Applications/Postgres.app/Contents/Versions/11/bin/
-```
-
-### Redis [DEPRECATED]
-
-To switch redis on you'll need to install it locally. On a Mac you can do:
-
-```
-# assuming you use Homebrew
-brew install redis
-brew services start redis
-```
-
-To use redis caching you need to switch it on with an environment variable:
-
-```
-export REDIS_ENABLED=1
-```
-
-## To run the application
-
-```
-# set up AWS SES/SNS as instructed above
-
-# create .env file as instructed above
-
-# download vscode and install the Remote-Containers plug-in from Microsoft
-
-# create the external docker network
-docker network create notify-network
-
-# Using the command pallette, search "Remote Containers: Open folder in project" and choose devcontainer-api, then wait for docker to build
-
-# Open a terminal in vscode and run the web server
-make run-flask
-
-# Open another terminal in vscode and run the background tasks
-make run-celery
-
-# Open a third terminal in vscode and run scheduled tasks (optional)
-make run-celery-beat
-```
+Local redis implementation is handled by [docker compose](https://github.com/18F/notifications-api/blob/main/docker-compose.devcontainer.yml)
 
 ## To test the application
 
@@ -133,19 +106,26 @@ make bootstrap
 make test
 ```
 
-## To run one off tasks
+## To run scheduled tasks
+
+```
+# After scheduling some tasks, open a third terminal in your running devcontainer and run celery beat 
+make run-celery-beat
+```
+
+## To run one off tasks (Ignore for Quick Start)
 
 Tasks are run through the `flask` command - run `flask --help` for more information. There are two sections we need to
 care about: `flask db` contains alembic migration commands, and `flask command` contains all of our custom commands. For
 example, to purge all dynamically generated functional test data, do the following:
 
-Locally
+Local (from inside the devcontainer)
 
 ```
 flask command purge_functional_test_data -u <functional tests user name prefix>
 ```
 
-On the server
+Remote
 
 ```
 cf run-task notify-api "flask command purge_functional_test_data -u <functional tests user name prefix>"
@@ -153,7 +133,7 @@ cf run-task notify-api "flask command purge_functional_test_data -u <functional 
 
 All commands and command options have a --help command if you need more information.
 
-## Further documentation
+## Further documentation [DEPRECATED]
 
 - [Writing public APIs](docs/writing-public-apis.md)
 - [Updating dependencies](https://github.com/alphagov/notifications-manuals/wiki/Dependencies)
