@@ -82,44 +82,44 @@ class TaskNames(object):
 
 class Config(object):
     # URL of admin app
-    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL')
+    ADMIN_BASE_URL = os.environ.get('ADMIN_BASE_URL')
 
     # URL of api app (on AWS this is the internal api endpoint)
-    API_HOST_NAME = os.getenv('API_HOST_NAME')
+    API_HOST_NAME = os.environ.get('API_HOST_NAME')
 
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
     ADMIN_CLIENT_ID = 'notify-admin'
-    GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts'
+    GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts' # TODO: can remove?
 
     INTERNAL_CLIENT_API_KEYS = json.loads(
         os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    )
+    ) # TODO: handled by varsfile?
 
     # encyption secret/salt
-    ADMIN_CLIENT_SECRET = os.getenv('ADMIN_CLIENT_SECRET', 'dev-notify-secret-key')
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-notify-secret-key')
-    DANGEROUS_SALT = os.getenv('DANGEROUS_SALT', 'dev-notify-salt ')
+    ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    DANGEROUS_SALT = os.environ.get('DANGEROUS_SALT')
 
     # DB conection string
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     
     # AWS SMS
-    AWS_PINPOINT_REGION = os.getenv("AWS_PINPOINT_REGION", "us-west-2")
-    AWS_US_TOLL_FREE_NUMBER = os.getenv("AWS_US_TOLL_FREE_NUMBER", "+18446120782")
+    AWS_PINPOINT_REGION = os.environ.get("AWS_PINPOINT_REGION")
+    AWS_US_TOLL_FREE_NUMBER = os.environ.get("AWS_US_TOLL_FREE_NUMBER")
 
     # MMG API Key
-    MMG_API_KEY = os.getenv('MMG_API_KEY')
+    MMG_API_KEY = os.environ.get('MMG_API_KEY', 'placeholder')
 
     # Firetext API Key
-    FIRETEXT_API_KEY = os.getenv("FIRETEXT_API_KEY")
-    FIRETEXT_INTERNATIONAL_API_KEY = os.getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
+    FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
+    FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
 
     # Prefix to identify queues in SQS
-    NOTIFICATION_QUEUE_PREFIX = os.getenv('NOTIFICATION_QUEUE_PREFIX')
+    NOTIFICATION_QUEUE_PREFIX = os.environ.get('NOTIFICATION_QUEUE_PREFIX')
 
     # URL of redis instance
-    REDIS_URL = os.getenv('REDIS_URL')
-    REDIS_ENABLED = 1
+    REDIS_URL = os.environ.get('REDIS_URL')
+    REDIS_ENABLED = True
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
@@ -128,7 +128,7 @@ class Config(object):
 
     # Logging
     DEBUG = False
-    NOTIFY_LOG_PATH = os.getenv('NOTIFY_LOG_PATH')
+    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH')
 
     # Cronitor
     CRONITOR_ENABLED = False
@@ -349,12 +349,12 @@ class Config(object):
     }
 
     # we can set celeryd_prefetch_multiplier to be 1 for celery apps which handle only long running tasks
-    if os.getenv('CELERYD_PREFETCH_MULTIPLIER'):
-        CELERY['worker_prefetch_multiplier'] = os.getenv('CELERYD_PREFETCH_MULTIPLIER')
+    if os.environ.get('CELERYD_PREFETCH_MULTIPLIER'):
+        CELERY['worker_prefetch_multiplier'] = os.environ.get('CELERYD_PREFETCH_MULTIPLIER')
 
     FROM_NUMBER = 'development'
 
-    STATSD_HOST = os.getenv('STATSD_HOST')
+    STATSD_HOST = os.environ.get('STATSD_HOST')
     STATSD_PORT = 8125
     STATSD_ENABLED = bool(STATSD_HOST)
 
@@ -409,7 +409,7 @@ class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
 
-    REDIS_ENABLED = os.getenv('REDIS_ENABLED') == '1'
+    REDIS_ENABLED = True
 
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
@@ -436,14 +436,15 @@ class Development(Config):
     NOTIFY_LOG_PATH = 'application.log'
     NOTIFY_EMAIL_DOMAIN = "dispostable.com"
 
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
-    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    REDIS_URL = os.environ.get('REDIS_URL')
 
-    ANTIVIRUS_ENABLED = os.getenv('ANTIVIRUS_ENABLED') == '1'
+    ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
     ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:6012')
 
     API_HOST_NAME = os.getenv('API_HOST_NAME', 'http://localhost:6011')
+
     API_RATE_LIMIT_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
@@ -534,26 +535,29 @@ class Staging(Config):
 class Live(Config):
     NOTIFY_EMAIL_DOMAIN = os.environ.get('NOTIFY_EMAIL_DOMAIN')
     NOTIFY_ENVIRONMENT = 'live'
-    CSV_UPLOAD_BUCKET_NAME = 'live-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'production-contact-list'
-    TEST_LETTERS_BUCKET_NAME = 'production-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'production-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'production-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf'
-    TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters'
-    LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise'
-    FROM_NUMBER = 'GOVUK'
+    # buckets
+    CSV_UPLOAD_BUCKET_NAME = 'notifications-prototype-csv-upload' # created in gsa sandbox
+    CONTACT_LIST_BUCKET_NAME = 'notifications-prototype-contact-list-upload' # created in gsa sandbox
+    # TODO: verify below buckets only used for letters
+    TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
+    DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
+    LETTERS_PDF_BUCKET_NAME = 'production-letters-pdf' # not created in gsa sandbox
+    LETTERS_SCAN_BUCKET_NAME = 'production-letters-scan' # not created in gsa sandbox
+    INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf' # not created in gsa sandbox
+    TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters' # not created in gsa sandbox
+    LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise' # not created in gsa sandbox
+    
+    FROM_NUMBER = 'US Notify'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = True
     SES_STUB_URL = None
     CRONITOR_ENABLED = True
     
     # DEBUG = True
-    REDIS_ENABLED = os.getenv('REDIS_ENABLED') == '1'
+    REDIS_ENABLED = True
 
-    NOTIFY_LOG_PATH = os.getenv('NOTIFY_LOG_PATH', 'application.log')
-    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
+    REDIS_URL = os.environ.get('REDIS_URL')
 
 
 class CloudFoundryConfig(Config):
