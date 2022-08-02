@@ -24,7 +24,7 @@ env:
   ADMIN_BASE_URL: http://localhost:6012
   API_HOST_NAME: http://localhost:6011
   REDIS_URL: redis://localhost:6380
-  REDIS_ENABLED: 1
+  REDIS_ENABLED: False
   SQLALCHEMY_DATABASE_URI: postgresql://postgres:chummy@db:5432/notification_api
   SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
   AWS_REGION: us-west-2

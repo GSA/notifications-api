@@ -119,7 +119,7 @@ class Config(object):
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
@@ -409,7 +409,7 @@ class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
 
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
@@ -554,7 +554,7 @@ class Live(Config):
     CRONITOR_ENABLED = True
     
     # DEBUG = True
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
     NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
     REDIS_URL = os.environ.get('REDIS_URL')
