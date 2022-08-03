@@ -1,0 +1,76 @@
+name: Run checks
+
+on: [push]
+
+permissions:
+  contents: read
+
+env:
+  DEBUG: True
+  ANTIVIRUS_ENABLED: 0
+  NOTIFY_ENVIRONMENT: development
+  NOTIFICATION_QUEUE_PREFIX: local_dev_10x
+  STATSD_HOST: localhost
+  SES_STUB_URL: None
+  NOTIFY_APP_NAME: api
+  NOTIFY_EMAIL_DOMAIN: dispostable.com
+  NOTIFY_LOG_PATH: /workspace/logs/app.log
+  ADMIN_CLIENT_ID: notify-admin
+  ADMIN_CLIENT_SECRET: dev-notify-secret-key
+  GOVUK_ALERTS_CLIENT_ID: govuk-alerts
+  FLASK_APP: application.py
+  FLASK_ENV: development
+  WERKZEUG_DEBUG_PIN: off
+  ADMIN_BASE_URL: http://localhost:6012
+  API_HOST_NAME: http://localhost:6011
+  REDIS_URL: redis://localhost:6380
+  REDIS_ENABLED: False
+  SQLALCHEMY_DATABASE_URI: postgresql://postgres:chummy@db:5432/notification_api
+  SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+  AWS_REGION: us-west-2
+  AWS_PINPOINT_REGION: us-west-2
+  AWS_US_TOLL_FREE_NUMBER: +18446120782
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_notification_api
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+    - name: Install container dependencies
+      run: |
+        sudo apt-get update \
+        && sudo apt-get install -y --no-install-recommends \
+        libcurl4-openssl-dev
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+    - name: Install application dependencies
+      run: make bootstrap
+      env:
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+    # - name: Run style checks
+    #   run: flake8 .
+    # - name: Check imports alphabetized
+    #   run: isort --check-only ./app ./tests
+    - name: Run tests
+      run: pytest -n4 --maxfail=10
+      env:
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api

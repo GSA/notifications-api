@@ -68,7 +68,7 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: ## Run tests
-	flake8 .
+	# flake8 .
 	isort --check-only ./app ./tests
 	pytest -n4 --maxfail=10
 
@@ -133,14 +133,8 @@ cf-deploy: ## Deploys the app to Cloud Foundry
 	# cancel any existing deploys to ensure we can apply manifest (if a deploy is in progress you'll see ScaleDisabledDuringDeployment)
 	cf cancel-deployment ${CF_APP} || true
 
-	# generate manifest (including secrets) and write it to CF_MANIFEST_PATH (in /tmp/)
-	make -s CF_APP=${CF_APP} generate-manifest > ${CF_MANIFEST_PATH}
-
 	# fails after 15 mins if deploy doesn't work
-	# reads manifest from CF_MANIFEST_PATH
-	CF_STARTUP_TIMEOUT=15 cf push ${CF_APP} --strategy=rolling -f ${CF_MANIFEST_PATH}
-	# delete old manifest file
-	rm ${CF_MANIFEST_PATH}
+	CF_STARTUP_TIMEOUT=15 cf push ${CF_APP} --strategy=rolling
 
 .PHONY: cf-deploy-api-db-migration
 cf-deploy-api-db-migration:

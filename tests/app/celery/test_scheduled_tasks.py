@@ -25,7 +25,7 @@ from app.celery.scheduled_tasks import (
     switch_current_sms_provider_on_slow_delivery,
     trigger_link_tests,
 )
-from app.config import Config, QueueNames, TaskNames
+from app.config import QueueNames, TaskNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.models import (
@@ -630,7 +630,7 @@ MockServicesWithHighFailureRate = namedtuple(
         [],
         "1 service(s) have had high permanent-failure rates for sms messages in last "
         "24 hours:\nservice: {}/services/{} failure rate: 0.3,\n".format(
-            Config.ADMIN_BASE_URL, "123"
+            Test.ADMIN_BASE_URL, "123"
         )
     ],
     [
@@ -638,7 +638,7 @@ MockServicesWithHighFailureRate = namedtuple(
         [MockServicesSendingToTVNumbers("123", 300)],
         "1 service(s) have sent over 500 sms messages to tv numbers in last 24 hours:\n"
         "service: {}/services/{} count of sms to tv numbers: 300,\n".format(
-            Config.ADMIN_BASE_URL, "123"
+            Test.ADMIN_BASE_URL, "123"
         )
     ]
 ])

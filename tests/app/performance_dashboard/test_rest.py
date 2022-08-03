@@ -1,5 +1,7 @@
 from datetime import date
 
+import pytest
+
 from tests.app.db import (
     create_ft_notification_status,
     create_process_time,
@@ -7,6 +9,7 @@ from tests.app.db import (
 )
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Needs updating for new providers")
 def test_performance_dashboard(sample_service, admin_request):
     template_sms = create_template(service=sample_service, template_type='sms', template_name='a')
     template_email = create_template(service=sample_service, template_type='email', template_name='b')

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+import pytest
 from flask import current_app
 from notifications_utils.template import SMSMessageTemplate
 
@@ -19,38 +20,39 @@ from app.notifications.notifications_ses_callback import (
 # }
 
 
-# @notify_celery.task(bind=True, name="process-sms-client-response", max_retries=5, default_retry_delay=300)
-# def process_sms_client_response(self, status, provider_reference, client_name, detailed_status_code=None):
-#     # validate reference
-#     try:
-#         uuid.UUID(provider_reference, version=4)
-#     except ValueError as e:
-#         current_app.logger.exception(f'{client_name} callback with invalid reference {provider_reference}')
-#         raise e
+gUpdate with new providers")
+@notify_celery.task(bind=True, name="process-sms-client-response", max_retries=5, default_retry_delay=300)
+def process_sms_client_response(self, status, provider_reference, client_name, detailed_status_code=None):
+    # validate reference
+    try:
+        uuid.UUID(provider_reference, version=4)
+    except ValueError as e:
+        current_app.logger.exception(f'{client_name} callback with invalid reference {provider_reference}')
+        raise e
 
-#     response_parser = sms_response_mapper[client_name]
+    response_parser = sms_response_mapper[client_name]
 
-#     # validate status
-#     try:
-#         notification_status, detailed_status = response_parser(status, detailed_status_code)
-#         current_app.logger.info(
-#             f'{client_name} callback returned status of {notification_status}'
-#             f'({status}): {detailed_status}({detailed_status_code}) for reference: {provider_reference}'
-#         )
-#     except KeyError:
-#         _process_for_status(
-#             notification_status='technical-failure',
-#             client_name=client_name,
-#             provider_reference=provider_reference
-#         )
-#         raise ClientException(f'{client_name} callback failed: status {status} not found.')
+    # validate status
+    try:
+        notification_status, detailed_status = response_parser(status, detailed_status_code)
+        current_app.logger.info(
+            f'{client_name} callback returned status of {notification_status}'
+            f'({status}): {detailed_status}({detailed_status_code}) for reference: {provider_reference}'
+        )
+    except KeyError:
+        _process_for_status(
+            notification_status='technical-failure',
+            client_name=client_name,
+            provider_reference=provider_reference
+        )
+        raise ClientException(f'{client_name} callback failed: status {status} not found.')
 
-#     _process_for_status(
-#         notification_status=notification_status,
-#         client_name=client_name,
-#         provider_reference=provider_reference,
-#         detailed_status_code=detailed_status_code
-#     )
+    _process_for_status(
+        notification_status=notification_status,
+        client_name=client_name,
+        provider_reference=provider_reference,
+        detailed_status_code=detailed_status_code
+    )
 
 
 def _process_for_status(notification_status, client_name, provider_reference, detailed_status_code=None):

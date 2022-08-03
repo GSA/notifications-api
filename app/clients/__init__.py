@@ -1,5 +1,6 @@
 from celery import current_app
 
+
 class ClientException(Exception):
     '''
     Base Exceptions for sending notifications that fail

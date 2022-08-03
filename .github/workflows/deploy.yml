@@ -1,0 +1,58 @@
+name: Deploy to prototype environment
+
+on:
+  workflow_run:
+    workflows: [ Run checks ]
+    types:
+      - completed
+    branches: [ main ] # Redundant, workflow_run events are only triggered on default branch (`main`)
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    - name: Install container dependencies
+      run: |
+        sudo apt-get update \
+        && sudo apt-get install -y --no-install-recommends \
+        libcurl4-openssl-dev
+
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+
+    - name: Install application dependencies
+      run: make bootstrap
+
+    - name: Deploy to cloud.gov
+      uses: 18f/cg-deploy-action@main
+      env:
+        DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      with:
+        cf_username: ${{ secrets.cloudgov_username }}
+        cf_password: ${{ secrets.cloudgov_password }}
+        cf_org: gsa-10x-prototyping
+        cf_space: 10x-notifications
+        full_command: |
+          cf push --strategy rolling \
+          --var DANGEROUS_SALT="$DANGEROUS_SALT" \
+          --var SECRET_KEY="$SECRET_KEY" \
+          --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+          --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+
+  bail:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'Checks failed, not deploying'

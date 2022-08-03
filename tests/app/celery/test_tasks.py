@@ -1246,6 +1246,7 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(mocker, 
     assert persisted_notification.reply_to_text == 'new-sender'
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 @pytest.mark.parametrize('env', ['staging', 'live'])
 def test_save_letter_sets_delivered_letters_as_pdf_permission_in_research_mode_in_staging_live(
         notify_api, mocker, notify_db_session, sample_letter_job, env):
@@ -1283,6 +1284,7 @@ def test_save_letter_sets_delivered_letters_as_pdf_permission_in_research_mode_i
     assert not mock_create_fake_letter_response_file.called
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 @pytest.mark.parametrize('env', ['development', 'preview'])
 def test_save_letter_calls_create_fake_response_for_letters_in_research_mode_on_development_preview(
         notify_api, mocker, notify_db_session, sample_letter_job, env):
@@ -1321,6 +1323,7 @@ def test_save_letter_calls_create_fake_response_for_letters_in_research_mode_on_
     )
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_save_letter_calls_get_pdf_for_templated_letter_task_not_in_research(
         mocker, notify_db_session, sample_letter_job):
     mock_create_letters_pdf = mocker.patch('app.celery.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
@@ -1404,6 +1407,7 @@ def test_get_sms_template_instance(mocker, sample_template, sample_job):
     ]
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_get_letter_template_instance(mocker, sample_job):
     mocker.patch(
         'app.celery.tasks.s3.get_job_and_metadata_from_s3',
@@ -1720,6 +1724,7 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     assert mock_email_saver.call_count == 8  # There are 10 in the file and we've added two already
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_process_incomplete_job_letter(mocker, sample_letter_template):
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
                  return_value=(load_example_csv('multiple_letter'), {'sender_id': None}))
@@ -1767,6 +1772,7 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
     assert mock_process_incomplete_job.mock_calls == [call(str(job1.id)), call(str(job2.id))]
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_process_returned_letters_list(sample_letter_template):
     create_notification(sample_letter_template, reference='ref1')
     create_notification(sample_letter_template, reference='ref2')
@@ -1779,6 +1785,7 @@ def test_process_returned_letters_list(sample_letter_template):
     assert all(n.updated_at for n in notifications)
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_process_returned_letters_list_updates_history_if_notification_is_already_purged(
         sample_letter_template
 ):
@@ -1793,6 +1800,7 @@ def test_process_returned_letters_list_updates_history_if_notification_is_alread
     assert all(n.updated_at for n in notifications)
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_process_returned_letters_populates_returned_letters_table(
         sample_letter_template
 ):
@@ -1917,11 +1925,6 @@ def test_save_api_email_dont_retry_if_notification_already_exists(sample_service
         'app.celery.provider_tasks.deliver_sms.apply_async',
         '07700 900890',
         {'template_type': 'sms'}
-    ), (
-        save_letter,
-        'app.celery.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async',
-        '123 Example Street\nCity of Town\nXM4 5HQ',
-        {'template_type': 'letter', 'subject': 'Hello'}
     ),
 ))
 def test_save_tasks_use_cached_service_and_template(
@@ -1946,7 +1949,7 @@ def test_save_tasks_use_cached_service_and_template(
         wraps=SerialisedTemplate.get_dict,
     )
 
-    for _ in range(3):
+    for _ in range(2):
         task_function(
             service.id,
             uuid.uuid4(),
@@ -1962,9 +1965,9 @@ def test_save_tasks_use_cached_service_and_template(
         call(str(template.id), str(service.id), 1),
     ]
 
-    # But we save 3 notifications and enqueue 3 tasks
-    assert len(Notification.query.all()) == 3
-    assert len(delivery_mock.call_args_list) == 3
+    # But we save 2 notifications and enqueue 2 tasks
+    assert len(Notification.query.all()) == 2
+    assert len(delivery_mock.call_args_list) == 2
 
 
 @freeze_time('2020-03-25 14:30')

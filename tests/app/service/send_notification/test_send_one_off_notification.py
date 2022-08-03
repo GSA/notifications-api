@@ -387,6 +387,7 @@ def test_send_one_off_letter_notification_should_use_template_reply_to_text(samp
     assert notification.reply_to_text == "Edinburgh, ED1 1AA"
 
 
+@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 def test_send_one_off_letter_should_not_make_pdf_in_research_mode(sample_letter_template):
 
     sample_letter_template.service.research_mode = True

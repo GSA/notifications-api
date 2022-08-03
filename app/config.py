@@ -119,7 +119,7 @@ class Config(object):
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
@@ -409,7 +409,7 @@ class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
 
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
@@ -441,7 +441,10 @@ class Development(Config):
 
     ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
-    API_HOST_NAME = os.environ.get('API_HOST_NAME', 'http://localhost:6011')
+    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:6012')
+
+    API_HOST_NAME = os.getenv('API_HOST_NAME', 'http://localhost:6011')
+
     API_RATE_LIMIT_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
@@ -471,8 +474,8 @@ class Test(Development):
     TRANSIENT_UPLOADED_LETTERS = 'test-transient-uploaded-letters'
     LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
-    # this is overriden in jenkins and on cloudfoundry
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    # this is overriden in CI
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
 
     CELERY = {
         **Config.CELERY,
@@ -551,7 +554,7 @@ class Live(Config):
     CRONITOR_ENABLED = True
     
     # DEBUG = True
-    REDIS_ENABLED = True
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
     NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
     REDIS_URL = os.environ.get('REDIS_URL')

@@ -9,7 +9,6 @@ from flask import current_app, url_for
 from sqlalchemy.orm.session import make_transient
 
 from app import db
-from app.clients.sms.firetext import FiretextClient
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.broadcast_service_dao import (
     insert_or_update_service_broadcast_settings,
@@ -609,20 +608,6 @@ def ses_provider():
 @pytest.fixture(scope='function')
 def mmg_provider():
     return ProviderDetails.query.filter_by(identifier='mmg').one()
-
-
-@pytest.fixture(scope='function')
-def mock_firetext_client(mocker):
-    client = FiretextClient()
-    statsd_client = mocker.Mock()
-    current_app = mocker.Mock(config={
-        'FIRETEXT_URL': 'https://example.com/firetext',
-        'FIRETEXT_API_KEY': 'foo',
-        'FIRETEXT_INTERNATIONAL_API_KEY': 'international',
-        'FROM_NUMBER': 'bar'
-    })
-    client.init_app(current_app, statsd_client)
-    return client
 
 
 @pytest.fixture(scope='function')
