@@ -8,30 +8,33 @@ Contains:
 - an internal-only REST API built using Flask to manage services, users, templates, etc (this is what the [admin app](http://github.com/18F/notifications-admin) talks to)
 - asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc
 
+## QUICKSTART
+---
+If you are the first on your team to deploy, set up AWS SES/SNS as instructed in the AWS setup section below.
 
-## QUICK START
-```
-# If you are the first on your team to deploy, set up AWS SES/SNS as instructed below
+Create .env file as described in the .env section below.
 
-# create .env file as instructed below
+Install VS Code
+Open VS Code and install the Remote-Containers plug-in from Microsoft.
 
-# download vscode and install the Remote-Containers plug-in from Microsoft
+Make sure your docker daemon is running (on OS X, this is typically accomplished by opening the Docker Desktop app)
 
-# make sure your docker daemon is running
+Create the external docker network:
 
-# create the external docker network
-docker network create notify-network
+`docker network create notify-network`
 
-# Using the command pallette (cmd+p), search "Remote Containers: Open folder in project" 
-# choose devcontainer-api folder, after reload, hit "show logs" in bottom-right
+Using the command palette (shift+cmd+p), search and select “Remote Containers: Open Folder in Container...”
+When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window (replacing the current one). 
 
-# Check vscode panel > ports, await green dot, open a new terminal and run the web server
-make run-flask
+After this page loads, hit "show logs” in bottom-right. The first time this runs it will need to build the Docker image, which will likely take several minutes.
 
-# Open another terminal and run the background tasks
-make run-celery
-```
+Select View->Open View..., then search/select “ports”. Await a green dot on the port view, then open a new terminal and run the web server:
+`make run-flask`
 
+Open another terminal and run the background tasks:
+`make run-celery`
+
+---
 ## Setting Up
 
 ### `.env` file
