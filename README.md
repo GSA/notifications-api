@@ -31,7 +31,34 @@ make run-flask
 # Open another terminal and run the background tasks
 make run-celery
 ```
+## QUICK START
+---
+If you are the first on your team to deploy, set up AWS SES/SNS as instructed in the AWS setup section below.
 
+Create .env file as described in the .env section below.
+
+Install VS Code
+Open VS Code and install the Remote-Containers plug-in from Microsoft.
+
+Make sure your docker daemon is running (on OS X, this is typically accomplished by opening the Docker Desktop app)
+
+Create the external docker network:
+
+`docker network create notify-network`
+
+Using the command palette (shift+cmd+p), search and select “Remote Containers: Open Folder in Container...”
+When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window (replacing the current one). 
+
+
+After this page loads, hit "show logs” in bottom-right. The first time this runs it will need to build the Docker image, which will likely take several minutes.
+
+Select View->Open View..., then search/select “ports”. Await a green dot on the port view, then open a new terminal and run the web server
+`make run-flask`
+
+Open another terminal and run the background tasks
+`make run-celery`
+
+---
 ## Setting Up
 
 ### `.env` file
