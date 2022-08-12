@@ -97,7 +97,7 @@ flask-migrate==3.1.0
     # via -r requirements.in
 flask-redis==0.4.0
     # via notifications-utils
-flask-sqlalchemy @ git+https://github.com/mitsuhiko/flask-sqlalchemy.git@500e732dd1b975a56ab06a46bd1a20a21e682262
+flask-sqlalchemy @ git+https://github.com/pallets-eco/flask-sqlalchemy.git@aa7a61a5357cf6f5dcc135d98c781192457aa6fa
     # via
     #   -r requirements.in
     #   flask-migrate
@@ -157,13 +157,13 @@ marshmallow==3.15.0
     #   -r requirements.in
     #   flask-marshmallow
     #   marshmallow-sqlalchemy
-marshmallow-sqlalchemy==0.28.0
+marshmallow-sqlalchemy==0.28.1
     # via -r requirements.in
 mistune==0.8.4
     # via notifications-utils
 notifications-python-client==6.3.0
     # via -r requirements.in
-notifications-utils @ git+https://github.com/alphagov/notifications-utils.git@56.0.0
+notifications-utils @ git+https://github.com/alphagov/notifications-utils.git@56.0.2
     # via -r requirements.in
 orderedset==2.0.3
     # via notifications-utils
@@ -171,6 +171,7 @@ packaging==21.3
     # via
     #   bleach
     #   marshmallow
+    #   marshmallow-sqlalchemy
     #   redis
 phonenumbers==8.12.48
     # via notifications-utils
@@ -248,7 +249,7 @@ smartypants==2.0.1
     # via notifications-utils
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-sqlalchemy==1.4.36
+sqlalchemy==1.4.40
     # via
     #   -r requirements.in
     #   alembic
@@ -275,7 +276,7 @@ webcolors==1.12
     # via jsonschema
 webencodings==0.5.1
     # via bleach
-werkzeug==2.0.3
+werkzeug==2.1.1
     # via
     #   -r requirements.in
     #   flask
