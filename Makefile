@@ -77,6 +77,11 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 	pip install --upgrade pip-tools
 	pip-compile requirements.in
 
+.PHONY: audit
+audit:
+	pip install --upgrade pip-audit
+	pip-audit -r requirements.txt -r requirements_for_test.txt -l
+
 .PHONY: clean
 clean:
 	rm -rf node_modules cache target venv .coverage build tests/.cache ${CF_MANIFEST_PATH}
