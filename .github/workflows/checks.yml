@@ -50,16 +50,8 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update \
-        && sudo apt-get install -y --no-install-recommends \
-        libcurl4-openssl-dev
     - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.9"
+    - uses: ./.github/actions/setup-project
     - name: Install application dependencies
       run: make bootstrap
       env:
@@ -76,16 +68,8 @@ jobs:
   pip-audit:
     runs-on: ubuntu-latest
     steps:
-      - name: Install container dependencies
-        run: |
-          sudo apt-get update \
-          && sudo apt-get install -y --no-install-recommends \
-          libcurl4-openssl-dev
       - uses: actions/checkout@v3
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.9"
+      - uses: ./.github/actions/setup-project
       - uses: trailofbits/gh-action-pip-audit@v1.0.0
         with:
           inputs: requirements.txt requirements_for_test.txt
