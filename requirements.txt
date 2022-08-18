@@ -69,6 +69,8 @@ click-repl==0.2.0
     # via celery
 colorama==0.4.4
     # via awscli
+defusedxml==0.7.1
+    # via -r requirements.in
 deprecated==1.2.13
     # via redis
 dnspython==2.2.1
