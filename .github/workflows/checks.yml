@@ -84,3 +84,40 @@ jobs:
         run: pip install bandit
       - name: Run scan
         run: bandit -r app/ --confidence-level medium
+
+  dynamic-scan:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_notification_api
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-project
+      - name: Install application dependencies
+        run: make bootstrap
+        env:
+          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+      - name: Run server
+        run: make run-flask &
+        env:
+          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+      - name: Run OWASP Baseline Scan
+        uses: zaproxy/action-baseline@v0.6.1
+        with:
+          docker_name: 'owasp/zap2docker-weekly'
+          target: 'http://localhost:6011/'
+          fail_action: true
+          rules_file_name: 'zap.conf'
+          cmd_options: '-I'
