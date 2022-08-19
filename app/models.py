@@ -1647,7 +1647,7 @@ class Notification(db.Model):
         """
         # this should only ever be called for letter notifications - it makes no sense otherwise and I'd rather not
         # get the two code flows mixed up at all
-        assert self.notification_type == LETTER_TYPE
+        assert self.notification_type == LETTER_TYPE # nosec B101 - current calling code already validates the correct type
 
         if self.status in [NOTIFICATION_CREATED, NOTIFICATION_SENDING]:
             return NOTIFICATION_STATUS_LETTER_ACCEPTED

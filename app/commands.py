@@ -544,7 +544,8 @@ def populate_organisation_agreement_details_from_file(file_name):
 
             current_app.logger.info(f"Updating {org.name}")
 
-            assert org.agreement_signed
+            if not org.agreement_signed:
+                raise RuntimeError('Agreement was not signed')
 
             org.agreement_signed_version = float(row[1])
             org.agreement_signed_on_behalf_of_name = row[2].strip()
