@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import string
 import time
 import uuid
@@ -353,7 +353,7 @@ def create_uuid():
 
 
 def create_random_identifier():
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+    return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
 
 
 def setup_sqlalchemy_events(app):

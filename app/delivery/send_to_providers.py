@@ -188,7 +188,7 @@ def provider_to_use(notification_type, international=True):
         chosen_provider = active_providers[0]
     else:
         weights = [p.priority for p in active_providers]
-        chosen_provider = random.choices(active_providers, weights=weights)[0]
+        chosen_provider = random.choices(active_providers, weights=weights)[0] # nosec B311 - this is not security/cryptography related
 
     return notification_provider_clients.get_client_by_name_and_type(chosen_provider.identifier, notification_type)
 
