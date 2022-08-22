@@ -18,6 +18,7 @@ Install VS Code
 Open VS Code and install the Remote-Containers plug-in from Microsoft.
 
 Make sure your docker daemon is running (on OS X, this is typically accomplished by opening the Docker Desktop app)
+Also make sure there is NOT a Postgres daemon running on port 5432.
 
 Create the external docker network:
 
@@ -33,6 +34,8 @@ Select View->Open View..., then search/select “ports”. Await a green dot on 
 
 Open another terminal and run the background tasks:
 `make run-celery`
+
+Confirm that everything is working by hitting localhost:6011 and it responds with a 200 OK.
 
 ---
 ## Setting Up
