@@ -1,6 +1,10 @@
-name: Run checks
+name: Run daily scans
 
-on: [push]
+on:
+  schedule:
+    # cron format: 'minute hour dayofmonth month dayofweek'
+    # this will run at noon UTC every day (7am EST / 8am EDT)
+    - cron: '0 12 * * *'
 
 permissions:
   contents: read
@@ -30,41 +34,6 @@ env:
   AWS_US_TOLL_FREE_NUMBER: +18446120782
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: test_notification_api
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: ./.github/actions/setup-project
-    - name: Install application dependencies
-      run: make bootstrap
-      env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-    # - name: Run style checks
-    #   run: flake8 .
-    - name: Check imports alphabetized
-      run: isort --check-only ./app ./tests
-    - name: Run tests
-      run: pytest -n4 --maxfail=10
-      env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-
   pip-audit:
     runs-on: ubuntu-latest
     steps:
