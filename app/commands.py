@@ -151,8 +151,8 @@ def backfill_notification_statuses():
     `Notification._status_enum`
     """
     LIMIT = 250000
-    subq = "SELECT id FROM notification_history WHERE notification_status is NULL LIMIT {}".format(LIMIT)
-    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq)
+    subq = "SELECT id FROM notification_history WHERE notification_status is NULL LIMIT {}".format(LIMIT) # nosec B608 no user-controlled input
+    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq) # nosec B608 no user-controlled input
     result = db.session.execute(subq).fetchall()
 
     while len(result) > 0:
@@ -169,7 +169,7 @@ def update_notification_international_flag():
     """
     # 250,000 rows takes 30 seconds to update.
     subq = "select id from notifications where international is null limit 250000"
-    update = "update notifications set international = False where id in ({})".format(subq)
+    update = "update notifications set international = False where id in ({})".format(subq) # nosec B608 no user-controlled input
     result = db.session.execute(subq).fetchall()
 
     while len(result) > 0:
@@ -180,7 +180,7 @@ def update_notification_international_flag():
 
     # Now update notification_history
     subq_history = "select id from notification_history where international is null limit 250000"
-    update_history = "update notification_history set international = False where id in ({})".format(subq_history)
+    update_history = "update notification_history set international = False where id in ({})".format(subq_history) # nosec B608 no user-controlled input
     result_history = db.session.execute(subq_history).fetchall()
     while len(result_history) > 0:
         db.session.execute(update_history)
@@ -201,8 +201,8 @@ def fix_notification_statuses_not_in_sync():
     """
     MAX = 10000
 
-    subq = "SELECT id FROM notifications WHERE cast (status as text) != notification_status LIMIT {}".format(MAX)
-    update = "UPDATE notifications SET notification_status = status WHERE id in ({})".format(subq)
+    subq = "SELECT id FROM notifications WHERE cast (status as text) != notification_status LIMIT {}".format(MAX) # nosec B608 no user-controlled input
+    update = "UPDATE notifications SET notification_status = status WHERE id in ({})".format(subq) # nosec B608 no user-controlled input
     result = db.session.execute(subq).fetchall()
 
     while len(result) > 0:
@@ -211,9 +211,8 @@ def fix_notification_statuses_not_in_sync():
         db.session.commit()
         result = db.session.execute(subq).fetchall()
 
-    subq_hist = "SELECT id FROM notification_history WHERE cast (status as text) != notification_status LIMIT {}" \
-        .format(MAX)
-    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq_hist)
+    subq_hist = "SELECT id FROM notification_history WHERE cast (status as text) != notification_status LIMIT {}".format(MAX)  # nosec B608
+    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq_hist) # nosec B608 no user-controlled input
     result = db.session.execute(subq_hist).fetchall()
 
     while len(result) > 0:
@@ -545,7 +544,8 @@ def populate_organisation_agreement_details_from_file(file_name):
 
             current_app.logger.info(f"Updating {org.name}")
 
-            assert org.agreement_signed
+            if not org.agreement_signed:
+                raise RuntimeError('Agreement was not signed')
 
             org.agreement_signed_version = float(row[1])
             org.agreement_signed_on_behalf_of_name = row[2].strip()

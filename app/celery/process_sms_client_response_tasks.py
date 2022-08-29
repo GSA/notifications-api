@@ -14,13 +14,13 @@ from app.notifications.notifications_ses_callback import (
     check_and_queue_callback_task,
 )
 
-# sms_response_mapper = {
-#     'MMG': get_mmg_responses,
-#     'Firetext': get_firetext_responses,
-# }
+sms_response_mapper = {
+    # 'MMG': get_mmg_responses,
+    # 'Firetext': get_firetext_responses,
+}
 
 
-gUpdate with new providers")
+# gUpdate with new providers")
 @notify_celery.task(bind=True, name="process-sms-client-response", max_retries=5, default_retry_delay=300)
 def process_sms_client_response(self, status, provider_reference, client_name, detailed_status_code=None):
     # validate reference

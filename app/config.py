@@ -102,7 +102,7 @@ class Config(object):
 
     # DB conection string
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    
+
     # AWS SMS
     AWS_PINPOINT_REGION = os.environ.get("AWS_PINPOINT_REGION")
     AWS_US_TOLL_FREE_NUMBER = os.environ.get("AWS_US_TOLL_FREE_NUMBER")
@@ -157,7 +157,7 @@ class Config(object):
     ONE_OFF_MESSAGE_FILENAME = 'Report'
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
-    
+
     SES_STUB_URL = None # TODO: set to a URL in env and remove this to use a stubbed SES service
 
     # be careful increasing this size without being sure that we won't see slowness in pysftp
@@ -179,7 +179,7 @@ class Config(object):
     SMS_CODE_TEMPLATE_ID = '36fb0730-6259-4da1-8a80-c8de22ad4246'
     EMAIL_2FA_TEMPLATE_ID = '299726d2-dba6-42b8-8209-30e1d66ea164'
     NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID = 'ece42649-22a8-4d06-b87f-d52d5d3f0a27'
-    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201'
+    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201' # nosec B105 - this is not a password
     ALREADY_REGISTERED_EMAIL_TEMPLATE_ID = '0880fbb1-a0c6-46f0-9a8e-36c986381ceb'
     CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID = 'eb4d9930-87ab-4aef-9bce-786762687884'
     SERVICE_NOW_LIVE_TEMPLATE_ID = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
@@ -426,7 +426,7 @@ class Development(Config):
     #     Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
     # }
 
-    SECRET_KEY = 'dev-notify-secret-key'
+    SECRET_KEY = 'dev-notify-secret-key' # nosec B105 - this is only used in development
     DANGEROUS_SALT = 'dev-notify-salt'
 
     MMG_INBOUND_SMS_AUTH = ['testkey']
@@ -546,13 +546,13 @@ class Live(Config):
     INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf' # not created in gsa sandbox
     TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters' # not created in gsa sandbox
     LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise' # not created in gsa sandbox
-    
+
     FROM_NUMBER = 'US Notify'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = True
     SES_STUB_URL = None
     CRONITOR_ENABLED = True
-    
+
     # DEBUG = True
     REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 

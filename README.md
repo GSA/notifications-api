@@ -24,7 +24,7 @@ Create the external docker network:
 `docker network create notify-network`
 
 Using the command palette (shift+cmd+p), search and select “Remote Containers: Open Folder in Container...”
-When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window (replacing the current one). 
+When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window (replacing the current one).
 
 After this page loads, hit "show logs” in bottom-right. The first time this runs it will need to build the Docker image, which will likely take several minutes.
 
@@ -39,7 +39,7 @@ Open another terminal and run the background tasks:
 
 ### `.env` file
 
-Create and edit a .env file, based on sample.env. 
+Create and edit a .env file, based on sample.env.
 
 NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
@@ -109,10 +109,19 @@ make bootstrap
 make test
 ```
 
+## To run a local OWASP scan
+
+1. Run `make run-flask` from within the dev container.
+2. On your host machine run:
+
+```
+docker run -v $(pwd):/zap/wrk/:rw --network="notify-network" -t owasp/zap2docker-weekly zap-api-scan.py -t http://dev:6011/_status -f openapi -c zap.conf
+```
+
 ## To run scheduled tasks
 
 ```
-# After scheduling some tasks, open a third terminal in your running devcontainer and run celery beat 
+# After scheduling some tasks, open a third terminal in your running devcontainer and run celery beat
 make run-celery-beat
 ```
 

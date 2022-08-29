@@ -108,7 +108,7 @@ def __format_message(e):
             error_path = e.path.popleft()
             # no need to catch IndexError exception explicity as
             # error_path is None if e.path has no items
-        except Exception:
+        except IndexError:
             pass
         return error_path
 

@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import string
 import time
 import uuid
@@ -41,12 +41,13 @@ class SQLAlchemy(_SQLAlchemy):
     """We need to subclass SQLAlchemy in order to override create_engine options"""
 
     def apply_driver_hacks(self, app, info, options):
-        super().apply_driver_hacks(app, info, options)
+        sa_url, options = super().apply_driver_hacks(app, info, options)
         if 'connect_args' not in options:
             options['connect_args'] = {}
         options['connect_args']["options"] = "-c statement_timeout={}".format(
             int(app.config['SQLALCHEMY_STATEMENT_TIMEOUT']) * 1000
         )
+        return (sa_url, options)
 
 
 db = SQLAlchemy()
@@ -352,7 +353,7 @@ def create_uuid():
 
 
 def create_random_identifier():
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+    return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
 
 
 def setup_sqlalchemy_events(app):
