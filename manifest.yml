@@ -2,7 +2,7 @@
 
 applications:
   - name: notifications-api
-    buildpack: python_buildpack
+    buildpack: https://github.com/cloudfoundry/python-buildpack.git#v1.7.58
     instances: 1
     memory: 1G
     disk_quota: 1G
@@ -28,7 +28,7 @@ applications:
       STATSD_HOST: localhost
 
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["dev-notify-secret-key"]}'
-      
+
       # Credentials variables
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
