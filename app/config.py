@@ -434,7 +434,7 @@ class Development(Config):
 
     NOTIFY_ENVIRONMENT = 'development'
     NOTIFY_LOG_PATH = 'application.log'
-    NOTIFY_EMAIL_DOMAIN = "dispostable.com"
+    NOTIFY_EMAIL_DOMAIN = "notify.sandbox.10x.gsa.gov"
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
     REDIS_URL = os.environ.get('REDIS_URL')

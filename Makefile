@@ -37,7 +37,7 @@ run-flask: ## Run flask
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
-	celery -A run_celery.notify_celery purge -f
+	# celery -A run_celery.notify_celery purge -f
 	celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
