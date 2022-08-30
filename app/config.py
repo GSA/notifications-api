@@ -117,7 +117,7 @@ class Config(object):
     # Prefix to identify queues in SQS
     NOTIFICATION_QUEUE_PREFIX = os.environ.get('NOTIFICATION_QUEUE_PREFIX')
     
-    # Use production sending domain unless overwritten by environment
+    # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
 
     # URL of redis instance
