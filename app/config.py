@@ -116,6 +116,9 @@ class Config(object):
 
     # Prefix to identify queues in SQS
     NOTIFICATION_QUEUE_PREFIX = os.environ.get('NOTIFICATION_QUEUE_PREFIX')
+    
+    # Use notify.sandbox.10x sending domain unless overwritten by environment
+    NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')
@@ -434,7 +437,8 @@ class Development(Config):
 
     NOTIFY_ENVIRONMENT = 'development'
     NOTIFY_LOG_PATH = 'application.log'
-    NOTIFY_EMAIL_DOMAIN = "dispostable.com"
+    
+    NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
     REDIS_URL = os.environ.get('REDIS_URL')
@@ -533,7 +537,6 @@ class Staging(Config):
 
 
 class Live(Config):
-    NOTIFY_EMAIL_DOMAIN = os.environ.get('NOTIFY_EMAIL_DOMAIN')
     NOTIFY_ENVIRONMENT = 'live'
     # buckets
     CSV_UPLOAD_BUCKET_NAME = 'notifications-prototype-csv-upload' # created in gsa sandbox
