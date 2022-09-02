@@ -35,8 +35,9 @@ jobs:
     - name: Deploy to cloud.gov
       uses: 18f/cg-deploy-action@main
       env:
-        DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        DANGEROUS_SALT: ${{ secrets.PROD_DANGEROUS_SALT }}
+        SECRET_KEY: ${{ secrets.PROD_SECRET_KEY }}
+        ADMIN_CLIENT_SECRET: ${{ secrets.PROD_ADMIN_CLIENT_SECRET }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       with:
@@ -44,11 +45,11 @@ jobs:
         cf_password: ${{ secrets.cloudgov_password }}
         cf_org: gsa-10x-prototyping
         cf_space: 10x-notifications
-        full_command: |
-          cf push --strategy rolling \
-          --var DANGEROUS_SALT="$DANGEROUS_SALT" \
-          --var SECRET_KEY="$SECRET_KEY" \
-          --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+        push_arguments: >-
+          --var DANGEROUS_SALT="$DANGEROUS_SALT"
+          --var SECRET_KEY="$SECRET_KEY"
+          --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
+          --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
           --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
 
   bail:
