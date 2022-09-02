@@ -13,11 +13,6 @@ CF_SPACE ?= ${DEPLOY_ENV}
 CF_HOME ?= ${HOME}
 $(eval export CF_HOME)
 
-CF_MANIFEST_PATH ?= /tmp/manifest.yml
-
-
-NOTIFY_CREDENTIALS ?= ~/.notify-credentials
-
 
 ## DEVELOPMENT
 
@@ -119,19 +114,6 @@ cf-login: ## Log in to Cloud Foundry
 	$(if ${CF_SPACE},,$(error Must specify CF_SPACE))
 	@echo "Logging in to Cloud Foundry on ${CF_API}"
 	@cf login -a "${CF_API}" -u ${CF_USERNAME} -p "${CF_PASSWORD}" -o "${CF_ORG}" -s "${CF_SPACE}"
-
-.PHONY: generate-manifest
-generate-manifest:
-	$(if ${CF_APP},,$(error Must specify CF_APP))
-	$(if ${CF_SPACE},,$(error Must specify CF_SPACE))
-	$(if $(shell which gpg2), $(eval export GPG=gpg2), $(eval export GPG=gpg))
-	$(if ${GPG_PASSPHRASE_TXT}, $(eval export DECRYPT_CMD=echo -n $$$${GPG_PASSPHRASE_TXT} | ${GPG} --quiet --batch --passphrase-fd 0 --pinentry-mode loopback -d), $(eval export DECRYPT_CMD=${GPG} --quiet --batch -d))
-
-	@jinja2 --strict manifest.yml.j2 \
-	    -D environment=${CF_SPACE} \
-	    -D CF_APP=${CF_APP} \
-	    --format=yaml \
-	    <(${DECRYPT_CMD} ${NOTIFY_CREDENTIALS}/credentials/${CF_SPACE}/paas/environment-variables.gpg) 2>&1
 
 .PHONY: cf-deploy
 cf-deploy: ## Deploys the app to Cloud Foundry

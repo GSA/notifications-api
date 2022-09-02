@@ -27,9 +27,10 @@ applications:
       NOTIFICATION_QUEUE_PREFIX: prototype_10x
       STATSD_HOST: localhost
 
-      INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["dev-notify-secret-key"]}'
+      INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
 
       # Credentials variables
+      ADMIN_CLIENT_SECRET: ((ADMIN_CLIENT_SECRET))
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
       AWS_REGION: us-west-2
@@ -37,5 +38,3 @@ applications:
       AWS_US_TOLL_FREE_NUMBER: +18446120782
 
       DVLA_EMAIL_ADDRESSES: []
-
-      NOTIFY_EMAIL_DOMAIN: dispostable.com
