@@ -13,8 +13,11 @@
 		},
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
-		"python.pythonPath": "/usr/local/bin/python",
-		"python.linting.pylintPath": "/usr/local/share/pip-global/bin/pylint"
+		"python.defaultInterpreterPath": "/usr/bin/python3",
+		"python.linting.pylintPath": "/usr/local/share/pip-global/bin/pylint",
+		"python.analysis.extraPaths": [
+			"/home/vscode/.local/lib/python3.9/site-packages"
+		]
 	},
 	"features": {
 		"docker-from-docker": {
