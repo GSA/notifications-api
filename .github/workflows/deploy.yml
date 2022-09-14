@@ -70,6 +70,7 @@ jobs:
         cf_org: gsa-10x-prototyping
         cf_space: 10x-notifications
         push_arguments: >-
+          --var env=staging
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
           --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
