@@ -139,6 +139,7 @@ def register_blueprint(application):
     )
     from app.billing.rest import billing_blueprint
     from app.broadcast_message.rest import broadcast_message_blueprint
+    from app.celery.process_ses_receipts_tasks import ses_callback_blueprint
     from app.complaint.complaint_rest import complaint_blueprint
     from app.email_branding.rest import email_branding_blueprint
     from app.events.rest import events as events_blueprint
@@ -196,6 +197,10 @@ def register_blueprint(application):
 
     status_blueprint.before_request(requires_no_auth)
     application.register_blueprint(status_blueprint)
+    
+    # delivery receipts
+    ses_callback_blueprint.before_request(requires_no_auth)
+    application.register_blueprint(ses_callback_blueprint)
 
     # delivery receipts
     # TODO: make sure research mode can still trigger sms callbacks, then re-enable this

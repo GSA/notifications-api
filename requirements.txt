@@ -10,6 +10,8 @@ amqp==5.1.1
     # via kombu
 arrow==1.2.2
     # via isoduration
+asn1crypto==1.5.1
+    # via oscrypto
 async-timeout==4.0.2
     # via redis
 attrs==21.4.0
@@ -169,6 +171,8 @@ notifications-utils @ git+https://github.com/GSA/notifications-utils.git
     # via -r requirements.in
 orderedset==2.0.3
     # via notifications-utils
+oscrypto==1.3.0
+    # via validatesns
 packaging==21.3
     # via
     #   bleach
@@ -247,6 +251,7 @@ six==1.16.0
     #   flask-marshmallow
     #   python-dateutil
     #   rfc3339-validator
+    #   validatesns
 smartypants==2.0.1
     # via notifications-utils
 soupsieve==2.3.2.post1
@@ -267,6 +272,8 @@ urllib3==1.26.9
     # via
     #   botocore
     #   requests
+validatesns==0.1.1
+    # via -r requirements.in
 vine==5.0.0
     # via
     #   amqp
