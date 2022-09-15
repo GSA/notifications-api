@@ -146,16 +146,6 @@ def create_sample_notification(
         data["job_row_number"] = job_row_number
     notification = Notification(**data)
     dao_create_notification(notification)
-    # if scheduled_for:
-    #     scheduled_notification = ScheduledNotification(
-    #         id=uuid.uuid4(),
-    #         notification_id=notification.id,
-    #         scheduled_for=datetime.strptime(scheduled_for, "%Y-%m-%d %H:%M"),
-    #     )
-    #     if status != "created":
-    #         scheduled_notification.pending = False
-    #     db.session.add(scheduled_notification)
-    #     db.session.commit()
 
     return notification
 

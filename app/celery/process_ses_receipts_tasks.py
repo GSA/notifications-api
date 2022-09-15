@@ -97,13 +97,15 @@ def sns_callback_handler():
 
 
 @notify_celery.task(bind=True, name="process-ses-result", max_retries=5, default_retry_delay=300)
-@statsd(namespace="tasks")
 def process_ses_results(self, response):
     try:
         ses_message = json.loads(response["Message"])
         notification_type = ses_message["notificationType"]
-        print(f"ses_message is: {ses_message}")
-        if notification_type == "Complaint":
+        bounce_message = None
+
+        if notification_type == 'Bounce':
+            bounce_message = _determine_notification_bounce_type(ses_message)
+        elif notification_type == 'Complaint':
             _check_and_queue_complaint_callback_task(*handle_complaint(ses_message))
             return True
 
@@ -111,20 +113,25 @@ def process_ses_results(self, response):
 
         notification_status = aws_response_dict["notification_status"]
         reference = ses_message["mail"]["messageId"]
-        
-        print(f"notification_status is: {notification_status}")
 
         try:
             notification = notifications_dao.dao_get_notification_by_reference(reference)
         except NoResultFound:
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(tzinfo=None)
             if datetime.utcnow() - message_time < timedelta(minutes=5):
+                current_app.logger.info(
+                    f"notification not found for reference: {reference} (while attempting update to {notification_status}). "
+                    f"Callback may have arrived before notification was persisted to the DB. Adding task to retry queue"
+                )
                 self.retry(queue=QueueNames.RETRY)
             else:
                 current_app.logger.warning(
-                    "notification not found for reference: {} (update to {})".format(reference, notification_status)
+                    "notification not found for reference: {} (while attempting update to {})".format(reference, notification_status)
                 )
             return
+
+        if bounce_message:
+            current_app.logger.info(f"SES bounce for notification ID {notification.id}: {bounce_message}")
 
         if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
             notifications_dao._duplicate_update_warning(
@@ -166,71 +173,3 @@ def process_ses_results(self, response):
         current_app.logger.exception("Error processing SES results: {}".format(type(e)))
         self.retry(queue=QueueNames.RETRY)
 
-# def process_ses_results(self, response):
-#     try:
-#         ses_message = json.loads(response['Message'])
-#         print(f"ses_message is {ses_message}")
-#         notification_type = ses_message['notificationType']
-#         print(f"notification_type is {notification_type}")
-#         if notification_type == 'Bounce':
-#             notification_type = _determine_notification_bounce_type(ses_message)
-#         elif notification_type == 'Complaint':
-#             _check_and_queue_complaint_callback_task(*handle_complaint(ses_message))
-#             return True
-#         aws_response_dict = get_aws_responses(notification_type)
-#         print(f"aws_response_dict is {aws_response_dict}")
-#         notification_status = aws_response_dict['notification_status']
-#         print(f"notification_status is {notification_status}")
-#         reference = ses_message['mail']['messageId']
-#         try:
-#             notification = notifications_dao.dao_get_notification_by_reference(reference)
-#             print(f"notification is {notification}")
-#         except NoResultFound:
-#             print(f"notification not found")
-#             message_time = iso8601.parse_date(ses_message['mail']['timestamp']).replace(tzinfo=None)
-#             if datetime.utcnow() - message_time < timedelta(minutes=5):
-#                 self.retry(queue=QueueNames.RETRY)
-#             else:
-#                 current_app.logger.warning(
-#                     "notification not found for reference: {} (update to {})".format(reference, notification_status)
-#                 )
-#             return
-#         print(f"notification.status is {notification.status}")
-#         if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
-#             print(f"notification.status is not in [{NOTIFICATION_SENDING}, {NOTIFICATION_PENDING}]")
-#             notifications_dao._duplicate_update_warning(notification, notification_status)
-#             return
-#         notifications_dao._update_notification_status(
-#             notification=notification, 
-#             status=notification_status, 
-#             provider_response=None
-#         )
-#         if not aws_response_dict['success']:
-#             current_app.logger.info(
-#                 "SES delivery failed: notification id {} and reference {} has error found. Status {}".format(
-#                     notification.id, reference, aws_response_dict['message']
-#                 )
-#             )
-#             print(
-#                 "SES delivery failed: notification id {} and reference {} has error found. Status {}".format(
-#                     notification.id, reference, aws_response_dict['message']
-#                 )
-#             )
-#         else:
-#             current_app.logger.info('SES callback return status of {} for notification: {}'.format(
-#                 notification_status, notification.id
-#             ))
-#             print('SES callback return status of {} for notification: {}'.format(
-#                 notification_status, notification.id
-#             ))
-#         statsd_client.incr('callback.ses.{}'.format(notification_status))
-#         if notification.sent_at:
-#             statsd_client.timing_with_dates('callback.ses.elapsed-time', datetime.utcnow(), notification.sent_at)
-#         check_and_queue_callback_task(notification)
-#         return True
-#     except Retry:
-#         raise
-#     except Exception as e:
-#         current_app.logger.exception('Error processing SES results: {}'.format(type(e)))
-#         self.retry(queue=QueueNames.RETRY)
-        

@@ -592,18 +592,6 @@ def dao_get_notification_by_reference(reference):
     ).one()
 
 
-def dao_get_notification_or_history_by_reference(reference):
-    try:
-        # This try except is necessary because in test keys and research mode does not create notification history.
-        # Otherwise we could just search for the NotificationHistory object
-        return Notification.query.filter(
-            Notification.reference == reference
-        ).one()
-    except NoResultFound:
-        return NotificationHistory.query.filter(
-            NotificationHistory.reference == reference
-        ).one()
-
 def dao_get_notification_history_by_reference(reference):
     try:
         # This try except is necessary because in test keys and research mode does not create notification history.
