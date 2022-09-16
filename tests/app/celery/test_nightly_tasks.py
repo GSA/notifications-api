@@ -319,6 +319,7 @@ def test_get_letter_notifications_still_sending_when_they_shouldnt_finds_friday_
 
 
 @freeze_time('2018-01-11T23:00:00')
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_letter_raise_alert_if_no_ack_file_for_zip_does_not_raise_when_files_match_zip_list(mocker, notify_db_session):
     mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=mock_s3_get_list_match)
     letter_raise_alert_if_no_ack_file_for_zip()
@@ -334,6 +335,7 @@ def test_letter_raise_alert_if_no_ack_file_for_zip_does_not_raise_when_files_mat
 
 
 @freeze_time('2018-01-11T23:00:00')
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_letter_raise_alert_if_ack_files_not_match_zip_list(mocker, notify_db_session):
     mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=mock_s3_get_list_diff)
     mock_create_ticket = mocker.spy(NotifySupportTicket, '__init__')
@@ -360,6 +362,7 @@ def test_letter_raise_alert_if_ack_files_not_match_zip_list(mocker, notify_db_se
 
 
 @freeze_time('2018-01-11T23:00:00')
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_letter_not_raise_alert_if_no_files_do_not_cause_error(mocker, notify_db_session):
     mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=None)
     letter_raise_alert_if_no_ack_file_for_zip()

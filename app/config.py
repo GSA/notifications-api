@@ -116,7 +116,7 @@ class Config(object):
 
     # Prefix to identify queues in SQS
     NOTIFICATION_QUEUE_PREFIX = os.environ.get('NOTIFICATION_QUEUE_PREFIX')
-    
+
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
 
@@ -416,13 +416,13 @@ class Development(Config):
 
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
-    TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'notify.tools-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'development-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'development-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'development-letters-invalid-pdf'
-    TRANSIENT_UPLOADED_LETTERS = 'development-transient-uploaded-letters'
-    LETTER_SANITISE_BUCKET_NAME = 'development-letters-sanitise'
+    # TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
+    # DVLA_RESPONSE_BUCKET_NAME = 'notify.tools-ftp'
+    # LETTERS_PDF_BUCKET_NAME = 'development-letters-pdf'
+    # LETTERS_SCAN_BUCKET_NAME = 'development-letters-scan'
+    # INVALID_PDF_BUCKET_NAME = 'development-letters-invalid-pdf'
+    # TRANSIENT_UPLOADED_LETTERS = 'development-transient-uploaded-letters'
+    # LETTER_SANITISE_BUCKET_NAME = 'development-letters-sanitise'
 
     # INTERNAL_CLIENT_API_KEYS = {
     #     Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
@@ -437,7 +437,7 @@ class Development(Config):
 
     NOTIFY_ENVIRONMENT = 'development'
     NOTIFY_LOG_PATH = 'application.log'
-    
+
     NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
@@ -470,13 +470,13 @@ class Test(Development):
 
     CSV_UPLOAD_BUCKET_NAME = 'test-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'test-contact-list'
-    TEST_LETTERS_BUCKET_NAME = 'test-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'test.notify.com-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'test-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'test-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'test-letters-invalid-pdf'
-    TRANSIENT_UPLOADED_LETTERS = 'test-transient-uploaded-letters'
-    LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
+    # TEST_LETTERS_BUCKET_NAME = 'test-test-letters'
+    # DVLA_RESPONSE_BUCKET_NAME = 'test.notify.com-ftp'
+    # LETTERS_PDF_BUCKET_NAME = 'test-letters-pdf'
+    # LETTERS_SCAN_BUCKET_NAME = 'test-letters-scan'
+    # INVALID_PDF_BUCKET_NAME = 'test-letters-invalid-pdf'
+    # TRANSIENT_UPLOADED_LETTERS = 'test-transient-uploaded-letters'
+    # LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in CI
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
@@ -507,13 +507,13 @@ class Preview(Config):
     NOTIFY_ENVIRONMENT = 'preview'
     CSV_UPLOAD_BUCKET_NAME = 'preview-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'preview-contact-list'
-    TEST_LETTERS_BUCKET_NAME = 'preview-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'preview-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'preview-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'preview-letters-invalid-pdf'
-    TRANSIENT_UPLOADED_LETTERS = 'preview-transient-uploaded-letters'
-    LETTER_SANITISE_BUCKET_NAME = 'preview-letters-sanitise'
+    # TEST_LETTERS_BUCKET_NAME = 'preview-test-letters'
+    # DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
+    # LETTERS_PDF_BUCKET_NAME = 'preview-letters-pdf'
+    # LETTERS_SCAN_BUCKET_NAME = 'preview-letters-scan'
+    # INVALID_PDF_BUCKET_NAME = 'preview-letters-invalid-pdf'
+    # TRANSIENT_UPLOADED_LETTERS = 'preview-transient-uploaded-letters'
+    # LETTER_SANITISE_BUCKET_NAME = 'preview-letters-sanitise'
     FROM_NUMBER = 'preview'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = False
@@ -524,13 +524,13 @@ class Staging(Config):
     NOTIFY_ENVIRONMENT = 'staging'
     CSV_UPLOAD_BUCKET_NAME = 'staging-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'staging-contact-list'
-    TEST_LETTERS_BUCKET_NAME = 'staging-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'staging-notify.works-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'staging-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'staging-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'staging-letters-invalid-pdf'
-    TRANSIENT_UPLOADED_LETTERS = 'staging-transient-uploaded-letters'
-    LETTER_SANITISE_BUCKET_NAME = 'staging-letters-sanitise'
+    # TEST_LETTERS_BUCKET_NAME = 'staging-test-letters'
+    # DVLA_RESPONSE_BUCKET_NAME = 'staging-notify.works-ftp'
+    # LETTERS_PDF_BUCKET_NAME = 'staging-letters-pdf'
+    # LETTERS_SCAN_BUCKET_NAME = 'staging-letters-scan'
+    # INVALID_PDF_BUCKET_NAME = 'staging-letters-invalid-pdf'
+    # TRANSIENT_UPLOADED_LETTERS = 'staging-transient-uploaded-letters'
+    # LETTER_SANITISE_BUCKET_NAME = 'staging-letters-sanitise'
     FROM_NUMBER = 'stage'
     API_RATE_LIMIT_ENABLED = True
     CHECK_PROXY_HEADER = True
@@ -542,13 +542,13 @@ class Live(Config):
     CSV_UPLOAD_BUCKET_NAME = 'notifications-prototype-csv-upload' # created in gsa sandbox
     CONTACT_LIST_BUCKET_NAME = 'notifications-prototype-contact-list-upload' # created in gsa sandbox
     # TODO: verify below buckets only used for letters
-    TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
-    DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
-    LETTERS_PDF_BUCKET_NAME = 'production-letters-pdf' # not created in gsa sandbox
-    LETTERS_SCAN_BUCKET_NAME = 'production-letters-scan' # not created in gsa sandbox
-    INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf' # not created in gsa sandbox
-    TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters' # not created in gsa sandbox
-    LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise' # not created in gsa sandbox
+    # TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
+    # DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
+    # LETTERS_PDF_BUCKET_NAME = 'production-letters-pdf' # not created in gsa sandbox
+    # LETTERS_SCAN_BUCKET_NAME = 'production-letters-scan' # not created in gsa sandbox
+    # INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf' # not created in gsa sandbox
+    # TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters' # not created in gsa sandbox
+    # LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise' # not created in gsa sandbox
 
     FROM_NUMBER = 'US Notify'
     API_RATE_LIMIT_ENABLED = True
@@ -573,12 +573,12 @@ class Sandbox(CloudFoundryConfig):
     NOTIFY_ENVIRONMENT = 'sandbox'
     CSV_UPLOAD_BUCKET_NAME = 'cf-sandbox-notifications-csv-upload'
     CONTACT_LIST_BUCKET_NAME = 'cf-sandbox-contact-list'
-    LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
-    TEST_LETTERS_BUCKET_NAME = 'cf-sandbox-test-letters'
-    DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
-    LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
-    LETTERS_SCAN_BUCKET_NAME = 'cf-sandbox-letters-scan'
-    INVALID_PDF_BUCKET_NAME = 'cf-sandbox-letters-invalid-pdf'
+    # LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
+    # TEST_LETTERS_BUCKET_NAME = 'cf-sandbox-test-letters'
+    # DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
+    # LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
+    # LETTERS_SCAN_BUCKET_NAME = 'cf-sandbox-letters-scan'
+    # INVALID_PDF_BUCKET_NAME = 'cf-sandbox-letters-invalid-pdf'
     FROM_NUMBER = 'sandbox'
 
 

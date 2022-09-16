@@ -2514,6 +2514,7 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
     assert response['id'] == str(noti.id)
 
 
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_pdf_letter(mocker, sample_service_full_permissions, client, fake_uuid, notify_user):
     mocker.patch('app.service.send_notification.utils_s3download')
     mocker.patch('app.service.send_notification.get_page_count', return_value=1)
