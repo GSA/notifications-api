@@ -539,8 +539,8 @@ class Staging(Config):
 class Live(Config):
     NOTIFY_ENVIRONMENT = 'live'
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = 'notifications-prototype-csv-upload' # created in gsa sandbox
-    CONTACT_LIST_BUCKET_NAME = 'notifications-prototype-contact-list-upload' # created in gsa sandbox
+    CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME', 'notifications-prototype-csv-upload') # created in gsa sandbox
+    CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME', 'notifications-prototype-contact-list-upload') # created in gsa sandbox
     # TODO: verify below buckets only used for letters
     # TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
     # DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
