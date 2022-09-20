@@ -121,6 +121,8 @@ idna==3.3
     # via
     #   jsonschema
     #   requests
+importlib-metadata==4.12.0
+    # via flask
 iso8601==1.0.2
     # via -r requirements.in
 isoduration==20.11.0
@@ -257,6 +259,8 @@ sqlalchemy==1.4.40
     #   marshmallow-sqlalchemy
 statsd==3.3.0
     # via notifications-utils
+typing-extensions==4.3.0
+    # via pypdf2
 uri-template==1.2.0
     # via jsonschema
 urllib3==1.26.9
@@ -280,6 +284,8 @@ werkzeug==2.1.1
     #   flask
 wrapt==1.14.1
     # via deprecated
+zipp==3.8.1
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
