@@ -17,7 +17,7 @@ from app.models import Complaint
 from app.notifications.callbacks import create_complaint_callback_data
 
 
-def _determine_notification_bounce_type(ses_message):
+def determine_notification_bounce_type(ses_message):
     notification_type = ses_message["notificationType"]
     if notification_type in ["Delivery", "Complaint"]:
         return notification_type
@@ -51,7 +51,7 @@ def _determine_provider_response(ses_message):
 
 
 def get_aws_responses(ses_message):
-    status = _determine_notification_bounce_type(ses_message)
+    status = determine_notification_bounce_type(ses_message)
 
     base = {
         "Permanent": {

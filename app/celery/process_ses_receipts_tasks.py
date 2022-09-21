@@ -4,21 +4,20 @@ from json import decoder
 
 import iso8601
 import requests
-import validatesns
 from celery.exceptions import Retry
 from flask import Blueprint, current_app, json, jsonify, request
-from notifications_utils.statsd_decorators import statsd
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery, redis_store, statsd_client
+from app import notify_celery, statsd_client
+from app.celery.validate_sns import valid_sns_message
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.errors import InvalidRequest, register_errors
 from app.models import NOTIFICATION_PENDING, NOTIFICATION_SENDING
 from app.notifications.notifications_ses_callback import (
     _check_and_queue_complaint_callback_task,
-    _determine_notification_bounce_type,
     check_and_queue_callback_task,
+    determine_notification_bounce_type,
     get_aws_responses,
     handle_complaint,
 )
@@ -26,7 +25,6 @@ from app.notifications.notifications_ses_callback import (
 ses_callback_blueprint = Blueprint('notifications_ses_callback', __name__)
 
 register_errors(ses_callback_blueprint)
-
 class SNSMessageType(enum.Enum):
     SubscriptionConfirmation = 'SubscriptionConfirmation'
     Notification = 'Notification'
@@ -44,14 +42,6 @@ def verify_message_type(message_type: str):
         raise InvalidMessageTypeException(f'{message_type} is not a valid message type.')
 
 
-def get_certificate(url):
-    res = redis_store.get(url)
-    if res is not None:
-        return res
-    res = requests.get(url).content
-    redis_store.set(url, res, ex=60 * 60)  # 60 minutes
-    return res
-
 # 400 counts as a permanent failure so SNS will not retry.
 # 500 counts as a failed delivery attempt so SNS will retry.
 # See https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html#DeliveryPolicies
@@ -62,35 +52,53 @@ def get_certificate(url):
 def sns_callback_handler():
     message_type = request.headers.get('x-amz-sns-message-type')
     try:
+        print("validating message type")
         verify_message_type(message_type)
     except InvalidMessageTypeException:
+        current_app.logger.exception(f"Response headers: {request.headers}\nResponse data: {request.data}")
         raise InvalidRequest("SES-SNS callback failed: invalid message type", 400)
 
     try:
-        message = json.loads(request.data)
+        print("loading message")
+        message = json.loads(request.data.decode('utf-8'))
     except decoder.JSONDecodeError:
+        current_app.logger.exception(f"Response headers: {request.headers}\nResponse data: {request.data}")
         raise InvalidRequest("SES-SNS callback failed: invalid JSON given", 400)
 
+    current_app.logger.info(f"Message type: {message_type}\nResponse data: {message}")
+
     try:
-        validatesns.validate(message, get_certificate=get_certificate)
-    except validatesns.ValidationError:
+        print("attempting to validate sns")
+        if valid_sns_message(message) == False:
+            current_app.logger.error(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: Signature validation failed.")
+            print("attempting to validate sns failed")
+            raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
+    except Exception as e:
+        current_app.logger.exception(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: {e}")
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
 
     if message.get('Type') == 'SubscriptionConfirmation':
-        url = message.get('SubscribeURL')
+        print("processing subscription")
+        url = message.get('SubscribeUrl') if 'SubscribeUrl' in message else message.get('SubscribeURL')
         response = requests.get(url)
         try:
             response.raise_for_status()
         except Exception as e:
-            current_app.logger.warning("Response: {}".format(response.text))
+            current_app.logger.warning(f"Attempt to raise_for_status()SubscriptionConfirmation Type message files for response: {response.text} with error {e}")
             raise e
 
         return jsonify(
             result="success", message="SES-SNS auto-confirm callback succeeded"
         ), 200
 
+    print("info logging")
+    # TODO remove after smoke testing on prod is implemented
+    current_app.logger.info(f"SNS message: {message} is a valid delivery status message. Attempting to process it now.")
+    
+    print("running process_ses_results")
     process_ses_results.apply_async([{"Message": message.get("Message")}], queue=QueueNames.NOTIFY)
 
+    print("returning success")
     return jsonify(
         result="success", message="SES-SNS callback succeeded"
     ), 200
@@ -101,10 +109,12 @@ def process_ses_results(self, response):
     try:
         ses_message = json.loads(response["Message"])
         notification_type = ses_message["notificationType"]
+        # TODO remove after smoke testing on prod is implemented
+        current_app.logger.info(f"Attempting to process SES delivery status message from SNS with type: {notification_type} and body: {ses_message}")
         bounce_message = None
 
         if notification_type == 'Bounce':
-            bounce_message = _determine_notification_bounce_type(ses_message)
+            bounce_message = determine_notification_bounce_type(ses_message)
         elif notification_type == 'Complaint':
             _check_and_queue_complaint_callback_task(*handle_complaint(ses_message))
             return True

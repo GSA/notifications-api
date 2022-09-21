@@ -119,6 +119,9 @@ class Config(object):
     
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
+    
+    # AWS SNS topics for delivery receipts
+    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint']
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')

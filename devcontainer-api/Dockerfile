@@ -21,6 +21,7 @@ RUN apt-get update \
     openssh-client \
     procps \
     sudo \
+    swig \
     tldr \
     unzip \
     vim \
