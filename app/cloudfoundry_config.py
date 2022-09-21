@@ -18,11 +18,15 @@ def extract_cloudfoundry_config():
     os.environ['REDIS_URL'] = vcap_services['aws-elasticache-redis'][0]['credentials']['uri']
 
     # CSV Upload Bucket Name
-    csv_bucket_service = find_by_service_name(vcap_services['s3'], f"notifications-api-csv-upload-bucket-{os.environ['DEPLOY_ENV']}")
-    if csv_bucket_service:
-        os.environ['CSV_UPLOAD_BUCKET_NAME'] = csv_bucket_service['credentials']['bucket']
+    bucket_service = find_by_service_name(vcap_services['s3'], f"notifications-api-csv-upload-bucket-{os.environ['DEPLOY_ENV']}")
+    if bucket_service:
+        os.environ['CSV_UPLOAD_BUCKET_NAME'] = bucket_service['credentials']['bucket']
+        os.environ['CSV_UPLOAD_ACCESS_KEY'] = bucket_service['credentials']['access_key_id']
+        os.environ['CSV_UPLOAD_SECRET_KEY'] = bucket_service['credentials']['secret_access_key']
 
     # Contact List Bucket Name
-    contact_bucket_service = find_by_service_name(vcap_services['s3'], f"notifications-api-contact-list-bucket-{os.environ['DEPLOY_ENV']}")
-    if contact_bucket_service:
-        os.environ['CONTACT_LIST_BUCKET_NAME'] = contact_bucket_service['credentials']['bucket']
+    bucket_service = find_by_service_name(vcap_services['s3'], f"notifications-api-contact-list-bucket-{os.environ['DEPLOY_ENV']}")
+    if bucket_service:
+        os.environ['CONTACT_LIST_BUCKET_NAME'] = bucket_service['credentials']['bucket']
+        os.environ['CONTACT_LIST_ACCESS_KEY'] = bucket_service['credentials']['access_key_id']
+        os.environ['CONTACT_LIST_SECRET_KEY'] = bucket_service['credentials']['secret_access_key']

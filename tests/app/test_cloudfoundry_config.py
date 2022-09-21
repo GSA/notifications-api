@@ -23,13 +23,17 @@ def vcap_services():
             {
                 'name': 'notifications-api-csv-upload-bucket-test',
                 'credentials': {
-                    'bucket': 'csv-upload-bucket'
+                    'access_key_id': 'csv-access',
+                    'bucket': 'csv-upload-bucket',
+                    'secret_access_key': 'csv-secret'
                 }
             },
             {
                 'name': 'notifications-api-contact-list-bucket-test',
                 'credentials': {
-                    'bucket': 'contact-list-bucket'
+                    'access_key_id': 'contact-access',
+                    'bucket': 'contact-list-bucket',
+                    'secret_access_key': 'contact-secret'
                 }
             }
         ],
