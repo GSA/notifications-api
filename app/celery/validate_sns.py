@@ -10,16 +10,13 @@ from app.config import Config
 
 USE_CACHE = True
 VALIDATE_ARN = True
+VALID_SNS_TOPICS = Config.VALID_SNS_TOPICS
 
 
 _signing_cert_cache = {}
 _cert_url_re = re.compile(
     r'sns\.([a-z]{1,3}-[a-z]+-[0-9]{1,2})\.amazonaws\.com',
 )
-
-
-VALID_SNS_TOPICS = Config.VALID_SNS_TOPICS
-# VALID_SNS_TOPICS = ['my_bounce_topic_name', 'my_success_topic_name', 'my_complaint_topic_name']
 
 
 def get_certificate(url):

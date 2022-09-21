@@ -52,14 +52,12 @@ def verify_message_type(message_type: str):
 def sns_callback_handler():
     message_type = request.headers.get('x-amz-sns-message-type')
     try:
-        print("validating message type")
         verify_message_type(message_type)
     except InvalidMessageTypeException:
         current_app.logger.exception(f"Response headers: {request.headers}\nResponse data: {request.data}")
         raise InvalidRequest("SES-SNS callback failed: invalid message type", 400)
 
     try:
-        print("loading message")
         message = json.loads(request.data.decode('utf-8'))
     except decoder.JSONDecodeError:
         current_app.logger.exception(f"Response headers: {request.headers}\nResponse data: {request.data}")
@@ -68,17 +66,14 @@ def sns_callback_handler():
     current_app.logger.info(f"Message type: {message_type}\nResponse data: {message}")
 
     try:
-        print("attempting to validate sns")
         if valid_sns_message(message) == False:
             current_app.logger.error(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: Signature validation failed.")
-            print("attempting to validate sns failed")
             raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
     except Exception as e:
         current_app.logger.exception(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: {e}")
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
 
     if message.get('Type') == 'SubscriptionConfirmation':
-        print("processing subscription")
         url = message.get('SubscribeUrl') if 'SubscribeUrl' in message else message.get('SubscribeURL')
         response = requests.get(url)
         try:
@@ -91,14 +86,11 @@ def sns_callback_handler():
             result="success", message="SES-SNS auto-confirm callback succeeded"
         ), 200
 
-    print("info logging")
     # TODO remove after smoke testing on prod is implemented
     current_app.logger.info(f"SNS message: {message} is a valid delivery status message. Attempting to process it now.")
     
-    print("running process_ses_results")
     process_ses_results.apply_async([{"Message": message.get("Message")}], queue=QueueNames.NOTIFY)
 
-    print("returning success")
     return jsonify(
         result="success", message="SES-SNS callback succeeded"
     ), 200
