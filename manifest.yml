@@ -9,6 +9,7 @@ applications:
     health-check-invocation-timeout: 1
     routes:
     - route: notifications-api.app.cloud.gov
+    - route: notifications-api-((env)).apps.internal
 
     services:
       - notifications-api-rds-((env))
