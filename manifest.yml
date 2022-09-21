@@ -1,7 +1,6 @@
 ---
-
 applications:
-  - name: notifications-api
+  - name: notifications-api-((env))
     buildpack: https://github.com/cloudfoundry/python-buildpack.git#v1.7.58
     instances: 1
     memory: 1G
@@ -12,8 +11,8 @@ applications:
     - route: notifications-api.app.cloud.gov
 
     services:
-      - api-psql
-      - api-redis
+      - notifications-api-rds-((env))
+      - notifications-api-redis-((env))
 
     env:
       NOTIFY_APP_NAME: api

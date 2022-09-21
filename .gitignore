@@ -81,3 +81,10 @@ varsfile*
 .secret*
 
 /scripts/run_my_tests.sh
+
+# Terraform
+.terraform.lock.hcl
+**/.terraform/*
+secrets.auto.tfvars
+terraform.tfstate
+terraform.tfstate.backup

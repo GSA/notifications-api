@@ -23,6 +23,30 @@ jobs:
         libcurl4-openssl-dev
 
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - name: Check for changes to Terraform
+      id: changed-terraform-files
+      uses: tj-actions/changed-files@v1.1.2
+      with:
+        files: terraform/staging
+    - name: Terraform init
+      if: steps.changed-terraform-files.outputs.any_changed == 'true'
+      working-directory: terraform/staging
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+      run: terraform init
+    - name: Terraform apply
+      if: steps.changed-terraform-files.outputs.any_changed == 'true'
+      working-directory: terraform/staging
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+        TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+        TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+      run: terraform apply -auto-approve -input=false
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
@@ -46,6 +70,7 @@ jobs:
         cf_org: gsa-10x-prototyping
         cf_space: 10x-notifications
         push_arguments: >-
+          --var env=staging
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
           --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
