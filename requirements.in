@@ -6,7 +6,7 @@ celery[sqs]==5.2.6
 Flask-Bcrypt==1.0.1
 flask-marshmallow==0.14.0
 Flask-Migrate==3.1.0
-git+https://github.com/pallets-eco/flask-sqlalchemy.git@aa7a61a5357cf6f5dcc135d98c781192457aa6fa#egg=Flask-SQLAlchemy==2.5.1
+Flask-SQLAlchemy==2.5.1
 Flask==2.1.2
 click-datetime==0.2
 # Should be pinned until a new gunicorn release greater than 20.1.0 comes out. (Due to eventlet v0.33 compatibility issues)
@@ -16,7 +16,6 @@ itsdangerous==2.1.2
 jsonschema[format]==4.5.1
 marshmallow-sqlalchemy==0.28.1
 marshmallow==3.15.0
-M2Crypto==0.38.0
 psycopg2-binary==2.9.3
 PyJWT==2.4.0
 SQLAlchemy==1.4.40
@@ -26,6 +25,8 @@ lxml==4.9.1
 defusedxml==0.7.1
 Werkzeug==2.1.1
 python-dotenv==0.20.0
+
+validatesns==0.1.1
 
 notifications-python-client==6.3.0
 

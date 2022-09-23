@@ -71,7 +71,7 @@ test: ## Run tests
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
 	pip install --upgrade pip-tools
 	pip-compile requirements.in
-	pip3 install -r requirements.txt
+	pip3 install -r requirements.txt --no-cache-dir
 
 .PHONY: audit
 audit:

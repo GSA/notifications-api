@@ -1,7 +1,7 @@
 ---
 
 applications:
-  - name: notifications-api
+  - name: notify-api-alt
     buildpack: https://github.com/cloudfoundry/python-buildpack.git#v1.7.58
     instances: 1
     memory: 1G
@@ -9,22 +9,24 @@ applications:
     health-check-type: process
     health-check-invocation-timeout: 1
     routes:
-    - route: notifications-api.app.cloud.gov
+    - route: notify-api-alt.app.cloud.gov
 
     services:
-      - api-psql
-      - api-redis
+      - api-alt-psql
+      - api-alt-redis
 
     env:
+      BP_PIP_VERSION: latest
       NOTIFY_APP_NAME: api
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
 
       NOTIFY_ENVIRONMENT: live
-      API_HOST_NAME: https://notifications-api.app.cloud.gov
-      ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
-      NOTIFICATION_QUEUE_PREFIX: prototype_10x
+      API_HOST_NAME: https://notify-api-alt.app.cloud.gov
+      ADMIN_BASE_URL: https://notify-admin-alt.app.cloud.gov
+      NOTIFICATION_QUEUE_PREFIX: notify_alt_
+      REDIS_ENABLED: true
       STATSD_HOST: localhost
 
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
@@ -33,6 +35,8 @@ applications:
       ADMIN_CLIENT_SECRET: ((ADMIN_CLIENT_SECRET))
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
+      AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
+      AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
       AWS_REGION: us-west-2
       AWS_PINPOINT_REGION: us-west-2
       AWS_US_TOLL_FREE_NUMBER: +18446120782

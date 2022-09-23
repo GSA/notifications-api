@@ -4,12 +4,14 @@ from json import decoder
 
 import iso8601
 import requests
+import traceback
 from celery.exceptions import Retry
 from flask import Blueprint, current_app, json, jsonify, request
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery, statsd_client
-from app.celery.validate_sns import valid_sns_message
+from app import notify_celery, statsd_client, redis_store
+# from app.celery.validate_sns import valid_sns_message
+import validatesns
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.errors import InvalidRequest, register_errors
@@ -23,6 +25,7 @@ from app.notifications.notifications_ses_callback import (
 )
 
 ses_callback_blueprint = Blueprint('notifications_ses_callback', __name__)
+DEFAULT_MAX_AGE = timedelta(days=10000)
 
 register_errors(ses_callback_blueprint)
 class SNSMessageType(enum.Enum):
@@ -41,6 +44,13 @@ def verify_message_type(message_type: str):
     except ValueError:
         raise InvalidMessageTypeException(f'{message_type} is not a valid message type.')
 
+def get_certificate(url):
+    res = redis_store.get(url)
+    if res is not None:
+        return res
+    res = requests.get(url).content
+    redis_store.set(url, res, ex=60 * 60)  # 60 minutes
+    return res
 
 # 400 counts as a permanent failure so SNS will not retry.
 # 500 counts as a failed delivery attempt so SNS will retry.
@@ -64,14 +74,25 @@ def sns_callback_handler():
         raise InvalidRequest("SES-SNS callback failed: invalid JSON given", 400)
 
     current_app.logger.info(f"Message type: {message_type}\nResponse data: {message}")
-
+    
     try:
-        if valid_sns_message(message) == False:
-            current_app.logger.error(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: Signature validation failed.")
-            raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
-    except Exception as e:
-        current_app.logger.exception(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: {e}")
+        # AWS sends SigningCertURL if sending to a webhook, but SigningCertUrl if sending to a Lambda function
+        message["SigningCertURL"] = message["SigningCertURL"] if "SigningCertURL" in message else message["SigningCertUrl"] 
+        # Some SNS messages now contain "Subject": null, which is not handled by the validatesns library
+        if "Subject" in message and message["Subject"] == None:
+            message.pop("Subject")
+        validatesns.validate(message, get_certificate=get_certificate, max_age=DEFAULT_MAX_AGE)
+    except Exception as err:
+        current_app.logger.error(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: Signature validation failed with error {err} and traceback {traceback.format_exc()}")
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
+
+    # try:
+    #     if valid_sns_message(message) == False:
+    #         current_app.logger.error(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: Signature validation failed.")
+    #         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
+    # except Exception as e:
+    #     current_app.logger.exception(f"SES-SNS callback failed: validation failed! Response headers: {request.headers}\nResponse data: {request.data}\nError: {e}")
+    #     raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
 
     if message.get('Type') == 'SubscriptionConfirmation':
         url = message.get('SubscribeUrl') if 'SubscribeUrl' in message else message.get('SubscribeURL')
