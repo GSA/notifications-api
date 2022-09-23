@@ -28,6 +28,8 @@ env:
   AWS_REGION: us-west-2
   AWS_PINPOINT_REGION: us-west-2
   AWS_US_TOLL_FREE_NUMBER: +18446120782
+  AWS_ACCESS_KEY_ID: not-a-real-key-id
+  AWS_SECRET_ACCESS_KEY: not-a-real-secret
 
 jobs:
   build:

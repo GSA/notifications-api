@@ -71,6 +71,7 @@ def test_send_pdf_letter_notification_raises_error_if_service_in_trial_mode(
     assert 'trial mode' in e.value.message
 
 
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_send_pdf_letter_notification_raises_error_when_pdf_is_not_in_transient_letter_bucket(
     mocker,
     sample_service_full_permissions,
@@ -97,6 +98,7 @@ def test_send_pdf_letter_notification_does_nothing_if_notification_already_exist
 
 
 @freeze_time("2019-08-02 11:00:00")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_send_pdf_letter_notification_creates_notification_and_moves_letter(
     mocker,
     sample_service_full_permissions,

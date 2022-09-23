@@ -28,6 +28,7 @@ from tests.app.db import (
 
 @mock_s3
 @freeze_time('2019-09-01 04:30')
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_move_notifications_deletes_letters_from_s3(sample_letter_template, mocker):
     s3 = boto3.client('s3', region_name='eu-west-1')
     bucket_name = current_app.config['LETTERS_PDF_BUCKET_NAME']
@@ -53,6 +54,7 @@ def test_move_notifications_deletes_letters_from_s3(sample_letter_template, mock
 
 @mock_s3
 @freeze_time('2019-09-01 04:30')
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_move_notifications_copes_if_letter_not_in_s3(sample_letter_template, mocker):
     s3 = boto3.client('s3', region_name='eu-west-1')
     s3.create_bucket(
@@ -91,6 +93,7 @@ def test_move_notifications_does_nothing_if_notification_history_row_already_exi
 @pytest.mark.parametrize(
     'notification_status', ['validation-failed', 'virus-scan-failed']
 )
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_move_notifications_deletes_letters_not_sent_and_in_final_state_from_table_but_not_s3(
     sample_service, mocker, notification_status
 ):
@@ -115,6 +118,7 @@ def test_move_notifications_deletes_letters_not_sent_and_in_final_state_from_tab
 @mock_s3
 @freeze_time('2020-12-24 04:30')
 @pytest.mark.parametrize('notification_status', ['delivered', 'returned-letter', 'technical-failure'])
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_move_notifications_deletes_letters_sent_and_in_final_state_from_table_and_s3(
     sample_service, mocker, notification_status
 ):
@@ -153,6 +157,7 @@ def test_move_notifications_deletes_letters_sent_and_in_final_state_from_table_a
 
 
 @pytest.mark.parametrize('notification_status', ['pending-virus-check', 'created', 'sending'])
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_move_notifications_does_not_delete_letters_not_yet_in_final_state(
     sample_service, mocker, notification_status
 ):

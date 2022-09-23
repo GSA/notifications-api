@@ -134,6 +134,7 @@ def test_failure_firetext_callback(phone_number):
 
 
 @freeze_time("2018-01-25 14:00:30")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_fake_letter_response_file_uploads_response_file_s3(
         notify_api, mocker):
     mocker.patch('app.celery.research_mode_tasks.file_exists', return_value=False)
@@ -157,6 +158,7 @@ def test_create_fake_letter_response_file_uploads_response_file_s3(
 
 
 @freeze_time("2018-01-25 14:00:30")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_fake_letter_response_file_calls_dvla_callback_on_development(
         notify_api, mocker):
     mocker.patch('app.celery.research_mode_tasks.file_exists', return_value=False)
@@ -193,6 +195,7 @@ def test_create_fake_letter_response_file_calls_dvla_callback_on_development(
 
 
 @freeze_time("2018-01-25 14:00:30")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_fake_letter_response_file_does_not_call_dvla_callback_on_preview(
         notify_api, mocker):
     mocker.patch('app.celery.research_mode_tasks.file_exists', return_value=False)
@@ -208,6 +211,7 @@ def test_create_fake_letter_response_file_does_not_call_dvla_callback_on_preview
 
 
 @freeze_time("2018-01-25 14:00:30")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_fake_letter_response_file_tries_to_create_files_with_other_filenames(notify_api, mocker):
     mock_file_exists = mocker.patch('app.celery.research_mode_tasks.file_exists', side_effect=[True, True, False])
     mock_s3upload = mocker.patch('app.celery.research_mode_tasks.s3upload')
@@ -228,6 +232,7 @@ def test_create_fake_letter_response_file_tries_to_create_files_with_other_filen
 
 
 @freeze_time("2018-01-25 14:00:30")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_create_fake_letter_response_file_gives_up_after_thirty_times(notify_api, mocker):
     mock_file_exists = mocker.patch('app.celery.research_mode_tasks.file_exists', return_value=True)
     mock_s3upload = mocker.patch('app.celery.research_mode_tasks.s3upload')

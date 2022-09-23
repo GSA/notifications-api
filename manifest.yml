@@ -9,16 +9,20 @@ applications:
     health-check-invocation-timeout: 1
     routes:
     - route: notifications-api.app.cloud.gov
+    - route: notifications-api-((env)).apps.internal
 
     services:
       - notifications-api-rds-((env))
       - notifications-api-redis-((env))
+      - notifications-api-csv-upload-bucket-((env))
+      - notifications-api-contact-list-bucket-((env))
 
     env:
       NOTIFY_APP_NAME: api
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
+      DEPLOY_ENV: ((env))
 
       NOTIFY_ENVIRONMENT: live
       API_HOST_NAME: https://notifications-api.app.cloud.gov

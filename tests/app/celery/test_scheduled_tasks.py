@@ -366,6 +366,7 @@ def test_check_job_status_task_does_not_raise_error(sample_template):
 
 
 @freeze_time("2019-05-30 14:00:00")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_check_if_letters_still_pending_virus_check_restarts_scan_for_stuck_letters(
         mocker,
         sample_letter_template
@@ -396,6 +397,7 @@ def test_check_if_letters_still_pending_virus_check_restarts_scan_for_stuck_lett
 
 
 @freeze_time("2019-05-30 14:00:00")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_check_if_letters_still_pending_virus_check_raises_zendesk_if_files_cant_be_found(
         mocker,
         sample_letter_template
@@ -447,6 +449,7 @@ def test_check_if_letters_still_pending_virus_check_raises_zendesk_if_files_cant
 
 
 @freeze_time("2019-05-30 14:00:00")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_check_if_letters_still_in_created_during_bst(mocker, sample_letter_template):
     mock_logger = mocker.patch('app.celery.tasks.current_app.logger.error')
     mock_create_ticket = mocker.spy(NotifySupportTicket, '__init__')
@@ -481,6 +484,7 @@ def test_check_if_letters_still_in_created_during_bst(mocker, sample_letter_temp
 
 
 @freeze_time("2019-01-30 14:00:00")
+@pytest.mark.skip(reason="Skipping letter-related functionality for now")
 def test_check_if_letters_still_in_created_during_utc(mocker, sample_letter_template):
     mock_logger = mocker.patch('app.celery.tasks.current_app.logger.error')
     mock_create_ticket = mocker.spy(NotifySupportTicket, '__init__')
