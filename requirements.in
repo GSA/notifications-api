@@ -26,8 +26,6 @@ defusedxml==0.7.1
 Werkzeug==2.1.1
 python-dotenv==0.20.0
 
-validatesns==0.1.1
-
 notifications-python-client==6.3.0
 
 # PaaS
