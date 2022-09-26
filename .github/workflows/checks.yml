@@ -118,7 +118,7 @@ jobs:
       - name: Run OWASP Baseline Scan
         uses: zaproxy/action-api-scan@v0.1.1
         with:
-          docker_name: 'owasp/zap2docker-weekly'
+          docker_name: 'owasp/zap2docker-stable'
           target: 'http://localhost:6011/_status'
           fail_action: true
           allow_issue_writing: false
