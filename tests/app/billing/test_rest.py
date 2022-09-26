@@ -108,7 +108,7 @@ def test_get_free_sms_fragment_limit_current_year_creates_new_row_if_annual_bill
     )
 
     assert json_response['financial_year_start'] == 2021
-    assert json_response['free_sms_fragment_limit'] == 10000  # based on other organisation type
+    assert json_response['free_sms_fragment_limit'] == 150000  # based on other organisation type
 
 
 def test_update_free_sms_fragment_limit_data(client, sample_service):

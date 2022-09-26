@@ -43,9 +43,8 @@ def test_local_dev_broadcast_permissions(
 
 
 @pytest.mark.parametrize("organisation_type, expected_allowance",
-                         [('central', 40000),
-                          ('local', 20000),
-                          ('nhs_gp', 10000)])
+                         [('federal', 40000),
+                          ('state', 40000)])
 def test_populate_annual_billing_with_defaults(
         notify_db_session, notify_api, organisation_type, expected_allowance
 ):

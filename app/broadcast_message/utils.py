@@ -89,7 +89,7 @@ def _create_p1_zendesk_alert(broadcast_message):
         ticket_type=NotifySupportTicket.TYPE_INCIDENT,
         technical_ticket=True,
         org_id=current_app.config['BROADCAST_ORGANISATION_ID'],
-        org_type='central',
+        org_type='federal',
         service_id=str(broadcast_message.service_id),
         p1=True
     )

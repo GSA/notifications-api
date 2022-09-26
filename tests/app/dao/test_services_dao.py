@@ -162,6 +162,7 @@ def test_create_service_with_organisation(notify_db_session):
     # the NHS branding set up
     ('SHN', False),
 ))
+@pytest.mark.skip(reason='Update for TTS')
 def test_create_nhs_service_get_default_branding_based_on_email_address(
     notify_db_session,
     branding_name_to_create,
