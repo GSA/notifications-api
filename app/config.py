@@ -417,9 +417,11 @@ class Development(Config):
     CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
     CSV_UPLOAD_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     CSV_UPLOAD_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    CSV_UPLOAD_REGION = os.environ.get('AWS_REGION', 'us-west-2')
     CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
     CONTACT_LIST_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     CONTACT_LIST_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    CONTACT_LIST_REGION = os.environ.get('AWS_REGION', 'us-west-2')
     # TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
     # DVLA_RESPONSE_BUCKET_NAME = 'notify.tools-ftp'
     # LETTERS_PDF_BUCKET_NAME = 'development-letters-pdf'
@@ -546,9 +548,11 @@ class Live(Config):
     CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME', 'notifications-prototype-csv-upload') # created in gsa sandbox
     CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
     CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
+    CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
     CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME', 'notifications-prototype-contact-list-upload') # created in gsa sandbox
     CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
     CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
+    CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')
     # TODO: verify below buckets only used for letters
     # TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
     # DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
