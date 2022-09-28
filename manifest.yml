@@ -27,7 +27,6 @@ applications:
       NOTIFY_ENVIRONMENT: live
       API_HOST_NAME: https://notifications-api.app.cloud.gov
       ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
-      NOTIFICATION_QUEUE_PREFIX: prototype_10x
       STATSD_HOST: localhost
 
       # Credentials variables

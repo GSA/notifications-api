@@ -114,9 +114,6 @@ class Config(object):
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
 
-    # Prefix to identify queues in SQS
-    NOTIFICATION_QUEUE_PREFIX = os.environ.get('NOTIFICATION_QUEUE_PREFIX')
-
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
 
@@ -200,11 +197,9 @@ class Config(object):
     DVLA_EMAIL_ADDRESSES = json.loads(os.environ.get('DVLA_EMAIL_ADDRESSES', '[]'))
 
     CELERY = {
-        'broker_url': 'sqs://',
+        'broker_url': REDIS_URL,
         'broker_transport_options': {
-            'region': AWS_REGION,
             'visibility_timeout': 310,
-            'queue_name_prefix': NOTIFICATION_QUEUE_PREFIX,
         },
         'timezone': 'Europe/London',
         'imports': [
@@ -447,7 +442,6 @@ class Development(Config):
     NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
-    REDIS_URL = os.environ.get('REDIS_URL')
 
     ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
@@ -572,7 +566,6 @@ class Live(Config):
     REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
     NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
-    REDIS_URL = os.environ.get('REDIS_URL')
 
 
 class CloudFoundryConfig(Config):

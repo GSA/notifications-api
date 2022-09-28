@@ -449,6 +449,7 @@ def handle_exception(task, notification, notification_id, exc):
         # Sometimes, SQS plays the same message twice. We should be able to catch an IntegrityError, but it seems
         # SQLAlchemy is throwing a FlushError. So we check if the notification id already exists then do not
         # send to the retry queue.
+        # This probably (hopefully) is not an issue with Redis as the celery backing store
         current_app.logger.exception('Retry' + retry_msg)
         try:
             task.retry(queue=QueueNames.RETRY, exc=exc)
