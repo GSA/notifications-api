@@ -71,6 +71,7 @@ test: ## Run tests
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
 	pip install --upgrade pip-tools
 	pip-compile requirements.in
+	pip install -r requirements.txt
 
 .PHONY: audit
 audit:
@@ -137,11 +138,11 @@ cf-deploy-api-db-migration:
 	cf push notifications-api --no-route -f ${CF_MANIFEST_PATH}
 	rm ${CF_MANIFEST_PATH}
 
-	cf run-task notifications-api --command="flask db upgrade" --name api_db_migration
+	cf run-task notify-api-alt --command="flask db upgrade" --name api_db_migration
 
 .PHONY: cf-check-api-db-migration-task
 cf-check-api-db-migration-task: ## Get the status for the last notifications-api task
-	@cf curl /v3/apps/`cf app --guid notifications-api`/tasks?order_by=-created_at | jq -r ".resources[0].state"
+	@cf curl /v3/apps/`cf app --guid notify-api-alt`/tasks?order_by=-created_at | jq -r ".resources[0].state"
 
 .PHONY: cf-rollback
 cf-rollback: ## Rollbacks the app to the previous release

@@ -99,7 +99,7 @@ flask-migrate==3.1.0
     # via -r requirements.in
 flask-redis==0.4.0
     # via notifications-utils
-flask-sqlalchemy==2.5.1
+flask-sqlalchemy @ git+https://github.com/pallets-eco/flask-sqlalchemy.git@aa7a61a5357cf6f5dcc135d98c781192457aa6fa
     # via
     #   -r requirements.in
     #   flask-migrate

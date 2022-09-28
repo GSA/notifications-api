@@ -4,6 +4,7 @@ queues.csv
 __pycache__/
 *.py[cod]
 
+.venv/
 venv/
 venv-freeze/
 
