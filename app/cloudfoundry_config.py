@@ -15,7 +15,7 @@ def extract_cloudfoundry_config():
     os.environ['SQLALCHEMY_DATABASE_URI'] = vcap_services['aws-rds'][0]['credentials']['uri'].replace('postgres',
                                                                                                       'postgresql')
     # Redis config
-    os.environ['REDIS_URL'] = vcap_services['aws-elasticache-redis'][0]['credentials']['uri']
+    os.environ['REDIS_URL'] = vcap_services['aws-elasticache-redis'][0]['credentials']['uri'].replace('redis', 'rediss')
 
     # CSV Upload Bucket Name
     bucket_service = find_by_service_name(vcap_services['s3'], f"notifications-api-csv-upload-bucket-{os.environ['DEPLOY_ENV']}")
