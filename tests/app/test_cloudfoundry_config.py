@@ -16,7 +16,7 @@ def vcap_services():
         }],
         'aws-elasticache-redis': [{
             'credentials': {
-                'uri': 'redis uri'
+                'uri': 'redis://xxx:6379'
             }
         }],
         's3': [
@@ -49,6 +49,6 @@ def test_extract_cloudfoundry_config_populates_other_vars(os_environ, vcap_servi
     extract_cloudfoundry_config()
 
     assert os.environ['SQLALCHEMY_DATABASE_URI'] == 'postgresql uri'
-    assert os.environ['REDIS_URL'] == 'redis uri'
+    assert os.environ['REDIS_URL'] == 'rediss://xxx:6379'
     assert os.environ['CSV_UPLOAD_BUCKET_NAME'] == 'csv-upload-bucket'
     assert os.environ['CONTACT_LIST_BUCKET_NAME'] == 'contact-list-bucket'
