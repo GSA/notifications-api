@@ -236,6 +236,7 @@ def process_sms_or_email_notification(
             # If SQS cannot put the task on the queue, it's probably because the notification body was too long and it
             # went over SQS's 256kb message limit. If the body is very large, it may exceed the HTTP max content length;
             # the exception we get here isn't handled correctly by botocore - we get a ResponseParserError instead.
+            # Hopefully this is no longer an issue with Redis as celery's backing store
             current_app.logger.info(
                 f'Notification {notification_id} failed to save to high volume queue. Using normal flow instead'
             )
