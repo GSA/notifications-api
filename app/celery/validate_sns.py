@@ -2,14 +2,13 @@ import base64
 import re
 from urllib.parse import urlparse
 
-import requests
 import oscrypto.asymmetric
 import oscrypto.errors
+import requests
+import six
 
 from app import redis_store
 from app.config import Config
-
-import six
 
 USE_CACHE = True
 VALIDATE_ARN = True

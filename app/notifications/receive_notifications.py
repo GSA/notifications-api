@@ -23,62 +23,6 @@ INBOUND_SMS_COUNTER = Counter(
     ['provider']
 )
 
-@receive_notifications_blueprint.route('/notifications/sms/receive/sns', methods=['POST'])
-def receive_sns_sms():
-    """
-    {
-        "originationNumber":"+14255550182",
-        "destinationNumber":"+12125550101",
-        "messageKeyword":"JOIN", # this is optional
-        "messageBody":"EXAMPLE",
-        "inboundMessageId":"cae173d2-66b9-564c-8309-21f858e9fb84",
-        "previousPublishedMessageId":"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-    }
-    """
-
-    post_data = request.get_json()
-
-    # validate sns from common module, WILL ALSO NEED TO AUTO-SUBSCRIBE... raise errors appropriately
-
-    # TODO modify this for AWS SNS
-    inbound_number = strip_leading_forty_four(post_data['Number'])
-
-    service = fetch_potential_service(inbound_number, 'sns')
-    if not service:
-        # since this is an issue with our service <-> number mapping, or no inbound_sms service permission
-        # we should still tell SNS that we received it successfully
-        current_app.logger.warning(f"Mapping between service id and inbound number is broken, or service does not have permission to receive inbound sms")
-        return jsonify({
-            "status": "ok"
-        }), 200 
-
-    INBOUND_SMS_COUNTER.labels("sns").inc()
-
-    content = format_mmg_message(post_data["Message"])
-    from_number = post_data['MSISDN']
-    provider_ref = post_data["ID"]
-    date_received = post_data.get('DateRecieved')
-    provider_name = "sns"
-
-    inbound_payload = {}
-
-    # TODO fill inbound_payload and spread like create_inbound_sms_object(service, **inbound_payload)
-    inbound = create_inbound_sms_object(service,
-                                        content=format_mmg_message(post_data["Message"]),
-                                        from_number=from_number,
-                                        provider_ref=provider_ref,
-                                        date_received=date_received,
-                                        provider_name=provider_name)
-
-    # TODO ensure inbound sms callback endpoints are accessible and functioning for notify api users
-    # tasks.send_inbound_sms_to_service.apply_async([str(inbound.id), str(service.id)], queue=QueueNames.NOTIFY)
-
-    current_app.logger.debug(
-        '{} received inbound SMS with reference {} from SNS'.format(service.id, inbound.provider_reference))
-
-    return jsonify({
-        "status": "ok"
-    }), 200 
 
 @receive_notifications_blueprint.route('/notifications/sms/receive/mmg', methods=['POST'])
 def receive_mmg_sms():

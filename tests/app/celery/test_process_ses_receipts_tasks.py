@@ -71,7 +71,7 @@ def test_notifications_ses_400_with_certificate(client):
 
 
 def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
-    mocker.patch("app.celery.process_ses_receipts_tasks.valid_sns_message", return_value=True)
+    mocker.patch("app.celery.process_ses_receipts_tasks.validate_sns_message", return_value=True)
     requests_mock = mocker.patch("requests.get")
     data = json.dumps({"Type": "SubscriptionConfirmation", "SubscribeURL": "https://foo"})
     response = client.post(
@@ -85,7 +85,7 @@ def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
 
 
 def test_notifications_ses_200_call_process_task(client, mocker):
-    mocker.patch("app.celery.process_ses_receipts_tasks.valid_sns_message", return_value=True)
+    mocker.patch("app.celery.process_ses_receipts_tasks.validate_sns_message", return_value=True)
     process_mock = mocker.patch("app.celery.process_ses_receipts_tasks.process_ses_results.apply_async")
     data = {"Type": "Notification", "foo": "bar"}
     json_data = json.dumps(data)

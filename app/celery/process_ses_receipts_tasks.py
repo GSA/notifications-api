@@ -1,15 +1,15 @@
 import enum
+import traceback
 from datetime import datetime, timedelta
 from json import decoder
 
 import iso8601
 import requests
-import traceback
 from celery.exceptions import Retry
 from flask import Blueprint, current_app, json, jsonify, request
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery, statsd_client, redis_store
+from app import notify_celery, redis_store, statsd_client
 from app.celery.validate_sns import validate_sns_message
 from app.config import QueueNames
 from app.dao import notifications_dao
