@@ -9,7 +9,6 @@ env:
   DEBUG: True
   ANTIVIRUS_ENABLED: 0
   NOTIFY_ENVIRONMENT: test
-  NOTIFICATION_QUEUE_PREFIX: local_dev_10x
   STATSD_HOST: localhost
   SES_STUB_URL: None
   NOTIFY_APP_NAME: api
@@ -28,6 +27,8 @@ env:
   AWS_REGION: us-west-2
   AWS_PINPOINT_REGION: us-west-2
   AWS_US_TOLL_FREE_NUMBER: +18446120782
+  AWS_ACCESS_KEY_ID: not-a-real-key-id
+  AWS_SECRET_ACCESS_KEY: not-a-real-secret
 
 jobs:
   build:
@@ -116,7 +117,7 @@ jobs:
       - name: Run OWASP Baseline Scan
         uses: zaproxy/action-api-scan@v0.1.1
         with:
-          docker_name: 'owasp/zap2docker-weekly'
+          docker_name: 'owasp/zap2docker-stable'
           target: 'http://localhost:6011/_status'
           fail_action: true
           allow_issue_writing: false

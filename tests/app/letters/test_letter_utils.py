@@ -31,6 +31,7 @@ from tests.app.db import create_notification
 
 FROZEN_DATE_TIME = "2018-03-14 17:00:00"
 
+pytest.skip(reason="Skipping letter-related functionality for now", allow_module_level=True)
 
 @pytest.fixture(name='sample_precompiled_letter_notification')
 def _sample_precompiled_letter_notification(sample_letter_notification):

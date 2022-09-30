@@ -10,6 +10,7 @@ letter_job = Blueprint("letter-job", __name__)
 register_errors(letter_job)
 
 # too many references will make SQS error (as the task can only be 256kb)
+# Maybe doesn't matter anymore with Redis as the celery backing store
 MAX_REFERENCES_PER_TASK = 5000
 
 

@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict, namedtuple
 from datetime import date, datetime
 
@@ -90,7 +91,10 @@ def test_update_letter_notifications_statuses_calls_with_correct_bucket_location
         update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
         s3_mock.assert_called_with('{}-ftp'.format(
             current_app.config['NOTIFY_EMAIL_DOMAIN']),
-            'NOTIFY-20170823160812-RSP.TXT'
+            'NOTIFY-20170823160812-RSP.TXT',
+            os.environ['AWS_ACCESS_KEY_ID'],
+            os.environ['AWS_SECRET_ACCESS_KEY'],
+            os.environ['AWS_REGION'],
         )
 
 

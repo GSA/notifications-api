@@ -4,7 +4,13 @@ import pytest
 import pytz
 from freezegun import freeze_time
 
-from app.aws.s3 import get_list_of_files_by_suffix, get_s3_file
+from app.aws.s3 import (
+    default_access_key,
+    default_region,
+    default_secret_key,
+    get_list_of_files_by_suffix,
+    get_s3_file,
+)
 from tests.app.conftest import datetime_in_past
 
 
@@ -22,7 +28,10 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
 
     get_s3_mock.assert_called_with(
         'foo-bucket',
-        'bar-file.txt'
+        'bar-file.txt',
+        default_access_key,
+        default_secret_key,
+        default_region,
     )
 
 

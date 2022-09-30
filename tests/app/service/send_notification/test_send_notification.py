@@ -683,7 +683,7 @@ def test_should_persist_notification(
     (SMS_TYPE, 'send-sms-tasks'),
     (EMAIL_TYPE, 'send-email-tasks')
 ])
-def test_should_delete_notification_and_return_error_if_sqs_fails(
+def test_should_delete_notification_and_return_error_if_redis_fails(
     client,
     sample_email_template,
     sample_template,
@@ -694,7 +694,7 @@ def test_should_delete_notification_and_return_error_if_sqs_fails(
 ):
     mocked = mocker.patch(
         'app.celery.provider_tasks.deliver_{}.apply_async'.format(template_type),
-        side_effect=Exception("failed to talk to SQS")
+        side_effect=Exception("failed to talk to redis")
     )
     mocker.patch('app.notifications.process_notifications.uuid.uuid4', return_value=fake_uuid)
 
@@ -719,7 +719,7 @@ def test_should_delete_notification_and_return_error_if_sqs_fails(
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json'), ('Authorization', 'Bearer {}'.format(auth_header))]
         )
-    assert str(e.value) == 'failed to talk to SQS'
+    assert str(e.value) == 'failed to talk to redis'
 
     mocked.assert_called_once_with([fake_uuid], queue=queue_name)
     assert not notifications_dao.get_notification_by_id(fake_uuid)
