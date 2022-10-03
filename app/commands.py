@@ -418,31 +418,31 @@ def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Total archived jobs = {}'.format(total_updated))
 
 
-@notify_command(name='update-emails-to-remove-gsi')
-@click.option('-s', '--service_id', required=True, help="service id. Update all user.email_address to remove .gsi")
-@statsd(namespace="tasks")
-def update_emails_to_remove_gsi(service_id):
-    users_to_update = """SELECT u.id user_id, u.name, email_address, s.id, s.name
-                           FROM users u
-                           JOIN user_to_service us on (u.id = us.user_id)
-                           JOIN services s on (s.id = us.service_id)
-                          WHERE s.id = :service_id
-                            AND u.email_address ilike ('%.gsi.gov.uk%')
-    """
-    results = db.session.execute(users_to_update, {'service_id': service_id})
-    print("Updating {} users.".format(results.rowcount))
+# @notify_command(name='update-emails-to-remove-gsi')
+# @click.option('-s', '--service_id', required=True, help="service id. Update all user.email_address to remove .gsi")
+# @statsd(namespace="tasks")
+# def update_emails_to_remove_gsi(service_id):
+#     users_to_update = """SELECT u.id user_id, u.name, email_address, s.id, s.name
+#                            FROM users u
+#                            JOIN user_to_service us on (u.id = us.user_id)
+#                            JOIN services s on (s.id = us.service_id)
+#                           WHERE s.id = :service_id
+#                             AND u.email_address ilike ('%.gsi.gov.uk%')
+#     """
+#     results = db.session.execute(users_to_update, {'service_id': service_id})
+#     print("Updating {} users.".format(results.rowcount))
 
-    for user in results:
-        print('User with id {} updated'.format(user.user_id))
+#     for user in results:
+#         print('User with id {} updated'.format(user.user_id))
 
-        update_stmt = """
-        UPDATE users
-           SET email_address = replace(replace(email_address, '.gsi.gov.uk', '.gov.uk'), '.GSI.GOV.UK', '.GOV.UK'),
-               updated_at = now()
-         WHERE id = :user_id
-        """
-        db.session.execute(update_stmt, {'user_id': str(user.user_id)})
-        db.session.commit()
+#         update_stmt = """
+#         UPDATE users
+#            SET email_address = replace(replace(email_address, '.gsi.gov.uk', '.gov.uk'), '.GSI.GOV.UK', '.GOV.UK'),
+#                updated_at = now()
+#          WHERE id = :user_id
+#         """
+#         db.session.execute(update_stmt, {'user_id': str(user.user_id)})
+#         db.session.commit()
 
 
 @notify_command(name='replay-daily-sorted-count-files')
@@ -841,3 +841,34 @@ def local_dev_broadcast_permissions(user_id):
         permission_dao.set_user_service_permission(
             user, service, permission_list, _commit=True, replace=True
         )
+
+@notify_command(name='create-test-user')
+@click.option('-e', '--email', required=True)
+@click.option('-m', '--mobile_number', required=True)
+@click.option('-p', '--password', required=True)
+@click.option('-n', '--name', required=True)
+@click.option('-a', '--auth_type', default="sms_auth")
+@click.option('-s', '--state', default="active")
+@click.option('-d', '--admin', default=False, type=bool)
+def create_test_user(name,email, mobile_number, password, auth_type, state, admin):
+    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+        current_app.logger.error('Can only be run in development')
+        return
+    
+    data = {
+        'name': name,
+        'email_address': email,
+        'mobile_number': mobile_number,
+        'password': password,
+        'auth_type': auth_type,
+        'state': state,
+        'platform_admin': admin,
+    }
+    user = User(**data)
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except IntegrityError:
+        print("duplicate user", user.name)
+        db.session.rollback()
+    
