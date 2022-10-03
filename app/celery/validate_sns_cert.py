@@ -68,10 +68,11 @@ def get_string_to_sign(sns_payload):
     return string_to_sign
 
 
-def validate_sns_message(sns_payload):
+def validate_sns_cert(sns_payload):
     """
     Adapted from the solution posted at
     https://github.com/boto/boto3/issues/2508#issuecomment-992931814
+    Modified to swap m2crypto for oscrypto
     """
     if not isinstance(sns_payload, dict):
         raise ValidationError("Unexpected message type {!r}".format(type(sns_payload).__name__))
