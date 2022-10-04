@@ -32,8 +32,10 @@ DEFAULT_MAX_AGE = timedelta(days=10000)
 def email_ses_callback_handler():
     try:
         data = sns_notification_handler(request.data, request.headers)
-    except Exception as e:
-        raise InvalidRequest("SES-SNS callback failed: invalid message type", 400)
+    except InvalidRequest as e:
+        return jsonify(
+            result="error", message=str(e.message)
+        ), e.status_code
     
     message = data.get("Message")
     if "mail" in message:

@@ -71,9 +71,9 @@ def test_notifications_ses_400_with_certificate(client):
 
 
 def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
-    mocker.patch("app.celery.process_ses_receipts_tasks.validate_sns_message", return_value=True)
+    mocker.patch("app.notifications.sns_handlers.validate_sns_cert", return_value=True)
     requests_mock = mocker.patch("requests.get")
-    data = json.dumps({"Type": "SubscriptionConfirmation", "SubscribeURL": "https://foo"})
+    data = json.dumps({"Type": "SubscriptionConfirmation", "SubscribeURL": "https://foo", "Message": "foo"})
     response = client.post(
         path='/notifications/email/ses',
         data=data,
@@ -85,9 +85,10 @@ def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
 
 
 def test_notifications_ses_200_call_process_task(client, mocker):
-    mocker.patch("app.celery.process_ses_receipts_tasks.validate_sns_message", return_value=True)
-    process_mock = mocker.patch("app.celery.process_ses_receipts_tasks.process_ses_results.apply_async")
-    data = {"Type": "Notification", "foo": "bar"}
+    process_mock = mocker.patch("app.notifications.notifications_ses_callback.process_ses_results.apply_async")
+    mocker.patch("app.notifications.sns_handlers.validate_sns_cert", return_value=True)
+    data = {"Type": "Notification", "foo": "bar", "Message": {"mail": "baz"} }
+    mocker.patch("app.notifications.sns_handlers.sns_notification_handler", return_value=data)
     json_data = json.dumps(data)
     response = client.post(
         path='/notifications/email/ses',
@@ -95,7 +96,7 @@ def test_notifications_ses_200_call_process_task(client, mocker):
         headers=[('Content-Type', 'application/json'), ('x-amz-sns-message-type', 'Notification')]
     )
 
-    process_mock.assert_called_once_with([{'Message': None}], queue='notify-internal-tasks')
+    process_mock.assert_called_once_with([{'Message': {"mail": "baz"}}], queue='notify-internal-tasks')
     assert response.status_code == 200
 
 
