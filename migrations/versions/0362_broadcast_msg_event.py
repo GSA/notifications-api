@@ -14,8 +14,8 @@ down_revision = '0361_new_user_bcast_permissions'
 
 
 def upgrade():
-    op.add_column('broadcast_message', sa.Column('cap_event', sa.String(length=255), nullable=True))
+    pass
 
 
 def downgrade():
-    op.drop_column('broadcast_message', 'cap_event')
+    pass

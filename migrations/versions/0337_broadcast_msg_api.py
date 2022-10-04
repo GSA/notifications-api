@@ -14,13 +14,8 @@ down_revision = '0336_broadcast_msg_content_2'
 
 
 def upgrade():
-    op.alter_column('broadcast_message', 'created_by_id', nullable=True)
-    op.add_column('broadcast_message', sa.Column('api_key_id', postgresql.UUID(), nullable=True))
-    op.create_foreign_key(None, 'broadcast_message', 'api_keys', ['api_key_id'], ['id'])
-    op.add_column('broadcast_message', sa.Column('reference', sa.String(length=255), nullable=True))
+    pass
 
 
 def downgrade():
-    op.alter_column('broadcast_message', 'created_by_id', nullable=False)
-    op.drop_column('broadcast_message', 'api_key_id')
-    op.add_column('broadcast_message', 'reference')
+    pass
