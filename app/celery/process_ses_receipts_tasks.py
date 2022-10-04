@@ -1,10 +1,6 @@
-import enum
-import traceback
 from datetime import datetime, timedelta
-from json import decoder
 
 import iso8601
-import requests
 from celery.exceptions import Retry
 from flask import current_app, json
 from sqlalchemy.orm.exc import NoResultFound
@@ -25,7 +21,6 @@ from app.dao.service_callback_api_dao import (
     get_service_delivery_status_callback_api_for_service,
 )
 from app.models import NOTIFICATION_PENDING, NOTIFICATION_SENDING, Complaint
-from app.notifications.callbacks import create_complaint_callback_data
 
 
 @notify_celery.task(bind=True, name="process-ses-result", max_retries=5, default_retry_delay=300)

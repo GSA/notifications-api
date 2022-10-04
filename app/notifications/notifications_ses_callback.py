@@ -1,25 +1,10 @@
-import enum
 from datetime import timedelta
 
-from flask import Blueprint, current_app, json, jsonify, request
+from flask import Blueprint, jsonify, request
 
 from app.celery.process_ses_receipts_tasks import process_ses_results
-from app.celery.service_callback_tasks import (
-    create_complaint_callback_data,
-    create_delivery_status_callback_data,
-    send_complaint_to_service,
-    send_delivery_status_to_service,
-)
 from app.config import QueueNames
-from app.dao.complaint_dao import save_complaint
-from app.dao.notifications_dao import dao_get_notification_history_by_reference
-from app.dao.service_callback_api_dao import (
-    get_service_complaint_callback_api_for_service,
-    get_service_delivery_status_callback_api_for_service,
-)
 from app.errors import InvalidRequest
-from app.models import Complaint
-from app.notifications.callbacks import create_complaint_callback_data
 from app.notifications.sns_handlers import sns_notification_handler
 
 ses_callback_blueprint = Blueprint('notifications_ses_callback', __name__)
