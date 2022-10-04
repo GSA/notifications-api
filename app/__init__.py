@@ -139,7 +139,6 @@ def register_blueprint(application):
     )
     from app.billing.rest import billing_blueprint
     from app.broadcast_message.rest import broadcast_message_blueprint
-    from app.celery.process_ses_receipts_tasks import ses_callback_blueprint
     from app.complaint.complaint_rest import complaint_blueprint
     from app.email_branding.rest import email_branding_blueprint
     from app.events.rest import events as events_blueprint
@@ -153,6 +152,9 @@ def register_blueprint(application):
     from app.letters.rest import letter_job
     from app.notifications.notifications_letter_callback import (
         letter_callback_blueprint,
+    )
+    from app.notifications.notifications_ses_callback import (
+        ses_callback_blueprint,
     )
     from app.notifications.notifications_sms_callback import (
         sms_callback_blueprint,

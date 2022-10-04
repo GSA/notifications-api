@@ -5,9 +5,8 @@ from json import decoder
 import requests
 from flask import current_app, json
 
-from app.celery.validate_sns_cert import validate_sns_cert
 from app.errors import InvalidRequest
-
+from app.notifications.sns_cert_validator import validate_sns_cert
 
 DEFAULT_MAX_AGE = timedelta(days=10000)
 
@@ -50,6 +49,7 @@ def sns_notification_handler(data, headers):
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
 
     if message.get('Type') == 'SubscriptionConfirmation':
+        # NOTE once a request is sent to SubscribeURL, AWS considers Notify a confirmed subscriber to this topic
         url = message.get('SubscribeUrl') if 'SubscribeUrl' in message else message.get('SubscribeURL')
         response = requests.get(url)
         try:

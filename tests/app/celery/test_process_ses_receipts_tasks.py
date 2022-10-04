@@ -4,7 +4,11 @@ from datetime import datetime
 from freezegun import freeze_time
 
 from app import encryption, statsd_client
-from app.celery.process_ses_receipts_tasks import process_ses_results
+from app.celery.process_ses_receipts_tasks import (
+    process_ses_results,
+    remove_emails_from_bounce,
+    remove_emails_from_complaint,
+)
 from app.celery.research_mode_tasks import (
     ses_hard_bounce_callback,
     ses_notification_callback,
@@ -15,10 +19,6 @@ from app.celery.service_callback_tasks import (
 )
 from app.dao.notifications_dao import get_notification_by_id
 from app.models import Complaint, Notification
-from app.notifications.notifications_ses_callback import (
-    remove_emails_from_bounce,
-    remove_emails_from_complaint,
-)
 from tests.app.conftest import create_sample_notification
 from tests.app.db import (
     create_notification,
@@ -105,7 +105,7 @@ def test_process_ses_results(sample_email_template):
     assert process_ses_results(response=ses_notification_callback(reference='ref1'))
 
 
-def test_process_ses_results_retry_called(sample_email_template, _notify_db, mocker):
+def test_process_ses_results_retry_called(sample_email_template, mocker):
     create_notification(sample_email_template, reference='ref1', sent_at=datetime.utcnow(), status='sending')
     mocker.patch("app.dao.notifications_dao._update_notification_status", side_effect=Exception("EXPECTED"))
     mocked = mocker.patch('app.celery.process_ses_receipts_tasks.process_ses_results.retry')
@@ -178,7 +178,7 @@ def test_ses_callback_should_not_update_notification_status_if_already_delivered
     assert mock_upd.call_count == 0
 
 
-def test_ses_callback_should_retry_if_notification_is_new(client, _notify_db, mocker):
+def test_ses_callback_should_retry_if_notification_is_new(mocker):
     mock_retry = mocker.patch('app.celery.process_ses_receipts_tasks.process_ses_results.retry')
     mock_logger = mocker.patch('app.celery.process_ses_receipts_tasks.current_app.logger.error')
     with freeze_time('2017-11-17T12:14:03.646Z'):
@@ -192,7 +192,7 @@ def test_ses_callback_should_log_if_notification_is_missing(client, _notify_db, 
         assert process_ses_results(ses_notification_callback(reference='ref')) is None
         assert mock_retry.call_count == 0
         mock_logger.assert_called_once_with('notification not found for reference: ref (while attempting update to delivered)')
-def test_ses_callback_should_not_retry_if_notification_is_old(client, _notify_db, mocker):
+def test_ses_callback_should_not_retry_if_notification_is_old(mocker):
     mock_retry = mocker.patch('app.celery.process_ses_receipts_tasks.process_ses_results.retry')
     mock_logger = mocker.patch('app.celery.process_ses_receipts_tasks.current_app.logger.error')
     with freeze_time('2017-11-21T12:14:03.646Z'):

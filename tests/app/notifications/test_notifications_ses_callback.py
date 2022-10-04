@@ -2,12 +2,12 @@ import pytest
 from flask import json
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.dao.notifications_dao import get_notification_by_id
-from app.models import Complaint
-from app.notifications.notifications_ses_callback import (
+from app.celery.process_ses_receipts_tasks import (
     check_and_queue_callback_task,
     handle_complaint,
 )
+from app.dao.notifications_dao import get_notification_by_id
+from app.models import Complaint
 from tests.app.db import (
     create_notification,
     create_notification_history,
