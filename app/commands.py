@@ -811,33 +811,3 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
         else:
             print(f'update service {service.id} with default')
             set_default_free_allowance_for_service(service, year)
-
-
-@click.option('-u', '--user-id', required=True)
-@notify_command(name='local-dev-broadcast-permissions')
-def local_dev_broadcast_permissions(user_id):
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
-        current_app.logger.error('Can only be run in development')
-        return
-
-    user = User.query.filter_by(id=user_id).one()
-
-    user_broadcast_services = Service.query.filter(
-        Service.permissions.any(permission='broadcast'),
-        Service.users.any(id=user_id)
-    )
-
-    for service in user_broadcast_services:
-        permission_list = [
-            Permission(service_id=service.id, user_id=user_id, permission=permission)
-            for permission in [
-                'reject_broadcasts', 'cancel_broadcasts',  # required to create / approve
-                'create_broadcasts', 'approve_broadcasts',  # minimum for testing
-                'manage_templates',  # unlikely but might be useful
-                'view_activity',  # normally added on invite / service creation
-            ]
-        ]
-
-        permission_dao.set_user_service_permission(
-            user, service, permission_list, _commit=True, replace=True
-        )

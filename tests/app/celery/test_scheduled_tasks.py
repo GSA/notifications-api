@@ -11,7 +11,6 @@ from notifications_utils.clients.zendesk.zendesk_client import (
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
-    auto_expire_broadcast_messages,
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     check_if_letters_still_in_created,
@@ -19,11 +18,9 @@ from app.celery.scheduled_tasks import (
     check_job_status,
     delete_invitations,
     delete_verify_codes,
-    remove_yesterdays_planned_tests_on_govuk_alerts,
     replay_created_notifications,
     run_scheduled_jobs,
     switch_current_sms_provider_on_slow_delivery,
-    trigger_link_tests,
 )
 from app.config import QueueNames, TaskNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
@@ -35,11 +32,9 @@ from app.models import (
     JOB_STATUS_PENDING,
     NOTIFICATION_DELIVERED,
     NOTIFICATION_PENDING_VIRUS_CHECK,
-    BroadcastStatusType,
 )
 from tests.app import load_example_csv
 from tests.app.db import (
-    create_broadcast_message,
     create_job,
     create_notification,
     create_template,
@@ -677,80 +672,3 @@ def test_check_for_services_with_high_failure_rates_or_sending_to_tv_numbers(
         technical_ticket=True
     )
     mock_send_ticket_to_zendesk.assert_called_once()
-
-
-def test_trigger_link_tests_calls_for_all_providers(
-    mocker, notify_api
-):
-    mock_trigger_link_test = mocker.patch(
-        'app.celery.scheduled_tasks.trigger_link_test',
-    )
-
-    with set_config(notify_api, 'ENABLED_CBCS', ['ee', 'vodafone']):
-        trigger_link_tests()
-
-    assert mock_trigger_link_test.apply_async.call_args_list == [
-        call(kwargs={'provider': 'ee'}, queue='broadcast-tasks'),
-        call(kwargs={'provider': 'vodafone'}, queue='broadcast-tasks')
-    ]
-
-
-def test_trigger_link_does_nothing_if_cbc_proxy_disabled(
-    mocker, notify_api
-):
-    mock_trigger_link_test = mocker.patch(
-        'app.celery.scheduled_tasks.trigger_link_test',
-    )
-
-    with set_config(notify_api, 'ENABLED_CBCS', ['ee', 'vodafone']), set_config(notify_api, 'CBC_PROXY_ENABLED', False):
-        trigger_link_tests()
-
-    assert mock_trigger_link_test.called is False
-
-
-@freeze_time('2021-07-19 15:50')
-@pytest.mark.parametrize('status, finishes_at, final_status, should_call_publish_task', [
-    (BroadcastStatusType.BROADCASTING, '2021-07-19 16:00', BroadcastStatusType.BROADCASTING, False),
-    (BroadcastStatusType.BROADCASTING, '2021-07-19 15:40', BroadcastStatusType.COMPLETED, True),
-    (BroadcastStatusType.BROADCASTING, None, BroadcastStatusType.BROADCASTING, False),
-    (BroadcastStatusType.PENDING_APPROVAL, None, BroadcastStatusType.PENDING_APPROVAL, False),
-    (BroadcastStatusType.CANCELLED, '2021-07-19 15:40', BroadcastStatusType.CANCELLED, False),
-])
-def test_auto_expire_broadcast_messages(
-    mocker,
-    status,
-    finishes_at,
-    final_status,
-    sample_template,
-    should_call_publish_task,
-):
-    message = create_broadcast_message(
-        status=status,
-        finishes_at=finishes_at,
-        template=sample_template,
-    )
-    mock_celery = mocker.patch('app.celery.scheduled_tasks.notify_celery.send_task')
-
-    auto_expire_broadcast_messages()
-    assert message.status == final_status
-
-    if should_call_publish_task:
-        mock_celery.assert_called_once_with(
-            name=TaskNames.PUBLISH_GOVUK_ALERTS,
-            queue=QueueNames.GOVUK_ALERTS
-        )
-    else:
-        assert not mock_celery.called
-
-
-def test_remove_yesterdays_planned_tests_on_govuk_alerts(
-    mocker
-):
-    mock_celery = mocker.patch('app.celery.scheduled_tasks.notify_celery.send_task')
-
-    remove_yesterdays_planned_tests_on_govuk_alerts()
-
-    mock_celery.assert_called_once_with(
-        name=TaskNames.PUBLISH_GOVUK_ALERTS,
-        queue=QueueNames.GOVUK_ALERTS
-    )

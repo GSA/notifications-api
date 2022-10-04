@@ -16,7 +16,6 @@ env:
   NOTIFY_LOG_PATH: /workspace/logs/app.log
   ADMIN_CLIENT_ID: notify-admin
   ADMIN_CLIENT_SECRET: dev-notify-secret-key
-  GOVUK_ALERTS_CLIENT_ID: govuk-alerts
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
