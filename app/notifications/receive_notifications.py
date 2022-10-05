@@ -27,6 +27,7 @@ INBOUND_SMS_COUNTER = Counter(
 @receive_notifications_blueprint.route('/notifications/sms/receive/sns', methods=['POST'])
 def receive_sns_sms():
     """
+    Expected value of the 'Message' key in the incoming payload from SNS
     {
         "originationNumber":"+14255550182",
         "destinationNumber":"+12125550101",

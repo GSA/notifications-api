@@ -10,8 +10,7 @@ import six
 from app import redis_store
 from app.config import Config
 
-USE_CACHE = True
-VALIDATE_ARN = True
+VALIDATE_SNS_TOPICS = Config.VALIDATE_SNS_TOPICS
 VALID_SNS_TOPICS = Config.VALID_SNS_TOPICS
 
 
@@ -27,19 +26,16 @@ class ValidationError(Exception):
 
 
 def get_certificate(url):
-    if USE_CACHE:
-        res = redis_store.get(url)
-        if res is not None:
-            return res
-        res = requests.get(url).text
-        redis_store.set(url, res, ex=60 * 60)  # 60 minutes
+    res = redis_store.get(url)
+    if res is not None:
         return res
-    else:
-        return requests.get(url).text
+    res = requests.get(url).text
+    redis_store.set(url, res, ex=60 * 60)  # 60 minutes
+    return res
 
 
 def validate_arn(sns_payload):
-    if VALIDATE_ARN:
+    if VALIDATE_SNS_TOPICS:
         arn = sns_payload.get('TopicArn')
         topic_name = arn.split(':')[5]
         if topic_name not in VALID_SNS_TOPICS:

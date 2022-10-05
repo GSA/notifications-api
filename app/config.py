@@ -118,6 +118,7 @@ class Config(object):
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
     
     # AWS SNS topics for delivery receipts
+    VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
 
     # URL of redis instance
