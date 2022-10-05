@@ -1,6 +1,7 @@
 ---
+
 applications:
-  - name: notifications-api-((env))
+  - name: notify-api-alt
     buildpack: https://github.com/cloudfoundry/python-buildpack.git#v1.7.58
     instances: 1
     memory: 1G
@@ -8,29 +9,29 @@ applications:
     health-check-type: process
     health-check-invocation-timeout: 1
     routes:
-    - route: notifications-api.app.cloud.gov
-    - route: notifications-api-((env)).apps.internal
+    - route: notify-api-alt.app.cloud.gov
 
     services:
-      - notifications-api-rds-((env))
-      - notifications-api-redis-((env))
-      - notifications-api-csv-upload-bucket-((env))
-      - notifications-api-contact-list-bucket-((env))
+      - api-alt-psql
+      - api-alt-redis
 
     env:
+      BP_PIP_VERSION: latest
       NOTIFY_APP_NAME: api
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
-      DEPLOY_ENV: ((env))
 
       NOTIFY_ENVIRONMENT: live
-      API_HOST_NAME: https://notifications-api.app.cloud.gov
-      ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
+      API_HOST_NAME: https://notify-api-alt.app.cloud.gov
+      ADMIN_BASE_URL: https://notify-admin-alt.app.cloud.gov
+      NOTIFICATION_QUEUE_PREFIX: notify_alt_
+      REDIS_ENABLED: true
       STATSD_HOST: localhost
 
-      # Credentials variables
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
+
+      # Credentials variables
       ADMIN_CLIENT_SECRET: ((ADMIN_CLIENT_SECRET))
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
