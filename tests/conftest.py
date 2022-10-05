@@ -5,7 +5,7 @@ import pytest
 import sqlalchemy
 from alembic.command import upgrade
 from alembic.config import Config
-from flask import Flask
+from flask import Flask, current_app
 
 from app import create_app, db
 from app.dao.provider_details_dao import get_provider_details_by_identifier

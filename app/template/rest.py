@@ -28,12 +28,7 @@ from app.dao.templates_dao import (
 )
 from app.errors import InvalidRequest, register_errors
 from app.letters.utils import get_letter_pdf_and_metadata
-from app.models import (
-    LETTER_TYPE,
-    SECOND_CLASS,
-    SMS_TYPE,
-    Template,
-)
+from app.models import LETTER_TYPE, SECOND_CLASS, SMS_TYPE, Template
 from app.notifications.validators import check_reply_to, service_has_permission
 from app.schema_validation import validate
 from app.schemas import (
@@ -171,6 +166,7 @@ def get_all_templates_for_service(service_id):
         data = template_schema.dump(templates, many=True)
     else:
         data = template_schema_no_detail.dump(templates, many=True)
+        print(data)
     return jsonify(data=data)
 
 

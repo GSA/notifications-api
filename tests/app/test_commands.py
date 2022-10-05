@@ -5,9 +5,8 @@ from app.commands import (
     populate_annual_billing_with_defaults,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.dao.services_dao import dao_add_user_to_service
 from app.models import AnnualBilling
-from tests.app.db import create_annual_billing, create_service, create_user
+from tests.app.db import create_annual_billing, create_service
 
 
 def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir):

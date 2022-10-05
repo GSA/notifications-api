@@ -13,10 +13,7 @@ from app.dao.api_key_dao import save_model_api_key
 from app.dao.invited_user_dao import save_invited_user
 from app.dao.jobs_dao import dao_create_job
 from app.dao.notifications_dao import dao_create_notification
-from app.dao.organisation_dao import (
-    dao_add_service_to_organisation,
-    dao_create_organisation,
-)
+from app.dao.organisation_dao import dao_create_organisation
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code

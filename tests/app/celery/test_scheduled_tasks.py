@@ -34,11 +34,7 @@ from app.models import (
     NOTIFICATION_PENDING_VIRUS_CHECK,
 )
 from tests.app import load_example_csv
-from tests.app.db import (
-    create_job,
-    create_notification,
-    create_template,
-)
+from tests.app.db import create_job, create_notification, create_template
 from tests.conftest import set_config
 
 
