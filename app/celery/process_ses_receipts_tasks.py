@@ -108,7 +108,7 @@ def determine_notification_bounce_type(ses_message):
         return notification_type
 
     if notification_type != "Bounce":
-        raise KeyError(f"Unhandled notification type {notification_type}")
+        raise KeyError(f"Unhandled sns notification type {notification_type}")
 
     remove_emails_from_bounce(ses_message)
     current_app.logger.info("SES bounce dict: {}".format(json.dumps(ses_message).replace("{", "(").replace("}", ")")))
@@ -116,6 +116,13 @@ def determine_notification_bounce_type(ses_message):
         return "Permanent"
     return "Temporary"
 
+def determine_notification_type(ses_message):
+    notification_type = ses_message["notificationType"]
+    if notification_type not in ["Bounce","Complaint","Delivery"]:
+        raise KeyError(f"Unhandled sns notification type {notification_type}")
+    if notification_type == 'Bounce':
+        return determine_notification_bounce_type(ses_message)
+    return notification_type
 
 def _determine_provider_response(ses_message):
     if ses_message["notificationType"] != "Bounce":
@@ -136,7 +143,7 @@ def _determine_provider_response(ses_message):
 
 
 def get_aws_responses(ses_message):
-    status = determine_notification_bounce_type(ses_message)
+    status = determine_notification_type(ses_message)
 
     base = {
         "Permanent": {
