@@ -31,6 +31,7 @@ def get_certificate(url):
         return res
     res = requests.get(url).text
     redis_store.set(url, res, ex=60 * 60)  # 60 minutes
+    _signing_cert_cache[url] = res
     return res
 
 
