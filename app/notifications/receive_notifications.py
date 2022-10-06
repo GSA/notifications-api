@@ -44,7 +44,7 @@ def receive_sns_sms():
         raise InvalidRequest(f"SMS-SNS callback failed with error: {e}", 400)
 
     # TODO remove after smoke testing implemented on prod
-    current_app.logger.info(f'data is: {data}')
+    current_app.logger.info(f'SNS message_type is: {message_type}, data is: {data}')
     
     # TODO wrap this up
     if message_type != 'SubscriptionConfirmation':
