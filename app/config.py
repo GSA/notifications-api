@@ -537,7 +537,7 @@ class Staging(Config):
     # LETTER_SANITISE_BUCKET_NAME = 'staging-letters-sanitise'
     FROM_NUMBER = 'stage'
     API_RATE_LIMIT_ENABLED = True
-    CHECK_PROXY_HEADER = True
+    CHECK_PROXY_HEADER = False
 
 
 class Live(Config):
@@ -562,7 +562,7 @@ class Live(Config):
 
     FROM_NUMBER = 'US Notify'
     API_RATE_LIMIT_ENABLED = True
-    CHECK_PROXY_HEADER = True
+    CHECK_PROXY_HEADER = False
     SES_STUB_URL = None
     CRONITOR_ENABLED = True
 
