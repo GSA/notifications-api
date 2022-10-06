@@ -16,7 +16,7 @@ DEFAULT_MAX_AGE = timedelta(days=10000)
 @ses_callback_blueprint.route('/notifications/email/ses', methods=['POST'])
 def email_ses_callback_handler():
     try:
-        data = sns_notification_handler(request.data, request.headers)
+        data, _ = sns_notification_handler(request.data, request.headers)
     except InvalidRequest as e:
         return jsonify(
             result="error", message=str(e.message)

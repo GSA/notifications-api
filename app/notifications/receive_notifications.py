@@ -39,13 +39,16 @@ def receive_sns_sms():
     """
     
     try:
-        post_data = sns_notification_handler(request.data, request.headers)
+        data, message_type = sns_notification_handler(request.data, request.headers)
     except Exception as e:
         raise InvalidRequest(f"SMS-SNS callback failed with error: {e}", 400)
 
-    message = json.loads(post_data.get("Message"))
+    # TODO remove after smoke testing implemented on prod
+    current_app.logger.info(f'data is: {data}')
+    
     # TODO wrap this up
-    if "inboundMessageId" in message:
+    if message_type != 'SubscriptionConfirmation':
+        message = json.loads(data.get("Message"))
         # TODO use standard formatting we use for all US numbers
         inbound_number = message['destinationNumber'].replace('+','')
 
@@ -63,7 +66,7 @@ def receive_sns_sms():
         content = message.get("messageBody")
         from_number = message.get('originationNumber')
         provider_ref = message.get('inboundMessageId')
-        date_received = post_data.get('Timestamp')
+        date_received = data.get('Timestamp')
         provider_name = "sns"
 
         inbound = create_inbound_sms_object(service,
@@ -73,7 +76,7 @@ def receive_sns_sms():
                                             date_received=date_received,
                                             provider_name=provider_name)
 
-        # TODO ensure inbound sms callback endpoints are accessible and functioning for notify api users, then uncomment the task below
+        # TODO ensure inbound sms callback endpoints are accessible and functioning for notify api users
         tasks.send_inbound_sms_to_service.apply_async([str(inbound.id), str(service.id)], queue=QueueNames.NOTIFY)
 
         current_app.logger.debug(
