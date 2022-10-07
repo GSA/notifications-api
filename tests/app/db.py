@@ -443,17 +443,17 @@ def create_service_permission(service_id, permission=EMAIL_TYPE):
 def create_inbound_sms(
         service,
         notify_number=None,
-        user_number='447700900111',
+        user_number='12025550104',
         provider_date=None,
         provider_reference=None,
         content='Hello',
-        provider="mmg",
+        provider="sns",
         created_at=None
 ):
     if not service.inbound_number:
         create_inbound_number(
             # create random inbound number
-            notify_number or '07{:09}'.format(random.randint(0, 1e9 - 1)),
+            notify_number or '1'+str(random.randint(1001001000, 9999999999)),
             provider=provider,
             service_id=service.id
         )
@@ -566,7 +566,7 @@ def create_api_key(service, key_type=KEY_TYPE_NORMAL, key_name=None):
     return api_key
 
 
-def create_inbound_number(number, provider='mmg', active=True, service_id=None):
+def create_inbound_number(number, provider='sns', active=True, service_id=None):
     inbound_number = InboundNumber(
         id=uuid.uuid4(),
         number=number,

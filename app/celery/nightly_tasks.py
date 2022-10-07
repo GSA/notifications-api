@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery, statsd_client, zendesk_client
 from app.aws import s3
+from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
 from app.cronitor import cronitor
 from app.dao.fact_processing_time_dao import insert_update_processing_time
@@ -36,9 +37,6 @@ from app.models import (
     SMS_TYPE,
     FactProcessingTime,
     Notification,
-)
-from app.notifications.notifications_ses_callback import (
-    check_and_queue_callback_task,
 )
 from app.utils import get_london_midnight_in_utc
 

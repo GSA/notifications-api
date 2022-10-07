@@ -2,12 +2,12 @@ import pytest
 from flask import json
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.dao.notifications_dao import get_notification_by_id
-from app.models import Complaint
-from app.notifications.notifications_ses_callback import (
+from app.celery.process_ses_receipts_tasks import (
     check_and_queue_callback_task,
     handle_complaint,
 )
+from app.dao.notifications_dao import get_notification_by_id
+from app.models import Complaint
 from tests.app.db import (
     create_notification,
     create_notification_history,
@@ -72,7 +72,7 @@ def test_process_ses_results_in_complaint_save_complaint_with_null_complaint_typ
 
 def test_check_and_queue_callback_task(mocker, sample_notification):
     mock_create = mocker.patch(
-        'app.notifications.notifications_ses_callback.create_delivery_status_callback_data'
+        'app.celery.process_ses_receipts_tasks.create_delivery_status_callback_data'
     )
 
     mock_send = mocker.patch(
@@ -86,6 +86,7 @@ def test_check_and_queue_callback_task(mocker, sample_notification):
 
     # callback_api doesn't match by equality for some
     # reason, so we need to take this approach instead
+    print(f'mock_create.mock_calls is: {mock_create.mock_calls}')
     mock_create_args = mock_create.mock_calls[0][1]
     assert mock_create_args[0] == sample_notification
     assert mock_create_args[1].id == callback_api.id

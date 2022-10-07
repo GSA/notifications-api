@@ -1,6 +1,7 @@
 from app.config import QueueNames
 
 
+# NOTE 100422 pass_app_wrapper can probably be removed
 def test_queue_names_set_in_paas_app_wrapper():
     with open("scripts/paas_app_wrapper.sh", 'r') as stream:
         search = ' -Q '

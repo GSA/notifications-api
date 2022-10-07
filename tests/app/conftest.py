@@ -31,6 +31,7 @@ from app.models import (
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     LETTER_TYPE,
+    NOTIFICATION_STATUS_TYPES_COMPLETED,
     SERVICE_PERMISSION_TYPES,
     SMS_TYPE,
     ApiKey,
@@ -67,6 +68,86 @@ from tests.app.db import (
 def rmock():
     with requests_mock.mock() as rmock:
         yield rmock
+
+
+def create_sample_notification(
+    notify_db,
+    notify_db_session,
+    service=None,
+    template=None,
+    job=None,
+    job_row_number=None,
+    to_field=None,
+    status="created",
+    provider_response=None,
+    reference=None,
+    created_at=None,
+    sent_at=None,
+    billable_units=1,
+    personalisation=None,
+    api_key=None,
+    key_type=KEY_TYPE_NORMAL,
+    sent_by=None,
+    international=False,
+    client_reference=None,
+    rate_multiplier=1.0,
+    scheduled_for=None,
+    normalised_to=None,
+    postage=None,
+):
+    if created_at is None:
+        created_at = datetime.utcnow()
+    if service is None:
+        service = create_service(check_if_service_exists=True)
+    if template is None:
+        template = create_template(service=service)
+
+    if job is None and api_key is None:
+        # we didn't specify in test - lets create it
+        api_key = ApiKey.query.filter(ApiKey.service == template.service, ApiKey.key_type == key_type).first()
+        if not api_key:
+            api_key = create_api_key(template.service, key_type=key_type)
+
+    notification_id = uuid.uuid4()
+
+    if to_field:
+        to = to_field
+    else:
+        to = "+16502532222"
+
+    data = {
+        "id": notification_id,
+        "to": to,
+        "job_id": job.id if job else None,
+        "job": job,
+        "service_id": service.id,
+        "service": service,
+        "template_id": template.id,
+        "template_version": template.version,
+        "status": status,
+        "provider_response": provider_response,
+        "reference": reference,
+        "created_at": created_at,
+        "sent_at": sent_at,
+        "billable_units": billable_units,
+        "personalisation": personalisation,
+        "notification_type": template.template_type,
+        "api_key": api_key,
+        "api_key_id": api_key and api_key.id,
+        "key_type": api_key.key_type if api_key else key_type,
+        "sent_by": sent_by,
+        "updated_at": created_at if status in NOTIFICATION_STATUS_TYPES_COMPLETED else None,
+        "client_reference": client_reference,
+        "rate_multiplier": rate_multiplier,
+        "normalised_to": normalised_to,
+        "postage": postage,
+    }
+    if job_row_number is not None:
+        data["job_row_number"] = job_row_number
+    notification = Notification(**data)
+    dao_create_notification(notification)
+
+    return notification
 
 
 @pytest.fixture(scope='function')

@@ -16,7 +16,8 @@
 		"python.defaultInterpreterPath": "/usr/bin/python3",
 		"python.linting.pylintPath": "/usr/local/share/pip-global/bin/pylint",
 		"python.analysis.extraPaths": [
-			"/home/vscode/.local/lib/python3.9/site-packages"
+			"/home/vscode/.local/lib/python3.9/site-packages",
+			"/home/vscode/.local/bin"
 		]
 	},
 	"features": {
