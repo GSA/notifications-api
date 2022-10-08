@@ -81,7 +81,11 @@ def send_sms_to_provider(notification):
                     'international': notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-                provider.send_sms(**send_sms_kwargs)
+                ref = provider.send_sms(**send_sms_kwargs)
+                notification.reference = ref
+                dao_update_notification(notification)
+                
+                
             except Exception as e:
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)

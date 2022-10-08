@@ -207,6 +207,17 @@ def dao_fetch_service_by_inbound_number(number):
         Service.id == inbound_number.service_id
     ).first()
 
+def dao_fetch_service_by_reference(reference):
+    previous_message = Notification.query.filter(
+        Notification.reference == reference
+    ).first()
+
+    if not previous_message:
+        return None
+
+    return Service.query.filter(
+        Service.id == previous_message.service_id
+    ).first()
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
     query = Service.query.filter_by(

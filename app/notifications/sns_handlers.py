@@ -58,7 +58,7 @@ def sns_notification_handler(data, headers):
             current_app.logger.warning(f"Attempt to raise_for_status()SubscriptionConfirmation Type message files for response: {response.text} with error {e}")
             raise InvalidRequest("SES-SNS callback failed: attempt to raise_for_status()SubscriptionConfirmation Type message failed", 400)
         current_app.logger.info("SES-SNS auto-confirm subscription callback succeeded")
-        return {'subscriptionConfirmed': True}
+        return message, message.get('Type')
 
     # TODO remove after smoke testing on prod is implemented
     current_app.logger.info(f"SNS message: {message} is a valid message. Attempting to process it now.")

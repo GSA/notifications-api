@@ -9,7 +9,7 @@ from notifications_utils.recipients import try_validate_and_format_phone_number
 from app.celery import tasks
 from app.config import QueueNames
 from app.dao.inbound_sms_dao import dao_create_inbound_sms
-from app.dao.services_dao import dao_fetch_service_by_inbound_number
+from app.dao.services_dao import dao_fetch_service_by_reference
 from app.errors import InvalidRequest, register_errors
 from app.models import INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
 from app.notifications.sns_handlers import sns_notification_handler
@@ -52,7 +52,7 @@ def receive_sns_sms():
         # TODO use standard formatting we use for all US numbers
         inbound_number = message['destinationNumber'].replace('+','')
 
-        service = fetch_potential_service(inbound_number, 'sns')
+        service = fetch_potential_service(message['previousPublishedMessageId'], 'sns')
         if not service:
             # since this is an issue with our service <-> number mapping, or no inbound_sms service permission
             # we should still tell SNS that we received it successfully
@@ -218,12 +218,13 @@ def create_inbound_sms_object(service, content, from_number, provider_ref, date_
     return inbound
 
 
-def fetch_potential_service(inbound_number, provider_name):
-    service = dao_fetch_service_by_inbound_number(inbound_number)
+def fetch_potential_service(reference, provider_name):
+    service = dao_fetch_service_by_reference(reference)
+    # service = dao_fetch_service_by_inbound_number(inbound_number)
 
     if not service:
         current_app.logger.warning('Inbound number "{}" from {} not associated with a service'.format(
-            inbound_number, provider_name
+            reference, provider_name
         ))
         return False
 

@@ -42,31 +42,31 @@ class AwsSnsClient(SmsClient):
                 "AWS.SNS.SMS.SMSType": {
                     "DataType": "String",
                     "StringValue": "Transactional",
+                },
+                "AWS.MM.SMS.OriginationNumber": {
+                    "DataType": "String",
+                    "StringValue": self.current_app.config["AWS_US_TOLL_FREE_NUMBER"],
                 }
             }
 
-            # If sending with a long code number, we need to use another AWS region
-            # and specify the phone number we want to use as the origination number
+            # sender is managed in the UI in settings > Text message senders
             send_with_dedicated_phone_number = self._send_with_dedicated_phone_number(sender)
+            
             if send_with_dedicated_phone_number:
                 client = self._long_codes_client
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": sender,
                 }
-
-            # If the number is US based, we must use a US Toll Free number to send the message
+            
             country = phonenumbers.region_code_for_number(match.number)
-            if country == "US":
-                client = self._long_codes_client
-                attributes["AWS.MM.SMS.OriginationNumber"] = {
-                    "DataType": "String",
-                    "StringValue": self.current_app.config["AWS_US_TOLL_FREE_NUMBER"],
-                }
 
             try:
                 start_time = monotonic()
                 response = client.publish(PhoneNumber=to, Message=content, MessageAttributes=attributes)
+                self.current_app.logger.info('RESPONSE FROM AWS SNS:')
+                for k,v in response.items():
+                    self.current_app.logger.info(f'{k}: {v}')
             except botocore.exceptions.ClientError as e:
                 self.statsd_client.incr("clients.sns.error")
                 raise str(e)
