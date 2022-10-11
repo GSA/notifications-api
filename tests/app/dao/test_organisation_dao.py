@@ -65,7 +65,7 @@ def test_update_organisation(notify_db_session):
     data = {
         'name': 'new name',
         "crown": True,
-        "organisation_type": 'local',
+        "organisation_type": 'state',
         "agreement_signed": True,
         "agreement_signed_at": datetime.datetime.utcnow(),
         "agreement_signed_by_id": user.id,
@@ -124,8 +124,8 @@ def test_update_organisation_does_not_update_the_service_if_certain_attributes_n
     email_branding = create_email_branding()
     letter_branding = create_letter_branding()
 
-    sample_service.organisation_type = 'local'
-    sample_organisation.organisation_type = 'central'
+    sample_service.organisation_type = 'state'
+    sample_organisation.organisation_type = 'federal'
     sample_organisation.email_branding = email_branding
     sample_organisation.letter_branding = letter_branding
 
@@ -138,8 +138,8 @@ def test_update_organisation_does_not_update_the_service_if_certain_attributes_n
 
     assert sample_organisation.name == 'updated org name'
 
-    assert sample_organisation.organisation_type == 'central'
-    assert sample_service.organisation_type == 'local'
+    assert sample_organisation.organisation_type == 'federal'
+    assert sample_service.organisation_type == 'state'
 
     assert sample_organisation.email_branding == email_branding
     assert sample_service.email_branding is None
@@ -152,20 +152,20 @@ def test_update_organisation_updates_the_service_org_type_if_org_type_is_provide
     sample_service,
     sample_organisation,
 ):
-    sample_service.organisation_type = 'local'
-    sample_organisation.organisation_type = 'local'
+    sample_service.organisation_type = 'state'
+    sample_organisation.organisation_type = 'state'
 
     sample_organisation.services.append(sample_service)
     db.session.commit()
 
-    dao_update_organisation(sample_organisation.id, organisation_type='central')
+    dao_update_organisation(sample_organisation.id, organisation_type='federal')
 
-    assert sample_organisation.organisation_type == 'central'
-    assert sample_service.organisation_type == 'central'
+    assert sample_organisation.organisation_type == 'federal'
+    assert sample_service.organisation_type == 'federal'
     assert Service.get_history_model().query.filter_by(
         id=sample_service.id,
         version=2
-    ).one().organisation_type == 'central'
+    ).one().organisation_type == 'federal'
 
 
 def test_update_organisation_updates_the_service_branding_if_branding_is_provided(
@@ -228,8 +228,8 @@ def test_update_organisation_updates_services_with_new_crown_type(
 def test_add_service_to_organisation(sample_service, sample_organisation):
     assert sample_organisation.services == []
 
-    sample_service.organisation_type = "central"
-    sample_organisation.organisation_type = "local"
+    sample_service.organisation_type = "federal"
+    sample_organisation.organisation_type = "state"
     sample_organisation.crown = False
 
     dao_add_service_to_organisation(sample_service, sample_organisation.id)

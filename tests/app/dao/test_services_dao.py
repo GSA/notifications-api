@@ -98,7 +98,7 @@ def test_create_service(notify_db_session):
                       email_from="email_from",
                       message_limit=1000,
                       restricted=False,
-                      organisation_type='central',
+                      organisation_type='federal',
                       created_by=user)
     dao_create_service(service, user)
     assert Service.query.count() == 1
@@ -110,7 +110,7 @@ def test_create_service(notify_db_session):
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
-    assert service_db.organisation_type == 'central'
+    assert service_db.organisation_type == 'federal'
     assert service_db.crown is None
     assert not service.letter_branding
     assert not service.organisation_id
@@ -119,13 +119,13 @@ def test_create_service(notify_db_session):
 def test_create_service_with_organisation(notify_db_session):
     user = create_user(email='local.authority@local-authority.gov.uk')
     organisation = create_organisation(
-        name='Some local authority', organisation_type='local', domains=['local-authority.gov.uk'])
+        name='Some local authority', organisation_type='state', domains=['local-authority.gov.uk'])
     assert Service.query.count() == 0
     service = Service(name="service_name",
                       email_from="email_from",
                       message_limit=1000,
                       restricted=False,
-                      organisation_type='central',
+                      organisation_type='federal',
                       created_by=user)
     dao_create_service(service, user)
     assert Service.query.count() == 1
@@ -138,7 +138,7 @@ def test_create_service_with_organisation(notify_db_session):
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
-    assert service_db.organisation_type == 'local'
+    assert service_db.organisation_type == 'state'
     assert service_db.crown is None
     assert not service.letter_branding
     assert service.organisation_id == organisation.id
@@ -447,7 +447,7 @@ def test_get_all_user_services_should_return_empty_list_if_no_services_for_user(
 
 @freeze_time('2019-04-23T10:00:00')
 def test_dao_fetch_live_services_data(sample_user):
-    org = create_organisation(organisation_type='nhs_central')
+    org = create_organisation(organisation_type='federal')
     service = create_service(go_live_user=sample_user, go_live_at='2014-04-20T10:00:00')
     sms_template = create_template(service=service)
     service_2 = create_service(service_name='second', go_live_at='2017-04-20T10:00:00', go_live_user=sample_user)
@@ -485,7 +485,7 @@ def test_dao_fetch_live_services_data(sample_user):
     # checks the results and that they are ordered by date:
     assert results == [
         {'service_id': mock.ANY, 'service_name': 'Sample service', 'organisation_name': 'test_org_1',
-            'organisation_type': 'nhs_central', 'consent_to_research': None, 'contact_name': 'Test User',
+            'organisation_type': 'federal', 'consent_to_research': None, 'contact_name': 'Test User',
             'contact_email': 'notify@digital.cabinet-office.gov.uk', 'contact_mobile': '+447700900986',
             'live_date': datetime(2014, 4, 20, 10, 0), 'sms_volume_intent': None, 'email_volume_intent': None,
             'letter_volume_intent': None, 'sms_totals': 2, 'email_totals': 1, 'letter_totals': 1,
