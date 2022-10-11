@@ -1,7 +1,7 @@
 """
 
-Revision ID: 0376_add_org_names
-Revises: 0375_fix_service_name
+Revision ID: 0378_add_org_names
+Revises: 0377_add_inbound_sms_number
 Create Date: 2022-09-23 20:04:00.766980
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0376_add_org_names'
-down_revision = '0375_fix_service_name'
+revision = '0378_add_org_names'
+down_revision = '0377_add_inbound_sms_number'
 
 
 def upgrade():
