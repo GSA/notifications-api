@@ -113,6 +113,9 @@ class Config(object):
     # Firetext API Key
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
+    
+    # Whether to ignore POSTs from SNS for replies to SMS we sent
+    RECEIVE_INBOUND_SMS = False
 
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'

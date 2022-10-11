@@ -38,6 +38,12 @@ def receive_sns_sms():
     }
     """
     
+    # Whether or not to ignore inbound SMS replies
+    if not current_app.config['RECEIVE_INBOUND_SMS']:
+        return jsonify(
+            result="success", message="SMS-SNS callback succeeded"
+        ), 200
+    
     try:
         post_data = sns_notification_handler(request.data, request.headers)
     except Exception as e:
