@@ -43,6 +43,7 @@ def setup_function(_function):
     # state of the cache is not shared between tests.
     send_to_providers.provider_cache.clear()
 
+
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
 def test_provider_to_use_should_return_random_provider(mocker, notify_db_session):
     mmg = get_provider_details_by_identifier('mmg')
@@ -71,6 +72,7 @@ def test_provider_to_use_should_cache_repeated_calls(mocker, notify_db_session):
 
     assert all(result == results[0] for result in results)
     assert len(mock_choices.call_args_list) == 1
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
 @pytest.mark.parametrize('international_provider_priority', (
@@ -591,6 +593,7 @@ def test_should_not_update_notification_if_research_mode_on_exception(
     persisted_notification = notifications_dao.get_notification_by_id(sample_notification.id)
     assert persisted_notification.billable_units == 0
     assert update_mock.called
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
 @pytest.mark.parametrize("starting_status, expected_status", [

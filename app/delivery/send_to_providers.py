@@ -166,7 +166,7 @@ def update_notification_to_sending(notification, provider):
         # We currently have no callback method for SMS deliveries
         # TODO create celery task to request SMS delivery receipts from cloudwatch api
         notification.status = NOTIFICATION_SENT if notification.notification_type == "sms" else NOTIFICATION_SENDING
-    
+
     dao_update_notification(notification)
 
 
@@ -175,10 +175,12 @@ provider_cache = TTLCache(maxsize=8, ttl=10)
 
 @cached(cache=provider_cache)
 def provider_to_use(notification_type, international=True):
-    international = False # TODO: remove or resolve the functionality of this flag
+    international = False  # TODO: remove or resolve the functionality of this flag
     # TODO rip firetext and mmg out of early migrations and clean up the expression below
     active_providers = [
-        p for p in get_provider_details_by_notification_type(notification_type, international) if p.active and p.identifier not in ['firetext','mmg']
+        p for p in get_provider_details_by_notification_type(
+            notification_type, international
+        ) if p.active and p.identifier not in ['firetext', 'mmg']
     ]
 
     if not active_providers:
@@ -191,7 +193,7 @@ def provider_to_use(notification_type, international=True):
         chosen_provider = active_providers[0]
     else:
         weights = [p.priority for p in active_providers]
-        chosen_provider = random.choices(active_providers, weights=weights)[0] # nosec B311 - this is not security/cryptography related
+        chosen_provider = random.choices(active_providers, weights=weights)[0]  # nosec B311 - not sec/crypto related
 
     return notification_provider_clients.get_client_by_name_and_type(chosen_provider.identifier, notification_type)
 

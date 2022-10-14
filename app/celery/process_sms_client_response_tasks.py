@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
 
-import pytest
 from flask import current_app
 from notifications_utils.template import SMSMessageTemplate
 

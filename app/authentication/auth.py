@@ -18,7 +18,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.serialised_models import SerialisedService
 
-GENERAL_TOKEN_ERROR_MESSAGE = 'Invalid token: make sure your API token matches the example at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header'  # nosec B105
+GENERAL_TOKEN_ERROR_MESSAGE = '''
+        Invalid token: make sure your API token matches the example
+        at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header
+    '''  # nosec B105
 
 AUTH_DB_CONNECTION_DURATION_SECONDS = Histogram(
     'auth_db_connection_duration_seconds',

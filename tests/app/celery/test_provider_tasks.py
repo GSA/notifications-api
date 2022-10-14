@@ -126,6 +126,7 @@ def test_should_add_to_retry_queue_if_notification_not_found_in_deliver_email_ta
     app.delivery.send_to_providers.send_email_to_provider.assert_not_called()
     app.celery.provider_tasks.deliver_email.retry.assert_called_with(queue="retry-tasks")
 
+
 @pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize(
     'exception_class', [

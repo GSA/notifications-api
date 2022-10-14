@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from notifications_utils.recipients import try_validate_and_format_phone_number
+# from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app.dao.inbound_sms_dao import (
     dao_count_inbound_sms_for_service,
