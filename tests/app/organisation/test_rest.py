@@ -26,7 +26,7 @@ from tests.app.db import (
 
 
 def test_get_all_organisations(admin_request, notify_db_session):
-    create_organisation(name='inactive org', active=False, organisation_type='nhs_central')
+    create_organisation(name='inactive org', active=False, organisation_type='federal')
     create_organisation(name='active org', domains=['example.com'])
 
     response = admin_request.get(
@@ -52,7 +52,7 @@ def test_get_all_organisations(admin_request, notify_db_session):
     assert response[1]['active'] is False
     assert response[1]['count_of_live_services'] == 0
     assert response[1]['domains'] == []
-    assert response[1]['organisation_type'] == 'nhs_central'
+    assert response[1]['organisation_type'] == 'federal'
 
 
 def test_get_organisation_by_id(admin_request, notify_db_session):
@@ -169,7 +169,7 @@ def test_post_create_organisation(admin_request, notify_db_session, crown):
         'name': 'test organisation',
         'active': True,
         'crown': crown,
-        'organisation_type': 'local',
+        'organisation_type': 'state',
     }
 
     response = admin_request.post(
@@ -191,6 +191,7 @@ def test_post_create_organisation(admin_request, notify_db_session, crown):
 
 
 @pytest.mark.parametrize('org_type', ["nhs_central", "nhs_local", "nhs_gp"])
+@pytest.mark.skip(reason='Update for TTS')
 def test_post_create_organisation_sets_default_nhs_branding_for_nhs_orgs(
     admin_request, notify_db_session, nhs_email_branding, org_type
 ):
@@ -218,7 +219,7 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
         'name': sample_organisation.name,
         'active': True,
         'crown': True,
-        'organisation_type': 'central',
+        'organisation_type': 'federal',
     }
 
     response = admin_request.post(
@@ -237,12 +238,12 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
     ({
         'active': False,
         'crown': True,
-        'organisation_type': 'central',
+        'organisation_type': 'federal',
     }, 'name is a required property'),
     ({
         'active': False,
         'name': 'Service name',
-        'organisation_type': 'central',
+        'organisation_type': 'federal',
     }, 'crown is a required property'),
     ({
         'active': False,
@@ -253,7 +254,7 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
         'active': False,
         'name': 'Service name',
         'crown': None,
-        'organisation_type': 'central',
+        'organisation_type': 'federal',
     }, 'crown None is not of type boolean'),
     ({
         'active': False,
@@ -262,7 +263,7 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
         'organisation_type': 'foo',
     }, (
         'organisation_type foo is not one of '
-        '[central, local, nhs_central, nhs_local, nhs_gp, emergency_service, school_or_college, other]'
+        '[federal, state, other]'
     )),
 ))
 def test_post_create_organisation_with_missing_data_gives_validation_error(
@@ -295,7 +296,7 @@ def test_post_update_organisation_updates_fields(
         'name': 'new organisation name',
         'active': False,
         'crown': crown,
-        'organisation_type': 'central',
+        'organisation_type': 'federal',
     }
     assert org.crown is None
 
@@ -314,7 +315,7 @@ def test_post_update_organisation_updates_fields(
     assert organisation[0].active == data['active']
     assert organisation[0].crown == crown
     assert organisation[0].domains == []
-    assert organisation[0].organisation_type == 'central'
+    assert organisation[0].organisation_type == 'federal'
 
 
 @pytest.mark.parametrize('domain_list', (
@@ -371,6 +372,7 @@ def test_update_other_organisation_attributes_doesnt_clear_domains(
 
 
 @pytest.mark.parametrize('new_org_type', ["nhs_central", "nhs_local", "nhs_gp"])
+@pytest.mark.skip(reason='Update for TTS')
 def test_post_update_organisation_to_nhs_type_updates_branding_if_none_present(
     admin_request,
     nhs_email_branding,
@@ -398,6 +400,7 @@ def test_post_update_organisation_to_nhs_type_updates_branding_if_none_present(
 
 
 @pytest.mark.parametrize('new_org_type', ["nhs_central", "nhs_local", "nhs_gp"])
+@pytest.mark.skip(reason='Update for TTS')
 def test_post_update_organisation_to_nhs_type_does_not_update_branding_if_default_branding_set(
     admin_request,
     nhs_email_branding,
@@ -581,7 +584,7 @@ def test_post_link_service_to_organisation(admin_request, sample_service):
     data = {
         'service_id': str(sample_service.id)
     }
-    organisation = create_organisation(organisation_type='central')
+    organisation = create_organisation(organisation_type='federal')
 
     admin_request.post(
         'organisation.link_service_to_organisation',
@@ -590,7 +593,7 @@ def test_post_link_service_to_organisation(admin_request, sample_service):
         _expected_status=204
     )
     assert len(organisation.services) == 1
-    assert sample_service.organisation_type == 'central'
+    assert sample_service.organisation_type == 'federal'
 
 
 @freeze_time('2021-09-24 13:30')
@@ -598,7 +601,7 @@ def test_post_link_service_to_organisation_inserts_annual_billing(admin_request,
     data = {
         'service_id': str(sample_service.id)
     }
-    organisation = create_organisation(organisation_type='central')
+    organisation = create_organisation(organisation_type='federal')
     assert len(organisation.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     admin_request.post(
@@ -623,7 +626,7 @@ def test_post_link_service_to_organisation_rollback_service_if_annual_billing_up
     }
     assert not sample_service.organisation_type
 
-    organisation = create_organisation(organisation_type='central')
+    organisation = create_organisation(organisation_type='federal')
     assert len(organisation.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
@@ -655,7 +658,7 @@ def test_post_link_service_to_another_org(
     assert len(sample_organisation.services) == 1
     assert not sample_service.organisation_type
 
-    new_org = create_organisation(organisation_type='central')
+    new_org = create_organisation(organisation_type='federal')
     admin_request.post(
         'organisation.link_service_to_organisation',
         _data=data,
@@ -664,7 +667,7 @@ def test_post_link_service_to_another_org(
     )
     assert not sample_organisation.services
     assert len(new_org.services) == 1
-    assert sample_service.organisation_type == 'central'
+    assert sample_service.organisation_type == 'federal'
     annual_billing = AnnualBilling.query.all()
     assert len(annual_billing) == 1
     assert annual_billing[0].free_sms_fragment_limit == 150000
