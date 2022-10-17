@@ -13,6 +13,9 @@ applications:
       - notify-api-redis-((env))
       - notify-api-csv-upload-bucket-((env))
       - notify-api-contact-list-bucket-((env))
+      - name: notify-api-ses-((env))
+        parameters:
+          notification_webhook: ""
 
     processes:
       - type: web
