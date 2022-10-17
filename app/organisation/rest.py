@@ -211,6 +211,7 @@ def send_notifications_on_mou_signed(organisation_id):
         send_notification_to_queue(saved_notification, research_mode=False, queue=QueueNames.NOTIFY)
 
     personalisation = {
+        # TODO: needs an approach detached from crown binary
         'mou_link': '{}/agreement/{}.pdf'.format(
             current_app.config['ADMIN_BASE_URL'],
             'crown' if organisation.crown else 'non-crown'

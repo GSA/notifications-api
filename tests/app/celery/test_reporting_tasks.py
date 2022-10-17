@@ -36,7 +36,7 @@ from tests.app.db import (
 
 
 def mocker_get_rate(
-    non_letter_rates, letter_rates, notification_type, bst_date, crown=None, rate_multiplier=None, post_class="second"
+    non_letter_rates, letter_rates, notification_type, bst_date, rate_multiplier=None, post_class="second"
 ):
     if notification_type == LETTER_TYPE:
         return Decimal(2.1)
@@ -436,24 +436,25 @@ def test_create_nightly_billing_for_day_null_sent_by_sms(
 
 
 def test_get_rate_for_letter_latest(notify_db_session):
-    # letter rates should be passed into the get_rate function as a tuple of start_date, crown, sheet_count,
+    # letter rates should be passed into the get_rate function as a tuple of start_date, sheet_count,
     # rate and post_class
-    new = create_letter_rate(datetime(2017, 12, 1), crown=True, sheet_count=1, rate=0.33, post_class='second')
-    old = create_letter_rate(datetime(2016, 12, 1), crown=True, sheet_count=1, rate=0.30, post_class='second')
+    new = create_letter_rate(datetime(2017, 12, 1), sheet_count=1, rate=0.33, post_class='second')
+    old = create_letter_rate(datetime(2016, 12, 1), sheet_count=1, rate=0.30, post_class='second')
     letter_rates = [new, old]
 
-    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), True, 1)
+    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), 1)
     assert rate == Decimal('0.33')
 
 
 def test_get_rate_for_letter_latest_if_crown_is_none(notify_db_session):
-    # letter rates should be passed into the get_rate function as a tuple of start_date, crown, sheet_count,
+    # letter rates should be passed into the get_rate function as a tuple of start_date, sheet_count,
     # rate and post_class
-    crown = create_letter_rate(datetime(2017, 12, 1), crown=True, sheet_count=1, rate=0.33, post_class='second')
-    non_crown = create_letter_rate(datetime(2017, 12, 1), crown=False, sheet_count=1, rate=0.35, post_class='second')
+    # this might still work if crown is removed???
+    crown = create_letter_rate(datetime(2017, 12, 1), sheet_count=1, rate=0.33, post_class='second')
+    non_crown = create_letter_rate(datetime(2017, 12, 1), sheet_count=1, rate=0.35, post_class='second')
     letter_rates = [crown, non_crown]
 
-    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), crown=None, letter_page_count=1)
+    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), letter_page_count=1)
     assert rate == Decimal('0.33')
 
 

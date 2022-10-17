@@ -126,7 +126,6 @@ def create_service(
         check_if_service_exists=False,
         go_live_user=None,
         go_live_at=None,
-        crown=True,
         organisation=None,
         purchase_order_number=None,
         billing_contact_names=None,
@@ -147,7 +146,6 @@ def create_service(
             organisation=organisation,
             go_live_user=go_live_user,
             go_live_at=go_live_at,
-            crown=crown,
             purchase_order_number=purchase_order_number,
             billing_contact_names=billing_contact_names,
             billing_contact_email_addresses=billing_contact_email_addresses,
@@ -531,14 +529,13 @@ def create_rate(start_date, value, notification_type):
     return rate
 
 
-def create_letter_rate(start_date=None, end_date=None, crown=True, sheet_count=1, rate=0.33, post_class='second'):
+def create_letter_rate(start_date=None, end_date=None, sheet_count=1, rate=0.33, post_class='second'):
     if start_date is None:
         start_date = datetime(2016, 1, 1)
     rate = LetterRate(
         id=uuid.uuid4(),
         start_date=start_date,
         end_date=end_date,
-        crown=crown,
         sheet_count=sheet_count,
         rate=rate,
         post_class=post_class

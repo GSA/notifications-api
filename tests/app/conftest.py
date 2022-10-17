@@ -223,7 +223,6 @@ def sample_service(sample_user):
         'restricted': False,
         'email_from': email_from,
         'created_by': sample_user,
-        'crown': True
     }
     service = Service.query.filter_by(name=service_name).first()
     if not service:
@@ -247,7 +246,6 @@ def sample_broadcast_service(broadcast_organisation, sample_user):
         'restricted': False,
         'email_from': email_from,
         'created_by': sample_user,
-        'crown': True,
         'count_as_live': False,
     }
     service = Service.query.filter_by(name=service_name).first()
@@ -274,8 +272,7 @@ def sample_broadcast_service_2(broadcast_organisation, sample_user):
         'restricted': False,
         'email_from': email_from,
         'created_by': sample_user,
-        'crown': True,
-        'count_as_live': False,
+        'count_as_live': False
     }
     service = Service.query.filter_by(name=service_name).first()
     if not service:

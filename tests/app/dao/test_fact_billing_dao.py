@@ -376,7 +376,6 @@ def test_get_rate(notify_db_session):
                     date=date(2017, 6, 1))
     letter_rate = get_rate(non_letter_rates=non_letter_rates, letter_rates=letter_rates,
                            notification_type='letter',
-                           crown=True,
                            letter_page_count=1,
                            date=date(2017, 6, 1))
 
@@ -397,7 +396,7 @@ def test_get_rate_filters_letters_by_post_class(notify_db_session, letter_post_c
     create_letter_rate(start_date=datetime(2017, 5, 30, 23, 0), sheet_count=2, rate=1.05, post_class='rest-of-world')
 
     non_letter_rates, letter_rates = get_rates_for_billing()
-    rate = get_rate(non_letter_rates, letter_rates, "letter", datetime(2018, 10, 1), True, 2, letter_post_class)
+    rate = get_rate(non_letter_rates, letter_rates, "letter", datetime(2018, 10, 1), 2, letter_post_class)
     assert rate == Decimal(expected_rate)
 
 
@@ -407,7 +406,7 @@ def test_get_rate_chooses_right_rate_depending_on_date(notify_db_session, date, 
     create_letter_rate(start_date=datetime(2018, 9, 30, 23, 0), sheet_count=2, rate=0.35, post_class='second')
 
     non_letter_rates, letter_rates = get_rates_for_billing()
-    rate = get_rate(non_letter_rates, letter_rates, "letter", date, True, 2, "second")
+    rate = get_rate(non_letter_rates, letter_rates, "letter", date, 2, "second")
     assert rate == Decimal(expected_rate)
 
 
@@ -415,7 +414,6 @@ def test_get_rate_for_letters_when_page_count_is_zero(notify_db_session):
     non_letter_rates, letter_rates = get_rates_for_billing()
     letter_rate = get_rate(non_letter_rates=non_letter_rates, letter_rates=letter_rates,
                            notification_type='letter',
-                           crown=True,
                            letter_page_count=0,
                            date=datetime.utcnow())
     assert letter_rate == 0

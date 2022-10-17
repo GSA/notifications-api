@@ -470,7 +470,6 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
     def _email_query():
         return db.session.query(
             NotificationAllTimeView.template_id,
-            literal(service.crown).label('crown'),
             literal(service.id).label('service_id'),
             literal(notification_type).label('notification_type'),
             literal('ses').label('sent_by'),
@@ -497,7 +496,6 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
         international = func.coalesce(NotificationAllTimeView.international, False)
         return db.session.query(
             NotificationAllTimeView.template_id,
-            literal(service.crown).label('crown'),
             literal(service.id).label('service_id'),
             literal(notification_type).label('notification_type'),
             sent_by.label('sent_by'),
@@ -526,7 +524,6 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
         postage = func.coalesce(NotificationAllTimeView.postage, 'none')
         return db.session.query(
             NotificationAllTimeView.template_id,
-            literal(service.crown).label('crown'),
             literal(service.id).label('service_id'),
             literal(notification_type).label('notification_type'),
             literal('dvla').label('sent_by'),
@@ -579,20 +576,22 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 
 
 def get_rate(
-    non_letter_rates, letter_rates, notification_type, date, crown=None, letter_page_count=None, post_class='second'
+    non_letter_rates, 
+    letter_rates, 
+    notification_type, 
+    date, 
+    letter_page_count=None, 
+    post_class='second'
 ):
     start_of_day = get_london_midnight_in_utc(date)
 
     if notification_type == LETTER_TYPE:
         if letter_page_count == 0:
             return 0
-        # if crown is not set default to true, this is okay because the rates are the same for both crown and non-crown.
-        crown = crown or True
         return next(
             r.rate
             for r in letter_rates if (
                 start_of_day >= r.start_date and
-                crown == r.crown and
                 letter_page_count == r.sheet_count and
                 post_class == r.post_class
             )
@@ -615,7 +614,6 @@ def update_fact_billing(data, process_day):
                     letter_rates,
                     data.notification_type,
                     process_day,
-                    data.crown,
                     data.letter_page_count,
                     data.postage)
     billing_record = create_billing_record(data, rate, process_day)

@@ -82,7 +82,6 @@ def set_broadcast_service_type(service, service_mode, broadcast_channel, provide
     ).one()
     service.organisation_id = organisation.id
     service.organisation_type = organisation.organisation_type
-    service.crown = organisation.crown
 
     db.session.add(service)
 

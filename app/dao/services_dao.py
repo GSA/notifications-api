@@ -321,8 +321,6 @@ def dao_create_service(
         if organisation.letter_branding:
             service.letter_branding = organisation.letter_branding
 
-    if organisation:
-        service.crown = organisation.crown
     service.count_as_live = not user.platform_admin
 
     db.session.add(service)
