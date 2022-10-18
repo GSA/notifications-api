@@ -36,7 +36,6 @@ from tests.app.db import (  # create_service,; create_service_with_defined_sms_s
 # from requests import HTTPError
 
 
-
 def setup_function(_function):
     # pytest will run this function before each test. It makes sure the
     # state of the cache is not shared between tests.
