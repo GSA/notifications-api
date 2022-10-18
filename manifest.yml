@@ -21,7 +21,7 @@ applications:
       - type: web
         instances: ((web_instances))
         memory: ((web_memory))
-        command: ./scripts/run_app_paas.sh gunicorn -c ./gunicorn_config.py application
+        command: ./scripts/migrate_and_run_web.sh
       - type: worker
         instances: ((worker_instances))
         memory: ((worker_memory))
