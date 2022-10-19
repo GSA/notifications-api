@@ -60,8 +60,8 @@ def process_ses_results(self, response):
                 self.retry(queue=QueueNames.RETRY)
             else:
                 current_app.logger.warning(
-                    "notification not found for reference: {} (while \
-                        attempting update to {})".format(reference, notification_status)
+                    f"notification not found for reference: {reference} \
+                        (while attempting update to {notification_status})"
                 )
             return
 
