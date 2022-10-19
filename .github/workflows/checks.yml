@@ -73,7 +73,7 @@ jobs:
       - uses: ./.github/actions/setup-project
       - uses: trailofbits/gh-action-pip-audit@v1.0.0
         with:
-          inputs: requirements.txt requirements_for_test.txt
+          inputs: requirements.txt
           ignore-vulns: PYSEC-2022-237
 
   static-scan:
