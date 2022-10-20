@@ -348,12 +348,8 @@ class Domain(db.Model):
 
 
 ORGANISATION_TYPES = [
-    "central", "local", "nhs_central", "nhs_local", "nhs_gp", "emergency_service", "school_or_college", "other",
+    "federal", "state", "other"
 ]
-
-CROWN_ORGANISATION_TYPES = ["nhs_central"]
-NON_CROWN_ORGANISATION_TYPES = ["local", "nhs_local", "nhs_gp", "emergency_service", "school_or_college"]
-NHS_ORGANISATION_TYPES = ["nhs_central", "nhs_local", "nhs_gp"]
 
 
 class OrganisationTypes(db.Model):
@@ -1488,6 +1484,8 @@ class Notification(db.Model):
     document_download_count = db.Column(db.Integer, nullable=True)
 
     postage = db.Column(db.String, nullable=True)
+    provider_response = db.Column(db.Text, nullable=True)
+    # queue_name = db.Column(db.Text, nullable=True)
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -1690,6 +1688,7 @@ class Notification(db.Model):
             "postcode": None,
             "type": self.notification_type,
             "status": self.get_letter_status() if self.notification_type == LETTER_TYPE else self.status,
+            "provider_response": self.provider_response,
             "template": template_dict,
             "body": self.content,
             "subject": self.subject,

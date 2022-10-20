@@ -9,6 +9,7 @@ from app.errors import InvalidRequest, register_errors
 sms_callback_blueprint = Blueprint("sms_callback", __name__, url_prefix="/notifications/sms")
 register_errors(sms_callback_blueprint)
 
+# TODO SNS SMS delivery receipts delivered here
 
 # @sms_callback_blueprint.route('/mmg', methods=['POST'])
 # def process_mmg_response():

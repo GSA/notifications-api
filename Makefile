@@ -75,7 +75,8 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 .PHONY: audit
 audit:
 	pip install --upgrade pip-audit
-	pip-audit -r requirements.txt -r requirements_for_test.txt -l --ignore-vuln PYSEC-2022-237
+	pip-audit -r requirements.txt -l --ignore-vuln PYSEC-2022-237
+	-pip-audit -r requirements_for_test.txt -l
 
 .PHONY: static-scan
 static-scan:

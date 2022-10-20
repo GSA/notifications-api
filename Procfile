@@ -1,2 +1,0 @@
-web: unset GUNICORN_CMD_ARGS; exec ./scripts/run_app_paas.sh gunicorn -c /home/vcap/app/gunicorn_config.py application
-worker: exec ./scripts/run_app_paas.sh celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4 2> /dev/null

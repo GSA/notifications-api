@@ -21,9 +21,8 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
 
 
 @pytest.mark.parametrize("organisation_type, expected_allowance",
-                         [('central', 40000),
-                          ('local', 20000),
-                          ('nhs_gp', 10000)])
+                         [('federal', 40000),
+                          ('state', 40000)])
 def test_populate_annual_billing_with_defaults(
         notify_db_session, notify_api, organisation_type, expected_allowance
 ):
@@ -45,7 +44,7 @@ def test_populate_annual_billing_with_defaults(
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(
         notify_db_session, notify_api
 ):
-    service = create_service(organisation_type='central')
+    service = create_service(organisation_type='federal')
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2021)
     notify_api.test_cli_runner().invoke(
         populate_annual_billing_with_defaults, ['-y', 2022]

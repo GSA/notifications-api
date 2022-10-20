@@ -99,9 +99,16 @@ class Config(object):
     # Firetext API Key
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
+    
+    # Whether to ignore POSTs from SNS for replies to SMS we sent
+    RECEIVE_INBOUND_SMS = False
 
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
+    
+    # AWS SNS topics for delivery receipts
+    VALIDATE_SNS_TOPICS = True
+    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
 
     # URL of redis instance
     REDIS_URL = os.environ.get('REDIS_URL')
@@ -175,7 +182,7 @@ class Config(object):
     MOU_SIGNER_RECEIPT_TEMPLATE_ID = '4fd2e43c-309b-4e50-8fb8-1955852d9d71'
     MOU_SIGNED_ON_BEHALF_SIGNER_RECEIPT_TEMPLATE_ID = 'c20206d5-bf03-4002-9a90-37d5032d9e84'
     MOU_SIGNED_ON_BEHALF_ON_BEHALF_RECEIPT_TEMPLATE_ID = '522b6657-5ca5-4368-a294-6b527703bd0b'
-    NOTIFY_INTERNATIONAL_SMS_SENDER = '07984404008'
+    NOTIFY_INTERNATIONAL_SMS_SENDER = '18446120782'
     LETTERS_VOLUME_EMAIL_TEMPLATE_ID = '11fad854-fd38-4a7c-bd17-805fb13dfc12'
     NHS_EMAIL_BRANDING_ID = 'a7dc4e56-660b-4db7-8cff-12c37b12b5ea'
     # we only need real email in Live environment (production)

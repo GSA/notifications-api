@@ -460,7 +460,7 @@ def replay_daily_sorted_count_files(file_extension):
               help="Pipe delimited file containing organisation name, sector, crown, argeement_signed, domains")
 def populate_organisations_from_file(file_name):
     # [0] organisation name:: name of the organisation insert if organisation is missing.
-    # [1] sector:: Central | Local | NHS only
+    # [1] sector:: Federal | State only
     # [2] crown:: TRUE | FALSE only
     # [3] argeement_signed:: TRUE | FALSE
     # [4] domains:: comma separated list of domains related to the organisation
