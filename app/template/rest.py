@@ -166,7 +166,6 @@ def get_all_templates_for_service(service_id):
         data = template_schema.dump(templates, many=True)
     else:
         data = template_schema_no_detail.dump(templates, many=True)
-        print(data)
     return jsonify(data=data)
 
 

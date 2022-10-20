@@ -418,6 +418,12 @@ class TemplateSchemaNoDetail(TemplateSchema):
             'version',
         )
 
+    @pre_dump
+    def remove_content_for_non_broadcast_templates(self, template, **kwargs):
+        template.content = None
+
+        return template
+
 
 class TemplateHistorySchema(BaseSchema):
 
