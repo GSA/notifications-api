@@ -52,16 +52,16 @@ def process_ses_results(self, response):
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(tzinfo=None)
             if datetime.utcnow() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
-                    f"notification not found for reference: {reference} \
-                        (while attempting update to {notification_status}). "
-                    f"Callback may have arrived before notification was \
-                        persisted to the DB. Adding task to retry queue"
+                    f"notification not found for reference: {reference}"
+                        f"(while attempting update to {notification_status}). "
+                    f"Callback may have arrived before notification was"
+                        f"persisted to the DB. Adding task to retry queue"
                 )
                 self.retry(queue=QueueNames.RETRY)
             else:
                 current_app.logger.warning(
-                    f"notification not found for reference: {reference} \
-                        (while attempting update to {notification_status})"
+                    f"notification not found for reference: {reference} "
+                        f"(while attempting update to {notification_status})"
                 )
             return
 

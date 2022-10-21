@@ -15,8 +15,6 @@ from app.inbound_sms.inbound_sms_schemas import (
 )
 from app.schema_validation import validate
 
-# from notifications_utils.recipients import try_validate_and_format_phone_number
-
 
 inbound_sms = Blueprint(
     'inbound_sms',

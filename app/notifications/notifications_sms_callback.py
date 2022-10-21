@@ -1,9 +1,5 @@
-from flask import Blueprint  # , json, jsonify, request
+from flask import Blueprint
 
-# from app.celery.process_sms_client_response_tasks import (
-#     process_sms_client_response,
-# )
-# from app.config import QueueNames
 from app.errors import register_errors
 
 sms_callback_blueprint = Blueprint("sms_callback", __name__, url_prefix="/notifications/sms")
