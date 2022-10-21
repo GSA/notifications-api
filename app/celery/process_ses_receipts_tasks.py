@@ -30,8 +30,8 @@ def process_ses_results(self, response):
         notification_type = ses_message["notificationType"]
         # TODO remove after smoke testing on prod is implemented
         current_app.logger.info(
-            f"Attempting to process SES delivery status message \
-                from SNS with type: {notification_type} and body: {ses_message}"
+            f"Attempting to process SES delivery status message "
+            f"from SNS with type: {notification_type} and body: {ses_message}"
         )
         bounce_message = None
 
@@ -52,16 +52,16 @@ def process_ses_results(self, response):
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(tzinfo=None)
             if datetime.utcnow() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
-                    f"notification not found for reference: {reference}"
-                        f"(while attempting update to {notification_status}). "
+                    f"Notification not found for reference: {reference}"
+                    f"(while attempting update to {notification_status}). "
                     f"Callback may have arrived before notification was"
-                        f"persisted to the DB. Adding task to retry queue"
+                    f"persisted to the DB. Adding task to retry queue"
                 )
                 self.retry(queue=QueueNames.RETRY)
             else:
                 current_app.logger.warning(
-                    f"notification not found for reference: {reference} "
-                        f"(while attempting update to {notification_status})"
+                    f"Notification not found for reference: {reference} "
+                    f"(while attempting update to {notification_status})"
                 )
             return
 

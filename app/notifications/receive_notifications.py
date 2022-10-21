@@ -61,8 +61,8 @@ def receive_sns_sms():
             # since this is an issue with our service <-> number mapping, or no inbound_sms service permission
             # we should still tell SNS that we received it successfully
             current_app.logger.warning(
-                f"Mapping between service and inbound number: {inbound_number} is broken, \
-                    or service does not have permission to receive inbound sms"
+                f"Mapping between service and inbound number: {inbound_number} is broken, "
+                f"or service does not have permission to receive inbound sms"
             )
             return jsonify(
                 result="success", message="SMS-SNS callback succeeded"

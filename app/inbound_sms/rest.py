@@ -15,7 +15,6 @@ from app.inbound_sms.inbound_sms_schemas import (
 )
 from app.schema_validation import validate
 
-
 inbound_sms = Blueprint(
     'inbound_sms',
     __name__,

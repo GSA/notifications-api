@@ -198,7 +198,7 @@ def test_ses_callback_should_log_if_notification_is_missing(client, _notify_db, 
         assert process_ses_results(ses_notification_callback(reference='ref')) is None
         assert mock_retry.call_count == 0
         mock_logger.assert_called_once_with(
-            'notification not found for reference: ref (while attempting update to delivered)'
+            'Notification not found for reference: ref (while attempting update to delivered)'
         )
 
 
