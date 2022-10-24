@@ -144,6 +144,7 @@ def test_adjust_provider_priority_sets_priority(
     assert mmg_provider.created_by.id == notify_user.id
     assert mmg_provider.priority == 50
 
+
 @pytest.mark.skip(reason="Needs updating for TTS: MMG removal")
 @freeze_time('2016-01-01 00:30')
 def test_adjust_provider_priority_adds_history(
@@ -171,6 +172,7 @@ def test_adjust_provider_priority_adds_history(
     assert len(updated_provider_history_rows) - len(old_provider_history_rows) == 1
     assert updated_provider_history_rows[0].version - old_provider_history_rows[0].version == 1
     assert updated_provider_history_rows[0].priority == 50
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: MMG removal")
 @freeze_time('2016-01-01 01:00')

@@ -29,7 +29,10 @@ def process_ses_results(self, response):
         ses_message = json.loads(response["Message"])
         notification_type = ses_message["notificationType"]
         # TODO remove after smoke testing on prod is implemented
-        current_app.logger.info(f"Attempting to process SES delivery status message from SNS with type: {notification_type} and body: {ses_message}")
+        current_app.logger.info(
+            f"Attempting to process SES delivery status message "
+            f"from SNS with type: {notification_type} and body: {ses_message}"
+        )
         bounce_message = None
 
         if notification_type == 'Bounce':
@@ -49,13 +52,16 @@ def process_ses_results(self, response):
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(tzinfo=None)
             if datetime.utcnow() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
-                    f"notification not found for reference: {reference} (while attempting update to {notification_status}). "
-                    f"Callback may have arrived before notification was persisted to the DB. Adding task to retry queue"
+                    f"Notification not found for reference: {reference}"
+                    f"(while attempting update to {notification_status}). "
+                    f"Callback may have arrived before notification was"
+                    f"persisted to the DB. Adding task to retry queue"
                 )
                 self.retry(queue=QueueNames.RETRY)
             else:
                 current_app.logger.warning(
-                    "notification not found for reference: {} (while attempting update to {})".format(reference, notification_status)
+                    f"Notification not found for reference: {reference} "
+                    f"(while attempting update to {notification_status})"
                 )
             return
 
@@ -64,7 +70,7 @@ def process_ses_results(self, response):
 
         if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
             notifications_dao._duplicate_update_warning(
-                notification, 
+                notification,
                 notification_status
             )
             return
@@ -102,6 +108,7 @@ def process_ses_results(self, response):
         current_app.logger.exception("Error processing SES results: {}".format(type(e)))
         self.retry(queue=QueueNames.RETRY)
 
+
 def determine_notification_bounce_type(ses_message):
     notification_type = ses_message["notificationType"]
     if notification_type in ["Delivery", "Complaint"]:
@@ -116,13 +123,15 @@ def determine_notification_bounce_type(ses_message):
         return "Permanent"
     return "Temporary"
 
+
 def determine_notification_type(ses_message):
     notification_type = ses_message["notificationType"]
-    if notification_type not in ["Bounce","Complaint","Delivery"]:
+    if notification_type not in ["Bounce", "Complaint",   "Delivery"]:
         raise KeyError(f"Unhandled sns notification type {notification_type}")
     if notification_type == 'Bounce':
         return determine_notification_bounce_type(ses_message)
     return notification_type
+
 
 def _determine_provider_response(ses_message):
     if ses_message["notificationType"] != "Bounce":
@@ -175,7 +184,9 @@ def get_aws_responses(ses_message):
 
 def handle_complaint(ses_message):
     recipient_email = remove_emails_from_complaint(ses_message)[0]
-    current_app.logger.info("Complaint from SES: \n{}".format(json.dumps(ses_message).replace("{", "(").replace("}", ")")))
+    current_app.logger.info(
+        "Complaint from SES: \n{}".format(json.dumps(ses_message).replace("{", "(").replace("}", ")"))
+    )
     try:
         reference = ses_message["mail"]["messageId"]
     except KeyError as e:
@@ -219,7 +230,9 @@ def check_and_queue_callback_task(notification):
     service_callback_api = get_service_delivery_status_callback_api_for_service(service_id=notification.service_id)
     if service_callback_api:
         notification_data = create_delivery_status_callback_data(notification, service_callback_api)
-        send_delivery_status_to_service.apply_async([str(notification.id), notification_data], queue=QueueNames.CALLBACKS)
+        send_delivery_status_to_service.apply_async(
+            [str(notification.id), notification_data], queue=QueueNames.CALLBACKS
+        )
 
 
 def _check_and_queue_complaint_callback_task(complaint, notification, recipient):
@@ -228,4 +241,3 @@ def _check_and_queue_complaint_callback_task(complaint, notification, recipient)
     if service_callback_api:
         complaint_data = create_complaint_callback_data(complaint, notification, service_callback_api, recipient)
         send_complaint_to_service.apply_async([complaint_data], queue=QueueNames.CALLBACKS)
-        

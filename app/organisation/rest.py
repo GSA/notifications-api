@@ -103,8 +103,6 @@ def update_organisation(organisation_id):
     data = request.get_json()
     validate(data, post_update_organisation_schema)
 
-    organisation = dao_get_organisation_by_id(organisation_id)
-
     result = dao_update_organisation(organisation_id, **data)
 
     if data.get('agreement_signed') is True:

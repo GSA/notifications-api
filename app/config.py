@@ -89,11 +89,11 @@ class Config(object):
 
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
     ADMIN_CLIENT_ID = 'notify-admin'
-    GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts' # TODO: can remove?
+    GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts'  # TODO: can remove?
 
     INTERNAL_CLIENT_API_KEYS = json.loads(
         os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    ) # TODO: handled by varsfile?
+    )  # TODO: handled by varsfile?
 
     # encyption secret/salt
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
@@ -113,13 +113,13 @@ class Config(object):
     # Firetext API Key
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
-    
+
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
 
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
-    
+
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
@@ -165,7 +165,7 @@ class Config(object):
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
 
-    SES_STUB_URL = None # TODO: set to a URL in env and remove this to use a stubbed SES service
+    SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
 
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
@@ -186,7 +186,7 @@ class Config(object):
     SMS_CODE_TEMPLATE_ID = '36fb0730-6259-4da1-8a80-c8de22ad4246'
     EMAIL_2FA_TEMPLATE_ID = '299726d2-dba6-42b8-8209-30e1d66ea164'
     NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID = 'ece42649-22a8-4d06-b87f-d52d5d3f0a27'
-    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201' # nosec B105 - this is not a password
+    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201'  # nosec B105 - this is not a password
     ALREADY_REGISTERED_EMAIL_TEMPLATE_ID = '0880fbb1-a0c6-46f0-9a8e-36c986381ceb'
     CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID = 'eb4d9930-87ab-4aef-9bce-786762687884'
     SERVICE_NOW_LIVE_TEMPLATE_ID = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
@@ -437,7 +437,7 @@ class Development(Config):
     #     Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
     # }
 
-    SECRET_KEY = 'dev-notify-secret-key' # nosec B105 - this is only used in development
+    SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     DANGEROUS_SALT = 'dev-notify-salt'
 
     MMG_INBOUND_SMS_AUTH = ['testkey']
@@ -448,7 +448,10 @@ class Development(Config):
 
     NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api'
+    )
 
     ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
@@ -486,7 +489,10 @@ class Test(Development):
     # LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in CI
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_TEST_URI',
+        'postgresql://postgres:chummy@db:5432/test_notification_api'
+    )
 
     CELERY = {
         **Config.CELERY,
@@ -546,11 +552,17 @@ class Staging(Config):
 class Live(Config):
     NOTIFY_ENVIRONMENT = 'live'
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME', 'notifications-prototype-csv-upload') # created in gsa sandbox
+    CSV_UPLOAD_BUCKET_NAME = os.environ.get(
+        'CSV_UPLOAD_BUCKET_NAME',
+        'notifications-prototype-csv-upload'
+    )  # created in gsa sandbox
     CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
     CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
     CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
-    CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME', 'notifications-prototype-contact-list-upload') # created in gsa sandbox
+    CONTACT_LIST_BUCKET_NAME = os.environ.get(
+        'CONTACT_LIST_BUCKET_NAME',
+        'notifications-prototype-contact-list-upload'
+    )  # created in gsa sandbox
     CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
     CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
     CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')
