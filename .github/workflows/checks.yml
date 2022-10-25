@@ -56,8 +56,8 @@ jobs:
       run: make bootstrap
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-    # - name: Run style checks
-    #   run: flake8 .
+    - name: Run style checks
+      run: flake8 .
     - name: Check imports alphabetized
       run: isort --check-only ./app ./tests
     - name: Run tests

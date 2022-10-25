@@ -120,7 +120,9 @@ class User(db.Model):
     state = db.Column(db.String, nullable=False, default='pending')
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
-    auth_type = db.Column(db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=EMAIL_AUTH_TYPE)
+    auth_type = db.Column(
+        db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=EMAIL_AUTH_TYPE
+    )
     email_access_validated_at = db.Column(
         db.DateTime, index=False, unique=False, nullable=False, default=datetime.datetime.utcnow
     )
@@ -594,7 +596,7 @@ class AnnualBilling(db.Model):
                 "name": self.service.name
             }
 
-        return{
+        return {
             "id": str(self.id),
             'free_sms_fragment_limit': self.free_sms_fragment_limit,
             'service_id': self.service_id,
@@ -1628,7 +1630,7 @@ class Notification(db.Model):
         """
         # this should only ever be called for letter notifications - it makes no sense otherwise and I'd rather not
         # get the two code flows mixed up at all
-        assert self.notification_type == LETTER_TYPE # nosec B101 - current calling code already validates the correct type
+        assert self.notification_type == LETTER_TYPE  # nosec B101 - current calling code validates correct type
 
         if self.status in [NOTIFICATION_CREATED, NOTIFICATION_SENDING]:
             return NOTIFICATION_STATUS_LETTER_ACCEPTED

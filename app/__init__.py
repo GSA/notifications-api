@@ -192,7 +192,7 @@ def register_blueprint(application):
 
     status_blueprint.before_request(requires_no_auth)
     application.register_blueprint(status_blueprint)
-    
+
     # delivery receipts
     ses_callback_blueprint.before_request(requires_no_auth)
     application.register_blueprint(ses_callback_blueprint)

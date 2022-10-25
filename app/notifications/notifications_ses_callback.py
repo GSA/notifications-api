@@ -10,6 +10,7 @@ from app.notifications.sns_handlers import sns_notification_handler
 ses_callback_blueprint = Blueprint('notifications_ses_callback', __name__)
 DEFAULT_MAX_AGE = timedelta(days=10000)
 
+
 # 400 counts as a permanent failure so SNS will not retry.
 # 500 counts as a failed delivery attempt so SNS will retry.
 # See https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html#DeliveryPolicies
@@ -21,7 +22,7 @@ def email_ses_callback_handler():
         return jsonify(
             result="error", message=str(e.message)
         ), e.status_code
-    
+
     message = data.get("Message")
     if "mail" in message:
         process_ses_results.apply_async([{"Message": message}], queue=QueueNames.NOTIFY)

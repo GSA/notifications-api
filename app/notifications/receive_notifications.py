@@ -24,6 +24,7 @@ INBOUND_SMS_COUNTER = Counter(
     ['provider']
 )
 
+
 @receive_notifications_blueprint.route('/notifications/sms/receive/sns', methods=['POST'])
 def receive_sns_sms():
     """
@@ -37,13 +38,13 @@ def receive_sns_sms():
         "previousPublishedMessageId":"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
     }
     """
-    
+
     # Whether or not to ignore inbound SMS replies
     if not current_app.config['RECEIVE_INBOUND_SMS']:
         return jsonify(
             result="success", message="SMS-SNS callback succeeded"
         ), 200
-    
+
     try:
         post_data = sns_notification_handler(request.data, request.headers)
     except Exception as e:
@@ -53,13 +54,16 @@ def receive_sns_sms():
     # TODO wrap this up
     if "inboundMessageId" in message:
         # TODO use standard formatting we use for all US numbers
-        inbound_number = message['destinationNumber'].replace('+','')
+        inbound_number = message['destinationNumber'].replace('+', '')
 
         service = fetch_potential_service(inbound_number, 'sns')
         if not service:
             # since this is an issue with our service <-> number mapping, or no inbound_sms service permission
             # we should still tell SNS that we received it successfully
-            current_app.logger.warning(f"Mapping between service and inbound number: {inbound_number} is broken, or service does not have permission to receive inbound sms")
+            current_app.logger.warning(
+                f"Mapping between service and inbound number: {inbound_number} is broken, "
+                f"or service does not have permission to receive inbound sms"
+            )
             return jsonify(
                 result="success", message="SMS-SNS callback succeeded"
             ), 200
@@ -79,7 +83,6 @@ def receive_sns_sms():
                                             date_received=date_received,
                                             provider_name=provider_name)
 
-        # TODO ensure inbound sms callback endpoints are accessible and functioning for notify api users, then uncomment the task below
         tasks.send_inbound_sms_to_service.apply_async([str(inbound.id), str(service.id)], queue=QueueNames.NOTIFY)
 
         current_app.logger.debug(

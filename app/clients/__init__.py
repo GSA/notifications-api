@@ -1,6 +1,3 @@
-from celery import current_app
-
-
 class ClientException(Exception):
     '''
     Base Exceptions for sending notifications that fail
@@ -38,7 +35,7 @@ class NotificationProviderClients(object):
         return self.email_clients.get(name)
 
     def get_client_by_name_and_type(self, name, notification_type):
-        assert notification_type in ['email', 'sms'] # nosec B101
+        assert notification_type in ['email', 'sms']  # nosec B101
 
         if notification_type == 'email':
             return self.get_email_client(name)

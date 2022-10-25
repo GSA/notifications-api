@@ -79,7 +79,7 @@ class Config(object):
 
     INTERNAL_CLIENT_API_KEYS = json.loads(
         os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    ) # TODO: handled by varsfile?
+    )  # TODO: handled by varsfile?
 
     # encyption secret/salt
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
@@ -99,13 +99,13 @@ class Config(object):
     # Firetext API Key
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
-    
+
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
 
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
-    
+
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
@@ -402,7 +402,7 @@ class Development(Config):
     #     Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
     # }
 
-    SECRET_KEY = 'dev-notify-secret-key' # nosec B105 - this is only used in development
+    SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     DANGEROUS_SALT = 'dev-notify-salt'
 
     MMG_INBOUND_SMS_AUTH = ['testkey']
@@ -413,7 +413,10 @@ class Development(Config):
 
     NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api'
+    )
 
     ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
@@ -449,7 +452,10 @@ class Test(Development):
     # LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in CI
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_TEST_URI',
+        'postgresql://postgres:chummy@db:5432/test_notification_api'
+    )
 
     CELERY = {
         **Config.CELERY,
@@ -508,11 +514,17 @@ class Staging(Config):
 class Live(Config):
     NOTIFY_ENVIRONMENT = 'live'
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME', 'notifications-prototype-csv-upload') # created in gsa sandbox
+    CSV_UPLOAD_BUCKET_NAME = os.environ.get(
+        'CSV_UPLOAD_BUCKET_NAME',
+        'notifications-prototype-csv-upload'
+    )  # created in gsa sandbox
     CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
     CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
     CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
-    CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME', 'notifications-prototype-contact-list-upload') # created in gsa sandbox
+    CONTACT_LIST_BUCKET_NAME = os.environ.get(
+        'CONTACT_LIST_BUCKET_NAME',
+        'notifications-prototype-contact-list-upload'
+    )  # created in gsa sandbox
     CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
     CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
     CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')

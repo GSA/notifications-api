@@ -87,7 +87,7 @@ def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
 def test_notifications_ses_200_call_process_task(client, mocker):
     process_mock = mocker.patch("app.notifications.notifications_ses_callback.process_ses_results.apply_async")
     mocker.patch("app.notifications.sns_handlers.validate_sns_cert", return_value=True)
-    data = {"Type": "Notification", "foo": "bar", "Message": {"mail": "baz"} }
+    data = {"Type": "Notification", "foo": "bar", "Message": {"mail": "baz"}}
     mocker.patch("app.notifications.sns_handlers.sns_notification_handler", return_value=data)
     json_data = json.dumps(data)
     response = client.post(
@@ -156,7 +156,10 @@ def test_ses_callback_should_update_notification_status(
             status='sending',
             sent_at=datetime.utcnow()
         )
-        callback_api = create_service_callback_api(service=sample_email_template.service, url="https://original_url.com")
+        callback_api = create_service_callback_api(
+            service=sample_email_template.service,
+            url="https://original_url.com"
+        )
         assert get_notification_by_id(notification.id).status == 'sending'
         assert process_ses_results(ses_notification_callback(reference='ref'))
         assert get_notification_by_id(notification.id).status == 'delivered'
@@ -186,13 +189,19 @@ def test_ses_callback_should_retry_if_notification_is_new(mocker):
         assert process_ses_results(ses_notification_callback(reference='ref')) is None
         assert mock_logger.call_count == 0
         assert mock_retry.call_count == 1
+
+
 def test_ses_callback_should_log_if_notification_is_missing(client, _notify_db, mocker):
     mock_retry = mocker.patch('app.celery.process_ses_receipts_tasks.process_ses_results.retry')
     mock_logger = mocker.patch('app.celery.process_ses_receipts_tasks.current_app.logger.warning')
     with freeze_time('2017-11-17T12:34:03.646Z'):
         assert process_ses_results(ses_notification_callback(reference='ref')) is None
         assert mock_retry.call_count == 0
-        mock_logger.assert_called_once_with('notification not found for reference: ref (while attempting update to delivered)')
+        mock_logger.assert_called_once_with(
+            'Notification not found for reference: ref (while attempting update to delivered)'
+        )
+
+
 def test_ses_callback_should_not_retry_if_notification_is_old(mocker):
     mock_retry = mocker.patch('app.celery.process_ses_receipts_tasks.process_ses_results.retry')
     mock_logger = mocker.patch('app.celery.process_ses_receipts_tasks.current_app.logger.error')
@@ -200,6 +209,8 @@ def test_ses_callback_should_not_retry_if_notification_is_old(mocker):
         assert process_ses_results(ses_notification_callback(reference='ref')) is None
         assert mock_logger.call_count == 0
         assert mock_retry.call_count == 0
+
+
 def test_ses_callback_does_not_call_send_delivery_status_if_no_db_entry(
         client,
         _notify_db,
@@ -222,6 +233,8 @@ def test_ses_callback_does_not_call_send_delivery_status_if_no_db_entry(
         assert process_ses_results(ses_notification_callback(reference='ref'))
         assert get_notification_by_id(notification.id).status == 'delivered'
         send_mock.assert_not_called()
+
+
 def test_ses_callback_should_update_multiple_notification_status_sent(
         client,
         _notify_db,
@@ -257,6 +270,8 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
     assert process_ses_results(ses_notification_callback(reference='ref2'))
     assert process_ses_results(ses_notification_callback(reference='ref3'))
     assert send_mock.called
+
+
 def test_ses_callback_should_set_status_to_temporary_failure(client,
                                                              _notify_db,
                                                              notify_db_session,
@@ -278,6 +293,8 @@ def test_ses_callback_should_set_status_to_temporary_failure(client,
     assert process_ses_results(ses_soft_bounce_callback(reference='ref'))
     assert get_notification_by_id(notification.id).status == 'temporary-failure'
     assert send_mock.called
+
+
 def test_ses_callback_should_set_status_to_permanent_failure(client,
                                                              _notify_db,
                                                              notify_db_session,
@@ -299,6 +316,8 @@ def test_ses_callback_should_set_status_to_permanent_failure(client,
     assert process_ses_results(ses_hard_bounce_callback(reference='ref'))
     assert get_notification_by_id(notification.id).status == 'permanent-failure'
     assert send_mock.called
+
+
 def test_ses_callback_should_send_on_complaint_to_user_callback_api(sample_email_template, mocker):
     send_mock = mocker.patch(
         'app.celery.service_callback_tasks.send_complaint_to_service.apply_async'
@@ -321,4 +340,3 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(sample_email
         'service_callback_api_url': 'https://original_url.com',
         'to': 'recipient1@example.com'
     }
-    
