@@ -30,7 +30,6 @@ from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
 from app.clients import NotificationProviderClients
-from app.clients.cbc_proxy import CBCProxyClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
@@ -61,7 +60,6 @@ encryption = Encryption()
 zendesk_client = ZendeskClient()
 statsd_client = StatsdClient()
 redis_store = RedisClient()
-cbc_proxy_client = CBCProxyClient()
 document_download_client = DocumentDownloadClient()
 metrics = GDSMetrics()
 
@@ -115,8 +113,6 @@ def create_app(application):
     redis_store.init_app(application)
     document_download_client.init_app(application)
 
-    cbc_proxy_client.init_app(application)
-
     register_blueprint(application)
     register_v2_blueprints(application)
 
@@ -134,15 +130,12 @@ def register_blueprint(application):
     from app.authentication.auth import (
         requires_admin_auth,
         requires_auth,
-        requires_govuk_alerts_auth,
         requires_no_auth,
     )
     from app.billing.rest import billing_blueprint
-    from app.broadcast_message.rest import broadcast_message_blueprint
     from app.complaint.complaint_rest import complaint_blueprint
     from app.email_branding.rest import email_branding_blueprint
     from app.events.rest import events as events_blueprint
-    from app.govuk_alerts.rest import govuk_alerts_blueprint
     from app.inbound_number.rest import inbound_number_blueprint
     from app.inbound_sms.rest import inbound_sms as inbound_sms_blueprint
     from app.job.rest import job_blueprint
@@ -276,16 +269,9 @@ def register_blueprint(application):
     upload_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(upload_blueprint)
 
-    broadcast_message_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(broadcast_message_blueprint)
-
-    govuk_alerts_blueprint.before_request(requires_govuk_alerts_auth)
-    application.register_blueprint(govuk_alerts_blueprint)
-
 
 def register_v2_blueprints(application):
     from app.authentication.auth import requires_auth
-    from app.v2.broadcast.post_broadcast import v2_broadcast_blueprint
     from app.v2.inbound_sms.get_inbound_sms import v2_inbound_sms_blueprint
     from app.v2.notifications import (  # noqa
         get_notifications,
@@ -310,9 +296,6 @@ def register_v2_blueprints(application):
 
     v2_inbound_sms_blueprint.before_request(requires_auth)
     application.register_blueprint(v2_inbound_sms_blueprint)
-
-    v2_broadcast_blueprint.before_request(requires_auth)
-    application.register_blueprint(v2_broadcast_blueprint)
 
 
 def init_app(app):
