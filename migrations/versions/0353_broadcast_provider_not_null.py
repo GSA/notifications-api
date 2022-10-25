@@ -13,8 +13,10 @@ down_revision = '0352_broadcast_provider_types'
 
 
 def upgrade():
-    pass
+    op.execute("UPDATE service_broadcast_settings SET provider = 'all' WHERE provider is null")
+    op.alter_column('service_broadcast_settings', 'provider', existing_type=sa.VARCHAR(), nullable=False)
 
 
 def downgrade():
-    pass
+    op.alter_column('service_broadcast_settings', 'provider', existing_type=sa.VARCHAR(), nullable=True)
+    op.execute("UPDATE service_broadcast_settings SET provider = null WHERE provider = 'all'")

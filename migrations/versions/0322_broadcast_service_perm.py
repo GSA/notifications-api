@@ -13,8 +13,9 @@ down_revision = '0321_drop_postage_constraints'
 
 
 def upgrade():
-    pass
+    op.execute("INSERT INTO service_permission_types VALUES ('broadcast')")
 
 
 def downgrade():
-    pass
+    op.execute("DELETE FROM service_permissions WHERE permission = 'broadcast'")
+    op.execute("DELETE FROM service_permission_types WHERE name = 'broadcast'")

@@ -12,8 +12,11 @@ down_revision = '0357_validate_constraint'
 
 
 def upgrade():
-    pass
+    op.execute("INSERT INTO broadcast_channel_types VALUES ('operator')")
 
 
 def downgrade():
-    pass
+    # This can't be downgraded if there are rows in service_broadcast_settings which
+    # have the channel set to operator or if broadcasts have already been sent on the
+    # operator channel - it would break foreign key constraints.
+    op.execute("DELETE FROM broadcast_channel_types WHERE name = 'operator'")
