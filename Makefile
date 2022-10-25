@@ -100,12 +100,6 @@ cf-login: ## Log in to Cloud Foundry
 cf-check-api-db-migration-task: ## Get the status for the last notifications-api task
 	@cf curl /v3/apps/`cf app --guid notifications-api`/tasks?order_by=-created_at | jq -r ".resources[0].state"
 
-# .PHONY: cf-rollback
-# cf-rollback: ## Rollbacks the app to the previous release
-# 	$(if ${CF_APP},,$(error Must specify CF_APP))
-# 	rm ${CF_MANIFEST_PATH}
-# 	cf cancel-deployment ${CF_APP}
-
 .PHONY: check-if-migrations-to-run
 check-if-migrations-to-run:
 	@echo $(shell python3 scripts/check_if_new_migration.py)
