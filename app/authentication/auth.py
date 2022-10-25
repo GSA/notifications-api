@@ -63,6 +63,7 @@ class InternalApiKey():
 def requires_no_auth():
     pass
 
+
 def requires_admin_auth():
     requires_internal_auth(current_app.config.get('ADMIN_CLIENT_ID'))
 

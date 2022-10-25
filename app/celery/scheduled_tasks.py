@@ -7,7 +7,7 @@ from notifications_utils.clients.zendesk.zendesk_client import (
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db, notify_celery, zendesk_client
+from app import notify_celery, zendesk_client
 from app.aws import s3
 from app.celery.letters_pdf_tasks import get_pdf_for_templated_letter
 from app.celery.tasks import (

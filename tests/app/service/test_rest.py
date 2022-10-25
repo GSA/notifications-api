@@ -28,7 +28,6 @@ from app.models import (
     KEY_TYPE_TEST,
     LETTER_TYPE,
     NOTIFICATION_RETURNED_LETTER,
-    SERVICE_PERMISSION_TYPES,
     SMS_TYPE,
     UPLOAD_LETTERS,
     AnnualBilling,

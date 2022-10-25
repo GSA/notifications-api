@@ -34,7 +34,6 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.collections import attribute_mapped_collection
-from sqlalchemy.schema import Sequence
 
 from app import db, encryption
 from app.hashing import check_hash, hashpw
@@ -43,7 +42,6 @@ from app.utils import (
     DATETIME_FORMAT,
     DATETIME_FORMAT_NO_TIMEZONE,
     get_dt_string_or_none,
-    get_uuid_string_or_none,
 )
 
 SMS_TYPE = 'sms'

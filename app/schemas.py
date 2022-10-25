@@ -234,7 +234,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     email_branding = field_for(models.Service, 'email_branding')
     organisation = field_for(models.Service, 'organisation')
     go_live_at = field_for(models.Service, 'go_live_at', format=DATETIME_FORMAT_NO_TIMEZONE)
-    
+
     def get_letter_logo_filename(self, service):
         return service.letter_branding and service.letter_branding.filename
 

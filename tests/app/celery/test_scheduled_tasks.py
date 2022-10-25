@@ -35,7 +35,6 @@ from app.models import (
 )
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
-from tests.conftest import set_config
 
 
 def _create_slow_delivery_notification(template, provider='mmg'):

@@ -95,7 +95,7 @@ def get_public_notify_type_text(notify_type, plural=False):
         notify_type_text = 'document'
     elif notify_type == PRECOMPILED_LETTER:
         notify_type_text = 'precompiled letter'
-    
+
     return '{}{}'.format(notify_type_text, 's' if plural else '')
 
 

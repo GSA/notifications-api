@@ -2,8 +2,6 @@ import random
 import uuid
 from datetime import date, datetime, timedelta
 
-import pytest
-
 from app import db
 from app.dao import fact_processing_time_dao
 from app.dao.email_branding_dao import dao_create_email_branding
