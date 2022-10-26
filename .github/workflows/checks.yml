@@ -71,6 +71,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-project
+      - name: Create requirements.txt
+        run: pipenv requirements
       - uses: trailofbits/gh-action-pip-audit@v1.0.0
         with:
           inputs: requirements.txt

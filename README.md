@@ -6,7 +6,7 @@ This repo contains:
 
 - A public-facing REST API for Notify, which teams can integrate with using [API clients built by UK](https://www.notifications.service.gov.uk/documentation)
 - An internal-only REST API built using Flask to manage services, users, templates, etc., which the [admin UI](http://github.com/18F/notifications-admin) talks to)
-- Asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc
+- Asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc.
 
 ## Local setup
 
@@ -17,7 +17,7 @@ This repo contains:
 1. Install dependencies into a virtual environment
 
     ```
-    pipenv install --with dev
+    pipenv install --dev
     createdb notification_api
     flask db upgrade
     ```
@@ -46,7 +46,12 @@ This repo contains:
 
 If you're working in VS Code, you can also leverage Docker for a containerized dev environment
 
-1. Create .env file as described in the .env section below.
+1. Create the .env file
+
+    ```
+    cp sample.env .env
+    # follow the instructions in .env
+    ```
 
 1. Install the Remote-Containers plug-in in VS Code
 
@@ -56,7 +61,7 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
 
 1. Using the command palette (shift+cmd+p) or green button thingy in the bottom left, search and select “Remote Containers: Open Folder in Container...” When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window, replacing the current one.
 
-1. Wait a few minutes while things happen
+1. Wait a few minutes while things happen 🍵
 
 1. Open a VS Code terminal and run the Flask application:
 
