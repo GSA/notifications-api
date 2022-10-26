@@ -12,6 +12,10 @@ about what is loaded into which tables, and some plans for how we might manage t
 Flask does not seem to have a great way to squash migrations, but rather wants you to recreate them
 from the DB structure. This means it's easy to recreate the tables, but hard to recreate the initial data.
 
+## Data Model Diagram
+
+A diagram of Notify's data model is available [in our compliance repo](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/data.logical.pdf).
+
 ## Migrations
 
 Create a migration:

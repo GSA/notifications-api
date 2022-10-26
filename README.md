@@ -8,6 +8,36 @@ This repo contains:
 - An internal-only REST API built using Flask to manage services, users, templates, etc., which the [admin UI](http://github.com/18F/notifications-admin) talks to)
 - Asynchronous workers built using Celery to put things on queues and read them off to be processed, sent to providers, updated, etc.
 
+Our other repositories are:
+
+- [notifications-admin](https://github.com/GSA/notifications-admin)
+- [notifications-utils](https://github.com/GSA/notifications-utils)
+- [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
+- [notify-python-demo](https://github.com/GSA/notify-python-demo)
+
+## Documentation, here and elsewhere
+
+### About Notify
+
+- [Roadmap](https://notifications-admin.app.cloud.gov/features/roadmap)
+- [Using the API](./docs/api-usage.md)
+
+### Infrastructure
+
+- [Overview, setup, and onboarding](./docs/infra-overview.md)
+- [Database management](./docs/database-management.md)
+
+### Common dev work
+
+- [Local setup](#local-setup)
+- [Testing](./docs/testing.md)
+- [Running one-off tasks](./docs/one-off-tasks.md)
+
+## UK docs that may still be helpful
+
+- [Writing public APIs](docs/writing-public-apis.md)
+- [Updating dependencies](https://github.com/alphagov/notifications-manuals/wiki/Dependencies)
+
 ## Local setup
 
 ### Direct installation
@@ -73,20 +103,3 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
 
 NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
-## Deeper documentation
-
-### Infrastructure
-
-- [Checklist for onboarding to all of the things](./docs/infra-onboarding.md)
-- [Setting up the initial infrastructure using AWS](./docs/infra-setup.md)
-- [Database management](./docs/database-management.md)
-
-### Common dev work
-
-- [Testing](./docs/testing.md)
-- [Running one-off tasks](./docs/one-off-tasks.md)
-
-## UK docs that may still be helpful
-
-- [Writing public APIs](docs/writing-public-apis.md)
-- [Updating dependencies](https://github.com/alphagov/notifications-manuals/wiki/Dependencies)
