@@ -11,7 +11,7 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
-	generate-version-file
+	make generate-version-file
 	pipenv install ---dev
 	createdb notification_api || true
 	(pipenv run flask db upgrade) || true
