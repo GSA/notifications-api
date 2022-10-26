@@ -11,8 +11,6 @@ from notifications_utils.template import BroadcastMessageTemplate
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 
-from app.models import BroadcastMessage
-
 revision = '0336_broadcast_msg_content_2'
 down_revision = '0335_broadcast_msg_content'
 

@@ -11,7 +11,7 @@ from app.dao.invited_user_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import BROADCAST_TYPE, EMAIL_TYPE, KEY_TYPE_NORMAL, Service
+from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -29,10 +29,7 @@ def create_invited_user(service_id):
     invited_user = invited_user_schema.load(request_json)
     save_invited_user(invited_user)
 
-    if invited_user.service.has_permission(BROADCAST_TYPE):
-        template_id = current_app.config['BROADCAST_INVITATION_EMAIL_TEMPLATE_ID']
-    else:
-        template_id = current_app.config['INVITATION_EMAIL_TEMPLATE_ID']
+    template_id = current_app.config['INVITATION_EMAIL_TEMPLATE_ID']
 
     template = dao_get_template_by_id(template_id)
     service = Service.query.get(current_app.config['NOTIFY_SERVICE_ID'])

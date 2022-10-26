@@ -19,6 +19,7 @@ _cert_url_re = re.compile(
     r'sns\.([a-z]{1,3}-[a-z]+-[0-9]{1,2})\.amazonaws\.com',
 )
 
+
 class ValidationError(Exception):
     """
     ValidationError. Raised when a message fails integrity checks.
@@ -56,7 +57,7 @@ def get_string_to_sign(sns_payload):
     for field in fields:
         field_value = sns_payload.get(field)
         if not isinstance(field_value, str):
-            if field == 'Subject' and field_value == None:
+            if field == 'Subject' and field_value is None:
                 continue
             raise ValidationError(f"In {field}, found non-string value: {field_value}")
         string_to_sign += field + '\n' + field_value + '\n'
@@ -77,25 +78,26 @@ def validate_sns_cert(sns_payload):
     # Amazon SNS currently supports signature version 1.
     if sns_payload.get('SignatureVersion') != '1':
         raise ValidationError("Wrong Signature Version (expected 1)")
-    
+
     validate_arn(sns_payload)
-    
+
     string_to_sign = get_string_to_sign(sns_payload)
 
     # Key signing cert url via Lambda and via webhook are slightly different
-    signing_cert_url = sns_payload.get('SigningCertUrl') if 'SigningCertUrl' in sns_payload else sns_payload.get('SigningCertURL')
+    signing_cert_url = sns_payload.get('SigningCertUrl') if 'SigningCertUrl' in \
+        sns_payload else sns_payload.get('SigningCertURL')
     if not isinstance(signing_cert_url, str):
         raise ValidationError("Signing cert url must be a string")
     cert_scheme, cert_netloc, *_ = urlparse(signing_cert_url)
     if cert_scheme != 'https' or not re.match(_cert_url_re, cert_netloc):
         raise ValidationError("Cert does not appear to be from AWS")
-    
+
     certificate = _signing_cert_cache.get(signing_cert_url)
     if certificate is None:
         certificate = get_certificate(signing_cert_url)
     if isinstance(certificate, six.text_type):
         certificate = certificate.encode()
-    
+
     signature = base64.b64decode(sns_payload["Signature"])
 
     try:

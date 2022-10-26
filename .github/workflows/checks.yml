@@ -16,7 +16,6 @@ env:
   NOTIFY_LOG_PATH: /workspace/logs/app.log
   ADMIN_CLIENT_ID: notify-admin
   ADMIN_CLIENT_SECRET: dev-notify-secret-key
-  GOVUK_ALERTS_CLIENT_ID: govuk-alerts
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
@@ -57,8 +56,8 @@ jobs:
       run: make bootstrap
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-    # - name: Run style checks
-    #   run: flake8 .
+    - name: Run style checks
+      run: flake8 .
     - name: Check imports alphabetized
       run: pipenv run isort --check-only ./app ./tests
     - name: Run tests

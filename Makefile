@@ -49,7 +49,7 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: ## Run tests
-	# flake8 .
+	flake8 .
 	isort --check-only ./app ./tests
 	pytest -n4 --maxfail=10
 

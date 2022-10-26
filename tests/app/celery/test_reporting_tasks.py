@@ -290,6 +290,7 @@ def test_create_nightly_billing_for_day_different_sent_by(
         assert record.billable_units == 1
         assert record.rate_multiplier == 1.0
 
+
 @pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
 def test_create_nightly_billing_for_day_different_letter_postage(
     notify_db_session,

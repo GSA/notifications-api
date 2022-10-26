@@ -15,6 +15,7 @@ def fake_client(notify_api):
     fake_client.init_app(notify_api, statsd_client)
     return fake_client
 
+
 @pytest.mark.skip(reason="Needs updating for TTS: New SMS client")
 def test_send_sms(fake_client, mocker):
     mock_send = mocker.patch.object(fake_client, 'try_send_sms')
@@ -30,6 +31,7 @@ def test_send_sms(fake_client, mocker):
     mock_send.assert_called_with(
         'to', 'content', 'reference', False, 'testing'
     )
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: New SMS client")
 def test_send_sms_error(fake_client, mocker):

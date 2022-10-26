@@ -40,7 +40,6 @@ from app.dao.organisation_dao import (
     dao_get_organisation_by_email_address,
     dao_get_organisation_by_id,
 )
-from app.dao.permissions_dao import permission_dao
 from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_all_services_created_by_user,
@@ -64,7 +63,6 @@ from app.models import (
     LetterBranding,
     Notification,
     Organisation,
-    Permission,
     Service,
     User,
 )
@@ -144,86 +142,6 @@ def purge_functional_test_data(user_email_prefix):
                 print(f"Deleting user {usr.id} which is not part of any services")
                 delete_user_verify_codes(usr)
                 delete_model_user(usr)
-
-
-@notify_command()
-def backfill_notification_statuses():
-    """
-    DEPRECATED. Populates notification_status.
-
-    This will be used to populate the new `Notification._status_fkey` with the old
-    `Notification._status_enum`
-    """
-    LIMIT = 250000
-    subq = "SELECT id FROM notification_history WHERE notification_status is NULL LIMIT {}".format(LIMIT) # nosec B608 no user-controlled input
-    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq) # nosec B608 no user-controlled input
-    result = db.session.execute(subq).fetchall()
-
-    while len(result) > 0:
-        db.session.execute(update)
-        print('commit {} updates at {}'.format(LIMIT, datetime.utcnow()))
-        db.session.commit()
-        result = db.session.execute(subq).fetchall()
-
-
-@notify_command()
-def update_notification_international_flag():
-    """
-    DEPRECATED. Set notifications.international=false.
-    """
-    # 250,000 rows takes 30 seconds to update.
-    subq = "select id from notifications where international is null limit 250000"
-    update = "update notifications set international = False where id in ({})".format(subq) # nosec B608 no user-controlled input
-    result = db.session.execute(subq).fetchall()
-
-    while len(result) > 0:
-        db.session.execute(update)
-        print('commit 250000 updates at {}'.format(datetime.utcnow()))
-        db.session.commit()
-        result = db.session.execute(subq).fetchall()
-
-    # Now update notification_history
-    subq_history = "select id from notification_history where international is null limit 250000"
-    update_history = "update notification_history set international = False where id in ({})".format(subq_history) # nosec B608 no user-controlled input
-    result_history = db.session.execute(subq_history).fetchall()
-    while len(result_history) > 0:
-        db.session.execute(update_history)
-        print('commit 250000 updates at {}'.format(datetime.utcnow()))
-        db.session.commit()
-        result_history = db.session.execute(subq_history).fetchall()
-
-
-@notify_command()
-def fix_notification_statuses_not_in_sync():
-    """
-    DEPRECATED.
-    This will be used to correct an issue where Notification._status_enum and NotificationHistory._status_fkey
-    became out of sync. See 979e90a.
-
-    Notification._status_enum is the source of truth so NotificationHistory._status_fkey will be updated with
-    these values.
-    """
-    MAX = 10000
-
-    subq = "SELECT id FROM notifications WHERE cast (status as text) != notification_status LIMIT {}".format(MAX) # nosec B608 no user-controlled input
-    update = "UPDATE notifications SET notification_status = status WHERE id in ({})".format(subq) # nosec B608 no user-controlled input
-    result = db.session.execute(subq).fetchall()
-
-    while len(result) > 0:
-        db.session.execute(update)
-        print('Committed {} updates at {}'.format(len(result), datetime.utcnow()))
-        db.session.commit()
-        result = db.session.execute(subq).fetchall()
-
-    subq_hist = "SELECT id FROM notification_history WHERE cast (status as text) != notification_status LIMIT {}".format(MAX)  # nosec B608
-    update = "UPDATE notification_history SET notification_status = status WHERE id in ({})".format(subq_hist) # nosec B608 no user-controlled input
-    result = db.session.execute(subq_hist).fetchall()
-
-    while len(result) > 0:
-        db.session.execute(update)
-        print('Committed {} updates at {}'.format(len(result), datetime.utcnow()))
-        db.session.commit()
-        result = db.session.execute(subq_hist).fetchall()
 
 
 @notify_command(name='insert-inbound-numbers')
@@ -815,33 +733,3 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
         else:
             print(f'update service {service.id} with default')
             set_default_free_allowance_for_service(service, year)
-
-
-@click.option('-u', '--user-id', required=True)
-@notify_command(name='local-dev-broadcast-permissions')
-def local_dev_broadcast_permissions(user_id):
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
-        current_app.logger.error('Can only be run in development')
-        return
-
-    user = User.query.filter_by(id=user_id).one()
-
-    user_broadcast_services = Service.query.filter(
-        Service.permissions.any(permission='broadcast'),
-        Service.users.any(id=user_id)
-    )
-
-    for service in user_broadcast_services:
-        permission_list = [
-            Permission(service_id=service.id, user_id=user_id, permission=permission)
-            for permission in [
-                'reject_broadcasts', 'cancel_broadcasts',  # required to create / approve
-                'create_broadcasts', 'approve_broadcasts',  # minimum for testing
-                'manage_templates',  # unlikely but might be useful
-                'view_activity',  # normally added on invite / service creation
-            ]
-        ]
-
-        permission_dao.set_user_service_permission(
-            user, service, permission_list, _commit=True, replace=True
-        )

@@ -34,8 +34,6 @@ class QueueNames(object):
     SANITISE_LETTERS = 'sanitise-letter-tasks'
     SAVE_API_EMAIL = 'save-api-email-tasks'
     SAVE_API_SMS = 'save-api-sms-tasks'
-    BROADCASTS = 'broadcast-tasks'
-    GOVUK_ALERTS = 'govuk-alerts'
 
     @staticmethod
     def all_queues():
@@ -57,17 +55,7 @@ class QueueNames(object):
             QueueNames.SMS_CALLBACKS,
             QueueNames.SAVE_API_EMAIL,
             QueueNames.SAVE_API_SMS,
-            QueueNames.BROADCASTS,
         ]
-
-
-class BroadcastProvider:
-    EE = 'ee'
-    VODAFONE = 'vodafone'
-    THREE = 'three'
-    O2 = 'o2'
-
-    PROVIDERS = [EE, VODAFONE, THREE, O2]
 
 
 class TaskNames(object):
@@ -76,7 +64,6 @@ class TaskNames(object):
     SCAN_FILE = 'scan-file'
     SANITISE_LETTER = 'sanitise-and-upload-letter'
     CREATE_PDF_FOR_TEMPLATED_LETTER = 'create-pdf-for-templated-letter'
-    PUBLISH_GOVUK_ALERTS = 'publish-govuk-alerts'
     RECREATE_PDF_FOR_PRECOMPILED_LETTER = 'recreate-pdf-for-precompiled-letter'
 
 
@@ -89,11 +76,10 @@ class Config(object):
 
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
     ADMIN_CLIENT_ID = 'notify-admin'
-    GOVUK_ALERTS_CLIENT_ID = 'govuk-alerts' # TODO: can remove?
 
     INTERNAL_CLIENT_API_KEYS = json.loads(
         os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    ) # TODO: handled by varsfile?
+    )  # TODO: handled by varsfile?
 
     # encyption secret/salt
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
@@ -113,13 +99,13 @@ class Config(object):
     # Firetext API Key
     FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
     FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
-    
+
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
 
     # Use notify.sandbox.10x sending domain unless overwritten by environment
     NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
-    
+
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
@@ -165,7 +151,7 @@ class Config(object):
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
 
-    SES_STUB_URL = None # TODO: set to a URL in env and remove this to use a stubbed SES service
+    SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
 
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
@@ -182,11 +168,10 @@ class Config(object):
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'
     INVITATION_EMAIL_TEMPLATE_ID = '4f46df42-f795-4cc4-83bb-65ca312f49cc'
-    BROADCAST_INVITATION_EMAIL_TEMPLATE_ID = '46152f7c-6901-41d5-8590-a5624d0d4359'
     SMS_CODE_TEMPLATE_ID = '36fb0730-6259-4da1-8a80-c8de22ad4246'
     EMAIL_2FA_TEMPLATE_ID = '299726d2-dba6-42b8-8209-30e1d66ea164'
     NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID = 'ece42649-22a8-4d06-b87f-d52d5d3f0a27'
-    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201' # nosec B105 - this is not a password
+    PASSWORD_RESET_TEMPLATE_ID = '474e9242-823b-4f99-813d-ed392e7f1201'  # nosec B105 - this is not a password
     ALREADY_REGISTERED_EMAIL_TEMPLATE_ID = '0880fbb1-a0c6-46f0-9a8e-36c986381ceb'
     CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID = 'eb4d9930-87ab-4aef-9bce-786762687884'
     SERVICE_NOW_LIVE_TEMPLATE_ID = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
@@ -340,16 +325,6 @@ class Config(object):
                 'schedule': timedelta(minutes=15),
                 'options': {'queue': QueueNames.PERIODIC}
             },
-            'auto-expire-broadcast-messages': {
-                'task': 'auto-expire-broadcast-messages',
-                'schedule': timedelta(minutes=5),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'remove-yesterdays-planned-tests-on-govuk-alerts': {
-                'task': 'remove-yesterdays-planned-tests-on-govuk-alerts',
-                'schedule': crontab(hour=00, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
         }
     }
 
@@ -396,15 +371,6 @@ class Config(object):
 
     AWS_REGION = 'us-west-2'
 
-    CBC_PROXY_ENABLED = True
-    CBC_PROXY_AWS_ACCESS_KEY_ID = os.environ.get('CBC_PROXY_AWS_ACCESS_KEY_ID', '')
-    CBC_PROXY_AWS_SECRET_ACCESS_KEY = os.environ.get('CBC_PROXY_AWS_SECRET_ACCESS_KEY', '')
-
-    ENABLED_CBCS = {BroadcastProvider.EE, BroadcastProvider.THREE, BroadcastProvider.O2, BroadcastProvider.VODAFONE}
-
-    # as defined in api db migration 0331_add_broadcast_org.py
-    BROADCAST_ORGANISATION_ID = '38e4bf69-93b0-445d-acee-53ea53fe02df'
-
 
 ######################
 # Config overrides ###
@@ -434,10 +400,9 @@ class Development(Config):
 
     # INTERNAL_CLIENT_API_KEYS = {
     #     Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
-    #     Config.GOVUK_ALERTS_CLIENT_ID: ['govuk-alerts-secret-key']
     # }
 
-    SECRET_KEY = 'dev-notify-secret-key' # nosec B105 - this is only used in development
+    SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     DANGEROUS_SALT = 'dev-notify-salt'
 
     MMG_INBOUND_SMS_AUTH = ['testkey']
@@ -448,7 +413,10 @@ class Development(Config):
 
     NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:chummy@db:5432/notification_api')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'SQLALCHEMY_DATABASE_URI',
+        'postgresql://postgres:chummy@db:5432/notification_api'
+    )
 
     ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
 
@@ -458,8 +426,6 @@ class Development(Config):
 
     API_RATE_LIMIT_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
-
-    CBC_PROXY_ENABLED = False
 
 
 class Test(Development):
@@ -486,7 +452,10 @@ class Test(Development):
     # LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
 
     # this is overriden in CI
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI', 'postgresql://postgres:chummy@db:5432/test_notification_api')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'SQLALCHEMY_DATABASE_TEST_URI',
+        'postgresql://postgres:chummy@db:5432/test_notification_api'
+    )
 
     CELERY = {
         **Config.CELERY,
@@ -505,7 +474,6 @@ class Test(Development):
     MMG_URL = 'https://example.com/mmg'
     FIRETEXT_URL = 'https://example.com/firetext'
 
-    CBC_PROXY_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
 
 
@@ -546,11 +514,17 @@ class Staging(Config):
 class Live(Config):
     NOTIFY_ENVIRONMENT = 'live'
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME', 'notifications-prototype-csv-upload') # created in gsa sandbox
+    CSV_UPLOAD_BUCKET_NAME = os.environ.get(
+        'CSV_UPLOAD_BUCKET_NAME',
+        'notifications-prototype-csv-upload'
+    )  # created in gsa sandbox
     CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
     CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
     CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
-    CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME', 'notifications-prototype-contact-list-upload') # created in gsa sandbox
+    CONTACT_LIST_BUCKET_NAME = os.environ.get(
+        'CONTACT_LIST_BUCKET_NAME',
+        'notifications-prototype-contact-list-upload'
+    )  # created in gsa sandbox
     CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
     CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
     CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')

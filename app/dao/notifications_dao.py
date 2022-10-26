@@ -87,6 +87,7 @@ def country_records_delivery(phone_prefix):
     dlr = INTERNATIONAL_BILLING_RATES[phone_prefix]['attributes']['dlr']
     return dlr and dlr.lower() == 'yes'
 
+
 def _decide_permanent_temporary_failure(current_status, status):
     # If we go from pending to delivered we need to set failure type as temporary-failure
     if current_status == NOTIFICATION_PENDING and status == NOTIFICATION_PERMANENT_FAILURE:
@@ -101,6 +102,7 @@ def _update_notification_status(notification, status, provider_response=None):
         notification.provider_response = provider_response
     dao_update_notification(notification)
     return notification
+
 
 @autocommit
 def update_notification_status_by_id(notification_id, status, sent_by=None, detailed_status_code=None):
