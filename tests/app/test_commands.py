@@ -1,12 +1,43 @@
 import pytest
 
 from app.commands import (
+    create_test_user,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import AnnualBilling
+from app.models import AnnualBilling, User
 from tests.app.db import create_annual_billing, create_service
+
+
+def test_create_test_user_command(notify_db_session, notify_api):
+    
+    # number of users before adding ours
+    user_count = User.query.count()
+    
+    # run the command
+    notify_api.test_cli_runner().invoke(
+        create_test_user, [
+            '--email', 'somebody@fake.gov',
+            '--mobile_number', '555-555-5555',
+            '--password', 'correct horse battery staple',
+            '--name', 'Fake Personson',
+            # '--auth_type', 'sms_auth',  # this is the default
+            # '--state', 'active',  # this is the default
+            # '--admin', 'False',  # this is the default
+        ]
+    )
+
+    # there should be one more user
+    assert User.query.count() == user_count + 1
+
+    # that user should be the one we added
+    user = User.query.filter_by(
+        name = 'Fake Personson'
+    ).first()
+    assert user.email_address == 'somebody@fake.gov'
+    assert user.auth_type == 'sms_auth'
+    assert user.state == 'active'
 
 
 def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir):

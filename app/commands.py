@@ -736,10 +736,10 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
 
 
 @notify_command(name='create-test-user')
-@click.option('-e', '--email', required=True)
-@click.option('-m', '--mobile_number', required=True)
-@click.option('-p', '--password', required=True)
-@click.option('-n', '--name', required=True)
+@click.option('-n', '--name', required=True, prompt=True)
+@click.option('-e', '--email', required=True, prompt=True)
+@click.option('-m', '--mobile_number', required=True, prompt=True)
+@click.option('-p', '--password', required=True, prompt=True, hide_input=True, confirmation_prompt=True)
 @click.option('-a', '--auth_type', default="sms_auth")
 @click.option('-s', '--state', default="active")
 @click.option('-d', '--admin', default=False, type=bool)
@@ -754,7 +754,7 @@ def create_test_user(name,email, mobile_number, password, auth_type, state, admi
         'mobile_number': mobile_number,
         'password': password,
         'auth_type': auth_type,
-        'state': state,
+        'state': state,  # skip the email verification for our test user
         'platform_admin': admin,
     }
     user = User(**data)
