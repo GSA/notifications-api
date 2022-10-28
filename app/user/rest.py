@@ -380,7 +380,7 @@ def send_new_user_email_verification(user_id):
 
     template = dao_get_template_by_id(current_app.config['NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID'])
     service = Service.query.get(current_app.config['NOTIFY_SERVICE_ID'])
-    
+
     current_app.logger.info('template.id is {}'.format(template.id))
     current_app.logger.info('service.id is {}'.format(service.id))
 
@@ -404,7 +404,7 @@ def send_new_user_email_verification(user_id):
     current_app.logger.info('Sending notification to queue')
 
     send_notification_to_queue(saved_notification, False, queue=QueueNames.NOTIFY)
-    
+
     current_app.logger.info('Sent notification to queue')
 
     return jsonify({}), 204
@@ -414,12 +414,12 @@ def send_new_user_email_verification(user_id):
 def send_already_registered_email(user_id):
     current_app.logger.info('Email already registered for user {}'.format(user_id))
     to = email_data_request_schema.load(request.get_json())
-    
+
     current_app.logger.info('To email is {}'.format(to['email']))
 
     template = dao_get_template_by_id(current_app.config['ALREADY_REGISTERED_EMAIL_TEMPLATE_ID'])
     service = Service.query.get(current_app.config['NOTIFY_SERVICE_ID'])
-    
+
     current_app.logger.info('template.id is {}'.format(template.id))
     current_app.logger.info('service.id is {}'.format(service.id))
 
@@ -438,11 +438,11 @@ def send_already_registered_email(user_id):
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=service.get_default_reply_to_email_address()
     )
-    
+
     current_app.logger.info('Sending notification to queue')
 
     send_notification_to_queue(saved_notification, False, queue=QueueNames.NOTIFY)
-    
+
     current_app.logger.info('Sent notification to queue')
 
     return jsonify({}), 204

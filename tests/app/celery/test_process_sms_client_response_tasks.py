@@ -5,9 +5,9 @@ import pytest
 from freezegun import freeze_time
 
 from app import statsd_client
-# from app.celery.process_sms_client_response_tasks import (
-#     process_sms_client_response,
-# )
+from app.celery.process_sms_client_response_tasks import (
+    process_sms_client_response,
+)
 from app.clients import ClientException
 from app.models import NOTIFICATION_TECHNICAL_FAILURE
 

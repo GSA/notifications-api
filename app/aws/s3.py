@@ -10,18 +10,25 @@ default_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
 default_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
 default_region = os.environ.get('AWS_REGION')
 
-def get_s3_file(bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region):
+
+def get_s3_file(
+    bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region
+):
     s3_file = get_s3_object(bucket_name, file_location, access_key, secret_key, region)
     return s3_file.get()['Body'].read().decode('utf-8')
 
 
-def get_s3_object(bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region):
+def get_s3_object(
+    bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region
+):
     session = Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
     s3 = session.resource('s3')
     return s3.Object(bucket_name, file_location)
 
 
-def file_exists(bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region):
+def file_exists(
+    bucket_name, file_location, access_key=default_access_key, secret_key=default_secret_key, region=default_region
+):
     try:
         # try and access metadata of object
         get_s3_object(bucket_name, file_location, access_key, secret_key, region).metadata

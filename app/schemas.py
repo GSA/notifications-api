@@ -234,14 +234,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     email_branding = field_for(models.Service, 'email_branding')
     organisation = field_for(models.Service, 'organisation')
     go_live_at = field_for(models.Service, 'go_live_at', format=DATETIME_FORMAT_NO_TIMEZONE)
-    allowed_broadcast_provider = fields.Method(dump_only=True, serialize='_get_allowed_broadcast_provider')
-    broadcast_channel = fields.Method(dump_only=True, serialize='_get_broadcast_channel')
-
-    def _get_allowed_broadcast_provider(self, service):
-        return service.allowed_broadcast_provider
-
-    def _get_broadcast_channel(self, service):
-        return service.broadcast_channel
 
     def get_letter_logo_filename(self, service):
         return service.letter_branding and service.letter_branding.filename
@@ -270,7 +262,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'all_template_folders',
             'annual_billing',
             'api_keys',
-            'broadcast_messages',
             'complaints',
             'contact_list',
             'created_at',
@@ -284,8 +275,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'letter_logo_filename',
             'reply_to_email_addresses',
             'returned_letters',
-            'service_broadcast_provider_restriction',
-            'service_broadcast_settings',
             'service_sms_senders',
             'templates',
             'updated_at',
@@ -331,7 +320,6 @@ class DetailedServiceSchema(BaseSchema):
             'all_template_folders',
             'annual_billing',
             'api_keys',
-            'broadcast_messages',
             'contact_list',
             'created_by',
             'crown',
@@ -413,7 +401,6 @@ class TemplateSchemaNoDetail(TemplateSchema):
     class Meta(TemplateSchema.Meta):
         exclude = TemplateSchema.Meta.exclude + (
             'archived',
-            'broadcast_data',
             'created_at',
             'created_by',
             'created_by_id',
@@ -433,8 +420,7 @@ class TemplateSchemaNoDetail(TemplateSchema):
 
     @pre_dump
     def remove_content_for_non_broadcast_templates(self, template, **kwargs):
-        if template.template_type != models.BROADCAST_TYPE:
-            template.content = None
+        template.content = None
 
         return template
 
@@ -457,7 +443,6 @@ class TemplateHistorySchema(BaseSchema):
 
     class Meta(BaseSchema.Meta):
         model = models.TemplateHistory
-        exclude = ('broadcast_messages',)
 
 
 class ApiKeySchema(BaseSchema):

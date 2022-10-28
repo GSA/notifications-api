@@ -112,7 +112,7 @@ def test_get_all_templates_for_invalid_type_returns_400(client, sample_service):
         'status_code': 400,
         'errors': [
             {
-                'message': 'type coconut is not one of [sms, email, letter, broadcast]',
+                'message': 'type coconut is not one of [sms, email, letter]',
                 'error': 'ValidationError'
             }
         ]

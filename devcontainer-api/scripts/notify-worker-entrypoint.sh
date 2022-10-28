@@ -30,8 +30,7 @@ cd /workspace
 git status
 
 make generate-version-file
-pip3 install -r requirements.txt
-pip3 install -r requirements_for_test.txt
+pipenv install --dev
 
 # Install virtualenv to support running the isolated make freeze-requirements from within the devcontainer
 pip3 install virtualenv

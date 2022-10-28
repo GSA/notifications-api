@@ -106,13 +106,13 @@ def persist_notification(
     updated_at=None
 ):
     current_app.logger.info('Presisting notification')
-    
+
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
-    
+
     current_app.logger.info('Presisting notification with id {}'.format(notification_id))
-    
+
     notification = Notification(
         id=notification_id,
         template_id=template_id,
@@ -135,7 +135,7 @@ def persist_notification(
         document_download_count=document_download_count,
         updated_at=updated_at
     )
-    
+
     current_app.logger.info('Presisting notification with to address: {}'.format(notification.to))
 
     if notification_type == SMS_TYPE:

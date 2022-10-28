@@ -88,12 +88,19 @@ def country_records_delivery(phone_prefix):
     return dlr and dlr.lower() == 'yes'
 
 
-def _update_notification_status(notification, status, detailed_status_code=None):
-    # status = _decide_permanent_temporary_failure(
-    #     status=status, notification=notification, detailed_status_code=detailed_status_code
-    # )
-    # notification.status = status
-    # dao_update_notification(notification)
+def _decide_permanent_temporary_failure(current_status, status):
+    # If we go from pending to delivered we need to set failure type as temporary-failure
+    if current_status == NOTIFICATION_PENDING and status == NOTIFICATION_PERMANENT_FAILURE:
+        status = NOTIFICATION_TEMPORARY_FAILURE
+    return status
+
+
+def _update_notification_status(notification, status, provider_response=None):
+    status = _decide_permanent_temporary_failure(current_status=notification.status, status=status)
+    notification.status = status
+    if provider_response:
+        notification.provider_response = provider_response
+    dao_update_notification(notification)
     return notification
 
 
@@ -587,17 +594,13 @@ def dao_get_notification_by_reference(reference):
     ).one()
 
 
-def dao_get_notification_or_history_by_reference(reference):
+def dao_get_notification_history_by_reference(reference):
     try:
         # This try except is necessary because in test keys and research mode does not create notification history.
         # Otherwise we could just search for the NotificationHistory object
-        return Notification.query.filter(
-            Notification.reference == reference
-        ).one()
+        return Notification.query.filter(Notification.reference == reference).one()
     except NoResultFound:
-        return NotificationHistory.query.filter(
-            NotificationHistory.reference == reference
-        ).one()
+        return NotificationHistory.query.filter(NotificationHistory.reference == reference).one()
 
 
 def dao_get_notifications_processing_time_stats(start_date, end_date):

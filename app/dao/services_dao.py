@@ -9,21 +9,16 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
 from app.dao.date_util import get_current_financial_year
-from app.dao.email_branding_dao import dao_get_email_branding_by_name
-from app.dao.letter_branding_dao import dao_get_letter_branding_by_name
 from app.dao.organisation_dao import dao_get_organisation_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
 from app.models import (
-    CROWN_ORGANISATION_TYPES,
     EMAIL_TYPE,
     INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEST,
     LETTER_TYPE,
-    NHS_ORGANISATION_TYPES,
-    NON_CROWN_ORGANISATION_TYPES,
     NOTIFICATION_PERMANENT_FAILURE,
     SMS_TYPE,
     UPLOAD_LETTERS,
@@ -50,7 +45,6 @@ from app.models import (
     VerifyCode,
 )
 from app.utils import (
-    email_address_is_nhs,
     escape_special_characters,
     get_archived_db_column_value,
     get_london_midnight_in_utc,
@@ -324,16 +318,8 @@ def dao_create_service(
         if organisation.letter_branding:
             service.letter_branding = organisation.letter_branding
 
-    elif service.organisation_type in NHS_ORGANISATION_TYPES or email_address_is_nhs(user.email_address):
-        service.email_branding = dao_get_email_branding_by_name('NHS')
-        service.letter_branding = dao_get_letter_branding_by_name('NHS')
-
     if organisation:
         service.crown = organisation.crown
-    elif service.organisation_type in CROWN_ORGANISATION_TYPES:
-        service.crown = True
-    elif service.organisation_type in NON_CROWN_ORGANISATION_TYPES:
-        service.crown = False
     service.count_as_live = not user.platform_admin
 
     db.session.add(service)

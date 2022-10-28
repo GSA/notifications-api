@@ -18,7 +18,11 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.serialised_models import SerialisedService
 
-GENERAL_TOKEN_ERROR_MESSAGE = 'Invalid token: make sure your API token matches the example at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header'  # nosec B105
+# stvnrlly - this is silly, but bandit has a multiline string bug (https://github.com/PyCQA/bandit/issues/658)
+# and flake8 wants a multiline quote here. TODO: check on bug status and restore sanity once possible
+TOKEN_MESSAGE_ONE = "Invalid token: make sure your API token matches the example "  # nosec B105
+TOKEN_MESSAGE_TWO = "at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header"  # nosec B105
+GENERAL_TOKEN_ERROR_MESSAGE = TOKEN_MESSAGE_ONE + TOKEN_MESSAGE_TWO
 
 AUTH_DB_CONNECTION_DURATION_SECONDS = Histogram(
     'auth_db_connection_duration_seconds',
@@ -58,10 +62,6 @@ class InternalApiKey():
 
 def requires_no_auth():
     pass
-
-
-def requires_govuk_alerts_auth():
-    requires_internal_auth(current_app.config.get('GOVUK_ALERTS_CLIENT_ID'))
 
 
 def requires_admin_auth():

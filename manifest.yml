@@ -17,6 +17,16 @@ applications:
       - notifications-api-csv-upload-bucket-((env))
       - notifications-api-contact-list-bucket-((env))
 
+    processes:
+      - type: web
+        instances: ((web_instances))
+        memory: ((web_memory))
+        command: ./scripts/migrate_and_run_web.sh
+      - type: worker
+        instances: ((worker_instances))
+        memory: ((worker_memory))
+        command: ./scripts/run_app_paas.sh celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4
+
     env:
       NOTIFY_APP_NAME: api
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log

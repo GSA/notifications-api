@@ -55,46 +55,21 @@ def dao_get_all_free_sms_fragment_limit(service_id):
 
 def set_default_free_allowance_for_service(service, year_start=None):
     default_free_sms_fragment_limits = {
-        'central': {
+        'federal': {
             2020: 250_000,
             2021: 150_000,
             2022: 40_000,
         },
-        'local': {
-            2020: 25_000,
-            2021: 25_000,
-            2022: 20_000,
-        },
-        'nhs_central': {
+        'state': {
             2020: 250_000,
             2021: 150_000,
             2022: 40_000,
-        },
-        'nhs_local': {
-            2020: 25_000,
-            2021: 25_000,
-            2022: 20_000,
-        },
-        'nhs_gp': {
-            2020: 25_000,
-            2021: 10_000,
-            2022: 10_000,
-        },
-        'emergency_service': {
-            2020: 25_000,
-            2021: 25_000,
-            2022: 20_000,
-        },
-        'school_or_college': {
-            2020: 25_000,
-            2021: 10_000,
-            2022: 10_000,
         },
         'other': {
-            2020: 25_000,
-            2021: 10_000,
-            2022: 10_000,
-        },
+            2020: 250_000,
+            2021: 150_000,
+            2022: 40_000,
+        }
     }
     if not year_start:
         year_start = get_current_financial_year_start_year()

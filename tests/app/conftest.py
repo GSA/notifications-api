@@ -10,27 +10,21 @@ from sqlalchemy.orm.session import make_transient
 
 from app import db
 from app.dao.api_key_dao import save_model_api_key
-from app.dao.broadcast_service_dao import (
-    insert_or_update_service_broadcast_settings,
-)
 from app.dao.invited_user_dao import save_invited_user
 from app.dao.jobs_dao import dao_create_job
 from app.dao.notifications_dao import dao_create_notification
-from app.dao.organisation_dao import (
-    dao_add_service_to_organisation,
-    dao_create_organisation,
-)
+from app.dao.organisation_dao import dao_create_organisation
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
 from app.history_meta import create_history
 from app.models import (
-    BROADCAST_TYPE,
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     LETTER_TYPE,
+    NOTIFICATION_STATUS_TYPES_COMPLETED,
     SERVICE_PERMISSION_TYPES,
     SMS_TYPE,
     ApiKey,
@@ -67,6 +61,86 @@ from tests.app.db import (
 def rmock():
     with requests_mock.mock() as rmock:
         yield rmock
+
+
+def create_sample_notification(
+    notify_db,
+    notify_db_session,
+    service=None,
+    template=None,
+    job=None,
+    job_row_number=None,
+    to_field=None,
+    status="created",
+    provider_response=None,
+    reference=None,
+    created_at=None,
+    sent_at=None,
+    billable_units=1,
+    personalisation=None,
+    api_key=None,
+    key_type=KEY_TYPE_NORMAL,
+    sent_by=None,
+    international=False,
+    client_reference=None,
+    rate_multiplier=1.0,
+    scheduled_for=None,
+    normalised_to=None,
+    postage=None,
+):
+    if created_at is None:
+        created_at = datetime.utcnow()
+    if service is None:
+        service = create_service(check_if_service_exists=True)
+    if template is None:
+        template = create_template(service=service)
+
+    if job is None and api_key is None:
+        # we didn't specify in test - lets create it
+        api_key = ApiKey.query.filter(ApiKey.service == template.service, ApiKey.key_type == key_type).first()
+        if not api_key:
+            api_key = create_api_key(template.service, key_type=key_type)
+
+    notification_id = uuid.uuid4()
+
+    if to_field:
+        to = to_field
+    else:
+        to = "+16502532222"
+
+    data = {
+        "id": notification_id,
+        "to": to,
+        "job_id": job.id if job else None,
+        "job": job,
+        "service_id": service.id,
+        "service": service,
+        "template_id": template.id,
+        "template_version": template.version,
+        "status": status,
+        "provider_response": provider_response,
+        "reference": reference,
+        "created_at": created_at,
+        "sent_at": sent_at,
+        "billable_units": billable_units,
+        "personalisation": personalisation,
+        "notification_type": template.template_type,
+        "api_key": api_key,
+        "api_key_id": api_key and api_key.id,
+        "key_type": api_key.key_type if api_key else key_type,
+        "sent_by": sent_by,
+        "updated_at": created_at if status in NOTIFICATION_STATUS_TYPES_COMPLETED else None,
+        "client_reference": client_reference,
+        "rate_multiplier": rate_multiplier,
+        "normalised_to": normalised_to,
+        "postage": postage,
+    }
+    if job_row_number is not None:
+        data["job_row_number"] = job_row_number
+    notification = Notification(**data)
+    dao_create_notification(notification)
+
+    return notification
 
 
 @pytest.fixture(scope='function')
@@ -148,60 +222,6 @@ def sample_service(sample_user):
     if not service:
         service = Service(**data)
         dao_create_service(service, sample_user, service_permissions=None)
-    else:
-        if sample_user not in service.users:
-            dao_add_user_to_service(service, sample_user)
-
-    return service
-
-
-@pytest.fixture(scope='function')
-def sample_broadcast_service(broadcast_organisation, sample_user):
-    service_name = 'Sample broadcast service'
-    email_from = service_name.lower().replace(' ', '.')
-
-    data = {
-        'name': service_name,
-        'message_limit': 1000,
-        'restricted': False,
-        'email_from': email_from,
-        'created_by': sample_user,
-        'crown': True,
-        'count_as_live': False,
-    }
-    service = Service.query.filter_by(name=service_name).first()
-    if not service:
-        service = Service(**data)
-        dao_create_service(service, sample_user, service_permissions=[BROADCAST_TYPE])
-        insert_or_update_service_broadcast_settings(service, channel="severe")
-        dao_add_service_to_organisation(service, current_app.config['BROADCAST_ORGANISATION_ID'])
-    else:
-        if sample_user not in service.users:
-            dao_add_user_to_service(service, sample_user)
-
-    return service
-
-
-@pytest.fixture(scope='function')
-def sample_broadcast_service_2(broadcast_organisation, sample_user):
-    service_name = 'Sample broadcast service 2'
-    email_from = service_name.lower().replace(' ', '.')
-
-    data = {
-        'name': service_name,
-        'message_limit': 1000,
-        'restricted': False,
-        'email_from': email_from,
-        'created_by': sample_user,
-        'crown': True,
-        'count_as_live': False,
-    }
-    service = Service.query.filter_by(name=service_name).first()
-    if not service:
-        service = Service(**data)
-        dao_create_service(service, sample_user, service_permissions=[BROADCAST_TYPE])
-        insert_or_update_service_broadcast_settings(service, channel="severe")
-        dao_add_service_to_organisation(service, current_app.config['BROADCAST_ORGANISATION_ID'])
     else:
         if sample_user not in service.users:
             dao_add_user_to_service(service, sample_user)
@@ -663,19 +683,6 @@ def invitation_email_template(notify_service):
 
 
 @pytest.fixture(scope='function')
-def broadcast_invitation_email_template(notify_service):
-    content = '((user_name)) is invited to broadcast Notify by ((service_name)) ((url)) to complete registration',
-    return create_custom_template(
-        service=notify_service,
-        user=notify_service.users[0],
-        template_config_name='BROADCAST_INVITATION_EMAIL_TEMPLATE_ID',
-        content=content,
-        subject='Invitation to ((service_name))',
-        template_type='email'
-    )
-
-
-@pytest.fixture(scope='function')
 def org_invite_email_template(notify_service):
     return create_custom_template(
         service=notify_service,
@@ -891,16 +898,6 @@ def sample_inbound_numbers(sample_service):
 def sample_organisation(notify_db_session):
     org = Organisation(name='sample organisation')
     dao_create_organisation(org)
-    return org
-
-
-@pytest.fixture
-def broadcast_organisation(notify_db_session):
-    org = Organisation.query.get(current_app.config['BROADCAST_ORGANISATION_ID'])
-    if not org:
-        org = Organisation(id=current_app.config['BROADCAST_ORGANISATION_ID'], name='broadcast organisation')
-        dao_create_organisation(org)
-
     return org
 
 

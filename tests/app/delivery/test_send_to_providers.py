@@ -6,8 +6,6 @@ from unittest.mock import ANY
 
 import pytest
 from flask import current_app
-from notifications_utils.recipients import validate_and_format_phone_number
-from requests import HTTPError
 
 import app
 # from app import firetext_client, mmg_client, notification_provider_clients
@@ -27,21 +25,22 @@ from app.models import (
     Notification,
 )
 from app.serialised_models import SerialisedService
-from tests.app.db import (
+from tests.app.db import (  # create_service,; create_service_with_defined_sms_sender,; create_template,
     create_email_branding,
     create_notification,
     create_reply_to_email,
-    create_service,
     create_service_sms_sender,
-    create_service_with_defined_sms_sender,
-    create_template,
 )
+
+# from notifications_utils.recipients import validate_and_format_phone_number
+# from requests import HTTPError
 
 
 def setup_function(_function):
     # pytest will run this function before each test. It makes sure the
     # state of the cache is not shared between tests.
     send_to_providers.provider_cache.clear()
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
 def test_provider_to_use_should_return_random_provider(mocker, notify_db_session):
@@ -71,6 +70,7 @@ def test_provider_to_use_should_cache_repeated_calls(mocker, notify_db_session):
 
     assert all(result == results[0] for result in results)
     assert len(mock_choices.call_args_list) == 1
+
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
 @pytest.mark.parametrize('international_provider_priority', (
@@ -115,39 +115,39 @@ def test_provider_to_use_raises_if_no_active_providers(mocker, restore_provider_
         send_to_providers.provider_to_use('sms', international=True)
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
-    sample_sms_template_with_html,
-    mocker
-):
-    db_notification = create_notification(template=sample_sms_template_with_html,
-                                          to_field="+447234123123", personalisation={"name": "Jo"},
-                                          status='created',
-                                          reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
-                                          normalised_to="447234123123"
-                                          )
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
+#     sample_sms_template_with_html,
+#     mocker
+# ):
+#     db_notification = create_notification(template=sample_sms_template_with_html,
+#                                           to_field="+447234123123", personalisation={"name": "Jo"},
+#                                           status='created',
+#                                           reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
+#                                           normalised_to="447234123123"
+#                                           )
 
-    mocker.patch('app.mmg_client.send_sms')
+#     mocker.patch('app.mmg_client.send_sms')
 
-    send_to_providers.send_sms_to_provider(
-        db_notification
-    )
+#     send_to_providers.send_sms_to_provider(
+#         db_notification
+#     )
 
-    mmg_client.send_sms.assert_called_once_with(
-        to="447234123123",
-        content="Sample service: Hello Jo\nHere is <em>some HTML</em> & entities",
-        reference=str(db_notification.id),
-        sender=current_app.config['FROM_NUMBER'],
-        international=False
-    )
+#     mmg_client.send_sms.assert_called_once_with(
+#         to="447234123123",
+#         content="Sample service: Hello Jo\nHere is <em>some HTML</em> & entities",
+#         reference=str(db_notification.id),
+#         sender=current_app.config['FROM_NUMBER'],
+#         international=False
+#     )
 
-    notification = Notification.query.filter_by(id=db_notification.id).one()
+#     notification = Notification.query.filter_by(id=db_notification.id).one()
 
-    assert notification.status == 'sending'
-    assert notification.sent_at <= datetime.utcnow()
-    assert notification.sent_by == 'mmg'
-    assert notification.billable_units == 1
-    assert notification.personalisation == {"name": "Jo"}
+#     assert notification.status == 'sending'
+#     assert notification.sent_at <= datetime.utcnow()
+#     assert notification.sent_by == 'mmg'
+#     assert notification.billable_units == 1
+#     assert notification.personalisation == {"name": "Jo"}
 
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
@@ -215,145 +215,145 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
     assert Notification.query.get(sample_notification.id).status == 'technical-failure'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_send_sms_should_use_template_version_from_notification_not_latest(
-        sample_template,
-        mocker):
-    db_notification = create_notification(template=sample_template, to_field='+447234123123', status='created',
-                                          reply_to_text=sample_template.service.get_default_sms_sender(),
-                                          normalised_to='447234123123')
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_send_sms_should_use_template_version_from_notification_not_latest(
+#         sample_template,
+#         mocker):
+#     db_notification = create_notification(template=sample_template, to_field='+447234123123', status='created',
+#                                           reply_to_text=sample_template.service.get_default_sms_sender(),
+#                                           normalised_to='447234123123')
 
-    mocker.patch('app.mmg_client.send_sms')
+#     mocker.patch('app.mmg_client.send_sms')
 
-    version_on_notification = sample_template.version
-    expected_template_id = sample_template.id
+#     version_on_notification = sample_template.version
+#     expected_template_id = sample_template.id
 
-    # Change the template
-    from app.dao.templates_dao import (
-        dao_get_template_by_id,
-        dao_update_template,
-    )
-    sample_template.content = sample_template.content + " another version of the template"
-    dao_update_template(sample_template)
-    t = dao_get_template_by_id(sample_template.id)
-    assert t.version > version_on_notification
+#     # Change the template
+#     from app.dao.templates_dao import (
+#         dao_get_template_by_id,
+#         dao_update_template,
+#     )
+#     sample_template.content = sample_template.content + " another version of the template"
+#     dao_update_template(sample_template)
+#     t = dao_get_template_by_id(sample_template.id)
+#     assert t.version > version_on_notification
 
-    send_to_providers.send_sms_to_provider(
-        db_notification
-    )
+#     send_to_providers.send_sms_to_provider(
+#         db_notification
+#     )
 
-    mmg_client.send_sms.assert_called_once_with(
-        to=validate_and_format_phone_number("+447234123123"),
-        content="Sample service: This is a template:\nwith a newline",
-        reference=str(db_notification.id),
-        sender=current_app.config['FROM_NUMBER'],
-        international=False
-    )
+#     mmg_client.send_sms.assert_called_once_with(
+#         to=validate_and_format_phone_number("+447234123123"),
+#         content="Sample service: This is a template:\nwith a newline",
+#         reference=str(db_notification.id),
+#         sender=current_app.config['FROM_NUMBER'],
+#         international=False
+#     )
 
-    t = dao_get_template_by_id(expected_template_id)
+#     t = dao_get_template_by_id(expected_template_id)
 
-    persisted_notification = notifications_dao.get_notification_by_id(db_notification.id)
-    assert persisted_notification.to == db_notification.to
-    assert persisted_notification.template_id == expected_template_id
-    assert persisted_notification.template_version == version_on_notification
-    assert persisted_notification.template_version != t.version
-    assert persisted_notification.status == 'sending'
-    assert not persisted_notification.personalisation
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-@pytest.mark.parametrize('research_mode,key_type', [
-    (True, KEY_TYPE_NORMAL),
-    (False, KEY_TYPE_TEST)
-])
-def test_should_call_send_sms_response_task_if_research_mode(
-        notify_db_session, sample_service, sample_notification, mocker, research_mode, key_type
-):
-    mocker.patch('app.mmg_client.send_sms')
-    mocker.patch('app.delivery.send_to_providers.send_sms_response')
-
-    if research_mode:
-        sample_service.research_mode = True
-        notify_db_session.add(sample_service)
-        notify_db_session.commit()
-
-    sample_notification.key_type = key_type
-
-    send_to_providers.send_sms_to_provider(
-        sample_notification
-    )
-    assert not mmg_client.send_sms.called
-
-    app.delivery.send_to_providers.send_sms_response.assert_called_once_with(
-        'mmg', str(sample_notification.id), sample_notification.to
-    )
-
-    persisted_notification = notifications_dao.get_notification_by_id(sample_notification.id)
-    assert persisted_notification.to == sample_notification.to
-    assert persisted_notification.template_id == sample_notification.template_id
-    assert persisted_notification.status == 'sending'
-    assert persisted_notification.sent_at <= datetime.utcnow()
-    assert persisted_notification.sent_by == 'mmg'
-    assert not persisted_notification.personalisation
+#     persisted_notification = notifications_dao.get_notification_by_id(db_notification.id)
+#     assert persisted_notification.to == db_notification.to
+#     assert persisted_notification.template_id == expected_template_id
+#     assert persisted_notification.template_version == version_on_notification
+#     assert persisted_notification.template_version != t.version
+#     assert persisted_notification.status == 'sending'
+#     assert not persisted_notification.personalisation
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_have_sending_status_if_fake_callback_function_fails(sample_notification, mocker):
-    mocker.patch('app.delivery.send_to_providers.send_sms_response', side_effect=HTTPError)
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# @pytest.mark.parametrize('research_mode,key_type', [
+#     (True, KEY_TYPE_NORMAL),
+#     (False, KEY_TYPE_TEST)
+# ])
+# def test_should_call_send_sms_response_task_if_research_mode(
+#         notify_db_session, sample_service, sample_notification, mocker, research_mode, key_type
+# ):
+#     mocker.patch('app.mmg_client.send_sms')
+#     mocker.patch('app.delivery.send_to_providers.send_sms_response')
 
-    sample_notification.key_type = KEY_TYPE_TEST
+#     if research_mode:
+#         sample_service.research_mode = True
+#         notify_db_session.add(sample_service)
+#         notify_db_session.commit()
 
-    with pytest.raises(HTTPError):
-        send_to_providers.send_sms_to_provider(
-            sample_notification
-        )
-    assert sample_notification.status == 'sending'
-    assert sample_notification.sent_by == 'mmg'
+#     sample_notification.key_type = key_type
 
+#     send_to_providers.send_sms_to_provider(
+#         sample_notification
+#     )
+#     assert not mmg_client.send_sms.called
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_not_send_to_provider_when_status_is_not_created(
-    sample_template,
-    mocker
-):
-    notification = create_notification(template=sample_template, status='sending')
-    mocker.patch('app.mmg_client.send_sms')
-    response_mock = mocker.patch('app.delivery.send_to_providers.send_sms_response')
+#     app.delivery.send_to_providers.send_sms_response.assert_called_once_with(
+#         'mmg', str(sample_notification.id), sample_notification.to
+#     )
 
-    send_to_providers.send_sms_to_provider(
-        notification
-    )
-
-    app.mmg_client.send_sms.assert_not_called()
-    response_mock.assert_not_called()
+#     persisted_notification = notifications_dao.get_notification_by_id(sample_notification.id)
+#     assert persisted_notification.to == sample_notification.to
+#     assert persisted_notification.template_id == sample_notification.template_id
+#     assert persisted_notification.status == 'sending'
+#     assert persisted_notification.sent_at <= datetime.utcnow()
+#     assert persisted_notification.sent_by == 'mmg'
+#     assert not persisted_notification.personalisation
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
-    # é, o, and u are in GSM.
-    # ī, grapes, tabs, zero width space and ellipsis are not
-    # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
-    msg = "a é ī o u 🍇 foo\tbar\u200bbaz((misc))…"
-    placeholder = '∆∆∆abc'
-    gsm_message = "?ódz Housing Service: a é i o u ? foo barbaz???abc..."
-    service = create_service(service_name='Łódź Housing Service')
-    template = create_template(service, content=msg)
-    db_notification = create_notification(
-        template=template,
-        personalisation={'misc': placeholder}
-    )
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_have_sending_status_if_fake_callback_function_fails(sample_notification, mocker):
+#     mocker.patch('app.delivery.send_to_providers.send_sms_response', side_effect=HTTPError)
 
-    mocker.patch('app.mmg_client.send_sms')
+#     sample_notification.key_type = KEY_TYPE_TEST
 
-    send_to_providers.send_sms_to_provider(db_notification)
+#     with pytest.raises(HTTPError):
+#         send_to_providers.send_sms_to_provider(
+#             sample_notification
+#         )
+#     assert sample_notification.status == 'sending'
+#     assert sample_notification.sent_by == 'mmg'
 
-    mmg_client.send_sms.assert_called_once_with(
-        to=ANY,
-        content=gsm_message,
-        reference=ANY,
-        sender=ANY,
-        international=False
-    )
+
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_not_send_to_provider_when_status_is_not_created(
+#     sample_template,
+#     mocker
+# ):
+#     notification = create_notification(template=sample_template, status='sending')
+#     mocker.patch('app.mmg_client.send_sms')
+#     response_mock = mocker.patch('app.delivery.send_to_providers.send_sms_response')
+
+#     send_to_providers.send_sms_to_provider(
+#         notification
+#     )
+
+#     app.mmg_client.send_sms.assert_not_called()
+#     response_mock.assert_not_called()
+
+
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
+#     # é, o, and u are in GSM.
+#     # ī, grapes, tabs, zero width space and ellipsis are not
+#     # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
+#     msg = "a é ī o u 🍇 foo\tbar\u200bbaz((misc))…"
+#     placeholder = '∆∆∆abc'
+#     gsm_message = "?ódz Housing Service: a é i o u ? foo barbaz???abc..."
+#     service = create_service(service_name='Łódź Housing Service')
+#     template = create_template(service, content=msg)
+#     db_notification = create_notification(
+#         template=template,
+#         personalisation={'misc': placeholder}
+#     )
+
+#     mocker.patch('app.mmg_client.send_sms')
+
+#     send_to_providers.send_sms_to_provider(db_notification)
+
+#     mmg_client.send_sms.assert_called_once_with(
+#         to=ANY,
+#         content=gsm_message,
+#         reference=ANY,
+#         sender=ANY,
+#         international=False
+#     )
 
 
 @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
@@ -592,22 +592,23 @@ def test_should_not_update_notification_if_research_mode_on_exception(
     assert persisted_notification.billable_units == 0
     assert update_mock.called
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-@pytest.mark.parametrize("starting_status, expected_status", [
-    ("delivered", "delivered"),
-    ("created", "sending"),
-    ("technical-failure", "technical-failure"),
-])
-def test_update_notification_to_sending_does_not_update_status_from_a_final_status(
-    sample_service, notify_db_session, starting_status, expected_status
-):
-    template = create_template(sample_service)
-    notification = create_notification(template=template, status=starting_status)
-    send_to_providers.update_notification_to_sending(
-        notification,
-        notification_provider_clients.get_client_by_name_and_type("mmg", "sms")
-    )
-    assert notification.status == expected_status
+
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# @pytest.mark.parametrize("starting_status, expected_status", [
+#     ("delivered", "delivered"),
+#     ("created", "sending"),
+#     ("technical-failure", "technical-failure"),
+# ])
+# def test_update_notification_to_sending_does_not_update_status_from_a_final_status(
+#     sample_service, notify_db_session, starting_status, expected_status
+# ):
+#     template = create_template(sample_service)
+#     notification = create_notification(template=template, status=starting_status)
+#     send_to_providers.update_notification_to_sending(
+#         notification,
+#         notification_provider_clients.get_client_by_name_and_type("mmg", "sms")
+#     )
+#     assert notification.status == expected_status
 
 
 def __update_notification(notification_to_update, research_mode, expected_status):
@@ -665,116 +666,116 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
     mock_reduce.assert_called_once_with('mmg', time_threshold=timedelta(minutes=1))
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_send_sms_to_international_providers(
-    sample_template,
-    sample_user,
-    mocker
-):
-    mocker.patch('app.mmg_client.send_sms')
-    mocker.patch('app.firetext_client.send_sms')
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_send_sms_to_international_providers(
+#     sample_template,
+#     sample_user,
+#     mocker
+# ):
+#     mocker.patch('app.mmg_client.send_sms')
+#     mocker.patch('app.firetext_client.send_sms')
 
-    # set firetext to active
-    get_provider_details_by_identifier('firetext').priority = 100
-    get_provider_details_by_identifier('mmg').priority = 0
+#     # set firetext to active
+#     get_provider_details_by_identifier('firetext').priority = 100
+#     get_provider_details_by_identifier('mmg').priority = 0
 
-    notification_international = create_notification(
-        template=sample_template,
-        to_field="+6011-17224412",
-        personalisation={"name": "Jo"},
-        status='created',
-        international=True,
-        reply_to_text=sample_template.service.get_default_sms_sender(),
-        normalised_to='601117224412'
-    )
+#     notification_international = create_notification(
+#         template=sample_template,
+#         to_field="+6011-17224412",
+#         personalisation={"name": "Jo"},
+#         status='created',
+#         international=True,
+#         reply_to_text=sample_template.service.get_default_sms_sender(),
+#         normalised_to='601117224412'
+#     )
 
-    send_to_providers.send_sms_to_provider(
-        notification_international
-    )
+#     send_to_providers.send_sms_to_provider(
+#         notification_international
+#     )
 
-    mmg_client.send_sms.assert_called_once_with(
-        to="601117224412",
-        content=ANY,
-        reference=str(notification_international.id),
-        sender=current_app.config['FROM_NUMBER'],
-        international=True
-    )
+#     mmg_client.send_sms.assert_called_once_with(
+#         to="601117224412",
+#         content=ANY,
+#         reference=str(notification_international.id),
+#         sender=current_app.config['FROM_NUMBER'],
+#         international=True
+#     )
 
-    assert notification_international.status == 'sent'
-    assert notification_international.sent_by == 'mmg'
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-def test_should_send_non_international_sms_to_default_provider(
-    sample_template,
-    sample_user,
-    mocker
-):
-    mocker.patch('app.mmg_client.send_sms')
-    mocker.patch('app.firetext_client.send_sms')
-
-    # set firetext to active
-    get_provider_details_by_identifier('firetext').priority = 100
-    get_provider_details_by_identifier('mmg').priority = 0
-
-    notification_uk = create_notification(
-        template=sample_template,
-        to_field="+447234123999",
-        personalisation={"name": "Jo"},
-        status='created',
-        international=False,
-        reply_to_text=sample_template.service.get_default_sms_sender(),
-        normalised_to="447234123999"
-    )
-
-    send_to_providers.send_sms_to_provider(
-        notification_uk
-    )
-
-    firetext_client.send_sms.assert_called_once_with(
-        to="447234123999",
-        content=ANY,
-        reference=str(notification_uk.id),
-        sender=current_app.config['FROM_NUMBER'],
-        international=False
-    )
-
-    assert notification_uk.status == 'sending'
-    assert notification_uk.sent_by == 'firetext'
+#     assert notification_international.status == 'sent'
+#     assert notification_international.sent_by == 'mmg'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
-@pytest.mark.parametrize('sms_sender, expected_sender, prefix_sms, expected_content', [
-    ('foo', 'foo', False, 'bar'),
-    ('foo', 'foo', True, 'Sample service: bar'),
-    # if 40604 is actually in DB then treat that as if entered manually
-    ('40604', '40604', False, 'bar'),
-    # 'testing' is the FROM_NUMBER during unit tests
-    ('testing', 'testing', True, 'Sample service: bar'),
-    ('testing', 'testing', False, 'bar'),
-])
-def test_should_handle_sms_sender_and_prefix_message(
-    mocker,
-    sms_sender,
-    prefix_sms,
-    expected_sender,
-    expected_content,
-    notify_db_session
-):
-    mocker.patch('app.mmg_client.send_sms')
-    service = create_service_with_defined_sms_sender(sms_sender_value=sms_sender, prefix_sms=prefix_sms)
-    template = create_template(service, content='bar')
-    notification = create_notification(template, reply_to_text=sms_sender)
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# def test_should_send_non_international_sms_to_default_provider(
+#     sample_template,
+#     sample_user,
+#     mocker
+# ):
+#     mocker.patch('app.mmg_client.send_sms')
+#     mocker.patch('app.firetext_client.send_sms')
 
-    send_to_providers.send_sms_to_provider(notification)
+#     # set firetext to active
+#     get_provider_details_by_identifier('firetext').priority = 100
+#     get_provider_details_by_identifier('mmg').priority = 0
 
-    mmg_client.send_sms.assert_called_once_with(
-        content=expected_content,
-        sender=expected_sender,
-        to=ANY,
-        reference=ANY,
-        international=False
-    )
+#     notification_uk = create_notification(
+#         template=sample_template,
+#         to_field="+447234123999",
+#         personalisation={"name": "Jo"},
+#         status='created',
+#         international=False,
+#         reply_to_text=sample_template.service.get_default_sms_sender(),
+#         normalised_to="447234123999"
+#     )
+
+#     send_to_providers.send_sms_to_provider(
+#         notification_uk
+#     )
+
+#     firetext_client.send_sms.assert_called_once_with(
+#         to="447234123999",
+#         content=ANY,
+#         reference=str(notification_uk.id),
+#         sender=current_app.config['FROM_NUMBER'],
+#         international=False
+#     )
+
+#     assert notification_uk.status == 'sending'
+#     assert notification_uk.sent_by == 'firetext'
+
+
+# @pytest.mark.skip(reason="Needs updating for TTS: Update with new providers")
+# @pytest.mark.parametrize('sms_sender, expected_sender, prefix_sms, expected_content', [
+#     ('foo', 'foo', False, 'bar'),
+#     ('foo', 'foo', True, 'Sample service: bar'),
+#     # if 40604 is actually in DB then treat that as if entered manually
+#     ('40604', '40604', False, 'bar'),
+#     # 'testing' is the FROM_NUMBER during unit tests
+#     ('testing', 'testing', True, 'Sample service: bar'),
+#     ('testing', 'testing', False, 'bar'),
+# ])
+# def test_should_handle_sms_sender_and_prefix_message(
+#     mocker,
+#     sms_sender,
+#     prefix_sms,
+#     expected_sender,
+#     expected_content,
+#     notify_db_session
+# ):
+#     mocker.patch('app.mmg_client.send_sms')
+#     service = create_service_with_defined_sms_sender(sms_sender_value=sms_sender, prefix_sms=prefix_sms)
+#     template = create_template(service, content='bar')
+#     notification = create_notification(template, reply_to_text=sms_sender)
+
+#     send_to_providers.send_sms_to_provider(notification)
+
+#     mmg_client.send_sms.assert_called_once_with(
+#         content=expected_content,
+#         sender=expected_sender,
+#         to=ANY,
+#         reference=ANY,
+#         international=False
+#     )
 
 
 def test_send_email_to_provider_uses_reply_to_from_notification(

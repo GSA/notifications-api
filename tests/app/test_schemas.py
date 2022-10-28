@@ -106,7 +106,7 @@ def test_provider_details_schema_returns_user_details(
     restore_provider_details
 ):
     from app.schemas import provider_details_schema
-    current_sms_provider = get_provider_details_by_identifier('mmg')
+    current_sms_provider = get_provider_details_by_identifier('sns')
     current_sms_provider.created_by = sample_user
     data = provider_details_schema.dump(current_sms_provider)
 
@@ -119,7 +119,7 @@ def test_provider_details_history_schema_returns_user_details(
     restore_provider_details,
 ):
     from app.schemas import provider_details_schema
-    current_sms_provider = get_provider_details_by_identifier('mmg')
+    current_sms_provider = get_provider_details_by_identifier('sns')
     current_sms_provider.created_by_id = sample_user.id
     data = provider_details_schema.dump(current_sms_provider)
 

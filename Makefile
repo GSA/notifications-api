@@ -7,20 +7,14 @@ APP_VERSION_FILE = app/version.py
 GIT_BRANCH ?= $(shell git symbolic-ref --short HEAD 2> /dev/null || echo "detached")
 GIT_COMMIT ?= $(shell git rev-parse HEAD)
 
-CF_API ?= api.cloud.service.gov.uk
-CF_ORG ?= govuk-notify
-CF_SPACE ?= ${DEPLOY_ENV}
-CF_HOME ?= ${HOME}
-$(eval export CF_HOME)
-
-
 ## DEVELOPMENT
 
 .PHONY: bootstrap
-bootstrap: generate-version-file ## Set up everything to run the app
-	pip3 install -r requirements_for_test.txt
+bootstrap: ## Set up everything to run the app
+	make generate-version-file
+	pipenv install --dev
 	createdb notification_api || true
-	(flask db upgrade) || true
+	(pipenv run flask db upgrade) || true
 
 .PHONY: bootstrap-with-docker
 bootstrap-with-docker: ## Build the image to run the app in Docker
@@ -28,30 +22,22 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 
 .PHONY: run-flask
 run-flask: ## Run flask
-	flask run -p 6011 --host=0.0.0.0
+	pipenv run flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
-	celery -A run_celery.notify_celery purge -f
-	celery \
+	pipenv run celery -A run_celery.notify_celery purge -f
+	pipenv run celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
 		--concurrency=4
 
-.PHONY: run-celery-with-docker
-run-celery-with-docker: ## Run celery in Docker container (useful if you can't install pycurl locally)
-	./scripts/run_with_docker.sh make run-celery
-
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
-	celery \
+	pipenv run celery \
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
-
-.PHONY: run-celery-beat-with-docker
-run-celery-beat-with-docker: ## Run celery beat in Docker container (useful if you can't install pycurl locally)
-	./scripts/run_with_docker.sh make run-celery-beat
 
 .PHONY: help
 help:
@@ -63,24 +49,25 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: ## Run tests
-	# flake8 .
-	isort --check-only ./app ./tests
-	pytest -n4 --maxfail=10
+	pipenv run flake8 .
+	pipenv run isort --check-only ./app ./tests
+	pipenv run pytest -n4 --maxfail=10
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
-	pip install --upgrade pip-tools
-	pip-compile requirements.in
+	pipenv lock
+	pipenv requirements
 
 .PHONY: audit
 audit:
-	pip install --upgrade pip-audit
-	pip-audit -r requirements.txt -r requirements_for_test.txt -l --ignore-vuln PYSEC-2022-237
+	pipenv requirements > requirements.txt
+	pipenv requirements --dev > requirements_for_test.txt
+	pipenv run pip-audit -r requirements.txt -l --ignore-vuln PYSEC-2022-237
+	-pipenv run pip-audit -r requirements_for_test.txt -l
 
 .PHONY: static-scan
 static-scan:
-	pip install bandit
-	bandit -r app/
+	pipenv run bandit -r app/
 
 .PHONY: clean
 clean:
@@ -89,90 +76,26 @@ clean:
 
 ## DEPLOYMENT
 
-.PHONY: preview
-preview: ## Set environment to preview
-	$(eval export DEPLOY_ENV=preview)
-	$(eval export DNS_NAME="notify.works")
-	@true
+# .PHONY: cf-deploy-failwhale
+# cf-deploy-failwhale:
+# 	$(if ${CF_SPACE},,$(error Must target space, eg `make preview cf-deploy-failwhale`))
+# 	cd ./paas-failwhale; cf push notify-api-failwhale -f manifest.yml
 
-.PHONY: staging
-staging: ## Set environment to staging
-	$(eval export DEPLOY_ENV=staging)
-	$(eval export DNS_NAME="staging-notify.works")
-	@true
+# .PHONY: enable-failwhale
+# enable-failwhale: ## Enable the failwhale app and disable api
+# 	$(if ${DNS_NAME},,$(error Must target space, eg `make preview enable-failwhale`))
+# 	# make sure failwhale is running first
+# 	cf start notify-api-failwhale
 
-.PHONY: production
-production: ## Set environment to production
-	$(eval export DEPLOY_ENV=production)
-	$(eval export DNS_NAME="notifications.service.gov.uk")
-	@true
+# 	cf map-route notify-api-failwhale ${DNS_NAME} --hostname api
+# 	cf unmap-route notify-api ${DNS_NAME} --hostname api
+# 	@echo "Failwhale is enabled"
 
-.PHONY: cf-login
-cf-login: ## Log in to Cloud Foundry
-	$(if ${CF_USERNAME},,$(error Must specify CF_USERNAME))
-	$(if ${CF_PASSWORD},,$(error Must specify CF_PASSWORD))
-	$(if ${CF_SPACE},,$(error Must specify CF_SPACE))
-	@echo "Logging in to Cloud Foundry on ${CF_API}"
-	@cf login -a "${CF_API}" -u ${CF_USERNAME} -p "${CF_PASSWORD}" -o "${CF_ORG}" -s "${CF_SPACE}"
+# .PHONY: disable-failwhale
+# disable-failwhale: ## Disable the failwhale app and enable api
+# 	$(if ${DNS_NAME},,$(error Must target space, eg `make preview disable-failwhale`))
 
-.PHONY: cf-deploy
-cf-deploy: ## Deploys the app to Cloud Foundry
-	$(if ${CF_SPACE},,$(error Must specify CF_SPACE))
-	$(if ${CF_APP},,$(error Must specify CF_APP))
-	cf target -o ${CF_ORG} -s ${CF_SPACE}
-	@cf app --guid ${CF_APP} || exit 1
-
-	# cancel any existing deploys to ensure we can apply manifest (if a deploy is in progress you'll see ScaleDisabledDuringDeployment)
-	cf cancel-deployment ${CF_APP} || true
-
-	# fails after 15 mins if deploy doesn't work
-	CF_STARTUP_TIMEOUT=15 cf push ${CF_APP} --strategy=rolling
-
-.PHONY: cf-deploy-api-db-migration
-cf-deploy-api-db-migration:
-	$(if ${CF_SPACE},,$(error Must specify CF_SPACE))
-	cf target -o ${CF_ORG} -s ${CF_SPACE}
-	make -s CF_APP=notifications-api generate-manifest > ${CF_MANIFEST_PATH}
-
-	cf push notifications-api --no-route -f ${CF_MANIFEST_PATH}
-	rm ${CF_MANIFEST_PATH}
-
-	cf run-task notifications-api --command="flask db upgrade" --name api_db_migration
-
-.PHONY: cf-check-api-db-migration-task
-cf-check-api-db-migration-task: ## Get the status for the last notifications-api task
-	@cf curl /v3/apps/`cf app --guid notifications-api`/tasks?order_by=-created_at | jq -r ".resources[0].state"
-
-.PHONY: cf-rollback
-cf-rollback: ## Rollbacks the app to the previous release
-	$(if ${CF_APP},,$(error Must specify CF_APP))
-	rm ${CF_MANIFEST_PATH}
-	cf cancel-deployment ${CF_APP}
-
-.PHONY: check-if-migrations-to-run
-check-if-migrations-to-run:
-	@echo $(shell python3 scripts/check_if_new_migration.py)
-
-.PHONY: cf-deploy-failwhale
-cf-deploy-failwhale:
-	$(if ${CF_SPACE},,$(error Must target space, eg `make preview cf-deploy-failwhale`))
-	cd ./paas-failwhale; cf push notify-api-failwhale -f manifest.yml
-
-.PHONY: enable-failwhale
-enable-failwhale: ## Enable the failwhale app and disable api
-	$(if ${DNS_NAME},,$(error Must target space, eg `make preview enable-failwhale`))
-	# make sure failwhale is running first
-	cf start notify-api-failwhale
-
-	cf map-route notify-api-failwhale ${DNS_NAME} --hostname api
-	cf unmap-route notify-api ${DNS_NAME} --hostname api
-	@echo "Failwhale is enabled"
-
-.PHONY: disable-failwhale
-disable-failwhale: ## Disable the failwhale app and enable api
-	$(if ${DNS_NAME},,$(error Must target space, eg `make preview disable-failwhale`))
-
-	cf map-route notify-api ${DNS_NAME} --hostname api
-	cf unmap-route notify-api-failwhale ${DNS_NAME} --hostname api
-	cf stop notify-api-failwhale
-	@echo "Failwhale is disabled"
+# 	cf map-route notify-api ${DNS_NAME} --hostname api
+# 	cf unmap-route notify-api-failwhale ${DNS_NAME} --hostname api
+# 	cf stop notify-api-failwhale
+# 	@echo "Failwhale is disabled"

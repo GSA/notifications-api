@@ -1,18 +1,15 @@
 import uuid
 from datetime import datetime
 
-import pytest
 from flask import current_app
 from notifications_utils.template import SMSMessageTemplate
 
 from app import notify_celery, statsd_client
+from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.clients import ClientException
 from app.dao import notifications_dao
 from app.dao.templates_dao import dao_get_template_by_id
 from app.models import NOTIFICATION_PENDING
-from app.notifications.notifications_ses_callback import (
-    check_and_queue_callback_task,
-)
 
 sms_response_mapper = {
     # 'MMG': get_mmg_responses,
