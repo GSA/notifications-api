@@ -746,9 +746,9 @@ def validate_mobile(ctx, param, value):
 @click.option('-n', '--name', required=True, prompt=True)
 @click.option('-e', '--email', required=True, prompt=True)  # TODO: require valid email
 @click.option('-m', '--mobile_number',
-    required=True, prompt=True, callback=validate_mobile)
+              required=True, prompt=True, callback=validate_mobile)
 @click.option('-p', '--password',
-    required=True, prompt=True, hide_input=True, confirmation_prompt=True)
+              required=True, prompt=True, hide_input=True, confirmation_prompt=True)
 @click.option('-a', '--auth_type', default="sms_auth")
 @click.option('-s', '--state', default="active")
 @click.option('-d', '--admin', default=False, type=bool)
