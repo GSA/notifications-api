@@ -49,9 +49,9 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: ## Run tests
-	flake8 .
-	isort --check-only ./app ./tests
-	pytest -n4 --maxfail=10
+	pipenv run flake8 .
+	pipenv run isort --check-only ./app ./tests
+	pipenv run pytest -n4 --maxfail=10
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
@@ -60,16 +60,14 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 
 .PHONY: audit
 audit:
-	pip install --upgrade pip-audit
 	pipenv requirements > requirements.txt
 	pipenv requirements --dev > requirements_for_test.txt
-	pip-audit -r requirements.txt -l --ignore-vuln PYSEC-2022-237
-	-pip-audit -r requirements_for_test.txt -l
+	pipenv run pip-audit -r requirements.txt -l --ignore-vuln PYSEC-2022-237
+	-pipenv run pip-audit -r requirements_for_test.txt -l
 
 .PHONY: static-scan
 static-scan:
-	pip install bandit
-	bandit -r app/
+	pipenv run bandit -r app/
 
 .PHONY: clean
 clean:

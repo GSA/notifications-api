@@ -75,6 +75,8 @@ pytest-xdist = "==2.5.0"
 freezegun = "==1.2.1"
 requests-mock = "==1.9.3"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
+pip-audit = "*"
+bandit = "*"
 
 [requires]
 python_version = "3.9"
