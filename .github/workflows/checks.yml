@@ -57,11 +57,11 @@ jobs:
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
     - name: Run style checks
-      run: flake8 .
+      run: pipenv run flake8 .
     - name: Check imports alphabetized
-      run: isort --check-only ./app ./tests
+      run: pipenv run isort --check-only ./app ./tests
     - name: Run tests
-      run: pytest -n4 --maxfail=10
+      run: pipenv run pytest -n4 --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
 
@@ -70,6 +70,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-project
+      - name: Create requirements.txt
+        run: pipenv requirements > requirements.txt
       - uses: trailofbits/gh-action-pip-audit@v1.0.0
         with:
           inputs: requirements.txt

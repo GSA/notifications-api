@@ -111,6 +111,10 @@ def purge_functional_test_data(user_email_prefix):
 
     users, services, etc. Give an email prefix. Probably "notify-tests-preview".
     """
+    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+        current_app.logger.error('Can only be run in development')
+        return
+
     users = User.query.filter(User.email_address.like("{}%".format(user_email_prefix))).all()
     for usr in users:
         # Make sure the full email includes a uuid in it
