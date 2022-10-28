@@ -8,7 +8,7 @@ both with `pytest` and with trial runs.
 To run a command on cloud.gov, use this format:
 
 ```
-cf run-task CLOUD-GOV-SPACE --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND
+cf run-task CLOUD-GOV-APP --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND
 ```
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.

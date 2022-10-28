@@ -43,15 +43,13 @@ Our other repositories are:
 
 ### Direct installation
 
-1. Set up Postgres && Redis
+1. Set up Postgres && Redis on your machine
+
+1. Install [pipenv](https://pipenv.pypa.io/en/latest/)
 
 1. Install dependencies into a virtual environment
 
-    ```
-    pipenv install --dev
-    createdb notification_api
-    flask db upgrade
-    ```
+    `make bootstrap`
 
 1. Create the .env file
 
@@ -62,15 +60,11 @@ Our other repositories are:
 
 1. Run Flask
 
-    ```
-    pipenv run make run-flask
-    ```
+    `make run-flask`
 
 1. Run Celery
 
-    ```
-    pipenv run make run-celery
-    ```
+    `make run-celery`
 
 
 ### VS Code && Docker installation
