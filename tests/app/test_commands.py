@@ -11,10 +11,10 @@ from tests.app.db import create_annual_billing, create_service
 
 
 def test_create_test_user_command(notify_db_session, notify_api):
-    
+
     # number of users before adding ours
     user_count = User.query.count()
-    
+
     # run the command
     notify_api.test_cli_runner().invoke(
         create_test_user, [
@@ -33,7 +33,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
 
     # that user should be the one we added
     user = User.query.filter_by(
-        name = 'Fake Personson'
+        name='Fake Personson'
     ).first()
     assert user.email_address == 'somebody@fake.gov'
     assert user.auth_type == 'sms_auth'
