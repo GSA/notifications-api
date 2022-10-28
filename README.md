@@ -31,6 +31,7 @@ Our other repositories are:
 
 - [Local setup](#local-setup)
 - [Testing](./docs/testing.md)
+- [Deploying](./docs/deploying.md)
 - [Running one-off tasks](./docs/one-off-tasks.md)
 
 ## UK docs that may still be helpful

@@ -21,6 +21,8 @@ On GitHub, in addition to these tests, we run:
 
 We're using GitHub Actions. See [/.github](../.github/) for the configuration.
 
+In addition to commit-triggered scans, the `daily_checks.yml` workflow runs the relevant dependency audits, static scan, and/or dynamic scans at 10am UTC each day. Developers will be notified of failures in daily scans by GitHub notifications.
+
 ## To run a local OWASP scan
 
 1. Run `make run-flask` from within the dev container.
