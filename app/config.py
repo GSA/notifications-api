@@ -5,12 +5,7 @@ from datetime import timedelta
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
-if os.environ.get('VCAP_SERVICES'):
-    # on cloudfoundry, config is a json blob in VCAP_SERVICES - unpack it, and populate
-    # standard environment variables from it
-    from app.cloudfoundry_config import extract_cloudfoundry_config
-
-    extract_cloudfoundry_config()
+from app.cloudfoundry_config import cloud_config
 
 
 class QueueNames(object):
@@ -77,7 +72,8 @@ class Config(object):
 
     # Credentials
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
-    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID')
+    # ADMIN_CLIENT_ID is called ADMIN_CLIENT_USER_NAME in api repo, they should match
+    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID', 'notify-admin')
     INTERNAL_CLIENT_API_KEYS = json.loads(
         os.environ.get(
             'INTERNAL_CLIENT_API_KEYS',
@@ -100,7 +96,7 @@ class Config(object):
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
     PAGE_SIZE = 50
     API_PAGE_SIZE = 250
-    REDIS_URL = os.environ.get('REDIS_URL')
+    REDIS_URL = cloud_config.redis_url
     REDIS_ENABLED = os.environ.get('REDIS_ENABLED', '0') == '1'
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
@@ -350,27 +346,28 @@ class Config(object):
     DOCUMENT_DOWNLOAD_API_KEY = os.environ.get('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
 
 
+def _default_s3_credentials(bucket_name):
+    return {
+        'bucket': bucket_name,
+        'access_key_id': os.environ.get('AWS_ACCESS_KEY_ID'),
+        'secret_access_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'region': os.environ.get('AWS_REGION')
+    }
+
+
 class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
     # Buckets
-    CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
-    CSV_UPLOAD_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    CSV_UPLOAD_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    CSV_UPLOAD_REGION = os.environ.get('AWS_REGION', 'us-west-2')
-    CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
-    CONTACT_LIST_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    CONTACT_LIST_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    CONTACT_LIST_REGION = os.environ.get('AWS_REGION', 'us-west-2')
+    CSV_UPLOAD_BUCKET = _default_s3_credentials('local-notifications-csv-upload')
+    CONTACT_LIST_BUCKET = _default_s3_credentials('local-contact-list')
 
     # credential overrides
     DANGEROUS_SALT = 'dev-notify-salt'
     SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
-    # ADMIN_CLIENT_ID is called ADMIN_CLIENT_USER_NAME in api repo, they should match
-    ADMIN_CLIENT_ID = 'notify-admin'
-    INTERNAL_CLIENT_API_KEYS = {ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
+    INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
 
 
 class Test(Development):
@@ -390,8 +387,8 @@ class Test(Development):
         '10d1b9c9-0072-4fa9-ae1c-595e333841da',
     ]
 
-    CSV_UPLOAD_BUCKET_NAME = 'test-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'test-contact-list'
+    CSV_UPLOAD_BUCKET = _default_s3_credentials('test-notifications-csv-upload')
+    CONTACT_LIST_BUCKET = _default_s3_credentials('test-contact-list')
 
     # this is overriden in CI
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI')
@@ -406,14 +403,10 @@ class Test(Development):
 
 class Production(Config):
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = os.environ.get('CSV_UPLOAD_BUCKET_NAME')
-    CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
-    CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
-    CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
-    CONTACT_LIST_BUCKET_NAME = os.environ.get('CONTACT_LIST_BUCKET_NAME')
-    CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
-    CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
-    CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')
+    CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
+        f"notifications-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
+    CONTACT_LIST_BUCKET = cloud_config.s3_credentials(
+        f"notifications-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
 
     FROM_NUMBER = 'US Notify'
     CRONITOR_ENABLED = True
