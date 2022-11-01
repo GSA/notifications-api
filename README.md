@@ -30,7 +30,7 @@ Our other repositories are:
 ### Common dev work
 
 - [Local setup](#local-setup)
-- [Testing](./docs/testing.md)
+- [Testing](./docs/testing.md), both automated and manual
 - [Deploying](./docs/deploying.md)
 - [Running one-off tasks](./docs/one-off-tasks.md)
 
