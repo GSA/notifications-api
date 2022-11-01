@@ -16,12 +16,6 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update \
-        && sudo apt-get install -y --no-install-recommends \
-        libcurl4-openssl-dev
-
     - uses: actions/checkout@v3
       with:
         fetch-depth: 2
@@ -48,13 +42,12 @@ jobs:
         TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
       run: terraform apply -auto-approve -input=false
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.9"
-
+    - uses: ./.github/actions/setup-project
     - name: Install application dependencies
       run: make bootstrap
+
+    - name: Create requirements.txt because Cloud Foundry does a weird pipenv thing
+      run: pipenv requirements > requirements.txt
 
     - name: Deploy to cloud.gov
       uses: 18f/cg-deploy-action@main
