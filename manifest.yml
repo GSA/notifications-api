@@ -32,16 +32,13 @@ applications:
       NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
-      DEPLOY_ENV: ((env))
 
-      NOTIFY_ENVIRONMENT: live
+      NOTIFY_ENVIRONMENT: ((env))
       API_HOST_NAME: https://notifications-api.app.cloud.gov
       ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
-      STATSD_HOST: localhost
 
       # Credentials variables
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
-      ADMIN_CLIENT_SECRET: ((ADMIN_CLIENT_SECRET))
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
       AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
@@ -49,5 +46,3 @@ applications:
       AWS_REGION: us-west-2
       AWS_PINPOINT_REGION: us-west-2
       AWS_US_TOLL_FREE_NUMBER: +18446120782
-
-      DVLA_EMAIL_ADDRESSES: []

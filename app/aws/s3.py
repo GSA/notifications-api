@@ -41,21 +41,21 @@ def file_exists(
 
 def get_job_location(service_id, job_id):
     return (
-        current_app.config['CSV_UPLOAD_BUCKET_NAME'],
+        current_app.config['CSV_UPLOAD_BUCKET']['bucket'],
         FILE_LOCATION_STRUCTURE.format(service_id, job_id),
-        current_app.config['CSV_UPLOAD_ACCESS_KEY'],
-        current_app.config['CSV_UPLOAD_SECRET_KEY'],
-        current_app.config['CSV_UPLOAD_REGION'],
+        current_app.config['CSV_UPLOAD_BUCKET']['access_key_id'],
+        current_app.config['CSV_UPLOAD_BUCKET']['secret_access_key'],
+        current_app.config['CSV_UPLOAD_BUCKET']['region'],
     )
 
 
 def get_contact_list_location(service_id, contact_list_id):
     return (
-        current_app.config['CONTACT_LIST_BUCKET_NAME'],
+        current_app.config['CONTACT_LIST_BUCKET']['bucket'],
         FILE_LOCATION_STRUCTURE.format(service_id, contact_list_id),
-        current_app.config['CONTACT_LIST_ACCESS_KEY'],
-        current_app.config['CONTACT_LIST_SECRET_KEY'],
-        current_app.config['CONTACT_LIST_REGION'],
+        current_app.config['CONTACT_LIST_BUCKET']['access_key_id'],
+        current_app.config['CONTACT_LIST_BUCKET']['secret_access_key'],
+        current_app.config['CONTACT_LIST_BUCKET']['region'],
     )
 
 
