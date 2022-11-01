@@ -20,6 +20,10 @@ bootstrap: ## Set up everything to run the app
 bootstrap-with-docker: ## Build the image to run the app in Docker
 	docker build -f docker/Dockerfile -t notifications-api .
 
+.PHONY: run-procfile
+run-procfile:
+	pipenv run honcho start -f Procfile.dev
+
 .PHONY: run-flask
 run-flask: ## Run flask
 	pipenv run flask run -p 6011 --host=0.0.0.0

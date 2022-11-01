@@ -5,12 +5,7 @@ from datetime import timedelta
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
-if os.environ.get('VCAP_SERVICES'):
-    # on cloudfoundry, config is a json blob in VCAP_SERVICES - unpack it, and populate
-    # standard environment variables from it
-    from app.cloudfoundry_config import extract_cloudfoundry_config
-
-    extract_cloudfoundry_config()
+from app.cloudfoundry_config import cloud_config
 
 
 class QueueNames(object):
@@ -68,76 +63,31 @@ class TaskNames(object):
 
 
 class Config(object):
+    NOTIFY_APP_NAME = 'api'
+    NOTIFY_ENVIRONMENT = os.environ.get('NOTIFY_ENVIRONMENT', 'development')
     # URL of admin app
-    ADMIN_BASE_URL = os.environ.get('ADMIN_BASE_URL')
-
+    ADMIN_BASE_URL = os.environ.get('ADMIN_BASE_URL', 'http://localhost:6012')
     # URL of api app (on AWS this is the internal api endpoint)
-    API_HOST_NAME = os.environ.get('API_HOST_NAME')
+    API_HOST_NAME = os.environ.get('API_HOST_NAME', 'http://localhost:6011')
 
+    # Credentials
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
-    ADMIN_CLIENT_ID = 'notify-admin'
-
+    # ADMIN_CLIENT_ID is called ADMIN_CLIENT_USER_NAME in api repo, they should match
+    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID', 'notify-admin')
     INTERNAL_CLIENT_API_KEYS = json.loads(
-        os.environ.get('INTERNAL_CLIENT_API_KEYS', '{"notify-admin":["dev-notify-secret-key"]}')
-    )  # TODO: handled by varsfile?
-
+        os.environ.get(
+            'INTERNAL_CLIENT_API_KEYS',
+            ('{"%s":["%s"]}' % (ADMIN_CLIENT_ID, os.getenv('ADMIN_CLIENT_SECRET')))
+            )
+    )
     # encyption secret/salt
-    ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
     SECRET_KEY = os.environ.get('SECRET_KEY')
     DANGEROUS_SALT = os.environ.get('DANGEROUS_SALT')
+    ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
+    ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
 
-    # DB conection string
+    # DB settings
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-
-    # AWS SMS
-    AWS_PINPOINT_REGION = os.environ.get("AWS_PINPOINT_REGION")
-    AWS_US_TOLL_FREE_NUMBER = os.environ.get("AWS_US_TOLL_FREE_NUMBER")
-
-    # MMG API Key
-    MMG_API_KEY = os.environ.get('MMG_API_KEY', 'placeholder')
-
-    # Firetext API Key
-    FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
-    FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
-
-    # Whether to ignore POSTs from SNS for replies to SMS we sent
-    RECEIVE_INBOUND_SMS = False
-
-    # Use notify.sandbox.10x sending domain unless overwritten by environment
-    NOTIFY_EMAIL_DOMAIN = 'notify.sandbox.10x.gsa.gov'
-
-    # AWS SNS topics for delivery receipts
-    VALIDATE_SNS_TOPICS = True
-    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
-
-    # URL of redis instance
-    REDIS_URL = os.environ.get('REDIS_URL')
-    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
-    EXPIRE_CACHE_TEN_MINUTES = 600
-    EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
-
-    # Zendesk
-    ZENDESK_API_KEY = os.environ.get('ZENDESK_API_KEY')
-
-    # Logging
-    DEBUG = False
-    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH')
-
-    # Cronitor
-    CRONITOR_ENABLED = False
-    CRONITOR_KEYS = json.loads(os.environ.get('CRONITOR_KEYS', '{}'))
-
-    # Antivirus
-    ANTIVIRUS_ENABLED = True
-
-    ###########################
-    # Default config values ###
-    ###########################
-
-    NOTIFY_ENVIRONMENT = 'development'
-    AWS_REGION = 'us-west-2'
-    INVITATION_EXPIRATION_DAYS = 2
-    NOTIFY_APP_NAME = 'api'
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_POOL_SIZE = int(os.environ.get('SQLALCHEMY_POOL_SIZE', 5))
@@ -146,24 +96,68 @@ class Config(object):
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
     PAGE_SIZE = 50
     API_PAGE_SIZE = 250
-    TEST_MESSAGE_FILENAME = 'Test message'
-    ONE_OFF_MESSAGE_FILENAME = 'Report'
-    MAX_VERIFY_CODE_COUNT = 5
-    MAX_FAILED_LOGIN_COUNT = 10
+    REDIS_URL = cloud_config.redis_url
+    REDIS_ENABLED = os.environ.get('REDIS_ENABLED', '0') == '1'
+    EXPIRE_CACHE_TEN_MINUTES = 600
+    EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
+    # AWS Settings
+    AWS_REGION = os.environ.get('AWS_REGION')
+    AWS_PINPOINT_REGION = os.environ.get("AWS_PINPOINT_REGION")
+    AWS_US_TOLL_FREE_NUMBER = os.environ.get("AWS_US_TOLL_FREE_NUMBER")
+    # Whether to ignore POSTs from SNS for replies to SMS we sent
+    RECEIVE_INBOUND_SMS = False
+    NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
     SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
+    # AWS SNS topics for delivery receipts
+    VALIDATE_SNS_TOPICS = True
+    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
 
-    # be careful increasing this size without being sure that we won't see slowness in pysftp
-    MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
-    MAX_LETTER_PDF_COUNT_PER_ZIP = 500
-
-    CHECK_PROXY_HEADER = False
-
+    # SMS config to be cleaned up during https://github.com/GSA/notifications-api/issues/7
+    # MMG API Key
+    MMG_API_KEY = os.environ.get('MMG_API_KEY', 'placeholder')
+    # Firetext API Key
+    FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
+    FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
         'mmg': 50,
         'firetext': 50
     }
+    FIRETEXT_INBOUND_SMS_AUTH = json.loads(os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
+    MMG_INBOUND_SMS_AUTH = json.loads(os.environ.get('MMG_INBOUND_SMS_AUTH', '[]'))
+    MMG_INBOUND_SMS_USERNAME = json.loads(os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]'))
+    MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
+    FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
+
+    # Zendesk
+    ZENDESK_API_KEY = os.environ.get('ZENDESK_API_KEY')
+
+    # Logging
+    DEBUG = False
+    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'logs/application.log')
+
+    # Monitoring
+    CRONITOR_ENABLED = False
+    CRONITOR_KEYS = json.loads(os.environ.get('CRONITOR_KEYS', '{}'))
+    STATSD_HOST = os.environ.get('STATSD_HOST')
+    STATSD_PORT = 8125
+    STATSD_ENABLED = bool(STATSD_HOST)
+
+    # Antivirus
+    ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED', '1') == '1'
+
+    SENDING_NOTIFICATIONS_TIMEOUT_PERIOD = 259200  # 3 days
+    INVITATION_EXPIRATION_DAYS = 2
+    TEST_MESSAGE_FILENAME = 'Test message'
+    ONE_OFF_MESSAGE_FILENAME = 'Report'
+    MAX_VERIFY_CODE_COUNT = 5
+    MAX_FAILED_LOGIN_COUNT = 10
+    API_RATE_LIMIT_ENABLED = True
+
+    # be careful increasing this size without being sure that we won't see slowness in pysftp
+    MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
+    MAX_LETTER_PDF_COUNT_PER_ZIP = 500
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'
@@ -334,28 +328,14 @@ class Config(object):
 
     FROM_NUMBER = 'development'
 
-    STATSD_HOST = os.environ.get('STATSD_HOST')
-    STATSD_PORT = 8125
-    STATSD_ENABLED = bool(STATSD_HOST)
-
-    SENDING_NOTIFICATIONS_TIMEOUT_PERIOD = 259200  # 3 days
-
     SIMULATED_EMAIL_ADDRESSES = (
         'simulate-delivered@notifications.service.gov.uk',
         'simulate-delivered-2@notifications.service.gov.uk',
         'simulate-delivered-3@notifications.service.gov.uk',
     )
-
     SIMULATED_SMS_NUMBERS = ('+447700900000', '+447700900111', '+447700900222')
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
-
-    SMS_INBOUND_WHITELIST = json.loads(os.environ.get('SMS_INBOUND_WHITELIST', '[]'))
-    FIRETEXT_INBOUND_SMS_AUTH = json.loads(os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_AUTH = json.loads(os.environ.get('MMG_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_USERNAME = json.loads(os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]'))
-    ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
-    ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
 
     HIGH_VOLUME_SERVICE = json.loads(os.environ.get('HIGH_VOLUME_SERVICE', '[]'))
 
@@ -365,74 +345,40 @@ class Config(object):
     DOCUMENT_DOWNLOAD_API_HOST = os.environ.get('DOCUMENT_DOWNLOAD_API_HOST', 'http://localhost:7000')
     DOCUMENT_DOWNLOAD_API_KEY = os.environ.get('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
 
-    # these environment vars aren't defined in the manifest so to set them on paas use `cf set-env`
-    MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
-    FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
 
-    AWS_REGION = 'us-west-2'
+def _default_s3_credentials(bucket_name):
+    return {
+        'bucket': bucket_name,
+        'access_key_id': os.environ.get('AWS_ACCESS_KEY_ID'),
+        'secret_access_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'region': os.environ.get('AWS_REGION')
+    }
 
-
-######################
-# Config overrides ###
-######################
 
 class Development(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
-
-    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
-
-    CSV_UPLOAD_BUCKET_NAME = 'local-notifications-csv-upload'
-    CSV_UPLOAD_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    CSV_UPLOAD_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    CSV_UPLOAD_REGION = os.environ.get('AWS_REGION', 'us-west-2')
-    CONTACT_LIST_BUCKET_NAME = 'local-contact-list'
-    CONTACT_LIST_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    CONTACT_LIST_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    CONTACT_LIST_REGION = os.environ.get('AWS_REGION', 'us-west-2')
-    # TEST_LETTERS_BUCKET_NAME = 'development-test-letters'
-    # DVLA_RESPONSE_BUCKET_NAME = 'notify.tools-ftp'
-    # LETTERS_PDF_BUCKET_NAME = 'development-letters-pdf'
-    # LETTERS_SCAN_BUCKET_NAME = 'development-letters-scan'
-    # INVALID_PDF_BUCKET_NAME = 'development-letters-invalid-pdf'
-    # TRANSIENT_UPLOADED_LETTERS = 'development-transient-uploaded-letters'
-    # LETTER_SANITISE_BUCKET_NAME = 'development-letters-sanitise'
-
-    # INTERNAL_CLIENT_API_KEYS = {
-    #     Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key'],
-    # }
-
-    SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
-    DANGEROUS_SALT = 'dev-notify-salt'
-
-    MMG_INBOUND_SMS_AUTH = ['testkey']
-    MMG_INBOUND_SMS_USERNAME = ['username']
-
-    NOTIFY_ENVIRONMENT = 'development'
-    NOTIFY_LOG_PATH = 'application.log'
-
-    NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
-
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'SQLALCHEMY_DATABASE_URI',
-        'postgresql://postgres:chummy@db:5432/notification_api'
-    )
-
-    ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED') == '1'
-
-    ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:6012')
-
-    API_HOST_NAME = os.getenv('API_HOST_NAME', 'http://localhost:6011')
-
-    API_RATE_LIMIT_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
+
+    # Buckets
+    CSV_UPLOAD_BUCKET = _default_s3_credentials('local-notifications-csv-upload')
+    CONTACT_LIST_BUCKET = _default_s3_credentials('local-contact-list')
+
+    # credential overrides
+    DANGEROUS_SALT = 'dev-notify-salt'
+    SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
+    INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
 
 
 class Test(Development):
-    NOTIFY_EMAIL_DOMAIN = 'test.notify.com'
     FROM_NUMBER = 'testing'
-    NOTIFY_ENVIRONMENT = 'test'
     TESTING = True
+    ANTIVIRUS_ENABLED = True
+    DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
+
+    FIRETEXT_INBOUND_SMS_AUTH = ['testkey']
+    MMG_INBOUND_SMS_AUTH = ['testkey']
+    MMG_INBOUND_SMS_USERNAME = ['username']
 
     HIGH_VOLUME_SERVICE = [
         '941b6f9a-50d7-4742-8d50-f365ca74bf27',
@@ -441,139 +387,38 @@ class Test(Development):
         '10d1b9c9-0072-4fa9-ae1c-595e333841da',
     ]
 
-    CSV_UPLOAD_BUCKET_NAME = 'test-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'test-contact-list'
-    # TEST_LETTERS_BUCKET_NAME = 'test-test-letters'
-    # DVLA_RESPONSE_BUCKET_NAME = 'test.notify.com-ftp'
-    # LETTERS_PDF_BUCKET_NAME = 'test-letters-pdf'
-    # LETTERS_SCAN_BUCKET_NAME = 'test-letters-scan'
-    # INVALID_PDF_BUCKET_NAME = 'test-letters-invalid-pdf'
-    # TRANSIENT_UPLOADED_LETTERS = 'test-transient-uploaded-letters'
-    # LETTER_SANITISE_BUCKET_NAME = 'test-letters-sanitise'
+    CSV_UPLOAD_BUCKET = _default_s3_credentials('test-notifications-csv-upload')
+    CONTACT_LIST_BUCKET = _default_s3_credentials('test-contact-list')
 
     # this is overriden in CI
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'SQLALCHEMY_DATABASE_TEST_URI',
-        'postgresql://postgres:chummy@db:5432/test_notification_api'
-    )
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI')
 
     CELERY = {
         **Config.CELERY,
         'broker_url': 'you-forgot-to-mock-celery-in-your-tests://'
     }
 
-    ANTIVIRUS_ENABLED = True
-
-    API_RATE_LIMIT_ENABLED = True
-    API_HOST_NAME = "http://localhost:6011"
-
-    SMS_INBOUND_WHITELIST = ['203.0.113.195']
-    FIRETEXT_INBOUND_SMS_AUTH = ['testkey']
     TEMPLATE_PREVIEW_API_HOST = 'http://localhost:9999'
 
-    MMG_URL = 'https://example.com/mmg'
-    FIRETEXT_URL = 'https://example.com/firetext'
 
-    DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
-
-
-class Preview(Config):
-    NOTIFY_EMAIL_DOMAIN = 'notify.works'
-    NOTIFY_ENVIRONMENT = 'preview'
-    CSV_UPLOAD_BUCKET_NAME = 'preview-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'preview-contact-list'
-    # TEST_LETTERS_BUCKET_NAME = 'preview-test-letters'
-    # DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
-    # LETTERS_PDF_BUCKET_NAME = 'preview-letters-pdf'
-    # LETTERS_SCAN_BUCKET_NAME = 'preview-letters-scan'
-    # INVALID_PDF_BUCKET_NAME = 'preview-letters-invalid-pdf'
-    # TRANSIENT_UPLOADED_LETTERS = 'preview-transient-uploaded-letters'
-    # LETTER_SANITISE_BUCKET_NAME = 'preview-letters-sanitise'
-    FROM_NUMBER = 'preview'
-    API_RATE_LIMIT_ENABLED = True
-    CHECK_PROXY_HEADER = False
-
-
-class Staging(Config):
-    NOTIFY_EMAIL_DOMAIN = 'staging-notify.works'
-    NOTIFY_ENVIRONMENT = 'staging'
-    CSV_UPLOAD_BUCKET_NAME = 'staging-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'staging-contact-list'
-    # TEST_LETTERS_BUCKET_NAME = 'staging-test-letters'
-    # DVLA_RESPONSE_BUCKET_NAME = 'staging-notify.works-ftp'
-    # LETTERS_PDF_BUCKET_NAME = 'staging-letters-pdf'
-    # LETTERS_SCAN_BUCKET_NAME = 'staging-letters-scan'
-    # INVALID_PDF_BUCKET_NAME = 'staging-letters-invalid-pdf'
-    # TRANSIENT_UPLOADED_LETTERS = 'staging-transient-uploaded-letters'
-    # LETTER_SANITISE_BUCKET_NAME = 'staging-letters-sanitise'
-    FROM_NUMBER = 'stage'
-    API_RATE_LIMIT_ENABLED = True
-    CHECK_PROXY_HEADER = True
-
-
-class Live(Config):
-    NOTIFY_ENVIRONMENT = 'live'
+class Production(Config):
     # buckets
-    CSV_UPLOAD_BUCKET_NAME = os.environ.get(
-        'CSV_UPLOAD_BUCKET_NAME',
-        'notifications-prototype-csv-upload'
-    )  # created in gsa sandbox
-    CSV_UPLOAD_ACCESS_KEY = os.environ.get('CSV_UPLOAD_ACCESS_KEY')
-    CSV_UPLOAD_SECRET_KEY = os.environ.get('CSV_UPLOAD_SECRET_KEY')
-    CSV_UPLOAD_REGION = os.environ.get('CSV_UPLOAD_REGION')
-    CONTACT_LIST_BUCKET_NAME = os.environ.get(
-        'CONTACT_LIST_BUCKET_NAME',
-        'notifications-prototype-contact-list-upload'
-    )  # created in gsa sandbox
-    CONTACT_LIST_ACCESS_KEY = os.environ.get('CONTACT_LIST_ACCESS_KEY')
-    CONTACT_LIST_SECRET_KEY = os.environ.get('CONTACT_LIST_SECRET_KEY')
-    CONTACT_LIST_REGION = os.environ.get('CONTACT_LIST_REGION')
-    # TODO: verify below buckets only used for letters
-    # TEST_LETTERS_BUCKET_NAME = 'production-test-letters' # not created in gsa sandbox
-    # DVLA_RESPONSE_BUCKET_NAME = 'notifications.service.gov.uk-ftp' # not created in gsa sandbox
-    # LETTERS_PDF_BUCKET_NAME = 'production-letters-pdf' # not created in gsa sandbox
-    # LETTERS_SCAN_BUCKET_NAME = 'production-letters-scan' # not created in gsa sandbox
-    # INVALID_PDF_BUCKET_NAME = 'production-letters-invalid-pdf' # not created in gsa sandbox
-    # TRANSIENT_UPLOADED_LETTERS = 'production-transient-uploaded-letters' # not created in gsa sandbox
-    # LETTER_SANITISE_BUCKET_NAME = 'production-letters-sanitise' # not created in gsa sandbox
+    CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
+        f"notifications-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
+    CONTACT_LIST_BUCKET = cloud_config.s3_credentials(
+        f"notifications-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
 
     FROM_NUMBER = 'US Notify'
-    API_RATE_LIMIT_ENABLED = True
-    CHECK_PROXY_HEADER = True
-    SES_STUB_URL = None
     CRONITOR_ENABLED = True
 
-    # DEBUG = True
-    REDIS_ENABLED = os.environ.get('REDIS_ENABLED')
 
-    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'application.log')
-
-
-class CloudFoundryConfig(Config):
+class Staging(Production):
     pass
-
-
-# CloudFoundry sandbox
-class Sandbox(CloudFoundryConfig):
-    NOTIFY_EMAIL_DOMAIN = 'notify.works'
-    NOTIFY_ENVIRONMENT = 'sandbox'
-    CSV_UPLOAD_BUCKET_NAME = 'cf-sandbox-notifications-csv-upload'
-    CONTACT_LIST_BUCKET_NAME = 'cf-sandbox-contact-list'
-    # LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
-    # TEST_LETTERS_BUCKET_NAME = 'cf-sandbox-test-letters'
-    # DVLA_RESPONSE_BUCKET_NAME = 'notify.works-ftp'
-    # LETTERS_PDF_BUCKET_NAME = 'cf-sandbox-letters-pdf'
-    # LETTERS_SCAN_BUCKET_NAME = 'cf-sandbox-letters-scan'
-    # INVALID_PDF_BUCKET_NAME = 'cf-sandbox-letters-invalid-pdf'
-    FROM_NUMBER = 'sandbox'
 
 
 configs = {
     'development': Development,
     'test': Test,
-    'live': Live,
-    'production': Live,
     'staging': Staging,
-    'preview': Preview,
-    'sandbox': Sandbox
+    'production': Production
 }

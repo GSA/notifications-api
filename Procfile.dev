@@ -1,0 +1,2 @@
+web: make run-flask
+worker: make run-celery

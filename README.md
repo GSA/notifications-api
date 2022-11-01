@@ -58,13 +58,19 @@ Our other repositories are:
     # follow the instructions in .env
     ```
 
-1. Run Flask
+1. Run the web server and background worker
 
-    `make run-flask`
+    `make run-procfile`
 
-1. Run Celery
+1. Or run them individually:
 
-    `make run-celery`
+    * Run Flask (web server)
+
+        `make run-flask`
+
+    * Run Celery (background worker)
+
+        `make run-celery`
 
 
 ### VS Code && Docker installation
@@ -98,3 +104,10 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
 
 NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
+## License && public domain
+
+Work through [commit `e604385`](https://github.com/GSA/notifications-api/commit/e604385e0cf4c2ab8c6451b7120ceb196cce21b5) is licensed by the UK government until the MIT license. Work after that commit is in the worldwide public domain. See [LICENSE.md](./LICENSE.md) for more information.
+
+## Contributing
+
+As stated in [CONTRIBUTING.md](CONTRIBUTING.md), all contributions to this project will be released under the CC0 dedication. By submitting a pull request, you are agreeing to comply with this waiver of copyright interest.
