@@ -1,6 +1,6 @@
 import json
-import os
 from datetime import timedelta
+from os import getenv
 
 from celery.schedules import crontab
 from kombu import Exchange, Queue
@@ -64,50 +64,50 @@ class TaskNames(object):
 
 class Config(object):
     NOTIFY_APP_NAME = 'api'
-    NOTIFY_ENVIRONMENT = os.environ.get('NOTIFY_ENVIRONMENT', 'development')
+    NOTIFY_ENVIRONMENT = getenv('NOTIFY_ENVIRONMENT', 'development')
     # URL of admin app
-    ADMIN_BASE_URL = os.environ.get('ADMIN_BASE_URL', 'http://localhost:6012')
+    ADMIN_BASE_URL = getenv('ADMIN_BASE_URL', 'http://localhost:6012')
     # URL of api app (on AWS this is the internal api endpoint)
-    API_HOST_NAME = os.environ.get('API_HOST_NAME', 'http://localhost:6011')
+    API_HOST_NAME = getenv('API_HOST_NAME', 'http://localhost:6011')
 
     # Credentials
     # secrets that internal apps, such as the admin app or document download, must use to authenticate with the API
     # ADMIN_CLIENT_ID is called ADMIN_CLIENT_USER_NAME in api repo, they should match
-    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID', 'notify-admin')
+    ADMIN_CLIENT_ID = getenv('ADMIN_CLIENT_ID', 'notify-admin')
     INTERNAL_CLIENT_API_KEYS = json.loads(
-        os.environ.get(
+        getenv(
             'INTERNAL_CLIENT_API_KEYS',
-            ('{"%s":["%s"]}' % (ADMIN_CLIENT_ID, os.getenv('ADMIN_CLIENT_SECRET')))
+            ('{"%s":["%s"]}' % (ADMIN_CLIENT_ID, getenv('ADMIN_CLIENT_SECRET')))
             )
     )
     # encyption secret/salt
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    DANGEROUS_SALT = os.environ.get('DANGEROUS_SALT')
-    ROUTE_SECRET_KEY_1 = os.environ.get('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
-    ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
+    SECRET_KEY = getenv('SECRET_KEY')
+    DANGEROUS_SALT = getenv('DANGEROUS_SALT')
+    ROUTE_SECRET_KEY_1 = getenv('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
+    ROUTE_SECRET_KEY_2 = getenv('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
 
     # DB settings
     SQLALCHEMY_DATABASE_URI = cloud_config.database_url
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_SIZE = int(os.environ.get('SQLALCHEMY_POOL_SIZE', 5))
+    SQLALCHEMY_POOL_SIZE = int(getenv('SQLALCHEMY_POOL_SIZE', 5))
     SQLALCHEMY_POOL_TIMEOUT = 30
     SQLALCHEMY_POOL_RECYCLE = 300
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
     PAGE_SIZE = 50
     API_PAGE_SIZE = 250
     REDIS_URL = cloud_config.redis_url
-    REDIS_ENABLED = os.environ.get('REDIS_ENABLED', '0') == '1'
+    REDIS_ENABLED = getenv('REDIS_ENABLED', '0') == '1'
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
     # AWS Settings
-    AWS_REGION = os.environ.get('AWS_REGION')
-    AWS_PINPOINT_REGION = os.environ.get("AWS_PINPOINT_REGION")
-    AWS_US_TOLL_FREE_NUMBER = os.environ.get("AWS_US_TOLL_FREE_NUMBER")
+    AWS_REGION = getenv('AWS_REGION')
+    AWS_PINPOINT_REGION = getenv("AWS_PINPOINT_REGION")
+    AWS_US_TOLL_FREE_NUMBER = getenv("AWS_US_TOLL_FREE_NUMBER")
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
-    NOTIFY_EMAIL_DOMAIN = os.getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
+    NOTIFY_EMAIL_DOMAIN = getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
     SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
@@ -115,37 +115,37 @@ class Config(object):
 
     # SMS config to be cleaned up during https://github.com/GSA/notifications-api/issues/7
     # MMG API Key
-    MMG_API_KEY = os.environ.get('MMG_API_KEY', 'placeholder')
+    MMG_API_KEY = getenv('MMG_API_KEY', 'placeholder')
     # Firetext API Key
-    FIRETEXT_API_KEY = os.environ.get("FIRETEXT_API_KEY", "placeholder")
-    FIRETEXT_INTERNATIONAL_API_KEY = os.environ.get("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
+    FIRETEXT_API_KEY = getenv("FIRETEXT_API_KEY", "placeholder")
+    FIRETEXT_INTERNATIONAL_API_KEY = getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
         'mmg': 50,
         'firetext': 50
     }
-    FIRETEXT_INBOUND_SMS_AUTH = json.loads(os.environ.get('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_AUTH = json.loads(os.environ.get('MMG_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_USERNAME = json.loads(os.environ.get('MMG_INBOUND_SMS_USERNAME', '[]'))
-    MMG_URL = os.environ.get("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
-    FIRETEXT_URL = os.environ.get("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
+    FIRETEXT_INBOUND_SMS_AUTH = json.loads(getenv('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
+    MMG_INBOUND_SMS_AUTH = json.loads(getenv('MMG_INBOUND_SMS_AUTH', '[]'))
+    MMG_INBOUND_SMS_USERNAME = json.loads(getenv('MMG_INBOUND_SMS_USERNAME', '[]'))
+    MMG_URL = getenv("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
+    FIRETEXT_URL = getenv("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
 
     # Zendesk
-    ZENDESK_API_KEY = os.environ.get('ZENDESK_API_KEY')
+    ZENDESK_API_KEY = getenv('ZENDESK_API_KEY')
 
     # Logging
     DEBUG = False
-    NOTIFY_LOG_PATH = os.environ.get('NOTIFY_LOG_PATH', 'logs/application.log')
+    NOTIFY_LOG_PATH = getenv('NOTIFY_LOG_PATH', 'logs/application.log')
 
     # Monitoring
     CRONITOR_ENABLED = False
-    CRONITOR_KEYS = json.loads(os.environ.get('CRONITOR_KEYS', '{}'))
-    STATSD_HOST = os.environ.get('STATSD_HOST')
+    CRONITOR_KEYS = json.loads(getenv('CRONITOR_KEYS', '{}'))
+    STATSD_HOST = getenv('STATSD_HOST')
     STATSD_PORT = 8125
     STATSD_ENABLED = bool(STATSD_HOST)
 
     # Antivirus
-    ANTIVIRUS_ENABLED = os.environ.get('ANTIVIRUS_ENABLED', '1') == '1'
+    ANTIVIRUS_ENABLED = getenv('ANTIVIRUS_ENABLED', '1') == '1'
 
     SENDING_NOTIFICATIONS_TIMEOUT_PERIOD = 259200  # 3 days
     INVITATION_EXPIRATION_DAYS = 2
@@ -180,7 +180,7 @@ class Config(object):
     LETTERS_VOLUME_EMAIL_TEMPLATE_ID = '11fad854-fd38-4a7c-bd17-805fb13dfc12'
     NHS_EMAIL_BRANDING_ID = 'a7dc4e56-660b-4db7-8cff-12c37b12b5ea'
     # we only need real email in Live environment (production)
-    DVLA_EMAIL_ADDRESSES = json.loads(os.environ.get('DVLA_EMAIL_ADDRESSES', '[]'))
+    DVLA_EMAIL_ADDRESSES = json.loads(getenv('DVLA_EMAIL_ADDRESSES', '[]'))
 
     CELERY = {
         'broker_url': REDIS_URL,
@@ -323,8 +323,8 @@ class Config(object):
     }
 
     # we can set celeryd_prefetch_multiplier to be 1 for celery apps which handle only long running tasks
-    if os.environ.get('CELERYD_PREFETCH_MULTIPLIER'):
-        CELERY['worker_prefetch_multiplier'] = os.environ.get('CELERYD_PREFETCH_MULTIPLIER')
+    if getenv('CELERYD_PREFETCH_MULTIPLIER'):
+        CELERY['worker_prefetch_multiplier'] = getenv('CELERYD_PREFETCH_MULTIPLIER')
 
     FROM_NUMBER = 'development'
 
@@ -337,21 +337,21 @@ class Config(object):
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
-    HIGH_VOLUME_SERVICE = json.loads(os.environ.get('HIGH_VOLUME_SERVICE', '[]'))
+    HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
 
-    TEMPLATE_PREVIEW_API_HOST = os.environ.get('TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013')
-    TEMPLATE_PREVIEW_API_KEY = os.environ.get('TEMPLATE_PREVIEW_API_KEY', 'my-secret-key')
+    TEMPLATE_PREVIEW_API_HOST = getenv('TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013')
+    TEMPLATE_PREVIEW_API_KEY = getenv('TEMPLATE_PREVIEW_API_KEY', 'my-secret-key')
 
-    DOCUMENT_DOWNLOAD_API_HOST = os.environ.get('DOCUMENT_DOWNLOAD_API_HOST', 'http://localhost:7000')
-    DOCUMENT_DOWNLOAD_API_KEY = os.environ.get('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
+    DOCUMENT_DOWNLOAD_API_HOST = getenv('DOCUMENT_DOWNLOAD_API_HOST', 'http://localhost:7000')
+    DOCUMENT_DOWNLOAD_API_KEY = getenv('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
 
 
 def _default_s3_credentials(bucket_name):
     return {
         'bucket': bucket_name,
-        'access_key_id': os.environ.get('AWS_ACCESS_KEY_ID'),
-        'secret_access_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
-        'region': os.environ.get('AWS_REGION')
+        'access_key_id': getenv('AWS_ACCESS_KEY_ID'),
+        'secret_access_key': getenv('AWS_SECRET_ACCESS_KEY'),
+        'region': getenv('AWS_REGION')
     }
 
 
@@ -391,7 +391,7 @@ class Test(Development):
     CONTACT_LIST_BUCKET = _default_s3_credentials('test-contact-list')
 
     # this is overriden in CI
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_TEST_URI')
+    SQLALCHEMY_DATABASE_URI = getenv('SQLALCHEMY_DATABASE_TEST_URI')
 
     CELERY = {
         **Config.CELERY,
