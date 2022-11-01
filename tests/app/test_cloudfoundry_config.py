@@ -5,12 +5,13 @@ import pytest
 
 from app.cloudfoundry_config import CloudfoundryConfig
 
-bucket_credentials = {
+_bucket_credentials = {
     'access_key_id': 'csv-access',
     'bucket': 'csv-upload-bucket',
     'region': 'us-gov-west-1',
     'secret_access_key': 'csv-secret'
 }
+_postgres_url = 'postgres://postgres:password@localhost:5432/db_name'
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def vcap_services():
     return {
         'aws-rds': [{
             'credentials': {
-                'uri': 'postgres uri'
+                'uri': _postgres_url
             }
         }],
         'aws-elasticache-redis': [{
@@ -29,7 +30,7 @@ def vcap_services():
         's3': [
             {
                 'name': 'notifications-api-csv-upload-bucket-test',
-                'credentials': bucket_credentials
+                'credentials': _bucket_credentials
             },
             {
                 'name': 'notifications-api-contact-list-bucket-test',
@@ -43,6 +44,12 @@ def vcap_services():
         ],
         'user-provided': []
     }
+
+
+def test_database_url(vcap_services):
+    os.environ['DATABASE_URL'] = _postgres_url
+
+    assert CloudfoundryConfig().database_url == 'postgresql://postgres:password@localhost:5432/db_name'
 
 
 def test_redis_url(vcap_services):
@@ -62,7 +69,7 @@ def test_redis_url_falls_back_to_REDIS_URL():
 def test_s3_bucket_credentials(vcap_services):
     os.environ['VCAP_SERVICES'] = json.dumps(vcap_services)
 
-    assert CloudfoundryConfig().s3_credentials('notifications-api-csv-upload-bucket-test') == bucket_credentials
+    assert CloudfoundryConfig().s3_credentials('notifications-api-csv-upload-bucket-test') == _bucket_credentials
 
 
 def test_s3_bucket_credentials_falls_back_to_empty_creds():
