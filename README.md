@@ -66,6 +66,10 @@ Our other repositories are:
 
     `make run-celery`
 
+1. Or, run flask and celery together with [foreman](https://rubygems.org/gems/foreman)
+
+    `foreman start -f Procfile.dev`
+
 
 ### VS Code && Docker installation
 
@@ -97,4 +101,3 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
     `make run-celery`
 
 NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
-
