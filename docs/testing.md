@@ -23,6 +23,14 @@ We're using GitHub Actions. See [/.github](../.github/) for the configuration.
 
 In addition to commit-triggered scans, the `daily_checks.yml` workflow runs the relevant dependency audits, static scan, and/or dynamic scans at 10am UTC each day. Developers will be notified of failures in daily scans by GitHub notifications.
 
+## Manual testing
+
+If you're checking out the system locally, you may want to create a user quickly.
+
+`pipenv run flask command create-test-user`
+
+This will run an interactive prompt to create a user, and then mark that user as active. *Use a real mobile number* if you want to log in, as the SMS auth code will be sent here.
+
 ## To run a local OWASP scan
 
 1. Run `make run-flask` from within the dev container.
