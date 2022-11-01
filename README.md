@@ -58,17 +58,19 @@ Our other repositories are:
     # follow the instructions in .env
     ```
 
-1. Run Flask
+1. Run the web server and background worker
 
-    `make run-flask`
+    `make run-procfile`
 
-1. Run Celery
+1. Or run them individually:
 
-    `make run-celery`
+    * Run Flask (web server)
 
-1. Or, run flask and celery together with [foreman](https://rubygems.org/gems/foreman)
+        `make run-flask`
 
-    `foreman start -f Procfile.dev`
+    * Run Celery (background worker)
+
+        `make run-celery`
 
 
 ### VS Code && Docker installation
