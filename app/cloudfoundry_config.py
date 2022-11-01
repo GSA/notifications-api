@@ -15,6 +15,10 @@ class CloudfoundryConfig:
         }
 
     @property
+    def database_url(self):
+        return os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+
+    @property
     def redis_url(self):
         try:
             return self.parsed_services['aws-elasticache-redis'][0]['credentials']['uri'].replace(
