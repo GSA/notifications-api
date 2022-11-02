@@ -2,7 +2,7 @@ name: Run Terraform plan in production
 
 on:
   pull_request:
-    branches: [ production ]
+    branches: [ production-disabled-for-now ]
     paths: [ 'terraform/**' ]
 
 defaults:
@@ -38,8 +38,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
-          TF_VAR_cf_user: ${{ secrets.CF_USERNAME }}
-          TF_VAR_cf_password: ${{ secrets.CF_PASSWORD }}
+          TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+          TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
         run: terraform plan -no-color -input=false 2>&1 | tee plan_output.txt
 
       - name: Read Terraform plan output file
@@ -51,7 +51,7 @@ jobs:
 
       # inspiration: https://learn.hashicorp.com/tutorials/terraform/github-actions#review-actions-workflow
       - name: Update PR
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         # we would like to update the PR even when a prior step failed
         if: ${{ always() }}
         with:
@@ -71,7 +71,7 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
 
-            github.issues.createComment({
+            github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,

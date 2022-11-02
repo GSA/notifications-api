@@ -1,0 +1,7 @@
+env: demo
+web_instances: 1
+web_memory: 1G
+worker_instances: 1
+worker_memory: 512M
+public_api_route: notify-api-demo.app.cloud.gov
+admin_base_url: https://notify-demo.app.cloud.gov

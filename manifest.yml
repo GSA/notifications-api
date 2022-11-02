@@ -1,21 +1,18 @@
 ---
 applications:
-  - name: notifications-api-((env))
-    buildpack: https://github.com/cloudfoundry/python-buildpack.git#v1.7.58
+  - name: notify-api-((env))
+    buildpack: python_buildpack
     instances: 1
-    memory: 1G
     disk_quota: 1G
-    health-check-type: process
-    health-check-invocation-timeout: 1
     routes:
-    - route: notifications-api.app.cloud.gov
-    - route: notifications-api-((env)).apps.internal
+    - route: ((public_api_route))
+    - route: notify-api-((env)).apps.internal
 
     services:
-      - notifications-api-rds-((env))
-      - notifications-api-redis-((env))
-      - notifications-api-csv-upload-bucket-((env))
-      - notifications-api-contact-list-bucket-((env))
+      - notify-api-rds-((env))
+      - notify-api-redis-((env))
+      - notify-api-csv-upload-bucket-((env))
+      - notify-api-contact-list-bucket-((env))
 
     processes:
       - type: web
@@ -34,8 +31,8 @@ applications:
       FLASK_ENV: production
 
       NOTIFY_ENVIRONMENT: ((env))
-      API_HOST_NAME: https://notifications-api.app.cloud.gov
-      ADMIN_BASE_URL: https://notifications-admin.app.cloud.gov
+      API_HOST_NAME: https://((public_api_route))
+      ADMIN_BASE_URL: ((admin_base_url))
 
       # Credentials variables
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'

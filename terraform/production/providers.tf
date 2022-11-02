@@ -8,7 +8,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "cg-31204bcc-aae3-4cd3-8b59-5055a338d44f"
+    bucket  = "cg-6b759c13-6253-4a64-9bda-dd1f620185b0"
     key     = "api.tfstate.prod"
     encrypt = "true"
     region  = "us-gov-west-1"

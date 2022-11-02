@@ -1,19 +1,19 @@
-name: Run Terraform plan in staging
+name: Run Terraform plan in demo
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ production ]
     paths: [ 'terraform/**' ]
 
 defaults:
   run:
-    working-directory: terraform/staging
+    working-directory: terraform/demo
 
 jobs:
   terraform:
     name: Terraform plan
     runs-on: ubuntu-latest
-    environment: staging
+    environment: demo
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -47,7 +47,7 @@ jobs:
         uses: juliangruber/read-file-action@v1
         if: ${{ always() }}
         with:
-          path: ./terraform/staging/plan_output.txt
+          path: ./terraform/demo/plan_output.txt
 
       # inspiration: https://learn.hashicorp.com/tutorials/terraform/github-actions#review-actions-workflow
       - name: Update PR

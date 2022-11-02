@@ -9,8 +9,8 @@ module "s3" {
   cf_api_url      = local.cf_api_url
   cf_user         = var.cf_user
   cf_password     = var.cf_password
-  cf_org_name     = "gsa-10x-prototyping"
-  cf_space_name   = "10x-notifications"
+  cf_org_name     = "gsa-tts-benefits-studio-prototyping"
+  cf_space_name   = "notify-management"
   s3_service_name = local.s3_service_name
 }
 

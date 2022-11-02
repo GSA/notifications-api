@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-org="gsa-10x-prototyping"
+org="gsa-tts-benefits-studio-prototyping"
 
 usage="
 $0: Create a Service User Account for a given space
