@@ -1,7 +1,8 @@
 name: Deploy to demo environment
 
 on:
-  push: [ production ]
+  push:
+    branches: [ production ]
 
 permissions:
   contents: read
