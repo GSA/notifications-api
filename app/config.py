@@ -415,8 +415,10 @@ class Production(Config):
 class Staging(Production):
     pass
 
+
 class Demo(Production):
     pass
+
 
 configs = {
     'development': Development,
