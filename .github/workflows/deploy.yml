@@ -76,4 +76,5 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
       - uses: actions/github-script@v6
-        script: core.setFailed('Checks failed, not deploying')
+        with:
+          script: core.setFailed('Checks failed, not deploying')
