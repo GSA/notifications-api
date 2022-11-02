@@ -3,5 +3,5 @@ web_instances: 1
 web_memory: 1G
 worker_instances: 1
 worker_memory: 512M
-public_api_route: notifications-api-staging.app.cloud.gov
-admin_base_url: https://notifications-admin-staging.app.cloud.gov
+public_api_route: notify-api-staging.app.cloud.gov
+admin_base_url: https://notify-staging.app.cloud.gov

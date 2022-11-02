@@ -1,18 +1,18 @@
 ---
 applications:
-  - name: notifications-api-((env))
+  - name: notify-api-((env))
     buildpack: python_buildpack
     instances: 1
     disk_quota: 1G
     routes:
     - route: ((public_api_route))
-    - route: notifications-api-((env)).apps.internal
+    - route: notify-api-((env)).apps.internal
 
     services:
-      - notifications-api-rds-((env))
-      - notifications-api-redis-((env))
-      - notifications-api-csv-upload-bucket-((env))
-      - notifications-api-contact-list-bucket-((env))
+      - notify-api-rds-((env))
+      - notify-api-redis-((env))
+      - notify-api-csv-upload-bucket-((env))
+      - notify-api-contact-list-bucket-((env))
 
     processes:
       - type: web
