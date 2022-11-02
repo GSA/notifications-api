@@ -2,7 +2,7 @@ locals {
   cf_org_name      = "gsa-tts-benefits-studio-prototyping"
   cf_space_name    = "notify-staging"
   env              = "staging"
-  app_name         = "notifications-api"
+  app_name         = "notify-api"
   recursive_delete = true
 }
 
