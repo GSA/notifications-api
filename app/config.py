@@ -404,9 +404,9 @@ class Test(Development):
 class Production(Config):
     # buckets
     CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
-        f"notifications-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
+        f"notify-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
     CONTACT_LIST_BUCKET = cloud_config.s3_credentials(
-        f"notifications-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
+        f"notify-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
 
     FROM_NUMBER = 'US Notify'
     CRONITOR_ENABLED = True
