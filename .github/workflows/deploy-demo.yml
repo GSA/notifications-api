@@ -18,7 +18,7 @@ jobs:
 
     - name: Check for changes to Terraform
       id: changed-terraform-files
-      uses: tj-actions/changed-files@v1.1.2
+      uses: tj-actions/changed-files@v34
       with:
         files: terraform/demo
     - name: Terraform init
@@ -66,7 +66,13 @@ jobs:
           --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
           --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
 
+    - name: Check for changes to egress config
+      id: changed-egress-config
+      uses: tj-actions/changed-files@v34
+      with:
+        files: deploy-config/egress_proxy/notify-api-demo.*.acl
     - name: Deploy egress proxy
+      if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
       with:
         cf_space: notify-demo
