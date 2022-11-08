@@ -1,5 +1,5 @@
 name: Deploy egress proxy
-description: Setup egres space and deploy proxy
+description: Set egress space security groups and deploy proxy
 inputs:
   cf_space:
     description: The space the target app exists in.
