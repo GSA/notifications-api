@@ -71,6 +71,12 @@ jobs:
           --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
           --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
 
+    - name: Deploy egress proxy
+      uses: ./.github/actions/deploy-proxy
+      with:
+        cf_space: notify-staging
+        app: notify-api-staging
+
   bail:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
