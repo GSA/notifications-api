@@ -1,0 +1,33 @@
+name: Deploy egress proxy
+description: Set egress space security groups and deploy proxy
+inputs:
+  cf_space:
+    description: The space the target app exists in.
+    required: true
+  app:
+    description: application name to be proxied.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set restricted space egress
+      shell: bash
+      run: ./terraform/set_space_egress.sh -t -s ${{ inputs.cf_space }}
+    - name: Set public space egress
+      shell: bash
+      run: ./terraform/set_space_egress.sh -p -s ${{ inputs.cf_space }}-egress
+    - name: Create temp directory
+      shell: bash
+      id: create-temp-dir
+      run: echo "path=$(mktemp -d -t egress-XXXXXXXXXX --tmpdir=$RUNNER_TEMP)" >> $GITHUB_OUTPUT
+    - name: Clone egress-proxy
+      shell: bash
+      run: git clone https://github.com/rahearn/cg-egress-proxy.git ${{ steps.create-temp-dir.outputs.path }}
+    - name: Copy config files
+      shell: bash
+      run: cp ./deploy-config/egress_proxy/${{ inputs.app }}.*.acl ${{ steps.create-temp-dir.outputs.path }}
+    - name: Deploy proxy
+      shell: bash
+      run: >
+        cd ${{ steps.create-temp-dir.outputs.path }};
+        ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy

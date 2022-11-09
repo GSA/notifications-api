@@ -1,7 +1,7 @@
 locals {
   cf_org_name      = "gsa-tts-benefits-studio-prototyping"
-  cf_space_name    = "notify-staging"
-  env              = "staging"
+  cf_space_name    = "notify-sandbox"
+  env              = "sandbox"
   app_name         = "notify-api"
   recursive_delete = true
 }
@@ -62,6 +62,7 @@ module "egress-space" {
   cf_org_name              = local.cf_org_name
   cf_restricted_space_name = local.cf_space_name
   deployers = [
-    var.cf_user
+    var.cf_user,
+    "ryan.ahearn@gsa.gov"
   ]
 }
