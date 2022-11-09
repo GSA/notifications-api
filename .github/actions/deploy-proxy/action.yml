@@ -26,8 +26,9 @@ runs:
     - name: Copy config files
       shell: bash
       run: cp ./deploy-config/egress_proxy/${{ inputs.app }}.*.acl ${{ steps.create-temp-dir.outputs.path }}
-    - name: Deploy proxy
+    - name: Build and deploy proxy
       shell: bash
       run: >
         cd ${{ steps.create-temp-dir.outputs.path }};
+        make;
         ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy
