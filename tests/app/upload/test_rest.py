@@ -72,7 +72,7 @@ def test_get_uploads(admin_request, sample_template):
                        'recipient': None,
                        'notification_count': 2,
                        'template_type': 'letter',
-                       'created_at': upload_4.created_at.replace(hour=17, minute=30).strftime(
+                       'created_at': upload_4.created_at.replace(hour=22, minute=30).strftime(
                            "%Y-%m-%d %H:%M:%S"),
                        'statistics': [],
                        'upload_type': 'letter_day'}
@@ -146,7 +146,7 @@ def test_get_uploads_accepts_page_parameter(admin_request, sample_template):
 @freeze_time('2017-06-10 12:00')
 def test_get_uploads_should_retrieve_from_ft_notification_status_for_old_jobs(admin_request, sample_template):
     # it's the 10th today, so 3 days should include all of 7th, 8th, 9th, and some of 10th.
-    just_three_days_ago = datetime(2017, 6, 6, 22, 59, 59)
+    just_three_days_ago = datetime(2017, 6, 7, 3, 59, 59)
     not_quite_three_days_ago = just_three_days_ago + timedelta(seconds=1)
 
     job_1 = create_job(sample_template, created_at=just_three_days_ago, processing_started=just_three_days_ago)
@@ -155,15 +155,15 @@ def test_get_uploads_should_retrieve_from_ft_notification_status_for_old_jobs(ad
     job_3 = create_job(sample_template, created_at=just_three_days_ago, processing_started=None)
 
     # some notifications created more than three days ago, some created after the midnight cutoff
-    create_ft_notification_status(date(2017, 6, 6), job=job_1, notification_status='delivered', count=2)
-    create_ft_notification_status(date(2017, 6, 7), job=job_1, notification_status='delivered', count=4)
+    create_ft_notification_status(datetime(2017, 6, 6, 12), job=job_1, notification_status='delivered', count=2)
+    create_ft_notification_status(datetime(2017, 6, 7, 12), job=job_1, notification_status='delivered', count=4)
     # job2's new enough
     create_notification(job=job_2, status='created', created_at=not_quite_three_days_ago)
 
     # this isn't picked up because the job is too new
-    create_ft_notification_status(date(2017, 6, 7), job=job_2, notification_status='delivered', count=8)
+    create_ft_notification_status(datetime(2017, 6, 7, 12), job=job_2, notification_status='delivered', count=8)
     # this isn't picked up - while the job is old, it started in last 3 days so we look at notification table instead
-    create_ft_notification_status(date(2017, 6, 7), job=job_3, notification_status='delivered', count=16)
+    create_ft_notification_status(datetime(2017, 6, 7, 12), job=job_3, notification_status='delivered', count=16)
 
     # this isn't picked up because we're using the ft status table for job_1 as it's old
     create_notification(job=job_1, status='created', created_at=not_quite_three_days_ago)

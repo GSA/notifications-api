@@ -233,7 +233,7 @@ def test_check_billable_units_when_billable_units_does_not_match_page_count(
 
 
 @pytest.mark.parametrize('filename_date, billing_date', [
-    ('20170820230000', date(2017, 8, 21)),
+    ('20170820000000', date(2017, 8, 19)),
     ('20170120230000', date(2017, 1, 20))
 ])
 def test_get_billing_date_in_est_from_filename(filename_date, billing_date):

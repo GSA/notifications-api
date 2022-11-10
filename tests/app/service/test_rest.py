@@ -2162,10 +2162,10 @@ def test_get_detailed_services_includes_services_with_no_notifications(notify_db
 def test_get_detailed_services_only_includes_todays_notifications(sample_template):
     from app.service.rest import get_detailed_services
 
-    create_notification(sample_template, created_at=datetime(2015, 10, 9, 23, 59))
-    create_notification(sample_template, created_at=datetime(2015, 10, 10, 0, 0))
+    create_notification(sample_template, created_at=datetime(2015, 10, 10, 3, 59))
+    create_notification(sample_template, created_at=datetime(2015, 10, 10, 4, 0))
     create_notification(sample_template, created_at=datetime(2015, 10, 10, 12, 0))
-    create_notification(sample_template, created_at=datetime(2015, 10, 10, 23, 0))
+    create_notification(sample_template, created_at=datetime(2015, 10, 11, 3, 0))
 
     with freeze_time('2015-10-10T12:00:00'):
         data = get_detailed_services(start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date())

@@ -471,7 +471,7 @@ def test_get_rate_for_sms_and_email(notify_db_session):
     assert rate == Decimal(0)
 
 
-@freeze_time('2018-03-30T01:00:00')
+@freeze_time('2018-03-26T04:30:00')
 # summer time starts on 2018-03-25
 def test_create_nightly_billing_for_day_use_BST(
         sample_service,
@@ -482,7 +482,7 @@ def test_create_nightly_billing_for_day_use_BST(
 
     # too late
     create_notification(
-        created_at=datetime(2018, 3, 25, 23, 1),
+        created_at=datetime(2018, 3, 26, 4, 1),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -490,7 +490,7 @@ def test_create_nightly_billing_for_day_use_BST(
     )
 
     create_notification(
-        created_at=datetime(2018, 3, 25, 22, 59),
+        created_at=datetime(2018, 3, 26, 3, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -499,7 +499,7 @@ def test_create_nightly_billing_for_day_use_BST(
 
     # too early
     create_notification(
-        created_at=datetime(2018, 3, 24, 23, 59),
+        created_at=datetime(2018, 3, 25, 4, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -517,7 +517,7 @@ def test_create_nightly_billing_for_day_use_BST(
     assert records[0].billable_units == 2
 
 
-@freeze_time('2018-01-15T03:30:00')
+@freeze_time('2018-01-15T08:30:00')
 def test_create_nightly_billing_for_day_update_when_record_exists(
         sample_service,
         sample_template,
@@ -571,7 +571,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     third_template = create_template(service=second_service, template_type='letter')
 
     process_day = date.today() - timedelta(days=5)
-    with freeze_time(datetime.combine(process_day, time.min)):
+    with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(template=first_template, status='delivered')
         create_notification(template=second_template, status='temporary-failure')
 
@@ -585,7 +585,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification_history(template=third_template, status='delivered')
 
     # these created notifications from a different day get ignored
-    with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.min)):
+    with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
         create_notification(template=third_template)
@@ -671,14 +671,14 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
 
 
 # the job runs at 12:30am London time. 04/01 is in BST.
-@freeze_time('2019-04-01T23:30')
+@freeze_time('2019-04-02T04:30')
 def test_create_nightly_notification_status_for_service_and_day_respects_bst(sample_template):
-    create_notification(sample_template, status='delivered', created_at=datetime(2019, 4, 1, 23, 0))  # too new
+    create_notification(sample_template, status='delivered', created_at=datetime(2019, 4, 2, 5, 0))  # too new
 
-    create_notification(sample_template, status='created', created_at=datetime(2019, 4, 1, 22, 59))
-    create_notification(sample_template, status='created', created_at=datetime(2019, 3, 31, 23, 0))
+    create_notification(sample_template, status='created', created_at=datetime(2019, 4, 2, 5, 59))
+    create_notification(sample_template, status='created', created_at=datetime(2019, 4, 1, 4, 0))
 
-    create_notification(sample_template, status='delivered', created_at=datetime(2019, 3, 31, 22, 59))  # too old
+    create_notification(sample_template, status='delivered', created_at=datetime(2019, 3, 21, 17, 59))  # too old
 
     create_nightly_notification_status_for_service_and_day('2019-04-01', sample_template.service_id, 'sms')
 
