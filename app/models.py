@@ -20,7 +20,7 @@ from notifications_utils.template import (
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
-from notifications_utils.timezones import convert_utc_to_bst
+from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy import (
     CheckConstraint,
     Index,
@@ -1651,7 +1651,7 @@ class Notification(db.Model):
             return None
 
     def serialize_for_csv(self):
-        created_at_in_bst = convert_utc_to_bst(self.created_at)
+        created_at_in_est = convert_utc_to_local_timezone(self.created_at)
         serialized = {
             "row_number": '' if self.job_row_number is None else self.job_row_number + 1,
             "recipient": self.to,
@@ -1660,7 +1660,7 @@ class Notification(db.Model):
             "template_type": self.template.template_type,
             "job_name": self.job.original_file_name if self.job else '',
             "status": self.formatted_status,
-            "created_at": created_at_in_bst.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": created_at_in_est.strftime("%Y-%m-%d %H:%M:%S"),
             "created_by_name": self.get_created_by_name(),
             "created_by_email_address": self.get_created_by_email_address(),
         }

@@ -409,7 +409,7 @@ def test_save_daily_notification_processing_time(mocker, sample_template, date_p
 
 @freeze_time('2021-04-18T02:00')
 @pytest.mark.parametrize('date_provided', [None, '2021-4-17'])
-def test_save_daily_notification_processing_time_when_in_bst(mocker, sample_template, date_provided):
+def test_save_daily_notification_processing_time_when_in_est(mocker, sample_template, date_provided):
     # notification created too early to be counted
     create_notification(
         sample_template,

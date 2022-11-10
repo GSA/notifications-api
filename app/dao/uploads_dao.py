@@ -1,4 +1,5 @@
 from datetime import datetime
+from os import getenv
 
 from flask import current_app
 from sqlalchemy import String, and_, desc, func, literal, text
@@ -20,7 +21,7 @@ from app.utils import midnight_n_days_ago
 def _get_printing_day(created_at):
     return func.date_trunc(
         'day',
-        func.timezone('Europe/London', func.timezone('UTC', created_at)) + text(
+        func.timezone(getenv("TIMEZONE", "America/New_York"), func.timezone('UTC', created_at)) + text(
             # We add 6 hours 30 minutes to the local created_at time so that
             # any letters created after 5:30pm get shifted into the next day
             "interval '6 hours 30 minutes'"
@@ -36,7 +37,7 @@ def _get_printing_datetime(created_at):
 
 
 def _naive_gmt_to_utc(column):
-    return func.timezone('UTC', func.timezone('Europe/London', column))
+    return func.timezone('UTC', func.timezone(getenv("TIMEZONE", "America/New_York"), column))
 
 
 def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size=50):

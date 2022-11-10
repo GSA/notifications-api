@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from os import getenv
 
 import pytz
 from flask import url_for
@@ -7,13 +8,13 @@ from notifications_utils.template import (
     LetterPrintTemplate,
     SMSMessageTemplate,
 )
-from notifications_utils.timezones import convert_bst_to_utc
+from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import func
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
-local_timezone = pytz.timezone("Europe/London")
+local_timezone = pytz.timezone(getenv("TIMEZONE", "America/New_York"))
 
 
 def pagination_links(pagination, endpoint, **kwargs):
@@ -55,34 +56,34 @@ def get_template_instance(template, values):
     }[template['template_type']](template, values)
 
 
-def get_london_midnight_in_utc(date):
+def get_local_midnight_in_utc(date):
     """
-     This function converts date to midnight as BST (British Standard Time) to UTC,
-     the tzinfo is lastly removed from the datetime because the database stores the timestamps without timezone.
+     This function converts date from midnight in local time to UTC,
+     removing the tzinfo from the datetime because the database stores the timestamps without timezone.
      :param date: the day to calculate the London midnight in UTC for
      :return: the datetime of London midnight in UTC, for example 2016-06-17 = 2016-06-16 23:00:00
     """
-    return convert_bst_to_utc(datetime.combine(date, datetime.min.time()))
+    return convert_local_timezone_to_utc(datetime.combine(date, datetime.min.time()))
 
 
 def get_midnight_for_day_before(date):
     day_before = date - timedelta(1)
-    return get_london_midnight_in_utc(day_before)
+    return get_local_midnight_in_utc(day_before)
 
 
 def get_london_month_from_utc_column(column):
     """
      Where queries need to count notifications by month it needs to be
-     the month in BST (British Summer Time).
+     the month in local time.
      The database stores all timestamps as UTC without the timezone.
       - First set the timezone on created_at to UTC
-      - then convert the timezone to BST (or Europe/London)
+      - then convert the timezone to local time (or America/New_York)
       - lastly truncate the datetime to month with which we can group
         queries
     """
     return func.date_trunc(
         "month",
-        func.timezone("Europe/London", func.timezone("UTC", column))
+        func.timezone(getenv("TIMEZONE", "America/New_York"), func.timezone("UTC", column))
     )
 
 
@@ -103,7 +104,7 @@ def midnight_n_days_ago(number_of_days):
     """
     Returns midnight a number of days ago. Takes care of daylight savings etc.
     """
-    return get_london_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
+    return get_local_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
 
 
 def escape_special_characters(string):

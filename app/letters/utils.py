@@ -9,7 +9,7 @@ from flask import current_app
 from notifications_utils.letter_timings import LETTER_PROCESSING_DEADLINE
 from notifications_utils.pdf import pdf_page_count
 from notifications_utils.s3 import s3upload
-from notifications_utils.timezones import convert_utc_to_bst
+from notifications_utils.timezones import convert_utc_to_local_timezone
 
 from app.models import (
     KEY_TYPE_TEST,
@@ -31,7 +31,7 @@ PRECOMPILED_BUCKET_PREFIX = '{folder}NOTIFY.{reference}'
 
 
 def get_folder_name(created_at):
-    print_datetime = convert_utc_to_bst(created_at)
+    print_datetime = convert_utc_to_local_timezone(created_at)
     if print_datetime.time() > LETTER_PROCESSING_DEADLINE:
         print_datetime += timedelta(days=1)
     return '{}/'.format(print_datetime.date())
@@ -211,10 +211,10 @@ def _move_s3_object(source_bucket, source_filename, target_bucket, target_filena
 
 
 def letter_print_day(created_at):
-    bst_print_datetime = convert_utc_to_bst(created_at) + timedelta(hours=6, minutes=30)
+    bst_print_datetime = convert_utc_to_local_timezone(created_at) + timedelta(hours=6, minutes=30)
     bst_print_date = bst_print_datetime.date()
 
-    current_bst_date = convert_utc_to_bst(datetime.utcnow()).date()
+    current_bst_date = convert_utc_to_local_timezone(datetime.utcnow()).date()
 
     if bst_print_date >= current_bst_date:
         return 'today'

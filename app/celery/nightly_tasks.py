@@ -5,7 +5,7 @@ from flask import current_app
 from notifications_utils.clients.zendesk.zendesk_client import (
     NotifySupportTicket,
 )
-from notifications_utils.timezones import convert_utc_to_bst
+from notifications_utils.timezones import convert_utc_to_est
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -38,7 +38,7 @@ from app.models import (
     FactProcessingTime,
     Notification,
 )
-from app.utils import get_london_midnight_in_utc
+from app.utils import get_local_midnight_in_utc
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
@@ -90,8 +90,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
     flexible_data_retention = fetch_service_data_retention_for_all_services_by_notification_type(notification_type)
 
     for f in flexible_data_retention:
-        day_to_delete_backwards_from = get_london_midnight_in_utc(
-            convert_utc_to_bst(datetime.utcnow()).date() - timedelta(days=f.days_of_retention)
+        day_to_delete_backwards_from = get_local_midnight_in_utc(
+            convert_utc_to_est(datetime.utcnow()).date() - timedelta(days=f.days_of_retention)
         )
 
         delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
@@ -100,7 +100,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             'datetime_to_delete_before': day_to_delete_backwards_from
         })
 
-    seven_days_ago = get_london_midnight_in_utc(convert_utc_to_bst(datetime.utcnow()).date() - timedelta(days=7))
+    seven_days_ago = get_local_midnight_in_utc(convert_utc_to_est(datetime.utcnow()).date() - timedelta(days=7))
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
     # get a list of all service ids that we'll need to delete for. Typically that might only be 5% of services.
@@ -289,20 +289,20 @@ def letter_raise_alert_if_no_ack_file_for_zip():
 
 @notify_celery.task(name='save-daily-notification-processing-time')
 @cronitor("save-daily-notification-processing-time")
-def save_daily_notification_processing_time(bst_date=None):
-    # bst_date is a string in the format of "YYYY-MM-DD"
-    if bst_date is None:
+def save_daily_notification_processing_time(est_date=None):
+    # est_date is a string in the format of "YYYY-MM-DD"
+    if est_date is None:
         # if a date is not provided, we run against yesterdays data
-        bst_date = (datetime.utcnow() - timedelta(days=1)).date()
+        est_date = (datetime.utcnow() - timedelta(days=1)).date()
     else:
-        bst_date = datetime.strptime(bst_date, "%Y-%m-%d").date()
+        est_date = datetime.strptime(est_date, "%Y-%m-%d").date()
 
-    start_time = get_london_midnight_in_utc(bst_date)
-    end_time = get_london_midnight_in_utc(bst_date + timedelta(days=1))
+    start_time = get_local_midnight_in_utc(est_date)
+    end_time = get_local_midnight_in_utc(est_date + timedelta(days=1))
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(
-            bst_date=bst_date,
+            est_date=est_date,
             messages_total=result.messages_total,
             messages_within_10_secs=result.messages_within_10_secs
         )

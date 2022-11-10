@@ -187,7 +187,7 @@ class Config(object):
         'broker_transport_options': {
             'visibility_timeout': 310,
         },
-        'timezone': 'Europe/London',
+        'timezone': getenv("TIMEZONE", 'America/New_York'),
         'imports': [
             'app.celery.tasks',
             'app.celery.scheduled_tasks',

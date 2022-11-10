@@ -12,7 +12,7 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from notifications_utils.timezones import convert_bst_to_utc, convert_utc_to_bst
+from notifications_utils.timezones import convert_local_timezone_to_utc, convert_utc_to_local_timezone
 from sqlalchemy import and_, asc, desc, func, or_, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
@@ -45,7 +45,7 @@ from app.models import (
 )
 from app.utils import (
     escape_special_characters,
-    get_london_midnight_in_utc,
+    get_local_midnight_in_utc,
     midnight_n_days_ago,
 )
 
@@ -678,7 +678,7 @@ def dao_get_letters_to_be_printed(print_run_deadline, postage, query_limit=10000
     https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg12443.html
     """
     notifications = Notification.query.filter(
-        Notification.created_at < convert_bst_to_utc(print_run_deadline),
+        Notification.created_at < convert_local_timezone_to_utc(print_run_deadline),
         Notification.notification_type == LETTER_TYPE,
         Notification.status == NOTIFICATION_CREATED,
         Notification.key_type == KEY_TYPE_NORMAL,
@@ -697,7 +697,7 @@ def dao_get_letters_and_sheets_volume_by_postage(print_run_deadline):
         func.sum(Notification.billable_units).label('sheets_count'),
         Notification.postage
     ).filter(
-        Notification.created_at < convert_bst_to_utc(print_run_deadline),
+        Notification.created_at < convert_local_timezone_to_utc(print_run_deadline),
         Notification.notification_type == LETTER_TYPE,
         Notification.status == NOTIFICATION_CREATED,
         Notification.key_type == KEY_TYPE_NORMAL,
@@ -711,11 +711,11 @@ def dao_get_letters_and_sheets_volume_by_postage(print_run_deadline):
 
 
 def dao_old_letters_with_created_status():
-    yesterday_bst = convert_utc_to_bst(datetime.utcnow()) - timedelta(days=1)
+    yesterday_bst = convert_utc_to_local_timezone(datetime.utcnow()) - timedelta(days=1)
     last_processing_deadline = yesterday_bst.replace(hour=17, minute=30, second=0, microsecond=0)
 
     notifications = Notification.query.filter(
-        Notification.created_at < convert_bst_to_utc(last_processing_deadline),
+        Notification.created_at < convert_local_timezone_to_utc(last_processing_deadline),
         Notification.notification_type == LETTER_TYPE,
         Notification.status == NOTIFICATION_CREATED
     ).order_by(
@@ -785,8 +785,8 @@ def get_service_ids_with_notifications_before(notification_type, timestamp):
 
 
 def get_service_ids_with_notifications_on_date(notification_type, date):
-    start_date = get_london_midnight_in_utc(date)
-    end_date = get_london_midnight_in_utc(date + timedelta(days=1))
+    start_date = get_local_midnight_in_utc(date)
+    end_date = get_local_midnight_in_utc(date + timedelta(days=1))
 
     notification_table_query = db.session.query(
         Notification.service_id.label('service_id')
