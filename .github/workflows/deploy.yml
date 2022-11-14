@@ -75,7 +75,10 @@ jobs:
       id: changed-egress-config
       uses: tj-actions/changed-files@v34
       with:
-        files: deploy-config/egress_proxy/notify-api-staging.*.acl
+        files: |
+          deploy-config/egress_proxy/notify-api-staging.*.acl
+          .github/actions/deploy-proxy/action.yml
+          .github/workflows/deploy.yml
     - name: Deploy egress proxy
       if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
