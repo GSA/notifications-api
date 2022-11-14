@@ -41,7 +41,7 @@ def test_get_month_start_and_end_date_in_utc(month, year, expected_start, expect
     (datetime(2019, 4, 1, 3, 59, 59), 2018),
     (datetime(2019, 4, 1, 4, 0, 0), 2019),
     (date(2019, 3, 31), 2018),
-    (date(2019, 4, 2), 2019), # date() gives midnight UTC, which is the day before in ET
+    (date(2019, 4, 2), 2019),  # date() gives midnight UTC, which is the day before in ET
 ])
 def test_get_financial_year_for_datetime(dt, fy):
     assert get_financial_year_for_datetime(dt) == fy

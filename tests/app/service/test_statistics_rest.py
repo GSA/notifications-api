@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import pytest
 from freezegun import freeze_time
@@ -61,8 +61,8 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
         template_name=PRECOMPILED_TEMPLATE_NAME,
         hidden=True
     )
-    create_ft_notification_status(bst_date=datetime(2017, 4, 1), template=template_one, count=1)
-    create_ft_notification_status(bst_date=datetime(2017, 4, 1), template=sample_template, count=3)
+    create_ft_notification_status(bst_date=datetime(2017, 4, 2), template=template_one, count=1)
+    create_ft_notification_status(bst_date=datetime(2017, 4, 2), template=sample_template, count=3)
     create_notification(sample_template, created_at=datetime.utcnow())
 
     resp_json = admin_request.get(
@@ -259,10 +259,10 @@ def test_get_monthly_notification_stats_ignores_test_keys(admin_request, sample_
 
 def test_get_monthly_notification_stats_checks_dates(admin_request, sample_service):
     t = create_template(sample_service)
-    create_ft_notification_status(datetime(2016, 3, 31, 12), template=t, notification_status='created')
-    create_ft_notification_status(datetime(2016, 4, 1, 12), template=t, notification_status='sending')
-    create_ft_notification_status(datetime(2017, 3, 31, 12), template=t, notification_status='delivered')
-    create_ft_notification_status(datetime(2017, 4, 11, 12), template=t, notification_status='permanent-failure')
+    create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
+    create_ft_notification_status(datetime(2016, 4, 2), template=t, notification_status='sending')
+    create_ft_notification_status(datetime(2017, 3, 31), template=t, notification_status='delivered')
+    create_ft_notification_status(datetime(2017, 4, 11), template=t, notification_status='permanent-failure')
 
     response = admin_request.get('service.get_monthly_notification_stats', service_id=sample_service.id, year=2016)
 

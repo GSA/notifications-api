@@ -12,7 +12,10 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from notifications_utils.timezones import convert_local_timezone_to_utc, convert_utc_to_local_timezone
+from notifications_utils.timezones import (
+    convert_local_timezone_to_utc,
+    convert_utc_to_local_timezone,
+)
 from sqlalchemy import and_, asc, desc, func, or_, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
