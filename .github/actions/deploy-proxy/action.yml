@@ -31,12 +31,12 @@ runs:
       run: git clone ${{ inputs.proxy_repo }} ${{ steps.create-temp-dir.outputs.path }}
     - name: Switch to deploy ref
       shell: bash
-      working_directory: ${{ steps.create-temp-dir.outputs.path }}
+      working-directory: ${{ steps.create-temp-dir.outputs.path }}
       run: git checkout ${{ inputs.proxy_version }}
     - name: Copy config files
       shell: bash
       run: cp ./deploy-config/egress_proxy/${{ inputs.app }}.*.acl ${{ steps.create-temp-dir.outputs.path }}
     - name: Build and deploy proxy
       shell: bash
-      working_directory: ${{ steps.create-temp-dir.outputs.path }}
+      working-directory: ${{ steps.create-temp-dir.outputs.path }}
       run: make && ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy
