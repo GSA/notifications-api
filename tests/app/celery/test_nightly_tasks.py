@@ -419,8 +419,8 @@ def test_save_daily_notification_processing_time_when_in_est(mocker, sample_temp
     # notification counted and sent within 10 seconds
     create_notification(
         sample_template,
-        created_at=datetime(2021, 4, 16, 23, 00),
-        sent_at=datetime(2021, 4, 16, 23, 00) + timedelta(seconds=5)
+        created_at=datetime(2021, 4, 17, 4, 00),
+        sent_at=datetime(2021, 4, 17, 4, 00) + timedelta(seconds=5)
     )
     # notification counted and sent within 10 seconds
     create_notification(
@@ -431,8 +431,8 @@ def test_save_daily_notification_processing_time_when_in_est(mocker, sample_temp
     # notification created too late to be counted
     create_notification(
         sample_template,
-        created_at=datetime(2021, 4, 17, 23, 00),
-        sent_at=datetime(2021, 4, 17, 23, 00) + timedelta(seconds=15)
+        created_at=datetime(2021, 4, 18, 23, 00),
+        sent_at=datetime(2021, 4, 18, 23, 00) + timedelta(seconds=15)
     )
 
     save_daily_notification_processing_time(date_provided)
@@ -444,7 +444,7 @@ def test_save_daily_notification_processing_time_when_in_est(mocker, sample_temp
     assert persisted_to_db[0].messages_within_10_secs == 2
 
 
-@freeze_time('2021-06-05 03:00')
+@freeze_time('2021-06-05 08:00')
 def test_delete_notifications_task_calls_task_for_services_with_data_retention_of_same_type(notify_db_session, mocker):
     sms_service = create_service(service_name='a')
     email_service = create_service(service_name='b')
@@ -462,7 +462,7 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_o
         'service_id': sms_service.id,
         'notification_type': 'sms',
         # three days of retention, its morn of 5th, so we want to keep all messages from 4th, 3rd and 2nd.
-        'datetime_to_delete_before': datetime(2021, 6, 1, 23, 0),
+        'datetime_to_delete_before': datetime(2021, 6, 2, 4, 0),
     })
 
 
@@ -485,12 +485,12 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_b
         call(queue=ANY, kwargs={
             'service_id': service_14_days.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 3, 22, 0, 0)
+            'datetime_to_delete_before': datetime(2021, 3, 21, 4, 0)
         }),
         call(queue=ANY, kwargs={
             'service_id': service_3_days.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 4, 1, 23, 0)
+            'datetime_to_delete_before': datetime(2021, 4, 1, 4, 0)
         }),
     ])
 
@@ -528,11 +528,11 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
         call(queue=ANY, kwargs={
             'service_id': service_will_delete_1.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 3, 27, 0, 0)
+            'datetime_to_delete_before': datetime(2021, 3, 26, 4, 0)
         }),
         call(queue=ANY, kwargs={
             'service_id': service_will_delete_2.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 3, 27, 0, 0)
+            'datetime_to_delete_before': datetime(2021, 3, 26, 4, 0)
         }),
     ])
