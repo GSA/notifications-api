@@ -3,5 +3,6 @@ web_instances: 2
 web_memory: 1G
 worker_instances: 1
 worker_memory: 512M
+scheduler_memory: 256M
 public_api_route: notify-api.app.cloud.gov
 admin_base_url: https://notify.app.cloud.gov

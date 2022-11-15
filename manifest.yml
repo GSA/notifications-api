@@ -23,6 +23,10 @@ applications:
         instances: ((worker_instances))
         memory: ((worker_memory))
         command: ./scripts/run_app_paas.sh celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4
+      - type: scheduler
+        instances: 1
+        memory: ((scheduler_memory))
+        command: ./scripts/run_app_paas.sh celery -A run_celery.notify_celery beat --loglevel=INFO
 
     env:
       NOTIFY_APP_NAME: api
