@@ -23,6 +23,10 @@ applications:
         instances: ((worker_instances))
         memory: ((worker_memory))
         command: ./scripts/run_app_paas.sh celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4
+      - type: scheduler
+        instances: 1
+        memory: ((scheduler_memory))
+        command: ./scripts/run_app_paas.sh celery -A run_celery.notify_celery beat --loglevel=INFO
 
     env:
       NOTIFY_APP_NAME: api
@@ -43,3 +47,5 @@ applications:
       AWS_REGION: us-west-2
       AWS_PINPOINT_REGION: us-west-2
       AWS_US_TOLL_FREE_NUMBER: +18446120782
+
+      REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"

@@ -425,5 +425,6 @@ configs = {
     'test': Test,
     'staging': Staging,
     'demo': Demo,
+    'sandbox': Staging,
     'production': Production
 }

@@ -1,0 +1,42 @@
+name: Deploy egress proxy
+description: Set egress space security groups and deploy proxy
+inputs:
+  cf_space:
+    description: The space the target app exists in.
+    required: true
+  app:
+    description: application name to be proxied.
+    required: true
+  proxy_repo:
+    description: git repo for cg-egress-proxy
+    default: https://github.com/rahearn/cg-egress-proxy.git
+  proxy_version:
+    description: git ref to be deployed
+    default: main
+runs:
+  using: composite
+  steps:
+    - name: Set restricted space egress
+      shell: bash
+      run: ./terraform/set_space_egress.sh -t -s ${{ inputs.cf_space }}
+    - name: Set public space egress
+      shell: bash
+      run: ./terraform/set_space_egress.sh -p -s ${{ inputs.cf_space }}-egress
+    - name: Create temp directory
+      shell: bash
+      id: create-temp-dir
+      run: echo "path=$(mktemp -d -t egress-XXXXXXXXXX --tmpdir=$RUNNER_TEMP)" >> $GITHUB_OUTPUT
+    - name: Clone cg-egress-proxy
+      shell: bash
+      run: git clone ${{ inputs.proxy_repo }} ${{ steps.create-temp-dir.outputs.path }}
+    - name: Switch to deploy ref
+      shell: bash
+      working-directory: ${{ steps.create-temp-dir.outputs.path }}
+      run: git checkout ${{ inputs.proxy_version }}
+    - name: Copy config files
+      shell: bash
+      run: cp ./deploy-config/egress_proxy/${{ inputs.app }}.*.acl ${{ steps.create-temp-dir.outputs.path }}
+    - name: Build and deploy proxy
+      shell: bash
+      working-directory: ${{ steps.create-temp-dir.outputs.path }}
+      run: make && ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy

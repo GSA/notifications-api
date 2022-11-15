@@ -54,6 +54,18 @@ module "contact_list_bucket" {
   s3_service_name  = "${local.app_name}-contact-list-bucket-${local.env}"
 }
 
+module "egress-space" {
+  source = "../shared/egress_space"
+
+  cf_user                  = var.cf_user
+  cf_password              = var.cf_password
+  cf_org_name              = local.cf_org_name
+  cf_restricted_space_name = local.cf_space_name
+  deployers = [
+    var.cf_user
+  ]
+}
+
 ###########################################################################
 # The following lines need to be commented out for the initial `terraform apply`
 # It can be re-enabled after:
