@@ -71,7 +71,7 @@ def get_midnight_for_day_before(date):
     return get_local_midnight_in_utc(day_before)
 
 
-def get_london_month_from_utc_column(column):
+def get_local_month_from_utc_column(column):
     """
      Where queries need to count notifications by month it needs to be
      the month in local time.

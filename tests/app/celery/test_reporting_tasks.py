@@ -670,7 +670,7 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
     assert updated_fact_data[1].notification_status == 'delivered'
 
 
-# the job runs at 12:30am London time. 04/01 is in BST.
+# the job runs at 04:30am EST time.
 @freeze_time('2019-04-02T04:30')
 def test_create_nightly_notification_status_for_service_and_day_respects_bst(sample_template):
     create_notification(sample_template, status='delivered', created_at=datetime(2019, 4, 2, 5, 0))  # too new
