@@ -1,0 +1,62 @@
+openapi: '3.0.2'
+info:
+  title: Notify API
+  version: '1.0'
+servers:
+  - url: https://notify-api.app.cloud.gov
+    description: Production API endpoint
+  - url: https://notify-api-staging.app.cloud.gov
+    description: Staging API endpoint
+  - url: http://localhost:6011
+    description: Local development API endpoint
+paths:
+  /_status?simple=1:
+    get:
+      description: 'Retrieve only an acknowledgement that the server is listening'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["ok"]
+  /_status:
+    get:
+      description: 'Retrieve information on the status of the Notify API server'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  build_time:
+                    type: string
+                  db_version:
+                    type: string
+                  git_commit:
+                    type: string
+                  status:
+                    type: string
+                    enum: ["ok"]
+  /_status/live-service-and-organisation-counts:
+    get:
+      description: 'Retrieve a count of live services and organizations in the Notify system'
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  services:
+                    type: number
+                  organisations:
+                    type: number
