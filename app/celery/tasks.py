@@ -487,7 +487,7 @@ def record_daily_sorted_counts(self, filename):
         )
         raise DVLAException(message)
 
-    billing_date = get_billing_date_in_est_from_filename(filename)
+    billing_date = get_local_billing_date_from_filename(filename)
     persist_daily_sorted_letter_counts(day=billing_date,
                                        file_name=filename,
                                        sorted_letter_counts=sorted_letter_counts)
@@ -503,7 +503,7 @@ def parse_dvla_file(filename):
         raise DVLAException('DVLA response file: {} has an invalid format'.format(filename))
 
 
-def get_billing_date_in_est_from_filename(filename):
+def get_local_billing_date_from_filename(filename):
     # exclude seconds from the date since we don't need it. We got a date ending in 60 second - which is not valid.
     datetime_string = filename.split('-')[1][:-2]
     datetime_obj = datetime.strptime(datetime_string, '%Y%m%d%H%M')
