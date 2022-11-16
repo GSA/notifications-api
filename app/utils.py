@@ -8,13 +8,12 @@ from notifications_utils.template import (
     LetterPrintTemplate,
     SMSMessageTemplate,
 )
-from notifications_utils.timezones import convert_local_timezone_to_utc
+from notifications_utils.timezones import convert_local_timezone_to_utc, local_timezone
 from sqlalchemy import func
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
-local_timezone = pytz.timezone(getenv("TIMEZONE", "America/New_York"))
 
 
 def pagination_links(pagination, endpoint, **kwargs):
@@ -60,8 +59,8 @@ def get_local_midnight_in_utc(date):
     """
      This function converts date from midnight in local time to UTC,
      removing the tzinfo from the datetime because the database stores the timestamps without timezone.
-     :param date: the day to calculate the London midnight in UTC for
-     :return: the datetime of London midnight in UTC, for example 2016-06-17 = 2016-06-16 23:00:00
+     :param date: the day to calculate the local midnight in UTC for
+     :return: the datetime of local midnight in UTC, for example 2016-06-17 = 2016-06-16 23:00:00
     """
     return convert_local_timezone_to_utc(datetime.combine(date, datetime.min.time()))
 
