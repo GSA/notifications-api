@@ -134,6 +134,7 @@ def register_blueprint(application):
     )
     from app.billing.rest import billing_blueprint
     from app.complaint.complaint_rest import complaint_blueprint
+    from app.docs import docs as docs_blueprint
     from app.email_branding.rest import email_branding_blueprint
     from app.events.rest import events as events_blueprint
     from app.inbound_number.rest import inbound_number_blueprint
@@ -192,6 +193,9 @@ def register_blueprint(application):
 
     status_blueprint.before_request(requires_no_auth)
     application.register_blueprint(status_blueprint)
+
+    docs_blueprint.before_request(requires_no_auth)
+    application.register_blueprint(docs_blueprint)
 
     # delivery receipts
     ses_callback_blueprint.before_request(requires_no_auth)
