@@ -16,6 +16,73 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    serviceObject:
+      type: object
+      properties:
+        active:
+          type: boolean
+        billing_contact_email_addresses:
+          type: string
+        billing_contact_names:
+          type: string
+        billing_reference:
+          type: string
+        consent_to_research:
+          type: string
+        contact_link:
+          type: string
+        count_as_live:
+          type: boolean
+        created_by:
+          type: string
+        email_branding:
+          type: string
+        email_from:
+          type: string
+        go_live_at:
+          type: string
+        go_live_user:
+          type: string
+        id:
+          type: string
+        inbound_api:
+          type: array
+        letter_branding:
+          type: string
+        message_limit:
+          type: number
+        name:
+          type: string
+        notes:
+          type: string
+        organisation:
+          type: string
+        organisation_type:
+          type: string
+          enum: ["federal", "state", "other"]
+          default: "federal"
+        permissions:
+          type: array
+          items:
+            type: string
+        prefix_sms:
+          type: boolean
+        purchase_order_number:
+          type: string
+        rate_limit:
+          type: number
+        research_model:
+          type: boolean
+        restricted:
+          type: boolean
+        service_callback_api:
+          type: array
+        volume_email:
+          type: string
+        volume_letter:
+          type: string
+        volume_sms:
+          type: string
     userObject:
       type: object
       properties:
@@ -65,6 +132,8 @@ paths:
   /_status?simple=1:
     get:
       description: 'Retrieve only an acknowledgement that the server is listening'
+      tags:
+        - public
       responses:
         '200':
           description: OK
@@ -79,6 +148,8 @@ paths:
   /_status:
     get:
       description: 'Retrieve information on the status of the Notify API server'
+      tags:
+        - public
       responses:
         '200':
           description: OK
@@ -99,7 +170,8 @@ paths:
   /_status/live-service-and-organisation-counts:
     get:
       description: 'Retrieve a count of live services and organizations in the Notify system'
-      parameters: []
+      tags:
+        - public
       responses:
         '200':
           description: OK
@@ -117,7 +189,8 @@ paths:
       security:
         - bearerAuth: []
       description: 'Retrieve list of all users'
-      parameters: []
+      tags:
+        - internal-api
       responses:
         '200':
           description: OK
@@ -135,6 +208,8 @@ paths:
       security:
         - bearerAuth: []
       description: 'Retrieve single user details'
+      tags:
+        - internal-api
       parameters:
         - name: uuid
           in: path
@@ -151,3 +226,95 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/userObject"
+  /organisations:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve organization details'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    active:
+                      type: boolean
+                    count_of_live_services:
+                      type: number
+                    domains:
+                      type: array
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    organisation_type:
+                      type: string
+                      enum: ["federal", "state", "other"]
+  /service:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve all services'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/serviceObject"
+  /service/{uuid}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve details of a single service'
+      tags:
+        - internal-api
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/serviceObject"
+  /service/{uuid}/statistics:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve statistics about messages sent by a service'
+      tags:
+        - internal-api
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
