@@ -1,7 +1,7 @@
 import csv
 import functools
 import itertools
-import os
+from os import getenv
 import uuid
 from datetime import datetime, timedelta
 
@@ -9,6 +9,7 @@ import click
 import flask
 from click_datetime import Datetime as click_dt
 from flask import current_app, json
+from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.statsd_decorators import statsd
 from notifications_utils.template import SMSMessageTemplate
@@ -86,7 +87,7 @@ class notify_command:
 
         # in the test environment the app context is already provided and having
         # another will lead to the test db connection being closed prematurely
-        if os.getenv('NOTIFY_ENVIRONMENT', '') != 'test':
+        if getenv('NOTIFY_ENVIRONMENT', '') != 'test':
             # with_appcontext ensures the config is loaded, db connected, etc.
             decorators.insert(0, flask.cli.with_appcontext)
 
@@ -111,7 +112,7 @@ def purge_functional_test_data(user_email_prefix):
 
     users, services, etc. Give an email prefix. Probably "notify-tests-preview".
     """
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+    if getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
         current_app.logger.error('Can only be run in development')
         return
 
@@ -726,7 +727,7 @@ def validate_mobile(ctx, param, value):
 @click.option('-s', '--state', default="active")
 @click.option('-d', '--admin', default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+    if getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
         current_app.logger.error('Can only be run in development')
         return
 
@@ -746,3 +747,10 @@ def create_test_user(name, email, mobile_number, password, auth_type, state, adm
     except IntegrityError:
         print("duplicate user", user.name)
         db.session.rollback()
+
+@notify_command(name='create-admin-jwt')
+def create_admin_jwt():
+    if getenv('NOTIFY_ENVIRONMENT', '') != 'development':
+        current_app.logger.error('Can only be run in development')
+        return
+    print(create_jwt_token(current_app.config['SECRET_KEY'], current_app.config['ADMIN_CLIENT_ID']))

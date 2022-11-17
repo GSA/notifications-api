@@ -9,6 +9,58 @@ servers:
     description: Staging API endpoint
   - url: http://localhost:6011
     description: Local development API endpoint
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    userObject:
+      type: object
+      properties:
+        auth_type:
+          type: string
+        can_use_webauthn:
+          type: string
+        current_session_id:
+          type: string
+        email_access_validated_at:
+          type: string
+        email_address:
+          type: string
+        failed_login_count:
+          type: number
+        id:
+          type: string
+        logged_in_at:
+          type: string
+        mobile_number:
+          type: string
+        name:
+          type: string
+        organisations:
+          type: array
+          items:
+            type: string
+        password_changed_at:
+          type: string
+        permissions:
+          type: object
+          properties:
+            SERVICE_ID:
+              type: array
+              items:
+                type: string
+        platform_admin:
+          type: boolean
+        services:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+          enum: ["pending", "active", "inactive"]
 paths:
   /_status?simple=1:
     get:
@@ -60,3 +112,42 @@ paths:
                     type: number
                   organisations:
                     type: number
+  /user:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve list of all users'
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/userObject"
+  /user/{uuid}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve single user details'
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/userObject"
