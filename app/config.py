@@ -80,6 +80,7 @@ class Config(object):
             ('{"%s":["%s"]}' % (ADMIN_CLIENT_ID, getenv('ADMIN_CLIENT_SECRET')))
             )
     )
+    ALLOW_EXPIRED_API_TOKEN = False
     # encyption secret/salt
     SECRET_KEY = getenv('SECRET_KEY')
     DANGEROUS_SALT = getenv('DANGEROUS_SALT')
@@ -368,6 +369,7 @@ class Development(Config):
     DANGEROUS_SALT = 'dev-notify-salt'
     SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
+    ALLOW_EXPIRED_API_TOKEN = getenv('ALLOW_EXPIRED_API_TOKEN', '0') == '1'
 
 
 class Test(Development):

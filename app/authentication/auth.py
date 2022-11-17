@@ -132,8 +132,9 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
         try:
             decode_jwt_token(auth_token, api_key.secret)
         except TokenExpiredError:
-            err_msg = "Error: Your system clock must be accurate to within 30 seconds"
-            raise AuthError(err_msg, 403, service_id=service_id, api_key_id=api_key.id)
+            if not current_app.config.get('ALLOW_EXPIRED_API_TOKEN', False):
+                err_msg = "Error: Your system clock must be accurate to within 30 seconds"
+                raise AuthError(err_msg, 403, service_id=service_id, api_key_id=api_key.id)
         except TokenAlgorithmError:
             err_msg = "Invalid token: algorithm used is not HS256"
             raise AuthError(err_msg, 403, service_id=service_id, api_key_id=api_key.id)

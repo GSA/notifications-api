@@ -15,6 +15,13 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    uuidPath:
+      name: uuid
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     serviceObject:
       type: object
@@ -128,6 +135,30 @@ components:
         state:
           type: string
           enum: ["pending", "active", "inactive"]
+    apiKeyResponse:
+      type: object
+      properties:
+        apiKeys:
+          type: array
+          items:
+            type: object
+            properties:
+              created_by:
+                type: string
+              created_at:
+                type: string
+              expiry_date:
+                type: string
+              id:
+                type: string
+              key_type:
+                type: string
+              name:
+                type: string
+              updated_at:
+                type: string
+              version:
+                type: number
 paths:
   /_status?simple=1:
     get:
@@ -211,11 +242,7 @@ paths:
       tags:
         - internal-api
       parameters:
-        - name: uuid
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/uuidPath"
       responses:
         '200':
           description: OK
@@ -275,6 +302,52 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/serviceObject"
+  /service/find-services-by-name:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Find a service by name'
+      tags:
+        - internal-api
+      parameters:
+        - name: service_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        active:
+                          type: boolean
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        research_mode:
+                          type: boolean
+                        restricted:
+                          type: boolean
+  /service/live-services-data:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Unsure'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
   /service/{uuid}:
     get:
       security:
@@ -283,11 +356,7 @@ paths:
       tags:
         - internal-api
       parameters:
-        - name: uuid
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/uuidPath"
       responses:
         '200':
           description: OK
@@ -306,7 +375,40 @@ paths:
       tags:
         - internal-api
       parameters:
-        - name: uuid
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /service/{uuid}/api-keys:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve api-keys for a service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/apiKeyResponse"
+  /service/{uuid}/api-keys/{key-id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve details of a single API key'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+        - name: key-id
           in: path
           required: true
           schema:
@@ -317,4 +419,25 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/apiKeyResponse"
+  /service/{uuid}/users:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve users associated with this service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
                 type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/userObject"
