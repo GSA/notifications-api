@@ -754,3 +754,13 @@ def create_admin_jwt():
         current_app.logger.error('Can only be run in development')
         return
     print(create_jwt_token(current_app.config['SECRET_KEY'], current_app.config['ADMIN_CLIENT_ID']))
+
+@notify_command(name='create-user-jwt')
+@click.option('-t', '--token', required=True, prompt=False)
+def create_user_jwt(token):
+    if getenv('NOTIFY_ENVIRONMENT', '') != 'development':
+        current_app.logger.error('Can only be run in development')
+        return
+    service_id = token[-73:-37]
+    api_key = token[-36:]
+    print(create_jwt_token(api_key, service_id))

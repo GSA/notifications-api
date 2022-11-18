@@ -441,3 +441,28 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/userObject"
+  /v2/notifications/sms:
+    post:
+      security:
+        - bearerAuth: []
+      description: 'Send an SMS message'
+      tags:
+        - external-api
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                template_id:
+                  type: string
+                personalisation:
+                  type: object
+                reference:
+                  type: string
+      responses:
+        '201':
+          description: Sent
