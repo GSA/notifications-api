@@ -1,9 +1,9 @@
 import csv
 import functools
 import itertools
-from os import getenv
 import uuid
 from datetime import datetime, timedelta
+from os import getenv
 
 import click
 import flask
@@ -748,12 +748,14 @@ def create_test_user(name, email, mobile_number, password, auth_type, state, adm
         print("duplicate user", user.name)
         db.session.rollback()
 
+
 @notify_command(name='create-admin-jwt')
 def create_admin_jwt():
     if getenv('NOTIFY_ENVIRONMENT', '') != 'development':
         current_app.logger.error('Can only be run in development')
         return
     print(create_jwt_token(current_app.config['SECRET_KEY'], current_app.config['ADMIN_CLIENT_ID']))
+
 
 @notify_command(name='create-user-jwt')
 @click.option('-t', '--token', required=True, prompt=False)

@@ -27,7 +27,7 @@ flask command create-admin-jwt | tail -n 1 | pbcopy
 flask command create-user-jwt --token=<USER_API_TOKEN> | tail -n 1 | pbcopy
 ```
 
-to copy a token usable by the admin UI to your pasteboard. This token will expire in 30 seconds
+to copy a token to your pasteboard. This token will expire in 30 seconds
 
 ### Disable token expiration checking in development
 
