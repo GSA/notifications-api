@@ -100,7 +100,9 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             'datetime_to_delete_before': day_to_delete_backwards_from
         })
 
-    seven_days_ago = get_local_midnight_in_utc(convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7))
+    seven_days_ago = get_local_midnight_in_utc(
+        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7)
+    )
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
     # get a list of all service ids that we'll need to delete for. Typically that might only be 5% of services.

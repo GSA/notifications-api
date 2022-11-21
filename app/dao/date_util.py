@@ -1,11 +1,10 @@
 from datetime import date, datetime, time, timedelta
-from os import getenv
 
 import pytz
 from notifications_utils.timezones import (
     convert_local_timezone_to_utc,
     convert_utc_to_local_timezone,
-    local_timezone
+    local_timezone,
 )
 
 

@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta
 from os import getenv
 
-import pytz
 from flask import url_for
 from notifications_utils.template import (
     HTMLEmailTemplate,
     LetterPrintTemplate,
     SMSMessageTemplate,
 )
-from notifications_utils.timezones import convert_local_timezone_to_utc, local_timezone
+from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import func
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
