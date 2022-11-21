@@ -2,6 +2,14 @@ openapi: '3.0.2'
 info:
   title: Notify API
   version: '1.0'
+  description: |
+    The following OpenAPI document lists a subset of the available APIs for US Notify.
+
+    We are currently API compatible with GOV.UK Notify. Please visit [their documentation](https://docs.notifications.service.gov.uk/rest-api.html)
+    for more information.
+
+    Authorization uses [a JSON Web Token (JWT) bearer token](https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header). The internal-api
+    methods use the same scheme, but must use a specific key for the Admin UI.
 servers:
   - url: https://notify-api.app.cloud.gov
     description: Production API endpoint
@@ -445,15 +453,24 @@ paths:
     post:
       security:
         - bearerAuth: []
-      description: 'Send an SMS message'
+      description: 'Send an SMS message to a single phone number'
       tags:
         - external-api
       requestBody:
         required: true
+        description: |
+          The request body is a JSON object giving at least the phone nubmer to
+          deliver the message to and the template ID to send to that number.
+
+          If the template has variables, provide them in the `personalisation`
+          object with the variable names as the object keys.
         content:
           application/json:
             schema:
               type: object
+              required:
+                - phone_number
+                - template_id
               properties:
                 phone_number:
                   type: string
@@ -463,6 +480,56 @@ paths:
                   type: object
                 reference:
                   type: string
+            example:
+              phone_number: "5558675309"
+              template_id: "85b58733-7ebf-494e-bee2-a21a4ce17d58"
+              personalisation:
+                variable: "value"
       responses:
         '201':
           description: Sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: object
+                    properties:
+                      body:
+                        type: string
+                      from_number:
+                        type: string
+                    required:
+                      - body
+                      - from_number
+                    additionalProperties: false
+                  id:
+                    type: string
+                  reference:
+                    type: string
+                  scheduled_for:
+                    type: string
+                  template:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      uri:
+                        type: string
+                      version:
+                        type: integer
+                    required:
+                      - id
+                      - uri
+                      - version
+                    additionalProperties: false
+                  uri:
+                    type: string
+                additionalProperties: false
+                required:
+                  - content
+                  - id
+                  - reference
+                  - template
+                  - uri
