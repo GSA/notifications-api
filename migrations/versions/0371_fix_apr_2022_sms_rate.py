@@ -24,8 +24,8 @@ def upgrade():
         SET rate = 0.0161
         WHERE
         notification_type = 'sms' AND
-        local_date >= '2022-04-01' AND
-        local_date < '2022-05-01'
+        bst_date >= '2022-04-01' AND
+        bst_date < '2022-05-01'
         """
     )
 

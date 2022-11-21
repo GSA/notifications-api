@@ -14,14 +14,14 @@ down_revision = '0306_letter_rates_price_rise'
 
 
 def upgrade():
-    op.drop_index('ix_dm_datetime_local_date', table_name='dm_datetime')
+    op.drop_index('ix_dm_datetime_bst_date', table_name='dm_datetime')
     op.drop_index('ix_dm_datetime_yearmonth', table_name='dm_datetime')
     op.drop_table('dm_datetime')
 
 
 def downgrade():
     op.create_table('dm_datetime',
-    sa.Column('local_date', sa.DATE(), autoincrement=False, nullable=False),
+    sa.Column('bst_date', sa.DATE(), autoincrement=False, nullable=False),
     sa.Column('year', sa.INTEGER(), autoincrement=False, nullable=False),
     sa.Column('month', sa.INTEGER(), autoincrement=False, nullable=False),
     sa.Column('month_name', sa.VARCHAR(), autoincrement=False, nullable=False),
@@ -37,7 +37,7 @@ def downgrade():
     sa.Column('financial_year', sa.INTEGER(), autoincrement=False, nullable=False),
     sa.Column('utc_daytime_start', postgresql.TIMESTAMP(), autoincrement=False, nullable=False),
     sa.Column('utc_daytime_end', postgresql.TIMESTAMP(), autoincrement=False, nullable=False),
-    sa.PrimaryKeyConstraint('local_date', name='dm_datetime_pkey')
+    sa.PrimaryKeyConstraint('bst_date', name='dm_datetime_pkey')
     )
     op.create_index('ix_dm_datetime_yearmonth', 'dm_datetime', ['year', 'month'], unique=False)
-    op.create_index('ix_dm_datetime_local_date', 'dm_datetime', ['local_date'], unique=False)
+    op.create_index('ix_dm_datetime_bst_date', 'dm_datetime', ['bst_date'], unique=False)

@@ -20,7 +20,7 @@ def upgrade():
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
     # These are the orthogonal dimensions that define a row (except international).
     # These entries define a unique record.
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
                                                             'template_id',
                                                             'rate_multiplier',
                                                             'provider',
@@ -32,5 +32,5 @@ def downgrade():
     op.add_column('ft_billing', sa.Column('annual_billing_id', postgresql.UUID(), autoincrement=False, nullable=True))
     op.add_column('ft_billing', sa.Column('crown', sa.TEXT(), autoincrement=False, nullable=True))
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
                                                             'template_id'])

@@ -16,7 +16,7 @@ def upgrade():
     op.execute("ALTER TABLE ft_billing DROP CONSTRAINT ft_billing_pkey")
     sql = """ALTER TABLE ft_billing ADD CONSTRAINT 
     ft_billing_pkey PRIMARY KEY 
-    (local_date, template_id, service_id, rate_multiplier, provider, notification_type, international, rate)"""
+    (bst_date, template_id, service_id, rate_multiplier, provider, notification_type, international, rate)"""
     op.execute(sql)
 
 
@@ -25,5 +25,5 @@ def downgrade():
     op.execute("ALTER TABLE ft_billing DROP CONSTRAINT ft_billing_pkey")
     sql = """ALTER TABLE ft_billing ADD CONSTRAINT 
     ft_billing_pkey PRIMARY KEY 
-    (local_date, template_id, service_id, rate_multiplier, provider, notification_type, international)"""
+    (bst_date, template_id, service_id, rate_multiplier, provider, notification_type, international)"""
     op.execute(sql)

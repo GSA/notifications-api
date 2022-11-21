@@ -24,7 +24,7 @@ def upgrade():
         """
         INSERT into dm_datetime (
         SELECT
-        datum AS local_date,
+        datum AS bst_date,
         EXTRACT(YEAR FROM datum) AS year,
         EXTRACT(MONTH FROM datum) AS month,
         -- Localized month name
@@ -51,14 +51,14 @@ def upgrade():
         FROM generate_series(0,365*50+10) AS SEQUENCE(DAY)
         GROUP BY SEQUENCE.day
         ) DQ
-        ORDER BY local_date
+        ORDER BY bst_date
         );
         """
     )
 
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
 
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
                                                             'template_id',
                                                             'service_id',
                                                             'rate_multiplier',
@@ -70,7 +70,7 @@ def downgrade():
     # We don't downgrade populated data
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
 
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
                                                             'template_id',
                                                             'rate_multiplier',
                                                             'provider',

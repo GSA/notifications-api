@@ -16,7 +16,7 @@ down_revision = '0173_create_daily_sorted_letter'
 def upgrade():
     # Create notifications_for_today table
     op.create_table('ft_billing',
-                    sa.Column('local_date', sa.Date(), nullable=True),
+                    sa.Column('bst_date', sa.Date(), nullable=True),
                     sa.Column('template_id', postgresql.UUID(as_uuid=True), nullable=True),
                     sa.Column('service_id', postgresql.UUID(as_uuid=True), nullable=True),
                     sa.Column('organisation_id', postgresql.UUID(as_uuid=True), nullable=True),
@@ -29,15 +29,15 @@ def upgrade():
                     sa.Column('rate', sa.Numeric(), nullable=True),
                     sa.Column('billable_units', sa.Numeric(), nullable=True),
                     sa.Column('notifications_sent', sa.Integer(), nullable=True),
-                    sa.PrimaryKeyConstraint('local_date', 'template_id')
+                    sa.PrimaryKeyConstraint('bst_date', 'template_id')
                     )
     # Set indexes
-    op.create_index(op.f('ix_ft_billing_local_date'), 'ft_billing', ['local_date'], unique=False)
+    op.create_index(op.f('ix_ft_billing_bst_date'), 'ft_billing', ['bst_date'], unique=False)
     op.create_index(op.f('ix_ft_billing_service_id'), 'ft_billing', ['service_id'], unique=False)
 
     # Create dm_datetime table
     op.create_table('dm_datetime',
-                    sa.Column('local_date', sa.Date(), nullable=False),
+                    sa.Column('bst_date', sa.Date(), nullable=False),
                     sa.Column('year', sa.Integer(), nullable=False),
                     sa.Column('month', sa.Integer(), nullable=False),
                     sa.Column('month_name', sa.String(), nullable=False),
@@ -53,18 +53,18 @@ def upgrade():
                     sa.Column('financial_year', sa.Integer(), nullable=True),
                     sa.Column('utc_daytime_start', sa.DateTime(), nullable=False),
                     sa.Column('utc_daytime_end', sa.DateTime(), nullable=False),
-                    sa.PrimaryKeyConstraint('local_date')
+                    sa.PrimaryKeyConstraint('bst_date')
                     )
     # Set indexes
     op.create_index(op.f('ix_dm_datetime_yearmonth'), 'dm_datetime', ['year', 'month'], unique=False)
-    op.create_index(op.f('ix_dm_datetime_local_date'), 'dm_datetime', ['local_date'], unique=False)
+    op.create_index(op.f('ix_dm_datetime_bst_date'), 'dm_datetime', ['bst_date'], unique=False)
 
     # Insert data into table
     op.execute(
         """
         INSERT into dm_datetime (
         SELECT
-        datum AS local_date,
+        datum AS bst_date,
         EXTRACT(YEAR FROM datum) AS year,
         EXTRACT(MONTH FROM datum) AS month,
         -- Localized month name
@@ -91,7 +91,7 @@ def upgrade():
         FROM generate_series(0,365*50+10) AS SEQUENCE(DAY)
         GROUP BY SEQUENCE.day
         ) DQ
-        ORDER BY local_date
+        ORDER BY bst_date
         );
         """
     )
