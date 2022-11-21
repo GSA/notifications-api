@@ -291,20 +291,20 @@ def letter_raise_alert_if_no_ack_file_for_zip():
 
 @notify_celery.task(name='save-daily-notification-processing-time')
 @cronitor("save-daily-notification-processing-time")
-def save_daily_notification_processing_time(est_date=None):
-    # est_date is a string in the format of "YYYY-MM-DD"
-    if est_date is None:
+def save_daily_notification_processing_time(local_date=None):
+    # local_date is a string in the format of "YYYY-MM-DD"
+    if local_date is None:
         # if a date is not provided, we run against yesterdays data
-        est_date = (datetime.utcnow() - timedelta(days=1)).date()
+        local_date = (datetime.utcnow() - timedelta(days=1)).date()
     else:
-        est_date = datetime.strptime(est_date, "%Y-%m-%d").date()
+        local_date = datetime.strptime(local_date, "%Y-%m-%d").date()
 
-    start_time = get_local_midnight_in_utc(est_date)
-    end_time = get_local_midnight_in_utc(est_date + timedelta(days=1))
+    start_time = get_local_midnight_in_utc(local_date)
+    end_time = get_local_midnight_in_utc(local_date + timedelta(days=1))
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(
-            local_date=est_date,
+            local_date=local_date,
             messages_total=result.messages_total,
             messages_within_10_secs=result.messages_within_10_secs
         )
