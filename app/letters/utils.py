@@ -214,9 +214,9 @@ def letter_print_day(created_at):
     bst_print_datetime = convert_utc_to_local_timezone(created_at) + timedelta(hours=6, minutes=30)
     bst_print_date = bst_print_datetime.date()
 
-    current_bst_date = convert_utc_to_local_timezone(datetime.utcnow()).date()
+    current_local_date = convert_utc_to_local_timezone(datetime.utcnow()).date()
 
-    if bst_print_date >= current_bst_date:
+    if bst_print_date >= current_local_date:
         return 'today'
     else:
         print_date = bst_print_datetime.strftime('%d %B').lstrip('0')

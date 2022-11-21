@@ -402,7 +402,7 @@ def test_save_daily_notification_processing_time(mocker, sample_template, date_p
 
     persisted_to_db = FactProcessingTime.query.all()
     assert len(persisted_to_db) == 1
-    assert persisted_to_db[0].bst_date == date(2021, 1, 17)
+    assert persisted_to_db[0].local_date == date(2021, 1, 17)
     assert persisted_to_db[0].messages_total == 2
     assert persisted_to_db[0].messages_within_10_secs == 1
 
@@ -439,7 +439,7 @@ def test_save_daily_notification_processing_time_when_in_est(mocker, sample_temp
 
     persisted_to_db = FactProcessingTime.query.all()
     assert len(persisted_to_db) == 1
-    assert persisted_to_db[0].bst_date == date(2021, 4, 17)
+    assert persisted_to_db[0].local_date == date(2021, 4, 17)
     assert persisted_to_db[0].messages_total == 2
     assert persisted_to_db[0].messages_within_10_secs == 2
 

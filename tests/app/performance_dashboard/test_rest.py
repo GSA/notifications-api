@@ -14,59 +14,59 @@ def test_performance_dashboard(sample_service, admin_request):
     template_sms = create_template(service=sample_service, template_type='sms', template_name='a')
     template_email = create_template(service=sample_service, template_type='email', template_name='b')
     template_letter = create_template(service=sample_service, template_type='letter', template_name='c')
-    create_ft_notification_status(bst_date=date(2021, 2, 28),
+    create_ft_notification_status(local_date=date(2021, 2, 28),
                                   service=template_email.service,
                                   template=template_email,
                                   count=10)
-    create_ft_notification_status(bst_date=date(2021, 2, 28),
+    create_ft_notification_status(local_date=date(2021, 2, 28),
                                   service=template_sms.service,
                                   template=template_sms,
                                   count=5)
-    create_ft_notification_status(bst_date=date(2021, 2, 28),
+    create_ft_notification_status(local_date=date(2021, 2, 28),
                                   service=template_letter.service,
                                   template=template_letter,
                                   count=2)
-    create_ft_notification_status(bst_date=date(2021, 3, 1),
+    create_ft_notification_status(local_date=date(2021, 3, 1),
                                   service=template_email.service,
                                   template=template_email,
                                   count=15)
-    create_ft_notification_status(bst_date=date(2021, 3, 1),
+    create_ft_notification_status(local_date=date(2021, 3, 1),
                                   service=template_sms.service,
                                   template=template_sms,
                                   count=20)
-    create_ft_notification_status(bst_date=date(2021, 3, 1),
+    create_ft_notification_status(local_date=date(2021, 3, 1),
                                   service=template_letter.service,
                                   template=template_letter,
                                   count=3)
-    create_ft_notification_status(bst_date=date(2021, 3, 2),
+    create_ft_notification_status(local_date=date(2021, 3, 2),
                                   service=template_email.service,
                                   template=template_email,
                                   count=25)
-    create_ft_notification_status(bst_date=date(2021, 3, 2),
+    create_ft_notification_status(local_date=date(2021, 3, 2),
                                   service=template_sms.service,
                                   template=template_sms,
                                   count=30)
-    create_ft_notification_status(bst_date=date(2021, 3, 2),
+    create_ft_notification_status(local_date=date(2021, 3, 2),
                                   service=template_letter.service,
                                   template=template_letter,
                                   count=10)
-    create_ft_notification_status(bst_date=date(2021, 3, 3),
+    create_ft_notification_status(local_date=date(2021, 3, 3),
                                   service=template_email.service,
                                   template=template_email,
                                   count=45)
-    create_ft_notification_status(bst_date=date(2021, 3, 3),
+    create_ft_notification_status(local_date=date(2021, 3, 3),
                                   service=template_sms.service,
                                   template=template_sms,
                                   count=35)
-    create_ft_notification_status(bst_date=date(2021, 3, 3),
+    create_ft_notification_status(local_date=date(2021, 3, 3),
                                   service=template_letter.service,
                                   template=template_letter,
                                   count=15)
 
-    create_process_time(bst_date='2021-02-28', messages_total=15, messages_within_10_secs=14)
-    create_process_time(bst_date='2021-03-01', messages_total=35, messages_within_10_secs=34)
-    create_process_time(bst_date='2021-03-02', messages_total=15, messages_within_10_secs=12)
-    create_process_time(bst_date='2021-03-03', messages_total=15, messages_within_10_secs=14)
+    create_process_time(local_date='2021-02-28', messages_total=15, messages_within_10_secs=14)
+    create_process_time(local_date='2021-03-01', messages_total=35, messages_within_10_secs=34)
+    create_process_time(local_date='2021-03-02', messages_total=15, messages_within_10_secs=12)
+    create_process_time(local_date='2021-03-03', messages_total=15, messages_within_10_secs=14)
 
     results = admin_request.get(endpoint="performance_dashboard.get_performance_dashboard",
                                 start_date='2021-03-01',

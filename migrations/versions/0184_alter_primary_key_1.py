@@ -16,7 +16,7 @@ down_revision = '0183_alter_primary_key'
 def upgrade():
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
 
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
                                                             'template_id',
                                                             'service_id',
                                                             'rate_multiplier',
@@ -28,7 +28,7 @@ def upgrade():
 def downgrade():
     op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
 
-    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
+    op.create_primary_key('ft_billing_pkey', 'ft_billing', ['local_date',
                                                             'template_id',
                                                             'service_id',
                                                             'rate_multiplier',

@@ -304,7 +304,7 @@ def save_daily_notification_processing_time(est_date=None):
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(
-            bst_date=est_date,
+            local_date=est_date,
             messages_total=result.messages_total,
             messages_within_10_secs=result.messages_within_10_secs
         )

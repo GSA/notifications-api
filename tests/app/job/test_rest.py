@@ -667,7 +667,7 @@ def test_get_job_by_id_with_stats_for_old_job_where_notifications_have_been_purg
                          job_status='finished')
 
     def __create_ft_status(job, status, count):
-        create_ft_notification_status(bst_date=job.created_at.date(),
+        create_ft_notification_status(local_date=job.created_at.date(),
                                       notification_type='sms',
                                       service=job.service,
                                       job=job,

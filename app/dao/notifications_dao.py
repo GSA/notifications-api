@@ -66,7 +66,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
         return last_date_from_notifications
 
     last_date = db.session.query(
-        functions.max(FactNotificationStatus.bst_date)
+        functions.max(FactNotificationStatus.local_date)
     ).filter(
         FactNotificationStatus.template_id == template_id,
         FactNotificationStatus.key_type != KEY_TYPE_TEST
@@ -806,7 +806,7 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
         FactNotificationStatus.service_id.label('service_id')
     ).filter(
         FactNotificationStatus.notification_type == notification_type,
-        FactNotificationStatus.bst_date == date,
+        FactNotificationStatus.local_date == date,
     )
 
     return {

@@ -97,8 +97,8 @@ def dao_fetch_live_services_data():
     ).subquery()
 
     this_year_ft_billing = FactBilling.query.filter(
-        FactBilling.bst_date >= year_start_date,
-        FactBilling.bst_date <= year_end_date,
+        FactBilling.local_date >= year_start_date,
+        FactBilling.local_date <= year_end_date,
     ).subquery()
 
     data = db.session.query(

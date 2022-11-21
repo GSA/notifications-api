@@ -461,16 +461,16 @@ def test_dao_fetch_live_services_data(sample_user):
     template_letter_2 = create_template(service=service_2, template_type='letter')
     dao_add_service_to_organisation(service=service, organisation_id=org.id)
     # two sms billing records for 1st service within current financial year:
-    create_ft_billing(bst_date='2019-04-20', template=sms_template)
-    create_ft_billing(bst_date='2019-04-21', template=sms_template)
+    create_ft_billing(local_date='2019-04-20', template=sms_template)
+    create_ft_billing(local_date='2019-04-21', template=sms_template)
     # one sms billing record for 1st service from previous financial year, should not appear in the result:
-    create_ft_billing(bst_date='2018-04-20', template=sms_template)
+    create_ft_billing(local_date='2018-04-20', template=sms_template)
     # one email billing record for 1st service within current financial year:
-    create_ft_billing(bst_date='2019-04-20', template=email_template)
+    create_ft_billing(local_date='2019-04-20', template=email_template)
     # one letter billing record for 1st service within current financial year:
-    create_ft_billing(bst_date='2019-04-15', template=template_letter_1)
+    create_ft_billing(local_date='2019-04-15', template=template_letter_1)
     # one letter billing record for 2nd service within current financial year:
-    create_ft_billing(bst_date='2019-04-16', template=template_letter_2)
+    create_ft_billing(local_date='2019-04-16', template=template_letter_2)
 
     # 1st service: billing from 2018 and 2019
     create_annual_billing(service.id, 500, 2018)

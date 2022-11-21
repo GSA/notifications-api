@@ -151,7 +151,7 @@ def daily_volumes_report():
 
     for row in daily_volumes:
         report.append({
-            "day": row.bst_date,
+            "day": row.local_date,
             "sms_totals": int(row.sms_totals),
             "sms_fragment_totals": int(row.sms_fragment_totals),
             "sms_chargeable_units": int(row.sms_chargeable_units),
@@ -172,7 +172,7 @@ def daily_sms_provider_volumes_report():
 
     for row in daily_volumes:
         report.append({
-            'day': row.bst_date.isoformat(),
+            'day': row.local_date.isoformat(),
             'provider': row.provider,
             'sms_totals': int(row.sms_totals),
             'sms_fragment_totals': int(row.sms_fragment_totals),

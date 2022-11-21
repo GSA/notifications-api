@@ -165,7 +165,7 @@ def dao_get_provider_stats():
         func.sum(FactBilling.billable_units * FactBilling.rate_multiplier).label('current_month_billable_sms')
     ).filter(
         FactBilling.notification_type == SMS_TYPE,
-        FactBilling.bst_date >= first_day_of_the_month
+        FactBilling.local_date >= first_day_of_the_month
     ).group_by(
         FactBilling.provider
     ).subquery()

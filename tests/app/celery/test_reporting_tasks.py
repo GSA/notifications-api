@@ -36,7 +36,7 @@ from tests.app.db import (
 
 
 def mocker_get_rate(
-    non_letter_rates, letter_rates, notification_type, bst_date, crown=None, rate_multiplier=None, post_class="second"
+    non_letter_rates, letter_rates, notification_type, local_date, crown=None, rate_multiplier=None, post_class="second"
 ):
     if notification_type == LETTER_TYPE:
         return Decimal(2.1)
@@ -193,7 +193,7 @@ def test_create_nightly_billing_for_day_sms_rate_multiplier(
     assert len(records) == records_num
 
     for i, record in enumerate(records):
-        assert record.bst_date == datetime.date(yesterday)
+        assert record.local_date == datetime.date(yesterday)
         assert record.rate == Decimal(1.33)
         assert record.billable_units == billable_units
         assert record.rate_multiplier == multiplier[i]
@@ -240,7 +240,7 @@ def test_create_nightly_billing_for_day_different_templates(
     rate = [0, Decimal(1.33)]
 
     for i, record in enumerate(records):
-        assert record.bst_date == datetime.date(yesterday)
+        assert record.local_date == datetime.date(yesterday)
         assert record.rate == rate[i]
         assert record.billable_units == billable_units[i]
         assert record.rate_multiplier == multiplier[i]
@@ -285,7 +285,7 @@ def test_create_nightly_billing_for_day_different_sent_by(
     assert len(records) == 2
 
     for _, record in enumerate(records):
-        assert record.bst_date == datetime.date(yesterday)
+        assert record.local_date == datetime.date(yesterday)
         assert record.rate == Decimal(1.33)
         assert record.billable_units == 1
         assert record.rate_multiplier == 1.0
@@ -342,25 +342,25 @@ def test_create_nightly_billing_for_day_different_letter_postage(
     assert len(records) == 4
 
     assert records[0].notification_type == LETTER_TYPE
-    assert records[0].bst_date == datetime.date(yesterday)
+    assert records[0].local_date == datetime.date(yesterday)
     assert records[0].postage == 'europe'
     assert records[0].notifications_sent == 1
     assert records[0].billable_units == 1
 
     assert records[1].notification_type == LETTER_TYPE
-    assert records[1].bst_date == datetime.date(yesterday)
+    assert records[1].local_date == datetime.date(yesterday)
     assert records[1].postage == 'first'
     assert records[1].notifications_sent == 2
     assert records[1].billable_units == 4
 
     assert records[2].notification_type == LETTER_TYPE
-    assert records[2].bst_date == datetime.date(yesterday)
+    assert records[2].local_date == datetime.date(yesterday)
     assert records[2].postage == 'rest-of-world'
     assert records[2].notifications_sent == 1
     assert records[2].billable_units == 3
 
     assert records[3].notification_type == LETTER_TYPE
-    assert records[3].bst_date == datetime.date(yesterday)
+    assert records[3].local_date == datetime.date(yesterday)
     assert records[3].postage == 'second'
     assert records[3].notifications_sent == 1
     assert records[3].billable_units == 2
@@ -395,7 +395,7 @@ def test_create_nightly_billing_for_day_letter(
 
     record = records[0]
     assert record.notification_type == LETTER_TYPE
-    assert record.bst_date == datetime.date(yesterday)
+    assert record.local_date == datetime.date(yesterday)
     assert record.rate == Decimal(2.1)
     assert record.billable_units == 2
     assert record.rate_multiplier == 2.0
@@ -429,7 +429,7 @@ def test_create_nightly_billing_for_day_null_sent_by_sms(
     assert len(records) == 1
 
     record = records[0]
-    assert record.bst_date == datetime.date(yesterday)
+    assert record.local_date == datetime.date(yesterday)
     assert record.rate == Decimal(1.33)
     assert record.billable_units == 1
     assert record.rate_multiplier == 1
@@ -510,10 +510,10 @@ def test_create_nightly_billing_for_day_use_BST(
     assert FactBilling.query.count() == 0
 
     create_nightly_billing_for_day('2018-03-25')
-    records = FactBilling.query.order_by(FactBilling.bst_date).all()
+    records = FactBilling.query.order_by(FactBilling.local_date).all()
 
     assert len(records) == 1
-    assert records[0].bst_date == date(2018, 3, 25)
+    assert records[0].local_date == date(2018, 3, 25)
     assert records[0].billable_units == 2
 
 
@@ -539,10 +539,10 @@ def test_create_nightly_billing_for_day_update_when_record_exists(
     assert len(records) == 0
 
     create_nightly_billing_for_day('2018-01-14')
-    records = FactBilling.query.order_by(FactBilling.bst_date).all()
+    records = FactBilling.query.order_by(FactBilling.local_date).all()
 
     assert len(records) == 1
-    assert records[0].bst_date == date(2018, 1, 14)
+    assert records[0].local_date == date(2018, 1, 14)
     assert records[0].billable_units == 1
     assert not records[0].updated_at
 
@@ -604,7 +604,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert len(new_fact_data) == 4
 
     email_failure_row = new_fact_data[0]
-    assert email_failure_row.bst_date == process_day
+    assert email_failure_row.local_date == process_day
     assert email_failure_row.template_id == second_template.id
     assert email_failure_row.service_id == second_service.id
     assert email_failure_row.job_id == UUID('00000000-0000-0000-0000-000000000000')
@@ -682,8 +682,8 @@ def test_create_nightly_notification_status_for_service_and_day_respects_bst(sam
 
     create_nightly_notification_status_for_service_and_day('2019-04-01', sample_template.service_id, 'sms')
 
-    noti_status = FactNotificationStatus.query.order_by(FactNotificationStatus.bst_date).all()
+    noti_status = FactNotificationStatus.query.order_by(FactNotificationStatus.local_date).all()
     assert len(noti_status) == 1
 
-    assert noti_status[0].bst_date == date(2019, 4, 1)
+    assert noti_status[0].local_date == date(2019, 4, 1)
     assert noti_status[0].notification_status == 'created'

@@ -2076,7 +2076,7 @@ class DailySortedLetter(db.Model):
 class FactBilling(db.Model):
     __tablename__ = "ft_billing"
 
-    bst_date = db.Column(db.Date, nullable=False, primary_key=True, index=True)
+    local_date = db.Column(db.Date, nullable=False, primary_key=True, index=True)
     template_id = db.Column(UUID(as_uuid=True), nullable=False, primary_key=True, index=True)
     service_id = db.Column(UUID(as_uuid=True), nullable=False, primary_key=True, index=True)
     notification_type = db.Column(db.Text, nullable=False, primary_key=True)
@@ -2094,7 +2094,7 @@ class FactBilling(db.Model):
 class FactNotificationStatus(db.Model):
     __tablename__ = "ft_notification_status"
 
-    bst_date = db.Column(db.Date, index=True, primary_key=True, nullable=False)
+    local_date = db.Column(db.Date, index=True, primary_key=True, nullable=False)
     template_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False)
     service_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False, )
     job_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False)
@@ -2109,7 +2109,7 @@ class FactNotificationStatus(db.Model):
 class FactProcessingTime(db.Model):
     __tablename__ = "ft_processing_time"
 
-    bst_date = db.Column(db.Date, index=True, primary_key=True, nullable=False)
+    local_date = db.Column(db.Date, index=True, primary_key=True, nullable=False)
     messages_total = db.Column(db.Integer(), nullable=False)
     messages_within_10_secs = db.Column(db.Integer(), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)

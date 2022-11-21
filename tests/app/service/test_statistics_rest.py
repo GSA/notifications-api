@@ -26,7 +26,7 @@ def test_get_template_usage_by_month_returns_correct_data(
         admin_request,
         sample_template
 ):
-    create_ft_notification_status(bst_date=date(2017, 4, 2), template=sample_template, count=3)
+    create_ft_notification_status(local_date=date(2017, 4, 2), template=sample_template, count=3)
     create_notification(sample_template, created_at=datetime.utcnow())
 
     resp_json = admin_request.get(
@@ -61,8 +61,8 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
         template_name=PRECOMPILED_TEMPLATE_NAME,
         hidden=True
     )
-    create_ft_notification_status(bst_date=datetime(2017, 4, 2), template=template_one, count=1)
-    create_ft_notification_status(bst_date=datetime(2017, 4, 2), template=sample_template, count=3)
+    create_ft_notification_status(local_date=datetime(2017, 4, 2), template=template_one, count=1)
+    create_ft_notification_status(local_date=datetime(2017, 4, 2), template=sample_template, count=3)
     create_notification(sample_template, created_at=datetime.utcnow())
 
     resp_json = admin_request.get(
