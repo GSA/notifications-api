@@ -580,9 +580,10 @@ def test_update_notification_sets_status(sample_notification):
 def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template):
     assert len(Notification.query.all()) == 0
 
-    # create one notification a day between 1st and 9th
+    # create one notification a day between 1st and 9th,
+    # with assumption that the local timezone is EST
     for i in range(1, 11):
-        past_date = '2016-01-{0:02d}'.format(i)
+        past_date = '2016-01-{0:02d} 12:00:00'.format(i)
         with freeze_time(past_date):
             create_notification(sample_template, created_at=datetime.utcnow(), status="failed")
 
@@ -1741,9 +1742,9 @@ def test_dao_get_letters_and_sheets_volume_by_postage(notify_db_session):
 @pytest.mark.parametrize('created_at_utc,date_to_check,expected_count', [
     # Clocks change on the 27th of March 2022, so the query needs to look at the
     # time range 00:00 - 23:00 (UTC) thereafter.
-    ('2022-03-27T00:30', date(2022, 3, 27), 1),  # 27/03 00:30 GMT
+    ('2022-03-27T00:30', date(2022, 3, 27), 0),  # 27/03 00:30 GMT
     ('2022-03-27T22:30', date(2022, 3, 27), 1),  # 27/03 23:30 BST
-    ('2022-03-27T23:30', date(2022, 3, 27), 0),  # 28/03 00:30 BST
+    ('2022-03-27T23:30', date(2022, 3, 27), 1),  # 28/03 00:30 BST
     ('2022-03-26T23:30', date(2022, 3, 26), 1),  # 26/03 23:30 GMT
 ])
 def test_get_service_ids_with_notifications_on_date_respects_gmt_bst(
@@ -1761,7 +1762,7 @@ def test_get_service_ids_with_notifications_on_date_checks_ft_status(
     sample_template,
 ):
     create_notification(template=sample_template, created_at='2022-01-01T09:30')
-    create_ft_notification_status(template=sample_template, bst_date='2022-01-02')
+    create_ft_notification_status(template=sample_template, local_date='2022-01-02')
 
     assert len(get_service_ids_with_notifications_on_date(SMS_TYPE, date(2022, 1, 1))) == 1
     assert len(get_service_ids_with_notifications_on_date(SMS_TYPE, date(2022, 1, 2))) == 1

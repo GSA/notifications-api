@@ -127,7 +127,7 @@ def test_get_last_used_datetime_for_template(
     date_from_notification = datetime.utcnow() - timedelta(hours=2)
     create_notification(template=sample_template, created_at=date_from_notification)
     date_from_ft_status = (datetime.utcnow() - timedelta(days=2)).date()
-    create_ft_notification_status(bst_date=date_from_ft_status,
+    create_ft_notification_status(local_date=date_from_ft_status,
                                   template=sample_template)
 
     json_resp = admin_request.get(

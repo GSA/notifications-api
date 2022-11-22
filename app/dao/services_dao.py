@@ -47,7 +47,7 @@ from app.models import (
 from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
-    get_london_midnight_in_utc,
+    get_local_midnight_in_utc,
 )
 
 DEFAULT_SERVICE_PERMISSIONS = [
@@ -97,8 +97,8 @@ def dao_fetch_live_services_data():
     ).subquery()
 
     this_year_ft_billing = FactBilling.query.filter(
-        FactBilling.bst_date >= year_start_date,
-        FactBilling.bst_date <= year_end_date,
+        FactBilling.local_date >= year_start_date,
+        FactBilling.local_date <= year_end_date,
     ).subquery()
 
     data = db.session.query(
@@ -409,7 +409,7 @@ def delete_service_and_all_associated_db_objects(service):
 
 def dao_fetch_todays_stats_for_service(service_id):
     today = date.today()
-    start_date = get_london_midnight_in_utc(today)
+    start_date = get_local_midnight_in_utc(today)
 
     return db.session.query(
         Notification.notification_type,
@@ -427,8 +427,8 @@ def dao_fetch_todays_stats_for_service(service_id):
 
 def dao_fetch_todays_stats_for_all_services(include_from_test_key=True, only_active=True):
     today = date.today()
-    start_date = get_london_midnight_in_utc(today)
-    end_date = get_london_midnight_in_utc(today + timedelta(days=1))
+    start_date = get_local_midnight_in_utc(today)
+    end_date = get_local_midnight_in_utc(today + timedelta(days=1))
 
     subquery = db.session.query(
         Notification.notification_type,

@@ -18,12 +18,12 @@ def insert_update_processing_time(processing_time):
     '''
     table = FactProcessingTime.__table__
     stmt = insert(table).values(
-        bst_date=processing_time.bst_date,
+        local_date=processing_time.local_date,
         messages_total=processing_time.messages_total,
         messages_within_10_secs=processing_time.messages_within_10_secs
     )
     stmt = stmt.on_conflict_do_update(
-        index_elements=[table.c.bst_date],
+        index_elements=[table.c.local_date],
         set_={
             'messages_total': stmt.excluded.messages_total,
             'messages_within_10_secs': stmt.excluded.messages_within_10_secs,
@@ -35,7 +35,7 @@ def insert_update_processing_time(processing_time):
 
 def get_processing_time_percentage_for_date_range(start_date, end_date):
     query = db.session.query(
-        FactProcessingTime.bst_date.cast(db.Text).label("date"),
+        FactProcessingTime.local_date.cast(db.Text).label("date"),
         FactProcessingTime.messages_total,
         FactProcessingTime.messages_within_10_secs,
         case([
@@ -46,8 +46,8 @@ def get_processing_time_percentage_for_date_range(start_date, end_date):
             (FactProcessingTime.messages_total == 0, 100.0)
         ]).label("percentage")
     ).filter(
-        FactProcessingTime.bst_date >= start_date,
-        FactProcessingTime.bst_date <= end_date
-    ).order_by(FactProcessingTime.bst_date)
+        FactProcessingTime.local_date >= start_date,
+        FactProcessingTime.local_date <= end_date
+    ).order_by(FactProcessingTime.local_date)
 
     return query.all()

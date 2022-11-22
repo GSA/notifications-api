@@ -21,12 +21,12 @@ from tests.app.db import (
 )
 
 
-@freeze_time('2017-11-11 02:00')
+@freeze_time('2017-11-11 06:00')
 def test_get_template_usage_by_month_returns_correct_data(
         admin_request,
         sample_template
 ):
-    create_ft_notification_status(bst_date=date(2017, 4, 2), template=sample_template, count=3)
+    create_ft_notification_status(local_date=date(2017, 4, 2), template=sample_template, count=3)
     create_notification(sample_template, created_at=datetime.utcnow())
 
     resp_json = admin_request.get(
@@ -53,7 +53,7 @@ def test_get_template_usage_by_month_returns_correct_data(
     assert resp_json[1]["count"] == 1
 
 
-@freeze_time('2017-11-11 02:00')
+@freeze_time('2017-11-11 06:00')
 def test_get_template_usage_by_month_returns_two_templates(admin_request, sample_template, sample_service):
     template_one = create_template(
         sample_service,
@@ -61,8 +61,8 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
         template_name=PRECOMPILED_TEMPLATE_NAME,
         hidden=True
     )
-    create_ft_notification_status(bst_date=datetime(2017, 4, 1), template=template_one, count=1)
-    create_ft_notification_status(bst_date=datetime(2017, 4, 1), template=sample_template, count=3)
+    create_ft_notification_status(local_date=datetime(2017, 4, 2), template=template_one, count=1)
+    create_ft_notification_status(local_date=datetime(2017, 4, 2), template=sample_template, count=3)
     create_notification(sample_template, created_at=datetime.utcnow())
 
     resp_json = admin_request.get(
@@ -213,14 +213,14 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
 
 @freeze_time('2016-06-05 12:00:00')
 def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(admin_request, sample_template):
-    create_ft_notification_status(datetime(2016, 5, 1), template=sample_template, count=1)
-    create_ft_notification_status(datetime(2016, 6, 1), template=sample_template, notification_status='created', count=2)  # noqa
+    create_ft_notification_status(datetime(2016, 5, 1, 12), template=sample_template, count=1)
+    create_ft_notification_status(datetime(2016, 6, 1, 12), template=sample_template, notification_status='created', count=2)  # noqa
 
-    create_notification(sample_template, created_at=datetime(2016, 6, 5), status='created')
-    create_notification(sample_template, created_at=datetime(2016, 6, 5), status='delivered')
+    create_notification(sample_template, created_at=datetime(2016, 6, 5, 12), status='created')
+    create_notification(sample_template, created_at=datetime(2016, 6, 5, 12), status='delivered')
 
     # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
-    create_notification(sample_template, created_at=datetime(2016, 6, 4), status='sending')
+    create_notification(sample_template, created_at=datetime(2016, 6, 4, 12), status='sending')
 
     response = admin_request.get(
         'service.get_monthly_notification_stats',
@@ -260,7 +260,7 @@ def test_get_monthly_notification_stats_ignores_test_keys(admin_request, sample_
 def test_get_monthly_notification_stats_checks_dates(admin_request, sample_service):
     t = create_template(sample_service)
     create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
-    create_ft_notification_status(datetime(2016, 4, 1), template=t, notification_status='sending')
+    create_ft_notification_status(datetime(2016, 4, 2), template=t, notification_status='sending')
     create_ft_notification_status(datetime(2017, 3, 31), template=t, notification_status='delivered')
     create_ft_notification_status(datetime(2017, 4, 11), template=t, notification_status='permanent-failure')
 

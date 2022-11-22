@@ -42,7 +42,7 @@ def create_uploaded_template(service):
     )
 
 
-@freeze_time("2020-02-02 14:00")  # GMT time
+@freeze_time("2020-02-02 09:00")  # GMT time
 def test_get_uploads_for_service(sample_template):
     create_service_data_retention(sample_template.service, 'sms', days_of_retention=9)
     contact_list = create_service_contact_list()
@@ -69,9 +69,9 @@ def test_get_uploads_for_service(sample_template):
         1,
         'letter',
         None,
-        letter.created_at.replace(hour=17, minute=30, second=0, microsecond=0),
+        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
         None,
-        letter.created_at.replace(hour=17, minute=30, second=0, microsecond=0),
+        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
         None,
         'letter_day',
         None,
@@ -97,9 +97,9 @@ def test_get_uploads_for_service(sample_template):
         1,
         'letter',
         None,
-        letter.created_at.replace(hour=17, minute=30, second=0, microsecond=0),
+        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
         None,
-        letter.created_at.replace(hour=17, minute=30, second=0, microsecond=0),
+        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
         None,
         "letter_day",
         None,
@@ -125,25 +125,25 @@ def test_get_uploads_for_service_groups_letters(sample_template):
 
     # Just gets into yesterday’s print run
     create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 1, 17, 29, 59)
+        datetime(2020, 2, 1, 22, 29, 59)
     ))
 
     # Yesterday but in today’s print run
     create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 1, 17, 30)
+        datetime(2020, 2, 1, 22, 30)
     ))
     # First thing today
     create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 0, 0)
+        datetime(2020, 2, 2, 5, 0)
     ))
     # Just before today’s print deadline
     create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 17, 29, 59)
+        datetime(2020, 2, 2, 22, 29, 59)
     ))
 
     # Just missed today’s print deadline
     create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 17, 30)
+        datetime(2020, 2, 2, 22, 30)
     ))
 
     uploads_from_db = dao_get_uploads_by_service_id(sample_template.service_id).items
@@ -152,9 +152,9 @@ def test_get_uploads_for_service_groups_letters(sample_template):
         (upload.notification_count, upload.created_at)
         for upload in uploads_from_db
     ] == [
-        (1, datetime(2020, 2, 3, 17, 30)),
-        (3, datetime(2020, 2, 2, 17, 30)),
-        (1, datetime(2020, 2, 1, 17, 30)),
+        (1, datetime(2020, 2, 3, 22, 30)),
+        (3, datetime(2020, 2, 2, 22, 30)),
+        (1, datetime(2020, 2, 1, 22, 30)),
     ]
 
 
@@ -262,18 +262,18 @@ def test_get_uploads_only_gets_uploads_within_service_retention_period(sample_te
     assert len(results) == 4
 
     # Uploaded letters get their `created_at` shifted time of printing
-    # 17:30 BST == 16:30 UTC
-    assert results[0].created_at == upload_1.created_at.replace(hour=16, minute=30, second=0, microsecond=0)
+    # 21:30 EST == 16:30 UTC
+    assert results[0].created_at == upload_1.created_at.replace(hour=21, minute=30, second=0, microsecond=0)
 
     # Jobs keep their original `created_at`
     assert results[1].created_at == upload_2.created_at.replace(hour=14, minute=00, second=0, microsecond=0)
 
     # Still in BST here…
-    assert results[2].created_at == upload_3.created_at.replace(hour=16, minute=30, second=0, microsecond=0)
+    assert results[2].created_at == upload_3.created_at.replace(hour=21, minute=30, second=0, microsecond=0)
 
     # Now we’ve gone far enough back to be in GMT
     # 17:30 GMT == 17:30 UTC
-    assert results[3].created_at == upload_4.created_at.replace(hour=17, minute=30, second=0, microsecond=0)
+    assert results[3].created_at == upload_4.created_at.replace(hour=21, minute=30, second=0, microsecond=0)
 
 
 @freeze_time('2020-02-02 14:00')
@@ -302,7 +302,7 @@ def test_get_uploads_is_paginated(sample_template):
     assert results.per_page == 1
     assert results.total == 3
     assert len(results.items) == 1
-    assert results.items[0].created_at == datetime.utcnow().replace(hour=17, minute=30, second=0, microsecond=0)
+    assert results.items[0].created_at == datetime.utcnow().replace(hour=22, minute=30, second=0, microsecond=0)
     assert results.items[0].notification_count == 2
     assert results.items[0].upload_type == 'letter_day'
 
@@ -327,28 +327,28 @@ def test_get_uploaded_letters_by_print_date(sample_template):
     for _ in range(3):
         create_uploaded_letter(
             letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(day=1, hour=17, minute=29, second=59)
+            created_at=datetime.utcnow().replace(day=1, hour=22, minute=29, second=59)
         )
 
     # Letters from yesterday that rolled into today’s run
     for _ in range(30):
         create_uploaded_letter(
             letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(day=1, hour=17, minute=30, second=0)
+            created_at=datetime.utcnow().replace(day=1, hour=22, minute=30, second=0)
         )
 
     # Letters that just made today’s run
     for _ in range(30):
         create_uploaded_letter(
             letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(hour=17, minute=29, second=59)
+            created_at=datetime.utcnow().replace(hour=22, minute=29, second=59)
         )
 
     # Letters that just missed today’s run
     for _ in range(3):
         create_uploaded_letter(
             letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(hour=17, minute=30, second=0)
+            created_at=datetime.utcnow().replace(hour=22, minute=30, second=0)
         )
 
     result = dao_get_uploaded_letters_by_print_date(

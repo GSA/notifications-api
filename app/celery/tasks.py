@@ -6,7 +6,7 @@ from flask import current_app
 from notifications_utils.insensitive_dict import InsensitiveDict
 from notifications_utils.postal_address import PostalAddress
 from notifications_utils.recipients import RecipientCSV
-from notifications_utils.timezones import convert_utc_to_bst
+from notifications_utils.timezones import convert_utc_to_local_timezone
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
@@ -487,7 +487,7 @@ def record_daily_sorted_counts(self, filename):
         )
         raise DVLAException(message)
 
-    billing_date = get_billing_date_in_bst_from_filename(filename)
+    billing_date = get_local_billing_date_from_filename(filename)
     persist_daily_sorted_letter_counts(day=billing_date,
                                        file_name=filename,
                                        sorted_letter_counts=sorted_letter_counts)
@@ -503,11 +503,11 @@ def parse_dvla_file(filename):
         raise DVLAException('DVLA response file: {} has an invalid format'.format(filename))
 
 
-def get_billing_date_in_bst_from_filename(filename):
+def get_local_billing_date_from_filename(filename):
     # exclude seconds from the date since we don't need it. We got a date ending in 60 second - which is not valid.
     datetime_string = filename.split('-')[1][:-2]
     datetime_obj = datetime.strptime(datetime_string, '%Y%m%d%H%M')
-    return convert_utc_to_bst(datetime_obj).date()
+    return convert_utc_to_local_timezone(datetime_obj).date()
 
 
 def persist_daily_sorted_letter_counts(day, file_name, sorted_letter_counts):

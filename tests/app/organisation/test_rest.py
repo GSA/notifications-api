@@ -833,7 +833,7 @@ def test_get_organisation_services_usage(admin_request, notify_db_session):
     template = create_template(service=service)
     dao_add_service_to_organisation(service=service, organisation_id=org.id)
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019)
-    create_ft_billing(bst_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
+    create_ft_billing(local_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
                       notifications_sent=19)
     response = admin_request.get(
         'organisation.get_organisation_services_usage',
@@ -863,7 +863,7 @@ def test_get_organisation_services_usage_sort_active_first(admin_request, notify
     dao_add_service_to_organisation(service=service, organisation_id=org.id)
     dao_add_service_to_organisation(service=archived_service, organisation_id=org.id)
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019)
-    create_ft_billing(bst_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
+    create_ft_billing(local_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
                       notifications_sent=19)
     response = admin_request.get(
         'organisation.get_organisation_services_usage',
