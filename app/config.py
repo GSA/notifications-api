@@ -135,7 +135,6 @@ class Config(object):
 
     # Logging
     DEBUG = False
-    NOTIFY_LOG_PATH = getenv('NOTIFY_LOG_PATH', 'logs/application.log')
 
     # Monitoring
     CRONITOR_ENABLED = False

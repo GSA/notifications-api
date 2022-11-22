@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4dbf825ea628237cbd96a33bf72c1c3a2c82e8a23bd0d53b836667fb8aba040c"
+            "sha256": "adeddc01285ee3e46e1a1464cceffc5fd1d151c61f069642e1c716b8e9fd0507"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -71,13 +71,6 @@
             ],
             "index": "pypi",
             "version": "==1.24.8"
-        },
-        "awscli-cwlogs": {
-            "hashes": [
-                "sha256:44d2fe77d109b7b630fb8f6c06760ff6c5ec9861be16413fd5b977f5a4971f83"
-            ],
-            "index": "pypi",
-            "version": "==1.4.6"
         },
         "bcrypt": {
             "hashes": [
@@ -717,7 +710,7 @@
         "notifications-utils": {
             "editable": true,
             "git": "https://github.com/GSA/notifications-utils",
-            "ref": "987646ec18d32dfe8b4ea55b83d68e31e2f85104"
+            "ref": "11b9d3dbde8d73910c05b0cb8e74d9f93b45a7b0"
         },
         "orderedset": {
             "hashes": [
@@ -1010,10 +1003,10 @@
         },
         "redis": {
             "hashes": [
-                "sha256:a52d5694c9eb4292770084fa8c863f79367ca19884b329ab574d5cb2036b3e54",
-                "sha256:ddf27071df4adf3821c4f2ca59d67525c3a82e5f268bed97b813cb4fabf87880"
+                "sha256:30c07511627a4c5c4d970e060000772f323174f75e745a26938319817ead7a12",
+                "sha256:46652271dc7525cd5a9667e5b0ca983c848c75b2b8f7425403395bb8379dcf25"
             ],
-            "version": "==4.3.4"
+            "version": "==4.3.5"
         },
         "requests": {
             "hashes": [
@@ -1818,11 +1811,11 @@
         },
         "pip-audit": {
             "hashes": [
-                "sha256:6c7fd7c300559c99963f0b4be4543c55175e1550534228b8d27bce7dcd06ab34",
-                "sha256:be866655a365714c98782e00e64b092383ffb9171680aaaa0fb50ba75d775022"
+                "sha256:00ebef2a52884627f255b879135e28001de4378b8005318b66cc3a802459ee0a",
+                "sha256:d6d830bdbe3fd3efaf54f4a203451f286e75aecb7e44f9f84f7bfbd38aba26ac"
             ],
             "index": "pypi",
-            "version": "==2.4.5"
+            "version": "==2.4.6"
         },
         "pip-requirements-parser": {
             "hashes": [

@@ -30,7 +30,6 @@ applications:
 
     env:
       NOTIFY_APP_NAME: api
-      NOTIFY_LOG_PATH: /home/vcap/logs/app.log
       FLASK_APP: application.py
       FLASK_ENV: production
 
