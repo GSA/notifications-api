@@ -92,7 +92,7 @@ def create_app(application):
     ma.init_app(application)
     zendesk_client.init_app(application)
     statsd_client.init_app(application)
-    logging.init_app(application, statsd_client)
+    logging.init_app(application)
     aws_sns_client.init_app(application, statsd_client=statsd_client)
 
     aws_ses_client.init_app(application.config['AWS_REGION'], statsd_client=statsd_client)

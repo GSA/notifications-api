@@ -49,15 +49,13 @@ lxml = "==4.9.1"
 marshmallow = "==3.15.0"
 marshmallow-sqlalchemy = "==0.28.1"
 notifications-python-client = "==6.3.0"
-notifications-utils = {editable = true, ref = "987646ec18d32dfe8b4ea55b83d68e31e2f85104", git = "https://github.com/GSA/notifications-utils"}
+notifications-utils = {editable = true, ref = "11b9d3dbde8d73910c05b0cb8e74d9f93b45a7b0", git = "https://github.com/GSA/notifications-utils"}
 oscrypto = "==1.3.0"
 psycopg2-binary = "==2.9.3"
 pyjwt = "==2.4.0"
 python-dotenv = "==0.20.0"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.1.1"
-# PaaS packages
-awscli-cwlogs = "==1.4.6"
 # gds metrics packages
 prometheus-client = "==0.14.1"
 gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
