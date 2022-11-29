@@ -121,8 +121,9 @@ class Config(object):
     FIRETEXT_INTERNATIONAL_API_KEY = getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
-        'mmg': 50,
-        'firetext': 50
+        'sns': 100,
+        'mmg': 0,
+        'firetext': 0
     }
     FIRETEXT_INBOUND_SMS_AUTH = json.loads(getenv('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
     MMG_INBOUND_SMS_AUTH = json.loads(getenv('MMG_INBOUND_SMS_AUTH', '[]'))
@@ -214,11 +215,11 @@ class Config(object):
                 'schedule': timedelta(minutes=66),
                 'options': {'queue': QueueNames.PERIODIC}
             },
-            'switch-current-sms-provider-on-slow-delivery': {
-                'task': 'switch-current-sms-provider-on-slow-delivery',
-                'schedule': crontab(),  # Every minute
-                'options': {'queue': QueueNames.PERIODIC}
-            },
+            # 'switch-current-sms-provider-on-slow-delivery': {
+            #     'task': 'switch-current-sms-provider-on-slow-delivery',
+            #     'schedule': crontab(),  # Every minute
+            #     'options': {'queue': QueueNames.PERIODIC}
+            # },
             'check-job-status': {
                 'task': 'check-job-status',
                 'schedule': crontab(),
