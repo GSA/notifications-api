@@ -6,6 +6,15 @@ _Most of the API endpoints in this repo are for internal use. These are all defi
 
 Public APIs are intended for use by services and are all located under `app/v2/` to distinguish them from internal endpoints. Originally we did have a "v1" public API, where we tried to reuse / expose existing internal endpoints. The needs for public APIs are sufficiently different that we decided to separate them out. Any "v1" endpoints that remain are now purely internal and no longer exposed to services.
 
+## Documenting APIs
+
+New and existing APIs should be documented within [openapi.yml](./openapi.yml). Tools to help
+with editing this file:
+
+* [OpenAPI Editor for VSCode](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
+* [OpenAPI specification](https://spec.openapis.org/oas/v3.0.2)
+
+
 ## New APIs
 
 Here are some pointers for how we write public API endpoints.
