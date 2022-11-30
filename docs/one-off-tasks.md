@@ -16,11 +16,3 @@ To run a command on cloud.gov, use this format:
 `cf run-task CLOUD-GOV-APP --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND`
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
-
-## Celery scheduled tasks
-
-After scheduling some tasks, run celery beat to get them moving:
-
-```
-make run-celery-beat
-```

@@ -26,6 +26,7 @@ Our other repositories are:
 
 - [Overview, setup, and onboarding](./docs/infra-overview.md)
 - [Database management](./docs/database-management.md)
+- [Celery queues and tasks](./docs/queues-and-tasks.md)
 
 ### Common dev work
 
