@@ -20,11 +20,9 @@ from app.celery.scheduled_tasks import (
     delete_verify_codes,
     replay_created_notifications,
     run_scheduled_jobs,
-    switch_current_sms_provider_on_slow_delivery,
 )
 from app.config import QueueNames, TaskNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
-from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.models import (
     JOB_STATUS_ERROR,
     JOB_STATUS_FINISHED,
@@ -35,19 +33,6 @@ from app.models import (
 )
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
-
-
-def _create_slow_delivery_notification(template, provider='mmg'):
-    now = datetime.utcnow()
-    five_minutes_from_now = now + timedelta(minutes=5)
-
-    create_notification(
-        template=template,
-        status='delivered',
-        sent_by=provider,
-        updated_at=five_minutes_from_now,
-        sent_at=now,
-    )
 
 
 def test_should_call_delete_codes_on_delete_verify_codes_task(notify_db_session, mocker):
@@ -96,47 +81,6 @@ def test_should_update_all_scheduled_jobs_and_put_on_queue(sample_template, mock
         call([str(job_2.id)], queue="job-tasks"),
         call([str(job_1.id)], queue="job-tasks")
     ])
-
-
-@freeze_time('2017-05-01 14:00:00')
-def test_switch_current_sms_provider_on_slow_delivery_switches_when_one_provider_is_slow(
-    mocker,
-    restore_provider_details,
-):
-    is_slow_dict = {'mmg': False, 'firetext': True}
-    mock_is_slow = mocker.patch('app.celery.scheduled_tasks.is_delivery_slow_for_providers', return_value=is_slow_dict)
-    mock_reduce = mocker.patch('app.celery.scheduled_tasks.dao_reduce_sms_provider_priority')
-    # updated_at times are older than the 10 minute window
-    get_provider_details_by_identifier('mmg').updated_at = datetime(2017, 5, 1, 13, 49)
-    get_provider_details_by_identifier('firetext').updated_at = None
-
-    switch_current_sms_provider_on_slow_delivery()
-
-    mock_is_slow.assert_called_once_with(
-        threshold=0.3,
-        created_at=datetime(2017, 5, 1, 13, 50),
-        delivery_time=timedelta(minutes=4)
-    )
-    mock_reduce.assert_called_once_with('firetext', time_threshold=timedelta(minutes=10))
-
-
-@freeze_time('2017-05-01 14:00:00')
-@pytest.mark.parametrize('is_slow_dict', [
-    {'mmg': False, 'firetext': False},
-    {'mmg': True, 'firetext': True},
-])
-def test_switch_current_sms_provider_on_slow_delivery_does_nothing_if_no_need(
-    mocker,
-    restore_provider_details,
-    is_slow_dict
-):
-    mocker.patch('app.celery.scheduled_tasks.is_delivery_slow_for_providers', return_value=is_slow_dict)
-    mock_reduce = mocker.patch('app.celery.scheduled_tasks.dao_reduce_sms_provider_priority')
-    get_provider_details_by_identifier('mmg').updated_at = datetime(2017, 5, 1, 13, 51)
-
-    switch_current_sms_provider_on_slow_delivery()
-
-    assert mock_reduce.called is False
 
 
 def test_check_job_status_task_calls_process_incomplete_jobs(mocker, sample_template):

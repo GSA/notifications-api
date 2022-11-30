@@ -32,13 +32,11 @@ from app.dao.jobs_dao import (
 from app.dao.notifications_dao import (
     dao_old_letters_with_created_status,
     dao_precompiled_letters_still_pending_virus_check,
-    is_delivery_slow_for_providers,
     letters_missing_from_sending_bucket,
     notifications_not_yet_sent,
 )
 from app.dao.provider_details_dao import (
     dao_adjust_provider_priority_back_to_resting_points,
-    dao_reduce_sms_provider_priority,
 )
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
@@ -93,28 +91,6 @@ def delete_invitations():
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise
-
-
-@notify_celery.task(name='switch-current-sms-provider-on-slow-delivery')
-def switch_current_sms_provider_on_slow_delivery():
-    """
-    Reduce provider's priority if at least 30% of notifications took more than four minutes to be delivered
-    in the last ten minutes. If both providers are slow, don't do anything. If we changed the providers in the
-    last ten minutes, then don't update them again either.
-    """
-    slow_delivery_notifications = is_delivery_slow_for_providers(
-        threshold=0.3,
-        created_at=datetime.utcnow() - timedelta(minutes=10),
-        delivery_time=timedelta(minutes=4),
-    )
-
-    # only adjust if some values are true and some are false - ie, don't adjust if all providers are fast or
-    # all providers are slow
-    if len(set(slow_delivery_notifications.values())) != 1:
-        for provider_name, is_slow in slow_delivery_notifications.items():
-            if is_slow:
-                current_app.logger.warning('Slow delivery notifications detected for provider {}'.format(provider_name))
-                dao_reduce_sms_provider_priority(provider_name, time_threshold=timedelta(minutes=10))
 
 
 @notify_celery.task(name='tend-providers-back-to-middle')
