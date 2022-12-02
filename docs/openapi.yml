@@ -167,6 +167,47 @@ components:
                 type: string
               version:
                 type: number
+    templateObject:
+      type: object
+      properties:
+        body:
+          type: string
+        created_at:
+          type: string
+        created_by:
+          type: string
+        id:
+          type: string
+        letter_contact_block:
+          type: object
+        name:
+          type: string
+        personalisation:
+          type: object
+        postage:
+          type: string
+        subject:
+          type: string
+        type:
+          type: string
+        updated_at:
+          type: string
+        version:
+          type: integer
+      required:
+        - body
+        - created_at
+        - created_by
+        - id
+        - letter_contact_block
+        - name
+        - personalisation
+        - postage
+        - subject
+        - type
+        - updated_at
+        - version
+      additionalProperties: false
 paths:
   /_status?simple=1:
     get:
@@ -449,6 +490,54 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/userObject"
+  /v2/templates:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Get list of templates'
+      tags:
+        - external-api
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: ["sms", "email"]
+          examples:
+            "SMS Templates":
+              value: "sms"
+            "Email Templates":
+              value: "email"
+            "All Templates":
+              value: ""
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/templateObject"
+  /v2/template/{uuid}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Get details for a single template'
+      tags:
+        - external-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/templateObject"
   /v2/notifications/sms:
     post:
       security:
