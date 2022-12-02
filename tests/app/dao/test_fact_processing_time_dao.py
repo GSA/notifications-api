@@ -12,7 +12,7 @@ from tests.app.db import create_process_time
 
 def test_insert_update_processing_time(notify_db_session):
     data = FactProcessingTime(
-        bst_date=datetime(2021, 2, 22).date(),
+        local_date=datetime(2021, 2, 22).date(),
         messages_total=3,
         messages_within_10_secs=2
     )
@@ -22,14 +22,14 @@ def test_insert_update_processing_time(notify_db_session):
     result = FactProcessingTime.query.all()
 
     assert len(result) == 1
-    assert result[0].bst_date == datetime(2021, 2, 22).date()
+    assert result[0].local_date == datetime(2021, 2, 22).date()
     assert result[0].messages_total == 3
     assert result[0].messages_within_10_secs == 2
     assert result[0].created_at
     assert not result[0].updated_at
 
     data = FactProcessingTime(
-        bst_date=datetime(2021, 2, 22).date(),
+        local_date=datetime(2021, 2, 22).date(),
         messages_total=4,
         messages_within_10_secs=3
     )
@@ -39,7 +39,7 @@ def test_insert_update_processing_time(notify_db_session):
     result = FactProcessingTime.query.all()
 
     assert len(result) == 1
-    assert result[0].bst_date == datetime(2021, 2, 22).date()
+    assert result[0].local_date == datetime(2021, 2, 22).date()
     assert result[0].messages_total == 4
     assert result[0].messages_within_10_secs == 3
     assert result[0].created_at
@@ -48,17 +48,17 @@ def test_insert_update_processing_time(notify_db_session):
 
 def test_get_processing_time_percentage_for_date_range(notify_db_session):
     create_process_time(
-        bst_date='2021-02-21',
+        local_date='2021-02-21',
         messages_total=5,
         messages_within_10_secs=4
     )
     create_process_time(
-        bst_date='2021-02-22',
+        local_date='2021-02-22',
         messages_total=3,
         messages_within_10_secs=2
     )
     create_process_time(
-        bst_date='2021-02-23',
+        local_date='2021-02-23',
         messages_total=4,
         messages_within_10_secs=3
     )
@@ -74,12 +74,12 @@ def test_get_processing_time_percentage_for_date_range(notify_db_session):
 
 def test_get_processing_time_percentage_for_date_range_handles_zero_cases(notify_db_session):
     create_process_time(
-        bst_date='2021-02-21',
+        local_date='2021-02-21',
         messages_total=0,
         messages_within_10_secs=0
     )
     create_process_time(
-        bst_date='2021-02-22',
+        local_date='2021-02-22',
         messages_total=10,
         messages_within_10_secs=0
     )

@@ -37,5 +37,11 @@ This will run an interactive prompt to create a user, and then mark that user as
 2. On your host machine run:
 
 ```
-docker run -v $(pwd):/zap/wrk/:rw --network="notify-network" -t owasp/zap2docker-weekly zap-api-scan.py -t http://dev:6011/_status -f openapi -c zap.conf
+docker run -v $(pwd):/zap/wrk/:rw --network="notify-network" -t owasp/zap2docker-weekly zap-api-scan.py -t http://dev:6011/docs/openapi.yml -f openapi -c zap.conf
+```
+
+The equivalent command if you are running the API locally:
+
+```
+docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf
 ```

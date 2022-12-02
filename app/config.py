@@ -80,6 +80,7 @@ class Config(object):
             ('{"%s":["%s"]}' % (ADMIN_CLIENT_ID, getenv('ADMIN_CLIENT_SECRET')))
             )
     )
+    ALLOW_EXPIRED_API_TOKEN = False
     # encyption secret/salt
     SECRET_KEY = getenv('SECRET_KEY')
     DANGEROUS_SALT = getenv('DANGEROUS_SALT')
@@ -121,8 +122,9 @@ class Config(object):
     FIRETEXT_INTERNATIONAL_API_KEY = getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
-        'mmg': 50,
-        'firetext': 50
+        'sns': 100,
+        'mmg': 0,
+        'firetext': 0
     }
     FIRETEXT_INBOUND_SMS_AUTH = json.loads(getenv('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
     MMG_INBOUND_SMS_AUTH = json.loads(getenv('MMG_INBOUND_SMS_AUTH', '[]'))
@@ -135,7 +137,6 @@ class Config(object):
 
     # Logging
     DEBUG = False
-    NOTIFY_LOG_PATH = getenv('NOTIFY_LOG_PATH', 'logs/application.log')
 
     # Monitoring
     CRONITOR_ENABLED = False
@@ -187,7 +188,7 @@ class Config(object):
         'broker_transport_options': {
             'visibility_timeout': 310,
         },
-        'timezone': 'Europe/London',
+        'timezone': getenv("TIMEZONE", 'America/New_York'),
         'imports': [
             'app.celery.tasks',
             'app.celery.scheduled_tasks',
@@ -213,11 +214,6 @@ class Config(object):
             'delete-invitations': {
                 'task': 'delete-invitations',
                 'schedule': timedelta(minutes=66),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'switch-current-sms-provider-on-slow-delivery': {
-                'task': 'switch-current-sms-provider-on-slow-delivery',
-                'schedule': crontab(),  # Every minute
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'check-job-status': {
@@ -368,6 +364,7 @@ class Development(Config):
     DANGEROUS_SALT = 'dev-notify-salt'
     SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
+    ALLOW_EXPIRED_API_TOKEN = getenv('ALLOW_EXPIRED_API_TOKEN', '0') == '1'
 
 
 class Test(Development):

@@ -130,9 +130,9 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     letter_template = create_template(service=service, template_type="letter")
 
     for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
-        create_ft_billing(bst_date=dt, template=sms_template, rate=0.0162)
-        create_ft_billing(bst_date=dt, template=email_template, billable_unit=0, rate=0)
-        create_ft_billing(bst_date=dt, template=letter_template, rate=0.33, postage='second')
+        create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
+        create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
+        create_ft_billing(local_date=dt, template=letter_template, rate=0.33, postage='second')
 
     json_response = admin_request.get(
         'billing.get_yearly_usage_by_monthly_from_ft_billing',
@@ -201,9 +201,9 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
     letter_template = create_template(service=service, template_type="letter")
 
     for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
-        create_ft_billing(bst_date=dt, template=sms_template, rate=0.0162)
-        create_ft_billing(bst_date=dt, template=email_template, billable_unit=0, rate=0)
-        create_ft_billing(bst_date=dt, template=letter_template, rate=0.33, postage='second')
+        create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
+        create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
+        create_ft_billing(local_date=dt, template=letter_template, rate=0.33, postage='second')
 
     json_response = admin_request.get(
         'billing.get_yearly_billing_usage_summary_from_ft_billing',

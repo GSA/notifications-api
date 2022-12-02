@@ -26,6 +26,7 @@ Our other repositories are:
 
 - [Overview, setup, and onboarding](./docs/infra-overview.md)
 - [Database management](./docs/database-management.md)
+- [Celery queues and tasks](./docs/queues-and-tasks.md)
 
 ### Common dev work
 
@@ -90,7 +91,7 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
 
     `docker network create notify-network`
 
-1. Using the command palette (shift+cmd+p) or green button thingy in the bottom left, search and select “Remote Containers: Open Folder in Container...” When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notification-api). This will startup the container in a new window, replacing the current one.
+1. Using the command palette (shift+cmd+p) or green button thingy in the bottom left, search and select “Remote Containers: Open Folder in Container...” When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notifications-api). This will start the container in a new window, replacing the current one.
 
 1. Wait a few minutes while things happen 🍵
 
@@ -102,11 +103,11 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
 
     `make run-celery`
 
-NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. Vscode _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
+NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. VS Code _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
 ## License && public domain
 
-Work through [commit `e604385`](https://github.com/GSA/notifications-api/commit/e604385e0cf4c2ab8c6451b7120ceb196cce21b5) is licensed by the UK government until the MIT license. Work after that commit is in the worldwide public domain. See [LICENSE.md](./LICENSE.md) for more information.
+Work through [commit `e604385`](https://github.com/GSA/notifications-api/commit/e604385e0cf4c2ab8c6451b7120ceb196cce21b5) is licensed by the UK government under the MIT license. Work after that commit is in the worldwide public domain. See [LICENSE.md](./LICENSE.md) for more information.
 
 ## Contributing
 

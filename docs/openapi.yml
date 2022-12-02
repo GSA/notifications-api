@@ -1,0 +1,535 @@
+openapi: '3.0.2'
+info:
+  title: Notify API
+  version: '1.0'
+  description: |
+    The following OpenAPI document lists a subset of the available APIs for US Notify.
+
+    We are currently API compatible with GOV.UK Notify. Please visit [their documentation](https://docs.notifications.service.gov.uk/rest-api.html)
+    for more information.
+
+    Authorization uses [a JSON Web Token (JWT) bearer token](https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header). The internal-api
+    methods use the same scheme, but must use a specific key for the Admin UI.
+servers:
+  - url: https://notify-api.app.cloud.gov
+    description: Production API endpoint
+  - url: https://notify-api-staging.app.cloud.gov
+    description: Staging API endpoint
+  - url: http://localhost:6011
+    description: Local development API endpoint
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    uuidPath:
+      name: uuid
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    serviceObject:
+      type: object
+      properties:
+        active:
+          type: boolean
+        billing_contact_email_addresses:
+          type: string
+        billing_contact_names:
+          type: string
+        billing_reference:
+          type: string
+        consent_to_research:
+          type: string
+        contact_link:
+          type: string
+        count_as_live:
+          type: boolean
+        created_by:
+          type: string
+        email_branding:
+          type: string
+        email_from:
+          type: string
+        go_live_at:
+          type: string
+        go_live_user:
+          type: string
+        id:
+          type: string
+        inbound_api:
+          type: array
+        letter_branding:
+          type: string
+        message_limit:
+          type: number
+        name:
+          type: string
+        notes:
+          type: string
+        organisation:
+          type: string
+        organisation_type:
+          type: string
+          enum: ["federal", "state", "other"]
+          default: "federal"
+        permissions:
+          type: array
+          items:
+            type: string
+        prefix_sms:
+          type: boolean
+        purchase_order_number:
+          type: string
+        rate_limit:
+          type: number
+        research_model:
+          type: boolean
+        restricted:
+          type: boolean
+        service_callback_api:
+          type: array
+        volume_email:
+          type: string
+        volume_letter:
+          type: string
+        volume_sms:
+          type: string
+    userObject:
+      type: object
+      properties:
+        auth_type:
+          type: string
+        can_use_webauthn:
+          type: string
+        current_session_id:
+          type: string
+        email_access_validated_at:
+          type: string
+        email_address:
+          type: string
+        failed_login_count:
+          type: number
+        id:
+          type: string
+        logged_in_at:
+          type: string
+        mobile_number:
+          type: string
+        name:
+          type: string
+        organisations:
+          type: array
+          items:
+            type: string
+        password_changed_at:
+          type: string
+        permissions:
+          type: object
+          properties:
+            SERVICE_ID:
+              type: array
+              items:
+                type: string
+        platform_admin:
+          type: boolean
+        services:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+          enum: ["pending", "active", "inactive"]
+    apiKeyResponse:
+      type: object
+      properties:
+        apiKeys:
+          type: array
+          items:
+            type: object
+            properties:
+              created_by:
+                type: string
+              created_at:
+                type: string
+              expiry_date:
+                type: string
+              id:
+                type: string
+              key_type:
+                type: string
+              name:
+                type: string
+              updated_at:
+                type: string
+              version:
+                type: number
+paths:
+  /_status?simple=1:
+    get:
+      description: 'Retrieve only an acknowledgement that the server is listening'
+      tags:
+        - public
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["ok"]
+  /_status:
+    get:
+      description: 'Retrieve information on the status of the Notify API server'
+      tags:
+        - public
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  build_time:
+                    type: string
+                  db_version:
+                    type: string
+                  git_commit:
+                    type: string
+                  status:
+                    type: string
+                    enum: ["ok"]
+  /_status/live-service-and-organisation-counts:
+    get:
+      description: 'Retrieve a count of live services and organizations in the Notify system'
+      tags:
+        - public
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  services:
+                    type: number
+                  organisations:
+                    type: number
+  /user:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve list of all users'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/userObject"
+  /user/{uuid}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve single user details'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/userObject"
+  /organisations:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve organization details'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    active:
+                      type: boolean
+                    count_of_live_services:
+                      type: number
+                    domains:
+                      type: array
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    organisation_type:
+                      type: string
+                      enum: ["federal", "state", "other"]
+  /service:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve all services'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/serviceObject"
+  /service/find-services-by-name:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Find a service by name'
+      tags:
+        - internal-api
+      parameters:
+        - name: service_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        active:
+                          type: boolean
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        research_mode:
+                          type: boolean
+                        restricted:
+                          type: boolean
+  /service/live-services-data:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Unsure'
+      tags:
+        - internal-api
+      responses:
+        '200':
+          description: OK
+  /service/{uuid}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve details of a single service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/serviceObject"
+  /service/{uuid}/statistics:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve statistics about messages sent by a service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /service/{uuid}/api-keys:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve api-keys for a service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/apiKeyResponse"
+  /service/{uuid}/api-keys/{key-id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve details of a single API key'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+        - name: key-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/apiKeyResponse"
+  /service/{uuid}/users:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Retrieve users associated with this service'
+      tags:
+        - internal-api
+      parameters:
+        - $ref: "#/components/parameters/uuidPath"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/userObject"
+  /v2/notifications/sms:
+    post:
+      security:
+        - bearerAuth: []
+      description: 'Send an SMS message to a single phone number'
+      tags:
+        - external-api
+      requestBody:
+        required: true
+        description: |
+          The request body is a JSON object giving at least the phone nubmer to
+          deliver the message to and the template ID to send to that number.
+
+          If the template has variables, provide them in the `personalisation`
+          object with the variable names as the object keys.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - template_id
+              properties:
+                phone_number:
+                  type: string
+                template_id:
+                  type: string
+                personalisation:
+                  type: object
+                reference:
+                  type: string
+            example:
+              phone_number: "5558675309"
+              template_id: "85b58733-7ebf-494e-bee2-a21a4ce17d58"
+              personalisation:
+                variable: "value"
+      responses:
+        '201':
+          description: Sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: object
+                    properties:
+                      body:
+                        type: string
+                      from_number:
+                        type: string
+                    required:
+                      - body
+                      - from_number
+                    additionalProperties: false
+                  id:
+                    type: string
+                  reference:
+                    type: string
+                  scheduled_for:
+                    type: string
+                  template:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      uri:
+                        type: string
+                      version:
+                        type: integer
+                    required:
+                      - id
+                      - uri
+                      - version
+                    additionalProperties: false
+                  uri:
+                    type: string
+                additionalProperties: false
+                required:
+                  - content
+                  - id
+                  - reference
+                  - template
+                  - uri

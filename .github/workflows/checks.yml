@@ -107,7 +107,7 @@ jobs:
         uses: zaproxy/action-api-scan@v0.1.1
         with:
           docker_name: 'owasp/zap2docker-stable'
-          target: 'http://localhost:6011/_status'
+          target: 'http://localhost:6011/docs/openapi.yml'
           fail_action: true
           allow_issue_writing: false
           rules_file_name: 'zap.conf'

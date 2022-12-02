@@ -1,14 +1,15 @@
 import csv
 import functools
 import itertools
-import os
 import uuid
 from datetime import datetime, timedelta
+from os import getenv
 
 import click
 import flask
 from click_datetime import Datetime as click_dt
 from flask import current_app, json
+from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.statsd_decorators import statsd
 from notifications_utils.template import SMSMessageTemplate
@@ -66,7 +67,7 @@ from app.models import (
     Service,
     User,
 )
-from app.utils import get_london_midnight_in_utc
+from app.utils import get_local_midnight_in_utc
 
 
 @click.group(name='command', help='Additional commands')
@@ -86,7 +87,7 @@ class notify_command:
 
         # in the test environment the app context is already provided and having
         # another will lead to the test db connection being closed prematurely
-        if os.getenv('NOTIFY_ENVIRONMENT', '') != 'test':
+        if getenv('NOTIFY_ENVIRONMENT', '') != 'test':
             # with_appcontext ensures the config is loaded, db connected, etc.
             decorators.insert(0, flask.cli.with_appcontext)
 
@@ -111,7 +112,7 @@ def purge_functional_test_data(user_email_prefix):
 
     users, services, etc. Give an email prefix. Probably "notify-tests-preview".
     """
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+    if getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
         current_app.logger.error('Can only be run in development')
         return
 
@@ -213,8 +214,8 @@ def rebuild_ft_billing_for_day(service_id, day):
         rebuild_ft_data(day, service_id)
     else:
         services = get_service_ids_that_need_billing_populated(
-            get_london_midnight_in_utc(day),
-            get_london_midnight_in_utc(day + timedelta(days=1))
+            get_local_midnight_in_utc(day),
+            get_local_midnight_in_utc(day + timedelta(days=1))
         )
         for row in services:
             rebuild_ft_data(day, row.service_id)
@@ -325,9 +326,9 @@ def update_jobs_archived_flag(start_date, end_date):
         sql = """update
                     jobs set archived = true
                 where
-                    created_at >= (date :start + time '00:00:00') at time zone 'Europe/London'
+                    created_at >= (date :start + time '00:00:00') at time zone 'America/New_York'
                     at time zone 'UTC'
-                    and created_at < (date :end + time '00:00:00') at time zone 'Europe/London' at time zone 'UTC'"""
+                    and created_at < (date :end + time '00:00:00') at time zone 'America/New_York' at time zone 'UTC'"""
 
         result = db.session.execute(sql, {"start": process_date, "end": process_date + timedelta(days=1)})
         db.session.commit()
@@ -726,7 +727,7 @@ def validate_mobile(ctx, param, value):
 @click.option('-s', '--state', default="active")
 @click.option('-d', '--admin', default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
-    if os.getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
+    if getenv('NOTIFY_ENVIRONMENT', '') not in ['development', 'test']:
         current_app.logger.error('Can only be run in development')
         return
 
@@ -746,3 +747,22 @@ def create_test_user(name, email, mobile_number, password, auth_type, state, adm
     except IntegrityError:
         print("duplicate user", user.name)
         db.session.rollback()
+
+
+@notify_command(name='create-admin-jwt')
+def create_admin_jwt():
+    if getenv('NOTIFY_ENVIRONMENT', '') != 'development':
+        current_app.logger.error('Can only be run in development')
+        return
+    print(create_jwt_token(current_app.config['SECRET_KEY'], current_app.config['ADMIN_CLIENT_ID']))
+
+
+@notify_command(name='create-user-jwt')
+@click.option('-t', '--token', required=True, prompt=False)
+def create_user_jwt(token):
+    if getenv('NOTIFY_ENVIRONMENT', '') != 'development':
+        current_app.logger.error('Can only be run in development')
+        return
+    service_id = token[-73:-37]
+    api_key = token[-36:]
+    print(create_jwt_token(api_key, service_id))

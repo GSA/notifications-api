@@ -101,13 +101,13 @@ def test_fetch_complaint_by_service_return_many(notify_db_session):
 def test_fetch_count_of_complaints(sample_email_notification):
     create_complaint(service=sample_email_notification.service,
                      notification=sample_email_notification,
-                     created_at=datetime(2018, 6, 6, 22, 00, 00))
+                     created_at=datetime(2018, 6, 7, 2, 00, 00))
     create_complaint(service=sample_email_notification.service,
                      notification=sample_email_notification,
-                     created_at=datetime(2018, 6, 6, 23, 00, 00))
+                     created_at=datetime(2018, 6, 7, 3, 00, 00))
     create_complaint(service=sample_email_notification.service,
                      notification=sample_email_notification,
-                     created_at=datetime(2018, 6, 7, 00, 00, 00))
+                     created_at=datetime(2018, 6, 7, 5, 00, 00))
     create_complaint(service=sample_email_notification.service,
                      notification=sample_email_notification,
                      created_at=datetime(2018, 6, 7, 13, 00, 00))

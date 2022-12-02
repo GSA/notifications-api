@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError as BotoClientError
 from flask import current_app
 from notifications_utils.letter_timings import LETTER_PROCESSING_DEADLINE
 from notifications_utils.postal_address import PostalAddress
-from notifications_utils.timezones import convert_utc_to_bst
+from notifications_utils.timezones import convert_utc_to_local_timezone
 
 from app import encryption, notify_celery
 from app.aws import s3
@@ -136,7 +136,7 @@ def collate_letter_pdfs_to_be_sent():
     that have not yet been sent.
     If run after midnight, it will collect up letters created before 5:30pm the day before.
     """
-    print_run_date = convert_utc_to_bst(datetime.utcnow())
+    print_run_date = convert_utc_to_local_timezone(datetime.utcnow())
     if print_run_date.time() < LETTER_PROCESSING_DEADLINE:
         print_run_date = print_run_date - timedelta(days=1)
 

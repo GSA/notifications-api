@@ -25,7 +25,6 @@ from app.dao.notifications_dao import (
     get_notifications_for_job,
     get_notifications_for_service,
     get_service_ids_with_notifications_on_date,
-    is_delivery_slow_for_providers,
     notifications_not_yet_sent,
     update_notification_status_by_id,
     update_notification_status_by_reference,
@@ -36,12 +35,9 @@ from app.models import (
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_SENDING,
     NOTIFICATION_SENT,
     NOTIFICATION_STATUS_TYPES,
     NOTIFICATION_STATUS_TYPES_FAILED,
-    NOTIFICATION_TEMPORARY_FAILURE,
     SMS_TYPE,
     Job,
     Notification,
@@ -580,9 +576,10 @@ def test_update_notification_sets_status(sample_notification):
 def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template):
     assert len(Notification.query.all()) == 0
 
-    # create one notification a day between 1st and 9th
+    # create one notification a day between 1st and 9th,
+    # with assumption that the local timezone is EST
     for i in range(1, 11):
-        past_date = '2016-01-{0:02d}'.format(i)
+        past_date = '2016-01-{0:02d} 12:00:00'.format(i)
         with freeze_time(past_date):
             create_notification(sample_template, created_at=datetime.utcnow(), status="failed")
 
@@ -925,95 +922,6 @@ def test_should_exclude_test_key_notifications_by_default(
 
     all_notifications = get_notifications_for_service(sample_job.service_id, limit_days=1, key_type=KEY_TYPE_TEST).items
     assert len(all_notifications) == 1
-
-
-@pytest.mark.parametrize(
-    "normal_sending,slow_sending,normal_delivered,slow_delivered,threshold,expected_result",
-    [
-        (0, 0, 0, 0, 0.1, False),
-        (1, 0, 0, 0, 0.1, False),
-        (1, 1, 0, 0, 0.1, True),
-        (0, 0, 1, 1, 0.1, True),
-        (1, 1, 1, 1, 0.5, True),
-        (1, 1, 1, 1, 0.6, False),
-        (45, 5, 45, 5, 0.1, True),
-    ]
-)
-@freeze_time("2018-12-04 12:00:00.000000")
-def test_is_delivery_slow_for_providers(
-    notify_db_session,
-    sample_template,
-    normal_sending,
-    slow_sending,
-    normal_delivered,
-    slow_delivered,
-    threshold,
-    expected_result
-):
-    normal_notification = partial(
-        create_notification,
-        template=sample_template,
-        sent_by='sns',
-        sent_at=datetime.now(),
-        updated_at=datetime.now()
-    )
-
-    slow_notification = partial(
-        create_notification,
-        template=sample_template,
-        sent_by='sns',
-        sent_at=datetime.now() - timedelta(minutes=5),
-        updated_at=datetime.now()
-    )
-
-    for _ in range(normal_sending):
-        normal_notification(status='sending')
-    for _ in range(slow_sending):
-        slow_notification(status='sending')
-    for _ in range(normal_delivered):
-        normal_notification(status='delivered')
-    for _ in range(slow_delivered):
-        slow_notification(status='delivered')
-
-    result = is_delivery_slow_for_providers(datetime.utcnow(), threshold, timedelta(minutes=4))
-    assert result == {
-        'firetext': False,
-        'mmg': False,
-        'sns': expected_result
-    }
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
-@pytest.mark.parametrize("options,expected_result", [
-    ({"status": NOTIFICATION_DELIVERED, "sent_by": "mmg"}, True),
-    ({"status": NOTIFICATION_PENDING, "sent_by": "mmg"}, True),
-    ({"status": NOTIFICATION_SENDING, "sent_by": "mmg"}, True),
-
-    ({"status": NOTIFICATION_TEMPORARY_FAILURE, "sent_by": "mmg"}, False),
-    ({"status": NOTIFICATION_DELIVERED, "sent_by": "mmg", "sent_at": None}, False),
-    ({"status": NOTIFICATION_DELIVERED, "sent_by": "mmg", "key_type": KEY_TYPE_TEST}, False),
-    ({"status": NOTIFICATION_SENDING, "sent_by": "firetext"}, False),
-    ({"status": NOTIFICATION_DELIVERED, "sent_by": "firetext"}, False),
-
-])
-@freeze_time("2018-12-04 12:00:00.000000")
-def test_delivery_is_delivery_slow_for_providers_filters_out_notifications_it_should_not_count(
-    notify_db_session,
-    sample_template,
-    options,
-    expected_result
-):
-    create_slow_notification_with = {
-        "template": sample_template,
-        "sent_at": datetime.now() - timedelta(minutes=5),
-        "updated_at": datetime.now(),
-    }
-    create_slow_notification_with.update(options)
-    create_notification(
-        **create_slow_notification_with
-    )
-    result = is_delivery_slow_for_providers(datetime.utcnow(), 0.1, timedelta(minutes=4))
-    assert result['mmg'] == expected_result
 
 
 def test_dao_get_notifications_by_recipient(sample_template):
@@ -1741,9 +1649,9 @@ def test_dao_get_letters_and_sheets_volume_by_postage(notify_db_session):
 @pytest.mark.parametrize('created_at_utc,date_to_check,expected_count', [
     # Clocks change on the 27th of March 2022, so the query needs to look at the
     # time range 00:00 - 23:00 (UTC) thereafter.
-    ('2022-03-27T00:30', date(2022, 3, 27), 1),  # 27/03 00:30 GMT
+    ('2022-03-27T00:30', date(2022, 3, 27), 0),  # 27/03 00:30 GMT
     ('2022-03-27T22:30', date(2022, 3, 27), 1),  # 27/03 23:30 BST
-    ('2022-03-27T23:30', date(2022, 3, 27), 0),  # 28/03 00:30 BST
+    ('2022-03-27T23:30', date(2022, 3, 27), 1),  # 28/03 00:30 BST
     ('2022-03-26T23:30', date(2022, 3, 26), 1),  # 26/03 23:30 GMT
 ])
 def test_get_service_ids_with_notifications_on_date_respects_gmt_bst(
@@ -1761,7 +1669,7 @@ def test_get_service_ids_with_notifications_on_date_checks_ft_status(
     sample_template,
 ):
     create_notification(template=sample_template, created_at='2022-01-01T09:30')
-    create_ft_notification_status(template=sample_template, bst_date='2022-01-02')
+    create_ft_notification_status(template=sample_template, local_date='2022-01-02')
 
     assert len(get_service_ids_with_notifications_on_date(SMS_TYPE, date(2022, 1, 1))) == 1
     assert len(get_service_ids_with_notifications_on_date(SMS_TYPE, date(2022, 1, 2))) == 1
