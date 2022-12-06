@@ -300,11 +300,6 @@ class Config(object):
             },
             # The collate-letter-pdf does assume it is called in an hour that BST does not make a
             # difference to the truncate date which translates to the filename to process
-            'collate-letter-pdfs-to-be-sent': {
-                'task': 'collate-letter-pdfs-to-be-sent',
-                'schedule': crontab(hour=17, minute=50),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
             'raise-alert-if-no-letter-ack-file': {
                 'task': 'raise-alert-if-no-letter-ack-file',
                 'schedule': crontab(hour=23, minute=00),
