@@ -310,11 +310,6 @@ class Config(object):
                 'schedule': crontab(hour=23, minute=00),
                 'options': {'queue': QueueNames.PERIODIC}
             },
-            'trigger-link-tests': {
-                'task': 'trigger-link-tests',
-                'schedule': timedelta(minutes=15),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
         }
     }
 
