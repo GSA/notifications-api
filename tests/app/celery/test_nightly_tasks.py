@@ -16,9 +16,6 @@ from app.celery.nightly_tasks import (
     delete_inbound_sms,
     delete_letter_notifications_older_than_retention,
     delete_sms_notifications_older_than_retention,
-    get_letter_notifications_still_sending_when_they_shouldnt_be,
-    letter_raise_alert_if_no_ack_file_for_zip,
-    raise_alert_if_letter_notifications_still_sending,
     remove_letter_csv_files,
     remove_sms_email_csv_files,
     s3,
@@ -193,129 +190,6 @@ def test_delete_inbound_sms_calls_child_task(notify_api, mocker):
     mocker.patch('app.celery.nightly_tasks.delete_inbound_sms_older_than_retention')
     delete_inbound_sms()
     assert nightly_tasks.delete_inbound_sms_older_than_retention.call_count == 1
-
-
-def test_create_ticket_if_letter_notifications_still_sending(notify_api, mocker):
-    mock_get_letters = mocker.patch(
-        "app.celery.nightly_tasks.get_letter_notifications_still_sending_when_they_shouldnt_be"
-    )
-
-    mock_get_letters.return_value = 1, date(2018, 1, 15)
-    mock_create_ticket = mocker.spy(NotifySupportTicket, '__init__')
-    mock_send_ticket_to_zendesk = mocker.patch(
-        'app.celery.nightly_tasks.zendesk_client.send_ticket_to_zendesk',
-        autospec=True,
-    )
-
-    raise_alert_if_letter_notifications_still_sending()
-    mock_create_ticket.assert_called_once_with(
-        ANY,
-        subject='[test] Letters still sending',
-        email_ccs=current_app.config['DVLA_EMAIL_ADDRESSES'],
-        message=(
-            "There are 1 letters in the 'sending' state from Monday 15 January. Resolve using "
-            "https://github.com/alphagov/notifications-manuals/wiki/Support-Runbook#deal-with-letters-still-in-sending"
-            ),
-        ticket_type='incident',
-        technical_ticket=True,
-        ticket_categories=['notify_letters']
-    )
-    mock_send_ticket_to_zendesk.assert_called_once()
-
-
-def test_dont_create_ticket_if_letter_notifications_not_still_sending(notify_api, mocker):
-    mock_get_letters = mocker.patch(
-        "app.celery.nightly_tasks.get_letter_notifications_still_sending_when_they_shouldnt_be"
-    )
-
-    mock_get_letters.return_value = 0, None
-    mock_send_ticket_to_zendesk = mocker.patch(
-        "app.celery.nightly_tasks.zendesk_client.send_ticket_to_zendesk",
-        autospec=True
-    )
-
-    raise_alert_if_letter_notifications_still_sending()
-
-    mock_send_ticket_to_zendesk.assert_not_called()
-
-
-@freeze_time("Thursday 17th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_finds_no_letters_if_sent_a_day_ago(
-    sample_letter_template
-):
-    today = datetime.utcnow()
-    one_day_ago = today - timedelta(days=1)
-    create_notification(template=sample_letter_template, status='sending', sent_at=one_day_ago)
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 0
-
-
-@freeze_time("Thursday 17th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_only_finds_letters_still_in_sending_status(
-    sample_letter_template
-):
-    two_days_ago = datetime(2018, 1, 15, 13, 30)
-    create_notification(template=sample_letter_template, status='sending', sent_at=two_days_ago)
-    create_notification(template=sample_letter_template, status='delivered', sent_at=two_days_ago)
-    create_notification(template=sample_letter_template, status='failed', sent_at=two_days_ago)
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 1
-    assert expected_sent_date == date(2018, 1, 15)
-
-
-@freeze_time("Thursday 17th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_finds_letters_older_than_offset(
-    sample_letter_template
-):
-    three_days_ago = datetime(2018, 1, 14, 13, 30)
-    create_notification(template=sample_letter_template, status='sending', sent_at=three_days_ago)
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 1
-    assert expected_sent_date == date(2018, 1, 15)
-
-
-@freeze_time("Sunday 14th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_be_finds_no_letters_on_weekend(
-    sample_letter_template
-):
-    yesterday = datetime(2018, 1, 13, 13, 30)
-    create_notification(template=sample_letter_template, status='sending', sent_at=yesterday)
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 0
-
-
-@freeze_time("Monday 15th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_finds_thursday_letters_when_run_on_monday(
-    sample_letter_template
-):
-    thursday = datetime(2018, 1, 11, 13, 30)
-    yesterday = datetime(2018, 1, 14, 13, 30)
-    create_notification(template=sample_letter_template, status='sending', sent_at=thursday, postage='first')
-    create_notification(template=sample_letter_template, status='sending', sent_at=thursday, postage='second')
-    create_notification(template=sample_letter_template, status='sending', sent_at=yesterday, postage='second')
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 2
-    assert expected_sent_date == date(2018, 1, 11)
-
-
-@freeze_time("Tuesday 16th January 2018 17:00")
-def test_get_letter_notifications_still_sending_when_they_shouldnt_finds_friday_letters_when_run_on_tuesday(
-    sample_letter_template
-):
-    friday = datetime(2018, 1, 12, 13, 30)
-    yesterday = datetime(2018, 1, 14, 13, 30)
-    create_notification(template=sample_letter_template, status='sending', sent_at=friday, postage='first')
-    create_notification(template=sample_letter_template, status='sending', sent_at=friday, postage='second')
-    create_notification(template=sample_letter_template, status='sending', sent_at=yesterday, postage='first')
-
-    count, expected_sent_date = get_letter_notifications_still_sending_when_they_shouldnt_be()
-    assert count == 2
-    assert expected_sent_date == date(2018, 1, 12)
 
 
 @freeze_time('2018-01-11T23:00:00')

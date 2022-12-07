@@ -278,31 +278,9 @@ class Config(object):
                 # since we mark jobs as archived
                 'options': {'queue': QueueNames.PERIODIC},
             },
-            'check-if-letters-still-in-created': {
-                'task': 'check-if-letters-still-in-created',
-                'schedule': crontab(day_of_week='mon-fri', hour=7, minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'check-if-letters-still-pending-virus-check': {
-                'task': 'check-if-letters-still-pending-virus-check',
-                'schedule': crontab(day_of_week='mon-fri', hour='9,15', minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {
                 'task': 'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers',
                 'schedule': crontab(day_of_week='mon-fri', hour=10, minute=30),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'raise-alert-if-letter-notifications-still-sending': {
-                'task': 'raise-alert-if-letter-notifications-still-sending',
-                'schedule': crontab(hour=17, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            # The collate-letter-pdf does assume it is called in an hour that BST does not make a
-            # difference to the truncate date which translates to the filename to process
-            'raise-alert-if-no-letter-ack-file': {
-                'task': 'raise-alert-if-no-letter-ack-file',
-                'schedule': crontab(hour=23, minute=00),
                 'options': {'queue': QueueNames.PERIODIC}
             },
         }

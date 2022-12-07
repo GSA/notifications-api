@@ -13,8 +13,6 @@ from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
-    check_if_letters_still_in_created,
-    check_if_letters_still_pending_virus_check,
     check_job_status,
     delete_invitations,
     delete_verify_codes,
