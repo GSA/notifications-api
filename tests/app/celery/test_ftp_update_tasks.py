@@ -11,7 +11,6 @@ from app.celery.tasks import (
     get_local_billing_date_from_filename,
     persist_daily_sorted_letter_counts,
     process_updates_from_file,
-    record_daily_sorted_counts,
     update_letter_notifications_to_error,
     update_letter_notifications_to_sent_to_dvla,
 )
@@ -134,77 +133,3 @@ def test_persist_daily_sorted_letter_counts_saves_sorted_and_unsorted_values(cli
     assert day.unsorted_count == 5
     assert day.sorted_count == 1
 
-
-def test_record_daily_sorted_counts_persists_daily_sorted_letter_count(
-    notify_api,
-    notify_db_session,
-    mocker,
-):
-    valid_file = 'Letter1|Sent|1|uNsOrTeD\nLetter2|Sent|2|SORTED\nLetter3|Sent|2|Sorted'
-
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-
-    assert DailySortedLetter.query.count() == 0
-
-    record_daily_sorted_counts(filename='NOTIFY-20170823160812-RSP.TXT')
-
-    daily_sorted_counts = DailySortedLetter.query.all()
-    assert len(daily_sorted_counts) == 1
-    assert daily_sorted_counts[0].sorted_count == 2
-    assert daily_sorted_counts[0].unsorted_count == 1
-
-
-def test_record_daily_sorted_counts_raises_dvla_exception_with_unknown_sorted_status(
-    notify_api,
-    mocker,
-):
-    file_contents = 'ref-foo|Failed|1|invalid\nrow_2|Failed|1|MM'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=file_contents)
-    filename = "failed.txt"
-    with pytest.raises(DVLAException) as e:
-        record_daily_sorted_counts(filename=filename)
-
-    assert "DVLA response file: {} contains unknown Sorted status".format(filename) in e.value.message
-    assert "'mm'" in e.value.message
-    assert "'invalid'" in e.value.message
-
-
-def test_record_daily_sorted_counts_persists_daily_sorted_letter_count_with_no_sorted_values(
-    notify_api,
-    mocker,
-    notify_db_session
-):
-    valid_file = 'Letter1|Sent|1|Unsorted\nLetter2|Sent|2|Unsorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-
-    record_daily_sorted_counts(filename='NOTIFY-20170823160812-RSP.TXT')
-
-    daily_sorted_letter = dao_get_daily_sorted_letter_by_billing_day(date(2017, 8, 23))
-
-    assert daily_sorted_letter.unsorted_count == 2
-    assert daily_sorted_letter.sorted_count == 0
-
-
-def test_record_daily_sorted_counts_can_run_twice_for_same_file(
-    notify_api,
-    mocker,
-    notify_db_session
-):
-    valid_file = 'Letter1|Sent|1|sorted\nLetter2|Sent|2|Unsorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-
-    record_daily_sorted_counts(filename='NOTIFY-20170823160812-RSP.TXT')
-
-    daily_sorted_letter = dao_get_daily_sorted_letter_by_billing_day(date(2017, 8, 23))
-
-    assert daily_sorted_letter.unsorted_count == 1
-    assert daily_sorted_letter.sorted_count == 1
-
-    updated_file = 'Letter1|Sent|1|sorted\nLetter2|Sent|2|Unsorted\nLetter3|Sent|2|Unsorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=updated_file)
-
-    record_daily_sorted_counts(filename='NOTIFY-20170823160812-RSP.TXT')
-    daily_sorted_letter = dao_get_daily_sorted_letter_by_billing_day(date(2017, 8, 23))
-
-    assert daily_sorted_letter.unsorted_count == 2
-    assert daily_sorted_letter.sorted_count == 1

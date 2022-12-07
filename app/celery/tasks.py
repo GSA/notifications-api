@@ -446,26 +446,6 @@ def handle_exception(task, notification, notification_id, exc):
             current_app.logger.error('Max retry failed' + retry_msg)
 
 
-@notify_celery.task(bind=True, name="record-daily-sorted-counts")
-def record_daily_sorted_counts(self, filename):
-    sorted_letter_counts = defaultdict(int)
-    notification_updates = parse_dvla_file(filename)
-    for update in notification_updates:
-        sorted_letter_counts[update.cost_threshold.lower()] += 1
-
-    unknown_status = sorted_letter_counts.keys() - {'unsorted', 'sorted'}
-    if unknown_status:
-        message = 'DVLA response file: {} contains unknown Sorted status {}'.format(
-            filename, unknown_status.__repr__()
-        )
-        raise DVLAException(message)
-
-    billing_date = get_local_billing_date_from_filename(filename)
-    persist_daily_sorted_letter_counts(day=billing_date,
-                                       file_name=filename,
-                                       sorted_letter_counts=sorted_letter_counts)
-
-
 def parse_dvla_file(filename):
     bucket_location = '{}-ftp'.format(current_app.config['NOTIFY_EMAIL_DOMAIN'])
     response_file_content = s3.get_s3_file(bucket_location, filename)

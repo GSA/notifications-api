@@ -19,7 +19,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
-from app.celery.tasks import process_row, record_daily_sorted_counts
+from app.celery.tasks import process_row
 from app.config import QueueNames
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
@@ -319,18 +319,6 @@ def update_jobs_archived_flag(start_date, end_date):
 
         total_updated += result.rowcount
     current_app.logger.info('Total archived jobs = {}'.format(total_updated))
-
-
-@notify_command(name='replay-daily-sorted-count-files')
-@click.option('-f', '--file_extension', required=False, help="File extension to search for, defaults to rs.txt")
-@statsd(namespace="tasks")
-def replay_daily_sorted_count_files(file_extension):
-    bucket_location = '{}-ftp'.format(current_app.config['NOTIFY_EMAIL_DOMAIN'])
-    for filename in s3.get_list_of_files_by_suffix(bucket_name=bucket_location,
-                                                   subfolder='root/dispatch',
-                                                   suffix=file_extension or '.rs.txt'):
-        print("Create task to record daily sorted counts for file: ", filename)
-        record_daily_sorted_counts.apply_async([filename], queue=QueueNames.NOTIFY)
 
 
 @notify_command(name='populate-organisations-from-file')
