@@ -15,7 +15,6 @@ from app import (
     encryption,
     notify_celery,
 )
-from app.celery.research_mode_tasks import create_fake_letter_response_file
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames, TaskNames
@@ -380,12 +379,6 @@ def process_letter_notification(
                                               updated_at=updated_at,
                                               postage=postage
                                               )
-
-    if test_key and current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
-        create_fake_letter_response_file.apply_async(
-            (notification.reference,),
-            queue=queue
-        )
 
     resp = create_response_for_post_notification(
         notification_id=notification.id,

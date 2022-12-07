@@ -385,13 +385,7 @@ def save_letter(
             status=status
         )
 
-        if current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
-            research_mode_tasks.create_fake_letter_response_file.apply_async(
-                (saved_notification.reference,),
-                queue=QueueNames.RESEARCH_MODE
-            )
-        else:
-            update_notification_status_by_reference(saved_notification.reference, 'delivered')
+        update_notification_status_by_reference(saved_notification.reference, 'delivered')
 
         current_app.logger.debug("Letter {} created at {}".format(saved_notification.id, saved_notification.created_at))
     except SQLAlchemyError as e:
