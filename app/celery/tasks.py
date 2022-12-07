@@ -392,41 +392,6 @@ def save_letter(
         handle_exception(self, notification, notification_id, e)
 
 
-@notify_celery.task(bind=True, name='update-letter-notifications-to-sent')
-def update_letter_notifications_to_sent_to_dvla(self, notification_references):
-    # This task will be called by the FTP app to update notifications as sent to DVLA
-    provider = get_provider_details_by_notification_type(LETTER_TYPE)[0]
-
-    updated_count, _ = dao_update_notifications_by_reference(
-        notification_references,
-        {
-            'status': NOTIFICATION_SENDING,
-            'sent_by': provider.identifier,
-            'sent_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow()
-        }
-    )
-
-    current_app.logger.info("Updated {} letter notifications to sending".format(updated_count))
-
-
-@notify_celery.task(bind=True, name='update-letter-notifications-to-error')
-def update_letter_notifications_to_error(self, notification_references):
-    # This task will be called by the FTP app to update notifications as sent to DVLA
-
-    updated_count, _ = dao_update_notifications_by_reference(
-        notification_references,
-        {
-            'status': NOTIFICATION_TECHNICAL_FAILURE,
-            'updated_at': datetime.utcnow()
-        }
-    )
-    message = "Updated {} letter notifications to technical-failure with references {}".format(
-        updated_count, notification_references
-    )
-    raise NotificationTechnicalFailureException(message)
-
-
 def handle_exception(task, notification, notification_id, exc):
     if not get_notification_by_id(notification_id):
         retry_msg = '{task} notification for job {job} row number {row} and notification id {noti}'.format(
@@ -444,72 +409,6 @@ def handle_exception(task, notification, notification_id, exc):
             task.retry(queue=QueueNames.RETRY, exc=exc)
         except task.MaxRetriesExceededError:
             current_app.logger.error('Max retry failed' + retry_msg)
-
-
-def parse_dvla_file(filename):
-    bucket_location = '{}-ftp'.format(current_app.config['NOTIFY_EMAIL_DOMAIN'])
-    response_file_content = s3.get_s3_file(bucket_location, filename)
-
-    try:
-        return process_updates_from_file(response_file_content)
-    except TypeError:
-        raise DVLAException('DVLA response file: {} has an invalid format'.format(filename))
-
-
-def get_local_billing_date_from_filename(filename):
-    # exclude seconds from the date since we don't need it. We got a date ending in 60 second - which is not valid.
-    datetime_string = filename.split('-')[1][:-2]
-    datetime_obj = datetime.strptime(datetime_string, '%Y%m%d%H%M')
-    return convert_utc_to_local_timezone(datetime_obj).date()
-
-
-def persist_daily_sorted_letter_counts(day, file_name, sorted_letter_counts):
-    daily_letter_count = DailySortedLetter(
-        billing_day=day,
-        file_name=file_name,
-        unsorted_count=sorted_letter_counts['unsorted'],
-        sorted_count=sorted_letter_counts['sorted']
-    )
-    dao_create_or_update_daily_sorted_letter(daily_letter_count)
-
-
-def process_updates_from_file(response_file):
-    NotificationUpdate = namedtuple('NotificationUpdate', ['reference', 'status', 'page_count', 'cost_threshold'])
-    notification_updates = [NotificationUpdate(*line.split('|')) for line in response_file.splitlines()]
-    return notification_updates
-
-
-def update_letter_notification(filename, temporary_failures, update):
-    if update.status == DVLA_RESPONSE_STATUS_SENT:
-        status = NOTIFICATION_DELIVERED
-    else:
-        status = NOTIFICATION_TEMPORARY_FAILURE
-        temporary_failures.append(update.reference)
-
-    updated_count, _ = dao_update_notifications_by_reference(
-        references=[update.reference],
-        update_dict={"status": status,
-                     "updated_at": datetime.utcnow()
-                     }
-    )
-
-    if not updated_count:
-        msg = "Update letter notification file {filename} failed: notification either not found " \
-              "or already updated from delivered. Status {status} for notification reference {reference}".format(
-                  filename=filename, status=status, reference=update.reference)
-        current_app.logger.info(msg)
-
-
-def check_billable_units(notification_update):
-    notification = dao_get_notification_history_by_reference(notification_update.reference)
-
-    if int(notification_update.page_count) != notification.billable_units:
-        msg = 'Notification with id {} has {} billable_units but DVLA says page count is {}'.format(
-            notification.id, notification.billable_units, notification_update.page_count)
-        try:
-            raise DVLAException(msg)
-        except DVLAException:
-            current_app.logger.exception(msg)
 
 
 @notify_celery.task(bind=True, name="send-inbound-sms", max_retries=5, default_retry_delay=300)
