@@ -29,7 +29,6 @@ from app.celery.tasks import (
     save_api_email,
     save_api_sms,
     save_email,
-    save_letter,
     save_sms,
     send_inbound_sms_to_service,
 )
@@ -94,7 +93,6 @@ def test_should_have_decorated_tasks_functions():
     assert process_job.__wrapped__.__name__ == 'process_job'
     assert save_sms.__wrapped__.__name__ == 'save_sms'
     assert save_email.__wrapped__.__name__ == 'save_email'
-    assert save_letter.__wrapped__.__name__ == 'save_letter'
 
 
 @pytest.fixture
@@ -368,8 +366,6 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template,
     (SMS_TYPE, True, 'save_sms', 'research-mode-tasks'),
     (EMAIL_TYPE, False, 'save_email', 'database-tasks'),
     (EMAIL_TYPE, True, 'save_email', 'research-mode-tasks'),
-    (LETTER_TYPE, False, 'save_letter', 'database-tasks'),
-    (LETTER_TYPE, True, 'save_letter', 'research-mode-tasks'),
 ])
 def test_process_row_sends_letter_task(template_type, research_mode, expected_function, expected_queue, mocker):
     mocker.patch('app.celery.tasks.create_uuid', return_value='noti_uuid')
@@ -1341,28 +1337,6 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     assert completed_job.job_status == JOB_STATUS_FINISHED
 
     assert mock_email_saver.call_count == 8  # There are 10 in the file and we've added two already
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_incomplete_job_letter(mocker, sample_letter_template):
-    mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
-                 return_value=(load_example_csv('multiple_letter'), {'sender_id': None}))
-    mock_letter_saver = mocker.patch('app.celery.tasks.save_letter.apply_async')
-
-    job = create_job(template=sample_letter_template, notification_count=10,
-                     created_at=datetime.utcnow() - timedelta(hours=2),
-                     scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-                     processing_started=datetime.utcnow() - timedelta(minutes=31),
-                     job_status=JOB_STATUS_ERROR)
-
-    create_notification(sample_letter_template, job, 0)
-    create_notification(sample_letter_template, job, 1)
-
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
-
-    process_incomplete_job(str(job.id))
-
-    assert mock_letter_saver.call_count == 8
 
 
 @freeze_time('2017-01-01')

@@ -12,11 +12,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import create_random_identifier, create_uuid, encryption, notify_celery
 from app.aws import s3
-from app.celery import provider_tasks, research_mode_tasks
+from app.celery import provider_tasks
 from app.config import QueueNames
-from app.dao.daily_sorted_letter_dao import (
-    dao_create_or_update_daily_sorted_letter,
-)
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
@@ -26,15 +23,11 @@ from app.dao.notifications_dao import (
     get_notification_by_id,
     update_notification_status_by_reference,
 )
-from app.dao.provider_details_dao import (
-    get_provider_details_by_notification_type,
-)
 from app.dao.returned_letters_dao import insert_or_update_returned_letters
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
-from app.exceptions import DVLAException, NotificationTechnicalFailureException
 from app.models import (
     DVLA_RESPONSE_STATUS_SENT,
     EMAIL_TYPE,
@@ -136,8 +129,7 @@ def process_row(row, template, job, service, sender_id=None):
 
     send_fns = {
         SMS_TYPE: save_sms,
-        EMAIL_TYPE: save_email,
-        LETTER_TYPE: save_letter
+        EMAIL_TYPE: save_email
     }
 
     send_fn = send_fns[template_type]
@@ -339,57 +331,6 @@ def save_api_email_or_sms(self, encrypted_notification):
             self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
             current_app.logger.error(f"Max retry failed Failed to persist notification {notification['id']}")
-
-
-@notify_celery.task(bind=True, name="save-letter", max_retries=5, default_retry_delay=300)
-def save_letter(
-        self,
-        service_id,
-        notification_id,
-        encrypted_notification,
-):
-    notification = encryption.decrypt(encrypted_notification)
-
-    postal_address = PostalAddress.from_personalisation(
-        InsensitiveDict(notification['personalisation'])
-    )
-
-    service = SerialisedService.from_id(service_id)
-    template = SerialisedTemplate.from_id_and_service_id(
-        notification['template'],
-        service_id=service.id,
-        version=notification['template_version'],
-    )
-
-    try:
-        # if we don't want to actually send the letter, then start it off in SENDING so we don't pick it up
-        status = NOTIFICATION_CREATED if not service.research_mode else NOTIFICATION_SENDING
-
-        saved_notification = persist_notification(
-            template_id=notification['template'],
-            template_version=notification['template_version'],
-            postage=postal_address.postage if postal_address.international else template.postage,
-            recipient=postal_address.normalised,
-            service=service,
-            personalisation=notification['personalisation'],
-            notification_type=LETTER_TYPE,
-            api_key_id=None,
-            key_type=KEY_TYPE_NORMAL,
-            created_at=datetime.utcnow(),
-            job_id=notification['job'],
-            job_row_number=notification['row_number'],
-            notification_id=notification_id,
-            reference=create_random_identifier(),
-            client_reference=get_reference_from_personalisation(notification['personalisation']),
-            reply_to_text=template.reply_to_text,
-            status=status
-        )
-
-        update_notification_status_by_reference(saved_notification.reference, 'delivered')
-
-        current_app.logger.debug("Letter {} created at {}".format(saved_notification.id, saved_notification.created_at))
-    except SQLAlchemyError as e:
-        handle_exception(self, notification, notification_id, e)
 
 
 def handle_exception(task, notification, notification_id, exc):
