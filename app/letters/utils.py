@@ -161,20 +161,6 @@ def move_uploaded_pdf_to_letters_bucket(source_filename, upload_filename):
     )
 
 
-def move_sanitised_letter_to_test_or_live_pdf_bucket(filename, is_test_letter, created_at, new_filename):
-    target_bucket_config = 'TEST_LETTERS_BUCKET_NAME' if is_test_letter else 'LETTERS_PDF_BUCKET_NAME'
-    target_bucket_name = current_app.config[target_bucket_config]
-    target_folder = '' if is_test_letter else get_folder_name(created_at)
-    target_filename = target_folder + new_filename
-
-    _move_s3_object(
-        source_bucket=current_app.config['LETTER_SANITISE_BUCKET_NAME'],
-        source_filename=filename,
-        target_bucket=target_bucket_name,
-        target_filename=target_filename,
-    )
-
-
 def get_file_names_from_error_bucket():
     s3 = boto3.resource('s3')
     scan_bucket = current_app.config['LETTERS_SCAN_BUCKET_NAME']

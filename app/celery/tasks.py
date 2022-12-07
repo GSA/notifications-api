@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import create_random_identifier, create_uuid, encryption, notify_celery
 from app.aws import s3
-from app.celery import letters_pdf_tasks, provider_tasks, research_mode_tasks
+from app.celery import provider_tasks, research_mode_tasks
 from app.config import QueueNames
 from app.dao.daily_sorted_letter_dao import (
     dao_create_or_update_daily_sorted_letter,

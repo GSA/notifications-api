@@ -56,7 +56,6 @@ class TaskNames(object):
     PROCESS_INCOMPLETE_JOBS = 'process-incomplete-jobs'
     ZIP_AND_SEND_LETTER_PDFS = 'zip-and-send-letter-pdfs'
     SCAN_FILE = 'scan-file'
-    SANITISE_LETTER = 'sanitise-and-upload-letter'
     CREATE_PDF_FOR_TEMPLATED_LETTER = 'create-pdf-for-templated-letter'
     RECREATE_PDF_FOR_PRECOMPILED_LETTER = 'recreate-pdf-for-precompiled-letter'
 

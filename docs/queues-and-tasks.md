@@ -19,7 +19,6 @@ There are a bunch of queues:
 - letter tasks
 - sms callbacks
 - antivirus tasks
-- sanitise letter tasks
 - save api email tasks
 - save api sms tasks
 
@@ -49,7 +48,6 @@ And these tasks:
 - process incomplete jobs
 - process job
 - process returned letters list
-- process sanitised letter
 - process ses result
 - process virus scan error
 - process virus scan failed
@@ -59,9 +57,7 @@ And these tasks:
 - remove letter jobs
 - remove sms email jobs
 - replay created notifications
-- resanitise pdf
 - run scheduled jobs
-- sanitise letter
 - save api email
 - save api sms
 - save daily notification processing time

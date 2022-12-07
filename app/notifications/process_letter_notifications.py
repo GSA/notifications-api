@@ -33,7 +33,7 @@ def create_letter_notification(
         status=status,
         reply_to_text=reply_to_text,
         billable_units=billable_units,
-        # letter_data.get('postage') is only set for precompiled letters (if international it is set after sanitise)
+        # letter_data.get('postage') is only set for precompiled letters
         # letters from a template will pass in 'europe' or 'rest-of-world' if None then use postage from template
         postage=postage or letter_data.get('postage') or template.postage,
         updated_at=updated_at

@@ -15,9 +15,6 @@ from app import (
     encryption,
     notify_celery,
 )
-from app.celery.letters_pdf_tasks import (
-    sanitise_letter,
-)
 from app.celery.research_mode_tasks import create_fake_letter_response_file
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
@@ -432,12 +429,6 @@ def process_precompiled_letter_notifications(*, letter_data, api_key, service, t
             name=TaskNames.SCAN_FILE,
             kwargs={'filename': filename},
             queue=QueueNames.ANTIVIRUS,
-        )
-    else:
-        # stub out antivirus in dev
-        sanitise_letter.apply_async(
-            [filename],
-            queue=QueueNames.LETTERS
         )
 
     return resp

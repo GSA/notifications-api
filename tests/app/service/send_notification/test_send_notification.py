@@ -1229,7 +1229,7 @@ def test_post_notification_should_set_reply_to_text(client, sample_service, mock
     assert notifications[0].reply_to_text == expected_reply_to
 
 
-@pytest.mark.skip(reason="Rewrite without letters")
+@pytest.mark.skip(reason="Rewrite without letters?")
 @pytest.mark.parametrize('reference_paceholder,', [None, 'ref2'])
 def test_send_notification_should_set_client_reference_from_placeholder(
     sample_letter_template, mocker, reference_paceholder
