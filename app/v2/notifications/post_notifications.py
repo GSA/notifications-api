@@ -300,7 +300,7 @@ def save_email_or_sms_to_queue(
         "status": NOTIFICATION_CREATED,
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
-    encrypted = encryption.encrypt(
+    encrypted = encryption.sign(
         data
     )
 

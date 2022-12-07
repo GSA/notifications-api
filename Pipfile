@@ -58,7 +58,7 @@ werkzeug = "~=2.1.1"
 # gds metrics packages
 prometheus-client = "==0.14.1"
 gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
-notifications-utils = {editable = true, ref = "37ae9753c050851453d072994fb03b1415601716", git = "https://github.com/GSA/notifications-utils"}
+notifications-utils = {editable = true, ref = "723cd96915310f12bf5c02df3fed44e7794dccfd", git = "https://github.com/GSA/notifications-utils"}
 
 [dev-packages]
 flake8 = "==4.0.1"

@@ -465,7 +465,7 @@ def test_check_for_missing_rows_in_completed_jobs_ignores_old_and_new_jobs(
 ):
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
                  return_value=(load_example_csv('multiple_email'), {"sender_id": None}))
-    mocker.patch('app.encryption.encrypt', return_value="something_encrypted")
+    mocker.patch('app.encryption.sign', return_value="something_encrypted")
     process_row = mocker.patch('app.celery.scheduled_tasks.process_row')
 
     job = create_job(
@@ -485,7 +485,7 @@ def test_check_for_missing_rows_in_completed_jobs_ignores_old_and_new_jobs(
 def test_check_for_missing_rows_in_completed_jobs(mocker, sample_email_template):
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
                  return_value=(load_example_csv('multiple_email'), {"sender_id": None}))
-    mocker.patch('app.encryption.encrypt', return_value="something_encrypted")
+    mocker.patch('app.encryption.sign', return_value="something_encrypted")
     process_row = mocker.patch('app.celery.scheduled_tasks.process_row')
 
     job = create_job(template=sample_email_template,
@@ -506,7 +506,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(mocker, sampl
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
                  return_value=(load_example_csv('multiple_email'), {'sender_id': None}))
     save_email_task = mocker.patch('app.celery.tasks.save_email.apply_async')
-    mocker.patch('app.encryption.encrypt', return_value="something_encrypted")
+    mocker.patch('app.encryption.sign', return_value="something_encrypted")
     mocker.patch('app.celery.tasks.create_uuid', return_value='uuid')
 
     job = create_job(template=sample_email_template,

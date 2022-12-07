@@ -191,7 +191,7 @@ def _set_up_data_for_status_update(callback_api, notification):
         "template_id": str(notification.template_id),
         "template_version": notification.template_version,
     }
-    encrypted_status_update = encryption.encrypt(data)
+    encrypted_status_update = encryption.sign(data)
     return encrypted_status_update
 
 
@@ -205,5 +205,5 @@ def _set_up_data_for_complaint(callback_api, complaint, notification):
         "service_callback_api_url": callback_api.url,
         "service_callback_api_bearer_token": callback_api.bearer_token,
     }
-    obscured_status_update = encryption.encrypt(data)
+    obscured_status_update = encryption.sign(data)
     return obscured_status_update
