@@ -446,22 +446,6 @@ def handle_exception(task, notification, notification_id, exc):
             current_app.logger.error('Max retry failed' + retry_msg)
 
 
-@notify_celery.task(bind=True, name='update-letter-notifications-statuses')
-def update_letter_notifications_statuses(self, filename):
-    notification_updates = parse_dvla_file(filename)
-
-    temporary_failures = []
-
-    for update in notification_updates:
-        check_billable_units(update)
-        update_letter_notification(filename, temporary_failures, update)
-    if temporary_failures:
-        # This will alert Notify that DVLA was unable to deliver the letters, we need to investigate
-        message = "DVLA response file: {filename} has failed letters with notification.reference {failures}" \
-            .format(filename=filename, failures=temporary_failures)
-        raise DVLAException(message)
-
-
 @notify_celery.task(bind=True, name="record-daily-sorted-counts")
 def record_daily_sorted_counts(self, filename):
     sorted_letter_counts = defaultdict(int)

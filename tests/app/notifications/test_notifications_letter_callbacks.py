@@ -25,59 +25,6 @@ def test_dvla_callback_autoconfirms_subscription(client, mocker):
     assert autoconfirm_mock.called
 
 
-def test_dvla_callback_autoconfirm_does_not_call_update_letter_notifications_task(client, mocker):
-    autoconfirm_mock = mocker.patch('app.notifications.notifications_letter_callback.autoconfirm_subscription')
-    update_task = \
-        mocker.patch('app.notifications.notifications_letter_callback.update_letter_notifications_statuses.apply_async')
-
-    data = _sns_confirmation_callback()
-    response = dvla_post(client, data)
-
-    assert response.status_code == 200
-    assert autoconfirm_mock.called
-    assert not update_task.called
-
-
-def test_dvla_callback_calls_does_not_update_letter_notifications_task_with_invalid_file_type(client, mocker):
-    update_task = \
-        mocker.patch('app.notifications.notifications_letter_callback.update_letter_notifications_statuses.apply_async')
-
-    data = _sample_sns_s3_callback("bar.txt")
-    response = dvla_post(client, data)
-
-    assert response.status_code == 200
-    assert not update_task.called
-
-
-@pytest.mark.parametrize("filename",
-                         ['Notify-20170411153023-rs.txt', 'Notify-20170411153023-rsp.txt'])
-def test_dvla_rs_and_rsp_txt_file_callback_calls_update_letter_notifications_task(client, mocker, filename):
-    update_task = mocker.patch(
-        'app.notifications.notifications_letter_callback.update_letter_notifications_statuses.apply_async')
-    daily_sorted_counts_task = mocker.patch(
-        'app.notifications.notifications_letter_callback.record_daily_sorted_counts.apply_async')
-    data = _sample_sns_s3_callback(filename)
-    response = dvla_post(client, data)
-
-    assert response.status_code == 200
-    assert update_task.called
-    update_task.assert_called_with([filename], queue='notify-internal-tasks')
-    daily_sorted_counts_task.assert_called_with([filename], queue='notify-internal-tasks')
-
-
-def test_dvla_ack_calls_does_not_call_letter_notifications_task(client, mocker):
-    update_task = mocker.patch(
-        'app.notifications.notifications_letter_callback.update_letter_notifications_statuses.apply_async')
-    daily_sorted_counts_task = mocker.patch(
-        'app.notifications.notifications_letter_callback.record_daily_sorted_counts.apply_async')
-    data = _sample_sns_s3_callback('bar.ack.txt')
-    response = dvla_post(client, data)
-
-    assert response.status_code == 200
-    update_task.assert_not_called()
-    daily_sorted_counts_task.assert_not_called()
-
-
 def _sample_sns_s3_callback(filename):
     message_contents = '''{"Records":[{"eventVersion":"2.0","eventSource":"aws:s3","awsRegion":"eu-west-1","eventTime":"2017-05-16T11:38:41.073Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"some-p-id"},"requestParameters":{"sourceIPAddress":"8.8.8.8"},"responseElements":{"x-amz-request-id":"some-r-id","x-amz-id-2":"some-x-am-id"},"s3":{"s3SchemaVersion":"1.0","configurationId":"some-c-id","bucket":{"name":"some-bucket","ownerIdentity":{"principalId":"some-p-id"},"arn":"some-bucket-arn"},
             "object":{"key":"%s"}}}]}''' % (filename)  # noqa

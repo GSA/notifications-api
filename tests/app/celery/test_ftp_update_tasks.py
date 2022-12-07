@@ -12,7 +12,6 @@ from app.celery.tasks import (
     persist_daily_sorted_letter_counts,
     process_updates_from_file,
     record_daily_sorted_counts,
-    update_letter_notifications_statuses,
     update_letter_notifications_to_error,
     update_letter_notifications_to_sent_to_dvla,
 )
@@ -44,123 +43,6 @@ def notification_update():
     """
     NotificationUpdate = namedtuple('NotificationUpdate', ['reference', 'status', 'page_count', 'cost_threshold'])
     return NotificationUpdate('REFERENCE_ABC', 'sent', '1', 'cost')
-
-
-def test_update_letter_notifications_statuses_raises_for_invalid_format(notify_api, mocker):
-    invalid_file = 'ref-foo|Sent|1|Unsorted\nref-bar|Sent|2'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=invalid_file)
-
-    with pytest.raises(DVLAException) as e:
-        update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
-    assert 'DVLA response file: {} has an invalid format'.format('NOTIFY-20170823160812-RSP.TXT') in str(e.value)
-
-
-def test_update_letter_notification_statuses_when_notification_does_not_exist_updates_notification_history(
-    sample_letter_template,
-    mocker
-):
-    valid_file = 'ref-foo|Sent|1|Unsorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-    notification = create_notification_history(sample_letter_template, reference='ref-foo', status=NOTIFICATION_SENDING,
-                                               billable_units=1)
-
-    update_letter_notifications_statuses(filename="NOTIFY-20170823160812-RSP.TXT")
-
-    updated_history = NotificationHistory.query.filter_by(id=notification.id).one()
-    assert updated_history.status == NOTIFICATION_DELIVERED
-
-
-def test_update_letter_notifications_statuses_raises_dvla_exception(notify_api, mocker, sample_letter_template):
-    valid_file = 'ref-foo|Failed|1|Unsorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-    create_notification(sample_letter_template, reference='ref-foo', status=NOTIFICATION_SENDING,
-                        billable_units=0)
-
-    with pytest.raises(DVLAException) as e:
-        update_letter_notifications_statuses(filename="failed.txt")
-    failed = ["ref-foo"]
-    assert "DVLA response file: {filename} has failed letters with notification.reference {failures}".format(
-        filename="failed.txt", failures=failed
-    ) in str(e.value)
-
-
-def test_update_letter_notifications_statuses_calls_with_correct_bucket_location(notify_api, mocker):
-    s3_mock = mocker.patch('app.celery.tasks.s3.get_s3_object')
-
-    with set_config(notify_api, 'NOTIFY_EMAIL_DOMAIN', 'foo.bar'):
-        update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
-        s3_mock.assert_called_with('{}-ftp'.format(
-            current_app.config['NOTIFY_EMAIL_DOMAIN']),
-            'NOTIFY-20170823160812-RSP.TXT',
-            os.environ.get('AWS_ACCESS_KEY_ID'),
-            os.environ.get('AWS_SECRET_ACCESS_KEY'),
-            os.environ.get('AWS_REGION'),
-        )
-
-
-def test_update_letter_notifications_statuses_builds_updates_from_content(notify_api, mocker):
-    valid_file = 'ref-foo|Sent|1|Unsorted\nref-bar|Sent|2|Sorted'
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-    update_mock = mocker.patch('app.celery.tasks.process_updates_from_file')
-
-    update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
-
-    update_mock.assert_called_with('ref-foo|Sent|1|Unsorted\nref-bar|Sent|2|Sorted')
-
-
-def test_update_letter_notifications_statuses_builds_updates_list(notify_api, mocker):
-    valid_file = 'ref-foo|Sent|1|Unsorted\nref-bar|Sent|2|Sorted'
-    updates = process_updates_from_file(valid_file)
-
-    assert len(updates) == 2
-
-    assert updates[0].reference == 'ref-foo'
-    assert updates[0].status == 'Sent'
-    assert updates[0].page_count == '1'
-    assert updates[0].cost_threshold == 'Unsorted'
-
-    assert updates[1].reference == 'ref-bar'
-    assert updates[1].status == 'Sent'
-    assert updates[1].page_count == '2'
-    assert updates[1].cost_threshold == 'Sorted'
-
-
-def test_update_letter_notifications_statuses_persisted(notify_api, mocker, sample_letter_template):
-    sent_letter = create_notification(sample_letter_template, reference='ref-foo', status=NOTIFICATION_SENDING,
-                                      billable_units=1)
-    failed_letter = create_notification(sample_letter_template, reference='ref-bar', status=NOTIFICATION_SENDING,
-                                        billable_units=2)
-    create_service_callback_api(service=sample_letter_template.service, url="https://original_url.com")
-    valid_file = '{}|Sent|1|Unsorted\n{}|Failed|2|Sorted'.format(
-        sent_letter.reference, failed_letter.reference)
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-
-    with pytest.raises(expected_exception=DVLAException) as e:
-        update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
-
-    assert sent_letter.status == NOTIFICATION_DELIVERED
-    assert sent_letter.billable_units == 1
-    assert sent_letter.updated_at
-    assert failed_letter.status == NOTIFICATION_TEMPORARY_FAILURE
-    assert failed_letter.billable_units == 2
-    assert failed_letter.updated_at
-    assert "DVLA response file: {filename} has failed letters with notification.reference {failures}".format(
-        filename="NOTIFY-20170823160812-RSP.TXT", failures=[format(failed_letter.reference)]) in str(e.value)
-
-
-def test_update_letter_notifications_does_not_call_send_callback_if_no_db_entry(notify_api, mocker,
-                                                                                sample_letter_template):
-    sent_letter = create_notification(sample_letter_template, reference='ref-foo', status=NOTIFICATION_SENDING,
-                                      billable_units=0)
-    valid_file = '{}|Sent|1|Unsorted\n'.format(sent_letter.reference)
-    mocker.patch('app.celery.tasks.s3.get_s3_file', return_value=valid_file)
-
-    send_mock = mocker.patch(
-        'app.celery.service_callback_tasks.send_delivery_status_to_service.apply_async'
-    )
-
-    update_letter_notifications_statuses(filename='NOTIFY-20170823160812-RSP.TXT')
-    send_mock.assert_not_called()
 
 
 def test_update_letter_notifications_to_sent_to_dvla_updates_based_on_notification_references(
