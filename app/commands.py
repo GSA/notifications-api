@@ -19,7 +19,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
-from app.celery.letters_pdf_tasks import resanitise_pdf
 from app.celery.tasks import process_row, record_daily_sorted_counts
 from app.config import QueueNames
 from app.dao.annual_billing_dao import (
@@ -157,14 +156,6 @@ def insert_inbound_numbers_from_file(file_name):
                 print(line)
                 db.session.execute(sql.format(uuid.uuid4(), line))
                 db.session.commit()
-
-
-@notify_command(name='recreate-pdf-for-precompiled-or-uploaded-letter')
-@click.option('-n', '--notification_id', type=click.UUID, required=True,
-              help="Notification ID of the precompiled or uploaded letter")
-def recreate_pdf_for_precompiled_or_uploaded_letter(notification_id):
-    print(f"Call resanitise_pdf task for notification: {notification_id}")
-    resanitise_pdf.apply_async([str(notification_id)], queue=QueueNames.LETTERS)
 
 
 def setup_commands(application):
