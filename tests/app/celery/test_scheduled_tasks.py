@@ -257,28 +257,6 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
                                                queue="send-sms-tasks")
 
 
-def test_replay_created_notifications_get_pdf_for_templated_letter_tasks_for_letters_not_ready_to_send(
-        sample_letter_template, mocker
-):
-    mock_task = mocker.patch('app.celery.scheduled_tasks.get_pdf_for_templated_letter.apply_async')
-    create_notification(template=sample_letter_template, billable_units=0,
-                        created_at=datetime.utcnow() - timedelta(hours=4))
-
-    create_notification(template=sample_letter_template, billable_units=0,
-                        created_at=datetime.utcnow() - timedelta(minutes=20))
-    notification_1 = create_notification(template=sample_letter_template, billable_units=0,
-                                         created_at=datetime.utcnow() - timedelta(hours=1, minutes=20))
-    notification_2 = create_notification(template=sample_letter_template, billable_units=0,
-                                         created_at=datetime.utcnow() - timedelta(hours=5))
-
-    replay_created_notifications()
-
-    calls = [call([str(notification_1.id)], queue=QueueNames.CREATE_LETTERS_PDF),
-             call([str(notification_2.id)], queue=QueueNames.CREATE_LETTERS_PDF),
-             ]
-    mock_task.assert_has_calls(calls, any_order=True)
-
-
 def test_check_job_status_task_does_not_raise_error(sample_template):
     create_job(
         template=sample_template,

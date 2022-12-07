@@ -385,12 +385,7 @@ def save_letter(
             status=status
         )
 
-        if not service.research_mode:
-            letters_pdf_tasks.get_pdf_for_templated_letter.apply_async(
-                [str(saved_notification.id)],
-                queue=QueueNames.CREATE_LETTERS_PDF
-            )
-        elif current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
+        if current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
             research_mode_tasks.create_fake_letter_response_file.apply_async(
                 (saved_notification.reference,),
                 queue=QueueNames.RESEARCH_MODE

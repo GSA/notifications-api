@@ -55,51 +55,6 @@ from app.models import (
 )
 
 
-@notify_celery.task(bind=True, name="get-pdf-for-templated-letter", max_retries=15, default_retry_delay=300)
-def get_pdf_for_templated_letter(self, notification_id):
-    try:
-        notification = get_notification_by_id(notification_id, _raise=True)
-        letter_filename = generate_letter_pdf_filename(
-            reference=notification.reference,
-            created_at=notification.created_at,
-            ignore_folder=notification.key_type == KEY_TYPE_TEST,
-            postage=notification.postage
-        )
-        letter_data = {
-            'letter_contact_block': notification.reply_to_text,
-            'template': {
-                "subject": notification.template.subject,
-                "content": notification.template.content,
-                "template_type": notification.template.template_type
-            },
-            'values': notification.personalisation,
-            'logo_filename': notification.service.letter_branding and notification.service.letter_branding.filename,
-            'letter_filename': letter_filename,
-            "notification_id": str(notification_id),
-            'key_type': notification.key_type
-        }
-
-        encrypted_data = encryption.encrypt(letter_data)
-
-        notify_celery.send_task(
-            name=TaskNames.CREATE_PDF_FOR_TEMPLATED_LETTER,
-            args=(encrypted_data,),
-            queue=QueueNames.SANITISE_LETTERS
-        )
-    except Exception as e:
-        try:
-            current_app.logger.exception(
-                f"RETRY: calling create-letter-pdf task for notification {notification_id} failed"
-            )
-            self.retry(exc=e, queue=QueueNames.RETRY)
-        except self.MaxRetriesExceededError:
-            message = f"RETRY FAILED: Max retries reached. " \
-                      f"The task create-letter-pdf failed for notification id {notification_id}. " \
-                      f"Notification has been updated to technical-failure"
-            update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
-            raise NotificationTechnicalFailureException(message)
-
-
 @notify_celery.task(bind=True, name="update-billable-units-for-letter", max_retries=15, default_retry_delay=300)
 def update_billable_units_for_letter(self, notification_id, page_count):
     notification = get_notification_by_id(notification_id, _raise=True)

@@ -9,7 +9,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery, zendesk_client
 from app.aws import s3
-from app.celery.letters_pdf_tasks import get_pdf_for_templated_letter
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -164,20 +163,6 @@ def replay_created_notifications():
 
         for n in notifications_to_resend:
             send_notification_to_queue(notification=n, research_mode=n.service.research_mode)
-
-    # if the letter has not be send after an hour, then create a zendesk ticket
-    letters = letters_missing_from_sending_bucket(resend_created_notifications_older_than)
-
-    if len(letters) > 0:
-        msg = "{} letters were created over an hour ago, " \
-              "but do not have an updated_at timestamp or billable units. " \
-              "\n Creating app.celery.letters_pdf_tasks.create_letters tasks to upload letter to S3 " \
-              "and update notifications for the following notification ids: " \
-              "\n {}".format(len(letters), [x.id for x in letters])
-
-        current_app.logger.info(msg)
-        for letter in letters:
-            get_pdf_for_templated_letter.apply_async([str(letter.id)], queue=QueueNames.CREATE_LETTERS_PDF)
 
 
 @notify_celery.task(name='check-for-missing-rows-in-completed-jobs')

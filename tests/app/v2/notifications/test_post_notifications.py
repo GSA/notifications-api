@@ -1156,32 +1156,3 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
         assert mock_send_task.called
         assert not save_task.called
         assert len(Notification.query.all()) == 1
-
-
-def test_post_notification_does_not_use_save_queue_for_letters(client, sample_letter_template, mocker):
-    mock_save = mocker.patch("app.v2.notifications.post_notifications.save_email_or_sms_to_queue")
-    mock_create_pdf_task = mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    with set_config_values(current_app, {
-        'HIGH_VOLUME_SERVICE': [str(sample_letter_template.service_id)],
-
-    }):
-        data = {
-            'template_id': str(sample_letter_template.id),
-            'personalisation': {
-                'address_line_1': 'Her Royal Highness Queen Elizabeth II',
-                'address_line_2': 'Buckingham Palace',
-                'address_line_3': 'London',
-                'postcode': 'SW1 1AA',
-            }
-        }
-        response = client.post(
-            path='/v2/notifications/letter',
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json'),
-                     create_service_authorization_header(service_id=sample_letter_template.service_id)]
-        )
-        assert response.status_code == 201
-        json_resp = response.get_json()
-        assert not mock_save.called
-        mock_create_pdf_task.assert_called_once_with([str(json_resp['id'])], queue='create-letters-pdf-tasks')

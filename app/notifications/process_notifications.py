@@ -17,7 +17,6 @@ from notifications_utils.template import (
 
 from app import redis_store
 from app.celery import provider_tasks
-from app.celery.letters_pdf_tasks import get_pdf_for_templated_letter
 from app.config import QueueNames
 from app.dao.notifications_dao import (
     dao_create_notification,
@@ -194,10 +193,6 @@ def send_notification_to_queue_detached(
         if not queue:
             queue = QueueNames.SEND_EMAIL
         deliver_task = provider_tasks.deliver_email
-    if notification_type == LETTER_TYPE:
-        if not queue:
-            queue = QueueNames.CREATE_LETTERS_PDF
-        deliver_task = get_pdf_for_templated_letter
 
     try:
         deliver_task.apply_async([str(notification_id)], queue=queue)

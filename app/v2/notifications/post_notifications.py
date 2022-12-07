@@ -16,7 +16,6 @@ from app import (
     notify_celery,
 )
 from app.celery.letters_pdf_tasks import (
-    get_pdf_for_templated_letter,
     sanitise_letter,
 )
 from app.celery.research_mode_tasks import create_fake_letter_response_file
@@ -384,11 +383,6 @@ def process_letter_notification(
                                               updated_at=updated_at,
                                               postage=postage
                                               )
-
-    get_pdf_for_templated_letter.apply_async(
-        [str(notification.id)],
-        queue=queue
-    )
 
     if test_key and current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
         create_fake_letter_response_file.apply_async(
