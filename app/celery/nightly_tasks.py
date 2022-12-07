@@ -1,15 +1,10 @@
 from datetime import datetime, timedelta
 
-import pytz
 from flask import current_app
-from notifications_utils.clients.zendesk.zendesk_client import (
-    NotifySupportTicket,
-)
 from notifications_utils.timezones import convert_utc_to_local_timezone
-from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, statsd_client, zendesk_client
+from app import notify_celery, statsd_client
 from app.aws import s3
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
@@ -29,15 +24,7 @@ from app.dao.notifications_dao import (
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    LETTER_TYPE,
-    NOTIFICATION_SENDING,
-    SMS_TYPE,
-    FactProcessingTime,
-    Notification,
-)
+from app.models import EMAIL_TYPE, LETTER_TYPE, SMS_TYPE, FactProcessingTime
 from app.utils import get_local_midnight_in_utc
 
 

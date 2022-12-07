@@ -2,12 +2,7 @@ from datetime import date, datetime, timedelta
 from unittest.mock import ANY, call
 
 import pytest
-import pytz
-from flask import current_app
 from freezegun import freeze_time
-from notifications_utils.clients.zendesk.zendesk_client import (
-    NotifySupportTicket,
-)
 
 from app.celery import nightly_tasks
 from app.celery.nightly_tasks import (
@@ -190,58 +185,6 @@ def test_delete_inbound_sms_calls_child_task(notify_api, mocker):
     mocker.patch('app.celery.nightly_tasks.delete_inbound_sms_older_than_retention')
     delete_inbound_sms()
     assert nightly_tasks.delete_inbound_sms_older_than_retention.call_count == 1
-
-
-@freeze_time('2018-01-11T23:00:00')
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_letter_raise_alert_if_no_ack_file_for_zip_does_not_raise_when_files_match_zip_list(mocker, notify_db_session):
-    mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=mock_s3_get_list_match)
-    letter_raise_alert_if_no_ack_file_for_zip()
-
-    yesterday = datetime.now(tz=pytz.utc) - timedelta(days=1)  # Datatime format on AWS
-    subfoldername = datetime.utcnow().strftime('%Y-%m-%d') + '/zips_sent'
-    assert mock_file_list.call_count == 2
-    assert mock_file_list.call_args_list == [
-        call(bucket_name=current_app.config['LETTERS_PDF_BUCKET_NAME'], subfolder=subfoldername, suffix='.TXT'),
-        call(bucket_name=current_app.config['DVLA_RESPONSE_BUCKET_NAME'], subfolder='root/dispatch',
-             suffix='.ACK.txt', last_modified=yesterday),
-    ]
-
-
-@freeze_time('2018-01-11T23:00:00')
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_letter_raise_alert_if_ack_files_not_match_zip_list(mocker, notify_db_session):
-    mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=mock_s3_get_list_diff)
-    mock_create_ticket = mocker.spy(NotifySupportTicket, '__init__')
-    mock_send_ticket_to_zendesk = mocker.patch(
-        'app.celery.nightly_tasks.zendesk_client.send_ticket_to_zendesk',
-        autospec=True,
-    )
-
-    letter_raise_alert_if_no_ack_file_for_zip()
-
-    assert mock_file_list.call_count == 2
-
-    mock_create_ticket.assert_called_once_with(
-        ANY,
-        subject="Letter acknowledge error",
-        message=ANY,
-        ticket_type='incident',
-        technical_ticket=True,
-        ticket_categories=['notify_letters']
-    )
-    mock_send_ticket_to_zendesk.assert_called_once()
-    assert "['NOTIFY.2018-01-11175009', 'NOTIFY.2018-01-11175010']" in mock_create_ticket.call_args[1]['message']
-    assert '2018-01-11/zips_sent' in mock_create_ticket.call_args[1]['message']
-
-
-@freeze_time('2018-01-11T23:00:00')
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_letter_not_raise_alert_if_no_files_do_not_cause_error(mocker, notify_db_session):
-    mock_file_list = mocker.patch("app.aws.s3.get_list_of_files_by_suffix", side_effect=None)
-    letter_raise_alert_if_no_ack_file_for_zip()
-
-    assert mock_file_list.call_count == 2
 
 
 @freeze_time('2021-01-18T02:00')

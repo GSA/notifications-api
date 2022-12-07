@@ -10,10 +10,7 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from notifications_utils.timezones import (
-    convert_local_timezone_to_utc,
-    convert_utc_to_local_timezone,
-)
+from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import asc, desc, func, or_, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
@@ -650,49 +647,6 @@ def dao_get_letters_and_sheets_volume_by_postage(print_run_deadline):
         Notification.postage
     ).order_by(
         Notification.postage
-    ).all()
-    return notifications
-
-
-def dao_old_letters_with_created_status():
-    yesterday_bst = convert_utc_to_local_timezone(datetime.utcnow()) - timedelta(days=1)
-    last_processing_deadline = yesterday_bst.replace(hour=17, minute=30, second=0, microsecond=0)
-
-    notifications = Notification.query.filter(
-        Notification.created_at < convert_local_timezone_to_utc(last_processing_deadline),
-        Notification.notification_type == LETTER_TYPE,
-        Notification.status == NOTIFICATION_CREATED
-    ).order_by(
-        Notification.created_at
-    ).all()
-    return notifications
-
-
-def letters_missing_from_sending_bucket(seconds_to_subtract):
-    older_than_date = datetime.utcnow() - timedelta(seconds=seconds_to_subtract)
-    # We expect letters to have a `created` status, updated_at timestamp and billable units greater than zero.
-    notifications = Notification.query.filter(
-        Notification.billable_units == 0,
-        Notification.updated_at == None,  # noqa
-        Notification.status == NOTIFICATION_CREATED,
-        Notification.created_at <= older_than_date,
-        Notification.notification_type == LETTER_TYPE,
-        Notification.key_type == KEY_TYPE_NORMAL
-    ).order_by(
-        Notification.created_at
-    ).all()
-
-    return notifications
-
-
-def dao_precompiled_letters_still_pending_virus_check():
-    ninety_minutes_ago = datetime.utcnow() - timedelta(seconds=5400)
-
-    notifications = Notification.query.filter(
-        Notification.created_at < ninety_minutes_ago,
-        Notification.status == NOTIFICATION_PENDING_VIRUS_CHECK
-    ).order_by(
-        Notification.created_at
     ).all()
     return notifications
 

@@ -1,13 +1,8 @@
 import json
-import random
-from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.s3 import s3upload
 from requests import HTTPError, request
 
-from app import notify_celery
-from app.aws.s3 import file_exists
 from app.celery.process_ses_receipts_tasks import process_ses_results
 from app.config import QueueNames
 from app.models import SMS_TYPE

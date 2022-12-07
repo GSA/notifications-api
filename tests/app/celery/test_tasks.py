@@ -66,7 +66,6 @@ from tests.app.db import (
     create_template,
     create_user,
 )
-from tests.conftest import set_config_values
 
 
 class AnyStringWith(str):
@@ -929,7 +928,6 @@ def test_save_sms_does_not_send_duplicate_and_does_not_put_in_retry_queue(sample
     assert Notification.query.count() == 1
     assert not deliver_sms.called
     assert not retry.called
-
 
 
 def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):

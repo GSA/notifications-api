@@ -8,14 +8,13 @@ from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery, zendesk_client
-from app.aws import s3
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
     process_job,
     process_row,
 )
-from app.config import QueueNames, TaskNames
+from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
 )
@@ -28,12 +27,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import (
-    dao_old_letters_with_created_status,
-    dao_precompiled_letters_still_pending_virus_check,
-    letters_missing_from_sending_bucket,
-    notifications_not_yet_sent,
-)
+from app.dao.notifications_dao import notifications_not_yet_sent
 from app.dao.provider_details_dao import (
     dao_adjust_provider_priority_back_to_resting_points,
 )
@@ -42,7 +36,6 @@ from app.dao.services_dao import (
     dao_find_services_with_high_failure_rates,
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
-from app.letters.utils import generate_letter_pdf_filename
 from app.models import (
     EMAIL_TYPE,
     JOB_STATUS_ERROR,

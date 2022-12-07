@@ -1,10 +1,8 @@
 import uuid
-from unittest.mock import ANY, call
+from unittest.mock import ANY
 
 import pytest
-import requests_mock
-from flask import current_app, json
-from freezegun import freeze_time
+from flask import json
 
 from app.celery.research_mode_tasks import (
     HTTPError,
@@ -15,7 +13,7 @@ from app.celery.research_mode_tasks import (
     ses_notification_callback,
 )
 from app.config import QueueNames
-from tests.conftest import Matcher, set_config_values
+from tests.conftest import Matcher
 
 dvla_response_file_matcher = Matcher(
     'dvla_response_file',

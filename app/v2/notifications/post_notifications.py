@@ -368,8 +368,6 @@ def process_letter_notification(
             status = NOTIFICATION_DELIVERED
             updated_at = datetime.utcnow()
 
-    queue = QueueNames.CREATE_LETTERS_PDF if not test_key else QueueNames.RESEARCH_MODE
-
     notification = create_letter_notification(letter_data=letter_data,
                                               service=service,
                                               template=template,
