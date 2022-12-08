@@ -112,25 +112,6 @@ def test_will_remove_csv_files_for_jobs_older_than_retention_period(
     ], any_order=True)
 
 
-@freeze_time('2017-01-01 10:00:00')
-def test_remove_csv_files_filters_by_type(mocker, sample_service):
-    mocker.patch('app.celery.nightly_tasks.s3.remove_job_from_s3')
-    """
-    Jobs older than seven days are deleted, but only two day's worth (two-day window)
-    """
-    letter_template = create_template(service=sample_service, template_type=LETTER_TYPE)
-    sms_template = create_template(service=sample_service, template_type=SMS_TYPE)
-
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-
-    job_to_delete = create_job(template=letter_template, created_at=eight_days_ago)
-    create_job(template=sms_template, created_at=eight_days_ago)
-
-    assert s3.remove_job_from_s3.call_args_list == [
-        call(job_to_delete.service_id, job_to_delete.id),
-    ]
-
-
 def test_delete_sms_notifications_older_than_retention_calls_child_task(notify_api, mocker):
     mocked = mocker.patch('app.celery.nightly_tasks._delete_notifications_older_than_retention_by_type')
     delete_sms_notifications_older_than_retention()

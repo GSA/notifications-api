@@ -115,35 +115,6 @@ def test_create_a_new_template_for_a_service_adds_folder_relationship(
     assert template.folder == parent_folder
 
 
-@pytest.mark.parametrize("template_type, expected_postage", [
-    (SMS_TYPE, None), (EMAIL_TYPE, None), (LETTER_TYPE, "second")
-])
-def test_create_a_new_template_for_a_service_adds_postage_for_letters_only(
-    client, sample_service, template_type, expected_postage
-):
-    data = {
-        'name': 'my template',
-        'template_type': template_type,
-        'content': 'template <b>content</b>',
-        'service': str(sample_service.id),
-        'created_by': str(sample_service.users[0].id)
-    }
-    if template_type in [EMAIL_TYPE, LETTER_TYPE]:
-        data["subject"] = "Hi, I have good news"
-
-    data = json.dumps(data)
-    auth_header = create_admin_authorization_header()
-
-    response = client.post(
-        '/service/{}/template'.format(sample_service.id),
-        headers=[('Content-Type', 'application/json'), auth_header],
-        data=data
-    )
-    assert response.status_code == 201
-    template = Template.query.filter(Template.name == 'my template').first()
-    assert template.postage == expected_postage
-
-
 def test_create_template_should_return_400_if_folder_is_for_a_different_service(
         client, sample_service
 ):
@@ -323,8 +294,8 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert json_resp['message'] == 'No result found'
 
 
-@pytest.mark.parametrize('template_type', [EMAIL_TYPE, LETTER_TYPE])
-def test_must_have_a_subject_on_an_email_or_letter_template(client, sample_user, sample_service, template_type):
+@pytest.mark.parametrize('template_type', [EMAIL_TYPE])
+def test_must_have_a_subject_on_an_email_template(client, sample_user, sample_service, template_type):
     data = {
         'name': 'my template',
         'template_type': template_type,
@@ -427,50 +398,6 @@ def test_should_be_able_to_archive_template_should_remove_template_folders(
     updated_template = Template.query.get(template.id)
     assert updated_template.archived
     assert not updated_template.folder
-
-
-def test_get_precompiled_template_for_service(
-    client,
-    notify_user,
-    sample_service,
-):
-    assert len(sample_service.templates) == 0
-
-    response = client.get(
-        '/service/{}/template/precompiled'.format(sample_service.id),
-        headers=[create_admin_authorization_header()],
-    )
-    assert response.status_code == 200
-    assert len(sample_service.templates) == 1
-
-    data = json.loads(response.get_data(as_text=True))
-    assert data['name'] == 'Pre-compiled PDF'
-    assert data['hidden'] is True
-
-
-def test_get_precompiled_template_for_service_when_service_has_existing_precompiled_template(
-    client,
-    notify_user,
-    sample_service,
-):
-    create_template(
-        sample_service,
-        template_name='Exisiting precompiled template',
-        template_type=LETTER_TYPE,
-        hidden=True)
-    assert len(sample_service.templates) == 1
-
-    response = client.get(
-        '/service/{}/template/precompiled'.format(sample_service.id),
-        headers=[create_admin_authorization_header()],
-    )
-
-    assert response.status_code == 200
-    assert len(sample_service.templates) == 1
-
-    data = json.loads(response.get_data(as_text=True))
-    assert data['name'] == 'Exisiting precompiled template'
-    assert data['hidden'] is True
 
 
 def test_should_be_able_to_get_all_templates_for_a_service(client, sample_user, sample_service):

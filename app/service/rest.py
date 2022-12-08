@@ -122,10 +122,7 @@ from app.schemas import (
     service_schema,
 )
 from app.service import statistics
-from app.service.send_notification import (
-    send_one_off_notification,
-    send_pdf_letter_notification,
-)
+from app.service.send_notification import send_one_off_notification
 from app.service.send_pdf_letter_schema import send_pdf_letter_request
 from app.service.sender import send_notification_to_service_users
 from app.service.service_contact_list_schema import (
@@ -749,11 +746,12 @@ def create_one_off_notification(service_id):
     return jsonify(resp), 201
 
 
-@service_blueprint.route('/<uuid:service_id>/send-pdf-letter', methods=['POST'])
-def create_pdf_letter(service_id):
-    data = validate(request.get_json(), send_pdf_letter_request)
-    resp = send_pdf_letter_notification(service_id, data)
-    return jsonify(resp), 201
+# TODO: return deactivation notice
+# @service_blueprint.route('/<uuid:service_id>/send-pdf-letter', methods=['POST'])
+# def create_pdf_letter(service_id):
+#     data = validate(request.get_json(), send_pdf_letter_request)
+#     resp = send_pdf_letter_notification(service_id, data)
+#     return jsonify(resp), 201
 
 
 @service_blueprint.route('/<uuid:service_id>/email-reply-to', methods=["GET"])

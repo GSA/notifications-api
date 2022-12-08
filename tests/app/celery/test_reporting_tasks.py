@@ -87,10 +87,8 @@ def test_create_nightly_notification_status_triggers_tasks(
 @freeze_time('2019-08-01T00:30')
 @pytest.mark.parametrize('notification_date, expected_types_aggregated', [
     ('2019-08-01', set()),
-    ('2019-07-31', {EMAIL_TYPE, SMS_TYPE, LETTER_TYPE}),
-    ('2019-07-28', {EMAIL_TYPE, SMS_TYPE, LETTER_TYPE}),
-    ('2019-07-27', {LETTER_TYPE}),
-    ('2019-07-22', {LETTER_TYPE}),
+    ('2019-07-31', {EMAIL_TYPE, SMS_TYPE}),
+    ('2019-07-28', {EMAIL_TYPE, SMS_TYPE}),
     ('2019-07-21', set()),
 ])
 def test_create_nightly_notification_status_triggers_relevant_tasks(
