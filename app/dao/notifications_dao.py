@@ -361,10 +361,6 @@ def move_notifications_to_notification_history(
     qry_limit=50000
 ):
     deleted = 0
-    if notification_type == LETTER_TYPE:
-        _delete_letters_from_s3(
-            notification_type, service_id, timestamp_to_delete_backwards_from, qry_limit
-        )
     delete_count_per_call = 1
     while delete_count_per_call > 0:
         delete_count_per_call = insert_notification_history_delete_notifications(
@@ -385,32 +381,6 @@ def move_notifications_to_notification_history(
     db.session.commit()
 
     return deleted
-
-
-def _delete_letters_from_s3(
-        notification_type, service_id, date_to_delete_from, query_limit
-):
-    letters_to_delete_from_s3 = db.session.query(
-        Notification
-    ).filter(
-        Notification.notification_type == notification_type,
-        Notification.created_at < date_to_delete_from,
-        Notification.service_id == service_id,
-        # although letters in non completed statuses do have PDFs in s3, they do not exist in the
-        # production-letters-pdf bucket as they never made it that far so we do not try and delete
-        # them from it
-        Notification.status.in_(NOTIFICATION_STATUS_TYPES_COMPLETED)
-    ).limit(query_limit).all()
-    for letter in letters_to_delete_from_s3:
-        try:
-            letter_pdf = find_letter_pdf_in_s3(letter)
-            letter_pdf.delete()
-        except ClientError:
-            current_app.logger.exception(
-                "Error deleting S3 object for letter: {}".format(letter.id))
-        except LetterPDFNotFound:
-            current_app.logger.warning(
-                "No S3 object to delete for letter: {}".format(letter.id))
 
 
 @autocommit

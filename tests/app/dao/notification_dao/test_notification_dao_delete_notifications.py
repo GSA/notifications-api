@@ -156,29 +156,6 @@ def test_move_notifications_deletes_letters_sent_and_in_final_state_from_table_a
         s3.get_object(Bucket=bucket_name, Key=filename)
 
 
-@pytest.mark.parametrize('notification_status', ['pending-virus-check', 'created', 'sending'])
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_move_notifications_does_not_delete_letters_not_yet_in_final_state(
-    sample_service, mocker, notification_status
-):
-    mock_s3_object = mocker.patch("app.dao.notifications_dao.find_letter_pdf_in_s3").return_value
-    letter_template = create_template(service=sample_service, template_type='letter')
-    create_notification(
-        template=letter_template,
-        status=notification_status,
-        reference='LETTER_REF',
-        created_at=datetime.utcnow() - timedelta(days=8),
-    )
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
-
-    move_notifications_to_notification_history('letter', sample_service.id, datetime.utcnow())
-
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
-    mock_s3_object.assert_not_called()
-
-
 def test_move_notifications_only_moves_notifications_older_than_provided_timestamp(sample_template):
     delete_time = datetime(2020, 6, 1, 12)
     one_second_before = delete_time - timedelta(seconds=1)

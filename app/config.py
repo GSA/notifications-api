@@ -20,10 +20,8 @@ class QueueNames(object):
     RETRY = 'retry-tasks'
     NOTIFY = 'notify-internal-tasks'
     PROCESS_FTP = 'process-ftp-tasks'
-    CREATE_LETTERS_PDF = 'create-letters-pdf-tasks'
     CALLBACKS = 'service-callbacks'
     CALLBACKS_RETRY = 'service-callbacks-retry'
-    LETTERS = 'letter-tasks'
     SMS_CALLBACKS = 'sms-callbacks'
     ANTIVIRUS = 'antivirus-tasks'
     SAVE_API_EMAIL = 'save-api-email-tasks'
@@ -42,10 +40,8 @@ class QueueNames(object):
             QueueNames.JOBS,
             QueueNames.RETRY,
             QueueNames.NOTIFY,
-            QueueNames.CREATE_LETTERS_PDF,
             QueueNames.CALLBACKS,
             QueueNames.CALLBACKS_RETRY,
-            QueueNames.LETTERS,
             QueueNames.SMS_CALLBACKS,
             QueueNames.SAVE_API_EMAIL,
             QueueNames.SAVE_API_SMS,
@@ -268,12 +264,6 @@ class Config(object):
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
                 'schedule': crontab(hour=4, minute=0),
-                'options': {'queue': QueueNames.PERIODIC},
-            },
-            'remove_letter_jobs': {
-                'task': 'remove_letter_jobs',
-                'schedule': crontab(hour=4, minute=20),
-                # since we mark jobs as archived
                 'options': {'queue': QueueNames.PERIODIC},
             },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {

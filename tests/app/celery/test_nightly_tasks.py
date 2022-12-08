@@ -9,9 +9,7 @@ from app.celery.nightly_tasks import (
     _delete_notifications_older_than_retention_by_type,
     delete_email_notifications_older_than_retention,
     delete_inbound_sms,
-    delete_letter_notifications_older_than_retention,
     delete_sms_notifications_older_than_retention,
-    remove_letter_csv_files,
     remove_sms_email_csv_files,
     s3,
     save_daily_notification_processing_time,
@@ -128,8 +126,6 @@ def test_remove_csv_files_filters_by_type(mocker, sample_service):
     job_to_delete = create_job(template=letter_template, created_at=eight_days_ago)
     create_job(template=sms_template, created_at=eight_days_ago)
 
-    remove_letter_csv_files()
-
     assert s3.remove_job_from_s3.call_args_list == [
         call(job_to_delete.service_id, job_to_delete.id),
     ]
@@ -146,12 +142,6 @@ def test_delete_email_notifications_older_than_retentions_calls_child_task(notif
         'app.celery.nightly_tasks._delete_notifications_older_than_retention_by_type')
     delete_email_notifications_older_than_retention()
     mocked_notifications.assert_called_once_with('email')
-
-
-def test_delete_letter_notifications_older_than_retention_calls_child_task(notify_api, mocker):
-    mocked = mocker.patch('app.celery.nightly_tasks._delete_notifications_older_than_retention_by_type')
-    delete_letter_notifications_older_than_retention()
-    mocked.assert_called_once_with('letter')
 
 
 def test_should_not_update_status_of_letter_notifications(client, sample_letter_template):
