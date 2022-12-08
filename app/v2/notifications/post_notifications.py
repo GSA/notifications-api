@@ -19,7 +19,6 @@ from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames, TaskNames
 from app.dao.dao_utils import transaction
-from app.dao.templates_dao import get_precompiled_letter_template
 from app.letters.utils import upload_letter_pdf
 from app.models import (
     EMAIL_TYPE,
@@ -66,7 +65,6 @@ from app.v2.notifications.create_response import (
 from app.v2.notifications.notification_schemas import (
     post_email_request,
     post_letter_request,
-    post_precompiled_letter_request,
     post_sms_request,
 )
 from app.v2.utils import get_valid_json
@@ -77,38 +75,39 @@ POST_NOTIFICATION_JSON_PARSE_DURATION_SECONDS = Histogram(
 )
 
 
-@v2_notification_blueprint.route('/{}'.format(LETTER_TYPE), methods=['POST'])
-def post_precompiled_letter_notification():
-    request_json = get_valid_json()
-    if 'content' not in (request_json or {}):
-        return post_notification(LETTER_TYPE)
+# TODO: return deprecation message
+# @v2_notification_blueprint.route('/{}'.format(LETTER_TYPE), methods=['POST'])
+# def post_precompiled_letter_notification():
+#     request_json = get_valid_json()
+#     if 'content' not in (request_json or {}):
+#         return post_notification(LETTER_TYPE)
 
-    form = validate(request_json, post_precompiled_letter_request)
+#     form = validate(request_json, post_precompiled_letter_request)
 
-    # Check permission to send letters
-    check_service_has_permission(LETTER_TYPE, authenticated_service.permissions)
+#     # Check permission to send letters
+#     check_service_has_permission(LETTER_TYPE, authenticated_service.permissions)
 
-    check_rate_limiting(authenticated_service, api_user)
+#     check_rate_limiting(authenticated_service, api_user)
 
-    template = get_precompiled_letter_template(authenticated_service.id)
+#     template = get_precompiled_letter_template(authenticated_service.id)
 
-    # For precompiled letters the to field will be set to Provided as PDF until the validation passes,
-    # then the address of the letter will be set as the to field
-    form['personalisation'] = {
-        'address_line_1': 'Provided as PDF'
-    }
+#     # For precompiled letters the to field will be set to Provided as PDF until the validation passes,
+#     # then the address of the letter will be set as the to field
+#     form['personalisation'] = {
+#         'address_line_1': 'Provided as PDF'
+#     }
 
-    notification = process_letter_notification(
-        letter_data=form,
-        api_key=api_user,
-        service=authenticated_service,
-        template=template,
-        template_with_content=None,  # not required for precompiled
-        reply_to_text='',  # not required for precompiled
-        precompiled=True
-    )
+#     notification = process_letter_notification(
+#         letter_data=form,
+#         api_key=api_user,
+#         service=authenticated_service,
+#         template=template,
+#         template_with_content=None,  # not required for precompiled
+#         reply_to_text='',  # not required for precompiled
+#         precompiled=True
+#     )
 
-    return jsonify(notification), 201
+#     return jsonify(notification), 201
 
 
 @v2_notification_blueprint.route('/<notification_type>', methods=['POST'])
@@ -120,8 +119,6 @@ def post_notification(notification_type):
             form = validate(request_json, post_email_request)
         elif notification_type == SMS_TYPE:
             form = validate(request_json, post_sms_request)
-        elif notification_type == LETTER_TYPE:
-            form = validate(request_json, post_letter_request)
         else:
             abort(404)
 
@@ -139,25 +136,16 @@ def post_notification(notification_type):
 
     reply_to = get_reply_to_text(notification_type, form, template)
 
-    if notification_type == LETTER_TYPE:
-        notification = process_letter_notification(
-            letter_data=form,
-            api_key=api_user,
-            service=authenticated_service,
-            template=template,
-            template_with_content=template_with_content,
-            reply_to_text=reply_to
-        )
-    else:
-        notification = process_sms_or_email_notification(
-            form=form,
-            notification_type=notification_type,
-            template=template,
-            template_with_content=template_with_content,
-            template_process_type=template.process_type,
-            service=authenticated_service,
-            reply_to_text=reply_to
-        )
+    
+    notification = process_sms_or_email_notification(
+        form=form,
+        notification_type=notification_type,
+        template=template,
+        template_with_content=template_with_content,
+        template_process_type=template.process_type,
+        service=authenticated_service,
+        reply_to_text=reply_to
+    )
 
     return jsonify(notification), 201
 
@@ -443,9 +431,6 @@ def get_reply_to_text(notification_type, form, template):
         else:
             reply_to = template.reply_to_text
 
-    elif notification_type == LETTER_TYPE:
-        reply_to = template.reply_to_text
-
     return reply_to
 
 
@@ -469,11 +454,6 @@ def create_response_for_post_notification(
             create_post_email_response_from_notification,
             subject=template_with_content.subject,
             email_from='{}@{}'.format(authenticated_service.email_from, current_app.config['NOTIFY_EMAIL_DOMAIN']),
-        )
-    elif notification_type == LETTER_TYPE:
-        create_resp_partial = functools.partial(
-            create_post_letter_response_from_notification,
-            subject=template_with_content.subject,
         )
     resp = create_resp_partial(
         notification_id, client_reference, template_id, template_version, service_id,

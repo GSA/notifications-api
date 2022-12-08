@@ -19,7 +19,7 @@ post_create_template_schema = {
     },
     "if": {
         "properties": {
-            "template_type": {"enum": ["email", "letter"]}
+            "template_type": {"enum": ["email"]}
         }
     },
     "then": {"required": ["subject"]},

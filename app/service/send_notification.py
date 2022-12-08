@@ -1,30 +1,13 @@
-import urllib
-
-from flask import current_app
-from notifications_utils.s3 import S3ObjectNotFound
-from notifications_utils.s3 import s3download as utils_s3download
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import create_random_identifier
 from app.config import QueueNames
-from app.dao.notifications_dao import (
-    _update_notification_status,
-    get_notification_by_id,
-)
+from app.dao.notifications_dao import _update_notification_status
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.dao.templates_dao import (
-    dao_get_template_by_id_and_service_id,
-    get_precompiled_letter_template,
-)
+from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.letters.utils import (
-    generate_letter_pdf_filename,
-    get_billable_units_for_letter_page_count,
-    get_page_count,
-    move_uploaded_pdf_to_letters_bucket,
-)
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
@@ -38,7 +21,6 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.notifications.validators import (
-    check_service_has_permission,
     check_service_over_daily_message_limit,
     validate_address,
     validate_and_format_recipient,
@@ -151,72 +133,3 @@ def get_reply_to_text(notification_type, sender_id, service, template):
     else:
         reply_to = template.get_reply_to_text()
     return reply_to
-
-
-def send_pdf_letter_notification(service_id, post_data):
-    service = dao_fetch_service_by_id(service_id)
-
-    check_service_has_permission(LETTER_TYPE, [
-        p.permission for p in service.permissions
-    ])
-    check_service_over_daily_message_limit(KEY_TYPE_NORMAL, service)
-    validate_created_by(service, post_data['created_by'])
-    validate_and_format_recipient(
-        send_to=post_data['recipient_address'],
-        key_type=KEY_TYPE_NORMAL,
-        service=service,
-        notification_type=LETTER_TYPE,
-        allow_guest_list_recipients=False,
-    )
-
-    # notification already exists e.g. if the user clicked send in different tabs
-    if get_notification_by_id(post_data['file_id']):
-        return {'id': str(post_data['file_id'])}
-
-    template = get_precompiled_letter_template(service.id)
-    file_location = 'service-{}/{}.pdf'.format(service.id, post_data['file_id'])
-
-    try:
-        letter = utils_s3download(current_app.config['TRANSIENT_UPLOADED_LETTERS'], file_location)
-    except S3ObjectNotFound as e:
-        current_app.logger.warning('Letter {}.pdf not in transient {} bucket'.format(
-            post_data['file_id'], current_app.config['TRANSIENT_UPLOADED_LETTERS'])
-        )
-
-        raise e
-
-    # Getting the page count won't raise an error since admin has already checked the PDF is valid
-    page_count = get_page_count(letter.read())
-    billable_units = get_billable_units_for_letter_page_count(page_count)
-
-    personalisation = {
-        'address_line_1': post_data['filename']
-    }
-
-    notification = persist_notification(
-        notification_id=post_data['file_id'],
-        template_id=template.id,
-        template_version=template.version,
-        recipient=urllib.parse.unquote(post_data['recipient_address']),
-        service=service,
-        personalisation=personalisation,
-        notification_type=LETTER_TYPE,
-        api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
-        reference=create_one_off_reference(LETTER_TYPE),
-        client_reference=post_data['filename'],
-        created_by_id=post_data['created_by'],
-        billable_units=billable_units,
-        postage=post_data['postage'] or template.postage,
-    )
-
-    upload_filename = generate_letter_pdf_filename(
-        reference=notification.reference,
-        created_at=notification.created_at,
-        ignore_folder=False,
-        postage=notification.postage
-    )
-
-    move_uploaded_pdf_to_letters_bucket(file_location, upload_filename)
-
-    return {'id': str(notification.id)}
