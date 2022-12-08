@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4e91ab05773366a04e60924ffca46e9157515716e6a98c4cc43097097713e651"
+            "sha256": "64cec0ebf1afc8708dcbfee70bfa3881152b2c2487ace24b785e107821b95917"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -157,11 +157,11 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:9c5705e395cd70084351dd8ad5c41e65655e08ce46f2ec9cf6c2c08390f71eb7",
-                "sha256:f1d53542ee8cbedbe2118b5686372fb33c297fcd6379b050cca0ef13a597382a"
+                "sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3",
+                "sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18"
             ],
             "index": "pypi",
-            "version": "==2022.5.18.1"
+            "version": "==2022.12.7"
         },
         "cffi": {
             "hashes": [
@@ -740,9 +740,10 @@
             "version": "==6.3.0"
         },
         "notifications-utils": {
+            "branch": "main",
             "editable": true,
             "git": "https://github.com/GSA/notifications-utils",
-            "ref": "723cd96915310f12bf5c02df3fed44e7794dccfd"
+            "ref": "3096f2937b5e3b59a2e7a4b4ffb05b7fa1ab72fa"
         },
         "orderedset": {
             "hashes": [
@@ -763,15 +764,15 @@
                 "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb",
                 "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"
             ],
-            "markers": "python_version >= '3.6'",
+            "index": "pypi",
             "version": "==21.3"
         },
         "phonenumbers": {
             "hashes": [
-                "sha256:07a95c2f178687fd1c3f722cf792b3d33e3a225ae71577e500c99b28544cd6d0",
-                "sha256:7cadfe900e833857500b7bafa3e5a7eddc3263eb66b66a767870b33e44665f92"
+                "sha256:0179f688d48c0e7e161eb7b9d86d587940af1f5174f97c1fdfd893c599c0d94a",
+                "sha256:884b26f775205261f4dc861371dce217c1661a4942fb3ec3624e290fb51869bf"
             ],
-            "version": "==8.13.1"
+            "version": "==8.13.2"
         },
         "prometheus-client": {
             "hashes": [
@@ -1387,11 +1388,11 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:9c5705e395cd70084351dd8ad5c41e65655e08ce46f2ec9cf6c2c08390f71eb7",
-                "sha256:f1d53542ee8cbedbe2118b5686372fb33c297fcd6379b050cca0ef13a597382a"
+                "sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3",
+                "sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18"
             ],
             "index": "pypi",
-            "version": "==2022.5.18.1"
+            "version": "==2022.12.7"
         },
         "cffi": {
             "hashes": [
@@ -1814,7 +1815,7 @@
                 "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb",
                 "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"
             ],
-            "markers": "python_version >= '3.6'",
+            "index": "pypi",
             "version": "==21.3"
         },
         "pbr": {
@@ -1843,19 +1844,19 @@
         },
         "pip-audit": {
             "hashes": [
-                "sha256:a99f825ee431a89b89981c4e9e6eaacff5af3233783f2f5d79fe03306dc378ce",
-                "sha256:f87b37b6db5317a3f5ecebc202b5d4401958b5e4bd05b39d7b230bdc6f63c34b"
+                "sha256:40876d6ad6adf5ac64fba1ecef034db9804c35c2c18f7c22cb7b11b382c10df9",
+                "sha256:a45540ab0c5a9311315ca42c78fa8f72cf3598d5968a67d883d2d6194eda598c"
             ],
             "index": "pypi",
-            "version": "==2.4.7"
+            "version": "==2.4.8"
         },
         "pip-requirements-parser": {
             "hashes": [
-                "sha256:22fa213a987913385b2484d5698ecfa1d9cf4154978cdf929085548af55355b0",
-                "sha256:8c2a6f8e091ac2693824a5ef4e3b250226e34f74a20a91a87b9ab0714b47788f"
+                "sha256:5159b8a9485a5a0d0254a29c9bd8b8ce66db2eb9a1a0244c64dfce43f7f2ac90",
+                "sha256:aa664781e69f82ecefda542d5210aa5b0f6533be95aea39a5453943db09359ed"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==31.2.0"
+            "version": "==32.0.0"
         },
         "pluggy": {
             "hashes": [
