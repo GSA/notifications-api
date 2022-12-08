@@ -1,10 +1,6 @@
-from datetime import datetime
-
 from sqlalchemy import desc, func
-from sqlalchemy.dialects.postgresql import insert
 
 from app import db
-from app.dao.dao_utils import autocommit
 from app.models import (
     Job,
     Notification,
@@ -14,41 +10,6 @@ from app.models import (
     User,
 )
 from app.utils import midnight_n_days_ago
-
-
-def _get_notification_ids_for_references(references):
-    notification_ids = db.session.query(Notification.id, Notification.service_id).filter(
-        Notification.reference.in_(references)
-    ).all()
-
-    notification_history_ids = db.session.query(NotificationHistory.id, NotificationHistory.service_id).filter(
-        NotificationHistory.reference.in_(references)
-    ).all()
-
-    return notification_ids + notification_history_ids
-
-
-@autocommit
-def insert_or_update_returned_letters(references):
-    data = _get_notification_ids_for_references(references)
-    for row in data:
-        table = ReturnedLetter.__table__
-
-        stmt = insert(table).values(
-            reported_at=datetime.utcnow().date(),
-            service_id=row.service_id,
-            notification_id=row.id,
-            created_at=datetime.utcnow()
-        )
-
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[table.c.notification_id],
-            set_={
-                'reported_at': datetime.utcnow().date(),
-                'updated_at': datetime.utcnow()
-            }
-        )
-        db.session.connection().execute(stmt)
 
 
 def fetch_recent_returned_letter_count(service_id):

@@ -14,10 +14,8 @@ from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
     dao_get_last_notification_added_for_job_id,
-    dao_update_notifications_by_reference,
     get_notification_by_id,
 )
-from app.dao.returned_letters_dao import insert_or_update_returned_letters
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
@@ -29,7 +27,6 @@ from app.models import (
     JOB_STATUS_IN_PROGRESS,
     JOB_STATUS_PENDING,
     KEY_TYPE_NORMAL,
-    NOTIFICATION_RETURNED_LETTER,
     SMS_TYPE,
 )
 from app.notifications.process_notifications import persist_notification
@@ -426,19 +423,3 @@ def process_incomplete_job(job_id):
             process_row(row, template, job, job.service, sender_id=sender_id)
 
     job_complete(job, resumed=True)
-
-
-@notify_celery.task(name='process-returned-letters-list')
-def process_returned_letters_list(notification_references):
-    updated, updated_history = dao_update_notifications_by_reference(
-        notification_references,
-        {"status": NOTIFICATION_RETURNED_LETTER}
-    )
-
-    insert_or_update_returned_letters(notification_references)
-
-    current_app.logger.info(
-        "Updated {} letter notifications ({} history notifications, from {} references) to returned-letter".format(
-            updated, updated_history, len(notification_references)
-        )
-    )

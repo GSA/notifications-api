@@ -23,7 +23,6 @@ from app.celery.tasks import (
     process_incomplete_job,
     process_incomplete_jobs,
     process_job,
-    process_returned_letters_list,
     process_row,
     s3,
     save_api_email,
@@ -1361,47 +1360,6 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
     assert job2.processing_started == datetime.utcnow()
 
     assert mock_process_incomplete_job.mock_calls == [call(str(job1.id)), call(str(job2.id))]
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_list(sample_letter_template):
-    create_notification(sample_letter_template, reference='ref1')
-    create_notification(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    notifications = Notification.query.all()
-
-    assert [n.status for n in notifications] == ['returned-letter', 'returned-letter']
-    assert all(n.updated_at for n in notifications)
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_list_updates_history_if_notification_is_already_purged(
-        sample_letter_template
-):
-    create_notification_history(sample_letter_template, reference='ref1')
-    create_notification_history(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    notifications = NotificationHistory.query.all()
-
-    assert [n.status for n in notifications] == ['returned-letter', 'returned-letter']
-    assert all(n.updated_at for n in notifications)
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_populates_returned_letters_table(
-        sample_letter_template
-):
-    create_notification_history(sample_letter_template, reference='ref1')
-    create_notification_history(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    returned_letters = ReturnedLetter.query.all()
-    assert len(returned_letters) == 2
 
 
 @freeze_time('2020-03-25 14:30')
