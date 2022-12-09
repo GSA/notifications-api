@@ -14,8 +14,8 @@ down_revision = '0380_bst_to_local'
 
 
 def upgrade():
-    pass
+    op.alter_column("api_keys", "secret", type_=sa.types.String())
 
 
 def downgrade():
-    pass
+    op.alter_column("api_keys", "secret", type_=sa.types.String(length=255))

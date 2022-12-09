@@ -125,7 +125,7 @@ def get_recipient_csv_and_template_and_sender_id(job):
 
 def process_row(row, template, job, service, sender_id=None):
     template_type = template.template_type
-    encrypted = encryption.sign({
+    encrypted = encryption.encrypt({
         'template': str(template.id),
         'template_version': job.template_version,
         'job': str(job.id),
@@ -183,7 +183,7 @@ def save_sms(self,
              notification_id,
              encrypted_notification,
              sender_id=None):
-    notification = encryption.verify_signature(encrypted_notification)
+    notification = encryption.decrypt(encrypted_notification)
     service = SerialisedService.from_id(service_id)
     template = SerialisedTemplate.from_id_and_service_id(
         notification['template'],
@@ -241,7 +241,7 @@ def save_email(self,
                notification_id,
                encrypted_notification,
                sender_id=None):
-    notification = encryption.verify_signature(encrypted_notification)
+    notification = encryption.decrypt(encrypted_notification)
 
     service = SerialisedService.from_id(service_id)
     template = SerialisedTemplate.from_id_and_service_id(
@@ -298,7 +298,7 @@ def save_api_sms(self, encrypted_notification):
 
 
 def save_api_email_or_sms(self, encrypted_notification):
-    notification = encryption.verify_signature(encrypted_notification)
+    notification = encryption.decrypt(encrypted_notification)
     service = SerialisedService.from_id(notification['service_id'])
     q = QueueNames.SEND_EMAIL if notification['notification_type'] == EMAIL_TYPE else QueueNames.SEND_SMS
     provider_task = provider_tasks.deliver_email if notification['notification_type'] == EMAIL_TYPE \
@@ -348,7 +348,7 @@ def save_letter(
         notification_id,
         encrypted_notification,
 ):
-    notification = encryption.verify_signature(encrypted_notification)
+    notification = encryption.decrypt(encrypted_notification)
 
     postal_address = PostalAddress.from_personalisation(
         InsensitiveDict(notification['personalisation'])

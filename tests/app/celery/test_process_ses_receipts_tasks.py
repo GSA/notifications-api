@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from unittest.mock import ANY
 
 from freezegun import freeze_time
 
@@ -14,11 +15,8 @@ from app.celery.research_mode_tasks import (
     ses_notification_callback,
     ses_soft_bounce_callback,
 )
-from app.celery.service_callback_tasks import (
-    create_delivery_status_callback_data,
-)
 from app.dao.notifications_dao import get_notification_by_id
-from app.models import Complaint, Notification
+from app.models import Complaint
 from tests.app.conftest import create_sample_notification
 from tests.app.db import (
     create_notification,
@@ -156,7 +154,7 @@ def test_ses_callback_should_update_notification_status(
             status='sending',
             sent_at=datetime.utcnow()
         )
-        callback_api = create_service_callback_api(
+        create_service_callback_api(
             service=sample_email_template.service,
             url="https://original_url.com"
         )
@@ -167,9 +165,9 @@ def test_ses_callback_should_update_notification_status(
             "callback.ses.elapsed-time", datetime.utcnow(), notification.sent_at
         )
         statsd_client.incr.assert_any_call("callback.ses.delivered")
-        updated_notification = Notification.query.get(notification.id)
-        encrypted_data = create_delivery_status_callback_data(updated_notification, callback_api)
-        send_mock.assert_called_once_with([str(notification.id), encrypted_data], queue="service-callbacks")
+        send_mock.assert_called_once_with([str(notification.id), ANY], queue="service-callbacks")
+        # assert second arg is an encrypted string
+        assert isinstance(send_mock.call_args.args[0][1], str)
 
 
 def test_ses_callback_should_not_update_notification_status_if_already_delivered(sample_email_template, mocker):
@@ -331,7 +329,7 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(sample_email
     response = ses_complaint_callback()
     assert process_ses_results(response)
     assert send_mock.call_count == 1
-    assert encryption.verify_signature(send_mock.call_args[0][0][0]) == {
+    assert encryption.decrypt(send_mock.call_args[0][0][0]) == {
         'complaint_date': '2018-06-05T13:59:58.000000Z',
         'complaint_id': str(Complaint.query.one().id),
         'notification_id': str(notification.id),

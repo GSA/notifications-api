@@ -12,7 +12,7 @@ from app.utils import DATETIME_FORMAT
 def send_delivery_status_to_service(
     self, notification_id, encrypted_status_update
 ):
-    status_update = encryption.verify_signature(encrypted_status_update)
+    status_update = encryption.decrypt(encrypted_status_update)
 
     data = {
         "id": str(notification_id),
@@ -38,7 +38,7 @@ def send_delivery_status_to_service(
 
 @notify_celery.task(bind=True, name="send-complaint", max_retries=5, default_retry_delay=300)
 def send_complaint_to_service(self, complaint_data):
-    complaint = encryption.verify_signature(complaint_data)
+    complaint = encryption.decrypt(complaint_data)
 
     data = {
         "notification_id": complaint['notification_id'],
@@ -125,7 +125,7 @@ def create_delivery_status_callback_data(notification, service_callback_api):
         "template_id": str(notification.template_id),
         "template_version": notification.template_version,
     }
-    return encryption.sign(data)
+    return encryption.encrypt(data)
 
 
 def create_complaint_callback_data(complaint, notification, service_callback_api, recipient):
@@ -138,4 +138,4 @@ def create_complaint_callback_data(complaint, notification, service_callback_api
         "service_callback_api_url": service_callback_api.url,
         "service_callback_api_bearer_token": service_callback_api.bearer_token,
     }
-    return encryption.sign(data)
+    return encryption.encrypt(data)
