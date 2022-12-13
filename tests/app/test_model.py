@@ -160,6 +160,13 @@ def test_notification_personalisation_getter_always_returns_empty_dict(notify_ap
     assert noti.personalisation == {}
 
 
+def test_notification_personalisation_getter_returns_empty_dict_for_encryption_errors(notify_app):
+    noti = Notification()
+    # old _personalisation values were created with encryption.sign, which will trigger a decryption error
+    noti._personalisation = encryption.sign({"value": "PII"})
+    assert noti.personalisation == {}
+
+
 @pytest.mark.parametrize('input_value', [
     None,
     {}
