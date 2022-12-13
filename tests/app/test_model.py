@@ -154,7 +154,7 @@ def test_notification_personalisation_getter_returns_empty_dict_from_None():
     assert noti.personalisation == {}
 
 
-def test_notification_personalisation_getter_always_returns_empty_dict(notify_api):
+def test_notification_personalisation_getter_always_returns_empty_dict(notify_app):
     noti = Notification()
     noti._personalisation = encryption.encrypt({})
     assert noti.personalisation == {}
@@ -164,7 +164,7 @@ def test_notification_personalisation_getter_always_returns_empty_dict(notify_ap
     None,
     {}
 ])
-def test_notification_personalisation_setter_always_sets_empty_dict(notify_api, input_value):
+def test_notification_personalisation_setter_always_sets_empty_dict(notify_app, input_value):
     noti = Notification()
     noti.personalisation = input_value
 
