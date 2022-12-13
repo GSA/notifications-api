@@ -154,7 +154,7 @@ def test_notification_personalisation_getter_returns_empty_dict_from_None():
     assert noti.personalisation == {}
 
 
-def test_notification_personalisation_getter_always_returns_empty_dict():
+def test_notification_personalisation_getter_always_returns_empty_dict(notify_app):
     noti = Notification()
     noti._personalisation = encryption.encrypt({})
     assert noti.personalisation == {}
@@ -164,11 +164,11 @@ def test_notification_personalisation_getter_always_returns_empty_dict():
     None,
     {}
 ])
-def test_notification_personalisation_setter_always_sets_empty_dict(input_value):
+def test_notification_personalisation_setter_always_sets_empty_dict(notify_app, input_value):
     noti = Notification()
     noti.personalisation = input_value
 
-    assert noti._personalisation == encryption.encrypt({})
+    assert noti.personalisation == {}
 
 
 def test_notification_subject_is_none_for_sms(sample_service):

@@ -473,7 +473,6 @@ def test_should_send_template_to_correct_sms_task_and_persist(sample_template_wi
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
     assert persisted_notification.personalisation == {'name': 'Jo'}
-    assert persisted_notification._personalisation == encryption.encrypt({"name": "Jo"})
     assert persisted_notification.notification_type == 'sms'
     mocked_deliver_sms.assert_called_once_with(
         [str(persisted_notification.id)],
@@ -721,7 +720,6 @@ def test_should_use_email_template_and_persist(sample_email_template_with_placeh
     assert not persisted_notification.sent_by
     assert persisted_notification.job_row_number == 1
     assert persisted_notification.personalisation == {'name': 'Jo'}
-    assert persisted_notification._personalisation == encryption.encrypt({"name": "Jo"})
     assert persisted_notification.api_key_id is None
     assert persisted_notification.key_type == KEY_TYPE_NORMAL
     assert persisted_notification.notification_type == 'email'

@@ -79,7 +79,7 @@ def get_pdf_for_templated_letter(self, notification_id):
             'key_type': notification.key_type
         }
 
-        encrypted_data = encryption.encrypt(letter_data)
+        encrypted_data = encryption.sign(letter_data)
 
         notify_celery.send_task(
             name=TaskNames.CREATE_PDF_FOR_TEMPLATED_LETTER,
@@ -328,7 +328,7 @@ def sanitise_letter(self, filename):
 
 @notify_celery.task(bind=True, name='process-sanitised-letter', max_retries=15, default_retry_delay=300)
 def process_sanitised_letter(self, sanitise_data):
-    letter_details = encryption.decrypt(sanitise_data)
+    letter_details = encryption.verify_signature(sanitise_data)
 
     filename = letter_details['filename']
     notification_id = letter_details['notification_id']
