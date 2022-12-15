@@ -20,7 +20,7 @@ boto3 = "==1.23.8"
 botocore = "==1.26.8"
 cachetools = "==5.1.0"
 celery = {version = "==5.2.7", extras = ["redis"]}
-certifi = "==2022.5.18.1"
+certifi = ">=2022.12.7"
 cffi = "==1.15.0"
 charset-normalizer = "==2.0.12"
 click = "==8.1.3"
@@ -58,7 +58,8 @@ werkzeug = "~=2.1.1"
 # gds metrics packages
 prometheus-client = "==0.14.1"
 gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
-notifications-utils = {editable = true, ref = "37ae9753c050851453d072994fb03b1415601716", git = "https://github.com/GSA/notifications-utils"}
+packaging = "==21.3"
+notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
 
 [dev-packages]
 flake8 = "==4.0.1"

@@ -361,7 +361,7 @@ class Development(Config):
     CONTACT_LIST_BUCKET = _default_s3_credentials('local-contact-list')
 
     # credential overrides
-    DANGEROUS_SALT = 'dev-notify-salt'
+    DANGEROUS_SALT = 'development-notify-salt'
     SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
     ALLOW_EXPIRED_API_TOKEN = getenv('ALLOW_EXPIRED_API_TOKEN', '0') == '1'
