@@ -174,14 +174,14 @@ def test_fetch_billing_data_for_day_is_grouped_by_service(notify_db_session):
 def test_fetch_billing_data_for_day_is_grouped_by_provider(notify_db_session):
     service = create_service()
     template = create_template(service=service)
-    create_notification(template=template, status='delivered', sent_by='mmg')
-    create_notification(template=template, status='delivered', sent_by='firetext')
+    create_notification(template=template, status='delivered', sent_by='sns')
+    create_notification(template=template, status='delivered', sent_by='sns')
 
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 2
-    assert results[0].notifications_sent == 1
-    assert results[1].notifications_sent == 1
+    assert len(results) == 1
+    assert results[0].notifications_sent == 2
+    # assert results[1].notifications_sent == 1
 
 
 def test_fetch_billing_data_for_day_is_grouped_by_rate_mulitplier(notify_db_session):

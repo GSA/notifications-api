@@ -53,7 +53,6 @@ from tests.app.db import (
 )
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_by_able_to_update_status_by_reference(sample_email_template, ses_provider):
     data = _notification_json(sample_email_template, status='sending')
 
@@ -69,8 +68,7 @@ def test_should_by_able_to_update_status_by_reference(sample_email_template, ses
     assert Notification.query.get(notification.id).status == 'delivered'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
-def test_should_by_able_to_update_status_by_id(sample_template, sample_job, mmg_provider):
+def test_should_by_able_to_update_status_by_id(sample_template, sample_job, sns_provider):
     with freeze_time('2000-01-01 12:00:00'):
         data = _notification_json(sample_template, job_id=sample_job.id, status='sending')
         notification = Notification(**data)
@@ -107,7 +105,6 @@ def test_should_not_update_status_by_reference_if_not_sending_and_does_not_updat
     assert sample_job == Job.query.get(notification.job_id)
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_update_status_by_id_if_created(sample_template, sample_notification):
     assert Notification.query.get(sample_notification.id).status == 'created'
     updated = update_notification_status_by_id(sample_notification.id, 'failed')
@@ -115,7 +112,6 @@ def test_should_update_status_by_id_if_created(sample_template, sample_notificat
     assert updated.status == 'failed'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 def test_should_update_status_by_id_if_pending_virus_check(sample_letter_template):
     notification = create_notification(template=sample_letter_template, status='pending-virus-check')
     assert Notification.query.get(notification.id).status == 'pending-virus-check'
@@ -124,7 +120,6 @@ def test_should_update_status_by_id_if_pending_virus_check(sample_letter_templat
     assert updated.status == 'cancelled'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 def test_should_update_status_of_international_letter_to_cancelled(sample_letter_template):
     notification = create_notification(
         template=sample_letter_template,
@@ -136,13 +131,12 @@ def test_should_update_status_of_international_letter_to_cancelled(sample_letter
     assert Notification.query.get(notification.id).status == 'cancelled'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_update_status_by_id_and_set_sent_by(sample_template):
     notification = create_notification(template=sample_template, status='sending')
 
-    updated = update_notification_status_by_id(notification.id, 'delivered', sent_by='mmg')
+    updated = update_notification_status_by_id(notification.id, 'delivered', sent_by='sns')
     assert updated.status == 'delivered'
-    assert updated.sent_by == 'mmg'
+    assert updated.sent_by == 'sns'
 
 
 def test_should_not_update_status_by_reference_if_from_country_with_no_delivery_receipts(sample_template):
@@ -186,7 +180,6 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_carrier_delivery
     assert notification.status == NOTIFICATION_SENT
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_not_update_status_by_id_if_sent_to_country_with_delivery_receipts(sample_template):
     notification = create_notification(
         sample_template,
@@ -209,7 +202,6 @@ def test_should_not_update_status_by_reference_if_not_sending(sample_template):
     assert not updated
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_by_able_to_update_status_by_id_from_pending_to_delivered(sample_template, sample_job):
     notification = create_notification(template=sample_template, job=sample_job, status='sending')
 
@@ -220,7 +212,6 @@ def test_should_by_able_to_update_status_by_id_from_pending_to_delivered(sample_
     assert Notification.query.get(notification.id).status == 'delivered'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_by_able_to_update_status_by_id_from_pending_to_temporary_failure(sample_template, sample_job):
     notification = create_notification(template=sample_template, job=sample_job, status='sending', sent_by='sns')
 
@@ -232,7 +223,6 @@ def test_should_by_able_to_update_status_by_id_from_pending_to_temporary_failure
     assert Notification.query.get(notification.id).status == 'temporary-failure'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_by_able_to_update_status_by_id_from_sending_to_permanent_failure(sample_template, sample_job):
     data = _notification_json(sample_template, job_id=sample_job.id, status='sending')
     notification = Notification(**data)
@@ -246,7 +236,6 @@ def test_should_by_able_to_update_status_by_id_from_sending_to_permanent_failure
     assert Notification.query.get(notification.id).status == 'permanent-failure'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_not_update_status_once_notification_status_is_delivered(
         sample_email_template):
     notification = create_notification(template=sample_email_template, status='sending')
@@ -372,7 +361,7 @@ def test_update_notification_with_research_mode_service_does_not_create_or_updat
     assert NotificationHistory.query.count() == 0
 
 
-def test_not_save_notification_and_not_create_stats_on_commit_error(sample_template, sample_job, mmg_provider):
+def test_not_save_notification_and_not_create_stats_on_commit_error(sample_template, sample_job, sns_provider):
     random_id = str(uuid.uuid4())
 
     assert Notification.query.count() == 0
@@ -386,7 +375,7 @@ def test_not_save_notification_and_not_create_stats_on_commit_error(sample_templ
     assert Job.query.get(sample_job.id).notifications_sent == 0
 
 
-def test_save_notification_and_increment_job(sample_template, sample_job, mmg_provider):
+def test_save_notification_and_increment_job(sample_template, sample_job, sns_provider):
     assert Notification.query.count() == 0
     data = _notification_json(sample_template, job_id=sample_job.id)
 
@@ -409,7 +398,7 @@ def test_save_notification_and_increment_job(sample_template, sample_job, mmg_pr
     assert Notification.query.count() == 2
 
 
-def test_save_notification_and_increment_correct_job(sample_template, mmg_provider):
+def test_save_notification_and_increment_correct_job(sample_template, sns_provider):
     job_1 = create_job(sample_template)
     job_2 = create_job(sample_template)
 
@@ -432,7 +421,7 @@ def test_save_notification_and_increment_correct_job(sample_template, mmg_provid
     assert job_1.id != job_2.id
 
 
-def test_save_notification_with_no_job(sample_template, mmg_provider):
+def test_save_notification_with_no_job(sample_template, sns_provider):
     assert Notification.query.count() == 0
     data = _notification_json(sample_template)
 

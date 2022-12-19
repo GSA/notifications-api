@@ -12,8 +12,7 @@ from app.dao.templates_dao import dao_get_template_by_id
 from app.models import NOTIFICATION_PENDING
 
 sms_response_mapper = {
-    # 'MMG': get_mmg_responses,
-    # 'Firetext': get_firetext_responses,
+    # 'SNS': get_sns_responses,
 }
 
 

@@ -75,9 +75,6 @@ class AnyStringWith(str):
         return self in other
 
 
-mmg_error = {'Error': '40', 'Description': 'error'}
-
-
 def _notification_json(template, to, personalisation=None, job_id=None, row_number=0):
     return {
         "template": str(template.id),

@@ -104,7 +104,7 @@ def _update_notification_status(notification, status, provider_response=None):
 
 
 @autocommit
-def update_notification_status_by_id(notification_id, status, sent_by=None, detailed_status_code=None):
+def update_notification_status_by_id(notification_id, status, sent_by=None):
     notification = Notification.query.with_for_update().filter(Notification.id == notification_id).first()
 
     if not notification:
@@ -134,8 +134,7 @@ def update_notification_status_by_id(notification_id, status, sent_by=None, deta
         notification.sent_by = sent_by
     return _update_notification_status(
         notification=notification,
-        status=status,
-        detailed_status_code=detailed_status_code
+        status=status
     )
 
 
