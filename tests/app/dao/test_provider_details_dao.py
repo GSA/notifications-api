@@ -195,17 +195,17 @@ def test_get_sms_providers_for_update_returns_nothing_if_recent_updates(restore_
 
 @pytest.mark.skip(reason="Reenable if/when we add a second SMS provider")
 @pytest.mark.parametrize(['starting_priorities', 'expected_priorities'], [
-    ({'mmg': 50, 'firetext': 50}, {'mmg': 40, 'firetext': 60}),
-    ({'mmg': 0, 'firetext': 20}, {'mmg': 0, 'firetext': 30}),  # lower bound respected
-    ({'mmg': 50, 'firetext': 100}, {'mmg': 40, 'firetext': 100}),  # upper bound respected
+    ({'sns': 50, 'other': 50}, {'sns': 40, 'other': 60}),
+    ({'sns': 0, 'other': 20}, {'sns': 0, 'other': 30}),  # lower bound respected
+    ({'sns': 50, 'other': 100}, {'sns': 40, 'other': 100}),  # upper bound respected
 
     # document what happens if they have unexpected values outside of the 0 - 100 range (due to manual setting from
     # the admin app). the code never causes further issues, but sometimes doesn't actively reset the vaues to 0-100.
-    ({'mmg': 150, 'firetext': 50}, {'mmg': 140, 'firetext': 60}),
-    ({'mmg': 50, 'firetext': 150}, {'mmg': 40, 'firetext': 100}),
+    ({'sns': 150, 'other': 50}, {'sns': 140, 'other': 60}),
+    ({'sns': 50, 'other': 150}, {'sns': 40, 'other': 100}),
 
-    ({'mmg': -100, 'firetext': 50}, {'mmg': 0, 'firetext': 60}),
-    ({'mmg': 50, 'firetext': -100}, {'mmg': 40, 'firetext': -90}),
+    ({'sns': -100, 'other': 50}, {'sns': 0, 'other': 60}),
+    ({'sns': 50, 'other': -100}, {'sns': 40, 'other': -90}),
 ])
 def test_reduce_sms_provider_priority_adjusts_provider_priorities(
     mocker,
@@ -216,19 +216,19 @@ def test_reduce_sms_provider_priority_adjusts_provider_priorities(
 ):
     mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
 
-    mmg = get_provider_details_by_identifier('mmg')
-    firetext = get_provider_details_by_identifier('firetext')
+    sns = get_provider_details_by_identifier('sns')
+    other = get_provider_details_by_identifier('other')
 
-    mmg.priority = starting_priorities['mmg']
-    firetext.priority = starting_priorities['firetext']
+    sns.priority = starting_priorities['sns']
+    other.priority = starting_priorities['other']
     # need to update these manually to avoid triggering the `onupdate` clause of the updated_at column
     ProviderDetails.query.filter(ProviderDetails.notification_type == 'sms').update({'updated_at': datetime.min})
 
-    # switch away from mmg. currently both 50/50
-    dao_reduce_sms_provider_priority('mmg', time_threshold=timedelta(minutes=10))
+    # switch away from sns. currently both 50/50
+    dao_reduce_sms_provider_priority('sns', time_threshold=timedelta(minutes=10))
 
-    mock_adjust.assert_any_call(firetext, expected_priorities['firetext'])
-    mock_adjust.assert_any_call(mmg, expected_priorities['mmg'])
+    mock_adjust.assert_any_call(other, expected_priorities['other'])
+    mock_adjust.assert_any_call(sns, expected_priorities['sns'])
 
 
 def test_reduce_sms_provider_priority_does_nothing_if_providers_have_recently_changed(
@@ -256,7 +256,7 @@ def test_reduce_sms_provider_priority_does_nothing_if_there_is_only_one_active_p
 
 
 @pytest.mark.skip(reason="Reenable if/when we add a second SMS provider")
-@pytest.mark.parametrize('existing_mmg, existing_firetext, new_mmg, new_firetext', [
+@pytest.mark.parametrize('existing_sns, existing_other, new_sns, new_other', [
     (50, 50, 60, 40),  # not just 50/50 - 60/40 specifically
     (65, 35, 60, 40),  # doesn't overshoot if there's less than 10 difference
     (0, 100, 10, 90),  # only adjusts by 10
@@ -265,26 +265,26 @@ def test_reduce_sms_provider_priority_does_nothing_if_there_is_only_one_active_p
 def test_adjust_provider_priority_back_to_resting_points_updates_all_providers(
     restore_provider_details,
     mocker,
-    existing_mmg,
-    existing_firetext,
-    new_mmg,
-    new_firetext
+    existing_sns,
+    existing_other,
+    new_sns,
+    new_other
 ):
-    mmg = get_provider_details_by_identifier('mmg')
-    firetext = get_provider_details_by_identifier('firetext')
-    mmg.priority = existing_mmg
-    firetext.priority = existing_firetext
+    sns = get_provider_details_by_identifier('sns')
+    other = get_provider_details_by_identifier('other')
+    sns.priority = existing_sns
+    other.priority = existing_other
 
     mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
     mock_get_providers = mocker.patch('app.dao.provider_details_dao._get_sms_providers_for_update', return_value=[
-        mmg, firetext
+        sns, other
     ])
 
     dao_adjust_provider_priority_back_to_resting_points()
 
     mock_get_providers.assert_called_once_with(timedelta(hours=1))
-    mock_adjust.assert_any_call(mmg, new_mmg)
-    mock_adjust.assert_any_call(firetext, new_firetext)
+    mock_adjust.assert_any_call(sns, new_sns)
+    mock_adjust.assert_any_call(other, new_other)
 
 
 def test_adjust_provider_priority_back_to_resting_points_does_nothing_if_theyre_already_at_right_values(
