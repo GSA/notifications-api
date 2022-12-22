@@ -262,7 +262,7 @@ def test_strip_leading_country_code(number, expected):
     ["", [], 401],
     ["testkey", [], 403],
 ])
-def test_mmg_inbound_sms_auth(notify_db_session, notify_api, client, mocker, auth, keys, status_code):
+def test_sns_inbound_sms_auth(notify_db_session, notify_api, client, mocker, auth, keys, status_code):
     mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
 
     create_service_with_inbound_number(

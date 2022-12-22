@@ -4,92 +4,11 @@ from flask import json
 from app.notifications.notifications_sms_callback import validate_callback_data
 
 
-def firetext_post(client, data):
-    return client.post(
-        path='/notifications/sms/firetext',
-        data=data,
-        headers=[('Content-Type', 'application/x-www-form-urlencoded')])
-
-
 def mmg_post(client, data):
     return client.post(
         path='/notifications/sms/mmg',
         data=data,
         headers=[('Content-Type', 'application/json')])
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_should_not_need_auth(client, mocker):
-    mocker.patch('app.notifications.notifications_sms_callback.process_sms_client_response')
-    data = 'mobile=441234123123&status=0&reference=notification_id&time=2016-03-10 14:17:00'
-
-    response = firetext_post(client, data)
-    assert response.status_code == 200
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_should_return_400_if_empty_reference(client, mocker):
-    data = 'mobile=441234123123&status=0&reference=&time=2016-03-10 14:17:00'
-    response = firetext_post(client, data)
-
-    json_resp = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 400
-    assert json_resp['result'] == 'error'
-    assert json_resp['message'] == ['Firetext callback failed: reference missing']
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_should_return_400_if_no_reference(client, mocker):
-    data = 'mobile=441234123123&status=0&time=2016-03-10 14:17:00'
-    response = firetext_post(client, data)
-    json_resp = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 400
-    assert json_resp['result'] == 'error'
-    assert json_resp['message'] == ['Firetext callback failed: reference missing']
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_should_return_400_if_no_status(client, mocker):
-    data = 'mobile=441234123123&time=2016-03-10 14:17:00&reference=notification_id'
-    response = firetext_post(client, data)
-    json_resp = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 400
-    assert json_resp['result'] == 'error'
-    assert json_resp['message'] == ['Firetext callback failed: status missing']
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_should_return_200_and_call_task_with_valid_data(client, mocker):
-    mock_celery = mocker.patch(
-        'app.notifications.notifications_sms_callback.process_sms_client_response.apply_async')
-
-    data = 'mobile=441234123123&status=0&time=2016-03-10 14:17:00&reference=notification_id'
-    response = firetext_post(client, data)
-    json_resp = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 200
-    assert json_resp['result'] == 'success'
-
-    mock_celery.assert_called_once_with(
-        ['0', 'notification_id', 'Firetext', None],
-        queue='sms-callbacks',
-    )
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Firetext removal")
-def test_firetext_callback_including_a_code_should_return_200_and_call_task_with_valid_data(client, mocker):
-    mock_celery = mocker.patch(
-        'app.notifications.notifications_sms_callback.process_sms_client_response.apply_async')
-
-    data = 'mobile=441234123123&status=1&code=101&time=2016-03-10 14:17:00&reference=notification_id'
-    response = firetext_post(client, data)
-    json_resp = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 200
-    assert json_resp['result'] == 'success'
-
-    mock_celery.assert_called_once_with(
-        ['1', 'notification_id', 'Firetext', '101'],
-        queue='sms-callbacks',
-    )
 
 
 @pytest.mark.skip(reason="Needs updating for TTS: MMG removal")

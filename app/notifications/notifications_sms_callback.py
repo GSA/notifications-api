@@ -6,6 +6,9 @@ sms_callback_blueprint = Blueprint("sms_callback", __name__, url_prefix="/notifi
 register_errors(sms_callback_blueprint)
 
 # TODO SNS SMS delivery receipts delivered here
+# This file should likely be deleted, since SNS does not use callback https calls
+# Leaving for now to have an example of what jobs MMG did that we may want to replicate in the
+# eventual SNS method.
 
 # @sms_callback_blueprint.route('/mmg', methods=['POST'])
 # def process_mmg_response():
@@ -21,27 +24,6 @@ register_errors(sms_callback_blueprint)
 #     detailed_status_code = str(data.get('substatus'))
 
 #     provider_reference = data.get('CID')
-
-#     process_sms_client_response.apply_async(
-#         [status, provider_reference, client_name, detailed_status_code],
-#         queue=QueueNames.SMS_CALLBACKS,
-#     )
-
-#     return jsonify(result='success'), 200
-
-
-# @sms_callback_blueprint.route('/firetext', methods=['POST'])
-# def process_firetext_response():
-#     client_name = 'Firetext'
-#     errors = validate_callback_data(data=request.form,
-#                                     fields=['status', 'reference'],
-#                                     client_name=client_name)
-#     if errors:
-#         raise InvalidRequest(errors, status_code=400)
-
-#     status = request.form.get('status')
-#     detailed_status_code = request.form.get('code')
-#     provider_reference = request.form.get('reference')
 
 #     process_sms_client_response.apply_async(
 #         [status, provider_reference, client_name, detailed_status_code],
