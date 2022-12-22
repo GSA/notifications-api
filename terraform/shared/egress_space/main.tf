@@ -12,7 +12,7 @@ data "cloudfoundry_org" "org" {
 
 resource "cloudfoundry_space" "public_egress" {
   name = "${var.cf_restricted_space_name}-egress"
-  org = data.cloudfoundry_org.org.id
+  org  = data.cloudfoundry_org.org.id
 }
 
 ###
@@ -21,8 +21,8 @@ resource "cloudfoundry_space" "public_egress" {
 
 data "cloudfoundry_user" "users" {
   for_each = var.deployers
-  name = each.key
-  org_id = data.cloudfoundry_org.org.id
+  name     = each.key
+  org_id   = data.cloudfoundry_org.org.id
 }
 
 locals {
@@ -30,7 +30,7 @@ locals {
 }
 
 resource "cloudfoundry_space_users" "deployers" {
-  space = cloudfoundry_space.public_egress.id
-  managers = local.user_ids
+  space      = cloudfoundry_space.public_egress.id
+  managers   = local.user_ids
   developers = local.user_ids
 }
