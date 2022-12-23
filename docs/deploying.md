@@ -45,8 +45,7 @@ Rules for use:
 1. Clean up when you are done: 
     - `terraform destroy` from within the `terraform/sandbox` directory will take care of the provisioned services
     - Delete the apps and routes shown in `cf apps` by running `cf delete APP_NAME -r`
-    - Delete the service keys for any remaining space deployers, likely `cf dsk <space-deployer> service-account-key`
-    - Delete the space deployers still shown in `cf services`
+    - Delete the space deployers still shown in `cf services` by running `terraform/destroy_service_account.sh -s notify-sandbox -u <space-deployer>`
 
 ### Deploying to the sandbox
 
