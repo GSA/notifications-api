@@ -48,7 +48,6 @@ services:
       - redis
     links:
       - db
-    restart: always
   worker:
     container_name: worker
     image: dev-notification-api
