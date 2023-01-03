@@ -150,9 +150,6 @@ def register_blueprint(application):
     from app.notifications.notifications_ses_callback import (
         ses_callback_blueprint,
     )
-    from app.notifications.notifications_sms_callback import (
-        sms_callback_blueprint,
-    )
     from app.notifications.receive_notifications import (
         receive_notifications_blueprint,
     )
@@ -200,11 +197,6 @@ def register_blueprint(application):
     # delivery receipts
     ses_callback_blueprint.before_request(requires_no_auth)
     application.register_blueprint(ses_callback_blueprint)
-
-    # delivery receipts
-    # TODO: make sure research mode can still trigger sms callbacks, then re-enable this
-    sms_callback_blueprint.before_request(requires_no_auth)
-    application.register_blueprint(sms_callback_blueprint)
 
     # inbound sms
     receive_notifications_blueprint.before_request(requires_no_auth)
