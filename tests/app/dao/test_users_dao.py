@@ -38,7 +38,7 @@ from tests.app.db import (
 
 @freeze_time('2020-01-28T12:00:00')
 @pytest.mark.parametrize('phone_number', [
-    '+447700900986',
+    '+12028675309',
     '+1-800-555-5555',
 ])
 def test_create_user(notify_db_session, phone_number):

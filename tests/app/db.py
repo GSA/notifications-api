@@ -72,7 +72,7 @@ from app.models import (
 
 def create_user(
     *,
-    mobile_number="+447700900986",
+    mobile_number="+12028675309",
     email=None,
     state='active',
     id_=None,

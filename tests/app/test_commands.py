@@ -19,7 +19,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     notify_api.test_cli_runner().invoke(
         create_test_user, [
             '--email', 'somebody@fake.gov',
-            '--mobile_number', '555-555-5555',
+            '--mobile_number', '202-555-5555',
             '--password', 'correct horse battery staple',
             '--name', 'Fake Personson',
             # '--auth_type', 'sms_auth',  # this is the default

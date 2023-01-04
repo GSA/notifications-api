@@ -1080,16 +1080,14 @@ def test_dao_get_notifications_by_reference_escapes_special_character(
 
 
 @pytest.mark.parametrize('search_term', [
-    '001',
-    '100',
-    '09001',
-    '077009001',
-    '07700 9001',
-    '(0)7700 9001',
-    '4477009001',
-    '+4477009001',
-    pytest.param('+44077009001', marks=pytest.mark.skip(reason='No easy way to normalise this')),
-    pytest.param('+44(0)77009001', marks=pytest.mark.skip(reason='No easy way to normalise this')),
+    '309',
+    '530',
+    '8675309',
+    '202867',
+    '202 867',
+    '202-867-5309',
+    '2028675309',
+    '+12028675309',
 ])
 def test_dao_get_notifications_by_recipient_matches_partial_phone_numbers(
     sample_template,
@@ -1098,13 +1096,13 @@ def test_dao_get_notifications_by_recipient_matches_partial_phone_numbers(
 
     notification_1 = create_notification(
         template=sample_template,
-        to_field='+447700900100',
-        normalised_to='447700900100',
+        to_field='202-867-5309',
+        normalised_to='+12028675309',
     )
     notification_2 = create_notification(
         template=sample_template,
-        to_field='+447700900200',
-        normalised_to='447700900200',
+        to_field='202-678-5000',
+        normalised_to='+12026785000',
     )
     results = dao_get_notifications_by_recipient_or_reference(
         notification_1.service_id, search_term, notification_type='sms'
@@ -1156,7 +1154,7 @@ def test_dao_get_notifications_by_recipient_ignores_spaces(sample_template):
 
 
 @pytest.mark.parametrize('phone_search', (
-    '077', '7-7', '+44(0)7711 111111'
+    '202', '7-5', '+1 (202) 867-5309'
 ))
 @pytest.mark.parametrize('email_search', (
     'example', 'eXaMpLe',
@@ -1169,9 +1167,9 @@ def test_dao_get_notifications_by_recipient_searches_across_notification_types(
     service = create_service()
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type='email')
-    sms = create_notification(template=sms_template, to_field='07711111111', normalised_to='447711111111')
+    sms = create_notification(template=sms_template, to_field='202-867-5309', normalised_to='+12028675309')
     email = create_notification(
-        template=email_template, to_field='077@example.com', normalised_to='077@example.com'
+        template=email_template, to_field='202@example.com', normalised_to='202@example.com'
     )
 
     results = dao_get_notifications_by_recipient_or_reference(
@@ -1186,7 +1184,7 @@ def test_dao_get_notifications_by_recipient_searches_across_notification_types(
     assert len(results.items) == 1
     assert results.items[0].id == email.id
 
-    results = dao_get_notifications_by_recipient_or_reference(service.id, '77')
+    results = dao_get_notifications_by_recipient_or_reference(service.id, '202')
     assert len(results.items) == 2
     assert results.items[0].id == email.id
     assert results.items[1].id == sms.id

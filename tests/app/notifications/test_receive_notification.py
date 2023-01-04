@@ -40,7 +40,7 @@ def test_receive_notification_returns_received_to_sns(client, mocker, sample_ser
     mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
     prom_counter_labels_mock = mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER.labels')
     data = {
-        "originationNumber": "+15558675309",
+        "originationNumber": "+12028675309",
         "destinationNumber": sample_service_full_permissions.get_inbound_number(),
         "messageKeyword": "JOIN",
         "messageBody": "EXAMPLE",
@@ -241,9 +241,9 @@ def test_receive_notification_error_if_not_single_matching_service(client, notif
 @pytest.mark.parametrize(
     'number, expected',
     [
-        ('15558675309', '5558675309'),
-        ('+15558675309', '5558675309'),
-        ('5558675309', '5558675309'),
+        ('12028675309', '2028675309'),
+        ('+12028675309', '2028675309'),
+        ('2028675309', '2028675309'),
         ('15111111111', '5111111111')
     ]
 )
