@@ -12,9 +12,9 @@ from app.celery.process_ses_receipts_tasks import process_ses_results
 from app.config import QueueNames
 from app.models import SMS_TYPE
 
-temp_fail = "5558675303"
-perm_fail = "5558675302"
-delivered = "5558675309"
+temp_fail = "2028675303"
+perm_fail = "2028675302"
+delivered = "2028675309"
 
 delivered_email = "delivered@simulator.notify"
 perm_fail_email = "perm-fail@simulator.notify"

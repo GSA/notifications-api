@@ -29,11 +29,11 @@ No db data is PII, but each job has a csv file in s3 containing phone numbers an
 
 * to
 * _personalization<sup>2</sup>
-* phone_prefix (?)
+* phone_prefix<sup>3</sup>
 
 #### notification_history
 
-* phone_prefix (?)
+* phone_prefix<sup>3</sup>
 
 #### inbound_sms
 
@@ -42,7 +42,7 @@ No db data is PII, but each job has a csv file in s3 containing phone numbers an
 
 #### events
 
-* data (contains user IP addresses)
+* data (contains user IP addresses)<sup>1</sup>
 
 ### Notes
 
@@ -55,6 +55,11 @@ Users and invited users are Federal, State, or Local government employees or con
 Field-level encryption is used on these fields.
 
 Details on encryption schemes and algorithms can be found in [SC-28(1)](https://github.com/GSA/us-notify-compliance/blob/main/dist/system-security-plans/lato/sc-28.1.md)
+
+#### Note 3.
+
+Probably not PII, this is the country code of the phone.
+
 
 Data Retention Policy
 ---------------------
