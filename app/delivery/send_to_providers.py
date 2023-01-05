@@ -111,7 +111,7 @@ def send_email_to_provider(notification):
         technical_failure(notification=notification)
         return
     if notification.status == 'created':
-        provider = provider_to_use(EMAIL_TYPE)
+        provider = provider_to_use(EMAIL_TYPE, False)
 
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id, service_id=service.id, version=notification.template_version
@@ -175,12 +175,10 @@ provider_cache = TTLCache(maxsize=8, ttl=10)
 
 @cached(cache=provider_cache)
 def provider_to_use(notification_type, international=True):
-    international = False  # TODO: remove or resolve the functionality of this flag
-    # TODO rip firetext and mmg out of early migrations and clean up the expression below
     active_providers = [
         p for p in get_provider_details_by_notification_type(
             notification_type, international
-        ) if p.active and p.identifier not in ['firetext', 'mmg']
+        ) if p.active
     ]
 
     if not active_providers:

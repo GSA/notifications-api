@@ -102,11 +102,10 @@ def _notify_db(notify_api, worker_id):
 def sms_providers(_notify_db):
     """
     In production we randomly choose which provider to use based on their priority. To guarantee tests run the same each
-    time, make sure we always choose mmg. You'll need to override them in your tests if you wish to do something
+    time, make sure we always choose sns. You'll need to override them in your tests if you wish to do something
     different.
     """
-    get_provider_details_by_identifier('mmg').priority = 100
-    get_provider_details_by_identifier('firetext').priority = 0
+    get_provider_details_by_identifier('sns').priority = 100
 
 
 @pytest.fixture(scope='function')

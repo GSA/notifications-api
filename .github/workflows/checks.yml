@@ -11,7 +11,6 @@ env:
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
-  NOTIFY_EMAIL_DOMAIN: dispostable.com
   REDIS_ENABLED: 0
   AWS_REGION: us-west-2
   AWS_PINPOINT_REGION: us-west-2

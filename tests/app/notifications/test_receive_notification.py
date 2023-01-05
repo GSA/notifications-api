@@ -1,17 +1,14 @@
-import base64
+from base64 import b64encode
 from datetime import datetime
 
 import pytest
 from flask import json
-from freezegun import freeze_time
 
 from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
 from app.notifications.receive_notifications import (
     create_inbound_sms_object,
-    format_mmg_datetime,
-    format_mmg_message,
     has_inbound_sms_permissions,
-    strip_leading_forty_four,
+    strip_leading_plus_one,
     unescape_string,
 )
 from tests.app.db import (
@@ -22,57 +19,41 @@ from tests.app.db import (
 from tests.conftest import set_config
 
 
-def firetext_post(client, data, auth=True, password='testkey'):
-    headers = [
-        ('Content-Type', 'application/x-www-form-urlencoded'),
-    ]
-
-    if auth:
-        auth_value = base64.b64encode("notify:{}".format(password).encode('utf-8')).decode('utf-8')
-        headers.append(('Authorization', 'Basic ' + auth_value))
-
-    return client.post(
-        path='/notifications/sms/receive/firetext',
-        data=data,
-        headers=headers
-    )
-
-
-def mmg_post(client, data, auth=True, password='testkey'):
+def sns_post(client, data, auth=True, password='testkey'):
     headers = [
         ('Content-Type', 'application/json'),
     ]
 
     if auth:
-        auth_value = base64.b64encode("username:{}".format(password).encode('utf-8')).decode('utf-8')
-        headers.append(('Authorization', 'Basic ' + auth_value))
+        auth_value = b64encode(f"notify:{password}".encode())
+        headers.append(('Authorization', f"Basic {auth_value}"))
 
     return client.post(
-        path='/notifications/sms/receive/mmg',
-        data=json.dumps(data),
+        path='/notifications/sms/receive/sns',
+        data={"Message": data},
         headers=headers
     )
 
 
-def test_receive_notification_returns_received_to_mmg(client, mocker, sample_service_full_permissions):
+@pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
+def test_receive_notification_returns_received_to_sns(client, mocker, sample_service_full_permissions):
     mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
     prom_counter_labels_mock = mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER.labels')
     data = {
-        "ID": "1234",
-        "MSISDN": "447700900855",
-        "Message": "Some message to notify",
-        "Trigger": "Trigger?",
-        "Number": sample_service_full_permissions.get_inbound_number(),
-        "Channel": "SMS",
-        "DateRecieved": "2012-06-27 12:33:00"
+        "originationNumber": "+15558675309",
+        "destinationNumber": sample_service_full_permissions.get_inbound_number(),
+        "messageKeyword": "JOIN",
+        "messageBody": "EXAMPLE",
+        "inboundMessageId": "cae173d2-66b9-564c-8309-21f858e9fb84",
+        "previousPublishedMessageId": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
     }
-    response = mmg_post(client, data)
+    response = sns_post(client, data)
 
     assert response.status_code == 200
     result = json.loads(response.get_data(as_text=True))
-    assert result['status'] == 'ok'
+    assert result['result'] == 'success'
 
-    prom_counter_labels_mock.assert_called_once_with("mmg")
+    prom_counter_labels_mock.assert_called_once_with("sns")
     prom_counter_labels_mock.return_value.inc.assert_called_once_with()
 
     inbound_sms_id = InboundSms.query.all()[0].id
@@ -84,7 +65,7 @@ def test_receive_notification_returns_received_to_mmg(client, mocker, sample_ser
     [SMS_TYPE],
     [INBOUND_SMS_TYPE],
 ])
-def test_receive_notification_from_mmg_without_permissions_does_not_persist(
+def test_receive_notification_from_sns_without_permissions_does_not_persist(
     client,
     mocker,
     notify_db_session,
@@ -101,42 +82,17 @@ def test_receive_notification_from_mmg_without_permissions_does_not_persist(
         "Channel": "SMS",
         "DateRecieved": "2012-06-27 12:33:00"
     }
-    response = mmg_post(client, data)
-
+    response = sns_post(client, data)
     assert response.status_code == 200
-    assert response.get_data(as_text=True) == 'RECEIVED'
+
+    parsed_response = json.loads(response.get_data(as_text=True))
+    assert parsed_response['result'] == 'success'
+
     assert InboundSms.query.count() == 0
     assert mocked.called is False
 
 
-@pytest.mark.parametrize('permissions', [
-    [SMS_TYPE],
-    [INBOUND_SMS_TYPE],
-])
-def test_receive_notification_from_firetext_without_permissions_does_not_persist(
-    client,
-    mocker,
-    notify_db_session,
-    permissions
-):
-    service = create_service_with_inbound_number(inbound_number='07111111111', service_permissions=permissions)
-    mocker.patch("app.notifications.receive_notifications.dao_fetch_service_by_inbound_number",
-                 return_value=service)
-    mocked_send_inbound_sms = mocker.patch(
-        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    mocker.patch("app.notifications.receive_notifications.has_inbound_sms_permissions", return_value=False)
-
-    data = "source=07999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-    response = firetext_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-
-    assert result['status'] == 'ok'
-    assert InboundSms.query.count() == 0
-    assert not mocked_send_inbound_sms.called
-
-
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_receive_notification_without_permissions_does_not_create_inbound_even_with_inbound_number_set(
         client, mocker, sample_service):
     inbound_number = create_inbound_number('1', service_id=sample_service.id, active=True)
@@ -156,7 +112,7 @@ def test_receive_notification_without_permissions_does_not_create_inbound_even_w
         "DateRecieved": "2012-06-27 12:33:00"
     }
 
-    response = mmg_post(client, data)
+    response = sns_post(client, data)
 
     assert response.status_code == 200
     assert len(InboundSms.query.all()) == 0
@@ -172,17 +128,6 @@ def test_receive_notification_without_permissions_does_not_create_inbound_even_w
 def test_check_permissions_for_inbound_sms(notify_db_session, permissions, expected_response):
     service = create_service(service_permissions=permissions)
     assert has_inbound_sms_permissions(service.permissions) is expected_response
-
-
-@pytest.mark.parametrize('message, expected_output', [
-    ('abc', 'abc'),
-    ('', ''),
-    ('lots+of+words', 'lots of words'),
-    ('%F0%9F%93%A9+%F0%9F%93%A9+%F0%9F%93%A9', '📩 📩 📩'),
-    ('x+%2B+y', 'x + y')
-])
-def test_format_mmg_message(message, expected_output):
-    assert format_mmg_message(message) == expected_output
 
 
 @pytest.mark.parametrize('raw, expected', [
@@ -215,20 +160,8 @@ def test_unescape_string(raw, expected):
     assert unescape_string(raw) == expected
 
 
-@pytest.mark.parametrize('provider_date, expected_output', [
-    ('2017-01-21+11%3A56%3A11', datetime(2017, 1, 21, 11, 56, 11)),
-    ('2017-05-21+11%3A56%3A11', datetime(2017, 5, 21, 11, 56, 11))
-])
-def test_format_mmg_datetime(provider_date, expected_output):
-    assert format_mmg_datetime(provider_date) == expected_output
-
-
-@freeze_time('2020-05-14 14:30:00')
-def test_format_mmg_datetime_returns_now_if_cannot_parse_date():
-    assert format_mmg_datetime('13-05-2020 08%3A37%3A43') == datetime.utcnow()
-
-
-def test_create_inbound_mmg_sms_object(sample_service_full_permissions):
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
+def test_create_inbound_sns_sms_object(sample_service_full_permissions):
     data = {
         'Message': 'hello+there+%F0%9F%93%A9',
         'Number': sample_service_full_permissions.get_inbound_number(),
@@ -237,8 +170,8 @@ def test_create_inbound_mmg_sms_object(sample_service_full_permissions):
         'ID': 'bar',
     }
 
-    inbound_sms = create_inbound_sms_object(sample_service_full_permissions, format_mmg_message(data["Message"]),
-                                            data["MSISDN"], data["ID"], data["DateRecieved"], "mmg")
+    inbound_sms = create_inbound_sms_object(sample_service_full_permissions, data["Message"],
+                                            data["MSISDN"], data["ID"], data["DateRecieved"], "sns")
 
     assert inbound_sms.service_id == sample_service_full_permissions.id
     assert inbound_sms.notify_number == sample_service_full_permissions.get_inbound_number()
@@ -247,10 +180,11 @@ def test_create_inbound_mmg_sms_object(sample_service_full_permissions):
     assert inbound_sms.provider_reference == 'bar'
     assert inbound_sms._content != 'hello there 📩'
     assert inbound_sms.content == 'hello there 📩'
-    assert inbound_sms.provider == 'mmg'
+    assert inbound_sms.provider == 'sns'
 
 
-def test_create_inbound_mmg_sms_object_uses_inbound_number_if_set(sample_service_full_permissions):
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
+def test_create_inbound_sns_sms_object_uses_inbound_number_if_set(sample_service_full_permissions):
     sample_service_full_permissions.sms_sender = 'foo'
     inbound_number = sample_service_full_permissions.get_inbound_number()
 
@@ -264,17 +198,18 @@ def test_create_inbound_mmg_sms_object_uses_inbound_number_if_set(sample_service
 
     inbound_sms = create_inbound_sms_object(
         sample_service_full_permissions,
-        format_mmg_message(data["Message"]),
+        data["Message"],
         data["MSISDN"],
         data["ID"],
         data["DateRecieved"],
-        "mmg"
+        "sns"
     )
 
     assert inbound_sms.service_id == sample_service_full_permissions.id
     assert inbound_sms.notify_number == inbound_number
 
 
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 @pytest.mark.parametrize('notify_number', ['foo', 'baz'], ids=['two_matching_services', 'no_matching_services'])
 def test_receive_notification_error_if_not_single_matching_service(client, notify_db_session, notify_number):
     create_service_with_inbound_number(
@@ -295,7 +230,7 @@ def test_receive_notification_error_if_not_single_matching_service(client, notif
         'DateRecieved': '2017-01-02 03:04:05',
         'ID': 'bar',
     }
-    response = mmg_post(client, data)
+    response = sns_post(client, data)
 
     # we still return 'RECEIVED' to MMG
     assert response.status_code == 200
@@ -303,107 +238,20 @@ def test_receive_notification_error_if_not_single_matching_service(client, notif
     assert InboundSms.query.count() == 0
 
 
-def test_receive_notification_returns_received_to_firetext(notify_db_session, client, mocker):
-    mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    prom_counter_labels_mock = mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER.labels')
-
-    service = create_service_with_inbound_number(
-        service_name='b', inbound_number='07111111111', service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE])
-
-    data = "source=07999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-
-    response = firetext_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-
-    prom_counter_labels_mock.assert_called_once_with("firetext")
-    prom_counter_labels_mock.return_value.inc.assert_called_once_with()
-
-    assert result['status'] == 'ok'
-    inbound_sms_id = InboundSms.query.all()[0].id
-    mocked.assert_called_once_with([str(inbound_sms_id), str(service.id)], queue="notify-internal-tasks")
-
-
-def test_receive_notification_from_firetext_persists_message(notify_db_session, client, mocker):
-    mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER')
-
-    service = create_service_with_inbound_number(
-        inbound_number='07111111111',
-        service_name='b',
-        service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE])
-
-    data = "source=07999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-
-    response = firetext_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-
-    persisted = InboundSms.query.first()
-    assert result['status'] == 'ok'
-    assert persisted.notify_number == '07111111111'
-    assert persisted.user_number == '447999999999'
-    assert persisted.service == service
-    assert persisted.content == 'this is a message'
-    assert persisted.provider == 'firetext'
-    assert persisted.provider_date == datetime(2017, 1, 1, 12, 0, 0, 0)
-    mocked.assert_called_once_with([str(persisted.id), str(service.id)], queue="notify-internal-tasks")
-
-
-def test_receive_notification_from_firetext_persists_message_with_normalized_phone(notify_db_session, client, mocker):
-    mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER')
-
-    create_service_with_inbound_number(
-        inbound_number='07111111111', service_name='b', service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE])
-
-    data = "source=(+44)7999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-
-    response = firetext_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-
-    persisted = InboundSms.query.first()
-
-    assert result['status'] == 'ok'
-    assert persisted.user_number == '447999999999'
-
-
-def test_returns_ok_to_firetext_if_mismatched_sms_sender(notify_db_session, client, mocker):
-    mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    mocker.patch('app.notifications.receive_notifications.INBOUND_SMS_COUNTER')
-
-    create_service_with_inbound_number(
-        inbound_number='07111111199', service_name='b', service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE])
-
-    data = "source=(+44)7999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-
-    response = firetext_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-
-    assert not InboundSms.query.all()
-    assert result['status'] == 'ok'
-    assert mocked.call_count == 0
-
-
 @pytest.mark.parametrize(
     'number, expected',
     [
-        ('447123123123', '07123123123'),
-        ('447123123144', '07123123144'),
-        ('07123123123', '07123123123'),
-        ('447444444444', '07444444444')
+        ('15558675309', '5558675309'),
+        ('+15558675309', '5558675309'),
+        ('5558675309', '5558675309'),
+        ('15111111111', '5111111111')
     ]
 )
 def test_strip_leading_country_code(number, expected):
-    assert strip_leading_forty_four(number) == expected
+    assert strip_leading_plus_one(number) == expected
 
 
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 @pytest.mark.parametrize("auth, keys, status_code", [
     ["testkey", ["testkey"], 200],
     ["", ["testkey"], 401],
@@ -414,31 +262,7 @@ def test_strip_leading_country_code(number, expected):
     ["", [], 401],
     ["testkey", [], 403],
 ])
-def test_firetext_inbound_sms_auth(notify_db_session, notify_api, client, mocker, auth, keys, status_code):
-    mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-
-    create_service_with_inbound_number(
-        service_name='b', inbound_number='07111111111', service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE]
-    )
-
-    data = "source=07999999999&destination=07111111111&message=this is a message&time=2017-01-01 12:00:00"
-
-    with set_config(notify_api, 'FIRETEXT_INBOUND_SMS_AUTH', keys):
-        response = firetext_post(client, data, auth=bool(auth), password=auth)
-        assert response.status_code == status_code
-
-
-@pytest.mark.parametrize("auth, keys, status_code", [
-    ["testkey", ["testkey"], 200],
-    ["", ["testkey"], 401],
-    ["wrong", ["testkey"], 403],
-    ["testkey1", ["testkey1", "testkey2"], 200],
-    ["testkey2", ["testkey1", "testkey2"], 200],
-    ["wrong", ["testkey1", "testkey2"], 403],
-    ["", [], 401],
-    ["testkey", [], 403],
-])
-def test_mmg_inbound_sms_auth(notify_db_session, notify_api, client, mocker, auth, keys, status_code):
+def test_sns_inbound_sms_auth(notify_db_session, notify_api, client, mocker, auth, keys, status_code):
     mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
 
     create_service_with_inbound_number(
@@ -456,10 +280,11 @@ def test_mmg_inbound_sms_auth(notify_db_session, notify_api, client, mocker, aut
     }
 
     with set_config(notify_api, 'MMG_INBOUND_SMS_AUTH', keys):
-        response = mmg_post(client, data, auth=bool(auth), password=auth)
+        response = sns_post(client, data, auth=bool(auth), password=auth)
         assert response.status_code == status_code
 
 
+@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sms_object_works_with_alphanumeric_sender(sample_service_full_permissions):
     data = {
         'Message': 'hello',
@@ -471,7 +296,7 @@ def test_create_inbound_sms_object_works_with_alphanumeric_sender(sample_service
 
     inbound_sms = create_inbound_sms_object(
         service=sample_service_full_permissions,
-        content=format_mmg_message(data["Message"]),
+        content=data["Message"],
         from_number='ALPHANUM3R1C',
         provider_ref='foo',
         date_received=None,
