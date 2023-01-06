@@ -28,6 +28,7 @@ No db data is PII, but each job has a csv file in s3 containing phone numbers an
 #### notifications
 
 * to
+* normalized_to
 * _personalization<sup>2</sup>
 * phone_prefix<sup>3</sup>
 

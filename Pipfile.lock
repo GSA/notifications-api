@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2f43f1aefdea61dea472c0f41aa81166c852769a8156d3e9644e5535c30a1c2a"
+            "sha256": "d0a90dd082bf51ae47e04412c0848f00bc5e4b538804d1333e9264ca0ad2d4e9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -739,7 +739,7 @@
         "notifications-utils": {
             "editable": true,
             "git": "https://github.com/GSA/notifications-utils.git",
-            "ref": "d88dff885f5db43f6573ccb5878c376dea92ec2e"
+            "ref": "d88d48026171991de4d8398e5f9f8c2063297885"
         },
         "numpy": {
             "hashes": [
@@ -2080,11 +2080,11 @@
         },
         "rich": {
             "hashes": [
-                "sha256:12b1d77ee7edf251b741531323f0d990f5f570a4e7c054d0bfb59fb7981ad977",
-                "sha256:3aa9eba7219b8c575c6494446a59f702552efe1aa261e7eeb95548fa586e1950"
+                "sha256:25f83363f636995627a99f6e4abc52ed0970ebbd544960cc63cbb43aaac3d6f0",
+                "sha256:41fe1d05f433b0f4724cda8345219213d2bfa472ef56b2f64f415b5b94d51b04"
             ],
             "markers": "python_full_version >= '3.7.0'",
-            "version": "==13.0.0"
+            "version": "==13.0.1"
         },
         "s3transfer": {
             "hashes": [

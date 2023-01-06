@@ -842,15 +842,16 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
 @pytest.mark.parametrize('key_type', [
     KEY_TYPE_NORMAL, KEY_TYPE_TEAM
 ])
-@pytest.mark.parametrize('notification_type, to', [
-    (SMS_TYPE, '2028675300'),
-    (EMAIL_TYPE, 'guest_list_recipient@mail.com')]
+@pytest.mark.parametrize('notification_type, to, normalized_to', [
+    (SMS_TYPE, '2028675300', '+12028675300'),
+    (EMAIL_TYPE, 'guest_list_recipient@mail.com', None)]
 )
 def test_should_send_notification_to_guest_list_recipient(
     client,
     sample_service,
     notification_type,
     to,
+    normalized_to,
     key_type,
     service_restricted,
     mocker
@@ -866,7 +867,7 @@ def test_should_send_notification_to_guest_list_recipient(
         service_guest_list = create_service_guest_list(sample_service, email_address=to)
 
     assert service_guest_list.service_id == sample_service.id
-    assert to in [member.recipient for member in sample_service.guest_list]
+    assert (normalized_to or to) in [member.recipient for member in sample_service.guest_list]
 
     create_notification(template=template)
 

@@ -32,7 +32,7 @@ from tests.app.db import (
 
 
 @pytest.mark.parametrize('mobile_number', [
-    '2348675309',
+    '+447700900855',
     '+12348675309'
 ])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):

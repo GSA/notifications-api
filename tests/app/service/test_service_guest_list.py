@@ -32,7 +32,7 @@ def test_get_guest_list_separates_emails_and_phones(client, sample_service):
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))
     assert json_resp['email_addresses'] == ['service@example.com']
-    assert sorted(json_resp['phone_numbers']) == sorted(['+1800-555-5555', '2028675309'])
+    assert sorted(json_resp['phone_numbers']) == sorted(['+18005555555', '+12028675309'])
 
 
 def test_get_guest_list_404s_with_unknown_service_id(client):
@@ -69,7 +69,7 @@ def test_update_guest_list_replaces_old_guest_list(client, sample_service_guest_
     assert response.status_code == 204
     guest_list = ServiceGuestList.query.order_by(ServiceGuestList.recipient).all()
     assert len(guest_list) == 2
-    assert guest_list[0].recipient == '2028765309'
+    assert guest_list[0].recipient == '+12028765309'
     assert guest_list[1].recipient == 'foo@bar.com'
 
 

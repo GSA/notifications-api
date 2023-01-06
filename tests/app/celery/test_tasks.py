@@ -572,11 +572,11 @@ def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(n
 
 
 def test_should_not_save_sms_if_restricted_service_and_invalid_number(notify_db_session, mocker):
-    user = create_user(mobile_number="07700 900205")
+    user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
 
-    notification = _notification_json(template, "07700 900849")
+    notification = _notification_json(template, "2028675400")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -667,14 +667,14 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
 
 def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(notify_db_session, mocker):
     assert Notification.query.count() == 0
-    user = create_user(mobile_number="07700 900205")
+    user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
 
     team_members = [user.mobile_number for user in service.users]
     assert "07890 300000" not in team_members
 
-    notification = _notification_json(template, "07700 900849")
+    notification = _notification_json(template, "2028675400")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()

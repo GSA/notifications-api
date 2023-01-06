@@ -748,7 +748,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
         name='Other Test User',
         email_address='other_user@digital.cabinet-office.gov.uk',
         password='password',
-        mobile_number='+447700900987'
+        mobile_number='+12028672000'
     )
     save_model_user(other_user, validated_email_access=True)
     service_two = Service(name="service_two",
