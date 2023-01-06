@@ -8,7 +8,6 @@ from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
 from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     has_inbound_sms_permissions,
-    strip_leading_plus_one,
     unescape_string,
 )
 from tests.app.db import (
@@ -236,19 +235,6 @@ def test_receive_notification_error_if_not_single_matching_service(client, notif
     assert response.status_code == 200
     assert response.get_data(as_text=True) == 'RECEIVED'
     assert InboundSms.query.count() == 0
-
-
-@pytest.mark.parametrize(
-    'number, expected',
-    [
-        ('12028675309', '2028675309'),
-        ('+12028675309', '2028675309'),
-        ('2028675309', '2028675309'),
-        ('15111111111', '5111111111')
-    ]
-)
-def test_strip_leading_country_code(number, expected):
-    assert strip_leading_plus_one(number) == expected
 
 
 @pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")

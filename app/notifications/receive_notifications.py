@@ -134,11 +134,3 @@ def fetch_potential_service(inbound_number, provider_name):
 def has_inbound_sms_permissions(permissions):
     str_permissions = [p.permission for p in permissions]
     return set([INBOUND_SMS_TYPE, SMS_TYPE]).issubset(set(str_permissions))
-
-
-def strip_leading_plus_one(number):
-    if number.startswith('+'):
-        number = number.replace('+', '', 1)
-    if number.startswith('1'):
-        number = number.replace('1', '', 1)
-    return number
