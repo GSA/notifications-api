@@ -122,7 +122,7 @@ def test_persist_notification_with_optionals(sample_job, sample_api_key):
     persist_notification(
         template_id=sample_job.template.id,
         template_version=sample_job.template.version,
-        recipient='+447111111111',
+        recipient='+12028675309',
         service=sample_job.service,
         personalisation=None,
         notification_type='sms',
@@ -146,7 +146,7 @@ def test_persist_notification_with_optionals(sample_job, sample_api_key):
     assert persisted_notification.client_reference == "ref from client"
     assert persisted_notification.reference is None
     assert persisted_notification.international is False
-    assert persisted_notification.phone_prefix == '44'
+    assert persisted_notification.phone_prefix == '1'
     assert persisted_notification.rate_multiplier == 1
     assert persisted_notification.created_by_id == sample_job.created_by_id
     assert not persisted_notification.reply_to_text
@@ -297,15 +297,15 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(sample
 
 
 @pytest.mark.parametrize("to_address, notification_type, expected", [
-    ("+447700900000", "sms", True),
-    ("+447700900111", "sms", True),
-    ("+447700900222", "sms", True),
-    ("07700900000", "sms", True),
-    ("7700900111", "sms", True),
+    ("+12028675000", "sms", True),
+    ("+12028675111", "sms", True),
+    ("+12028675222", "sms", True),
+    ("2028675000", "sms", True),
+    ("2028675111", "sms", True),
     ("simulate-delivered@notifications.service.gov.uk", "email", True),
     ("simulate-delivered-2@notifications.service.gov.uk", "email", True),
     ("simulate-delivered-3@notifications.service.gov.uk", "email", True),
-    ("07515896969", "sms", False),
+    ("2028675309", "sms", False),
     ("valid_email@test.com", "email", False)
 ])
 def test_simulated_recipient(notify_api, to_address, notification_type, expected):
@@ -317,7 +317,7 @@ def test_simulated_recipient(notify_api, to_address, notification_type, expected
         'simulate-delivered-2@notifications.service.gov.uk',
         'simulate-delivered-2@notifications.service.gov.uk'
     )
-    SIMULATED_SMS_NUMBERS = ('+447700900000', '+447700900111', '+447700900222')
+    SIMULATED_SMS_NUMBERS = ('+12028675000', '+12028675111', '+12028675222')
     """
     formatted_address = None
 
@@ -332,12 +332,10 @@ def test_simulated_recipient(notify_api, to_address, notification_type, expected
 
 
 @pytest.mark.parametrize('recipient, expected_international, expected_prefix, expected_units', [
-    ('7900900123', False, '44', 1),  # UK
-    ('+447900900123', False, '44', 1),  # UK
-    ('07700910222', True, '44', 1),  # UK (Jersey)
-    ('07700900222', False, '44', 1),  # TV number
-    ('73122345678', True, '7', 1),  # Russia
-    ('360623400400', True, '36', 3)]  # Hungary
+    ('+447900900123', True, '44', 1),  # UK
+    ('+73122345678', True, '7', 1),  # Russia
+    ('+360623400400', True, '36', 1),  # Hungary
+    ('2028675309', False, '1', 1)]  # USA
 )
 def test_persist_notification_with_international_info_stores_correct_info(
     sample_job,
@@ -394,15 +392,12 @@ def test_persist_notification_with_international_info_does_not_store_for_email(
 
 
 @pytest.mark.parametrize('recipient, expected_recipient_normalised', [
-    ('7900900123', '447900900123'),
-    ('+447900   900 123', '447900900123'),
-    ('  07700900222', '447700900222'),
-    ('07700900222', '447700900222'),
-    (' 73122345678', '73122345678'),
-    ('360623400400', '360623400400'),
-    ('-077-00900222-', '447700900222'),
-    ('(360623(400400)', '360623400400')
-
+    ('+4407900900123', '+447900900123'),
+    ('202-867-5309', '+12028675309'),
+    ('1 202-867-5309', '+12028675309'),
+    ('+1 (202) 867-5309', '+12028675309'),
+    ('(202) 867-5309', '+12028675309'),
+    ('2028675309', '+12028675309')
 ])
 def test_persist_sms_notification_stores_normalised_number(
     sample_job,

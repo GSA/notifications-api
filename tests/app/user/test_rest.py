@@ -107,7 +107,7 @@ def test_post_user(admin_request, notify_db_session):
         "name": "Test User",
         "email_address": "user@digital.cabinet-office.gov.uk",
         "password": "password",
-        "mobile_number": "+447700900986",
+        "mobile_number": "+12028675309",
         "logged_in_at": None,
         "state": "active",
         "failed_login_count": 0,
@@ -130,7 +130,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
         "name": "Test User",
         "email_address": "user@digital.cabinet-office.gov.uk",
         "password": "password",
-        "mobile_number": "+447700900986",
+        "mobile_number": "+12028675309",
         "permissions": {},
     }
 
@@ -149,7 +149,7 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
     data = {
         "name": "Test User",
         "password": "password",
-        "mobile_number": "+447700900986",
+        "mobile_number": "+12028675309",
         "logged_in_at": None,
         "state": "active",
         "failed_login_count": 0,
@@ -169,7 +169,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
     data = {
         "name": "Test User",
         "email_address": "user@digital.cabinet-office.gov.uk",
-        "mobile_number": "+447700900986",
+        "mobile_number": "+12028675309",
         "logged_in_at": None,
         "state": "active",
         "failed_login_count": 0,
@@ -224,7 +224,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
     )
     assert resp['message'] == {
         'email_address': ['Not a valid email address'],
-        'mobile_number': ['Invalid phone number: Not enough digits'],
+        'mobile_number': ['Invalid phone number: The string supplied did not seem to be a phone number.'],
         'name': ['Invalid name']
     }
 
@@ -883,7 +883,8 @@ def test_cannot_update_user_with_mobile_number_as_empty_string(admin_request, sa
         _data={'mobile_number': ''},
         _expected_status=400
     )
-    assert resp['message']['mobile_number'] == ['Invalid phone number: Not enough digits']
+    assert resp['message']['mobile_number'] == [
+        'Invalid phone number: The string supplied did not seem to be a phone number.']
 
 
 def test_cannot_update_user_password_using_attributes_method(admin_request, sample_user):
@@ -1100,10 +1101,9 @@ def test_search_for_users_by_email_handles_incorrect_data_format(notify_db_sessi
 
 @pytest.mark.parametrize('number, expected_reply_to',
                          [
-                          ("1-403-123-4567", "notify_international_sender"),
-                          ("27 123 4569 2312", "notify_international_sender"),
-                          ("30 123 4567 7890", "Notify"),
-                          ("+20 123 4567 7890", "Notify"),
+                          ("403-123-4567", "Notify"),
+                          ("+30 123 4567 7890", "Notify"),
+                          ("+27 123 4569 2312", "notify_international_sender"),
                           ])
 def test_get_sms_reply_to_for_notify_service(team_member_mobile_edit_template, number, expected_reply_to):
     # need to import locally to avoid db session errors,

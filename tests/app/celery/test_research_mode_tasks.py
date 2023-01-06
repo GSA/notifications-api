@@ -31,11 +31,11 @@ def test_make_sns_callback(notify_api, rmock):
         endpoint,
         json={"status": "success"},
         status_code=200)
-    send_sms_response("sns", "1234", "5558675309")
+    send_sms_response("sns", "1234", "2028675309")
 
     assert rmock.called
     assert rmock.request_history[0].url == endpoint
-    assert json.loads(rmock.request_history[0].text)['MSISDN'] == '5558675309'
+    assert json.loads(rmock.request_history[0].text)['MSISDN'] == '2028675309'
 
 
 @pytest.mark.skip(reason="Re-enable when SMS receipts exist")
@@ -70,7 +70,7 @@ def test_make_ses_callback(notify_api, mocker):
 
 @pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
 def test_delievered_sns_callback():
-    phone_number = "5558675309"
+    phone_number = "2028675309"
     data = json.loads(sns_callback("1234", phone_number))
     assert data['MSISDN'] == phone_number
     assert data['status'] == "3"
@@ -80,7 +80,7 @@ def test_delievered_sns_callback():
 
 @pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
 def test_perm_failure_sns_callback():
-    phone_number = "5558675302"
+    phone_number = "2028675302"
     data = json.loads(sns_callback("1234", phone_number))
     assert data['MSISDN'] == phone_number
     assert data['status'] == "5"
@@ -90,7 +90,7 @@ def test_perm_failure_sns_callback():
 
 @pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
 def test_temp_failure_sns_callback():
-    phone_number = "5558675303"
+    phone_number = "2028675303"
     data = json.loads(sns_callback("1234", phone_number))
     assert data['MSISDN'] == phone_number
     assert data['status'] == "4"

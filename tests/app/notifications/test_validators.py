@@ -167,10 +167,10 @@ def test_service_can_send_to_recipient_passes(key_type, notify_db_session):
 
 
 @pytest.mark.parametrize('user_number, recipient_number', [
-    ['0048601234567', '+486 012 34567'],
-    ['07513332413', '(07513) 332413'],
+    ['+12028675309', '202-867-5309'],
+    ['+447513332413', '+44 (07513) 332413'],
 ])
-def test_service_can_send_to_recipient_passes_with_non_normalised_number(sample_service, user_number, recipient_number):
+def test_service_can_send_to_recipient_passes_with_non_normalized_number(sample_service, user_number, recipient_number):
     sample_service.users[0].mobile_number = user_number
 
     serialised_service = SerialisedService.from_id(sample_service.id)
@@ -181,7 +181,7 @@ def test_service_can_send_to_recipient_passes_with_non_normalised_number(sample_
 @pytest.mark.parametrize('user_email, recipient_email', [
     ['test@example.com', 'TeSt@EXAMPLE.com'],
 ])
-def test_service_can_send_to_recipient_passes_with_non_normalised_email(sample_service, user_email, recipient_email):
+def test_service_can_send_to_recipient_passes_with_non_normalized_email(sample_service, user_email, recipient_email):
     sample_service.users[0].email_address = user_email
 
     serialised_service = SerialisedService.from_id(sample_service.id)
@@ -206,15 +206,15 @@ def test_service_can_send_to_recipient_passes_for_guest_list_recipient_passes(sa
     assert service_can_send_to_recipient("some_other_email@test.com",
                                          'team',
                                          sample_service) is None
-    create_service_guest_list(sample_service, mobile_number='07513332413')
-    assert service_can_send_to_recipient('07513332413',
+    create_service_guest_list(sample_service, mobile_number='2028675309')
+    assert service_can_send_to_recipient('2028675309',
                                          'team',
                                          sample_service) is None
 
 
 @pytest.mark.parametrize('recipient', [
     {"email_address": "some_other_email@test.com"},
-    {"mobile_number": "07513332413"},
+    {"mobile_number": "2028675300"},
 ])
 def test_service_can_send_to_recipient_fails_when_ignoring_guest_list(
     notify_db_session,
@@ -234,7 +234,7 @@ def test_service_can_send_to_recipient_fails_when_ignoring_guest_list(
     assert exec_info.value.fields == []
 
 
-@pytest.mark.parametrize('recipient', ['07513332413', 'some_other_email@test.com'])
+@pytest.mark.parametrize('recipient', ['2028675300', 'some_other_email@test.com'])
 @pytest.mark.parametrize('key_type, error_message',
                          [('team', 'Can’t send to this recipient using a team-only API key'),
                           ('normal',
@@ -482,7 +482,7 @@ def test_validate_and_format_recipient_fails_when_international_number_and_servi
     service = create_service(service_permissions=[SMS_TYPE])
     service_model = SerialisedService.from_id(service.id)
     with pytest.raises(BadRequestError) as e:
-        validate_and_format_recipient('20-12-1234-1234', key_type, service_model, SMS_TYPE)
+        validate_and_format_recipient('+20-12-1234-1234', key_type, service_model, SMS_TYPE)
     assert e.value.status_code == 400
     assert e.value.message == 'Cannot send to international mobile numbers'
     assert e.value.fields == []
@@ -492,8 +492,8 @@ def test_validate_and_format_recipient_fails_when_international_number_and_servi
 def test_validate_and_format_recipient_succeeds_with_international_numbers_if_service_does_allow_int_sms(
         key_type, sample_service_full_permissions):
     service_model = SerialisedService.from_id(sample_service_full_permissions.id)
-    result = validate_and_format_recipient('20-12-1234-1234', key_type, service_model, SMS_TYPE)
-    assert result == '201212341234'
+    result = validate_and_format_recipient('+4407513332413', key_type, service_model, SMS_TYPE)
+    assert result == '+447513332413'
 
 
 def test_validate_and_format_recipient_fails_when_no_recipient():
