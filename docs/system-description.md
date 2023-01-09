@@ -4,7 +4,7 @@ US Notify
 System Description
 ------------------
 
-US Notify is a service being developed by the TTS Benefits Studio to increase the availability of
+US Notify is a service being developed by the TTS Public Benefits Studio to increase the availability of
 SMS and email notifications to Federal, State, and Local Benefits agencies.
 
 Agencies that sign up will be able to create and use personalized message templates for sending
