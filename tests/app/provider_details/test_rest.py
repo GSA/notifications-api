@@ -11,7 +11,7 @@ def test_get_provider_details_returns_all_providers(admin_request, notify_db_ses
     json_resp = admin_request.get('provider_details.get_providers')['provider_details']
 
     assert len(json_resp) > 0
-    assert {'ses', 'firetext', 'mmg', 'dvla'} <= {x['identifier'] for x in json_resp}
+    assert {'ses', 'sns', 'dvla'} == {x['identifier'] for x in json_resp}
 
 
 def test_get_provider_details_by_id(client, notify_db_session):
@@ -32,7 +32,7 @@ def test_get_provider_details_by_id(client, notify_db_session):
 
 @freeze_time('2018-06-28 12:00')
 def test_get_provider_contains_correct_fields(client, sample_template):
-    create_ft_billing('2018-06-01', sample_template, provider='mmg', billable_unit=1)
+    create_ft_billing('2018-06-01', sample_template, provider='sns', billable_unit=1)
 
     response = client.get(
         '/provider-details',

@@ -9,8 +9,8 @@ from tests.app.db import create_notification, create_template
 
 
 @pytest.mark.parametrize('billable_units, provider', [
-    (1, 'mmg'),
-    (0, 'mmg'),
+    (1, 'sns'),
+    (0, 'sns'),
     (1, None)
 ])
 def test_get_notification_by_id_returns_200(

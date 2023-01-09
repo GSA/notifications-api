@@ -24,10 +24,8 @@ def get_provider_details_by_identifier(identifier):
 
 
 def get_alternative_sms_provider(identifier):
-    if identifier == 'firetext':
-        return 'mmg'
-    elif identifier == 'mmg':
-        return 'firetext'
+    if identifier == 'sns':
+        raise Exception("No alternative SMS providers currently available")
     raise ValueError('Unrecognised sms provider {}'.format(identifier))
 
 

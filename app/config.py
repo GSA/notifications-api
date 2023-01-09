@@ -114,23 +114,10 @@ class Config(object):
     VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
 
-    # SMS config to be cleaned up during https://github.com/GSA/notifications-api/issues/7
-    # MMG API Key
-    MMG_API_KEY = getenv('MMG_API_KEY', 'placeholder')
-    # Firetext API Key
-    FIRETEXT_API_KEY = getenv("FIRETEXT_API_KEY", "placeholder")
-    FIRETEXT_INTERNATIONAL_API_KEY = getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
         'sns': 100,
-        'mmg': 0,
-        'firetext': 0
     }
-    FIRETEXT_INBOUND_SMS_AUTH = json.loads(getenv('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_AUTH = json.loads(getenv('MMG_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_USERNAME = json.loads(getenv('MMG_INBOUND_SMS_USERNAME', '[]'))
-    MMG_URL = getenv("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
-    FIRETEXT_URL = getenv("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
 
     # Zendesk
     ZENDESK_API_KEY = getenv('ZENDESK_API_KEY')
@@ -329,7 +316,7 @@ class Config(object):
         'simulate-delivered-2@notifications.service.gov.uk',
         'simulate-delivered-3@notifications.service.gov.uk',
     )
-    SIMULATED_SMS_NUMBERS = ('+447700900000', '+447700900111', '+447700900222')
+    SIMULATED_SMS_NUMBERS = ('+12028675000', '+12028675111', '+12028675222')
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
@@ -372,10 +359,6 @@ class Test(Development):
     TESTING = True
     ANTIVIRUS_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
-
-    FIRETEXT_INBOUND_SMS_AUTH = ['testkey']
-    MMG_INBOUND_SMS_AUTH = ['testkey']
-    MMG_INBOUND_SMS_USERNAME = ['username']
 
     HIGH_VOLUME_SERVICE = [
         '941b6f9a-50d7-4742-8d50-f365ca74bf27',

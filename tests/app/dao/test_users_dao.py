@@ -37,11 +37,11 @@ from tests.app.db import (
 
 
 @freeze_time('2020-01-28T12:00:00')
-@pytest.mark.parametrize('phone_number', [
-    '+447700900986',
-    '+1-800-555-5555',
+@pytest.mark.parametrize('phone_number, expected_phone_number', [
+    ('2028675309', '+12028675309'),
+    ('+1-800-555-5555', '+18005555555'),
 ])
-def test_create_user(notify_db_session, phone_number):
+def test_create_user(notify_db_session, phone_number, expected_phone_number):
     email = 'notify@digital.cabinet-office.gov.uk'
     data = {
         'name': 'Test User',
@@ -55,7 +55,7 @@ def test_create_user(notify_db_session, phone_number):
     user_query = User.query.first()
     assert user_query.email_address == email
     assert user_query.id == user.id
-    assert user_query.mobile_number == phone_number
+    assert user_query.mobile_number == expected_phone_number
     assert user_query.email_access_validated_at == datetime.utcnow()
     assert not user_query.platform_admin
 

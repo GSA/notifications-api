@@ -36,6 +36,7 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
@@ -139,6 +140,14 @@ class User(db.Model):
         'Organisation',
         secondary='user_to_organisation',
         backref='users')
+
+    @validates("mobile_number")
+    def validate_mobile_number(self, key, number):
+        try:
+            if number is not None:
+                return validate_phone_number(number, international=True)
+        except InvalidPhoneError as err:
+            raise ValueError(str(err)) from err
 
     @property
     def password(self):
@@ -708,11 +717,9 @@ class ServiceGuestList(db.Model):
 
         try:
             if recipient_type == MOBILE_TYPE:
-                validate_phone_number(recipient, international=True)
-                instance.recipient = recipient
+                instance.recipient = validate_phone_number(recipient, international=True)
             elif recipient_type == EMAIL_TYPE:
-                validate_email_address(recipient)
-                instance.recipient = recipient
+                instance.recipient = validate_email_address(recipient)
             else:
                 raise ValueError('Invalid recipient type')
         except InvalidPhoneError:
@@ -1116,12 +1123,10 @@ class TemplateHistory(TemplateBase):
         )
 
 
-MMG_PROVIDER = "mmg"
-FIRETEXT_PROVIDER = "firetext"
 SNS_PROVIDER = 'sns'
 SES_PROVIDER = 'ses'
 
-SMS_PROVIDERS = [MMG_PROVIDER, FIRETEXT_PROVIDER, SNS_PROVIDER]
+SMS_PROVIDERS = [SNS_PROVIDER]
 EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
 

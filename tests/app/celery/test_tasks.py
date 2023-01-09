@@ -75,9 +75,6 @@ class AnyStringWith(str):
         return self in other
 
 
-mmg_error = {'Error': '40', 'Description': 'error'}
-
-
 def _notification_json(template, to, personalisation=None, job_id=None, row_number=0):
     return {
         "template": str(template.id),
@@ -505,10 +502,10 @@ def test_should_put_save_sms_task_in_research_mode_queue_if_research_mode_servic
 
 
 def test_should_save_sms_if_restricted_service_and_valid_number(notify_db_session, mocker):
-    user = create_user(mobile_number="07700 900890")
+    user = create_user(mobile_number="202-867-5309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
-    notification = _notification_json(template, "+447700900890")  # The user’s own number, but in a different format
+    notification = _notification_json(template, "+12028675309")  # The user’s own number, but in a different format
 
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
@@ -521,7 +518,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(notify_db_sessio
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == '+447700900890'
+    assert persisted_notification.to == '+12028675309'
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
     assert persisted_notification.status == 'created'
@@ -556,11 +553,11 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(noti
     assert persisted_notification.reply_to_text == 'reply_to@digital.gov.uk'
 
 
-def test_save_sms_should_save_default_smm_sender_notification_reply_to_text_on(notify_db_session, mocker):
+def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(notify_db_session, mocker):
     service = create_service_with_defined_sms_sender(sms_sender_value='12345')
     template = create_template(service=service)
 
-    notification = _notification_json(template, to="07700 900205")
+    notification = _notification_json(template, to="2028675309")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -575,11 +572,11 @@ def test_save_sms_should_save_default_smm_sender_notification_reply_to_text_on(n
 
 
 def test_should_not_save_sms_if_restricted_service_and_invalid_number(notify_db_session, mocker):
-    user = create_user(mobile_number="07700 900205")
+    user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
 
-    notification = _notification_json(template, "07700 900849")
+    notification = _notification_json(template, "2028675400")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -670,14 +667,14 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
 
 def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(notify_db_session, mocker):
     assert Notification.query.count() == 0
-    user = create_user(mobile_number="07700 900205")
+    user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
 
     team_members = [user.mobile_number for user in service.users]
     assert "07890 300000" not in team_members
 
-    notification = _notification_json(template, "07700 900849")
+    notification = _notification_json(template, "2028675400")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -1207,10 +1204,10 @@ def test_save_letter_uses_template_reply_to_text(mocker, notify_db_session):
 
 
 def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
-    service = create_service_with_defined_sms_sender(sms_sender_value='07123123123')
+    service = create_service_with_defined_sms_sender(sms_sender_value='2028675309')
     template = create_template(service=service)
 
-    notification = _notification_json(template, to="07700 900205")
+    notification = _notification_json(template, to="2028675301")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -1221,15 +1218,15 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.reply_to_text == '447123123123'
+    assert persisted_notification.reply_to_text == '+12028675309'
 
 
 def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(mocker, notify_db_session):
-    service = create_service_with_defined_sms_sender(sms_sender_value='07123123123')
+    service = create_service_with_defined_sms_sender(sms_sender_value='2028675309')
     template = create_template(service=service)
     new_sender = service_sms_sender_dao.dao_add_sms_sender_for_service(service.id, 'new-sender', False)
 
-    notification = _notification_json(template, to="07700 900205")
+    notification = _notification_json(template, to="202-867-5301")
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     notification_id = uuid.uuid4()
@@ -1921,7 +1918,7 @@ def test_save_api_email_dont_retry_if_notification_already_exists(sample_service
     ), (
         save_sms,
         'app.celery.provider_tasks.deliver_sms.apply_async',
-        '07700 900890',
+        '202-867-5309',
         {'template_type': 'sms'}
     ),
 ))
