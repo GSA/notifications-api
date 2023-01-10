@@ -38,7 +38,7 @@ eventlet = "==0.33.1"
 flask = "~=2.1.2"
 flask-bcrypt = "==1.0.1"
 flask-marshmallow = "==0.14.0"
-flask-migrate = "==3.1.0"
+flask-migrate = "~=3.1.0"
 flask-redis = "==0.4.0"
 flask-sqlalchemy = {version = "==2.5.1", ref = "aa7a61a5357cf6f5dcc135d98c781192457aa6fa", git = "https://github.com/pallets-eco/flask-sqlalchemy.git"}
 gunicorn = {version = "==20.1.0", extras = ["eventlet"], ref = "1299ea9e967a61ae2edebe191082fd169b864c64", git = "https://github.com/benoitc/gunicorn.git"}
