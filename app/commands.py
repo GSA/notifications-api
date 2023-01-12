@@ -765,3 +765,31 @@ def create_user_jwt(token):
     service_id = token[-73:-37]
     api_key = token[-36:]
     print(create_jwt_token(api_key, service_id))
+
+
+def update_template(id, name, template_type, content, subject):
+    update = """
+        UPDATE {} SET name = '{}', template_type = '{}', content = '{}', subject = '{}'
+        WHERE id = '{}'
+    """
+
+    for table_name in 'templates', 'templates_history':
+        db.session.execute(
+            update.format(
+                table_name,
+                name,
+                template_type,
+                '\n'.join(content),
+                subject,
+                id
+            )
+        )
+        db.session.commit()
+
+
+@notify_command(name='update-templates')
+def update_templates():
+    with open(current_app.config['CONFIG_FILES'] + '/templates.json') as f:
+        data = json.load(f)
+        for d in data:
+            update_template(d['id'], d['name'], d['type'], d['content'], d['subject'])
