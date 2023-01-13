@@ -192,7 +192,7 @@
         "name": "Phone number changed by service manager",
         "type": "sms",
         "subject": "",
-        "content": ["Your mobile number was changed by ((servicemanagername)). Next time you sign in, your US Notify authentication code will be sent to this phone."]
+        "content": ["Your mobile number was changed by ((servicemanagername)). Next time you sign in, your U.S. Notify authentication code will be sent to this phone."]
     },
     {
         "id": "a42f1d17-9404-46d5-a647-d013bdfca3e1",
