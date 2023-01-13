@@ -4,7 +4,7 @@
         "name": "Example text message template",
         "type": "sms",
         "subject":  "",
-        "content": ["Hi, I’m trying out US Notify. Today is ((day of week)) and my favourite colour is ((colour))."]
+        "content": ["Hi, I’m trying out U.S. Notify. Today is ((day of week)) and my favorite color is ((color))."]
     },
     {
         "id": "4f46df42-f795-4cc4-83bb-65ca312f49cc",
