@@ -99,7 +99,7 @@ def test_update_template(
         "299726d2-dba6-42b8-8209-30e1d66ea164",
         "Example text message template!",
         "sms",
-        ["Hi, I’m trying out US Notify! Today is ((day of week)) and my favourite colour is ((colour))."],
+        ["Hi, I’m trying out U.S. Notify! Today is ((day of week)) and my favorite color is ((color))."],
         ""
     )
 
