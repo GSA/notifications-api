@@ -29,7 +29,7 @@
         "name": "Notify SMS verify code",
         "type": "sms",
         "subject": "",
-        "content": ["((verify_code)) is your US Notify authentication code"]
+        "content": ["((verify_code)) is your U.S. Notify authentication code"]
     },
     {
         "id": "474e9242-823b-4f99-813d-ed392e7f1201",
