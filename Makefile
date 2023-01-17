@@ -26,12 +26,12 @@ run-procfile:
 
 .PHONY: run-flask
 run-flask: ## Run flask
-	pipenv run flask run -p 6011 --host=0.0.0.0
+	pipenv run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
 	pipenv run celery -A run_celery.notify_celery purge -f
-	pipenv run celery \
+	pipenv run newrelic-admin run-program celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
@@ -39,7 +39,7 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
-	pipenv run celery \
+	pipenv run newrelic-admin run-program celery \
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
 
@@ -52,6 +52,7 @@ generate-version-file: ## Generates the app version file
 	@echo -e "__git_commit__ = \"${GIT_COMMIT}\"\n__time__ = \"${DATE}\"" > ${APP_VERSION_FILE}
 
 .PHONY: test
+test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
