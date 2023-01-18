@@ -39,7 +39,7 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
-	pipenv run newrelic-admin run-program celery \
+	pipenv run celery \
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
 
