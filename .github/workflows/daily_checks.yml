@@ -12,6 +12,8 @@ permissions:
 env:
   DEBUG: True
   NOTIFY_ENVIRONMENT: test
+  NEW_RELIC_CONFIG_FILE: newrelic.ini
+  NEW_RELIC_ENVIRONMENT: test
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
