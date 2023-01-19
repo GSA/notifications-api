@@ -60,6 +60,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-project
+      - name: Install pipenv packages
+        run: pipenv install --dev
       - name: Validate NewRelic config
         env:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
