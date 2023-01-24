@@ -9,10 +9,10 @@ inputs:
     required: true
   proxy_repo:
     description: git repo for cg-egress-proxy
-    default: https://github.com/GSA/cg-egress-proxy.git
+    default: https://github.com/rahearn/cg-egress-proxy.git
   proxy_version:
     description: git ref to be deployed
-    default: main
+    default: new-relic-connection
 runs:
   using: composite
   steps:

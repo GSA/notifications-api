@@ -51,3 +51,4 @@ applications:
       AWS_US_TOLL_FREE_NUMBER: +18446120782
 
       REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
+      NEW_RELIC_CA_BUNDLE_PATH: "/etc/ssl/certs/ca-certificates.crt"
