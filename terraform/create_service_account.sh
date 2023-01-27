@@ -67,7 +67,7 @@ cf create-service cloud-gov-service-account $role $service 1>&2
 cf create-service-key $service service-account-key 1>&2
 
 # output service key to stdout in secrets.auto.tfvars format
-creds=`cf service-key $service service-account-key | tail -n 4`
+creds=`cf service-key $service service-account-key | tail -n +2 | jq '.credentials'`
 username=`echo $creds | jq -r '.username'`
 password=`echo $creds | jq -r '.password'`
 
