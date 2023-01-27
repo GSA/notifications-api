@@ -18,8 +18,15 @@ Options:
 -o <ORG NAME>: configure the organization to act on. Default: $org
 
 Notes:
-OrgManager is required for terraform to create <env>-egress spaces
+* OrgManager is required for terraform to create <env>-egress spaces
+* Requires cf-cli@8
 "
+
+cf_version=`cf --version | cut -d " " -f 3`
+if [[ $cf_version != 8.* ]]; then
+  echo "$usage"
+  exit 1
+fi
 
 set -e
 set -o pipefail
