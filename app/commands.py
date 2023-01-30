@@ -767,7 +767,7 @@ def create_user_jwt(token):
     print(create_jwt_token(api_key, service_id))
 
 
-def update_template(id, name, template_type, content, subject):
+def _update_template(id, name, template_type, content, subject):
     update = """
         UPDATE {} SET name = '{}', template_type = '{}', content = '{}', subject = '{}'
         WHERE id = '{}'
@@ -792,4 +792,4 @@ def update_templates():
     with open(current_app.config['CONFIG_FILES'] + '/templates.json') as f:
         data = json.load(f)
         for d in data:
-            update_template(d['id'], d['name'], d['type'], d['content'], d['subject'])
+            _update_template(d['id'], d['name'], d['type'], d['content'], d['subject'])
