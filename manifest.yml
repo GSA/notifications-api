@@ -22,7 +22,7 @@ applications:
       - type: worker
         instances: ((worker_instances))
         memory: ((worker_memory))
-        command: celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4
+        command: newrelic-admin run-program celery -A run_celery.notify_celery worker --loglevel=INFO --concurrency=4
       - type: scheduler
         instances: 1
         memory: ((scheduler_memory))
@@ -32,6 +32,9 @@ applications:
       NOTIFY_APP_NAME: api
       FLASK_APP: application.py
       FLASK_ENV: production
+      NEW_RELIC_CONFIG_FILE: newrelic.ini
+      NEW_RELIC_ENVIRONMENT: ((env))
+      NEW_RELIC_LICENSE_KEY: ((NEW_RELIC_LICENSE_KEY))
 
       NOTIFY_ENVIRONMENT: ((env))
       API_HOST_NAME: https://((public_api_route))
@@ -48,3 +51,4 @@ applications:
       AWS_US_TOLL_FREE_NUMBER: +18446120782
 
       REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
+      NEW_RELIC_CA_BUNDLE_PATH: "/etc/ssl/certs/ca-certificates.crt"

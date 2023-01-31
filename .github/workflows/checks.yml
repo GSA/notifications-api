@@ -8,6 +8,8 @@ permissions:
 env:
   DEBUG: True
   NOTIFY_ENVIRONMENT: test
+  NEW_RELIC_CONFIG_FILE: newrelic.ini
+  NEW_RELIC_ENVIRONMENT: test
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
@@ -51,6 +53,21 @@ jobs:
       run: pipenv run pytest -n4 --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+
+  validate-new-relic-config:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-project
+      - name: Install pipenv packages
+        run: pipenv install --dev
+      - name: Validate NewRelic config
+        env:
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          # Need to set a NEW_RELIC_ENVIRONMENT with monitor_mode: true
+          NEW_RELIC_ENVIRONMENT: staging
+        run: pipenv run newrelic-admin validate-config $NEW_RELIC_CONFIG_FILE
 
   pip-audit:
     runs-on: ubuntu-latest
