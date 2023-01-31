@@ -65,6 +65,8 @@ from app.models import (
     Notification,
     Organisation,
     Service,
+    Template,
+    TemplateHistory,
     User,
 )
 from app.utils import get_local_midnight_in_utc
@@ -768,23 +770,20 @@ def create_user_jwt(token):
 
 
 def _update_template(id, name, template_type, content, subject):
-    update = """
-        UPDATE {} SET name = '{}', template_type = '{}', content = '{}', subject = '{}'
-        WHERE id = '{}'
-    """
 
-    for table_name in 'templates', 'templates_history':
-        db.session.execute(
-            update.format(
-                table_name,
-                name,
-                template_type,
-                '\n'.join(content),
-                subject,
-                id
-            )
-        )
-        db.session.commit()
+    template = Template.query.filter_by(id=id).first()
+    template.name = name
+    template.template_type = template_type
+    template.content = '\n'.join(content)
+    template.subject = subject
+
+    history = TemplateHistory.query.filter_by(id=id).first()
+    history.name = name
+    history.template_type = template_type
+    history.content = '\n'.join(content)
+    history.subject = subject
+
+    db.session.commit()
 
 
 @notify_command(name='update-templates')

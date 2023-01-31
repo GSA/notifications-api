@@ -1,10 +1,10 @@
 import pytest
 
 from app.commands import (
+    _update_template,
     create_test_user,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
-    update_template,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.models import AnnualBilling, Template, User
@@ -95,7 +95,7 @@ def test_update_template(
     notify_db_session, email_2fa_code_template
 ):
 
-    update_template(
+    _update_template(
         "299726d2-dba6-42b8-8209-30e1d66ea164",
         "Example text message template!",
         "sms",
