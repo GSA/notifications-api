@@ -31,5 +31,47 @@ class CloudfoundryConfig:
     def s3_credentials(self, service_name):
         return self.s3_buckets.get(service_name) or self._empty_bucket_credentials
 
+    @property
+    def ses_email_domain(self):
+        try:
+            return self._ses_credentials('domain_arn').split('/')[-1]
+        except KeyError:
+            return getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
+
+    @property
+    def ses_region(self):
+        try:
+            return self._ses_credentials('region')
+        except KeyError:
+            return getenv('AWS_REGION')
+
+    @property
+    def ses_access_key(self):
+        try:
+            return self._ses_credentials('smtp_user')
+        except KeyError:
+            return getenv('AWS_ACCESS_KEY_ID')
+
+    @property
+    def ses_secret_key(self):
+        try:
+            return self._ses_credentials('secret_access_key')
+        except KeyError:
+            return getenv('AWS_SECRET_ACCESS_KEY')
+
+    @property
+    def sns_topic_arns(self):
+        try:
+            return [
+                self._ses_credentials('bounce_topic_arn'),
+                self._ses_credentials('complaint_topic_arn'),
+                self._ses_credentials('delivery_topic_arn')
+            ]
+        except KeyError:
+            return []
+
+    def _ses_credentials(self, key):
+        return self.parsed_services['datagov-smtp'][0]['credentials'][key]
+
 
 cloud_config = CloudfoundryConfig()

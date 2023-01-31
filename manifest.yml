@@ -15,7 +15,7 @@ applications:
       - notify-api-contact-list-bucket-((env))
       - name: notify-api-ses-((env))
         parameters:
-          notification_webhook: ""
+          notification_webhook: "https://((public_api_route))/notifications/email/ses"
 
     processes:
       - type: web
