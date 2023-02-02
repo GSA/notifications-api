@@ -63,7 +63,6 @@ module "ses_email" {
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-ses-${local.env}"
   recursive_delete    = local.recursive_delete
-  aws_region          = "us-gov-west-1"
-  email_domain        = "sandbox.10x.gsa.gov"
+  aws_region          = "us-west-2"
   email_receipt_error = "notify-support@gsa.gov"
 }
