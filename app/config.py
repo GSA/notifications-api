@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from os import getenv
+from os import getenv, path
 
 from celery.schedules import crontab
 from kombu import Exchange, Queue
@@ -146,6 +146,9 @@ class Config(object):
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
     MAX_LETTER_PDF_COUNT_PER_ZIP = 500
+
+    # Default data
+    CONFIG_FILES = path.dirname(__file__) + '/config_files/'
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'
