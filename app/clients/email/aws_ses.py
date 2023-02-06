@@ -1,7 +1,7 @@
 from time import monotonic
 
-import boto3
 import botocore
+from boto3 import client
 from flask import current_app
 
 from app.clients import STATISTICS_DELIVERED, STATISTICS_FAILURE
@@ -10,6 +10,7 @@ from app.clients.email import (
     EmailClientException,
     EmailClientNonRetryableException,
 )
+from app.cloudfoundry_config import cloud_config
 
 ses_response_map = {
     'Permanent': {
@@ -56,8 +57,13 @@ class AwsSesClient(EmailClient):
     Amazon SES email client.
     '''
 
-    def init_app(self, region, statsd_client, *args, **kwargs):
-        self._client = boto3.client('ses', region_name=region)
+    def init_app(self, statsd_client, *args, **kwargs):
+        self._client = client(
+            'ses',
+            region_name=cloud_config.ses_region,
+            aws_access_key_id=cloud_config.ses_access_key,
+            aws_secret_access_key=cloud_config.ses_secret_key
+        )
         super(AwsSesClient, self).__init__(*args, **kwargs)
         self.statsd_client = statsd_client
 

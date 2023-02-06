@@ -55,3 +55,14 @@ module "egress-space" {
     "steven.reilly@gsa.gov"
   ]
 }
+
+module "ses_email" {
+  source = "../shared/ses"
+
+  cf_org_name         = local.cf_org_name
+  cf_space_name       = local.cf_space_name
+  name                = "${local.app_name}-ses-${local.env}"
+  recursive_delete    = local.recursive_delete
+  aws_region          = "us-west-2"
+  email_receipt_error = "notify-support@gsa.gov"
+}
