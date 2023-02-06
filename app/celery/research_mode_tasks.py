@@ -7,9 +7,9 @@ from app.celery.process_ses_receipts_tasks import process_ses_results
 from app.config import QueueNames
 from app.models import SMS_TYPE
 
-temp_fail = "7700900003"
-perm_fail = "7700900002"
-delivered = "7700900001"
+temp_fail = "2028675303"
+perm_fail = "2028675302"
+delivered = "2028675309"
 
 delivered_email = "delivered@simulator.notify"
 perm_fail_email = "perm-fail@simulator.notify"
@@ -17,22 +17,8 @@ temp_fail_email = "temp-fail@simulator.notify"
 
 
 def send_sms_response(provider, reference, to):
-    if provider == "mmg":
-        body = mmg_callback(reference, to)
-        headers = {"Content-type": "application/json"}
-    else:
-        headers = {"Content-type": "application/x-www-form-urlencoded"}
-        body = firetext_callback(reference, to)
-        # to simulate getting a temporary_failure from firetext
-        # we need to send a pending status updated then a permanent-failure
-        if body['status'] == '2':  # pending status
-            make_request(SMS_TYPE, provider, body, headers)
-            # 1 is a declined status for firetext, will result in a temp-failure
-            body = {'mobile': to,
-                    'status': "1",
-                    'time': '2016-03-10 14:17:00',
-                    'reference': reference
-                    }
+    body = sns_callback(reference, to)
+    headers = {"Content-type": "application/json"}
 
     make_request(SMS_TYPE, provider, body, headers)
 
@@ -73,44 +59,25 @@ def make_request(notification_type, provider, data, headers):
     return response.json()
 
 
-def mmg_callback(notification_id, to):
-    """
-        status: 3 - delivered
-        status: 4 - expired (temp failure)
-        status: 5 - rejected (perm failure)
-    """
+def sns_callback(notification_id, to):
+    raise Exception("Need to update for SNS callback format along with test_send_to_providers")
 
-    if to.strip().endswith(temp_fail):
-        status = "4"
-    elif to.strip().endswith(perm_fail):
-        status = "5"
-    else:
-        status = "3"
+    # example from mmg_callback
+    # if to.strip().endswith(temp_fail):
+    #     # status: 4 - expired (temp failure)
+    #     status = "4"
+    # elif to.strip().endswith(perm_fail):
+    #     # status: 5 - rejected (perm failure)
+    #     status = "5"
+    # else:
+    #     # status: 3 - delivered
+    #     status = "3"
 
-    return json.dumps({"reference": "mmg_reference",
-                       "CID": str(notification_id),
-                       "MSISDN": to,
-                       "status": status,
-                       "deliverytime": "2016-04-05 16:01:07"})
-
-
-def firetext_callback(notification_id, to):
-    """
-        status: 0 - delivered
-        status: 1 - perm failure
-    """
-    if to.strip().endswith(perm_fail):
-        status = "1"
-    elif to.strip().endswith(temp_fail):
-        status = "2"
-    else:
-        status = "0"
-    return {
-        'mobile': to,
-        'status': status,
-        'time': '2016-03-10 14:17:00',
-        'reference': notification_id
-    }
+    # return json.dumps({"reference": "mmg_reference",
+    #                    "CID": str(notification_id),
+    #                    "MSISDN": to,
+    #                    "status": status,
+    #                    "deliverytime": "2016-04-05 16:01:07"})
 
 
 def ses_notification_callback(reference):

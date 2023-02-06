@@ -204,7 +204,7 @@ def test_get_live_services_data(sample_user, admin_request):
         {
             'consent_to_research': None,
             'contact_email': 'notify@digital.cabinet-office.gov.uk',
-            'contact_mobile': '+447700900986',
+            'contact_mobile': '+12028675309',
             'contact_name': 'Test User',
             'email_totals': 1,
             'email_volume_intent': None,
@@ -222,7 +222,7 @@ def test_get_live_services_data(sample_user, admin_request):
         {
             'consent_to_research': None,
             'contact_email': 'notify@digital.cabinet-office.gov.uk',
-            'contact_mobile': '+447700900986',
+            'contact_mobile': '+12028675309',
             'contact_name': 'Test User',
             'email_totals': 0,
             'email_volume_intent': None,
@@ -2474,7 +2474,7 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
         service_id=sample_service.id,
         _data={
             'template_id': str(template.id),
-            'to': '07700900001',
+            'to': '2028675309',
             'created_by': str(sample_service.created_by_id)
         },
         _expected_status=201

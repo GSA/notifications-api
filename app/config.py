@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from os import getenv
+from os import getenv, path
 
 from celery.schedules import crontab
 from kombu import Exchange, Queue
@@ -108,23 +108,10 @@ class Config(object):
     VALIDATE_SNS_TOPICS = True
     VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
 
-    # SMS config to be cleaned up during https://github.com/GSA/notifications-api/issues/7
-    # MMG API Key
-    MMG_API_KEY = getenv('MMG_API_KEY', 'placeholder')
-    # Firetext API Key
-    FIRETEXT_API_KEY = getenv("FIRETEXT_API_KEY", "placeholder")
-    FIRETEXT_INTERNATIONAL_API_KEY = getenv("FIRETEXT_INTERNATIONAL_API_KEY", "placeholder")
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
         'sns': 100,
-        'mmg': 0,
-        'firetext': 0
     }
-    FIRETEXT_INBOUND_SMS_AUTH = json.loads(getenv('FIRETEXT_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_AUTH = json.loads(getenv('MMG_INBOUND_SMS_AUTH', '[]'))
-    MMG_INBOUND_SMS_USERNAME = json.loads(getenv('MMG_INBOUND_SMS_USERNAME', '[]'))
-    MMG_URL = getenv("MMG_URL", "https://api.mmg.co.uk/jsonv2a/api.php")
-    FIRETEXT_URL = getenv("FIRETEXT_URL", "https://www.firetext.co.uk/api/sendsms/json")
 
     # Zendesk
     ZENDESK_API_KEY = getenv('ZENDESK_API_KEY')
@@ -153,6 +140,9 @@ class Config(object):
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
     MAX_LETTER_PDF_COUNT_PER_ZIP = 500
+
+    # Default data
+    CONFIG_FILES = path.dirname(__file__) + '/config_files/'
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'
@@ -285,7 +275,7 @@ class Config(object):
         'simulate-delivered-2@notifications.service.gov.uk',
         'simulate-delivered-3@notifications.service.gov.uk',
     )
-    SIMULATED_SMS_NUMBERS = ('+447700900000', '+447700900111', '+447700900222')
+    SIMULATED_SMS_NUMBERS = ('+12028675000', '+12028675111', '+12028675222')
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
@@ -317,7 +307,7 @@ class Development(Config):
     CONTACT_LIST_BUCKET = _default_s3_credentials('local-contact-list')
 
     # credential overrides
-    DANGEROUS_SALT = 'dev-notify-salt'
+    DANGEROUS_SALT = 'development-notify-salt'
     SECRET_KEY = 'dev-notify-secret-key'  # nosec B105 - this is only used in development
     INTERNAL_CLIENT_API_KEYS = {Config.ADMIN_CLIENT_ID: ['dev-notify-secret-key']}
     ALLOW_EXPIRED_API_TOKEN = getenv('ALLOW_EXPIRED_API_TOKEN', '0') == '1'
@@ -328,10 +318,6 @@ class Test(Development):
     TESTING = True
     ANTIVIRUS_ENABLED = True
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com', 'success+2@simulator.amazonses.com']
-
-    FIRETEXT_INBOUND_SMS_AUTH = ['testkey']
-    MMG_INBOUND_SMS_AUTH = ['testkey']
-    MMG_INBOUND_SMS_USERNAME = ['username']
 
     HIGH_VOLUME_SERVICE = [
         '941b6f9a-50d7-4742-8d50-f365ca74bf27',

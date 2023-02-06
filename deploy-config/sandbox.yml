@@ -6,6 +6,6 @@ worker_memory: 512M
 scheduler_memory: 256M
 public_api_route: notify-api-sandbox.app.cloud.gov
 admin_base_url: https://notify-sandbox.app.cloud.gov
-ADMIN_CLIENT_SECRET: dev-notify-secret-key
-DANGEROUS_SALT: dev-notify-salt
-SECRET_KEY: dev-notify-secret-key
+ADMIN_CLIENT_SECRET: sandbox-notify-secret-key
+DANGEROUS_SALT: sandbox-notify-salt
+SECRET_KEY: sandbox-notify-secret-key

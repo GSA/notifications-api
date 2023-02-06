@@ -12,16 +12,20 @@ from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
 @pytest.fixture(scope='session')
-def notify_api():
+def notify_app():
     app = Flask('test')
     create_app(app)
+    return app
 
+
+@pytest.fixture(scope='session')
+def notify_api(notify_app):
     # deattach server-error error handlers - error_handler_spec looks like:
     #   {'blueprint_name': {
     #       status_code: [error_handlers],
     #       None: { ExceptionClass: error_handler }
     # }}
-    for error_handlers in app.error_handler_spec.values():
+    for error_handlers in notify_app.error_handler_spec.values():
         error_handlers.pop(500, None)
         if None in error_handlers:
             error_handlers[None] = {
@@ -32,10 +36,10 @@ def notify_api():
             if error_handlers[None] == []:
                 error_handlers.pop(None)
 
-    ctx = app.app_context()
+    ctx = notify_app.app_context()
     ctx.push()
 
-    yield app
+    yield notify_app
 
     ctx.pop()
 
@@ -98,11 +102,10 @@ def _notify_db(notify_api, worker_id):
 def sms_providers(_notify_db):
     """
     In production we randomly choose which provider to use based on their priority. To guarantee tests run the same each
-    time, make sure we always choose mmg. You'll need to override them in your tests if you wish to do something
+    time, make sure we always choose sns. You'll need to override them in your tests if you wish to do something
     different.
     """
-    get_provider_details_by_identifier('mmg').priority = 100
-    get_provider_details_by_identifier('firetext').priority = 0
+    get_provider_details_by_identifier('sns').priority = 100
 
 
 @pytest.fixture(scope='function')

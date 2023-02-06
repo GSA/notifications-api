@@ -102,7 +102,7 @@ def test_post_sms_notification_uses_inbound_number_as_sender(client, notify_db_s
 
 
 def test_post_sms_notification_uses_inbound_number_reply_to_as_sender(client, notify_db_session, mocker):
-    service = create_service_with_inbound_number(inbound_number='07123123123')
+    service = create_service_with_inbound_number(inbound_number='2028675309')
 
     template = create_template(service=service, content="Hello (( Name))\nYour thing is due soon")
     mocked = mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
@@ -124,8 +124,8 @@ def test_post_sms_notification_uses_inbound_number_reply_to_as_sender(client, no
     assert len(notifications) == 1
     notification_id = notifications[0].id
     assert resp_json['id'] == str(notification_id)
-    assert resp_json['content']['from_number'] == '447123123123'
-    assert notifications[0].reply_to_text == '447123123123'
+    assert resp_json['content']['from_number'] == '+12028675309'
+    assert notifications[0].reply_to_text == '+12028675309'
     mocked.assert_called_once_with([str(notification_id)], queue='send-sms-tasks')
 
 
@@ -159,7 +159,7 @@ def test_post_sms_notification_returns_201_with_sms_sender_id(
 def test_post_sms_notification_uses_sms_sender_id_reply_to(
         client, sample_template_with_placeholders, mocker
 ):
-    sms_sender = create_service_sms_sender(service=sample_template_with_placeholders.service, sms_sender='07123123123')
+    sms_sender = create_service_sms_sender(service=sample_template_with_placeholders.service, sms_sender='2028675309')
     mocked = mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
     data = {
         'phone_number': '+447700900855',
@@ -176,10 +176,10 @@ def test_post_sms_notification_uses_sms_sender_id_reply_to(
     assert response.status_code == 201
     resp_json = json.loads(response.get_data(as_text=True))
     assert validate(resp_json, post_sms_response) == resp_json
-    assert resp_json['content']['from_number'] == '447123123123'
+    assert resp_json['content']['from_number'] == '+12028675309'
     notifications = Notification.query.all()
     assert len(notifications) == 1
-    assert notifications[0].reply_to_text == '447123123123'
+    assert notifications[0].reply_to_text == '+12028675309'
     mocked.assert_called_once_with([resp_json['id']], queue='send-sms-tasks')
 
 
@@ -189,7 +189,7 @@ def test_notification_reply_to_text_is_original_value_if_sender_is_changed_after
     sms_sender = create_service_sms_sender(service=sample_template.service, sms_sender='123456', is_default=False)
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
     data = {
-        'phone_number': '+447700900855',
+        'phone_number': '+12028675309',
         'template_id': str(sample_template.id),
         'sms_sender_id': str(sms_sender.id)
     }
@@ -220,7 +220,7 @@ def test_should_cache_template_lookups_in_memory(mocker, client, sample_template
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     data = {
-        'phone_number': '+447700900855',
+        'phone_number': '2028675309',
         'template_id': str(sample_template.id),
     }
 
@@ -455,9 +455,9 @@ def test_post_email_notification_returns_201(client, sample_email_template_with_
     ('simulate-delivered@notifications.service.gov.uk', EMAIL_TYPE),
     ('simulate-delivered-2@notifications.service.gov.uk', EMAIL_TYPE),
     ('simulate-delivered-3@notifications.service.gov.uk', EMAIL_TYPE),
-    ('07700 900000', 'sms'),
-    ('07700 900111', 'sms'),
-    ('07700 900222', 'sms')
+    ('2028675000', 'sms'),
+    ('2028675111', 'sms'),
+    ('2028675222', 'sms')
 ])
 def test_should_not_persist_or_send_notification_if_simulated_recipient(
         client,
@@ -493,7 +493,7 @@ def test_should_not_persist_or_send_notification_if_simulated_recipient(
 
 
 @pytest.mark.parametrize("notification_type, key_send_to, send_to",
-                         [("sms", "phone_number", "07700 900 855"),
+                         [("sms", "phone_number", "2028675309"),
                           ("email", "email_address", "sample@email.com")])
 def test_send_notification_uses_priority_queue_when_template_is_marked_as_priority(
     client,
@@ -532,7 +532,7 @@ def test_send_notification_uses_priority_queue_when_template_is_marked_as_priori
 
 @pytest.mark.parametrize(
     "notification_type, key_send_to, send_to",
-    [("sms", "phone_number", "07700 900 855"), ("email", "email_address", "sample@email.com")]
+    [("sms", "phone_number", "2028675309"), ("email", "email_address", "sample@email.com")]
 )
 def test_returns_a_429_limit_exceeded_if_rate_limit_exceeded(
         client,
@@ -581,7 +581,7 @@ def test_post_sms_notification_returns_400_if_not_allowed_to_send_int_sms(
     template = create_template(service=service)
 
     data = {
-        'phone_number': '20-12-1234-1234',
+        'phone_number': '+20-12-1234-1234',
         'template_id': template.id
     }
     auth_header = create_service_authorization_header(service_id=service.id)
@@ -627,7 +627,7 @@ def test_post_sms_notification_with_archived_reply_to_id_returns_400(client, sam
 
 
 @pytest.mark.parametrize('recipient,label,permission_type, notification_type,expected_error', [
-    ('07700 900000', 'phone_number', 'email', 'sms', 'text messages'),
+    ('2028675309', 'phone_number', 'email', 'sms', 'text messages'),
     ('someone@test.com', 'email_address', 'sms', 'email', 'emails')])
 def test_post_sms_notification_returns_400_if_not_allowed_to_send_notification(
         notify_db_session, client, recipient, label, permission_type, notification_type, expected_error
@@ -691,7 +691,7 @@ def test_post_sms_notification_returns_201_if_allowed_to_send_int_sms(
     mocker.patch('app.celery.provider_tasks.deliver_sms.apply_async')
 
     data = {
-        'phone_number': '20-12-1234-1234',
+        'phone_number': '+20-12-1234-1234',
         'template_id': sample_template.id
     }
     auth_header = create_service_authorization_header(service_id=sample_service.id)

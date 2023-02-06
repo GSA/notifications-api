@@ -104,13 +104,13 @@ def persist_notification(
     document_download_count=None,
     updated_at=None
 ):
-    current_app.logger.info('Presisting notification')
+    current_app.logger.info('Persisting notification')
 
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
 
-    current_app.logger.info('Presisting notification with id {}'.format(notification_id))
+    current_app.logger.info('Persisting notification with id {}'.format(notification_id))
 
     notification = Notification(
         id=notification_id,
@@ -135,7 +135,7 @@ def persist_notification(
         updated_at=updated_at
     )
 
-    current_app.logger.info('Presisting notification with to address: {}'.format(notification.to))
+    current_app.logger.info('Persisting notification with to address: {}'.format(notification.to))
 
     if notification_type == SMS_TYPE:
         formatted_recipient = validate_and_format_phone_number(recipient, international=True)
@@ -145,9 +145,9 @@ def persist_notification(
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == EMAIL_TYPE:
-        current_app.logger.info('Presisting notification with type: {}'.format(EMAIL_TYPE))
+        current_app.logger.info('Persisting notification with type: {}'.format(EMAIL_TYPE))
         notification.normalised_to = format_email_address(notification.to)
-        current_app.logger.info('Presisting notification to formatted email: {}'.format(notification.normalised_to))
+        current_app.logger.info('Persisting notification to formatted email: {}'.format(notification.normalised_to))
     elif notification_type == LETTER_TYPE:
         notification.postage = postage
         notification.international = postage in INTERNATIONAL_POSTAGE_TYPES

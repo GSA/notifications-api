@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from notifications_utils.recipients import (
-    is_uk_phone_number,
+    is_us_phone_number,
     use_numeric_sender,
 )
 from sqlalchemy.exc import IntegrityError
@@ -140,7 +140,7 @@ def update_user_attribute(user_id):
 
 
 def get_sms_reply_to_for_notify_service(recipient, template):
-    if not is_uk_phone_number(recipient) and use_numeric_sender(recipient):
+    if not is_us_phone_number(recipient) and use_numeric_sender(recipient):
         reply_to = current_app.config['NOTIFY_INTERNATIONAL_SMS_SENDER']
     else:
         reply_to = template.service.get_default_sms_sender()

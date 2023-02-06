@@ -522,7 +522,7 @@ def test_user_verify_email_code_fails_if_code_already_used(admin_request, sample
 def test_send_user_2fa_code_sends_from_number_for_international_numbers(
         client, sample_user, mocker, sms_code_template
 ):
-    sample_user.mobile_number = "601117224412"
+    sample_user.mobile_number = "+601117224412"
     auth_header = create_admin_authorization_header()
     mocker.patch('app.user.rest.create_secret_code', return_value='11111')
     mocker.patch('app.user.rest.send_notification_to_queue')

@@ -60,6 +60,8 @@ from app.models import (
     Notification,
     Organisation,
     Service,
+    Template,
+    TemplateHistory,
     User,
 )
 from app.utils import get_local_midnight_in_utc
@@ -142,12 +144,11 @@ def purge_functional_test_data(user_email_prefix):
 
 @notify_command(name='insert-inbound-numbers')
 @click.option('-f', '--file_name', required=True,
-              help="""Full path of the file to upload, file is a contains inbound numbers,
-              one number per line. The number must have the format of 07... not 447....""")
+              help="""Full path of the file to upload, file is a contains inbound numbers, one number per line.""")
 def insert_inbound_numbers_from_file(file_name):
     print("Inserting inbound numbers from {}".format(file_name))
     with open(file_name) as file:
-        sql = "insert into inbound_numbers values('{}', '{}', 'mmg', null, True, now(), null);"
+        sql = "insert into inbound_numbers values('{}', '{}', 'sns', null, True, now(), null);"
 
         for line in file:
             line = line.strip()
@@ -733,3 +734,28 @@ def create_user_jwt(token):
     service_id = token[-73:-37]
     api_key = token[-36:]
     print(create_jwt_token(api_key, service_id))
+
+
+def _update_template(id, name, template_type, content, subject):
+
+    template = Template.query.filter_by(id=id).first()
+    template.name = name
+    template.template_type = template_type
+    template.content = '\n'.join(content)
+    template.subject = subject
+
+    history = TemplateHistory.query.filter_by(id=id).first()
+    history.name = name
+    history.template_type = template_type
+    history.content = '\n'.join(content)
+    history.subject = subject
+
+    db.session.commit()
+
+
+@notify_command(name='update-templates')
+def update_templates():
+    with open(current_app.config['CONFIG_FILES'] + '/templates.json') as f:
+        data = json.load(f)
+        for d in data:
+            _update_template(d['id'], d['name'], d['type'], d['content'], d['subject'])

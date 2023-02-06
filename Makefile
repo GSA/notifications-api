@@ -26,12 +26,12 @@ run-procfile:
 
 .PHONY: run-flask
 run-flask: ## Run flask
-	pipenv run flask run -p 6011 --host=0.0.0.0
+	pipenv run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
 	pipenv run celery -A run_celery.notify_celery purge -f
-	pipenv run celery \
+	pipenv run newrelic-admin run-program celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
@@ -52,6 +52,7 @@ generate-version-file: ## Generates the app version file
 	@echo -e "__git_commit__ = \"${GIT_COMMIT}\"\n__time__ = \"${DATE}\"" > ${APP_VERSION_FILE}
 
 .PHONY: test
+test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
@@ -66,8 +67,8 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 audit:
 	pipenv requirements > requirements.txt
 	pipenv requirements --dev > requirements_for_test.txt
-	pipenv run pip-audit -r requirements.txt -l --ignore-vuln PYSEC-2022-237
-	-pipenv run pip-audit -r requirements_for_test.txt -l
+	pipenv run pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-237
+	-pipenv run pip-audit -r requirements_for_test.txt
 
 .PHONY: static-scan
 static-scan:

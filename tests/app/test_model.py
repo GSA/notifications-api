@@ -32,8 +32,8 @@ from tests.app.db import (
 
 
 @pytest.mark.parametrize('mobile_number', [
-    '07700 900678',
-    '+44 7700 900678'
+    '+447700900855',
+    '+12348675309'
 ])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string('service_id', MOBILE_TYPE, mobile_number)
@@ -93,7 +93,7 @@ def test_status_conversion(initial_statuses, expected_statuses):
 
 @freeze_time("2016-01-01 11:09:00.000000")
 @pytest.mark.parametrize('template_type, recipient', [
-    ('sms', '+447700900855'),
+    ('sms', '+12028675309'),
     ('email', 'foo@bar.com'),
 ])
 def test_notification_for_csv_returns_correct_type(sample_service, template_type, recipient):
@@ -154,9 +154,16 @@ def test_notification_personalisation_getter_returns_empty_dict_from_None():
     assert noti.personalisation == {}
 
 
-def test_notification_personalisation_getter_always_returns_empty_dict():
+def test_notification_personalisation_getter_always_returns_empty_dict(notify_app):
     noti = Notification()
     noti._personalisation = encryption.encrypt({})
+    assert noti.personalisation == {}
+
+
+def test_notification_personalisation_getter_returns_empty_dict_for_encryption_errors(notify_app):
+    noti = Notification()
+    # old _personalisation values were created with encryption.sign, which will trigger a decryption error
+    noti._personalisation = encryption.sign({"value": "PII"})
     assert noti.personalisation == {}
 
 
@@ -164,11 +171,11 @@ def test_notification_personalisation_getter_always_returns_empty_dict():
     None,
     {}
 ])
-def test_notification_personalisation_setter_always_sets_empty_dict(input_value):
+def test_notification_personalisation_setter_always_sets_empty_dict(notify_app, input_value):
     noti = Notification()
     noti.personalisation = input_value
 
-    assert noti._personalisation == encryption.encrypt({})
+    assert noti.personalisation == {}
 
 
 def test_notification_subject_is_none_for_sms(sample_service):

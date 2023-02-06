@@ -8,10 +8,11 @@ permissions:
 env:
   DEBUG: True
   NOTIFY_ENVIRONMENT: test
+  NEW_RELIC_CONFIG_FILE: newrelic.ini
+  NEW_RELIC_ENVIRONMENT: test
   FLASK_APP: application.py
   FLASK_ENV: development
   WERKZEUG_DEBUG_PIN: off
-  NOTIFY_EMAIL_DOMAIN: dispostable.com
   REDIS_ENABLED: 0
   AWS_REGION: us-west-2
   AWS_PINPOINT_REGION: us-west-2
@@ -53,6 +54,21 @@ jobs:
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
 
+  validate-new-relic-config:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-project
+      - name: Install pipenv packages
+        run: pipenv install --dev
+      - name: Validate NewRelic config
+        env:
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          # Need to set a NEW_RELIC_ENVIRONMENT with monitor_mode: true
+          NEW_RELIC_ENVIRONMENT: staging
+        run: pipenv run newrelic-admin validate-config $NEW_RELIC_CONFIG_FILE
+
   pip-audit:
     runs-on: ubuntu-latest
     steps:
@@ -60,7 +76,7 @@ jobs:
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
         run: pipenv requirements > requirements.txt
-      - uses: trailofbits/gh-action-pip-audit@v1.0.0
+      - uses: pypa/gh-action-pip-audit@v1.0.4
         with:
           inputs: requirements.txt
           ignore-vulns: PYSEC-2022-237

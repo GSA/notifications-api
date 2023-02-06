@@ -22,9 +22,13 @@ In SNS, we have 3 topics for SMS receipts. These are not currently functional, s
 
 Through Pinpoint, the API needs at least one number so that the application itself can send SMS for authentication codes.
 
-The API also has access to AWS S3 buckets for storing CSVs of messages and contact lists. It does not access a third S3 bucket that stores agency logos. 
+The API also has access to AWS S3 buckets for storing CSVs of messages and contact lists. It does not access a third S3 bucket that stores agency logos.
 
 We may be able to provision these services through cloud.gov, as well. In addition to [s3 support](https://cloud.gov/docs/services/s3/), there is [an SES brokerpak](https://github.com/GSA-TTS/datagov-brokerpak-smtp) and work on an SNS brokerpak.
+
+## New Relic
+
+We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for application monitoring and error reporting. When requesting access to New Relic, ask to be added to the Benefits-Studio subaccount.
 
 ## Onboarding
 
@@ -32,6 +36,7 @@ We may be able to provision these services through cloud.gov, as well. In additi
 - [ ] Get permissions for the repos
 - [ ] Get access to the cloud.gov org && space
 - [ ] Get [access to AWS](https://handbook.tts.gsa.gov/launching-software/infrastructure/#cloud-service-provider-csp-sandbox-accounts), if necessary
+- [ ] Get [access to New Relic](https://handbook.tts.gsa.gov/tools/new-relic/#how-do-i-get-access-to-new-relic), if necessary
 - [ ] Pull down creds from cloud.gov and create the local .env file
 - [ ] Do stuff!
 
