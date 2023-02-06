@@ -86,7 +86,7 @@ def create_nightly_notification_status():
     yesterday = convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=1)
 
     for notification_type in [SMS_TYPE, EMAIL_TYPE]:
-        days =  4
+        days = 4
 
         for i in range(days):
             process_day = yesterday - timedelta(days=i)

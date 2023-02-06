@@ -123,7 +123,6 @@ from app.schemas import (
 )
 from app.service import statistics
 from app.service.send_notification import send_one_off_notification
-from app.service.send_pdf_letter_schema import send_pdf_letter_request
 from app.service.sender import send_notification_to_service_users
 from app.service.service_contact_list_schema import (
     create_service_contact_list_schema,

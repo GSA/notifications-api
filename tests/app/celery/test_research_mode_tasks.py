@@ -6,7 +6,6 @@ from flask import json
 
 from app.celery.research_mode_tasks import (
     HTTPError,
-    create_fake_letter_response_file,
     send_email_response,
     send_sms_response,
     ses_notification_callback,

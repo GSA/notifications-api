@@ -1,8 +1,5 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
 
-from app.config import QueueNames
-from app.letters.letter_schemas import letter_references
-from app.schema_validation import validate
 from app.v2.errors import register_errors
 
 letter_job = Blueprint("letter-job", __name__)

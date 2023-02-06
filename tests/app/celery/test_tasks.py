@@ -44,8 +44,6 @@ from app.models import (
     SMS_TYPE,
     Job,
     Notification,
-    NotificationHistory,
-    ReturnedLetter,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import DATETIME_FORMAT
@@ -57,7 +55,6 @@ from tests.app.db import (
     create_job,
     create_letter_contact,
     create_notification,
-    create_notification_history,
     create_reply_to_email,
     create_service,
     create_service_inbound_api,

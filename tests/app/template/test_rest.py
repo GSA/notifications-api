@@ -1,23 +1,14 @@
-import base64
 import json
 import random
 import string
 import uuid
 from datetime import datetime, timedelta
 
-import botocore
 import pytest
-import requests_mock
 from freezegun import freeze_time
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from PyPDF2.errors import PdfReadError
 
-from app.dao.templates_dao import (
-    dao_get_template_by_id,
-    dao_get_template_versions,
-    dao_redact_template,
-    dao_update_template,
-)
+from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
 from app.models import (
     EMAIL_TYPE,
     LETTER_TYPE,
@@ -28,12 +19,10 @@ from app.models import (
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_letter_contact,
-    create_notification,
     create_service,
     create_template,
     create_template_folder,
 )
-from tests.conftest import set_config_values
 
 
 @pytest.mark.parametrize('template_type, subject', [

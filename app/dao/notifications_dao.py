@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from botocore.exceptions import ClientError
 from flask import current_app
 from notifications_utils.international_billing_rates import (
     INTERNATIONAL_BILLING_RATES,
@@ -20,7 +19,6 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
-from app.letters.utils import LetterPDFNotFound, find_letter_pdf_in_s3
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
@@ -32,7 +30,6 @@ from app.models import (
     NOTIFICATION_PERMANENT_FAILURE,
     NOTIFICATION_SENDING,
     NOTIFICATION_SENT,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
     NOTIFICATION_TEMPORARY_FAILURE,
     SMS_TYPE,
     FactNotificationStatus,

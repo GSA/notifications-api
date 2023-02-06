@@ -25,7 +25,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_CREATED,
     NOTIFICATION_DELIVERED,
     NOTIFICATION_PENDING_VIRUS_CHECK,
@@ -59,12 +58,10 @@ from app.v2.errors import BadRequestError
 from app.v2.notifications import v2_notification_blueprint
 from app.v2.notifications.create_response import (
     create_post_email_response_from_notification,
-    create_post_letter_response_from_notification,
     create_post_sms_response_from_notification,
 )
 from app.v2.notifications.notification_schemas import (
     post_email_request,
-    post_letter_request,
     post_sms_request,
 )
 from app.v2.utils import get_valid_json
@@ -136,7 +133,6 @@ def post_notification(notification_type):
 
     reply_to = get_reply_to_text(notification_type, form, template)
 
-    
     notification = process_sms_or_email_notification(
         form=form,
         notification_type=notification_type,
