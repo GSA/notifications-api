@@ -12,7 +12,6 @@ There are a bunch of queues:
 - job tasks
 - retry tasks
 - notify internal tasks
-- process ftp tasks
 - service callbacks
 - service callbacks retry
 - letter tasks

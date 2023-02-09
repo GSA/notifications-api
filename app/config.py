@@ -19,7 +19,6 @@ class QueueNames(object):
     JOBS = 'job-tasks'
     RETRY = 'retry-tasks'
     NOTIFY = 'notify-internal-tasks'
-    PROCESS_FTP = 'process-ftp-tasks'
     CALLBACKS = 'service-callbacks'
     CALLBACKS_RETRY = 'service-callbacks-retry'
     SMS_CALLBACKS = 'sms-callbacks'
