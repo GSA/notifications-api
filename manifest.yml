@@ -34,7 +34,7 @@ applications:
     env:
       NOTIFY_APP_NAME: api
       FLASK_APP: application.py
-      FLASK_ENV: production
+      FLASK_DEBUG: "false"
       NEW_RELIC_CONFIG_FILE: newrelic.ini
       NEW_RELIC_ENVIRONMENT: ((env))
       NEW_RELIC_LICENSE_KEY: ((NEW_RELIC_LICENSE_KEY))
