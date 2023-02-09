@@ -1,4 +1,3 @@
-import base64
 import functools
 import uuid
 from datetime import datetime
@@ -13,13 +12,10 @@ from app import (
     authenticated_service,
     document_download_client,
     encryption,
-    notify_celery,
 )
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
-from app.config import QueueNames, TaskNames
-from app.dao.dao_utils import transaction
-from app.letters.utils import upload_letter_pdf
+from app.config import QueueNames
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
@@ -27,7 +23,6 @@ from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
     NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING_VIRUS_CHECK,
     NOTIFICATION_SENDING,
     PRIORITY,
     SMS_TYPE,
@@ -321,6 +316,7 @@ def process_document_uploads(personalisation_data, service, simulated=False):
     return personalisation_data, len(file_keys)
 
 
+# TODO: remove precompiled var
 def process_letter_notification(
     *, letter_data, api_key, service, template, template_with_content, reply_to_text, precompiled=False
 ):
@@ -329,13 +325,6 @@ def process_letter_notification(
 
     if not service.research_mode and service.restricted and api_key.key_type != KEY_TYPE_TEST:
         raise BadRequestError(message='Cannot send letters when service is in trial mode', status_code=403)
-
-    if precompiled:
-        return process_precompiled_letter_notifications(letter_data=letter_data,
-                                                        api_key=api_key,
-                                                        service=service,
-                                                        template=template,
-                                                        reply_to_text=reply_to_text)
 
     postage = validate_address(service, letter_data['personalisation'])
 
@@ -372,40 +361,6 @@ def process_letter_notification(
         service_id=notification.service_id,
         template_with_content=template_with_content
     )
-    return resp
-
-
-def process_precompiled_letter_notifications(*, letter_data, api_key, service, template, reply_to_text):
-    try:
-        status = NOTIFICATION_PENDING_VIRUS_CHECK
-        letter_content = base64.b64decode(letter_data['content'])
-    except ValueError:
-        raise BadRequestError(message='Cannot decode letter content (invalid base64 encoding)', status_code=400)
-
-    with transaction():
-        notification = create_letter_notification(letter_data=letter_data,
-                                                  service=service,
-                                                  template=template,
-                                                  api_key=api_key,
-                                                  status=status,
-                                                  reply_to_text=reply_to_text)
-        filename = upload_letter_pdf(notification, letter_content, precompiled=True)
-
-    resp = {
-        'id': notification.id,
-        'reference': notification.client_reference,
-        'postage': notification.postage
-    }
-
-    # call task to add the filename to anti virus queue
-    if current_app.config['ANTIVIRUS_ENABLED']:
-        current_app.logger.info('Calling task scan-file for {}'.format(filename))
-        notify_celery.send_task(
-            name=TaskNames.SCAN_FILE,
-            kwargs={'filename': filename},
-            queue=QueueNames.ANTIVIRUS,
-        )
-
     return resp
 
 

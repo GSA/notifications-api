@@ -419,57 +419,6 @@ def populate_organisation_agreement_details_from_file(file_name):
             db.session.commit()
 
 
-@notify_command(name='get-letter-details-from-zips-sent-file')
-@click.argument('file_paths', required=True, nargs=-1)
-@statsd(namespace="tasks")
-def get_letter_details_from_zips_sent_file(file_paths):
-    """Get notification details from letters listed in zips_sent file(s)
-
-    This takes one or more file paths for the zips_sent files in S3 as its parameters, for example:
-    get-letter-details-from-zips-sent-file '2019-04-01/zips_sent/filename_1' '2019-04-01/zips_sent/filename_2'
-    """
-
-    rows_from_file = []
-
-    for path in file_paths:
-        file_contents = s3.get_s3_file(
-            bucket_name=current_app.config['LETTERS_PDF_BUCKET_NAME'],
-            file_location=path
-        )
-        rows_from_file.extend(json.loads(file_contents))
-
-    notification_references = tuple(row[18:34] for row in rows_from_file)
-    get_letters_data_from_references(notification_references)
-
-
-@notify_command(name='get-notification-and-service-ids-for-letters-that-failed-to-print')
-@click.option('-f', '--file_name', required=True,
-              help="""Full path of the file to upload, file should contain letter filenames, one per line""")
-def get_notification_and_service_ids_for_letters_that_failed_to_print(file_name):
-    print("Getting service and notification ids for letter filenames list {}".format(file_name))
-    file = open(file_name)
-    references = tuple([row[7:23] for row in file])
-
-    get_letters_data_from_references(tuple(references))
-    file.close()
-
-
-def get_letters_data_from_references(notification_references):
-    sql = """
-        SELECT id, service_id, template_id, reference, job_id, created_at
-        FROM notifications
-        WHERE reference IN :notification_references
-        ORDER BY service_id, job_id"""
-    result = db.session.execute(sql, {'notification_references': notification_references}).fetchall()
-
-    with open('zips_sent_details.csv', 'w') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(['notification_id', 'service_id', 'template_id', 'reference', 'job_id', 'created_at'])
-
-        for row in result:
-            csv_writer.writerow(row)
-
-
 @notify_command(name='associate-services-to-organisations')
 def associate_services_to_organisations():
     services = Service.get_history_model().query.filter_by(

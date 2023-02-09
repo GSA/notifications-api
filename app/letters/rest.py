@@ -10,7 +10,7 @@ register_errors(letter_job)
 MAX_REFERENCES_PER_TASK = 5000
 
 
-# TODO: return deactivation notice
+# TODO: return deprecation notice
 # @letter_job.route('/letters/returned', methods=['POST'])
 # def create_process_returned_letters_job():
 #     references = validate(request.get_json(), letter_references)['references']

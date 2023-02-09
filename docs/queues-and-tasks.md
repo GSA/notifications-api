@@ -13,7 +13,6 @@ There are a bunch of queues:
 - retry tasks
 - notify internal tasks
 - process ftp tasks
-- create letters pdf tasks
 - service callbacks
 - service callbacks retry
 - letter tasks
@@ -28,7 +27,6 @@ And these tasks:
 - check if letters still in created
 - check if letters still pending virus check
 - check job status
-- collate letter pdfs to be sent
 - create fake letter response file
 - create nightly billing
 - create nightly billing for day
@@ -44,7 +42,6 @@ And these tasks:
 - delete verify codes
 - deliver email
 - deliver sms
-- get pdf for templated letter
 - process incomplete jobs
 - process job
 - process returned letters list

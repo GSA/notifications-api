@@ -1,11 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 
-import boto3
-import pytest
-from flask import current_app
 from freezegun import freeze_time
-from moto import mock_s3
 
 from app.dao.notifications_dao import (
     insert_notification_history_delete_notifications,
@@ -26,50 +22,6 @@ from tests.app.db import (
 )
 
 
-@mock_s3
-@freeze_time('2019-09-01 04:30')
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_move_notifications_deletes_letters_from_s3(sample_letter_template, mocker):
-    s3 = boto3.client('s3', region_name='eu-west-1')
-    bucket_name = current_app.config['LETTERS_PDF_BUCKET_NAME']
-    s3.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration={'LocationConstraint': 'eu-west-1'}
-    )
-
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    create_notification(template=sample_letter_template, status='delivered',
-                        reference='LETTER_REF', created_at=eight_days_ago, sent_at=eight_days_ago)
-    filename = "{}/NOTIFY.LETTER_REF.D.2.C.{}.PDF".format(
-        str(eight_days_ago.date()),
-        eight_days_ago.strftime('%Y%m%d%H%M%S')
-    )
-    s3.put_object(Bucket=bucket_name, Key=filename, Body=b'foo')
-
-    move_notifications_to_notification_history('letter', sample_letter_template.service_id, datetime(2020, 1, 2))
-
-    with pytest.raises(s3.exceptions.NoSuchKey):
-        s3.get_object(Bucket=bucket_name, Key=filename)
-
-
-@mock_s3
-@freeze_time('2019-09-01 04:30')
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_move_notifications_copes_if_letter_not_in_s3(sample_letter_template, mocker):
-    s3 = boto3.client('s3', region_name='eu-west-1')
-    s3.create_bucket(
-        Bucket=current_app.config['LETTERS_PDF_BUCKET_NAME'],
-        CreateBucketConfiguration={'LocationConstraint': 'eu-west-1'}
-    )
-
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    create_notification(template=sample_letter_template, status='delivered', sent_at=eight_days_ago)
-
-    move_notifications_to_notification_history('letter', sample_letter_template.service_id, datetime(2020, 1, 2))
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 1
-
-
 def test_move_notifications_does_nothing_if_notification_history_row_already_exists(
     sample_email_template, mocker
 ):
@@ -88,72 +40,6 @@ def test_move_notifications_does_nothing_if_notification_history_row_already_exi
     history = NotificationHistory.query.all()
     assert len(history) == 1
     assert history[0].status == 'delivered'
-
-
-@pytest.mark.parametrize(
-    'notification_status', ['validation-failed', 'virus-scan-failed']
-)
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_move_notifications_deletes_letters_not_sent_and_in_final_state_from_table_but_not_s3(
-    sample_service, mocker, notification_status
-):
-    mock_s3_object = mocker.patch("app.dao.notifications_dao.find_letter_pdf_in_s3").return_value
-    letter_template = create_template(service=sample_service, template_type='letter')
-    create_notification(
-        template=letter_template,
-        status=notification_status,
-        reference='LETTER_REF',
-        created_at=datetime.utcnow() - timedelta(days=14)
-    )
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
-
-    move_notifications_to_notification_history('letter', sample_service.id, datetime.utcnow())
-
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 1
-    mock_s3_object.assert_not_called()
-
-
-@mock_s3
-@freeze_time('2020-12-24 04:30')
-@pytest.mark.parametrize('notification_status', ['delivered', 'returned-letter', 'technical-failure'])
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_move_notifications_deletes_letters_sent_and_in_final_state_from_table_and_s3(
-    sample_service, mocker, notification_status
-):
-    bucket_name = current_app.config['LETTERS_PDF_BUCKET_NAME']
-    s3 = boto3.client('s3', region_name='eu-west-1')
-    s3.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration={'LocationConstraint': 'eu-west-1'}
-    )
-
-    letter_template = create_template(service=sample_service, template_type='letter')
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    create_notification(
-        template=letter_template,
-        status=notification_status,
-        reference='LETTER_REF',
-        created_at=eight_days_ago,
-        sent_at=eight_days_ago
-    )
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
-
-    filename = "{}/NOTIFY.LETTER_REF.D.2.C.{}.PDF".format(
-        str(eight_days_ago.date()),
-        eight_days_ago.strftime('%Y%m%d%H%M%S')
-    )
-    s3.put_object(Bucket=bucket_name, Key=filename, Body=b'foo')
-
-    move_notifications_to_notification_history('letter', sample_service.id, datetime.utcnow())
-
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 1
-
-    with pytest.raises(s3.exceptions.NoSuchKey):
-        s3.get_object(Bucket=bucket_name, Key=filename)
 
 
 def test_move_notifications_only_moves_notifications_older_than_provided_timestamp(sample_template):

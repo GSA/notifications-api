@@ -2,10 +2,6 @@ import itertools
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
-from notifications_utils.letter_timings import (
-    letter_can_be_cancelled,
-    too_late_to_cancel_letter,
-)
 from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -97,10 +93,8 @@ from app.dao.services_dao import (
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
-from app.letters.utils import letter_print_day
 from app.models import (
     KEY_TYPE_NORMAL,
-    LETTER_TYPE,
     NOTIFICATION_CANCELLED,
     EmailBranding,
     LetterBranding,
@@ -493,22 +487,8 @@ def cancel_notification_for_service(service_id, notification_id):
 
     if not notification:
         raise InvalidRequest('Notification not found', status_code=404)
-    elif notification.notification_type != LETTER_TYPE:
+    else:
         raise InvalidRequest('Notification cannot be cancelled - only letters can be cancelled', status_code=400)
-    elif not letter_can_be_cancelled(notification.status, notification.created_at):
-        print_day = letter_print_day(notification.created_at)
-        if too_late_to_cancel_letter(notification.created_at):
-            message = "It’s too late to cancel this letter. Printing started {} at 5.30pm".format(print_day)
-        elif notification.status == 'cancelled':
-            message = "This letter has already been cancelled."
-        else:
-            message = (
-                f"We could not cancel this letter. "
-                f"Letter status: {notification.status}, created_at: {notification.created_at}"
-            )
-        raise InvalidRequest(
-            message,
-            status_code=400)
 
     updated_notification = notifications_dao.update_notification_status_by_id(
         notification_id,
@@ -745,7 +725,7 @@ def create_one_off_notification(service_id):
     return jsonify(resp), 201
 
 
-# TODO: return deactivation notice
+# TODO: return deprecation notice
 # @service_blueprint.route('/<uuid:service_id>/send-pdf-letter', methods=['POST'])
 # def create_pdf_letter(service_id):
 #     data = validate(request.get_json(), send_pdf_letter_request)

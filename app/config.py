@@ -134,10 +134,6 @@ class Config(object):
     MAX_FAILED_LOGIN_COUNT = 10
     API_RATE_LIMIT_ENABLED = True
 
-    # be careful increasing this size without being sure that we won't see slowness in pysftp
-    MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
-    MAX_LETTER_PDF_COUNT_PER_ZIP = 500
-
     # Default data
     CONFIG_FILES = path.dirname(__file__) + '/config_files/'
 

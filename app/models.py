@@ -324,7 +324,6 @@ INTERNATIONAL_SMS_TYPE = 'international_sms'
 INBOUND_SMS_TYPE = 'inbound_sms'
 SCHEDULE_NOTIFICATIONS = 'schedule_notifications'
 EMAIL_AUTH = 'email_auth'
-LETTERS_AS_PDF = 'letters_as_pdf'
 PRECOMPILED_LETTER = 'precompiled_letter'
 UPLOAD_DOCUMENT = 'upload_document'
 EDIT_FOLDER_PERMISSIONS = 'edit_folder_permissions'
@@ -339,7 +338,6 @@ SERVICE_PERMISSION_TYPES = [
     INBOUND_SMS_TYPE,
     SCHEDULE_NOTIFICATIONS,
     EMAIL_AUTH,
-    LETTERS_AS_PDF,
     UPLOAD_DOCUMENT,
     EDIT_FOLDER_PERMISSIONS,
     UPLOAD_LETTERS,

@@ -2484,32 +2484,6 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
     assert response['id'] == str(noti.id)
 
 
-@pytest.mark.skip(reason="Skipping letter-related functionality for now")
-def test_create_pdf_letter(mocker, sample_service_full_permissions, client, fake_uuid, notify_user):
-    mocker.patch('app.service.send_notification.utils_s3download')
-    mocker.patch('app.service.send_notification.get_page_count', return_value=1)
-    mocker.patch('app.service.send_notification.move_uploaded_pdf_to_letters_bucket')
-
-    user = sample_service_full_permissions.users[0]
-    data = json.dumps({
-        'filename': 'valid.pdf',
-        'created_by': str(user.id),
-        'file_id': fake_uuid,
-        'postage': 'second',
-        'recipient_address': 'Bugs%20Bunny%0A123%20Main%20Street%0ALooney%20Town'
-    })
-
-    response = client.post(
-        url_for('service.create_pdf_letter', service_id=sample_service_full_permissions.id),
-        data=data,
-        headers=[('Content-Type', 'application/json'), create_admin_authorization_header()]
-    )
-    json_resp = json.loads(response.get_data(as_text=True))
-
-    assert response.status_code == 201
-    assert json_resp == {'id': fake_uuid}
-
-
 def test_get_notification_for_service_includes_template_redacted(admin_request, sample_notification):
     resp = admin_request.get(
         'service.get_notification_for_service',
@@ -3358,45 +3332,6 @@ def test_cancel_notification_for_service_raises_invalid_request_when_notificatio
     assert response['result'] == 'error'
 
 
-@pytest.mark.parametrize('notification_status', [
-    'cancelled',
-    'sending',
-    'sent',
-    'delivered',
-    'pending',
-    'failed',
-    'technical-failure',
-    'temporary-failure',
-    'permanent-failure',
-    'validation-failed',
-    'virus-scan-failed',
-    'returned-letter',
-])
-@freeze_time('2018-07-07 12:00:00')
-def test_cancel_notification_for_service_raises_invalid_request_when_letter_is_in_wrong_state_to_be_cancelled(
-    admin_request,
-    sample_letter_notification,
-    notification_status,
-):
-    sample_letter_notification.status = notification_status
-    sample_letter_notification.created_at = datetime.now()
-
-    response = admin_request.post(
-        'service.cancel_notification_for_service',
-        service_id=sample_letter_notification.service_id,
-        notification_id=sample_letter_notification.id,
-        _expected_status=400
-    )
-    if notification_status == 'cancelled':
-        assert response['message'] == 'This letter has already been cancelled.'
-    else:
-        assert response['message'] == (
-            f"We could not cancel this letter. "
-            f"Letter status: {notification_status}, created_at: 2018-07-07 12:00:00"
-        )
-    assert response['result'] == 'error'
-
-
 @pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
 @pytest.mark.parametrize('notification_status', ['created', 'pending-virus-check'])
 @freeze_time('2018-07-07 16:00:00')
@@ -3414,23 +3349,6 @@ def test_cancel_notification_for_service_updates_letter_if_letter_is_in_cancella
         notification_id=sample_letter_notification.id,
     )
     assert response['status'] == 'cancelled'
-
-
-@freeze_time('2017-12-12 17:30:00')
-def test_cancel_notification_for_service_raises_error_if_its_too_late_to_cancel(
-    admin_request,
-    sample_letter_notification,
-):
-    sample_letter_notification.created_at = datetime(2017, 12, 11, 17, 0)
-
-    response = admin_request.post(
-        'service.cancel_notification_for_service',
-        service_id=sample_letter_notification.service_id,
-        notification_id=sample_letter_notification.id,
-        _expected_status=400
-    )
-    assert response['message'] == 'It’s too late to cancel this letter. Printing started on 11 December at 5.30pm'
-    assert response['result'] == 'error'
 
 
 @pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
