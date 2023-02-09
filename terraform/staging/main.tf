@@ -66,3 +66,14 @@ module "ses_email" {
   aws_region          = "us-west-2"
   email_receipt_error = "notify-support@gsa.gov"
 }
+
+module "sns_sms" {
+  source = "../shared/sns"
+
+  cf_org_name         = local.cf_org_name
+  cf_space_name       = local.cf_space_name
+  name                = "${local.app_name}-sns-${local.env}"
+  recursive_delete    = local.recursive_delete
+  aws_region          = "us-west-2"
+  monthly_spend_limit = 25
+}
