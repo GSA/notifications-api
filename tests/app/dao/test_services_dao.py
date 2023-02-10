@@ -73,11 +73,9 @@ from app.models import (
 from tests.app.db import (
     create_annual_billing,
     create_api_key,
-    create_email_branding,
     create_ft_billing,
     create_inbound_number,
     create_invited_user,
-    create_letter_branding,
     create_notification,
     create_notification_history,
     create_organisation,
@@ -92,7 +90,6 @@ from tests.app.db import (
 
 def test_create_service(notify_db_session):
     user = create_user()
-    create_letter_branding()
     assert Service.query.count() == 0
     service = Service(name="service_name",
                       email_from="email_from",
@@ -112,7 +109,6 @@ def test_create_service(notify_db_session):
     assert user in service_db.users
     assert service_db.organisation_type == 'federal'
     assert service_db.crown is None
-    assert not service.letter_branding
     assert not service.organisation_id
 
 
@@ -140,57 +136,8 @@ def test_create_service_with_organisation(notify_db_session):
     assert user in service_db.users
     assert service_db.organisation_type == 'state'
     assert service_db.crown is None
-    assert not service.letter_branding
     assert service.organisation_id == organisation.id
     assert service.organisation == organisation
-
-
-@pytest.mark.parametrize('email_address, organisation_type', (
-    ("test@example.gov.uk", 'nhs_central'),
-    ("test@example.gov.uk", 'nhs_local'),
-    ("test@example.gov.uk", 'nhs_gp'),
-    ("test@nhs.net", 'nhs_local'),
-    ("test@nhs.net", 'local'),
-    ("test@nhs.net", 'central'),
-    ("test@nhs.uk", 'central'),
-    ("test@example.nhs.uk", 'central'),
-    ("TEST@NHS.UK", 'central'),
-))
-@pytest.mark.parametrize('branding_name_to_create, expected_branding', (
-    ('NHS', True),
-    # Need to check that nothing breaks in environments that don’t have
-    # the NHS branding set up
-    ('SHN', False),
-))
-@pytest.mark.skip(reason='Update for TTS')
-def test_create_nhs_service_get_default_branding_based_on_email_address(
-    notify_db_session,
-    branding_name_to_create,
-    expected_branding,
-    email_address,
-    organisation_type,
-):
-    user = create_user(email=email_address)
-    letter_branding = create_letter_branding(name=branding_name_to_create)
-    email_branding = create_email_branding(name=branding_name_to_create)
-
-    service = Service(
-        name="service_name",
-        email_from="email_from",
-        message_limit=1000,
-        restricted=False,
-        organisation_type=organisation_type,
-        created_by=user,
-    )
-    dao_create_service(service, user)
-    service_db = Service.query.one()
-
-    if expected_branding:
-        assert service_db.letter_branding == letter_branding
-        assert service_db.email_branding == email_branding
-    else:
-        assert service_db.letter_branding is None
-        assert service_db.email_branding is None
 
 
 def test_cannot_create_two_services_with_same_name(notify_db_session):
@@ -577,7 +524,6 @@ def test_create_service_by_id_adding_and_removing_letter_returns_service_without
 
 def test_create_service_creates_a_history_record_with_current_data(notify_db_session):
     user = create_user()
-    create_letter_branding()
     assert Service.query.count() == 0
     assert Service.get_history_model().query.count() == 0
     service = Service(name="service_name",

@@ -52,7 +52,6 @@ from tests.app.db import (
     create_ft_notification_status,
     create_inbound_number,
     create_job,
-    create_letter_branding,
     create_letter_contact,
     create_notification,
     create_notification_history,
@@ -263,7 +262,6 @@ def test_get_service_by_id(admin_request, sample_service):
         'go_live_user',
         'id',
         'inbound_api',
-        'letter_branding',
         'message_limit',
         'name',
         'notes',
@@ -391,7 +389,6 @@ def test_create_service(
     assert json_resp['data']['name'] == 'created service'
     assert json_resp['data']['email_from'] == 'created.service'
     assert not json_resp['data']['research_mode']
-    assert json_resp['data']['letter_branding'] is None
     assert json_resp['data']['count_as_live'] is expected_count_as_live
 
     service_db = Service.query.get(json_resp['data']['id'])
@@ -507,8 +504,6 @@ def test_create_service_inherits_branding_from_organisation(
     org = create_organisation()
     email_branding = create_email_branding()
     org.email_branding = email_branding
-    letter_branding = create_letter_branding()
-    org.letter_branding = letter_branding
     create_domain('example.gov.uk', org.id)
     sample_user.email_address = 'test@example.gov.uk'
 
@@ -527,7 +522,6 @@ def test_create_service_inherits_branding_from_organisation(
     )
 
     assert json_resp['data']['email_branding'] == str(email_branding.id)
-    assert json_resp['data']['letter_branding'] == str(letter_branding.id)
 
 
 def test_should_not_create_service_with_missing_user_id_field(notify_api, fake_uuid):
@@ -720,53 +714,6 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
         headers=[('Content-Type', 'application/json'), auth_header]
     )
     assert resp.status_code == 500
-
-
-def test_update_service_letter_branding(client, notify_db_session, sample_service):
-    letter_branding = create_letter_branding(name='test brand', filename='test-brand')
-    data = {
-        'letter_branding': str(letter_branding.id)
-    }
-
-    auth_header = create_admin_authorization_header()
-
-    resp = client.post(
-        '/service/{}'.format(sample_service.id),
-        data=json.dumps(data),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-    result = resp.json
-    assert resp.status_code == 200
-    assert result['data']['letter_branding'] == str(letter_branding.id)
-
-
-def test_update_service_remove_letter_branding(client, notify_db_session, sample_service):
-    letter_branding = create_letter_branding(name='test brand', filename='test-brand')
-    sample_service
-    data = {
-        'letter_branding': str(letter_branding.id)
-    }
-
-    auth_header = create_admin_authorization_header()
-
-    client.post(
-        '/service/{}'.format(sample_service.id),
-        data=json.dumps(data),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    data = {
-        'letter_branding': None
-    }
-    resp = client.post(
-        '/service/{}'.format(sample_service.id),
-        data=json.dumps(data),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    result = resp.json
-    assert resp.status_code == 200
-    assert result['data']['letter_branding'] is None
 
 
 def test_update_service_remove_email_branding(admin_request, notify_db_session, sample_service):

@@ -408,13 +408,6 @@ class Organisation(db.Model):
         nullable=True,
     )
 
-    letter_branding = db.relationship('LetterBranding')
-    letter_branding_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey('letter_branding.id'),
-        nullable=True,
-    )
-
     notes = db.Column(db.Text, nullable=True)
     purchase_order_number = db.Column(db.String(255), nullable=True)
     billing_contact_names = db.Column(db.Text, nullable=True)
@@ -441,7 +434,6 @@ class Organisation(db.Model):
             "active": self.active,
             "crown": self.crown,
             "organisation_type": self.organisation_type,
-            "letter_branding_id": self.letter_branding_id,
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
             "agreement_signed_at": self.agreement_signed_at,
@@ -525,11 +517,6 @@ class Service(db.Model, Versioned):
     email_branding = db.relationship(
         'EmailBranding',
         secondary=service_email_branding,
-        uselist=False,
-        backref=db.backref('services', lazy='dynamic'))
-    letter_branding = db.relationship(
-        'LetterBranding',
-        secondary=service_letter_branding,
         uselist=False,
         backref=db.backref('services', lazy='dynamic'))
 

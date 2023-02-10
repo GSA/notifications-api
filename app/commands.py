@@ -56,7 +56,6 @@ from app.models import (
     AnnualBilling,
     Domain,
     EmailBranding,
-    LetterBranding,
     Notification,
     Organisation,
     Service,
@@ -331,7 +330,6 @@ def populate_organisations_from_file(file_name):
     # [3] argeement_signed:: TRUE | FALSE
     # [4] domains:: comma separated list of domains related to the organisation
     # [5] email branding name: name of the default email branding for the org
-    # [6] letter branding name: name of the default letter branding for the org
 
     # The expectation is that the organisation, organisation_to_service
     # and user_to_organisation will be cleared before running this command.
@@ -352,19 +350,13 @@ def populate_organisations_from_file(file_name):
             email_branding_column = columns[5].strip()
             if len(email_branding_column) > 0:
                 email_branding = EmailBranding.query.filter(EmailBranding.name == email_branding_column).one()
-            letter_branding = None
-            letter_branding_column = columns[6].strip()
-            if len(letter_branding_column) > 0:
-                letter_branding = LetterBranding.query.filter(LetterBranding.name == letter_branding_column).one()
             data = {
                 'name': columns[0],
                 'active': True,
                 'agreement_signed': boolean_or_none(columns[3]),
                 'crown': boolean_or_none(columns[2]),
                 'organisation_type': columns[1].lower(),
-                'email_branding_id': email_branding.id if email_branding else None,
-                'letter_branding_id': letter_branding.id if letter_branding else None
-
+                'email_branding_id': email_branding.id if email_branding else None
             }
             org = Organisation(**data)
             try:

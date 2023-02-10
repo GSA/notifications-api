@@ -459,14 +459,12 @@ def test_fetch_monthly_template_usage_for_service_does_join_to_notifications_if_
 
     assert results[0].template_id == template_one.id
     assert results[0].name == template_one.name
-    assert results[0].is_precompiled_letter == template_one.is_precompiled_letter
     assert results[0].template_type == template_one.template_type
     assert results[0].month == 2
     assert results[0].year == 2018
     assert results[0].count == 20
     assert results[1].template_id == template_two.id
     assert results[1].name == template_two.name
-    assert results[1].is_precompiled_letter == template_two.is_precompiled_letter
     assert results[1].template_type == template_two.template_type
     assert results[1].month == 2
     assert results[1].year == 2018

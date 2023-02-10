@@ -97,7 +97,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     NOTIFICATION_CANCELLED,
     EmailBranding,
-    LetterBranding,
     Permission,
     Service,
     ServiceContactList,
@@ -265,9 +264,6 @@ def update_service(service_id):
     if 'email_branding' in req_json:
         email_branding_id = req_json['email_branding']
         service.email_branding = None if not email_branding_id else EmailBranding.query.get(email_branding_id)
-    if 'letter_branding' in req_json:
-        letter_branding_id = req_json['letter_branding']
-        service.letter_branding = None if not letter_branding_id else LetterBranding.query.get(letter_branding_id)
     dao_update_service(service)
 
     if service_going_live:
