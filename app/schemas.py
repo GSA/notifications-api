@@ -229,14 +229,10 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
     created_by = field_for(models.Service, 'created_by', required=True)
     organisation_type = field_for(models.Service, 'organisation_type')
-    letter_logo_filename = fields.Method(dump_only=True, serialize='get_letter_logo_filename')
     permissions = fields.Method("serialize_service_permissions", "deserialize_service_permissions")
     email_branding = field_for(models.Service, 'email_branding')
     organisation = field_for(models.Service, 'organisation')
     go_live_at = field_for(models.Service, 'go_live_at', format=DATETIME_FORMAT_NO_TIMEZONE)
-
-    def get_letter_logo_filename(self, service):
-        return service.letter_branding and service.letter_branding.filename
 
     def serialize_service_permissions(self, service):
         return [p.permission for p in service.permissions]
@@ -272,7 +268,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'inbound_sms',
             'jobs',
             'letter_contacts',
-            'letter_logo_filename',
             'reply_to_email_addresses',
             'returned_letters',
             'service_sms_senders',

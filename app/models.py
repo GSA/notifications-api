@@ -297,29 +297,6 @@ service_email_branding = db.Table(
 )
 
 
-class LetterBranding(db.Model):
-    __tablename__ = 'letter_branding'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = db.Column(db.String(255), unique=True, nullable=False)
-    filename = db.Column(db.String(255), unique=True, nullable=False)
-
-    def serialize(self):
-        return {
-            "id": str(self.id),
-            "name": self.name,
-            "filename": self.filename,
-        }
-
-
-service_letter_branding = db.Table(
-    'service_letter_branding',
-    db.Model.metadata,
-    # service_id is a primary key as you can only have one letter branding per service
-    db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('services.id'), primary_key=True, nullable=False),
-    db.Column('letter_branding_id', UUID(as_uuid=True), db.ForeignKey('letter_branding.id'), nullable=False),
-)
-
-
 INTERNATIONAL_SMS_TYPE = 'international_sms'
 INBOUND_SMS_TYPE = 'inbound_sms'
 SCHEDULE_NOTIFICATIONS = 'schedule_notifications'
