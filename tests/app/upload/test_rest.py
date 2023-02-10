@@ -33,7 +33,6 @@ def create_precompiled_template(service):
         subject='Pre-compiled PDF',
         content="",
         hidden=True,
-        postage="second",
     )
 
 

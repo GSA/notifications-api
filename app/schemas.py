@@ -400,7 +400,6 @@ class TemplateSchemaNoDetail(TemplateSchema):
             'created_by',
             'created_by_id',
             'hidden',
-            'postage',
             'process_type',
             'redact_personalisation',
             'reply_to',

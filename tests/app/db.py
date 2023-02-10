@@ -201,7 +201,6 @@ def create_template(
         hidden=False,
         archived=False,
         folder=None,
-        postage=None,
         process_type='normal',
         contact_block_id=None
 ):
@@ -216,10 +215,6 @@ def create_template(
         'folder': folder,
         'process_type': process_type,
     }
-    if template_type == LETTER_TYPE:
-        data["postage"] = postage or "second"
-        if contact_block_id:
-            data['service_letter_contact_id'] = contact_block_id
     if template_type != SMS_TYPE:
         data['subject'] = subject
     template = Template(**data)
@@ -255,7 +250,6 @@ def create_notification(
         one_off=False,
         reply_to_text=None,
         created_by_id=None,
-        postage=None,
         document_download_count=None,
 ):
     assert job or template
@@ -277,9 +271,6 @@ def create_notification(
         api_key = ApiKey.query.filter(ApiKey.service == template.service, ApiKey.key_type == key_type).first()
         if not api_key:
             api_key = create_api_key(template.service, key_type=key_type)
-
-    if template.template_type == 'letter' and postage is None:
-        postage = 'second'
 
     data = {
         'id': uuid.uuid4(),
@@ -310,7 +301,6 @@ def create_notification(
         'normalised_to': normalised_to,
         'reply_to_text': reply_to_text,
         'created_by_id': created_by_id,
-        'postage': postage,
         'document_download_count': document_download_count,
     }
     notification = Notification(**data)
@@ -337,7 +327,6 @@ def create_notification_history(
         international=False,
         phone_prefix=None,
         created_by_id=None,
-        postage=None,
         id=None
 ):
     assert job or template
@@ -350,9 +339,6 @@ def create_notification_history(
     if status != 'created':
         sent_at = sent_at or datetime.utcnow()
         updated_at = updated_at or datetime.utcnow()
-
-    if template.template_type == 'letter' and postage is None:
-        postage = 'second'
 
     data = {
         'id': id or uuid.uuid4(),
@@ -379,7 +365,6 @@ def create_notification_history(
         'international': international,
         'phone_prefix': phone_prefix,
         'created_by_id': created_by_id,
-        'postage': postage
     }
     notification_history = NotificationHistory(**data)
     db.session.add(notification_history)
@@ -724,7 +709,6 @@ def create_ft_billing(local_date,
                       rate=0,
                       billable_unit=1,
                       notifications_sent=1,
-                      postage='none'
                       ):
     data = FactBilling(local_date=local_date,
                        service_id=template.service_id,
@@ -735,8 +719,7 @@ def create_ft_billing(local_date,
                        international=international,
                        rate=rate,
                        billable_units=billable_unit,
-                       notifications_sent=notifications_sent,
-                       postage=postage)
+                       notifications_sent=notifications_sent,)
     db.session.add(data)
     db.session.commit()
     return data
@@ -967,11 +950,11 @@ def set_up_usage_data(start_date):
     create_ft_billing(local_date=two_days_later, template=sms_template_1, billable_unit=1, rate=0.11)
 
     create_ft_billing(local_date=one_week_later, template=letter_template_1,
-                      notifications_sent=2, billable_unit=2, rate=.35, postage='first')
+                      notifications_sent=2, billable_unit=2, rate=.35)
     create_ft_billing(local_date=one_month_later, template=letter_template_1,
-                      notifications_sent=4, billable_unit=8, rate=.45, postage='second')
+                      notifications_sent=4, billable_unit=8, rate=.45)
     create_ft_billing(local_date=one_week_later, template=letter_template_1,
-                      notifications_sent=2, billable_unit=4, rate=.45, postage='second')
+                      notifications_sent=2, billable_unit=4, rate=.45)
 
     # service with emails only:
     service_with_emails = create_service(service_name='b - emails')
@@ -998,11 +981,11 @@ def set_up_usage_data(start_date):
     create_annual_billing(service_id=service_with_letters.id, free_sms_fragment_limit=0, financial_year_start=year)
 
     create_ft_billing(local_date=start_date, template=letter_template_3,
-                      notifications_sent=2, billable_unit=3, rate=.50, postage='first')
+                      notifications_sent=2, billable_unit=3, rate=.50)
     create_ft_billing(local_date=one_week_later, template=letter_template_3,
-                      notifications_sent=8, billable_unit=5, rate=.65, postage='second')
+                      notifications_sent=8, billable_unit=5, rate=.65)
     create_ft_billing(local_date=one_month_later, template=letter_template_3,
-                      notifications_sent=12, billable_unit=5, rate=.65, postage='second')
+                      notifications_sent=12, billable_unit=5, rate=.65)
 
     # service with letters, without an organisation:
     service_with_letters_without_org = create_service(service_name='d - service without org')
@@ -1014,13 +997,13 @@ def set_up_usage_data(start_date):
     )
 
     create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=7, billable_unit=4, rate=1.55, postage='rest-of-world')
+                      notifications_sent=7, billable_unit=4, rate=1.55)
     create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=8, billable_unit=4, rate=1.55, postage='europe')
+                      notifications_sent=8, billable_unit=4, rate=1.55)
     create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=2, billable_unit=1, rate=.35, postage='second')
+                      notifications_sent=2, billable_unit=1, rate=.35)
     create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=1, billable_unit=1, rate=.50, postage='first')
+                      notifications_sent=1, billable_unit=1, rate=.50)
 
     # service with chargeable SMS, without an organisation
     service_with_sms_without_org = create_service(

@@ -111,7 +111,6 @@ def send_notification(notification_type):
     simulated = simulated_recipient(notification_form['to'], notification_type)
     notification_model = persist_notification(template_id=template.id,
                                               template_version=template.version,
-                                              postage=template.postage,
                                               recipient=request.get_json()['to'],
                                               service=authenticated_service,
                                               personalisation=notification_form.get('personalisation', None),

@@ -240,34 +240,3 @@ def check_service_letter_contact_id(service_id, letter_contact_id, notification_
             message = 'letter_contact_id {} does not exist in database for service id {}' \
                 .format(letter_contact_id, service_id)
             raise BadRequestError(message=message)
-
-
-def validate_address(service, letter_data):
-    address = PostalAddress.from_personalisation(
-        letter_data,
-        allow_international_letters=(INTERNATIONAL_LETTERS in str(service.permissions)),
-    )
-    if not address.has_enough_lines:
-        raise ValidationError(
-            message=f'Address must be at least {PostalAddress.MIN_LINES} lines'
-        )
-    if address.has_too_many_lines:
-        raise ValidationError(
-            message=f'Address must be no more than {PostalAddress.MAX_LINES} lines'
-        )
-    if not address.has_valid_last_line:
-        if address.allow_international_letters:
-            raise ValidationError(
-                message='Last line of address must be a real UK postcode or another country'
-            )
-        raise ValidationError(
-            message='Must be a real UK postcode'
-        )
-    if address.has_invalid_characters:
-        raise ValidationError(
-            message='Address lines must not start with any of the following characters: @ ( ) = [ ] ” \\ / , < >'
-        )
-    if address.international:
-        return address.postage
-    else:
-        return None

@@ -20,7 +20,6 @@ def serialize_ft_billing_remove_emails(rows):
             "chargeable_units": row.chargeable_units,
             "notifications_sent": row.notifications_sent,
             "rate": float(row.rate),
-            "postage": row.postage,
             "cost": float(row.cost),
             "free_allowance_used": row.free_allowance_used,
             "charged_units": row.charged_units,

@@ -86,7 +86,6 @@ def create_sample_notification(
     rate_multiplier=1.0,
     scheduled_for=None,
     normalised_to=None,
-    postage=None,
 ):
     if created_at is None:
         created_at = datetime.utcnow()
@@ -133,7 +132,6 @@ def create_sample_notification(
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
         "normalised_to": normalised_to,
-        "postage": postage,
     }
     if job_row_number is not None:
         data["job_row_number"] = job_row_number
@@ -308,7 +306,7 @@ def sample_template_without_email_permission(notify_db_session):
 
 @pytest.fixture
 def sample_letter_template(sample_service_full_permissions):
-    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE, postage='second')
+    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE)
 
 
 @pytest.fixture
@@ -486,7 +484,6 @@ def sample_notification(notify_db_session):
         'client_reference': None,
         'rate_multiplier': 1.0,
         'normalised_to': None,
-        'postage': None,
     }
 
     notification = Notification(**data)

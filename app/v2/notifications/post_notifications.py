@@ -43,7 +43,6 @@ from app.notifications.validators import (
     check_service_email_reply_to_id,
     check_service_has_permission,
     check_service_sms_sender_id,
-    validate_address,
     validate_and_format_recipient,
     validate_template,
 )
@@ -326,8 +325,6 @@ def process_letter_notification(
     if not service.research_mode and service.restricted and api_key.key_type != KEY_TYPE_TEST:
         raise BadRequestError(message='Cannot send letters when service is in trial mode', status_code=403)
 
-    postage = validate_address(service, letter_data['personalisation'])
-
     test_key = api_key.key_type == KEY_TYPE_TEST
 
     status = NOTIFICATION_CREATED
@@ -347,8 +344,7 @@ def process_letter_notification(
                                               api_key=api_key,
                                               status=status,
                                               reply_to_text=reply_to_text,
-                                              updated_at=updated_at,
-                                              postage=postage
+                                              updated_at=updated_at
                                               )
 
     resp = create_response_for_post_notification(

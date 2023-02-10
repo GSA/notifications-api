@@ -25,7 +25,6 @@ from app.notifications.validators import (
     check_template_is_active,
     check_template_is_for_notification_type,
     service_can_send_to_recipient,
-    validate_address,
     validate_and_format_recipient,
     validate_template,
 )
@@ -623,19 +622,3 @@ def test_check_if_service_can_send_files_by_email_passes_if_contact_link_set(sam
         service_contact_link=sample_service.contact_link,
         service_id=sample_service.id
     )
-
-
-@pytest.mark.parametrize('key, address_line_3, expected_postage',
-                         [('address_line_3', 'SW1 1AA', None),
-                          ('address_line_5', 'CANADA', 'rest-of-world'),
-                          ('address_line_3', 'GERMANY', 'europe')
-                          ])
-def test_validate_address(notify_db_session, key, address_line_3, expected_postage):
-    service = create_service(service_permissions=[LETTER_TYPE, INTERNATIONAL_LETTERS])
-    data = {
-        'address_line_1': 'Prince Harry',
-        'address_line_2': 'Toronto',
-        key: address_line_3,
-    }
-    postage = validate_address(service, data)
-    assert postage == expected_postage

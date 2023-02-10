@@ -44,21 +44,18 @@ def set_up_yearly_data():
     service = create_service()
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
-    letter_template = create_template(service=service, template_type="letter")
 
     # use different rates for adjacent financial years to make sure the query
     # doesn't accidentally bleed over into them
     for dt in (date(2016, 3, 31), date(2017, 4, 1)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.163)
         create_ft_billing(local_date=dt, template=email_template, rate=0, billable_unit=0)
-        create_ft_billing(local_date=dt, template=letter_template, rate=0.31, postage='second')
 
     # a selection of dates that represent the extreme ends of the financial year
     # and some arbitrary dates in between
     for dt in (date(2016, 4, 1), date(2016, 4, 29), date(2017, 2, 6), date(2017, 3, 31)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.162)
         create_ft_billing(local_date=dt, template=email_template, rate=0, billable_unit=0)
-        create_ft_billing(local_date=dt, template=letter_template, rate=0.30, postage='second')
 
     return service
 
@@ -66,20 +63,17 @@ def set_up_yearly_data():
 def set_up_yearly_data_variable_rates():
     service = create_service()
     sms_template = create_template(service=service, template_type="sms")
-    letter_template = create_template(service=service, template_type="letter")
 
     create_ft_billing(local_date='2018-05-16', template=sms_template, rate=0.162)
     create_ft_billing(local_date='2018-05-17', template=sms_template, rate_multiplier=2, rate=0.0150, billable_unit=2)
     create_ft_billing(local_date='2018-05-16', template=sms_template, rate_multiplier=2, rate=0.162, billable_unit=2)
-    create_ft_billing(local_date='2018-05-16', template=letter_template, rate=0.33, postage='second')
 
     create_ft_billing(
         local_date='2018-05-17',
-        template=letter_template,
+        template=sms_template,
         rate=0.36,
         notifications_sent=2,
         billable_unit=4,  # 2 pages each
-        postage='second'
     )
 
     return service
@@ -231,70 +225,13 @@ def test_fetch_billing_data_for_day_is_grouped_by_notification_type(notify_db_se
     assert len(notification_types) == 3
 
 
-def test_fetch_billing_data_for_day_groups_by_postage(notify_db_session):
-    service = create_service()
-    letter_template = create_template(service=service, template_type='letter')
-    email_template = create_template(service=service, template_type='email')
-    create_notification(template=letter_template, status='delivered', postage='first')
-    create_notification(template=letter_template, status='delivered', postage='first')
-    create_notification(template=letter_template, status='delivered', postage='second')
-    create_notification(template=letter_template, status='delivered', postage='europe')
-    create_notification(template=letter_template, status='delivered', postage='rest-of-world')
-    create_notification(template=email_template, status='delivered')
-
-    today = convert_utc_to_local_timezone(datetime.utcnow())
-    results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 5
-
-
-def test_fetch_billing_data_for_day_groups_by_sent_by(notify_db_session):
-    service = create_service()
-    letter_template = create_template(service=service, template_type='letter')
-    email_template = create_template(service=service, template_type='email')
-    create_notification(template=letter_template, status='delivered', postage='second', sent_by='dvla')
-    create_notification(template=letter_template, status='delivered', postage='second', sent_by='dvla')
-    create_notification(template=letter_template, status='delivered', postage='second', sent_by=None)
-    create_notification(template=email_template, status='delivered')
-
-    today = convert_utc_to_local_timezone(datetime.utcnow())
-    results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 2
-
-
-def test_fetch_billing_data_for_day_groups_by_page_count(notify_db_session):
-    service = create_service()
-    letter_template = create_template(service=service, template_type='letter')
-    email_template = create_template(service=service, template_type='email')
-    create_notification(template=letter_template, status='delivered', postage='second', billable_units=1)
-    create_notification(template=letter_template, status='delivered', postage='second', billable_units=1)
-    create_notification(template=letter_template, status='delivered', postage='second', billable_units=2)
-    create_notification(template=email_template, status='delivered')
-
-    today = convert_utc_to_local_timezone(datetime.utcnow())
-    results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 3
-
-
-def test_fetch_billing_data_for_day_sets_postage_for_emails_and_sms_to_none(notify_db_session):
-    service = create_service()
-    sms_template = create_template(service=service, template_type='sms')
-    email_template = create_template(service=service, template_type='email')
-    create_notification(template=sms_template, status='delivered')
-    create_notification(template=email_template, status='delivered')
-
-    today = convert_utc_to_local_timezone(datetime.utcnow())
-    results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 2
-    assert results[0].postage == 'none'
-    assert results[1].postage == 'none'
-
-
 def test_fetch_billing_data_for_day_returns_empty_list(notify_db_session):
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(today.date())
     assert results == []
 
 
+# TODO: ready for reactivation?
 @pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_fetch_billing_data_for_day_uses_correct_table(notify_db_session):
     service = create_service()

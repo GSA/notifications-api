@@ -450,40 +450,6 @@ def test_persist_email_notification_stores_normalised_email(
     assert persisted_notification.normalised_to == expected_recipient_normalised
 
 
-@pytest.mark.parametrize(
-    "postage_argument, template_postage, expected_postage",
-    [
-        ("second", "first", "second"),
-        ("first", "first", "first"),
-        ("first", "second", "first")
-    ]
-)
-def test_persist_letter_notification_finds_correct_postage(
-    mocker,
-    postage_argument,
-    template_postage,
-    expected_postage,
-    sample_service_full_permissions,
-    sample_api_key,
-):
-    template = create_template(sample_service_full_permissions, template_type=LETTER_TYPE, postage=template_postage)
-    mocker.patch('app.dao.templates_dao.dao_get_template_by_id', return_value=template)
-    persist_notification(
-        template_id=template.id,
-        template_version=template.version,
-        recipient="Jane Doe, 10 Downing Street, London",
-        service=sample_service_full_permissions,
-        personalisation=None,
-        notification_type=LETTER_TYPE,
-        api_key_id=sample_api_key.id,
-        key_type=sample_api_key.key_type,
-        postage=postage_argument
-    )
-    persisted_notification = Notification.query.all()[0]
-
-    assert persisted_notification.postage == expected_postage
-
-
 def test_persist_notification_with_billable_units_stores_correct_info(
     mocker
 ):
@@ -504,22 +470,3 @@ def test_persist_notification_with_billable_units_stores_correct_info(
     persisted_notification = Notification.query.all()[0]
 
     assert persisted_notification.billable_units == 3
-
-
-@pytest.mark.parametrize('postage', ['europe', 'rest-of-world'])
-def test_persist_notification_for_international_letter(sample_letter_template, postage):
-    notification = persist_notification(
-        template_id=sample_letter_template.id,
-        template_version=sample_letter_template.version,
-        recipient="123 Main Street",
-        service=sample_letter_template.service,
-        personalisation=None,
-        notification_type=sample_letter_template.template_type,
-        api_key_id=None,
-        key_type="normal",
-        billable_units=3,
-        postage=postage,
-    )
-    persisted_notification = Notification.query.get(notification.id)
-    assert persisted_notification.postage == postage
-    assert persisted_notification.international

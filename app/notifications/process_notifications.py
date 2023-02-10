@@ -24,7 +24,6 @@ from app.dao.notifications_dao import (
 )
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_POSTAGE_TYPES,
     KEY_TYPE_TEST,
     LETTER_TYPE,
     NOTIFICATION_CREATED,
@@ -100,7 +99,6 @@ def persist_notification(
     status=NOTIFICATION_CREATED,
     reply_to_text=None,
     billable_units=None,
-    postage=None,
     document_download_count=None,
     updated_at=None
 ):
@@ -148,10 +146,6 @@ def persist_notification(
         current_app.logger.info('Persisting notification with type: {}'.format(EMAIL_TYPE))
         notification.normalised_to = format_email_address(notification.to)
         current_app.logger.info('Persisting notification to formatted email: {}'.format(notification.normalised_to))
-    elif notification_type == LETTER_TYPE:
-        notification.postage = postage
-        notification.international = postage in INTERNATIONAL_POSTAGE_TYPES
-        notification.normalised_to = ''.join(notification.to.split()).lower()
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:

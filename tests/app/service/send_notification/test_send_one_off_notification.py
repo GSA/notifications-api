@@ -100,7 +100,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
         created_by_id=str(service.created_by_id),
         reply_to_text='testing',
         reference=None,
-        postage=None,
         client_reference=None
     )
 
@@ -162,57 +161,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
         created_by_id=str(service.created_by_id),
         reply_to_text=None,
         reference=None,
-        postage=None,
-        client_reference=None
-    )
-
-
-def test_send_one_off_notification_calls_persist_correctly_for_letter(
-    mocker,
-    persist_mock,
-    celery_mock,
-    notify_db_session
-):
-    mocker.patch(
-        'app.service.send_notification.create_random_identifier',
-        return_value='this-is-random-in-real-life',
-    )
-    service = create_service()
-    template = create_template(
-        service=service,
-        template_type=LETTER_TYPE,
-        postage='first',
-        subject="Test subject",
-        content="Hello (( Name))\nYour thing is due soon",
-    )
-
-    post_data = {
-        'template_id': str(template.id),
-        'to': 'First Last',
-        'personalisation': {
-            'name': 'foo',
-            'address_line_1': 'First Last',
-            'address_line_2': '1 Example Street',
-            'postcode': 'SW1A 1AA',
-        },
-        'created_by': str(service.created_by_id)
-    }
-
-    send_one_off_notification(service.id, post_data)
-
-    persist_mock.assert_called_once_with(
-        template_id=template.id,
-        template_version=template.version,
-        recipient=post_data['to'],
-        service=template.service,
-        personalisation=post_data['personalisation'],
-        notification_type=LETTER_TYPE,
-        api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
-        created_by_id=str(service.created_by_id),
-        reply_to_text=None,
-        reference='this-is-random-in-real-life',
-        postage='first',
         client_reference=None
     )
 

@@ -906,7 +906,6 @@ class TemplateBase(db.Model):
     archived = db.Column(db.Boolean, nullable=False, default=False)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
     subject = db.Column(db.Text)
-    postage = db.Column(db.String, nullable=True)
 
     @declared_attr
     def service_id(cls):
@@ -1007,7 +1006,6 @@ class TemplateBase(db.Model):
                 }
                 for key in self._as_utils_template().placeholders
             },
-            "postage": self.postage,
             "letter_contact_block": self.service_letter_contact.contact_block if self.service_letter_contact else None,
         }
 
@@ -1338,19 +1336,11 @@ NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(*NOTIFICATION_STATUS_TYPES, name='notif
 NOTIFICATION_STATUS_LETTER_ACCEPTED = 'accepted'
 NOTIFICATION_STATUS_LETTER_RECEIVED = 'received'
 
+# TODO: delete these keywords for postage
 FIRST_CLASS = 'first'
 SECOND_CLASS = 'second'
 EUROPE = 'europe'
 REST_OF_WORLD = 'rest-of-world'
-POSTAGE_TYPES = [FIRST_CLASS, SECOND_CLASS, EUROPE, REST_OF_WORLD]
-UK_POSTAGE_TYPES = [FIRST_CLASS, SECOND_CLASS]
-INTERNATIONAL_POSTAGE_TYPES = [EUROPE, REST_OF_WORLD]
-RESOLVE_POSTAGE_FOR_FILE_NAME = {
-    FIRST_CLASS: 1,
-    SECOND_CLASS: 2,
-    EUROPE: 'E',
-    REST_OF_WORLD: 'N',
-}
 
 
 class NotificationStatusTypes(db.Model):
@@ -1366,6 +1356,10 @@ class NotificationAllTimeView(db.Model):
     tables and therefore rely on *both* sets of indices.
     """
     __tablename__ = 'notifications_all_time_view'
+
+    # Tell alembic not to create this as a table. We have a migration where we manually set this up as a view.
+    # This is custom logic we apply - not built-in logic. See `migrations/env.py`
+    __table_args__ = {"info": {"managed_by_alembic": False}}
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     job_id = db.Column(UUID(as_uuid=True))
@@ -1388,7 +1382,6 @@ class NotificationAllTimeView(db.Model):
     phone_prefix = db.Column(db.String)
     rate_multiplier = db.Column(db.Numeric(asdecimal=False))
     created_by_id = db.Column(UUID(as_uuid=True))
-    postage = db.Column(db.String)
     document_download_count = db.Column(db.Integer)
 
 
@@ -1451,7 +1444,6 @@ class Notification(db.Model):
 
     document_download_count = db.Column(db.Integer, nullable=True)
 
-    postage = db.Column(db.String, nullable=True)
     provider_response = db.Column(db.Text, nullable=True)
     # queue_name = db.Column(db.Text, nullable=True)
 
@@ -1668,28 +1660,7 @@ class Notification(db.Model):
             "sent_at": get_dt_string_or_none(self.sent_at),
             "completed_at": self.completed_at(),
             "scheduled_for": None,
-            "postage": self.postage
         }
-
-        if self.notification_type == LETTER_TYPE:
-            personalisation = InsensitiveDict(self.personalisation)
-
-            (
-                serialized['line_1'],
-                serialized['line_2'],
-                serialized['line_3'],
-                serialized['line_4'],
-                serialized['line_5'],
-                serialized['line_6'],
-                serialized['postcode'],
-            ) = (
-                personalisation.get(line) for line in address_lines_1_to_6_and_postcode_keys
-            )
-
-            serialized['estimated_delivery'] = \
-                get_letter_timings(serialized['created_at'], postage=self.postage)\
-                .earliest_delivery\
-                .strftime(DATETIME_FORMAT)
 
         return serialized
 
@@ -1730,8 +1701,6 @@ class NotificationHistory(db.Model, HistoryModel):
     rate_multiplier = db.Column(db.Numeric(asdecimal=False), nullable=True)
 
     created_by_id = db.Column(UUID(as_uuid=True), nullable=True)
-
-    postage = db.Column(db.String, nullable=True)
 
     document_download_count = db.Column(db.Integer, nullable=True)
 
@@ -2055,7 +2024,6 @@ class FactBilling(db.Model):
     rate_multiplier = db.Column(db.Integer(), nullable=False, primary_key=True)
     international = db.Column(db.Boolean, nullable=False, primary_key=True)
     rate = db.Column(db.Numeric(), nullable=False, primary_key=True)
-    postage = db.Column(db.String, nullable=False, primary_key=True)
     billable_units = db.Column(db.Integer(), nullable=True)
     notifications_sent = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)

@@ -298,7 +298,7 @@ def insert_notification_history_delete_notifications(
          SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
              key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
              client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, postage, document_download_count
+              created_by_id, document_download_count
           FROM notifications
         WHERE service_id = :service_id
           AND notification_type = :notification_type
@@ -311,7 +311,7 @@ def insert_notification_history_delete_notifications(
          SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
              key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
              client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, postage, document_download_count
+              created_by_id, document_download_count
           FROM notifications
         WHERE service_id = :service_id
           AND notification_type = :notification_type
@@ -565,25 +565,6 @@ def notifications_not_yet_sent(should_be_sending_after_seconds, notification_typ
         Notification.created_at <= older_than_date,
         Notification.notification_type == notification_type,
         Notification.status == NOTIFICATION_CREATED
-    ).all()
-    return notifications
-
-
-def dao_get_letters_and_sheets_volume_by_postage(print_run_deadline):
-    notifications = db.session.query(
-        func.count(Notification.id).label('letters_count'),
-        func.sum(Notification.billable_units).label('sheets_count'),
-        Notification.postage
-    ).filter(
-        Notification.created_at < convert_local_timezone_to_utc(print_run_deadline),
-        Notification.notification_type == LETTER_TYPE,
-        Notification.status == NOTIFICATION_CREATED,
-        Notification.key_type == KEY_TYPE_NORMAL,
-        Notification.billable_units > 0
-    ).group_by(
-        Notification.postage
-    ).order_by(
-        Notification.postage
     ).all()
     return notifications
 

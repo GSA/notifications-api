@@ -1,6 +1,6 @@
 """
 
-Revision ID: 1358d15190ba
+Revision ID: 0384_remove_letter_branding_
 Revises: 0383_update_default_templates.py
 Create Date: 2023-02-09 22:24:07.187569
 
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '1358d15190ba'
+revision = '0384_remove_letter_branding_'
 down_revision = '0383_update_default_templates.py'
 
 

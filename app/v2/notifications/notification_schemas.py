@@ -239,7 +239,6 @@ post_precompiled_letter_request = {
     "properties": {
         "reference": {"type": "string"},
         "content": {"type": "string"},
-        "postage": {"type": "string", "format": "postage"}
     },
     "required": ["reference", "content"],
     "additionalProperties": False

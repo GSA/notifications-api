@@ -43,8 +43,6 @@ def test_should_create_a_new_template_for_a_service(
     }
     if subject:
         data.update({'subject': subject})
-    if template_type == LETTER_TYPE:
-        data.update({'postage': 'first'})
     data = json.dumps(data)
     auth_header = create_admin_authorization_header()
 
@@ -67,11 +65,6 @@ def test_should_create_a_new_template_for_a_service(
         assert json_resp['data']['subject'] == 'subject'
     else:
         assert not json_resp['data']['subject']
-
-    if template_type == LETTER_TYPE:
-        assert json_resp['data']['postage'] == 'first'
-    else:
-        assert not json_resp['data']['postage']
 
     template = Template.query.get(json_resp['data']['id'])
     from app.schemas import template_schema
@@ -307,8 +300,8 @@ def test_must_have_a_subject_on_an_email_template(client, sample_user, sample_se
 
 def test_update_should_update_a_template(client, sample_user):
 
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service, template_type="letter", postage="second")
+    service = create_service()
+    template = create_template(service, template_type="sms")
 
     assert template.created_by == service.created_by
     assert template.created_by != sample_user
@@ -316,7 +309,6 @@ def test_update_should_update_a_template(client, sample_user):
     data = {
         'content': 'my template has new content, swell!',
         'created_by': str(sample_user.id),
-        'postage': 'first'
     }
     data = json.dumps(data)
     auth_header = create_admin_authorization_header()
@@ -332,7 +324,6 @@ def test_update_should_update_a_template(client, sample_user):
     assert update_json_resp['data']['content'] == (
         'my template has new content, swell!'
     )
-    assert update_json_resp['data']['postage'] == 'first'
     assert update_json_resp['data']['name'] == template.name
     assert update_json_resp['data']['template_type'] == template.template_type
     assert update_json_resp['data']['version'] == 2
@@ -477,7 +468,6 @@ def test_should_get_return_all_fields_by_default(
         'hidden',
         'id',
         'name',
-        'postage',
         'process_type',
         'redact_personalisation',
         'reply_to',
@@ -828,15 +818,7 @@ def test_create_a_template_with_foreign_service_reply_to(admin_request, sample_u
             {"error": "ValidationError", "message": "service is a required property"},
             {"error": "ValidationError", "message": "created_by is a required property"},
         ]
-    ),
-    (
-        {"name": "my template", "template_type": "sms", "content": "hi", "postage": "third",
-         "service": "1af43c02-b5a8-4923-ad7f-5279b75ff2d0", "created_by": "30587644-9083-44d8-a114-98887f07f1e3"},
-        [
-            {"error": "ValidationError",
-             "message": "postage invalid. It must be first, second, europe or rest-of-world."},
-        ]
-    ),
+    )
 ])
 def test_create_template_validates_against_json_schema(
     admin_request,
@@ -922,19 +904,6 @@ def test_update_template_reply_to_set_to_blank(client, notify_db_session):
     assert template.service_letter_contact_id is None
     th = TemplateHistory.query.filter_by(id=template.id, version=2).one()
     assert th.service_letter_contact_id is None
-
-
-def test_update_template_validates_postage(admin_request, sample_service_full_permissions):
-    template = create_template(service=sample_service_full_permissions, template_type='letter')
-
-    response = admin_request.post(
-        'template.update_template',
-        service_id=sample_service_full_permissions.id,
-        template_id=template.id,
-        _data={"postage": "third"},
-        _expected_status=400
-    )
-    assert 'postage invalid' in response['errors'][0]['message']
 
 
 def test_update_template_with_foreign_service_reply_to(client, sample_letter_template):
