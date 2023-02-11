@@ -127,7 +127,6 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
 
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
-    letter_template = create_template(service=service, template_type="letter")
 
     for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
@@ -139,22 +138,12 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
         year=2016
     )
 
-    assert len(json_response) == 6  # 3 billed months for SMS and letters
+    assert len(json_response) == 3  # 3 billed months for SMS
 
     email_rows = [row for row in json_response if row['notification_type'] == 'email']
     assert len(email_rows) == 0
 
-    letter_row = next(x for x in json_response if x['notification_type'] == 'letter')
     sms_row = next(x for x in json_response if x['notification_type'] == 'sms')
-
-    assert letter_row["month"] == "April"
-    assert letter_row["notification_type"] == "letter"
-    assert letter_row["chargeable_units"] == 1
-    assert letter_row["notifications_sent"] == 1
-    assert letter_row["rate"] == 0.33
-    assert letter_row["cost"] == 0.33
-    assert letter_row["free_allowance_used"] == 0
-    assert letter_row["charged_units"] == 1
 
     assert sms_row["month"] == "April"
     assert sms_row["notification_type"] == "sms"
@@ -195,7 +184,6 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
 
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
-    letter_template = create_template(service=service, template_type="letter")
 
     for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
@@ -207,7 +195,7 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
         year=2016
     )
 
-    assert len(json_response) == 3
+    assert len(json_response) == 2
 
     assert json_response[0]['notification_type'] == 'email'
     assert json_response[0]['chargeable_units'] == 0
@@ -217,18 +205,10 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
     assert json_response[0]['free_allowance_used'] == 0
     assert json_response[0]['charged_units'] == 0
 
-    assert json_response[1]['notification_type'] == 'letter'
+    assert json_response[1]['notification_type'] == 'sms'
     assert json_response[1]['chargeable_units'] == 3
     assert json_response[1]['notifications_sent'] == 3
-    assert json_response[1]['rate'] == 0.33
-    assert json_response[1]['cost'] == 0.99
-    assert json_response[1]['free_allowance_used'] == 0
-    assert json_response[1]['charged_units'] == 3
-
-    assert json_response[2]['notification_type'] == 'sms'
-    assert json_response[2]['chargeable_units'] == 3
-    assert json_response[2]['notifications_sent'] == 3
-    assert json_response[2]['rate'] == 0.0162
-    assert json_response[2]['cost'] == 0.0324
-    assert json_response[2]['free_allowance_used'] == 1
-    assert json_response[2]['charged_units'] == 2
+    assert json_response[1]['rate'] == 0.0162
+    assert json_response[1]['cost'] == 0.0324
+    assert json_response[1]['free_allowance_used'] == 1
+    assert json_response[1]['charged_units'] == 2

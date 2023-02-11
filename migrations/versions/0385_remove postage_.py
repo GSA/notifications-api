@@ -78,6 +78,15 @@ def upgrade():
     op.drop_column('templates', 'postage')
     op.drop_column('templates_history', 'postage')
     op.drop_column('ft_billing', 'postage')
+    # op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
+    # op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
+    #                                                         'template_id',
+    #                                                         'service_id',
+    #                                                         'notification_type',
+    #                                                         'provider',
+    #                                                         'rate_multiplier',
+    #                                                         'international',
+    #                                                         'rate'])
     # ### end Alembic commands ###
 
 
@@ -88,6 +97,17 @@ def downgrade():
     op.add_column('templates', sa.Column('postage', sa.VARCHAR(), autoincrement=False, nullable=True))
     op.add_column('notifications', sa.Column('postage', sa.VARCHAR(), autoincrement=False, nullable=True))
     op.add_column('notification_history', sa.Column('postage', sa.VARCHAR(), autoincrement=False, nullable=True))
+
+    # op.drop_constraint('ft_billing_pkey', 'ft_billing', type_='primary')
+    # op.create_primary_key('ft_billing_pkey', 'ft_billing', ['bst_date',
+    #                                                         'template_id',
+    #                                                         'service_id',
+    #                                                         'notification_type',
+    #                                                         'provider',
+    #                                                         'rate_multiplier',
+    #                                                         'international',
+    #                                                         'rate',
+    #                                                         'postage'])
 
     op.execute("DROP VIEW notifications_all_time_view;")
     op.execute("""

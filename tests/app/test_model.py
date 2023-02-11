@@ -190,23 +190,6 @@ def test_notification_subject_fills_in_placeholders(sample_service, template_typ
     assert notification.subject == 'hello'
 
 
-def test_letter_notification_serializes_with_address(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'address_line_1': 'foo',
-        'address_line_3': 'bar',
-        'address_line_5': None,
-        'postcode': 'SW1 1AA'
-    }
-    res = sample_letter_notification.serialize()
-    assert res['line_1'] == 'foo'
-    assert res['line_2'] is None
-    assert res['line_3'] == 'bar'
-    assert res['line_4'] is None
-    assert res['line_5'] is None
-    assert res['line_6'] is None
-    assert res['postcode'] == 'SW1 1AA'
-
-
 def test_notification_serializes_created_by_name_with_no_created_by_id(client, sample_notification):
     res = sample_notification.serialize()
     assert res['created_by_name'] is None
@@ -226,11 +209,6 @@ def test_sms_notification_serializes_without_subject(client, sample_template):
 def test_email_notification_serializes_with_subject(client, sample_email_template):
     res = sample_email_template.serialize_for_v2()
     assert res['subject'] == 'Email Subject'
-
-
-def test_letter_notification_serializes_with_subject(client, sample_letter_template):
-    res = sample_letter_template.serialize_for_v2()
-    assert res['subject'] == 'Template subject'
 
 
 def test_notification_references_template_history(client, sample_template):
@@ -279,40 +257,9 @@ def test_service_get_default_reply_to_email_address(sample_service):
     assert sample_service.get_default_reply_to_email_address() == 'default@email.com'
 
 
-def test_service_get_default_contact_letter(sample_service):
-    create_letter_contact(service=sample_service, contact_block='London,\nNW1A 1AA')
-
-    assert sample_service.get_default_letter_contact() == 'London,\nNW1A 1AA'
-
-
 def test_service_get_default_sms_sender(notify_db_session):
     service = create_service()
     assert service.get_default_sms_sender() == 'testing'
-
-
-def test_letter_notification_serializes_correctly(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'addressline1': 'test',
-        'addressline2': 'London',
-        'postcode': 'N1',
-    }
-
-    json = sample_letter_notification.serialize()
-    assert json['line_1'] == 'test'
-    assert json['line_2'] == 'London'
-    assert json['postcode'] == 'N1'
-
-
-def test_letter_notification_postcode_can_be_null_for_precompiled_letters(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'address_line_1': 'test',
-        'address_line_2': 'London',
-    }
-
-    json = sample_letter_notification.serialize()
-    assert json['line_1'] == 'test'
-    assert json['line_2'] == 'London'
-    assert json['postcode'] is None
 
 
 def test_template_folder_is_parent(sample_service):

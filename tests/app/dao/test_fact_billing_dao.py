@@ -363,7 +363,7 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=1, financial_year_start=2016)
     results = fetch_monthly_billing_for_year(service.id, 2016)
 
-    assert len(results) == 9  # 3 billed months for each type
+    assert len(results) == 6  # 3 billed months for each type
 
     assert str(results[0].month) == "2016-04-01"
     assert results[0].notification_type == 'email'
@@ -375,26 +375,17 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     assert results[0].charged_units == 0
 
     assert str(results[1].month) == "2016-04-01"
-    assert results[1].notification_type == 'letter'
+    assert results[1].notification_type == 'sms'
     assert results[1].notifications_sent == 2
     assert results[1].chargeable_units == 2
-    assert results[1].rate == Decimal('0.30')
-    assert results[1].cost == Decimal('0.60')
-    assert results[1].free_allowance_used == 0
-    assert results[1].charged_units == 2
-
-    assert str(results[2].month) == "2016-04-01"
-    assert results[2].notification_type == 'sms'
-    assert results[2].notifications_sent == 2
-    assert results[2].chargeable_units == 2
-    assert results[2].rate == Decimal('0.162')
+    assert results[1].rate == Decimal('0.162')
     # free allowance is 1
-    assert results[2].cost == Decimal('0.162')
-    assert results[2].free_allowance_used == 1
-    assert results[2].charged_units == 1
+    assert results[1].cost == Decimal('0.162')
+    assert results[1].free_allowance_used == 1
+    assert results[1].charged_units == 1
 
-    assert str(results[3].month) == "2017-02-01"
-    assert str(results[8].month) == "2017-03-01"
+    assert str(results[2].month) == "2017-02-01"
+    assert str(results[5].month) == "2017-03-01"
 
 
 def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
@@ -403,45 +394,27 @@ def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
     results = fetch_monthly_billing_for_year(service.id, 2018)
 
     # Test data is only for the month of May
-    assert len(results) == 4
+    assert len(results) == 3
 
     assert str(results[0].month) == "2018-05-01"
-    assert results[0].notification_type == 'letter'
+    assert results[0].notification_type == 'sms'
     assert results[0].notifications_sent == 1
-    assert results[0].chargeable_units == 1
-    assert results[0].rate == Decimal('0.33')
-    assert results[0].cost == Decimal('0.33')
-    assert results[0].free_allowance_used == 0
-    assert results[0].charged_units == 1
+    assert results[0].chargeable_units == 4
+    assert results[0].rate == Decimal('0.015')
+    # 1 free units on the 17th
+    assert results[0].cost == Decimal('0.045')
+    assert results[0].free_allowance_used == 1
+    assert results[0].charged_units == 3
 
     assert str(results[1].month) == "2018-05-01"
-    assert results[1].notification_type == 'letter'
+    assert results[1].notification_type == 'sms'
     assert results[1].notifications_sent == 2
-    assert results[1].chargeable_units == 2
-    assert results[1].rate == Decimal('0.36')
-    assert results[1].cost == Decimal('0.72')
-    assert results[1].free_allowance_used == 0
-    assert results[1].charged_units == 2
-
-    assert str(results[2].month) == "2018-05-01"
-    assert results[2].notification_type == 'sms'
-    assert results[2].notifications_sent == 1
-    assert results[2].chargeable_units == 4
-    assert results[2].rate == Decimal('0.015')
-    # 1 free units on the 17th
-    assert results[2].cost == Decimal('0.045')
-    assert results[2].free_allowance_used == 1
-    assert results[2].charged_units == 3
-
-    assert str(results[3].month) == "2018-05-01"
-    assert results[3].notification_type == 'sms'
-    assert results[3].notifications_sent == 2
-    assert results[3].chargeable_units == 5
-    assert results[3].rate == Decimal('0.162')
+    assert results[1].chargeable_units == 5
+    assert results[1].rate == Decimal('0.162')
     # 5 free units on the 16th
-    assert results[3].cost == Decimal('0')
-    assert results[3].free_allowance_used == 5
-    assert results[3].charged_units == 0
+    assert results[1].cost == Decimal('0')
+    assert results[1].free_allowance_used == 5
+    assert results[1].charged_units == 0
 
 
 @freeze_time('2018-08-01 13:30:00')
@@ -469,7 +442,7 @@ def test_fetch_billing_totals_for_year(notify_db_session):
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=1000, financial_year_start=2016)
     results = fetch_billing_totals_for_year(service_id=service.id, year=2016)
 
-    assert len(results) == 3
+    assert len(results) == 2
     assert results[0].notification_type == 'email'
     assert results[0].notifications_sent == 4
     assert results[0].chargeable_units == 0
@@ -478,21 +451,13 @@ def test_fetch_billing_totals_for_year(notify_db_session):
     assert results[0].free_allowance_used == 0
     assert results[0].charged_units == 0
 
-    assert results[1].notification_type == 'letter'
+    assert results[1].notification_type == 'sms'
     assert results[1].notifications_sent == 4
     assert results[1].chargeable_units == 4
-    assert results[1].rate == Decimal('0.3')
-    assert results[1].cost == Decimal('1.2')
-    assert results[1].free_allowance_used == 0
-    assert results[1].charged_units == 4
-
-    assert results[2].notification_type == 'sms'
-    assert results[2].notifications_sent == 4
-    assert results[2].chargeable_units == 4
-    assert results[2].rate == Decimal('0.162')
-    assert results[2].cost == Decimal('0')
-    assert results[2].free_allowance_used == 4
-    assert results[2].charged_units == 0
+    assert results[1].rate == Decimal('0.162')
+    assert results[1].cost == Decimal('0')
+    assert results[1].free_allowance_used == 4
+    assert results[1].charged_units == 0
 
 
 def test_fetch_billing_totals_for_year_uses_current_annual_billing(notify_db_session):
@@ -515,40 +480,25 @@ def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=6, financial_year_start=2018)
     results = fetch_billing_totals_for_year(service_id=service.id, year=2018)
 
-    assert len(results) == 4
-    assert results[0].notification_type == 'letter'
+    assert len(results) == 3
+
+    assert results[0].notification_type == 'sms'
     assert results[0].notifications_sent == 1
-    assert results[0].chargeable_units == 1
-    assert results[0].rate == Decimal('0.33')
-    assert results[0].cost == Decimal('0.33')
-    assert results[0].free_allowance_used == 0
-    assert results[0].charged_units == 1
-
-    assert results[1].notification_type == 'letter'
-    assert results[1].notifications_sent == 2
-    assert results[1].chargeable_units == 2
-    assert results[1].rate == Decimal('0.36')
-    assert results[1].cost == Decimal('0.72')
-    assert results[1].free_allowance_used == 0
-    assert results[1].charged_units == 2
-
-    assert results[2].notification_type == 'sms'
-    assert results[2].notifications_sent == 1
-    assert results[2].chargeable_units == 4
-    assert results[2].rate == Decimal('0.015')
+    assert results[0].chargeable_units == 4
+    assert results[0].rate == Decimal('0.015')
     # 1 free unit on the 17th
-    assert results[2].cost == Decimal('0.045')
-    assert results[2].free_allowance_used == 1
-    assert results[2].charged_units == 3
+    assert results[0].cost == Decimal('0.045')
+    assert results[0].free_allowance_used == 1
+    assert results[0].charged_units == 3
 
-    assert results[3].notification_type == 'sms'
-    assert results[3].notifications_sent == 2
-    assert results[3].chargeable_units == 5
-    assert results[3].rate == Decimal('0.162')
+    assert results[1].notification_type == 'sms'
+    assert results[1].notifications_sent == 2
+    assert results[1].chargeable_units == 5
+    assert results[1].rate == Decimal('0.162')
     # 5 free units on the 16th
-    assert results[3].cost == Decimal('0')
-    assert results[3].free_allowance_used == 5
-    assert results[3].charged_units == 0
+    assert results[1].cost == Decimal('0')
+    assert results[1].free_allowance_used == 5
+    assert results[1].charged_units == 0
 
 
 def test_delete_billing_data(notify_db_session):
@@ -711,72 +661,6 @@ def test_fetch_sms_billing_for_all_services_without_an_organisation_appears(noti
     ]
 
     assert [dict(result) for result in results] == expected_results
-
-
-def test_fetch_letter_costs_and_totals_for_all_services(notify_db_session):
-    fixtures = set_up_usage_data(datetime(2019, 6, 1))
-
-    results = fetch_letter_costs_and_totals_for_all_services(datetime(2019, 6, 1), datetime(2019, 9, 30))
-
-    assert len(results) == 3
-    assert results[0] == (
-        fixtures["org_1"].name, fixtures["org_1"].id,
-        fixtures["service_1_sms_and_letter"].name, fixtures["service_1_sms_and_letter"].id,
-        8, Decimal('3.40')
-    )
-    assert results[1] == (
-        fixtures["org_for_service_with_letters"].name, fixtures["org_for_service_with_letters"].id,
-        fixtures["service_with_letters"].name, fixtures["service_with_letters"].id,
-        22, Decimal('14.00')
-    )
-    assert results[2] == (
-        None, None,
-        fixtures["service_with_letters_without_org"].name, fixtures["service_with_letters_without_org"].id,
-        18, Decimal('24.45')
-    )
-
-
-def test_fetch_letter_line_items_for_all_service(notify_db_session):
-    fixtures = set_up_usage_data(datetime(2019, 6, 1))
-
-    results = fetch_letter_line_items_for_all_services(datetime(2019, 6, 1), datetime(2019, 9, 30))
-
-    assert len(results) == 7
-    assert results[0] == (
-        fixtures["org_1"].name, fixtures["org_1"].id,
-        fixtures["service_1_sms_and_letter"].name, fixtures["service_1_sms_and_letter"].id,
-        Decimal('0.45'), 'second', 6
-    )
-    assert results[1] == (
-        fixtures["org_1"].name, fixtures["org_1"].id,
-        fixtures["service_1_sms_and_letter"].name, fixtures["service_1_sms_and_letter"].id,
-        Decimal("0.35"), 'first', 2
-    )
-    assert results[2] == (
-        fixtures["org_for_service_with_letters"].name, fixtures["org_for_service_with_letters"].id,
-        fixtures["service_with_letters"].name, fixtures["service_with_letters"].id,
-        Decimal("0.65"), 'second', 20
-    )
-    assert results[3] == (
-        fixtures["org_for_service_with_letters"].name, fixtures["org_for_service_with_letters"].id,
-        fixtures["service_with_letters"].name, fixtures["service_with_letters"].id,
-        Decimal("0.50"), 'first', 2
-    )
-    assert results[4] == (
-        None, None,
-        fixtures["service_with_letters_without_org"].name, fixtures["service_with_letters_without_org"].id,
-        Decimal("0.35"), 'second', 2
-    )
-    assert results[5] == (
-        None, None,
-        fixtures["service_with_letters_without_org"].name, fixtures["service_with_letters_without_org"].id,
-        Decimal("0.50"), 'first', 1
-    )
-    assert results[6] == (
-        None, None,
-        fixtures["service_with_letters_without_org"].name, fixtures["service_with_letters_without_org"].id,
-        Decimal("1.55"), 'international', 15
-    )
 
 
 @freeze_time('2019-06-01 13:30')

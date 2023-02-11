@@ -96,10 +96,8 @@ def test_valid_post_template_returns_200(
 
     assert resp_json['id'] == str(template.id)
 
-    if tmp_type in {EMAIL_TYPE, LETTER_TYPE}:
-        assert expected_subject in resp_json['subject']
-
     if tmp_type == EMAIL_TYPE:
+        assert expected_subject in resp_json['subject']
         assert resp_json['html'] == expected_html
     else:
         assert resp_json['html'] is None
