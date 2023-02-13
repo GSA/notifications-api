@@ -5,7 +5,6 @@ from notifications_utils.clients.redis import (
     daily_limit_cache_key,
     rate_limit_cache_key,
 )
-from notifications_utils.postal_address import PostalAddress
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
@@ -19,7 +18,6 @@ from app.dao.service_letter_contact_dao import dao_get_letter_contact_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
@@ -33,12 +31,7 @@ from app.notifications.process_notifications import (
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
-from app.v2.errors import (
-    BadRequestError,
-    RateLimitError,
-    TooManyRequestsError,
-    ValidationError,
-)
+from app.v2.errors import BadRequestError, RateLimitError, TooManyRequestsError
 
 REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
     'redis_exceeded_rate_limit_duration_seconds',

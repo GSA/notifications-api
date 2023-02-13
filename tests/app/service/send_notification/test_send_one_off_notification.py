@@ -12,7 +12,6 @@ from app.dao.service_guest_list_dao import (
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
-    LETTER_TYPE,
     MOBILE_TYPE,
     PRIORITY,
     SMS_TYPE,

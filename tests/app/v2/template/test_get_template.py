@@ -12,15 +12,12 @@ valid_version_params = [None, 1]
 @pytest.mark.parametrize("tmp_type, expected_name, expected_subject", [
     (SMS_TYPE, 'sms Template Name', None),
     (EMAIL_TYPE, 'email Template Name', 'Template subject'),
-    (LETTER_TYPE, 'letter Template Name', 'Template subject')
 ])
 @pytest.mark.parametrize("version", valid_version_params)
 def test_get_template_by_id_returns_200(
     client, sample_service, tmp_type, expected_name, expected_subject, version
 ):
-    letter_contact_block_id = None
-
-    template = create_template(sample_service, template_type=tmp_type, contact_block_id=(letter_contact_block_id))
+    template = create_template(sample_service, template_type=tmp_type)
     auth_header = create_service_authorization_header(service_id=sample_service.id)
 
     version_path = '/version/{}'.format(version) if version else ''
@@ -44,7 +41,7 @@ def test_get_template_by_id_returns_200(
         "subject": expected_subject,
         'name': expected_name,
         'personalisation': {},
-        'letter_contact_block': letter_contact_block.contact_block if letter_contact_block_id else None,
+        'letter_contact_block': None,
     }
 
     assert json_response == expected_response

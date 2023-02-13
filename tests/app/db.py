@@ -29,7 +29,6 @@ from app.dao.users_dao import save_model_user
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
-    LETTER_TYPE,
     MOBILE_TYPE,
     SMS_TYPE,
     AnnualBilling,

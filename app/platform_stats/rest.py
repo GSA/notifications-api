@@ -8,7 +8,6 @@ from app.dao.fact_billing_dao import (
     fetch_daily_sms_provider_volumes_for_platform,
     fetch_daily_volumes_for_platform,
     fetch_letter_costs_and_totals_for_all_services,
-    fetch_letter_line_items_for_all_services,
     fetch_sms_billing_for_all_services,
     fetch_volumes_by_service,
 )
@@ -76,7 +75,6 @@ def get_data_for_billing_report():
     sms_costs = fetch_sms_billing_for_all_services(start_date, end_date)
     letter_overview = fetch_letter_costs_and_totals_for_all_services(start_date, end_date)
 
-
     combined = {}
     for s in sms_costs:
         if float(s.sms_cost) > 0:
@@ -110,7 +108,7 @@ def get_data_for_billing_report():
                 "letter_cost": float(data.letter_cost),
             }
             combined[data.service_id] = letter_entry
- 
+
     billing_details = fetch_billing_details_for_all_services()
     for service in billing_details:
         if service.service_id in combined:

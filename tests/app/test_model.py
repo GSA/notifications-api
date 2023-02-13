@@ -21,7 +21,6 @@ from app.models import (
 )
 from tests.app.db import (
     create_inbound_number,
-    create_letter_contact,
     create_notification,
     create_reply_to_email,
     create_service,

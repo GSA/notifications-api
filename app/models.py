@@ -6,11 +6,6 @@ from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import (
     EncryptionError,
 )
-from notifications_utils.insensitive_dict import InsensitiveDict
-from notifications_utils.letter_timings import get_letter_timings
-from notifications_utils.postal_address import (
-    address_lines_1_to_6_and_postcode_keys,
-)
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,

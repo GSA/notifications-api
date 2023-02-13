@@ -9,7 +9,6 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import asc, desc, func, or_, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
@@ -21,7 +20,6 @@ from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.models import (
     EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
     KEY_TYPE_TEST,
     LETTER_TYPE,
     NOTIFICATION_CREATED,

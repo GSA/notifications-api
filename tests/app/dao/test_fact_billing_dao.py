@@ -12,8 +12,6 @@ from app.dao.fact_billing_dao import (
     fetch_billing_totals_for_year,
     fetch_daily_sms_provider_volumes_for_platform,
     fetch_daily_volumes_for_platform,
-    fetch_letter_costs_and_totals_for_all_services,
-    fetch_letter_line_items_for_all_services,
     fetch_monthly_billing_for_year,
     fetch_sms_billing_for_all_services,
     fetch_sms_free_allowance_remainder_until_date,
