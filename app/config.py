@@ -98,11 +98,11 @@ class Config(object):
     AWS_US_TOLL_FREE_NUMBER = getenv("AWS_US_TOLL_FREE_NUMBER")
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
-    NOTIFY_EMAIL_DOMAIN = getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
+    NOTIFY_EMAIL_DOMAIN = cloud_config.ses_email_domain
     SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
-    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
+    VALID_SNS_TOPICS = cloud_config.sns_topic_arns
 
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {

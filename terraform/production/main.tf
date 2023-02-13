@@ -54,6 +54,33 @@ module "egress-space" {
   ]
 }
 
+module "ses_email" {
+  source = "../shared/ses"
+
+  cf_org_name         = local.cf_org_name
+  cf_space_name       = local.cf_space_name
+  name                = "${local.app_name}-ses-${local.env}"
+  recursive_delete    = local.recursive_delete
+  aws_region          = "us-gov-west-1"
+  email_domain        = "notify.gov"
+  email_receipt_error = "notify-support@gsa.gov"
+}
+
+#########################################################################
+# Wait for SNS is out of sandbox and spending limit is increased
+# before activating this module
+#########################################################################
+# module "sns_sms" {
+#   source = "../shared/sns"
+
+#   cf_org_name         = local.cf_org_name
+#   cf_space_name       = local.cf_space_name
+#   name                = "${local.app_name}-sns-${local.env}"
+#   recursive_delete    = local.recursive_delete
+#   aws_region          = "us-gov-west-1"
+#   monthly_spend_limit = 1000
+# }
+
 ###########################################################################
 # The following lines need to be commented out for the initial `terraform apply`
 # It can be re-enabled after:
