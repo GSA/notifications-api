@@ -684,7 +684,7 @@ def test_fetch_usage_year_for_organisation(notify_db_session):
     assert first_row['sms_remainder'] == 5  # because there are 5 billable units
     assert first_row['chargeable_billable_sms'] == 0
     assert first_row['sms_cost'] == 0.0
-    assert first_row['letter_cost'] == 3.4
+    assert first_row['letter_cost'] == 0
     assert first_row['emails_sent'] == 0
 
     second_row = results[str(service_with_emails_for_org.id)]
@@ -1071,16 +1071,16 @@ def test_fetch_volumes_by_service(notify_db_session):
     results = fetch_volumes_by_service(start_date=datetime(2022, 2, 1), end_date=datetime(2022, 2, 28))
 
     # since we are using a pre-set up fixture, we only care about some of the results
-    assert len(results) == 7
+    assert len(results) == 5
     assert results[0].service_name == 'a - with sms and letter'
     assert results[0].organisation_name == 'Org for a - with sms and letter'
     assert results[0].free_allowance == 10
     assert results[0].sms_notifications == 2
     assert results[0].sms_chargeable_units == 3
     assert results[0].email_totals == 0
-    assert results[0].letter_totals == 4
-    assert results[0].letter_sheet_totals == 6
-    assert float(results[0].letter_cost) == 1.6
+    assert results[0].letter_totals == 0
+    assert results[0].letter_sheet_totals == 0
+    assert float(results[0].letter_cost) == 0
 
     assert results[1].service_name == 'f - without ft_billing'
     assert results[1].organisation_name == 'Org for a - with sms and letter'
@@ -1092,22 +1092,22 @@ def test_fetch_volumes_by_service(notify_db_session):
     assert results[1].letter_sheet_totals == 0
     assert float(results[1].letter_cost) == 0
 
-    assert results[4].service_name == 'b - chargeable sms'
+    assert results[3].service_name == 'b - chargeable sms'
+    assert not results[3].organisation_name
+    assert results[3].free_allowance == 10
+    assert results[3].sms_notifications == 2
+    assert results[3].sms_chargeable_units == 3
+    assert results[3].email_totals == 0
+    assert results[3].letter_totals == 0
+    assert results[3].letter_sheet_totals == 0
+    assert float(results[3].letter_cost) == 0
+
+    assert results[4].service_name == 'e - sms within allowance'
     assert not results[4].organisation_name
     assert results[4].free_allowance == 10
-    assert results[4].sms_notifications == 2
-    assert results[4].sms_chargeable_units == 3
+    assert results[4].sms_notifications == 1
+    assert results[4].sms_chargeable_units == 2
     assert results[4].email_totals == 0
     assert results[4].letter_totals == 0
     assert results[4].letter_sheet_totals == 0
     assert float(results[4].letter_cost) == 0
-
-    assert results[6].service_name == 'e - sms within allowance'
-    assert not results[6].organisation_name
-    assert results[6].free_allowance == 10
-    assert results[6].sms_notifications == 1
-    assert results[6].sms_chargeable_units == 2
-    assert results[6].email_totals == 0
-    assert results[6].letter_totals == 0
-    assert results[6].letter_sheet_totals == 0
-    assert float(results[6].letter_cost) == 0

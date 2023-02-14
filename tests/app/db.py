@@ -917,7 +917,7 @@ def set_up_usage_data(start_date):
     one_week_earlier = start_date - timedelta(days=7)
     two_days_later = start_date + timedelta(days=2)
     one_week_later = start_date + timedelta(days=7)
-    one_month_later = start_date + timedelta(days=31)
+    # one_month_later = start_date + timedelta(days=31)
 
     # service with sms and letters:
     service_1_sms_and_letter = create_service(
@@ -927,7 +927,6 @@ def set_up_usage_data(start_date):
         billing_contact_email_addresses="service@billing.contact email@addresses.gov.uk",
         billing_reference="service billing reference"
     )
-    letter_template_1 = create_template(service=service_1_sms_and_letter, template_type='letter')
     sms_template_1 = create_template(service=service_1_sms_and_letter, template_type='sms')
     create_annual_billing(
         service_id=service_1_sms_and_letter.id, free_sms_fragment_limit=10, financial_year_start=year
@@ -948,13 +947,6 @@ def set_up_usage_data(start_date):
     create_ft_billing(local_date=start_date, template=sms_template_1, billable_unit=2, rate=0.11)
     create_ft_billing(local_date=two_days_later, template=sms_template_1, billable_unit=1, rate=0.11)
 
-    create_ft_billing(local_date=one_week_later, template=letter_template_1,
-                      notifications_sent=2, billable_unit=2, rate=.35)
-    create_ft_billing(local_date=one_month_later, template=letter_template_1,
-                      notifications_sent=4, billable_unit=8, rate=.45)
-    create_ft_billing(local_date=one_week_later, template=letter_template_1,
-                      notifications_sent=2, billable_unit=4, rate=.45)
-
     # service with emails only:
     service_with_emails = create_service(service_name='b - emails')
     email_template = create_template(service=service_with_emails, template_type='email')
@@ -965,44 +957,6 @@ def set_up_usage_data(start_date):
     create_annual_billing(service_id=service_with_emails.id, free_sms_fragment_limit=0, financial_year_start=year)
 
     create_ft_billing(local_date=start_date, template=email_template, notifications_sent=10)
-
-    # service with letters:
-    service_with_letters = create_service(service_name='c - letters only')
-    letter_template_3 = create_template(service=service_with_letters, template_type='letter')
-    org_for_service_with_letters = create_organisation(
-        name="Org for {}".format(service_with_letters.name),
-        purchase_order_number="org3 purchase order number",
-        billing_contact_names="org3 billing contact names",
-        billing_contact_email_addresses="org3@billing.contact email@addresses.gov.uk",
-        billing_reference="org3 billing reference"
-    )
-    dao_add_service_to_organisation(service=service_with_letters, organisation_id=org_for_service_with_letters.id)
-    create_annual_billing(service_id=service_with_letters.id, free_sms_fragment_limit=0, financial_year_start=year)
-
-    create_ft_billing(local_date=start_date, template=letter_template_3,
-                      notifications_sent=2, billable_unit=3, rate=.50)
-    create_ft_billing(local_date=one_week_later, template=letter_template_3,
-                      notifications_sent=8, billable_unit=5, rate=.65)
-    create_ft_billing(local_date=one_month_later, template=letter_template_3,
-                      notifications_sent=12, billable_unit=5, rate=.65)
-
-    # service with letters, without an organisation:
-    service_with_letters_without_org = create_service(service_name='d - service without org')
-    letter_template_4 = create_template(service=service_with_letters_without_org, template_type='letter')
-    create_annual_billing(
-        service_id=service_with_letters_without_org.id,
-        free_sms_fragment_limit=0,
-        financial_year_start=year
-    )
-
-    create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=7, billable_unit=4, rate=1.55)
-    create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=8, billable_unit=4, rate=1.55)
-    create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=2, billable_unit=1, rate=.35)
-    create_ft_billing(local_date=two_days_later, template=letter_template_4,
-                      notifications_sent=1, billable_unit=1, rate=.50)
 
     # service with chargeable SMS, without an organisation
     service_with_sms_without_org = create_service(
@@ -1049,9 +1003,6 @@ def set_up_usage_data(start_date):
         "service_1_sms_and_letter": service_1_sms_and_letter,
         "org_2": org_2,
         "service_with_emails": service_with_emails,
-        "org_for_service_with_letters": org_for_service_with_letters,
-        "service_with_letters": service_with_letters,
-        "service_with_letters_without_org": service_with_letters_without_org,
         "service_with_sms_without_org": service_with_sms_without_org,
         "service_with_sms_within_allowance": service_with_sms_within_allowance,
         "service_with_out_ft_billing_this_year": service_with_out_ft_billing_this_year,
