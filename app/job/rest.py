@@ -63,12 +63,6 @@ def cancel_job(service_id, job_id):
     return get_job_by_service_and_job_id(service_id, job_id)
 
 
-# TODO: return deprecation notice
-# @job_blueprint.route('/<job_id>/cancel-letter-job', methods=['POST'])
-# def cancel_letter_job(service_id, job_id):
-#     pass
-
-
 @job_blueprint.route('/<job_id>/notifications', methods=['GET'])
 def get_all_notifications_for_service_job(service_id, job_id):
     data = notifications_filter_schema.load(request.args)

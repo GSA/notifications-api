@@ -66,41 +66,6 @@ POST_NOTIFICATION_JSON_PARSE_DURATION_SECONDS = Histogram(
 )
 
 
-# TODO: return deprecation message
-# @v2_notification_blueprint.route('/{}'.format(LETTER_TYPE), methods=['POST'])
-# def post_precompiled_letter_notification():
-#     request_json = get_valid_json()
-#     if 'content' not in (request_json or {}):
-#         return post_notification(LETTER_TYPE)
-
-#     form = validate(request_json, post_precompiled_letter_request)
-
-#     # Check permission to send letters
-#     check_service_has_permission(LETTER_TYPE, authenticated_service.permissions)
-
-#     check_rate_limiting(authenticated_service, api_user)
-
-#     template = get_precompiled_letter_template(authenticated_service.id)
-
-#     # For precompiled letters the to field will be set to Provided as PDF until the validation passes,
-#     # then the address of the letter will be set as the to field
-#     form['personalisation'] = {
-#         'address_line_1': 'Provided as PDF'
-#     }
-
-#     notification = process_letter_notification(
-#         letter_data=form,
-#         api_key=api_user,
-#         service=authenticated_service,
-#         template=template,
-#         template_with_content=None,  # not required for precompiled
-#         reply_to_text='',  # not required for precompiled
-#         precompiled=True
-#     )
-
-#     return jsonify(notification), 201
-
-
 @v2_notification_blueprint.route('/<notification_type>', methods=['POST'])
 def post_notification(notification_type):
     with POST_NOTIFICATION_JSON_PARSE_DURATION_SECONDS.time():

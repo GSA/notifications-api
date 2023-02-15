@@ -407,25 +407,6 @@ def sample_scheduled_job(sample_template_with_placeholders):
     )
 
 
-@pytest.fixture
-def sample_letter_job(sample_letter_template):
-    service = sample_letter_template.service
-    data = {
-        'id': uuid.uuid4(),
-        'service_id': service.id,
-        'service': service,
-        'template_id': sample_letter_template.id,
-        'template_version': sample_letter_template.version,
-        'original_file_name': 'some.csv',
-        'notification_count': 1,
-        'created_at': datetime.utcnow(),
-        'created_by': service.created_by,
-    }
-    job = Job(**data)
-    dao_create_job(job)
-    return job
-
-
 @pytest.fixture(scope='function')
 def sample_notification_with_job(notify_db_session):
     service = create_service(check_if_service_exists=True)

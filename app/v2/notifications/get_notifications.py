@@ -20,35 +20,6 @@ def get_notification_by_id(notification_id):
     return jsonify(notification.serialize()), 200
 
 
-# TODO: return deprecation notice
-# @v2_notification_blueprint.route('/<notification_id>/pdf', methods=['GET'])
-# def get_pdf_for_notification(notification_id):
-#     _data = {"notification_id": notification_id}
-#     validate(_data, notification_by_id)
-#     notification = notifications_dao.get_notification_by_id(
-#         notification_id, authenticated_service.id, _raise=True
-#     )
-
-#     if notification.notification_type != LETTER_TYPE:
-#         raise BadRequestError(message="Notification is not a letter")
-
-#     if notification.status == NOTIFICATION_VIRUS_SCAN_FAILED:
-#         raise BadRequestError(message='File did not pass the virus scan')
-
-#     if notification.status == NOTIFICATION_TECHNICAL_FAILURE:
-#         raise BadRequestError(message='PDF not available for letters in status {}'.format(notification.status))
-
-#     if notification.status == NOTIFICATION_PENDING_VIRUS_CHECK:
-#         raise PDFNotReadyError()
-
-#     try:
-#         pdf_data, metadata = get_letter_pdf_and_metadata(notification)
-#     except Exception:
-#         raise PDFNotReadyError()
-
-#     return send_file(path_or_file=BytesIO(pdf_data), mimetype='application/pdf')
-
-
 @v2_notification_blueprint.route("", methods=['GET'])
 def get_notifications():
     _data = request.args.to_dict(flat=False)

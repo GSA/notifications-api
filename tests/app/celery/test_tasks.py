@@ -291,41 +291,6 @@ def test_should_process_email_job_with_sender_id(email_job_with_placeholders, mo
     )
 
 
-@freeze_time("2016-01-01 11:09:00.061258")
-def test_should_process_letter_job(sample_letter_job, mocker):
-    csv = """address_line_1,address_line_2,address_line_3,address_line_4,postcode,name
-    A1,A2,A3,A4,A_POST,Alice
-    """
-    s3_mock = mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
-                           return_value=(csv, {"sender_id": None}))
-    process_row_mock = mocker.patch('app.celery.tasks.process_row')
-    mocker.patch('app.celery.tasks.create_uuid', return_value="uuid")
-
-    process_job(sample_letter_job.id)
-
-    s3_mock.assert_called_once_with(
-        service_id=str(sample_letter_job.service.id),
-        job_id=str(sample_letter_job.id)
-    )
-
-    row_call = process_row_mock.mock_calls[0][1]
-    assert row_call[0].index == 0
-    assert row_call[0].recipient == ['A1', 'A2', 'A3', 'A4', None, None, 'A_POST', None]
-    assert row_call[0].personalisation == {
-        'addressline1': 'A1',
-        'addressline2': 'A2',
-        'addressline3': 'A3',
-        'addressline4': 'A4',
-        'postcode': 'A_POST'
-    }
-    assert row_call[2] == sample_letter_job
-    assert row_call[3] == sample_letter_job.service
-
-    assert process_row_mock.call_count == 1
-
-    assert sample_letter_job.job_status == 'finished'
-
-
 def test_should_process_all_sms_job(sample_job_with_placeholdered_template,
                                     mocker):
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',

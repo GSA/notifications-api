@@ -721,14 +721,6 @@ def create_one_off_notification(service_id):
     return jsonify(resp), 201
 
 
-# TODO: return deprecation notice
-# @service_blueprint.route('/<uuid:service_id>/send-pdf-letter', methods=['POST'])
-# def create_pdf_letter(service_id):
-#     data = validate(request.get_json(), send_pdf_letter_request)
-#     resp = send_pdf_letter_notification(service_id, data)
-#     return jsonify(resp), 201
-
-
 @service_blueprint.route('/<uuid:service_id>/email-reply-to', methods=["GET"])
 def get_email_reply_to_addresses(service_id):
     result = dao_get_reply_to_by_service_id(service_id)

@@ -1331,12 +1331,6 @@ NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(*NOTIFICATION_STATUS_TYPES, name='notif
 NOTIFICATION_STATUS_LETTER_ACCEPTED = 'accepted'
 NOTIFICATION_STATUS_LETTER_RECEIVED = 'received'
 
-# TODO: delete these keywords for postage
-FIRST_CLASS = 'first'
-SECOND_CLASS = 'second'
-EUROPE = 'europe'
-REST_OF_WORLD = 'rest-of-world'
-
 
 class NotificationStatusTypes(db.Model):
     __tablename__ = 'notification_status_types'

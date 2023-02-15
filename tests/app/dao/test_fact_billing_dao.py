@@ -289,7 +289,7 @@ def test_get_rates_for_billing(notify_db_session):
     create_rate(start_date=datetime.utcnow(), value=33, notification_type='email')
     rates = get_rates_for_billing()
 
-    assert len(rates) == 2
+    assert len(rates) == 3
 
 
 @freeze_time('2017-06-01 12:00')

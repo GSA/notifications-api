@@ -139,7 +139,6 @@ def register_blueprint(application):
     from app.inbound_number.rest import inbound_number_blueprint
     from app.inbound_sms.rest import inbound_sms as inbound_sms_blueprint
     from app.job.rest import job_blueprint
-    from app.letters.rest import letter_job
     from app.notifications.notifications_ses_callback import (
         ses_callback_blueprint,
     )
@@ -224,9 +223,6 @@ def register_blueprint(application):
 
     email_branding_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(email_branding_blueprint, url_prefix='/email-branding')
-
-    letter_job.before_request(requires_admin_auth)
-    application.register_blueprint(letter_job)
 
     billing_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(billing_blueprint)
