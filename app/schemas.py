@@ -389,7 +389,7 @@ class TemplateSchemaNested(TemplateSchema):
     is_precompiled_letter = fields.Method('get_is_precompiled_letter')
 
     def get_is_precompiled_letter(self, template):
-        return template.is_precompiled_letter
+        return False
 
 
 class TemplateSchemaNoDetail(TemplateSchema):

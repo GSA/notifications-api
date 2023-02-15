@@ -231,19 +231,6 @@ post_letter_request = {
     "additionalProperties": False
 }
 
-post_precompiled_letter_request = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST precompiled letter notification schema",
-    "type": "object",
-    "title": "POST v2/notifications/letter",
-    "properties": {
-        "reference": {"type": "string"},
-        "content": {"type": "string"},
-    },
-    "required": ["reference", "content"],
-    "additionalProperties": False
-}
-
 letter_content = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "Letter content for POST letter notification",

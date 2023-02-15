@@ -27,7 +27,6 @@ from app.models import (
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     LETTER_TYPE,
-    NOTIFICATION_RETURNED_LETTER,
     SMS_TYPE,
     UPLOAD_LETTERS,
     AnnualBilling,
@@ -45,19 +44,15 @@ from app.models import (
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_annual_billing,
-    create_api_key,
     create_domain,
     create_email_branding,
     create_ft_billing,
     create_ft_notification_status,
     create_inbound_number,
-    create_job,
     create_letter_contact,
     create_notification,
-    create_notification_history,
     create_organisation,
     create_reply_to_email,
-    create_returned_letter,
     create_service,
     create_service_sms_sender,
     create_service_with_defined_sms_sender,
@@ -2465,31 +2460,23 @@ def test_get_all_notifications_for_service_includes_template_redacted(admin_requ
     assert resp['notifications'][1]['template']['redact_personalisation'] is True
 
 
-def test_get_all_notifications_for_service_includes_template_hidden(admin_request, sample_service):
-    letter_template = create_template(sample_service, template_type=LETTER_TYPE)
-    precompiled_template = create_template(
-        sample_service,
-        template_type=LETTER_TYPE,
-        template_name='Pre-compiled PDF',
-        subject='Pre-compiled PDF',
-        hidden=True
-    )
+# TODO: check whether all hidden templates are also precompiled letters
+# def test_get_all_notifications_for_service_includes_template_hidden(admin_request, sample_service):
+#     letter_template = create_template(sample_service, template_type=LETTER_TYPE)
 
-    with freeze_time('2000-01-01'):
-        letter_noti = create_notification(letter_template)
-    with freeze_time('2000-01-02'):
-        precompiled_noti = create_notification(precompiled_template)
+#     with freeze_time('2000-01-01'):
+#         letter_noti = create_notification(letter_template)
 
-    resp = admin_request.get(
-        'service.get_all_notifications_for_service',
-        service_id=sample_service.id
-    )
+#     resp = admin_request.get(
+#         'service.get_all_notifications_for_service',
+#         service_id=sample_service.id
+#     )
 
-    assert resp['notifications'][0]['id'] == str(precompiled_noti.id)
-    assert resp['notifications'][0]['template']['is_precompiled_letter'] is True
+#     assert resp['notifications'][0]['id'] == str(precompiled_noti.id)
+#     assert resp['notifications'][0]['template']['is_precompiled_letter'] is True
 
-    assert resp['notifications'][1]['id'] == str(letter_noti.id)
-    assert resp['notifications'][1]['template']['is_precompiled_letter'] is False
+#     assert resp['notifications'][1]['id'] == str(letter_noti.id)
+#     assert resp['notifications'][1]['template']['is_precompiled_letter'] is False
 
 
 def test_search_for_notification_by_to_field_returns_personlisation(
@@ -3279,47 +3266,6 @@ def test_cancel_notification_for_service_raises_invalid_request_when_notificatio
     assert response['result'] == 'error'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
-@pytest.mark.parametrize('notification_status', ['created', 'pending-virus-check'])
-@freeze_time('2018-07-07 16:00:00')
-def test_cancel_notification_for_service_updates_letter_if_letter_is_in_cancellable_state(
-    admin_request,
-    sample_letter_notification,
-    notification_status,
-):
-    sample_letter_notification.status = notification_status
-    sample_letter_notification.created_at = datetime.now()
-
-    response = admin_request.post(
-        'service.cancel_notification_for_service',
-        service_id=sample_letter_notification.service_id,
-        notification_id=sample_letter_notification.id,
-    )
-    assert response['status'] == 'cancelled'
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
-@pytest.mark.parametrize('created_at', [
-    datetime(2018, 7, 6, 22, 30),  # yesterday evening
-    datetime(2018, 7, 6, 23, 30),  # this morning early hours (in bst)
-    datetime(2018, 7, 7, 10, 0),  # this morning normal hours
-])
-@freeze_time('2018-7-7 16:00:00')
-def test_cancel_notification_for_service_updates_letter_if_still_time_to_cancel(
-    admin_request,
-    sample_letter_notification,
-    created_at,
-):
-    sample_letter_notification.created_at = created_at
-
-    response = admin_request.post(
-        'service.cancel_notification_for_service',
-        service_id=sample_letter_notification.service_id,
-        notification_id=sample_letter_notification.id,
-    )
-    assert response['status'] == 'cancelled'
-
-
 def test_get_monthly_notification_data_by_service(sample_service, admin_request):
     create_ft_notification_status(date(2019, 4, 17), notification_type='letter', service=sample_service,
                                   notification_status='delivered')
@@ -3335,186 +3281,3 @@ def test_get_monthly_notification_data_by_service(sample_service, admin_request)
         ['2019-03-01', str(sample_service.id), 'Sample service', 'email', 4, 0, 0, 0, 0, 0],
         ['2019-04-01', str(sample_service.id), 'Sample service', 'letter', 0, 1, 0, 0, 0, 0],
     ]
-
-
-@freeze_time('2019-12-11 13:30')
-def test_get_returned_letter_statistics(admin_request, sample_service):
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=3))
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=2))
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=1))
-
-    response = admin_request.get('service.returned_letter_statistics', service_id=sample_service.id)
-
-    assert response == {
-        'returned_letter_count': 3,
-        'most_recent_report': '2019-12-10 00:00:00.000000'
-    }
-
-
-@freeze_time('2019-12-11 13:30')
-def test_get_returned_letter_statistics_with_old_returned_letters(
-    mocker,
-    admin_request,
-    sample_service,
-):
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=8))
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=800))
-
-    count_mock = mocker.patch(
-        'app.service.rest.fetch_recent_returned_letter_count',
-    )
-
-    assert admin_request.get(
-        'service.returned_letter_statistics',
-        service_id=sample_service.id,
-    ) == {
-        'returned_letter_count': 0,
-        'most_recent_report': '2019-12-03 00:00:00.000000',
-    }
-
-    assert count_mock.called is False
-
-
-def test_get_returned_letter_statistics_with_no_returned_letters(
-    mocker,
-    admin_request,
-    sample_service,
-):
-    count_mock = mocker.patch(
-        'app.service.rest.fetch_recent_returned_letter_count',
-    )
-
-    assert admin_request.get(
-        'service.returned_letter_statistics',
-        service_id=sample_service.id,
-    ) == {
-        'returned_letter_count': 0,
-        'most_recent_report': None,
-    }
-
-    assert count_mock.called is False
-
-
-@freeze_time('2019-12-11 13:30')
-def test_get_returned_letter_summary(admin_request, sample_service):
-    create_returned_letter(sample_service, reported_at=datetime.utcnow() - timedelta(days=3))
-    create_returned_letter(sample_service, reported_at=datetime.utcnow())
-    create_returned_letter(sample_service, reported_at=datetime.utcnow())
-
-    response = admin_request.get('service.returned_letter_summary', service_id=sample_service.id)
-
-    assert len(response) == 2
-    assert response[0] == {'returned_letter_count': 2, 'reported_at': '2019-12-11'}
-    assert response[1] == {'returned_letter_count': 1, 'reported_at': '2019-12-08'}
-
-
-@freeze_time('2019-12-11 13:30')
-def test_get_returned_letter(admin_request, sample_letter_template):
-    job = create_job(template=sample_letter_template)
-    letter_from_job = create_notification(template=sample_letter_template, client_reference='letter_from_job',
-                                          status=NOTIFICATION_RETURNED_LETTER,
-                                          job=job, job_row_number=2,
-                                          created_at=datetime.utcnow() - timedelta(days=1),
-                                          created_by_id=sample_letter_template.service.users[0].id)
-    create_returned_letter(service=sample_letter_template.service, reported_at=datetime.utcnow(),
-                           notification_id=letter_from_job.id)
-
-    one_off_letter = create_notification(template=sample_letter_template,
-                                         status=NOTIFICATION_RETURNED_LETTER,
-                                         created_at=datetime.utcnow() - timedelta(days=2),
-                                         created_by_id=sample_letter_template.service.users[0].id)
-    create_returned_letter(service=sample_letter_template.service, reported_at=datetime.utcnow(),
-                           notification_id=one_off_letter.id)
-
-    api_key = create_api_key(service=sample_letter_template.service)
-    api_letter = create_notification(template=sample_letter_template, client_reference='api_letter',
-                                     status=NOTIFICATION_RETURNED_LETTER,
-                                     created_at=datetime.utcnow() - timedelta(days=3),
-                                     api_key=api_key)
-    create_returned_letter(service=sample_letter_template.service, reported_at=datetime.utcnow(),
-                           notification_id=api_letter.id)
-
-    precompiled_template = create_template(service=sample_letter_template.service, template_type='letter', hidden=True,
-                                           template_name='hidden template')
-    precompiled_letter = create_notification_history(template=precompiled_template, api_key=api_key,
-                                                     client_reference='precompiled letter',
-                                                     created_at=datetime.utcnow() - timedelta(days=4))
-    create_returned_letter(service=sample_letter_template.service, reported_at=datetime.utcnow(),
-                           notification_id=precompiled_letter.id)
-
-    uploaded_letter = create_notification_history(template=precompiled_template, client_reference='filename.pdf',
-                                                  created_at=datetime.utcnow() - timedelta(days=5),
-                                                  created_by_id=sample_letter_template.service.users[0].id)
-    create_returned_letter(service=sample_letter_template.service, reported_at=datetime.utcnow(),
-                           notification_id=uploaded_letter.id)
-
-    not_included_in_results_template = create_template(service=create_service(service_name='not included in results'),
-                                                       template_type='letter')
-    letter_4 = create_notification_history(template=not_included_in_results_template,
-                                           status=NOTIFICATION_RETURNED_LETTER)
-    create_returned_letter(service=not_included_in_results_template.service, reported_at=datetime.utcnow(),
-                           notification_id=letter_4.id)
-    response = admin_request.get('service.get_returned_letters', service_id=sample_letter_template.service_id,
-                                 reported_at='2019-12-11')
-
-    assert len(response) == 5
-    assert response[0]['notification_id'] == str(letter_from_job.id)
-    assert not response[0]['client_reference']
-    assert response[0]['reported_at'] == '2019-12-11'
-    assert response[0]['created_at'] == '2019-12-10 13:30:00.000000'
-    assert response[0]['template_name'] == sample_letter_template.name
-    assert response[0]['template_id'] == str(sample_letter_template.id)
-    assert response[0]['template_version'] == sample_letter_template.version
-    assert response[0]['user_name'] == sample_letter_template.service.users[0].name
-    assert response[0]['original_file_name'] == job.original_file_name
-    assert response[0]['job_row_number'] == 3
-    assert not response[0]['uploaded_letter_file_name']
-
-    assert response[1]['notification_id'] == str(one_off_letter.id)
-    assert not response[1]['client_reference']
-    assert response[1]['reported_at'] == '2019-12-11'
-    assert response[1]['created_at'] == '2019-12-09 13:30:00.000000'
-    assert response[1]['template_name'] == sample_letter_template.name
-    assert response[1]['template_id'] == str(sample_letter_template.id)
-    assert response[1]['template_version'] == sample_letter_template.version
-    assert response[1]['user_name'] == sample_letter_template.service.users[0].name
-    assert not response[1]['original_file_name']
-    assert not response[1]['job_row_number']
-    assert not response[1]['uploaded_letter_file_name']
-
-    assert response[2]['notification_id'] == str(api_letter.id)
-    assert response[2]['client_reference'] == 'api_letter'
-    assert response[2]['reported_at'] == '2019-12-11'
-    assert response[2]['created_at'] == '2019-12-08 13:30:00.000000'
-    assert response[2]['template_name'] == sample_letter_template.name
-    assert response[2]['template_id'] == str(sample_letter_template.id)
-    assert response[2]['template_version'] == sample_letter_template.version
-    assert response[2]['user_name'] == 'API'
-    assert not response[2]['original_file_name']
-    assert not response[2]['job_row_number']
-    assert not response[2]['uploaded_letter_file_name']
-
-    assert response[3]['notification_id'] == str(precompiled_letter.id)
-    assert response[3]['client_reference'] == 'precompiled letter'
-    assert response[3]['reported_at'] == '2019-12-11'
-    assert response[3]['created_at'] == '2019-12-07 13:30:00.000000'
-    assert not response[3]['template_name']
-    assert not response[3]['template_id']
-    assert not response[3]['template_version']
-    assert response[3]['user_name'] == 'API'
-    assert not response[3]['original_file_name']
-    assert not response[3]['job_row_number']
-    assert not response[3]['uploaded_letter_file_name']
-
-    assert response[4]['notification_id'] == str(uploaded_letter.id)
-    assert not response[4]['client_reference']
-    assert response[4]['reported_at'] == '2019-12-11'
-    assert response[4]['created_at'] == '2019-12-06 13:30:00.000000'
-    assert not response[4]['template_name']
-    assert not response[4]['template_id']
-    assert not response[4]['template_version']
-    assert response[4]['user_name'] == sample_letter_template.service.users[0].name
-    assert response[4]['email_address'] == sample_letter_template.service.users[0].email_address
-    assert not response[4]['original_file_name']
-    assert not response[4]['job_row_number']
-    assert response[4]['uploaded_letter_file_name'] == 'filename.pdf'

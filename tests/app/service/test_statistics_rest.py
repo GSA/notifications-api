@@ -10,7 +10,6 @@ from app.models import (
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     LETTER_TYPE,
-    PRECOMPILED_TEMPLATE_NAME,
     SMS_TYPE,
 )
 from tests.app.db import (
@@ -57,8 +56,8 @@ def test_get_template_usage_by_month_returns_correct_data(
 def test_get_template_usage_by_month_returns_two_templates(admin_request, sample_template, sample_service):
     template_one = create_template(
         sample_service,
-        template_type=LETTER_TYPE,
-        template_name=PRECOMPILED_TEMPLATE_NAME,
+        template_type=SMS_TYPE,
+        template_name="TEST TEMPLATE",
         hidden=True
     )
     create_ft_notification_status(local_date=datetime(2017, 4, 2), template=template_one, count=1)
@@ -80,7 +79,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[0]["month"] == 4
     assert resp_json[0]["year"] == 2017
     assert resp_json[0]["count"] == 1
-    assert resp_json[0]["is_precompiled_letter"] is True
 
     assert resp_json[1]["template_id"] == str(sample_template.id)
     assert resp_json[1]["name"] == sample_template.name
@@ -88,7 +86,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[1]["month"] == 4
     assert resp_json[1]["year"] == 2017
     assert resp_json[1]["count"] == 3
-    assert resp_json[1]["is_precompiled_letter"] is False
 
     assert resp_json[2]["template_id"] == str(sample_template.id)
     assert resp_json[2]["name"] == sample_template.name
@@ -96,7 +93,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[2]["month"] == 11
     assert resp_json[2]["year"] == 2017
     assert resp_json[2]["count"] == 1
-    assert resp_json[2]["is_precompiled_letter"] is False
 
 
 @pytest.mark.parametrize('today_only, stats', [

@@ -30,7 +30,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -296,7 +295,6 @@ INTERNATIONAL_SMS_TYPE = 'international_sms'
 INBOUND_SMS_TYPE = 'inbound_sms'
 SCHEDULE_NOTIFICATIONS = 'schedule_notifications'
 EMAIL_AUTH = 'email_auth'
-PRECOMPILED_LETTER = 'precompiled_letter'
 UPLOAD_DOCUMENT = 'upload_document'
 EDIT_FOLDER_PERMISSIONS = 'edit_folder_permissions'
 UPLOAD_LETTERS = 'upload_letters'
@@ -880,9 +878,6 @@ template_folder_map = db.Table(
 )
 
 
-PRECOMPILED_TEMPLATE_NAME = 'Pre-compiled PDF'
-
-
 class TemplateBase(db.Model):
     __abstract__ = True
 
@@ -959,14 +954,6 @@ class TemplateBase(db.Model):
             return try_validate_and_format_phone_number(self.service.get_default_sms_sender())
         else:
             return None
-
-    @hybrid_property
-    def is_precompiled_letter(self):
-        return self.hidden and self.name == PRECOMPILED_TEMPLATE_NAME and self.template_type == LETTER_TYPE
-
-    @is_precompiled_letter.setter
-    def is_precompiled_letter(self, value):
-        pass
 
     def _as_utils_template(self):
         if self.template_type == EMAIL_TYPE:

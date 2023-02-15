@@ -156,7 +156,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(service_
     query = db.session.query(
         *([
             Template.name.label("template_name"),
-            Template.is_precompiled_letter,
+            False,  # TODO: this is related to is_precompiled_letter
             all_stats_table.c.template_id
         ] if by_template else []),
         all_stats_table.c.notification_type,
@@ -168,7 +168,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(service_
         query = query.filter(all_stats_table.c.template_id == Template.id)
 
     return query.group_by(
-        *([Template.name, Template.is_precompiled_letter, all_stats_table.c.template_id] if by_template else []),
+        *([Template.name, all_stats_table.c.template_id] if by_template else []),
         all_stats_table.c.notification_type,
         all_stats_table.c.status,
     ).all()
@@ -333,7 +333,6 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         FactNotificationStatus.template_id.label('template_id'),
         Template.name.label('name'),
         Template.template_type.label('template_type'),
-        Template.is_precompiled_letter.label('is_precompiled_letter'),
         extract('month', FactNotificationStatus.local_date).label('month'),
         extract('year', FactNotificationStatus.local_date).label('year'),
         func.sum(FactNotificationStatus.notification_count).label('count')
@@ -349,7 +348,6 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         FactNotificationStatus.template_id,
         Template.name,
         Template.template_type,
-        Template.is_precompiled_letter,
         extract('month', FactNotificationStatus.local_date).label('month'),
         extract('year', FactNotificationStatus.local_date).label('year'),
     ).order_by(
@@ -366,7 +364,6 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
             Notification.template_id.label('template_id'),
             Template.name.label('name'),
             Template.template_type.label('template_type'),
-            Template.is_precompiled_letter.label('is_precompiled_letter'),
             extract('month', month).label('month'),
             extract('year', month).label('year'),
             func.count().label('count')
@@ -389,7 +386,6 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         query = db.session.query(
             all_stats_table.c.template_id,
             all_stats_table.c.name,
-            all_stats_table.c.is_precompiled_letter,
             all_stats_table.c.template_type,
             func.cast(all_stats_table.c.month, Integer).label('month'),
             func.cast(all_stats_table.c.year, Integer).label('year'),
@@ -397,7 +393,6 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         ).group_by(
             all_stats_table.c.template_id,
             all_stats_table.c.name,
-            all_stats_table.c.is_precompiled_letter,
             all_stats_table.c.template_type,
             all_stats_table.c.month,
             all_stats_table.c.year,

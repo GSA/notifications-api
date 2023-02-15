@@ -402,14 +402,12 @@ def test_fetch_monthly_template_usage_for_service(sample_service):
 
     assert results[0].template_id == template_one.id
     assert results[0].name == template_one.name
-    assert results[0].is_precompiled_letter is False
     assert results[0].template_type == template_one.template_type
     assert results[0].month == 12
     assert results[0].year == 2017
     assert results[0].count == 6
     assert results[1].template_id == template_two.id
     assert results[1].name == template_two.name
-    assert results[1].is_precompiled_letter is False
     assert results[1].template_type == template_two.template_type
     assert results[1].month == 12
     assert results[1].year == 2017
@@ -417,7 +415,6 @@ def test_fetch_monthly_template_usage_for_service(sample_service):
 
     assert results[2].template_id == template_one.id
     assert results[2].name == template_one.name
-    assert results[2].is_precompiled_letter is False
     assert results[2].template_type == template_one.template_type
     assert results[2].month == 1
     assert results[2].year == 2018
@@ -425,7 +422,6 @@ def test_fetch_monthly_template_usage_for_service(sample_service):
 
     assert results[3].template_id == template_three.id
     assert results[3].name == template_three.name
-    assert results[3].is_precompiled_letter is False
     assert results[3].template_type == template_three.template_type
     assert results[3].month == 3
     assert results[3].year == 2018

@@ -706,7 +706,6 @@ def get_monthly_template_usage(service_id):
                     'month': i.month,
                     'year': i.year,
                     'count': i.count,
-                    'is_precompiled_letter': i.is_precompiled_letter
                 }
             )
 
@@ -1057,7 +1056,7 @@ def get_returned_letters(service_id):
          'client_reference': x.client_reference if x.api_key_id else None,
          'reported_at': x.reported_at.strftime(DATE_FORMAT),
          'created_at': x.created_at.strftime(DATETIME_FORMAT_NO_TIMEZONE),
-         # it doesn't make sense to show hidden/precompiled templates
+         # it doesn't make sense to show hidden templates
          'template_name': x.template_name if not x.hidden else None,
          'template_id': x.template_id if not x.hidden else None,
          'template_version': x.template_version if not x.hidden else None,

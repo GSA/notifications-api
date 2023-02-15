@@ -19,17 +19,10 @@ from app.config import QueueNames
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_SENDING,
     PRIORITY,
     SMS_TYPE,
     Notification,
-)
-from app.notifications.process_letter_notifications import (
-    create_letter_notification,
 )
 from app.notifications.process_notifications import (
     persist_notification,
@@ -278,51 +271,6 @@ def process_document_uploads(personalisation_data, service, simulated=False):
                 raise BadRequestError(message=e.message, status_code=e.status_code)
 
     return personalisation_data, len(file_keys)
-
-
-# TODO: remove precompiled var
-def process_letter_notification(
-    *, letter_data, api_key, service, template, template_with_content, reply_to_text, precompiled=False
-):
-    if api_key.key_type == KEY_TYPE_TEAM:
-        raise BadRequestError(message='Cannot send letters with a team api key', status_code=403)
-
-    if not service.research_mode and service.restricted and api_key.key_type != KEY_TYPE_TEST:
-        raise BadRequestError(message='Cannot send letters when service is in trial mode', status_code=403)
-
-    test_key = api_key.key_type == KEY_TYPE_TEST
-
-    status = NOTIFICATION_CREATED
-    updated_at = None
-    if test_key:
-        # if we don't want to actually send the letter, then start it off in SENDING so we don't pick it up
-        if current_app.config['NOTIFY_ENVIRONMENT'] in ['preview', 'development']:
-            status = NOTIFICATION_SENDING
-        # mark test letter as delivered and do not create a fake response later
-        else:
-            status = NOTIFICATION_DELIVERED
-            updated_at = datetime.utcnow()
-
-    notification = create_letter_notification(letter_data=letter_data,
-                                              service=service,
-                                              template=template,
-                                              api_key=api_key,
-                                              status=status,
-                                              reply_to_text=reply_to_text,
-                                              updated_at=updated_at
-                                              )
-
-    resp = create_response_for_post_notification(
-        notification_id=notification.id,
-        client_reference=notification.client_reference,
-        template_id=notification.template_id,
-        template_version=notification.template_version,
-        notification_type=notification.notification_type,
-        reply_to=reply_to_text,
-        service_id=notification.service_id,
-        template_with_content=template_with_content
-    )
-    return resp
 
 
 def get_reply_to_text(notification_type, form, template):
