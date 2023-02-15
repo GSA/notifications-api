@@ -1924,18 +1924,6 @@ class InboundSmsHistory(db.Model, HistoryModel):
     provider = db.Column(db.String, nullable=False)
 
 
-class LetterRate(db.Model):
-    __tablename__ = 'letter_rates'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    start_date = db.Column(db.DateTime, nullable=False)
-    end_date = db.Column(db.DateTime, nullable=True)
-    sheet_count = db.Column(db.Integer, nullable=False)  # double sided sheet
-    rate = db.Column(db.Numeric(), nullable=False)
-    crown = db.Column(db.Boolean, nullable=False)
-    post_class = db.Column(db.String, nullable=False)
-
-
 class ServiceEmailReplyTo(db.Model):
     __tablename__ = "service_email_reply_to"
 

@@ -23,7 +23,6 @@ from app.models import (
     SMS_TYPE,
     AnnualBilling,
     FactBilling,
-    LetterRate,
     NotificationAllTimeView,
     NotificationHistory,
     Organisation,
@@ -536,9 +535,8 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
 
 
 def get_rates_for_billing():
-    non_letter_rates = Rate.query.order_by(desc(Rate.valid_from)).all()
-    letter_rates = LetterRate.query.order_by(desc(LetterRate.start_date)).all()
-    return non_letter_rates, letter_rates
+    rates = Rate.query.order_by(desc(Rate.valid_from)).all()
+    return rates
 
 
 def get_service_ids_that_need_billing_populated(start_date, end_date):
@@ -553,28 +551,14 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 
 
 def get_rate(
-    non_letter_rates, letter_rates, notification_type, date, crown=None, letter_page_count=None, post_class='second'
+    rates, notification_type, date, crown=None
 ):
     start_of_day = get_local_midnight_in_utc(date)
 
-    if notification_type == LETTER_TYPE:
-        if letter_page_count == 0:
-            return 0
-        # if crown is not set default to true, this is okay because the rates are the same for both crown and non-crown.
-        crown = crown or True
+    if notification_type == SMS_TYPE:
         return next(
             r.rate
-            for r in letter_rates if (
-                start_of_day >= r.start_date and
-                crown == r.crown and
-                letter_page_count == r.sheet_count and
-                post_class == r.post_class
-            )
-        )
-    elif notification_type == SMS_TYPE:
-        return next(
-            r.rate
-            for r in non_letter_rates if (
+            for r in rates if (
                 notification_type == r.notification_type and
                 start_of_day >= r.valid_from
             )
@@ -584,13 +568,11 @@ def get_rate(
 
 
 def update_fact_billing(data, process_day):
-    non_letter_rates, letter_rates = get_rates_for_billing()
-    rate = get_rate(non_letter_rates,
-                    letter_rates,
+    rates = get_rates_for_billing()
+    rate = get_rate(rates,
                     data.notification_type,
                     process_day,
-                    data.crown,
-                    data.letter_page_count)
+                    data.crown)
     billing_record = create_billing_record(data, rate, process_day)
 
     table = FactBilling.__table__

@@ -12,8 +12,6 @@ from datetime import datetime
 from alembic import op
 from sqlalchemy.sql import text
 
-from app.models import LetterRate
-
 
 revision = '0366_letter_rates_2022'
 down_revision = '0365_add_nhs_branding'
@@ -38,7 +36,7 @@ def upgrade():
     conn = op.get_bind()
     conn.execute(text("UPDATE letter_rates SET end_date = :start WHERE end_date IS NULL"), start=CHANGEOVER_DATE)
 
-    op.bulk_insert(LetterRate.__table__, [
+    op.bulk_insert('letter_rates', [
         {
             'id': uuid.uuid4(),
             'start_date': CHANGEOVER_DATE,

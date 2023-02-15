@@ -26,8 +26,6 @@ from datetime import datetime
 from alembic import op
 from sqlalchemy.sql import text
 
-from app.models import LetterRate
-
 
 revision = '0306_letter_rates_price_rise'
 down_revision = '0305_add_gp_org_type'
@@ -45,7 +43,7 @@ def upgrade():
         'second': 30,
         'first': 56,
     }
-    op.bulk_insert(LetterRate.__table__, [
+    op.bulk_insert('letter_rates', [
         {
             'id': uuid.uuid4(),
             'start_date': CHANGEOVER_DATE,

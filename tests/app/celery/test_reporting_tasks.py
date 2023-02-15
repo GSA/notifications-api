@@ -26,7 +26,6 @@ from app.models import (
     Notification,
 )
 from tests.app.db import (
-    create_letter_rate,
     create_notification,
     create_notification_history,
     create_rate,
@@ -36,11 +35,9 @@ from tests.app.db import (
 
 
 def mocker_get_rate(
-    non_letter_rates, letter_rates, notification_type, local_date, crown=None, rate_multiplier=None, post_class="second"
+    non_letter_rates, notification_type, local_date, crown=None, rate_multiplier=None
 ):
-    if notification_type == LETTER_TYPE:
-        return Decimal(2.1)
-    elif notification_type == SMS_TYPE:
+    if notification_type == SMS_TYPE:
         return Decimal(1.33)
     elif notification_type == EMAIL_TYPE:
         return Decimal(0)
@@ -324,38 +321,16 @@ def test_create_nightly_billing_for_day_null_sent_by_sms(
     assert record.provider == 'unknown'
 
 
-def test_get_rate_for_letter_latest(notify_db_session):
-    # letter rates should be passed into the get_rate function as a tuple of start_date, crown, sheet_count,
-    # rate and post_class
-    new = create_letter_rate(datetime(2017, 12, 1), crown=True, sheet_count=1, rate=0.33, post_class='second')
-    old = create_letter_rate(datetime(2016, 12, 1), crown=True, sheet_count=1, rate=0.30, post_class='second')
-    letter_rates = [new, old]
-
-    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), True, 1)
-    assert rate == Decimal('0.33')
-
-
-def test_get_rate_for_letter_latest_if_crown_is_none(notify_db_session):
-    # letter rates should be passed into the get_rate function as a tuple of start_date, crown, sheet_count,
-    # rate and post_class
-    crown = create_letter_rate(datetime(2017, 12, 1), crown=True, sheet_count=1, rate=0.33, post_class='second')
-    non_crown = create_letter_rate(datetime(2017, 12, 1), crown=False, sheet_count=1, rate=0.35, post_class='second')
-    letter_rates = [crown, non_crown]
-
-    rate = get_rate([], letter_rates, LETTER_TYPE, date(2018, 1, 1), crown=None, letter_page_count=1)
-    assert rate == Decimal('0.33')
-
-
 def test_get_rate_for_sms_and_email(notify_db_session):
     non_letter_rates = [
         create_rate(datetime(2017, 12, 1), 0.15, SMS_TYPE),
         create_rate(datetime(2017, 12, 1), 0, EMAIL_TYPE)
     ]
 
-    rate = get_rate(non_letter_rates, [], SMS_TYPE, date(2018, 1, 1))
+    rate = get_rate(non_letter_rates, SMS_TYPE, date(2018, 1, 1))
     assert rate == Decimal(0.15)
 
-    rate = get_rate(non_letter_rates, [], EMAIL_TYPE, date(2018, 1, 1))
+    rate = get_rate(non_letter_rates, EMAIL_TYPE, date(2018, 1, 1))
     assert rate == Decimal(0)
 
 
