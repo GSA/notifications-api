@@ -21,14 +21,12 @@ from app.models import (
     EMAIL_AUTH_TYPE,
     EMAIL_TYPE,
     INBOUND_SMS_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     LETTER_TYPE,
     SMS_TYPE,
-    UPLOAD_LETTERS,
     AnnualBilling,
     EmailBranding,
     InboundNumber,
@@ -293,7 +291,7 @@ def test_get_service_list_has_default_permissions(admin_request, service_factory
         set(
             json['permissions']
         ) == {
-            EMAIL_TYPE, SMS_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+            EMAIL_TYPE, SMS_TYPE, INTERNATIONAL_SMS_TYPE,
         }
         for json in json_resp['data']
     )
@@ -305,7 +303,7 @@ def test_get_service_by_id_has_default_service_permissions(admin_request, sample
     assert set(
         json_resp['data']['permissions']
     ) == {
-        EMAIL_TYPE, SMS_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+        EMAIL_TYPE, SMS_TYPE, INTERNATIONAL_SMS_TYPE,
     }
 
 
@@ -752,7 +750,7 @@ def test_update_service_flags(client, sample_service):
 
     data = {
         'research_mode': True,
-        'permissions': [LETTER_TYPE, INTERNATIONAL_SMS_TYPE]
+        'permissions': [INTERNATIONAL_SMS_TYPE]
     }
 
     auth_header = create_admin_authorization_header()
@@ -765,7 +763,7 @@ def test_update_service_flags(client, sample_service):
     result = resp.json
     assert resp.status_code == 200
     assert result['data']['research_mode'] is True
-    assert set(result['data']['permissions']) == set([LETTER_TYPE, INTERNATIONAL_SMS_TYPE])
+    assert set(result['data']['permissions']) == set([INTERNATIONAL_SMS_TYPE])
 
 
 @pytest.mark.parametrize('field', (
@@ -829,7 +827,7 @@ def service_with_no_permissions(notify_db_session):
 def test_update_service_flags_with_service_without_default_service_permissions(client, service_with_no_permissions):
     auth_header = create_admin_authorization_header()
     data = {
-        'permissions': [LETTER_TYPE, INTERNATIONAL_SMS_TYPE],
+        'permissions': [INTERNATIONAL_SMS_TYPE],
     }
 
     resp = client.post(
@@ -840,7 +838,7 @@ def test_update_service_flags_with_service_without_default_service_permissions(c
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result['data']['permissions']) == set([LETTER_TYPE, INTERNATIONAL_SMS_TYPE])
+    assert set(result['data']['permissions']) == set([INTERNATIONAL_SMS_TYPE])
 
 
 def test_update_service_flags_will_remove_service_permissions(client, notify_db_session):
@@ -872,7 +870,7 @@ def test_update_permissions_will_override_permission_flags(client, service_with_
     auth_header = create_admin_authorization_header()
 
     data = {
-        'permissions': [LETTER_TYPE, INTERNATIONAL_SMS_TYPE]
+        'permissions': [INTERNATIONAL_SMS_TYPE]
     }
 
     resp = client.post(
@@ -883,14 +881,14 @@ def test_update_permissions_will_override_permission_flags(client, service_with_
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result['data']['permissions']) == set([LETTER_TYPE, INTERNATIONAL_SMS_TYPE])
+    assert set(result['data']['permissions']) == set([INTERNATIONAL_SMS_TYPE])
 
 
 def test_update_service_permissions_will_add_service_permissions(client, sample_service):
     auth_header = create_admin_authorization_header()
 
     data = {
-        'permissions': [EMAIL_TYPE, SMS_TYPE, LETTER_TYPE]
+        'permissions': [EMAIL_TYPE, SMS_TYPE]
     }
 
     resp = client.post(
@@ -901,7 +899,7 @@ def test_update_service_permissions_will_add_service_permissions(client, sample_
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result['data']['permissions']) == set([SMS_TYPE, EMAIL_TYPE, LETTER_TYPE])
+    assert set(result['data']['permissions']) == set([SMS_TYPE, EMAIL_TYPE])
 
 
 @pytest.mark.parametrize(
@@ -910,7 +908,6 @@ def test_update_service_permissions_will_add_service_permissions(client, sample_
         (EMAIL_TYPE),
         (SMS_TYPE),
         (INTERNATIONAL_SMS_TYPE),
-        (LETTER_TYPE),
         (INBOUND_SMS_TYPE),
         (EMAIL_AUTH_TYPE),
     ]
@@ -958,7 +955,7 @@ def test_update_permissions_with_duplicate_permissions_will_raise_error(client, 
     auth_header = create_admin_authorization_header()
 
     data = {
-        'permissions': [EMAIL_TYPE, SMS_TYPE, LETTER_TYPE, LETTER_TYPE]
+        'permissions': [EMAIL_TYPE, SMS_TYPE, SMS_TYPE]
     }
 
     resp = client.post(
@@ -970,7 +967,7 @@ def test_update_permissions_with_duplicate_permissions_will_raise_error(client, 
 
     assert resp.status_code == 400
     assert result['result'] == 'error'
-    assert "Duplicate Service Permission: ['{}']".format(LETTER_TYPE) in result['message']['permissions']
+    assert "Duplicate Service Permission: ['{}']".format(SMS_TYPE) in result['message']['permissions']
 
 
 def test_update_service_research_mode_throws_validation_error(notify_api, sample_service):

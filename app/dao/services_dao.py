@@ -15,13 +15,10 @@ from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_PERMANENT_FAILURE,
     SMS_TYPE,
-    UPLOAD_LETTERS,
     AnnualBilling,
     ApiKey,
     FactBilling,
@@ -53,10 +50,7 @@ from app.utils import (
 DEFAULT_SERVICE_PERMISSIONS = [
     SMS_TYPE,
     EMAIL_TYPE,
-    LETTER_TYPE,
     INTERNATIONAL_SMS_TYPE,
-    UPLOAD_LETTERS,
-    INTERNATIONAL_LETTERS,
 ]
 
 
