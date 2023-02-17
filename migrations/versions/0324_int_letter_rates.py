@@ -29,22 +29,23 @@ def upgrade():
     4 sheets - £1.08
     5 sheets - £1.16
     """
-    op.bulk_insert('letter_rates', [
-        {
-            'id': uuid.uuid4(),
-            'start_date': start_date,
-            'end_date': None,
-            'sheet_count': sheet_count,
-            'rate': (base_rate + (8 * sheet_count)) / 100.0,
-            'crown': crown,
-            'post_class': post_class,
-        }
-        for sheet_count, crown, post_class in itertools.product(
-            range(1, 6),
-            [True, False],
-            ['europe', 'rest-of-world']
-        )
-    ])
+    # op.bulk_insert('letter_rates', [
+    #     {
+    #         'id': uuid.uuid4(),
+    #         'start_date': start_date,
+    #         'end_date': None,
+    #         'sheet_count': sheet_count,
+    #         'rate': (base_rate + (8 * sheet_count)) / 100.0,
+    #         'crown': crown,
+    #         'post_class': post_class,
+    #     }
+    #     for sheet_count, crown, post_class in itertools.product(
+    #         range(1, 6),
+    #         [True, False],
+    #         ['europe', 'rest-of-world']
+    #     )
+    # ])
+    pass
 
 
 def downgrade():
