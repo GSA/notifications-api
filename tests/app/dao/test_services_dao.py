@@ -284,7 +284,7 @@ def test_should_remove_user_from_service(notify_db_session):
 
 
 def test_removing_a_user_from_a_service_deletes_their_permissions(sample_user, sample_service):
-    assert len(Permission.query.all()) == 8
+    assert len(Permission.query.all()) == 7
 
     dao_remove_user_from_service(sample_service, sample_user)
 
@@ -688,7 +688,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
     dao_create_service(service_one, user)
     assert user.id == service_one.users[0].id
     test_user_permissions = Permission.query.filter_by(service=service_one, user=user).all()
-    assert len(test_user_permissions) == 8
+    assert len(test_user_permissions) == 7
 
     other_user = User(
         name='Other Test User',
@@ -706,23 +706,23 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
 
     assert other_user.id == service_two.users[0].id
     other_user_permissions = Permission.query.filter_by(service=service_two, user=other_user).all()
-    assert len(other_user_permissions) == 8
+    assert len(other_user_permissions) == 7
 
     other_user_service_one_permissions = Permission.query.filter_by(service=service_one, user=other_user).all()
     assert len(other_user_service_one_permissions) == 0
 
     # adding the other_user to service_one should leave all other_user permissions on service_two intact
     permissions = []
-    for p in ['send_emails', 'send_texts', 'send_letters']:
+    for p in ['send_emails', 'send_texts']:
         permissions.append(Permission(permission=p))
 
     dao_add_user_to_service(service_one, other_user, permissions=permissions)
 
     other_user_service_one_permissions = Permission.query.filter_by(service=service_one, user=other_user).all()
-    assert len(other_user_service_one_permissions) == 3
+    assert len(other_user_service_one_permissions) == 2
 
     other_user_service_two_permissions = Permission.query.filter_by(service=service_two, user=other_user).all()
-    assert len(other_user_service_two_permissions) == 8
+    assert len(other_user_service_two_permissions) == 7
 
 
 def test_fetch_stats_filters_on_service(notify_db_session):

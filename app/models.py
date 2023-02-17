@@ -1785,7 +1785,6 @@ MANAGE_TEMPLATES = 'manage_templates'
 MANAGE_SETTINGS = 'manage_settings'
 SEND_TEXTS = 'send_texts'
 SEND_EMAILS = 'send_emails'
-SEND_LETTERS = 'send_letters'
 MANAGE_API_KEYS = 'manage_api_keys'
 PLATFORM_ADMIN = 'platform_admin'
 VIEW_ACTIVITY = 'view_activity'
@@ -1797,7 +1796,6 @@ PERMISSION_LIST = [
     MANAGE_SETTINGS,
     SEND_TEXTS,
     SEND_EMAILS,
-    SEND_LETTERS,
     MANAGE_API_KEYS,
     PLATFORM_ADMIN,
     VIEW_ACTIVITY,

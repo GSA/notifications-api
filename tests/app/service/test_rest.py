@@ -1215,7 +1215,6 @@ def test_add_existing_user_to_another_service_with_all_permissions(
             data = {
                 "permissions": [
                     {"permission": "send_emails"},
-                    {"permission": "send_letters"},
                     {"permission": "send_texts"},
                     {"permission": "manage_users"},
                     {"permission": "manage_settings"},
@@ -1254,7 +1253,7 @@ def test_add_existing_user_to_another_service_with_all_permissions(
             assert resp.status_code == 200
             json_resp = resp.json
             permissions = json_resp['data']['permissions'][str(sample_service.id)]
-            expected_permissions = ['send_texts', 'send_emails', 'send_letters', 'manage_users',
+            expected_permissions = ['send_texts', 'send_emails', 'manage_users',
                                     'manage_settings', 'manage_templates', 'manage_api_keys', 'view_activity']
             assert sorted(expected_permissions) == sorted(permissions)
 
@@ -1277,7 +1276,6 @@ def test_add_existing_user_to_another_service_with_send_permissions(notify_api,
             data = {
                 "permissions": [
                     {"permission": "send_emails"},
-                    {"permission": "send_letters"},
                     {"permission": "send_texts"},
                 ],
                 "folder_permissions": []
@@ -1302,7 +1300,7 @@ def test_add_existing_user_to_another_service_with_send_permissions(notify_api,
             json_resp = resp.json
 
             permissions = json_resp['data']['permissions'][str(sample_service.id)]
-            expected_permissions = ['send_texts', 'send_emails', 'send_letters']
+            expected_permissions = ['send_texts', 'send_emails']
             assert sorted(expected_permissions) == sorted(permissions)
 
 

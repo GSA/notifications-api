@@ -211,11 +211,11 @@ def rebuild_ft_billing_for_day(service_id, day):
 def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permissions):
     #  permissions
     #  manage_users | manage_templates | manage_settings
-    #  send messages ==> send_texts | send_emails | send_letters
+    #  send messages ==> send_texts | send_emails
     #  Access API keys manage_api_keys
     #  platform_admin
     #  view_activity
-    # "send_texts,send_emails,send_letters,view_activity"
+    # "send_texts,send_emails,view_activity"
     from app.service_invite.rest import create_invited_user
     file = open(file_name)
     for email_address in file:

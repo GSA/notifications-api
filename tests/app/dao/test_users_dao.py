@@ -261,7 +261,7 @@ def test_user_can_be_archived_if_the_other_service_members_have_the_manage_setti
 
     create_permissions(user_1, sample_service, 'manage_settings')
     create_permissions(user_2, sample_service, 'manage_settings', 'view_activity')
-    create_permissions(user_3, sample_service, 'manage_settings', 'send_emails', 'send_letters', 'send_texts')
+    create_permissions(user_3, sample_service, 'manage_settings', 'send_emails', 'send_texts')
 
     assert len(sample_service.users) == 3
     assert user_can_be_archived(user_1)
@@ -296,7 +296,7 @@ def test_user_cannot_be_archived_if_the_other_service_members_do_not_have_the_ma
 
     create_permissions(active_user, sample_service, 'manage_settings')
     create_permissions(pending_user, sample_service, 'view_activity')
-    create_permissions(inactive_user, sample_service, 'send_emails', 'send_letters', 'send_texts')
+    create_permissions(inactive_user, sample_service, 'send_emails', 'send_texts')
 
     assert len(sample_service.users) == 3
     assert not user_can_be_archived(active_user)
