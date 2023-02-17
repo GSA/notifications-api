@@ -34,7 +34,6 @@ from app.models import (
     Permission,
     Service,
     ServiceEmailReplyTo,
-    ServiceLetterContact,
     ServicePermission,
     ServiceSmsSender,
     User,

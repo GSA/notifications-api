@@ -2,10 +2,7 @@ from datetime import datetime, timedelta
 
 from freezegun import freeze_time
 
-from app.dao.uploads_dao import (
-    dao_get_uploaded_letters_by_print_date,
-    dao_get_uploads_by_service_id,
-)
+from app.dao.uploads_dao import dao_get_uploads_by_service_id
 from app.models import JOB_STATUS_IN_PROGRESS, LETTER_TYPE
 from tests.app.db import (
     create_job,
@@ -316,56 +313,3 @@ def test_get_uploads_is_paginated(sample_template):
 def test_get_uploads_returns_empty_list(sample_service):
     items = dao_get_uploads_by_service_id(sample_service.id).items
     assert items == []
-
-
-@freeze_time('2020-02-02 14:00')
-def test_get_uploaded_letters_by_print_date(sample_template):
-    letter_template = create_uploaded_template(sample_template.service)
-
-    # Letters for the previous day’s run
-    for _ in range(3):
-        create_uploaded_letter(
-            letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(day=1, hour=22, minute=29, second=59)
-        )
-
-    # Letters from yesterday that rolled into today’s run
-    for _ in range(30):
-        create_uploaded_letter(
-            letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(day=1, hour=22, minute=30, second=0)
-        )
-
-    # Letters that just made today’s run
-    for _ in range(30):
-        create_uploaded_letter(
-            letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(hour=22, minute=29, second=59)
-        )
-
-    # Letters that just missed today’s run
-    for _ in range(3):
-        create_uploaded_letter(
-            letter_template, sample_template.service, status='delivered',
-            created_at=datetime.utcnow().replace(hour=22, minute=30, second=0)
-        )
-
-    result = dao_get_uploaded_letters_by_print_date(
-        sample_template.service_id,
-        datetime.utcnow(),
-    )
-    assert result.total == 60
-    assert len(result.items) == 50
-    assert result.has_next is True
-    assert result.has_prev is False
-
-    result = dao_get_uploaded_letters_by_print_date(
-        sample_template.service_id,
-        datetime.utcnow(),
-        page=10,
-        page_size=2,
-    )
-    assert result.total == 60
-    assert len(result.items) == 2
-    assert result.has_next is True
-    assert result.has_prev is True
