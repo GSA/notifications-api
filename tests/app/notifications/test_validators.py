@@ -7,7 +7,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import templates_dao
-from app.models import EMAIL_TYPE, LETTER_TYPE, SMS_TYPE
+from app.models import EMAIL_TYPE, SMS_TYPE
 from app.notifications.process_notifications import (
     create_content_for_notification,
 )
@@ -18,7 +18,6 @@ from app.notifications.validators import (
     check_rate_limiting,
     check_reply_to,
     check_service_email_reply_to_id,
-    check_service_letter_contact_id,
     check_service_over_api_rate_limit,
     check_service_over_daily_message_limit,
     check_service_sms_sender_id,
@@ -37,7 +36,6 @@ from app.utils import get_template_instance
 from app.v2.errors import BadRequestError, RateLimitError, TooManyRequestsError
 from tests.app.db import (
     create_api_key,
-    create_letter_contact,
     create_reply_to_email,
     create_service,
     create_service_guest_list,
@@ -266,7 +264,7 @@ def test_service_can_send_to_recipient_fails_when_mobile_number_is_not_on_team(s
 
 @pytest.mark.parametrize('char_count', [612, 0, 494, 200, 918])
 @pytest.mark.parametrize('show_prefix', [True, False])
-@pytest.mark.parametrize('template_type', ['sms', 'email', 'letter'])
+@pytest.mark.parametrize('template_type', ['sms', 'email'])
 def test_check_is_message_too_long_passes(notify_db_session, show_prefix, char_count, template_type):
     service = create_service(prefix_sms=show_prefix)
     t = create_template(service=service, content='a' * char_count, template_type=template_type)
@@ -502,7 +500,7 @@ def test_validate_and_format_recipient_fails_when_no_recipient():
     assert e.value.message == "Recipient can't be empty"
 
 
-@pytest.mark.parametrize('notification_type', ['sms', 'email', 'letter'])
+@pytest.mark.parametrize('notification_type', ['sms', 'email'])
 def test_check_service_email_reply_to_id_where_reply_to_id_is_none(notification_type):
     assert check_service_email_reply_to_id(None, None, notification_type) is None
 
@@ -529,7 +527,7 @@ def test_check_service_email_reply_to_id_where_reply_to_id_is_not_found(sample_s
         .format(fake_uuid, sample_service.id)
 
 
-@pytest.mark.parametrize('notification_type', ['sms', 'email', 'letter'])
+@pytest.mark.parametrize('notification_type', ['sms', 'email'])
 def test_check_service_sms_sender_id_where_sms_sender_id_is_none(notification_type):
     assert check_service_sms_sender_id(None, None, notification_type) is None
 
@@ -556,33 +554,7 @@ def test_check_service_sms_sender_id_where_sms_sender_is_not_found(sample_servic
         .format(fake_uuid, sample_service.id)
 
 
-def test_check_service_letter_contact_id_where_letter_contact_id_is_none():
-    assert check_service_letter_contact_id(None, None, 'letter') is None
-
-
-def test_check_service_letter_contact_id_where_letter_contact_id_is_found(sample_service):
-    letter_contact = create_letter_contact(service=sample_service, contact_block='123456')
-    assert check_service_letter_contact_id(sample_service.id, letter_contact.id, LETTER_TYPE) == '123456'
-
-
-def test_check_service_letter_contact_id_where_service_id_is_not_found(sample_service, fake_uuid):
-    letter_contact = create_letter_contact(service=sample_service, contact_block='123456')
-    with pytest.raises(BadRequestError) as e:
-        check_service_letter_contact_id(fake_uuid, letter_contact.id, LETTER_TYPE)
-    assert e.value.status_code == 400
-    assert e.value.message == 'letter_contact_id {} does not exist in database for service id {}' \
-        .format(letter_contact.id, fake_uuid)
-
-
-def test_check_service_letter_contact_id_where_letter_contact_is_not_found(sample_service, fake_uuid):
-    with pytest.raises(BadRequestError) as e:
-        check_service_letter_contact_id(sample_service.id, fake_uuid, LETTER_TYPE)
-    assert e.value.status_code == 400
-    assert e.value.message == 'letter_contact_id {} does not exist in database for service id {}' \
-        .format(fake_uuid, sample_service.id)
-
-
-@pytest.mark.parametrize('notification_type', ['sms', 'email', 'letter'])
+@pytest.mark.parametrize('notification_type', ['sms', 'email'])
 def test_check_reply_to_with_empty_reply_to(sample_service, notification_type):
     assert check_reply_to(sample_service.id, None, notification_type) is None
 
@@ -595,11 +567,6 @@ def test_check_reply_to_email_type(sample_service):
 def test_check_reply_to_sms_type(sample_service):
     sms_sender = create_service_sms_sender(service=sample_service, sms_sender='123456')
     assert check_reply_to(sample_service.id, sms_sender.id, SMS_TYPE) == '123456'
-
-
-def test_check_reply_to_letter_type(sample_service):
-    letter_contact = create_letter_contact(service=sample_service, contact_block='123456')
-    assert check_reply_to(sample_service.id, letter_contact.id, LETTER_TYPE) == '123456'
 
 
 @pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")

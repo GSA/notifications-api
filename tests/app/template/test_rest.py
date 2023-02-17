@@ -785,28 +785,6 @@ def test_create_a_template_with_reply_to(admin_request, sample_user):
     assert th.service_letter_contact_id == letter_contact.id
 
 
-def test_create_a_template_with_foreign_service_reply_to(admin_request, sample_user):
-    service = create_service(service_permissions=['letter'])
-    service2 = create_service(service_name='test service', email_from='test@example.com',
-                              service_permissions=['letter'])
-    letter_contact = create_letter_contact(service2, "Edinburgh, ED1 1AA")
-    data = {
-        'name': 'my template',
-        'subject': 'subject',
-        'template_type': 'letter',
-        'content': 'template <b>content</b>',
-        'service': str(service.id),
-        'created_by': str(sample_user.id),
-        'reply_to': str(letter_contact.id),
-    }
-
-    json_resp = admin_request.post('template.create_template', service_id=service.id, _data=data, _expected_status=400)
-
-    assert json_resp['message'] == "letter_contact_id {} does not exist in database for service id {}".format(
-        str(letter_contact.id), str(service.id)
-    )
-
-
 @pytest.mark.parametrize('post_data, expected_errors', [
     (
         {},

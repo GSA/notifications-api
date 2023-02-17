@@ -383,12 +383,11 @@ def associate_services_to_organisations():
 
 @notify_command(name='populate-service-volume-intentions')
 @click.option('-f', '--file_name', required=True,
-              help="Pipe delimited file containing service_id, SMS, email, letters")
+              help="Pipe delimited file containing service_id, SMS, email")
 def populate_service_volume_intentions(file_name):
     # [0] service_id
     # [1] SMS:: volume intentions for service
     # [2] Email:: volume intentions for service
-    # [3] Letters:: volume intentions for service
 
     with open(file_name, 'r') as f:
         for line in itertools.islice(f, 1, None):
@@ -397,7 +396,6 @@ def populate_service_volume_intentions(file_name):
             service = dao_fetch_service_by_id(columns[0])
             service.volume_sms = columns[1]
             service.volume_email = columns[2]
-            service.volume_letter = columns[3]
             dao_update_service(service)
     print("populate-service-volume-intentions complete")
 

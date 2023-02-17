@@ -1,21 +1,12 @@
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import create_random_identifier
 from app.config import QueueNames
-from app.dao.notifications_dao import _update_notification_status
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    LETTER_TYPE,
-    NOTIFICATION_DELIVERED,
-    PRIORITY,
-    SMS_TYPE,
-)
+from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, PRIORITY, SMS_TYPE
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -38,9 +29,8 @@ def validate_created_by(service, created_by_id):
         raise BadRequestError(message=message)
 
 
+# TODO: possibly unnecessary after removing letters
 def create_one_off_reference(template_type):
-    if template_type == LETTER_TYPE:
-        return create_random_identifier()
     return None
 
 
@@ -92,17 +82,11 @@ def send_one_off_notification(service_id, post_data):
 
     queue_name = QueueNames.PRIORITY if template.process_type == PRIORITY else None
 
-    if template.template_type == LETTER_TYPE and service.research_mode:
-        _update_notification_status(
-            notification,
-            NOTIFICATION_DELIVERED,
-        )
-    else:
-        send_notification_to_queue(
-            notification=notification,
-            research_mode=service.research_mode,
-            queue=queue_name,
-        )
+    send_notification_to_queue(
+        notification=notification,
+        research_mode=service.research_mode,
+        queue=queue_name,
+    )
 
     return {'id': str(notification.id)}
 

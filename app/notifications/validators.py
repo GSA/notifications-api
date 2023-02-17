@@ -14,14 +14,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
-from app.dao.service_letter_contact_dao import dao_get_letter_contact_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
     EMAIL_TYPE,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     SMS_TYPE,
     ServicePermission,
 )
@@ -201,8 +199,6 @@ def check_reply_to(service_id, reply_to_id, type_):
         return check_service_email_reply_to_id(service_id, reply_to_id, type_)
     elif type_ == SMS_TYPE:
         return check_service_sms_sender_id(service_id, reply_to_id, type_)
-    elif type_ == LETTER_TYPE:
-        return check_service_letter_contact_id(service_id, reply_to_id, type_)
 
 
 def check_service_email_reply_to_id(service_id, reply_to_id, notification_type):
@@ -222,14 +218,4 @@ def check_service_sms_sender_id(service_id, sms_sender_id, notification_type):
         except NoResultFound:
             message = 'sms_sender_id {} does not exist in database for service id {}' \
                 .format(sms_sender_id, service_id)
-            raise BadRequestError(message=message)
-
-
-def check_service_letter_contact_id(service_id, letter_contact_id, notification_type):
-    if letter_contact_id:
-        try:
-            return dao_get_letter_contact_by_id(service_id, letter_contact_id).contact_block
-        except NoResultFound:
-            message = 'letter_contact_id {} does not exist in database for service id {}' \
-                .format(letter_contact_id, service_id)
             raise BadRequestError(message=message)

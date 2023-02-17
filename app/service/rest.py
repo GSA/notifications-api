@@ -28,12 +28,6 @@ from app.dao.fact_notification_status_dao import (
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
 from app.dao.organisation_dao import dao_get_organisation_by_service_id
-from app.dao.returned_letters_dao import (
-    fetch_most_recent_returned_letter,
-    fetch_recent_returned_letter_count,
-    fetch_returned_letter_summary,
-    fetch_returned_letters,
-)
 from app.dao.service_contact_list_dao import (
     dao_archive_contact_list,
     dao_get_contact_list_by_id,
@@ -58,13 +52,6 @@ from app.dao.service_guest_list_dao import (
     dao_add_and_commit_guest_list_contacts,
     dao_fetch_service_guest_list,
     dao_remove_service_guest_list,
-)
-from app.dao.service_letter_contact_dao import (
-    add_letter_contact_for_service,
-    archive_letter_contact,
-    dao_get_letter_contact_by_id,
-    dao_get_letter_contacts_by_service_id,
-    update_letter_contact,
 )
 from app.dao.service_sms_sender_dao import (
     archive_sms_sender,
@@ -126,17 +113,11 @@ from app.service.service_data_retention_schema import (
 )
 from app.service.service_senders_schema import (
     add_service_email_reply_to_request,
-    add_service_letter_contact_block_request,
     add_service_sms_sender_request,
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import (
-    DATE_FORMAT,
-    DATETIME_FORMAT_NO_TIMEZONE,
-    get_prev_next_pagination_links,
-    midnight_n_days_ago,
-)
+from app.utils import get_prev_next_pagination_links
 
 service_blueprint = Blueprint('service', __name__)
 
@@ -477,6 +458,7 @@ def get_notification_for_service(service_id, notification_id):
     ), 200
 
 
+# TODO: possibly unnecessary after removing letters
 @service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>/cancel', methods=['POST'])
 def cancel_notification_for_service(service_id, notification_id):
     notification = notifications_dao.get_notification_by_id(notification_id, service_id)
@@ -787,48 +769,6 @@ def delete_service_reply_to_email_address(service_id, reply_to_email_id):
     return jsonify(data=archived_reply_to.serialize()), 200
 
 
-@service_blueprint.route('/<uuid:service_id>/letter-contact', methods=["GET"])
-def get_letter_contacts(service_id):
-    result = dao_get_letter_contacts_by_service_id(service_id)
-    return jsonify([i.serialize() for i in result]), 200
-
-
-@service_blueprint.route('/<uuid:service_id>/letter-contact/<uuid:letter_contact_id>', methods=["GET"])
-def get_letter_contact_by_id(service_id, letter_contact_id):
-    result = dao_get_letter_contact_by_id(service_id=service_id, letter_contact_id=letter_contact_id)
-    return jsonify(result.serialize()), 200
-
-
-@service_blueprint.route('/<uuid:service_id>/letter-contact', methods=['POST'])
-def add_service_letter_contact(service_id):
-    # validate the service exists, throws ResultNotFound exception.
-    dao_fetch_service_by_id(service_id)
-    form = validate(request.get_json(), add_service_letter_contact_block_request)
-    new_letter_contact = add_letter_contact_for_service(service_id=service_id,
-                                                        contact_block=form['contact_block'],
-                                                        is_default=form.get('is_default', True))
-    return jsonify(data=new_letter_contact.serialize()), 201
-
-
-@service_blueprint.route('/<uuid:service_id>/letter-contact/<uuid:letter_contact_id>', methods=['POST'])
-def update_service_letter_contact(service_id, letter_contact_id):
-    # validate the service exists, throws ResultNotFound exception.
-    dao_fetch_service_by_id(service_id)
-    form = validate(request.get_json(), add_service_letter_contact_block_request)
-    new_reply_to = update_letter_contact(service_id=service_id,
-                                         letter_contact_id=letter_contact_id,
-                                         contact_block=form['contact_block'],
-                                         is_default=form.get('is_default', True))
-    return jsonify(data=new_reply_to.serialize()), 200
-
-
-@service_blueprint.route('/<uuid:service_id>/letter-contact/<uuid:letter_contact_id>/archive', methods=['POST'])
-def delete_service_letter_contact(service_id, letter_contact_id):
-    archived_letter_contact = archive_letter_contact(service_id, letter_contact_id)
-
-    return jsonify(data=archived_letter_contact.serialize()), 200
-
-
 @service_blueprint.route('/<uuid:service_id>/sms-sender', methods=['POST'])
 def add_service_sms_sender(service_id):
     dao_fetch_service_by_id(service_id)
@@ -1004,71 +944,6 @@ def check_if_reply_to_address_already_in_use(service_id, email_address):
         raise InvalidRequest(
             "Your service already uses ‘{}’ as an email reply-to address.".format(email_address), status_code=409
         )
-
-
-@service_blueprint.route('/<uuid:service_id>/returned-letter-statistics', methods=['GET'])
-def returned_letter_statistics(service_id):
-
-    most_recent = fetch_most_recent_returned_letter(service_id)
-
-    if not most_recent:
-        return jsonify({
-            'returned_letter_count': 0,
-            'most_recent_report': None,
-        })
-
-    most_recent_reported_at = datetime.combine(
-        most_recent.reported_at, datetime.min.time()
-    )
-
-    if most_recent_reported_at < midnight_n_days_ago(7):
-        return jsonify({
-            'returned_letter_count': 0,
-            'most_recent_report': most_recent.reported_at.strftime(DATETIME_FORMAT_NO_TIMEZONE),
-        })
-
-    count = fetch_recent_returned_letter_count(service_id)
-
-    return jsonify({
-        'returned_letter_count': count.returned_letter_count,
-        'most_recent_report': most_recent.reported_at.strftime(DATETIME_FORMAT_NO_TIMEZONE),
-    })
-
-
-@service_blueprint.route('/<uuid:service_id>/returned-letter-summary', methods=['GET'])
-def returned_letter_summary(service_id):
-    results = fetch_returned_letter_summary(service_id)
-
-    json_results = [{'returned_letter_count': x.returned_letter_count,
-                     'reported_at': x.reported_at.strftime(DATE_FORMAT)
-                     } for x in results]
-
-    return jsonify(json_results)
-
-
-@service_blueprint.route('/<uuid:service_id>/returned-letters', methods=['GET'])
-def get_returned_letters(service_id):
-    results = fetch_returned_letters(service_id=service_id, report_date=request.args.get('reported_at'))
-
-    json_results = [
-        {'notification_id': x.notification_id,
-         # client reference can only be added on API letters
-         'client_reference': x.client_reference if x.api_key_id else None,
-         'reported_at': x.reported_at.strftime(DATE_FORMAT),
-         'created_at': x.created_at.strftime(DATETIME_FORMAT_NO_TIMEZONE),
-         # it doesn't make sense to show hidden templates
-         'template_name': x.template_name if not x.hidden else None,
-         'template_id': x.template_id if not x.hidden else None,
-         'template_version': x.template_version if not x.hidden else None,
-         'user_name': x.user_name or 'API',
-         'email_address': x.email_address or 'API',
-         'original_file_name': x.original_file_name,
-         'job_row_number': x.job_row_number,
-         # the file name for a letter uploaded via the UI
-         'uploaded_letter_file_name': x.client_reference if x.hidden and not x.api_key_id else None
-         } for x in results]
-
-    return jsonify(sorted(json_results, key=lambda i: i['created_at'], reverse=True))
 
 
 @service_blueprint.route('/<uuid:service_id>/contact-list', methods=['GET'])

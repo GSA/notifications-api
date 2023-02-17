@@ -1167,8 +1167,7 @@ def test_should_not_allow_email_notifications_if_service_permission_not_set(
 
 @pytest.mark.parametrize(
     "notification_type, err_msg",
-    [("letter", "letter notification type is not supported, please use the latest version of the client"),
-     ("apple", "apple notification type is not supported")])
+    [("apple", "apple notification type is not supported")])
 def test_should_throw_exception_if_notification_type_is_invalid(client, sample_service, notification_type, err_msg):
     auth_header = create_service_authorization_header(service_id=sample_service.id)
     response = client.post(
