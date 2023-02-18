@@ -249,9 +249,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
         return in_data
 
-    def get_letter_contact(self, service):
-        return service.get_default_letter_contact()
-
     class Meta(BaseSchema.Meta):
         model = models.Service
         exclude = (
@@ -267,7 +264,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'inbound_number',
             'inbound_sms',
             'jobs',
-            'letter_contacts',
             'reply_to_email_addresses',
             'returned_letters',
             'service_sms_senders',
@@ -360,7 +356,7 @@ class BaseTemplateSchema(BaseSchema):
 
     class Meta(BaseSchema.Meta):
         model = models.Template
-        exclude = ("service_id", "jobs", "service_letter_contact_id")
+        exclude = ("service_id", "jobs")
 
 
 class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
@@ -405,7 +401,6 @@ class TemplateSchemaNoDetail(TemplateSchema):
             'reply_to',
             'reply_to_text',
             'service',
-            'service_letter_contact',
             'subject',
             'template_redacted',
             'updated_at',

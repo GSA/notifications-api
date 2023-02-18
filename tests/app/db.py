@@ -57,7 +57,6 @@ from app.models import (
     ServiceEmailReplyTo,
     ServiceGuestList,
     ServiceInboundApi,
-    ServiceLetterContact,
     ServicePermission,
     ServiceSmsSender,
     Template,
@@ -576,26 +575,6 @@ def create_service_sms_sender(
     db.session.commit()
 
     return service_sms_sender
-
-
-def create_letter_contact(
-        service,
-        contact_block,
-        is_default=True,
-        archived=False
-):
-    data = {
-        'service': service,
-        'contact_block': contact_block,
-        'is_default': is_default,
-        'archived': archived,
-    }
-    letter_content = ServiceLetterContact(**data)
-
-    db.session.add(letter_content)
-    db.session.commit()
-
-    return letter_content
 
 
 def create_annual_billing(

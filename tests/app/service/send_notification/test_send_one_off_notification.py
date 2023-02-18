@@ -21,7 +21,6 @@ from app.models import (
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import BadRequestError, TooManyRequestsError
 from tests.app.db import (
-    create_letter_contact,
     create_reply_to_email,
     create_service,
     create_service_sms_sender,
@@ -305,56 +304,6 @@ def test_send_one_off_notification_should_add_email_reply_to_text_for_notificati
         queue=None
     )
     assert notification.reply_to_text == reply_to_email.email_address
-
-
-def test_send_one_off_letter_notification_should_use_template_reply_to_text(sample_letter_template, celery_mock):
-    letter_contact = create_letter_contact(sample_letter_template.service, "Edinburgh, ED1 1AA", is_default=False)
-    sample_letter_template.reply_to = str(letter_contact.id)
-
-    data = {
-        'to': 'user@example.com',
-        'template_id': str(sample_letter_template.id),
-        'personalisation': {
-            'name': 'foo',
-            'address_line_1': 'First Last',
-            'address_line_2': '1 Example Street',
-            'address_line_3': 'SW1A 1AA',
-        },
-        'created_by': str(sample_letter_template.service.created_by_id)
-    }
-
-    notification_id = send_one_off_notification(service_id=sample_letter_template.service.id, post_data=data)
-    notification = Notification.query.get(notification_id['id'])
-    celery_mock.assert_called_once_with(
-        notification=notification,
-        research_mode=False,
-        queue=None
-    )
-
-    assert notification.reply_to_text == "Edinburgh, ED1 1AA"
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove letters")
-def test_send_one_off_letter_should_not_make_pdf_in_research_mode(sample_letter_template):
-
-    sample_letter_template.service.research_mode = True
-
-    data = {
-        'to': 'A. Name',
-        'template_id': str(sample_letter_template.id),
-        'personalisation': {
-            'name': 'foo',
-            'address_line_1': 'First Last',
-            'address_line_2': '1 Example Street',
-            'address_line_3': 'SW1A 1AA',
-        },
-        'created_by': str(sample_letter_template.service.created_by_id)
-    }
-
-    notification = send_one_off_notification(service_id=sample_letter_template.service.id, post_data=data)
-    notification = Notification.query.get(notification['id'])
-
-    assert notification.status == "delivered"
 
 
 def test_send_one_off_sms_notification_should_use_sms_sender_reply_to_text(sample_service, celery_mock):

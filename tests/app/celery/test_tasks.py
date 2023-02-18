@@ -9,7 +9,6 @@ from celery.exceptions import Retry
 from freezegun import freeze_time
 from notifications_utils.recipients import Row
 from notifications_utils.template import (
-    LetterPrintTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
@@ -39,7 +38,6 @@ from app.models import (
     JOB_STATUS_FINISHED,
     JOB_STATUS_IN_PROGRESS,
     KEY_TYPE_NORMAL,
-    LETTER_TYPE,
     NOTIFICATION_CREATED,
     SMS_TYPE,
     Job,
@@ -53,7 +51,6 @@ from tests.app.db import (
     create_api_key,
     create_inbound_sms,
     create_job,
-    create_letter_contact,
     create_notification,
     create_reply_to_email,
     create_service,
@@ -973,49 +970,6 @@ def test_get_sms_template_instance(mocker, sample_template, sample_job):
     assert isinstance(template, SMSMessageTemplate)
     assert recipient_csv.placeholders == [
         'phone number'
-    ]
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_get_letter_template_instance(mocker, sample_job):
-    mocker.patch(
-        'app.celery.tasks.s3.get_job_and_metadata_from_s3',
-        return_value=('', {}),
-    )
-    sample_contact_block = create_letter_contact(
-        service=sample_job.service,
-        contact_block='((reference number))'
-    )
-    sample_template = create_template(
-        service=sample_job.service,
-        template_type=LETTER_TYPE,
-        reply_to=sample_contact_block.id,
-    )
-    sample_job.template_id = sample_template.id
-
-    (
-        recipient_csv,
-        template,
-        _sender_id,
-    ) = get_recipient_csv_and_template_and_sender_id(sample_job)
-
-    assert isinstance(template, LetterPrintTemplate)
-    assert template.contact_block == (
-        '((reference number))'
-    )
-    assert template.placeholders == {
-        'reference number'
-    }
-    assert recipient_csv.placeholders == [
-        'reference number',
-        'address line 1',
-        'address line 2',
-        'address line 3',
-        'address line 4',
-        'address line 5',
-        'address line 6',
-        'postcode',
-        'address line 7',
     ]
 
 

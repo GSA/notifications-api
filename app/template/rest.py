@@ -14,7 +14,6 @@ from app.dao.templates_dao import (
     dao_get_template_versions,
     dao_redact_template,
     dao_update_template,
-    dao_update_template_reply_to,
 )
 from app.errors import InvalidRequest, register_errors
 from app.models import SMS_TYPE, Template
@@ -110,11 +109,6 @@ def update_template(service_id, template_id):
     # if redacting, don't update anything else
     if data.get('redact_personalisation') is True:
         return redact_template(fetched_template, data)
-
-    if "reply_to" in data:
-        check_reply_to(service_id, data.get("reply_to"), fetched_template.template_type)
-        updated = dao_update_template_reply_to(template_id=template_id, reply_to=data.get("reply_to"))
-        return jsonify(data=template_schema.dump(updated)), 200
 
     current_data = dict(template_schema.dump(fetched_template).items())
     updated_template = dict(template_schema.dump(fetched_template).items())

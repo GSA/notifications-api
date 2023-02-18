@@ -32,7 +32,6 @@ from app.models import (
     Service,
     ServiceContactList,
     ServiceEmailReplyTo,
-    ServiceLetterContact,
     ServicePermission,
     ServiceSmsSender,
     Template,
@@ -369,7 +368,6 @@ def delete_service_and_all_associated_db_objects(service):
 
     _delete_commit(ServiceSmsSender.query.filter_by(service=service))
     _delete_commit(ServiceEmailReplyTo.query.filter_by(service=service))
-    _delete_commit(ServiceLetterContact.query.filter_by(service=service))
     _delete_commit(ServiceContactList.query.filter_by(service=service))
     _delete_commit(InvitedUser.query.filter_by(service=service))
     _delete_commit(Permission.query.filter_by(service=service))

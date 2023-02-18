@@ -49,7 +49,6 @@ from tests.app.db import (
     create_inbound_number,
     create_invited_org_user,
     create_job,
-    create_letter_contact,
     create_notification,
     create_service,
     create_template,
@@ -236,12 +235,6 @@ def _sample_service_full_permissions(notify_db_session):
     )
     create_inbound_number('12345', service_id=service.id)
     return service
-
-
-@pytest.fixture(scope='function', name='sample_service_custom_letter_contact_block')
-def _sample_service_custom_letter_contact_block(sample_service):
-    create_letter_contact(sample_service, contact_block='((contact block))')
-    return sample_service
 
 
 @pytest.fixture(scope='function')
