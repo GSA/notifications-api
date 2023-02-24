@@ -37,7 +37,7 @@ def format_admin_stats(statistics):
 
 def create_stats_dict():
     stats_dict = {}
-    for template in NOTIFICATION_TYPES:
+    for template in ['sms', 'email']:  # TODO: return to NOTIFICATION_TYPES after removing letters
         stats_dict[template] = {}
 
         for status in ('total', 'test-key'):

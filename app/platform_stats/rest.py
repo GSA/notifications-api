@@ -7,7 +7,6 @@ from app.dao.fact_billing_dao import (
     fetch_billing_details_for_all_services,
     fetch_daily_sms_provider_volumes_for_platform,
     fetch_daily_volumes_for_platform,
-    fetch_letter_costs_and_totals_for_all_services,
     fetch_sms_billing_for_all_services,
     fetch_volumes_by_service,
 )
@@ -73,7 +72,7 @@ def get_data_for_billing_report():
     start_date, end_date = validate_date_range_is_within_a_financial_year(start_date, end_date)
 
     sms_costs = fetch_sms_billing_for_all_services(start_date, end_date)
-    letter_overview = fetch_letter_costs_and_totals_for_all_services(start_date, end_date)
+    # letter_overview = fetch_letter_costs_and_totals_for_all_services(start_date, end_date)
 
     combined = {}
     for s in sms_costs:
@@ -85,29 +84,29 @@ def get_data_for_billing_report():
                 "service_name": s.service_name,
                 "sms_cost": float(s.sms_cost),
                 "sms_chargeable_units": s.chargeable_billable_sms,
-                "total_letters": 0,
-                "letter_cost": 0,
+                # "total_letters": 0,
+                # "letter_cost": 0,
             }
             combined[s.service_id] = entry
 
-    for data in letter_overview:
-        if data.service_id in combined:
-            combined[data.service_id].update(
-                {'total_letters': data.total_letters, 'letter_cost': float(data.letter_cost)}
-            )
+    # for data in letter_overview:
+    #     if data.service_id in combined:
+    #         combined[data.service_id].update(
+    #             {'total_letters': data.total_letters, 'letter_cost': float(data.letter_cost)}
+    #         )
 
-        else:
-            letter_entry = {
-                "organisation_id": str(data.organisation_id) if data.organisation_id else "",
-                "organisation_name": data.organisation_name or "",
-                "service_id": str(data.service_id),
-                "service_name": data.service_name,
-                "sms_cost": 0,
-                "sms_chargeable_units": 0,
-                "total_letters": data.total_letters,
-                "letter_cost": float(data.letter_cost),
-            }
-            combined[data.service_id] = letter_entry
+    #     else:
+    #         letter_entry = {
+    #             "organisation_id": str(data.organisation_id) if data.organisation_id else "",
+    #             "organisation_name": data.organisation_name or "",
+    #             "service_id": str(data.service_id),
+    #             "service_name": data.service_name,
+    #             "sms_cost": 0,
+    #             "sms_chargeable_units": 0,
+    #             "total_letters": data.total_letters,
+    #             "letter_cost": float(data.letter_cost),
+    #         }
+    #         combined[data.service_id] = letter_entry
 
     billing_details = fetch_billing_details_for_all_services()
     for service in billing_details:
@@ -144,8 +143,8 @@ def daily_volumes_report():
             "sms_fragment_totals": int(row.sms_fragment_totals),
             "sms_chargeable_units": int(row.sms_chargeable_units),
             "email_totals": int(row.email_totals),
-            "letter_totals": int(row.letter_totals),
-            "letter_sheet_totals": int(row.letter_sheet_totals)
+            # "letter_totals": int(row.letter_totals),
+            # "letter_sheet_totals": int(row.letter_sheet_totals)
         })
     return jsonify(report)
 
@@ -189,16 +188,16 @@ def volumes_by_service_report():
             "sms_notifications": int(row.sms_notifications),
             "sms_chargeable_units": int(row.sms_chargeable_units),
             "email_totals": int(row.email_totals),
-            "letter_totals": int(row.letter_totals),
-            "letter_sheet_totals": int(row.letter_sheet_totals),
-            "letter_cost": float(row.letter_cost),
+            # "letter_totals": int(row.letter_totals),
+            # "letter_sheet_totals": int(row.letter_sheet_totals),
+            # "letter_cost": float(row.letter_cost),
         })
 
     return jsonify(report)
 
 
-def format_letter_rate(number):
-    if number >= 1:
-        return f"£{number:,.2f}"
+# def format_letter_rate(number):
+#     if number >= 1:
+#         return f"£{number:,.2f}"
 
-    return f"{number * 100:.0f}p"
+#     return f"{number * 100:.0f}p"
