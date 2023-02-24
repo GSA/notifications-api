@@ -21,7 +21,7 @@ def _remove_values_for_keys_if_present(dict, keys):
 
 def create_secret_code(length=6):
     random_number = randbelow(10 ** length)
-    return f"{random_number:06d}"
+    return "{:0{length}d}".format(random_number, length=length)
 
 
 def save_user_attribute(usr, update_dict=None):

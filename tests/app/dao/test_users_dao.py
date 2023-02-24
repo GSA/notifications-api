@@ -185,7 +185,13 @@ def test_create_secret_code_different_subsequent_codes():
 
 def test_create_secret_code_returns_6_digits():
     code = create_secret_code()
-    assert len(str(code)) == 6
+    assert len(code) == 6
+
+
+def test_create_secret_code_can_customize_digits():
+    code_length = 10
+    code = create_secret_code(code_length)
+    assert len(code) == code_length
 
 
 @freeze_time('2018-07-07 12:00:00')
