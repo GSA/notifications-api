@@ -67,7 +67,7 @@ def test_get_notifications_request_invalid_statuses(
 def test_get_notifications_request_invalid_template_types(
         invalid_template_types, valid_template_types
 ):
-    partial_error_template_type = "is not one of [sms, email, letter]"
+    partial_error_template_type = "is not one of [sms, email]"
 
     with pytest.raises(ValidationError) as e:
         validate({'template_type': invalid_template_types + valid_template_types}, get_notifications_request)
@@ -98,7 +98,7 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
             ) in error_messages
 
     for invalid_template_type in ["orange", "avocado"]:
-        assert "template_type {} is not one of [sms, email, letter]" \
+        assert "template_type {} is not one of [sms, email]" \
             .format(invalid_template_type) in error_messages
 
 
