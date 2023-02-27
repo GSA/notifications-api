@@ -4,7 +4,6 @@ from os import getenv
 from flask import url_for
 from notifications_utils.template import (
     HTMLEmailTemplate,
-    LetterPrintTemplate,
     SMSMessageTemplate,
 )
 from notifications_utils.timezones import convert_local_timezone_to_utc
@@ -46,11 +45,10 @@ def url_with_token(data, url, config, base_url=None):
 
 
 def get_template_instance(template, values):
-    from app.models import EMAIL_TYPE, LETTER_TYPE, SMS_TYPE
+    from app.models import EMAIL_TYPE, SMS_TYPE
     return {
         SMS_TYPE: SMSMessageTemplate,
         EMAIL_TYPE: HTMLEmailTemplate,
-        LETTER_TYPE: LetterPrintTemplate,
     }[template['template_type']](template, values)
 
 
