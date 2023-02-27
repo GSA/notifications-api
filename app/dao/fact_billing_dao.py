@@ -863,16 +863,16 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 (FactBilling.notification_type == EMAIL_TYPE, FactBilling.notifications_sent)
             ], else_=0
         )).label('email_totals'),
-        func.sum(case(
-            [
-                (FactBilling.notification_type == LETTER_TYPE, FactBilling.notifications_sent)
-            ], else_=0
-        )).label('letter_totals'),
-        func.sum(case(
-            [
-                (FactBilling.notification_type == LETTER_TYPE, FactBilling.billable_units)
-            ], else_=0
-        )).label('letter_sheet_totals')
+        # func.sum(case(
+        #     [
+        #         (FactBilling.notification_type == LETTER_TYPE, FactBilling.notifications_sent)
+        #     ], else_=0
+        # )).label('letter_totals'),
+        # func.sum(case(
+        #     [
+        #         (FactBilling.notification_type == LETTER_TYPE, FactBilling.billable_units)
+        #     ], else_=0
+        # )).label('letter_sheet_totals')
     ).filter(
         FactBilling.local_date >= start_date,
         FactBilling.local_date <= end_date
@@ -888,8 +888,8 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
         func.sum(
             daily_volume_stats.c.sms_fragments_times_multiplier).label('sms_chargeable_units'),
         func.sum(daily_volume_stats.c.email_totals).label('email_totals'),
-        func.sum(daily_volume_stats.c.letter_totals).label('letter_totals'),
-        func.sum(daily_volume_stats.c.letter_sheet_totals).label('letter_sheet_totals')
+        # func.sum(daily_volume_stats.c.letter_totals).label('letter_totals'),
+        # func.sum(daily_volume_stats.c.letter_sheet_totals).label('letter_sheet_totals')
     ).group_by(
         daily_volume_stats.c.local_date
     ).order_by(

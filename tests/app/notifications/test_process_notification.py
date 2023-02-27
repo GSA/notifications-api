@@ -11,7 +11,7 @@ from notifications_utils.recipients import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import LETTER_TYPE, Notification, NotificationHistory
+from app.models import SMS_TYPE, Notification, NotificationHistory
 from app.notifications.process_notifications import (
     create_content_for_notification,
     persist_notification,
@@ -453,13 +453,13 @@ def test_persist_email_notification_stores_normalised_email(
 def test_persist_notification_with_billable_units_stores_correct_info(
     mocker
 ):
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service, template_type=LETTER_TYPE)
+    service = create_service(service_permissions=[SMS_TYPE])
+    template = create_template(service, template_type=SMS_TYPE)
     mocker.patch('app.dao.templates_dao.dao_get_template_by_id', return_value=template)
     persist_notification(
         template_id=template.id,
         template_version=template.version,
-        recipient="123 Main Street",
+        recipient="+12028675309",
         service=template.service,
         personalisation=None,
         notification_type=template.template_type,

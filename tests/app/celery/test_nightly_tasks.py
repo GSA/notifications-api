@@ -125,17 +125,6 @@ def test_delete_email_notifications_older_than_retentions_calls_child_task(notif
     mocked_notifications.assert_called_once_with('email')
 
 
-def test_should_not_update_status_of_letter_notifications(client, sample_letter_template):
-    created_at = datetime.utcnow() - timedelta(days=5)
-    not1 = create_notification(template=sample_letter_template, status='sending', created_at=created_at)
-    not2 = create_notification(template=sample_letter_template, status='created', created_at=created_at)
-
-    timeout_notifications()
-
-    assert not1.status == 'sending'
-    assert not2.status == 'created'
-
-
 @freeze_time("2021-12-13T10:00")
 def test_timeout_notifications(mocker, sample_notification):
     mock_update = mocker.patch('app.celery.nightly_tasks.check_and_queue_callback_task')

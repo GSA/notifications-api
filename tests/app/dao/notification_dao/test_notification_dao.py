@@ -661,18 +661,6 @@ def test_dao_timeout_notifications_only_updates_for_older_notifications(sample_t
     assert Notification.query.get(pending.id).status == 'pending'
 
 
-def test_dao_timeout_notifications_doesnt_affect_letters(sample_letter_template):
-    with freeze_time(datetime.utcnow() - timedelta(minutes=2)):
-        sending = create_notification(sample_letter_template, status='sending')
-        pending = create_notification(sample_letter_template, status='pending')
-
-    temporary_failure_notifications = dao_timeout_notifications(datetime.utcnow())
-
-    assert len(temporary_failure_notifications) == 0
-    assert Notification.query.get(sending.id).status == 'sending'
-    assert Notification.query.get(pending.id).status == 'pending'
-
-
 def test_should_return_notifications_excluding_jobs_by_default(sample_template, sample_job, sample_api_key):
     create_notification(sample_template, job=sample_job)
     without_job = create_notification(sample_template, api_key=sample_api_key)
@@ -1175,7 +1163,6 @@ def test_dao_get_notifications_by_reference(
     service = create_service()
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type='email')
-    letter_template = create_template(service=service, template_type='letter')
     sms = create_notification(
         template=sms_template,
         to_field='07711111111',
@@ -1188,18 +1175,11 @@ def test_dao_get_notifications_by_reference(
         normalised_to='077@example.com',
         client_reference='77bB',
     )
-    letter = create_notification(
-        template=letter_template,
-        to_field='123 Example Street\nXX1X 1XX',
-        normalised_to='123examplestreetxx1x1xx',
-        client_reference='77bB',
-    )
 
     results = dao_get_notifications_by_recipient_or_reference(service.id, '77')
-    assert len(results.items) == 3
-    assert results.items[0].id == letter.id
-    assert results.items[1].id == email.id
-    assert results.items[2].id == sms.id
+    assert len(results.items) == 2
+    assert results.items[0].id == email.id
+    assert results.items[1].id == sms.id
 
     # If notification_type isn’t specified then we can’t normalise the
     # phone number to 4477… so this query will only find the email sent
@@ -1237,21 +1217,6 @@ def test_dao_get_notifications_by_reference(
 
     results = dao_get_notifications_by_recipient_or_reference(service.id, 'aA', notification_type='email')
     assert len(results.items) == 0
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, 'aA', notification_type='letter')
-    assert len(results.items) == 0
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, '123')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, 'xX 1x1  Xx')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, '77', notification_type='letter')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
 
 
 def test_dao_get_notifications_by_to_field_filters_status(sample_template):
@@ -1429,48 +1394,33 @@ def test_dao_update_notifications_by_reference_returns_zero_when_no_notification
     assert updated_history_count == 0
 
 
-def test_dao_update_notifications_by_reference_set_returned_letter_status(sample_letter_template):
-    notification = create_notification(template=sample_letter_template, reference='ref')
-
-    updated_count, updated_history_count = dao_update_notifications_by_reference(
-        references=['ref'],
-        update_dict={"status": "returned-letter"}
-    )
-
-    assert updated_count == 1
-    assert updated_history_count == 0
-    updated_notification = Notification.query.get(notification.id)
-    assert updated_notification.status == 'returned-letter'
-    assert updated_notification.updated_at <= datetime.utcnow()
-
-
 def test_dao_update_notifications_by_reference_updates_history_when_one_of_two_notifications_exists(
-        sample_letter_template
+        sample_template
 ):
-    notification1 = create_notification_history(template=sample_letter_template, reference='ref1')
-    notification2 = create_notification(template=sample_letter_template, reference='ref2')
+    notification1 = create_notification_history(template=sample_template, reference='ref1')
+    notification2 = create_notification(template=sample_template, reference='ref2')
 
     updated_count, updated_history_count = dao_update_notifications_by_reference(
         references=['ref1', 'ref2'],
-        update_dict={"status": "returned-letter"}
+        update_dict={"status": "delivered"}
     )
 
     assert updated_count == 1
     assert updated_history_count == 1
-    assert Notification.query.get(notification2.id).status == 'returned-letter'
-    assert NotificationHistory.query.get(notification1.id).status == 'returned-letter'
+    assert Notification.query.get(notification2.id).status == 'delivered'
+    assert NotificationHistory.query.get(notification1.id).status == 'delivered'
 
 
-def test_dao_get_notification_by_reference_with_one_match_returns_notification(sample_letter_template):
-    create_notification(template=sample_letter_template, reference='REF1')
+def test_dao_get_notification_by_reference_with_one_match_returns_notification(sample_template):
+    create_notification(template=sample_template, reference='REF1')
     notification = dao_get_notification_by_reference('REF1')
 
     assert notification.reference == 'REF1'
 
 
-def test_dao_get_notification_by_reference_with_multiple_matches_raises_error(sample_letter_template):
-    create_notification(template=sample_letter_template, reference='REF1')
-    create_notification(template=sample_letter_template, reference='REF1')
+def test_dao_get_notification_by_reference_with_multiple_matches_raises_error(sample_template):
+    create_notification(template=sample_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
 
     with pytest.raises(SQLAlchemyError):
         dao_get_notification_by_reference('REF1')
@@ -1482,19 +1432,19 @@ def test_dao_get_notification_by_reference_with_no_matches_raises_error(notify_d
 
 
 def test_dao_get_notification_history_by_reference_with_one_match_returns_notification(
-        sample_letter_template
+        sample_template
 ):
-    create_notification(template=sample_letter_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
     notification = dao_get_notification_history_by_reference('REF1')
 
     assert notification.reference == 'REF1'
 
 
 def test_dao_get_notification_history_by_reference_with_multiple_matches_raises_error(
-        sample_letter_template
+        sample_template
 ):
-    create_notification(template=sample_letter_template, reference='REF1')
-    create_notification(template=sample_letter_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
 
     with pytest.raises(SQLAlchemyError):
         dao_get_notification_history_by_reference('REF1')
@@ -1506,7 +1456,7 @@ def test_dao_get_notification_history_by_reference_with_no_matches_raises_error(
 
 
 @pytest.mark.parametrize("notification_type",
-                         ["letter", "email", "sms"]
+                         ["email", "sms"]
                          )
 def test_notifications_not_yet_sent(sample_service, notification_type):
     older_than = 4  # number of seconds the notification can not be older than
@@ -1525,7 +1475,7 @@ def test_notifications_not_yet_sent(sample_service, notification_type):
 
 
 @pytest.mark.parametrize("notification_type",
-                         ["letter", "email", "sms"]
+                         ["email", "sms"]
                          )
 def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_type):
     older_than = 5  # number of seconds the notification can not be older than

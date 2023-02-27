@@ -143,7 +143,7 @@ def test_get_data_for_billing_report(notify_db_session, admin_request):
 
 
 def test_daily_volumes_report(
-        notify_db_session, sample_template, sample_email_template, sample_letter_template, admin_request
+        notify_db_session, sample_template, sample_email_template, admin_request
 ):
     set_up_usage_data(datetime(2022, 3, 1))
     response = admin_request.get(
@@ -162,7 +162,7 @@ def test_daily_volumes_report(
 
 
 def test_volumes_by_service_report(
-        notify_db_session, sample_template, sample_email_template, sample_letter_template, admin_request
+        notify_db_session, sample_template, sample_email_template, admin_request
 ):
     fixture = set_up_usage_data(datetime(2022, 3, 1))
     response = admin_request.get(

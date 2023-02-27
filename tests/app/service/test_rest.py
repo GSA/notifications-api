@@ -1970,7 +1970,6 @@ def test_get_services_with_detailed_flag(client, sample_template):
     assert data[0]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 3},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
 
 
@@ -1993,7 +1992,6 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(client, sample_
     assert data[0]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 2},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
 
 
@@ -2054,13 +2052,11 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     assert data[0]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 1, 'failed': 0, 'requested': 3},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
     assert data[1]['id'] == str(service_2.id)
     assert data[1]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 1},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
 
 
@@ -2083,13 +2079,11 @@ def test_get_detailed_services_includes_services_with_no_notifications(notify_db
     assert data[0]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 1},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
     assert data[1]['id'] == str(service_2.id)
     assert data[1]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
 
 
@@ -2109,7 +2103,6 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
     assert data[0]['statistics'] == {
         EMAIL_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0},
         SMS_TYPE: {'delivered': 0, 'failed': 0, 'requested': 3},
-        # LETTER_TYPE: {'delivered': 0, 'failed': 0, 'requested': 0}
     }
 
 
@@ -2143,7 +2136,6 @@ def test_get_detailed_services_for_date_range(sample_template, start_date_delta,
     assert len(data) == 1
     assert data[0]['statistics'][EMAIL_TYPE] == {'delivered': 0, 'failed': 0, 'requested': 0}
     assert data[0]['statistics'][SMS_TYPE] == {'delivered': 2, 'failed': 0, 'requested': 2}
-    # assert data[0]['statistics'][LETTER_TYPE] == {'delivered': 0, 'failed': 0, 'requested': 0}
 
 
 def test_search_for_notification_by_to_field(client, sample_template, sample_email_template):
@@ -2235,29 +2227,6 @@ def test_search_for_notification_by_to_field_returns_no_next_link_if_50_or_less(
 
     assert len(response_json['notifications']) == 50
     assert response_json['links'] == {}
-
-
-def test_search_for_notification_by_to_field_for_letter(
-    client,
-    notify_db_session,
-    sample_letter_template,
-    sample_email_template,
-    sample_template,
-):
-    letter_notification = create_notification(sample_letter_template, to_field='A. Name', normalised_to='a.name')
-    create_notification(sample_email_template, to_field='A.Name@example.com', normalised_to='a.name@example.com')
-    create_notification(sample_template, to_field='44770900123', normalised_to='44770900123')
-    response = client.get(
-        '/service/{}/notifications?to={}&template_type={}'.format(
-            sample_letter_template.service_id, 'A. Name', 'letter',
-        ),
-        headers=[create_admin_authorization_header()]
-    )
-    notifications = json.loads(response.get_data(as_text=True))['notifications']
-
-    assert response.status_code == 200
-    assert len(notifications) == 1
-    assert notifications[0]['id'] == str(letter_notification.id)
 
 
 def test_update_service_calls_send_notification_as_service_becomes_live(notify_db_session, client, mocker):
@@ -3073,7 +3042,7 @@ def test_cancel_notification_for_service_raises_invalid_request_when_notificatio
 
 
 def test_get_monthly_notification_data_by_service(sample_service, admin_request):
-    create_ft_notification_status(date(2019, 4, 17), notification_type='letter', service=sample_service,
+    create_ft_notification_status(date(2019, 4, 17), notification_type='sms', service=sample_service,
                                   notification_status='delivered')
     create_ft_notification_status(date(2019, 3, 5), notification_type='email', service=sample_service,
                                   notification_status='sending', count=4)
@@ -3085,5 +3054,5 @@ def test_get_monthly_notification_data_by_service(sample_service, admin_request)
 
     assert response == [
         ['2019-03-01', str(sample_service.id), 'Sample service', 'email', 4, 0, 0, 0, 0, 0],
-        ['2019-04-01', str(sample_service.id), 'Sample service', 'letter', 0, 1, 0, 0, 0, 0],
+        ['2019-04-01', str(sample_service.id), 'Sample service', 'sms', 0, 1, 0, 0, 0, 0],
     ]

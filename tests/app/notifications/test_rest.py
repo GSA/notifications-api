@@ -13,20 +13,17 @@ from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
-@pytest.mark.parametrize('type', ('email', 'sms', 'letter'))
+@pytest.mark.parametrize('type', ('email', 'sms'))
 def test_get_notification_by_id(
     client,
     sample_notification,
     sample_email_notification,
-    sample_letter_notification,
     type
 ):
     if type == 'email':
         notification_to_get = sample_email_notification
     if type == 'sms':
         notification_to_get = sample_notification
-    if type == 'letter':
-        notification_to_get = sample_letter_notification
 
     auth_header = create_service_authorization_header(service_id=notification_to_get.service_id)
     response = client.get(

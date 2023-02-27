@@ -87,14 +87,12 @@ def test_move_notifications_only_moves_for_given_notification_type(sample_servic
 
     sms_template = create_template(sample_service, 'sms')
     email_template = create_template(sample_service, 'email')
-    letter_template = create_template(sample_service, 'letter')
     create_notification(sms_template, created_at=one_second_before)
     create_notification(email_template, created_at=one_second_before)
-    create_notification(letter_template, created_at=one_second_before)
 
     result = move_notifications_to_notification_history('sms', sample_service.id, delete_time)
     assert result == 1
-    assert {x.notification_type for x in Notification.query} == {'email', 'letter'}
+    assert {x.notification_type for x in Notification.query} == {'email'}
     assert NotificationHistory.query.one().notification_type == 'sms'
 
 

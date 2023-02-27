@@ -11,7 +11,6 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
 from app.models import (
     EMAIL_TYPE,
-    LETTER_TYPE,
     SMS_TYPE,
     Template,
     TemplateHistory,
@@ -165,7 +164,6 @@ def test_should_raise_error_if_service_does_not_exist_on_create(client, sample_u
 @pytest.mark.parametrize('permissions, template_type, subject, expected_error', [
     ([EMAIL_TYPE], SMS_TYPE, None, {'template_type': ['Creating text message templates is not allowed']}),
     ([SMS_TYPE], EMAIL_TYPE, 'subject', {'template_type': ['Creating email templates is not allowed']}),
-    ([SMS_TYPE], LETTER_TYPE, 'subject', {'template_type': ['Creating letter templates is not allowed']}),
 ])
 def test_should_raise_error_on_create_if_no_permission(
         client, sample_user, permissions, template_type, subject, expected_error):
@@ -196,8 +194,7 @@ def test_should_raise_error_on_create_if_no_permission(
 
 @pytest.mark.parametrize('template_type, permissions, expected_error', [
     (SMS_TYPE, [EMAIL_TYPE], {'template_type': ['Updating text message templates is not allowed']}),
-    (EMAIL_TYPE, [LETTER_TYPE], {'template_type': ['Updating email templates is not allowed']}),
-    (LETTER_TYPE, [SMS_TYPE], {'template_type': ['Updating letter templates is not allowed']})
+    (EMAIL_TYPE, [SMS_TYPE], {'template_type': ['Updating email templates is not allowed']}),
 ])
 def test_should_be_error_on_update_if_no_permission(
     client,
@@ -482,7 +479,6 @@ def test_should_get_return_all_fields_by_default(
 @pytest.mark.parametrize('template_type, expected_content', (
     (EMAIL_TYPE, None),
     (SMS_TYPE, None),
-    (LETTER_TYPE, None),
 ))
 def test_should_not_return_content_and_subject_if_requested(
     admin_request,
@@ -522,11 +518,6 @@ def test_should_not_return_content_and_subject_if_requested(
             None,
             'hello ((name)) we’ve received your ((thing))',
             SMS_TYPE
-        ),
-        (
-            'about your ((thing))',
-            'hello ((name)) we’ve received your ((thing))',
-            LETTER_TYPE
         )
     ]
 )

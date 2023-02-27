@@ -88,32 +88,28 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_key_type(noti
     assert results[0].notifications_sent == 2
 
 
-@pytest.mark.parametrize("notification_type", ["email", "sms", "letter"])
+@pytest.mark.parametrize("notification_type", ["email", "sms"])
 def test_fetch_billing_data_for_day_only_calls_query_for_permission_type(notify_db_session, notification_type):
     service = create_service(service_permissions=[notification_type])
     email_template = create_template(service=service, template_type="email")
     sms_template = create_template(service=service, template_type="sms")
-    letter_template = create_template(service=service, template_type="letter")
     create_notification(template=email_template, status='delivered')
     create_notification(template=sms_template, status='delivered')
-    create_notification(template=letter_template, status='delivered')
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(process_day=today.date(), check_permissions=True)
     assert len(results) == 1
 
 
-@pytest.mark.parametrize("notification_type", ["email", "sms", "letter"])
+@pytest.mark.parametrize("notification_type", ["email", "sms"])
 def test_fetch_billing_data_for_day_only_calls_query_for_all_channels(notify_db_session, notification_type):
     service = create_service(service_permissions=[notification_type])
     email_template = create_template(service=service, template_type="email")
     sms_template = create_template(service=service, template_type="sms")
-    letter_template = create_template(service=service, template_type="letter")
     create_notification(template=email_template, status='delivered')
     create_notification(template=sms_template, status='delivered')
-    create_notification(template=letter_template, status='delivered')
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(process_day=today.date(), check_permissions=False)
-    assert len(results) == 3
+    assert len(results) == 2
 
 
 @freeze_time('2018-04-02 01:20:00')
@@ -191,15 +187,12 @@ def test_fetch_billing_data_for_day_is_grouped_by_rate_mulitplier(notify_db_sess
 def test_fetch_billing_data_for_day_is_grouped_by_international(notify_db_session):
     service = create_service()
     sms_template = create_template(service=service)
-    letter_template = create_template(template_type='letter', service=service)
     create_notification(template=sms_template, status='delivered', international=True)
     create_notification(template=sms_template, status='delivered', international=False)
-    create_notification(template=letter_template, status='delivered', international=True)
-    create_notification(template=letter_template, status='delivered', international=False)
 
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 4
+    assert len(results) == 2
     assert all(result.notifications_sent == 1 for result in results)
 
 
@@ -207,19 +200,17 @@ def test_fetch_billing_data_for_day_is_grouped_by_notification_type(notify_db_se
     service = create_service()
     sms_template = create_template(service=service, template_type='sms')
     email_template = create_template(service=service, template_type='email')
-    letter_template = create_template(service=service, template_type='letter')
     create_notification(template=sms_template, status='delivered')
     create_notification(template=sms_template, status='delivered')
     create_notification(template=sms_template, status='delivered')
     create_notification(template=email_template, status='delivered')
     create_notification(template=email_template, status='delivered')
-    create_notification(template=letter_template, status='delivered')
 
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(today.date())
-    assert len(results) == 3
+    assert len(results) == 2
     notification_types = [x.notification_type for x in results]
-    assert len(notification_types) == 3
+    assert len(notification_types) == 2
 
 
 def test_fetch_billing_data_for_day_returns_empty_list(notify_db_session):
@@ -266,21 +257,17 @@ def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session
     service = create_service()
     sms_template = create_template(service=service, template_type='sms')
     email_template = create_template(service=service, template_type='email')
-    letter_template = create_template(service=service, template_type='letter')
     for status in NOTIFICATION_STATUS_TYPES:
         create_notification(template=sms_template, status=status)
         create_notification(template=email_template, status=status)
-        create_notification(template=letter_template, status=status)
     today = convert_utc_to_local_timezone(datetime.utcnow())
     results = fetch_billing_data_for_day(process_day=today.date(), service_id=service.id)
 
     sms_results = [x for x in results if x.notification_type == 'sms']
     email_results = [x for x in results if x.notification_type == 'email']
-    letter_results = [x for x in results if x.notification_type == 'letter']
     # we expect as many rows as we check for notification types
     assert 6 == sms_results[0].notifications_sent
     assert 4 == email_results[0].notifications_sent
-    assert 3 == letter_results[0].notifications_sent
 
 
 def test_get_rates_for_billing(notify_db_session):
@@ -781,7 +768,6 @@ def test_fetch_usage_year_for_organisation_only_returns_data_for_live_services(n
     trial_service = create_service(restricted=True, service_name='trial_service')
     email_template = create_template(service=trial_service, template_type='email')
     trial_sms_template = create_template(service=trial_service, template_type='sms')
-    trial_letter_template = create_template(service=trial_service, template_type='letter')
     dao_add_service_to_organisation(service=live_service, organisation_id=org.id)
     dao_add_service_to_organisation(service=trial_service, organisation_id=org.id)
     create_ft_billing(local_date=datetime.utcnow().date(), template=sms_template, rate=0.0158,
@@ -790,8 +776,6 @@ def test_fetch_usage_year_for_organisation_only_returns_data_for_live_services(n
                       notifications_sent=100)
     create_ft_billing(local_date=datetime.utcnow().date(), template=trial_sms_template, billable_unit=200, rate=0.0158,
                       notifications_sent=100)
-    create_ft_billing(local_date=datetime.utcnow().date(), template=trial_letter_template, billable_unit=40, rate=0.30,
-                      notifications_sent=20)
     create_annual_billing(service_id=live_service.id, free_sms_fragment_limit=0, financial_year_start=2019)
     create_annual_billing(service_id=trial_service.id, free_sms_fragment_limit=0, financial_year_start=2019)
 
@@ -905,24 +889,19 @@ def test_query_organisation_sms_usage_for_year_handles_multiple_rates(notify_db_
 
 
 def test_fetch_daily_volumes_for_platform(
-        notify_db_session, sample_template, sample_email_template, sample_letter_template
+        notify_db_session, sample_template, sample_email_template
 ):
     create_ft_billing(local_date='2022-02-03', template=sample_template,
                       notifications_sent=10, billable_unit=10)
     create_ft_billing(local_date='2022-02-03', template=sample_template,
                       notifications_sent=10, billable_unit=30, international=True)
     create_ft_billing(local_date='2022-02-03', template=sample_email_template, notifications_sent=10)
-    create_ft_billing(local_date='2022-02-03', template=sample_letter_template, notifications_sent=5,
-                      billable_unit=5, rate=0.39)
-    create_ft_billing(local_date='2022-02-03', template=sample_letter_template, notifications_sent=5,
-                      billable_unit=10, rate=0.44)
 
     create_ft_billing(local_date='2022-02-04', template=sample_template,
                       notifications_sent=20, billable_unit=40)
     create_ft_billing(local_date='2022-02-04', template=sample_template,
                       notifications_sent=10, billable_unit=20, rate_multiplier=3)
     create_ft_billing(local_date='2022-02-04', template=sample_email_template, notifications_sent=50)
-    create_ft_billing(local_date='2022-02-04', template=sample_letter_template, notifications_sent=20, billable_unit=40)
 
     results = fetch_daily_volumes_for_platform(start_date='2022-02-03', end_date='2022-02-04')
 
@@ -932,16 +911,12 @@ def test_fetch_daily_volumes_for_platform(
     assert results[0].sms_fragment_totals == 40
     assert results[0].sms_chargeable_units == 40
     assert results[0].email_totals == 10
-    assert results[0].letter_totals == 10
-    assert results[0].letter_sheet_totals == 15
 
     assert results[1].local_date == '2022-02-04'
     assert results[1].sms_totals == 30
     assert results[1].sms_fragment_totals == 60
     assert results[1].sms_chargeable_units == 100
     assert results[1].email_totals == 50
-    assert results[1].letter_totals == 20
-    assert results[1].letter_sheet_totals == 40
 
 
 def test_fetch_daily_sms_provider_volumes_for_platform_groups_values_by_provider(
@@ -1010,11 +985,9 @@ def test_fetch_daily_sms_provider_volumes_for_platform_for_platform_searches_dat
 def test_fetch_daily_sms_provider_volumes_for_platform_for_platform_only_returns_sms(
     sample_template,
     sample_email_template,
-    sample_letter_template
 ):
     create_ft_billing('2022-02-01', sample_template, notifications_sent=1)
     create_ft_billing('2022-02-01', sample_email_template, notifications_sent=2)
-    create_ft_billing('2022-02-01', sample_letter_template, notifications_sent=4)
 
     results = fetch_daily_sms_provider_volumes_for_platform(start_date='2022-02-01', end_date='2022-02-01')
 

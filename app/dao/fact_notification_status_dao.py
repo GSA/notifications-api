@@ -419,11 +419,6 @@ def get_total_notifications_for_date_range(start_date, end_date):
                 (FactNotificationStatus.notification_type == 'sms', FactNotificationStatus.notification_count)
             ],
             else_=0)).label('sms'),
-        func.sum(case(
-            [
-                (FactNotificationStatus.notification_type == 'letter', FactNotificationStatus.notification_count)
-            ],
-            else_=0)).label('letters'),
     ).filter(
         FactNotificationStatus.key_type != KEY_TYPE_TEST,
     ).group_by(

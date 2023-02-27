@@ -19,7 +19,6 @@ from tests.app.db import create_template
 @pytest.mark.parametrize('template_type, subject', [
     ('sms', None),
     ('email', 'subject'),
-    ('letter', 'subject'),
 ])
 def test_create_template(sample_service, sample_user, template_type, subject):
     data = {

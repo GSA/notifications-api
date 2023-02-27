@@ -119,11 +119,6 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
     ('sms', 'temporary-failure', 'Phone not accepting messages right now'),
     ('sms', 'permanent-failure', 'Phone number doesn’t exist'),
     ('sms', 'sent', 'Sent internationally'),
-    ('letter', 'created', 'Accepted'),
-    ('letter', 'sending', 'Accepted'),
-    ('letter', 'technical-failure', 'Technical failure'),
-    ('letter', 'permanent-failure', 'Permanent failure'),
-    ('letter', 'delivered', 'Received')
 ])
 def test_notification_for_csv_returns_formatted_status(
     sample_service,
@@ -182,7 +177,7 @@ def test_notification_subject_is_none_for_sms(sample_service):
     assert notification.subject is None
 
 
-@pytest.mark.parametrize('template_type', ['email', 'letter'])
+@pytest.mark.parametrize('template_type', ['email'])
 def test_notification_subject_fills_in_placeholders(sample_service, template_type):
     template = create_template(service=sample_service, template_type=template_type, subject='((name))')
     notification = create_notification(template=template, personalisation={'name': 'hello'})

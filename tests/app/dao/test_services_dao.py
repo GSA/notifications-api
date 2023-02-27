@@ -14,10 +14,7 @@ from app.dao.inbound_numbers_dao import (
     dao_set_inbound_number_to_service,
 )
 from app.dao.organisation_dao import dao_add_service_to_organisation
-from app.dao.service_permissions_dao import (
-    dao_add_service_permission,
-    dao_remove_service_permission,
-)
+from app.dao.service_permissions_dao import dao_remove_service_permission
 from app.dao.service_user_dao import (
     dao_get_service_user,
     dao_update_service_user,
@@ -50,7 +47,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     SMS_TYPE,
     ApiKey,
     InvitedUser,
@@ -402,8 +398,6 @@ def test_dao_fetch_live_services_data(sample_user):
     create_service(service_name='not_active', active=False)
     create_service(service_name='not_live', count_as_live=False)
     email_template = create_template(service=service, template_type='email')
-    template_letter_1 = create_template(service=service, template_type='letter')
-    template_letter_2 = create_template(service=service_2, template_type='letter')
     dao_add_service_to_organisation(service=service, organisation_id=org.id)
     # two sms billing records for 1st service within current financial year:
     create_ft_billing(local_date='2019-04-20', template=sms_template)
@@ -412,10 +406,6 @@ def test_dao_fetch_live_services_data(sample_user):
     create_ft_billing(local_date='2018-04-20', template=sms_template)
     # one email billing record for 1st service within current financial year:
     create_ft_billing(local_date='2019-04-20', template=email_template)
-    # one letter billing record for 1st service within current financial year:
-    create_ft_billing(local_date='2019-04-15', template=template_letter_1)
-    # one letter billing record for 2nd service within current financial year:
-    create_ft_billing(local_date='2019-04-16', template=template_letter_2)
 
     # 1st service: billing from 2018 and 2019
     create_annual_billing(service.id, 500, 2018)
@@ -433,7 +423,7 @@ def test_dao_fetch_live_services_data(sample_user):
             'organisation_type': 'federal', 'consent_to_research': None, 'contact_name': 'Test User',
             'contact_email': 'notify@digital.cabinet-office.gov.uk', 'contact_mobile': '+12028675309',
             'live_date': datetime(2014, 4, 20, 10, 0), 'sms_volume_intent': None, 'email_volume_intent': None,
-            'letter_volume_intent': None, 'sms_totals': 2, 'email_totals': 1, 'letter_totals': 1,
+            'letter_volume_intent': None, 'sms_totals': 2, 'email_totals': 1, 'letter_totals': 0,
             'free_sms_fragment_limit': 100},
         {'service_id': mock.ANY, 'service_name': 'third', 'organisation_name': None, 'consent_to_research': None,
             'organisation_type': None, 'contact_name': None, 'contact_email': None,
@@ -445,7 +435,7 @@ def test_dao_fetch_live_services_data(sample_user):
             'contact_name': 'Test User', 'contact_email': 'notify@digital.cabinet-office.gov.uk',
             'contact_mobile': '+12028675309', 'live_date': datetime(2017, 4, 20, 10, 0), 'sms_volume_intent': None,
             'organisation_type': None, 'email_volume_intent': None, 'letter_volume_intent': None,
-            'sms_totals': 0, 'email_totals': 0, 'letter_totals': 1,
+            'sms_totals': 0, 'email_totals': 0, 'letter_totals': 0,
             'free_sms_fragment_limit': 300}
     ]
 
@@ -492,30 +482,10 @@ def test_removing_all_permission_returns_service_with_no_permissions(notify_db_s
     service = create_service()
     dao_remove_service_permission(service_id=service.id, permission=SMS_TYPE)
     dao_remove_service_permission(service_id=service.id, permission=EMAIL_TYPE)
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
     dao_remove_service_permission(service_id=service.id, permission=INTERNATIONAL_SMS_TYPE)
 
     service = dao_fetch_service_by_id(service.id)
     assert len(service.permissions) == 0
-
-
-def test_create_service_by_id_adding_and_removing_letter_returns_service_without_letter(service_factory):
-    service = service_factory.get('testing', email_from='testing')
-
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
-    dao_add_service_permission(service_id=service.id, permission=LETTER_TYPE)
-
-    service = dao_fetch_service_by_id(service.id)
-    _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE,
-    ))
-
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
-    service = dao_fetch_service_by_id(service.id)
-
-    _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
-    ))
 
 
 def test_create_service_creates_a_history_record_with_current_data(notify_db_session):
@@ -582,11 +552,13 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
                       created_by=user)
     dao_create_service(service, user, service_permissions=[
         SMS_TYPE,
-        EMAIL_TYPE,
+        # EMAIL_TYPE,
         INTERNATIONAL_SMS_TYPE,
     ])
 
-    service.permissions.append(ServicePermission(service_id=service.id, permission='letter'))
+    assert Service.query.count() == 1
+
+    service.permissions.append(ServicePermission(service_id=service.id, permission=EMAIL_TYPE))
     dao_update_service(service)
 
     assert Service.query.count() == 1
@@ -597,7 +569,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     assert service_from_db.version == 2
 
     _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE,
+        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
     permission = [p for p in service.permissions if p.permission == 'sms'][0]
@@ -610,7 +582,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     service_from_db = Service.query.first()
     assert service_from_db.version == 3
     _assert_service_permissions(service.permissions, (
-        EMAIL_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE,
+        EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
     history = Service.get_history_model().query.filter_by(name='service_name').order_by('version').all()
@@ -1107,14 +1079,6 @@ def test_dao_allocating_inbound_number_shows_on_service(notify_db_session):
 def _assert_service_permissions(service_permissions, expected):
     assert len(service_permissions) == len(expected)
     assert set(expected) == set(p.permission for p in service_permissions)
-
-
-def create_email_sms_letter_template():
-    service = create_service()
-    template_one = create_template(service=service, template_name='1', template_type='email')
-    template_two = create_template(service=service, template_name='2', template_type='sms')
-    template_three = create_template(service=service, template_name='3', template_type='letter')
-    return template_one, template_three, template_two
 
 
 @freeze_time("2019-12-02 12:00:00.000000")

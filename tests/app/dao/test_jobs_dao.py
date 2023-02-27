@@ -19,9 +19,7 @@ from app.dao.jobs_dao import (
     find_missing_row_for_job,
 )
 from app.models import (
-    EMAIL_TYPE,
     JOB_STATUS_FINISHED,
-    LETTER_TYPE,
     SMS_TYPE,
     Job,
 )
@@ -306,36 +304,17 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 
 
 @freeze_time('2016-10-31 10:00:00')
-def test_should_get_jobs_seven_days_old_filters_type(sample_service):
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    letter_template = create_template(sample_service, template_type=LETTER_TYPE)
-    sms_template = create_template(sample_service, template_type=SMS_TYPE)
-    email_template = create_template(sample_service, template_type=EMAIL_TYPE)
-
-    job_to_remain = create_job(letter_template, created_at=eight_days_ago)
-    create_job(sms_template, created_at=eight_days_ago)
-    create_job(email_template, created_at=eight_days_ago)
-
-    jobs = dao_get_jobs_older_than_data_retention(
-        notification_types=[EMAIL_TYPE, SMS_TYPE]
-    )
-
-    assert len(jobs) == 2
-    assert job_to_remain.id not in [job.id for job in jobs]
-
-
-@freeze_time('2016-10-31 10:00:00')
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
     six_days_ago = datetime.utcnow() - timedelta(days=6)
     eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    letter_template = create_template(sample_service, template_type=LETTER_TYPE)
+    sms_template = create_template(sample_service, template_type=SMS_TYPE)
 
-    create_job(letter_template, created_at=eight_days_ago)
-    create_job(letter_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
-    job_to_remain = create_job(letter_template, created_at=eight_days_ago, scheduled_for=six_days_ago)
+    create_job(sms_template, created_at=eight_days_ago)
+    create_job(sms_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
+    job_to_remain = create_job(sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago)
 
     jobs = dao_get_jobs_older_than_data_retention(
-        notification_types=[LETTER_TYPE]
+        notification_types=[SMS_TYPE]
     )
 
     assert len(jobs) == 2

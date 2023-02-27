@@ -550,11 +550,10 @@ def test_get_all_notifications_filter_multiple_query_parameters(client, sample_e
 
 def test_get_all_notifications_renames_letter_statuses(
     client,
-    sample_letter_notification,
     sample_notification,
     sample_email_notification,
 ):
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
+    auth_header = create_service_authorization_header(service_id=sample_email_notification.service_id)
     response = client.get(
         path=url_for('v2_notifications.get_notifications'),
         headers=[('Content-Type', 'application/json'), auth_header]
@@ -566,7 +565,5 @@ def test_get_all_notifications_renames_letter_statuses(
     for noti in json_response['notifications']:
         if noti['type'] == 'sms' or noti['type'] == 'email':
             assert noti['status'] == 'created'
-        elif noti['type'] == 'letter':
-            assert noti['status'] == 'accepted'
         else:
             pytest.fail()

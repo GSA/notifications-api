@@ -18,7 +18,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_TYPES,
     SMS_TYPE,
     FactBilling,
@@ -112,7 +111,7 @@ def test_create_nightly_notification_status_triggers_relevant_tasks(
 @pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_checks_history(
     sample_service,
-    sample_letter_template,
+    sample_sms_template,
     mocker
 ):
     yesterday = datetime.now() - timedelta(days=1)
@@ -120,13 +119,13 @@ def test_create_nightly_billing_for_day_checks_history(
 
     create_notification(
         created_at=yesterday,
-        template=sample_letter_template,
+        template=sample_sms_template,
         status='sending',
     )
 
     create_notification_history(
         created_at=yesterday,
-        template=sample_letter_template,
+        template=sample_sms_template,
         status='delivered',
     )
 
@@ -138,7 +137,7 @@ def test_create_nightly_billing_for_day_checks_history(
     assert len(records) == 1
 
     record = records[0]
-    assert record.notification_type == LETTER_TYPE
+    assert record.notification_type == SMS_TYPE
     assert record.notifications_sent == 2
 
 
@@ -431,7 +430,6 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     first_template = create_template(service=first_service)
     second_service = create_service(service_name='second Service')
     second_template = create_template(service=second_service, template_type='email')
-    third_template = create_template(service=second_service, template_type='letter')
 
     process_day = date.today() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
@@ -439,25 +437,23 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification(template=second_template, status='temporary-failure')
 
         # team API key notifications are included
-        create_notification(template=third_template, status='sending', key_type=KEY_TYPE_TEAM)
+        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEAM)
 
         # test notifications are ignored
-        create_notification(template=third_template, status='sending', key_type=KEY_TYPE_TEST)
+        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEST)
 
         # historical notifications are included
-        create_notification_history(template=third_template, status='delivered')
+        create_notification_history(template=second_template, status='delivered')
 
     # these created notifications from a different day get ignored
     with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
-        create_notification(template=third_template)
 
     assert len(FactNotificationStatus.query.all()) == 0
 
     create_nightly_notification_status_for_service_and_day(str(process_day), first_service.id, 'sms')
     create_nightly_notification_status_for_service_and_day(str(process_day), second_service.id, 'email')
-    create_nightly_notification_status_for_service_and_day(str(process_day), second_service.id, 'letter')
 
     new_fact_data = FactNotificationStatus.query.order_by(
         FactNotificationStatus.notification_type,
@@ -466,7 +462,23 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
 
     assert len(new_fact_data) == 4
 
-    email_failure_row = new_fact_data[0]
+    email_delivered_row = new_fact_data[0]
+    assert email_delivered_row.template_id == second_template.id
+    assert email_delivered_row.service_id == second_service.id
+    assert email_delivered_row.notification_type == 'email'
+    assert email_delivered_row.notification_status == 'delivered'
+    assert email_delivered_row.notification_count == 1
+    assert email_delivered_row.key_type == KEY_TYPE_NORMAL
+
+    email_sending_row = new_fact_data[1]
+    assert email_sending_row.template_id == second_template.id
+    assert email_sending_row.service_id == second_service.id
+    assert email_sending_row.notification_type == 'email'
+    assert email_sending_row.notification_status == 'sending'
+    assert email_sending_row.notification_count == 1
+    assert email_sending_row.key_type == KEY_TYPE_TEAM
+
+    email_failure_row = new_fact_data[2]
     assert email_failure_row.local_date == process_day
     assert email_failure_row.template_id == second_template.id
     assert email_failure_row.service_id == second_service.id
@@ -475,22 +487,6 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_failure_row.notification_status == 'temporary-failure'
     assert email_failure_row.notification_count == 1
     assert email_failure_row.key_type == KEY_TYPE_NORMAL
-
-    letter_delivered_row = new_fact_data[1]
-    assert letter_delivered_row.template_id == third_template.id
-    assert letter_delivered_row.service_id == second_service.id
-    assert letter_delivered_row.notification_type == 'letter'
-    assert letter_delivered_row.notification_status == 'delivered'
-    assert letter_delivered_row.notification_count == 1
-    assert letter_delivered_row.key_type == KEY_TYPE_NORMAL
-
-    letter_sending_row = new_fact_data[2]
-    assert letter_sending_row.template_id == third_template.id
-    assert letter_sending_row.service_id == second_service.id
-    assert letter_sending_row.notification_type == 'letter'
-    assert letter_sending_row.notification_status == 'sending'
-    assert letter_sending_row.notification_count == 1
-    assert letter_sending_row.key_type == KEY_TYPE_TEAM
 
     sms_delivered_row = new_fact_data[3]
     assert sms_delivered_row.template_id == first_template.id

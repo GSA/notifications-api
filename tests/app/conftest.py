@@ -23,7 +23,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     SERVICE_PERMISSION_TYPES,
     SMS_TYPE,
@@ -297,17 +296,6 @@ def sample_template_without_email_permission(notify_db_session):
     return create_template(service, template_type=EMAIL_TYPE)
 
 
-@pytest.fixture
-def sample_letter_template(sample_service_full_permissions):
-    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE)
-
-
-@pytest.fixture
-def sample_trial_letter_template(sample_service_full_permissions):
-    sample_service_full_permissions.restricted = True
-    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE)
-
-
 @pytest.fixture(scope='function')
 def sample_email_template_with_placeholders(sample_service):
     return create_template(
@@ -464,20 +452,6 @@ def sample_notification(notify_db_session):
     dao_create_notification(notification)
 
     return notification
-
-
-@pytest.fixture
-def sample_letter_notification(sample_letter_template):
-    address = {
-        'address_line_1': 'A1',
-        'address_line_2': 'A2',
-        'address_line_3': 'A3',
-        'address_line_4': 'A4',
-        'address_line_5': 'A5',
-        'address_line_6': 'A6',
-        'postcode': 'A_POST'
-    }
-    return create_notification(sample_letter_template, reference='foo', personalisation=address)
 
 
 @pytest.fixture(scope='function')
