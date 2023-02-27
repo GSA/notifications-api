@@ -523,7 +523,6 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
         Notification.created_at < end_date,
         Notification.api_key_id.isnot(None),
         Notification.key_type != KEY_TYPE_TEST,
-        # Notification.notification_type != LETTER_TYPE
     ).one()
 
 

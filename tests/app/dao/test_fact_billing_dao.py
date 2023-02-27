@@ -629,7 +629,6 @@ def test_fetch_usage_year_for_organisation(notify_db_session):
     assert first_row['sms_remainder'] == 5  # because there are 5 billable units
     assert first_row['chargeable_billable_sms'] == 0
     assert first_row['sms_cost'] == 0.0
-    assert first_row['letter_cost'] == 0
     assert first_row['emails_sent'] == 0
 
     second_row = results[str(service_with_emails_for_org.id)]
@@ -639,7 +638,6 @@ def test_fetch_usage_year_for_organisation(notify_db_session):
     assert second_row['sms_remainder'] == 0
     assert second_row['chargeable_billable_sms'] == 0
     assert second_row['sms_cost'] == 0
-    assert second_row['letter_cost'] == 0
     assert second_row['emails_sent'] == 1100
 
     third_row = results[str(fixtures["service_with_out_ft_billing_this_year"].id)]
@@ -649,7 +647,6 @@ def test_fetch_usage_year_for_organisation(notify_db_session):
     assert third_row['sms_remainder'] == 10
     assert third_row['chargeable_billable_sms'] == 0
     assert third_row['sms_cost'] == 0
-    assert third_row['letter_cost'] == 0
     assert third_row['emails_sent'] == 0
 
 
@@ -1008,9 +1005,6 @@ def test_fetch_volumes_by_service(notify_db_session):
     assert results[0].sms_notifications == 2
     assert results[0].sms_chargeable_units == 3
     assert results[0].email_totals == 0
-    assert results[0].letter_totals == 0
-    assert results[0].letter_sheet_totals == 0
-    assert float(results[0].letter_cost) == 0
 
     assert results[1].service_name == 'f - without ft_billing'
     assert results[1].organisation_name == 'Org for a - with sms and letter'
@@ -1018,9 +1012,6 @@ def test_fetch_volumes_by_service(notify_db_session):
     assert results[1].sms_notifications == 0
     assert results[1].sms_chargeable_units == 0
     assert results[1].email_totals == 0
-    assert results[1].letter_totals == 0
-    assert results[1].letter_sheet_totals == 0
-    assert float(results[1].letter_cost) == 0
 
     assert results[3].service_name == 'b - chargeable sms'
     assert not results[3].organisation_name
@@ -1028,9 +1019,6 @@ def test_fetch_volumes_by_service(notify_db_session):
     assert results[3].sms_notifications == 2
     assert results[3].sms_chargeable_units == 3
     assert results[3].email_totals == 0
-    assert results[3].letter_totals == 0
-    assert results[3].letter_sheet_totals == 0
-    assert float(results[3].letter_cost) == 0
 
     assert results[4].service_name == 'e - sms within allowance'
     assert not results[4].organisation_name
@@ -1038,6 +1026,3 @@ def test_fetch_volumes_by_service(notify_db_session):
     assert results[4].sms_notifications == 1
     assert results[4].sms_chargeable_units == 2
     assert results[4].email_totals == 0
-    assert results[4].letter_totals == 0
-    assert results[4].letter_sheet_totals == 0
-    assert float(results[4].letter_cost) == 0

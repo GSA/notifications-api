@@ -106,16 +106,12 @@ def dao_fetch_live_services_data():
         Service.go_live_at.label("live_date"),
         Service.volume_sms.label('sms_volume_intent'),
         Service.volume_email.label('email_volume_intent'),
-        Service.volume_letter.label('letter_volume_intent'),
         case([
             (this_year_ft_billing.c.notification_type == 'email', func.sum(this_year_ft_billing.c.notifications_sent))
         ], else_=0).label("email_totals"),
         case([
             (this_year_ft_billing.c.notification_type == 'sms', func.sum(this_year_ft_billing.c.notifications_sent))
         ], else_=0).label("sms_totals"),
-        case([
-            (this_year_ft_billing.c.notification_type == 'letter', func.sum(this_year_ft_billing.c.notifications_sent))
-        ], else_=0).label("letter_totals"),
         AnnualBilling.free_sms_fragment_limit,
     ).join(
         Service.annual_billing
@@ -149,7 +145,6 @@ def dao_fetch_live_services_data():
         Service.go_live_at,
         Service.volume_sms,
         Service.volume_email,
-        Service.volume_letter,
         this_year_ft_billing.c.notification_type,
         AnnualBilling.free_sms_fragment_limit,
     ).order_by(
@@ -162,7 +157,6 @@ def dao_fetch_live_services_data():
         if existing_service is not None:
             existing_service["email_totals"] += row.email_totals
             existing_service["sms_totals"] += row.sms_totals
-            existing_service["letter_totals"] += row.letter_totals
         else:
             results.append(row._asdict())
     return results

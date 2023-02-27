@@ -118,38 +118,6 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
     return query.all()
 
 
-def fetch_letter_costs_and_totals_for_all_services(start_date, end_date):
-    query = db.session.query(
-        Organisation.name.label("organisation_name"),
-        Organisation.id.label("organisation_id"),
-        Service.name.label("service_name"),
-        Service.id.label("service_id"),
-        func.sum(FactBilling.notifications_sent).label("total_letters"),
-        func.sum(FactBilling.notifications_sent * FactBilling.rate).label("letter_cost")
-    ).select_from(
-        Service
-    ).outerjoin(
-        Service.organisation
-    ).join(
-        FactBilling, FactBilling.service_id == Service.id,
-    ).filter(
-        FactBilling.service_id == Service.id,
-        FactBilling.local_date >= start_date,
-        FactBilling.local_date <= end_date,
-        FactBilling.notification_type == LETTER_TYPE,
-    ).group_by(
-        Organisation.name,
-        Organisation.id,
-        Service.id,
-        Service.name,
-    ).order_by(
-        Organisation.name,
-        Service.name
-    )
-
-    return query.all()
-
-
 def fetch_letter_line_items_for_all_services(start_date, end_date):
     query = db.session.query(
         Organisation.name.label("organisation_name"),
@@ -622,31 +590,6 @@ def create_billing_record(data, rate, process_day):
     return billing_record
 
 
-def fetch_letter_costs_for_organisation(organisation_id, start_date, end_date):
-    query = db.session.query(
-        Service.name.label("service_name"),
-        Service.id.label("service_id"),
-        func.sum(FactBilling.notifications_sent * FactBilling.rate).label("letter_cost")
-    ).select_from(
-        Service
-    ).join(
-        FactBilling, FactBilling.service_id == Service.id,
-    ).filter(
-        FactBilling.local_date >= start_date,
-        FactBilling.local_date <= end_date,
-        FactBilling.notification_type == LETTER_TYPE,
-        Service.organisation_id == organisation_id,
-        Service.restricted.is_(False)
-    ).group_by(
-        Service.id,
-        Service.name,
-    ).order_by(
-        Service.name
-    )
-
-    return query.all()
-
-
 def fetch_email_usage_for_organisation(organisation_id, start_date, end_date):
     query = db.session.query(
         Service.name.label("service_name"),
@@ -793,12 +736,10 @@ def fetch_usage_year_for_organisation(organisation_id, year):
             'sms_billable_units': 0,
             'chargeable_billable_sms': 0,
             'sms_cost': 0.0,
-            'letter_cost': 0.0,
             'emails_sent': 0,
             'active': service.active
         }
     sms_usages = fetch_sms_billing_for_organisation(organisation_id, year)
-    letter_usages = fetch_letter_costs_for_organisation(organisation_id, year_start, year_end)
     email_usages = fetch_email_usage_for_organisation(organisation_id, year_start, year_end)
     for usage in sms_usages:
         service_with_usage[str(usage.service_id)] = {
@@ -809,12 +750,9 @@ def fetch_usage_year_for_organisation(organisation_id, year):
             'sms_billable_units': usage.sms_billable_units,
             'chargeable_billable_sms': usage.chargeable_billable_sms,
             'sms_cost': float(usage.sms_cost),
-            'letter_cost': 0.0,
             'emails_sent': 0,
             'active': usage.active
         }
-    for letter_usage in letter_usages:
-        service_with_usage[str(letter_usage.service_id)]['letter_cost'] = float(letter_usage.letter_cost)
     for email_usage in email_usages:
         service_with_usage[str(email_usage.service_id)]['emails_sent'] = email_usage.emails_sent
 
@@ -863,16 +801,6 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 (FactBilling.notification_type == EMAIL_TYPE, FactBilling.notifications_sent)
             ], else_=0
         )).label('email_totals'),
-        # func.sum(case(
-        #     [
-        #         (FactBilling.notification_type == LETTER_TYPE, FactBilling.notifications_sent)
-        #     ], else_=0
-        # )).label('letter_totals'),
-        # func.sum(case(
-        #     [
-        #         (FactBilling.notification_type == LETTER_TYPE, FactBilling.billable_units)
-        #     ], else_=0
-        # )).label('letter_sheet_totals')
     ).filter(
         FactBilling.local_date >= start_date,
         FactBilling.local_date <= end_date
@@ -888,8 +816,6 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
         func.sum(
             daily_volume_stats.c.sms_fragments_times_multiplier).label('sms_chargeable_units'),
         func.sum(daily_volume_stats.c.email_totals).label('email_totals'),
-        # func.sum(daily_volume_stats.c.letter_totals).label('letter_totals'),
-        # func.sum(daily_volume_stats.c.letter_sheet_totals).label('letter_sheet_totals')
     ).group_by(
         daily_volume_stats.c.local_date
     ).order_by(
@@ -941,17 +867,6 @@ def fetch_volumes_by_service(start_date, end_date):
         func.sum(case([
             (FactBilling.notification_type == EMAIL_TYPE, FactBilling.notifications_sent)
         ], else_=0)).label('email_totals'),
-        func.sum(case([
-            (FactBilling.notification_type == LETTER_TYPE, FactBilling.notifications_sent)
-        ], else_=0)).label('letter_totals'),
-        func.sum(case([
-            (FactBilling.notification_type == LETTER_TYPE, FactBilling.notifications_sent * FactBilling.rate)
-        ], else_=0)).label("letter_cost"),
-        func.sum(case(
-            [
-                (FactBilling.notification_type == LETTER_TYPE, FactBilling.billable_units)
-            ], else_=0
-        )).label('letter_sheet_totals')
     ).filter(
         FactBilling.local_date >= start_date,
         FactBilling.local_date <= end_date
@@ -982,9 +897,6 @@ def fetch_volumes_by_service(start_date, end_date):
         func.coalesce(func.sum(volume_stats.c.sms_fragments_times_multiplier), 0
                       ).label("sms_chargeable_units"),
         func.coalesce(func.sum(volume_stats.c.email_totals), 0).label("email_totals"),
-        func.coalesce(func.sum(volume_stats.c.letter_totals), 0).label("letter_totals"),
-        func.coalesce(func.sum(volume_stats.c.letter_cost), 0).label("letter_cost"),
-        func.coalesce(func.sum(volume_stats.c.letter_sheet_totals), 0).label("letter_sheet_totals")
     ).select_from(
         Service
     ).outerjoin(
