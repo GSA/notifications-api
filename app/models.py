@@ -1256,11 +1256,6 @@ NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
     NOTIFICATION_PERMANENT_FAILURE,
 ]
 
-NOTIFICATION_STATUS_TYPES_BILLABLE_FOR_LETTERS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_RETURNED_LETTER,
-]
 # we don't really have a concept of billable emails - however the ft billing table only includes emails that we have
 # actually sent.
 NOTIFICATION_STATUS_TYPES_SENT_EMAILS = [
