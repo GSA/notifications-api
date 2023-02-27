@@ -1,6 +1,4 @@
 from app.models import (
-    NOTIFICATION_STATUS_LETTER_ACCEPTED,
-    NOTIFICATION_STATUS_LETTER_RECEIVED,
     NOTIFICATION_STATUS_TYPES,
     NOTIFICATION_TYPES,
 )
@@ -48,7 +46,7 @@ get_notification_response = {
         "line_5": {"type": ["string", "null"]},
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
-        "type": {"enum": ["sms", "letter", "email"]},
+        "type": {"enum": ["sms", "email"]},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},
@@ -75,8 +73,7 @@ get_notifications_request = {
         "status": {
             "type": "array",
             "items": {
-                "enum": NOTIFICATION_STATUS_TYPES +
-                    [NOTIFICATION_STATUS_LETTER_ACCEPTED + ', ' + NOTIFICATION_STATUS_LETTER_RECEIVED]
+                "enum": NOTIFICATION_STATUS_TYPES
             }
         },
         "template_type": {
@@ -213,49 +210,6 @@ post_email_response = {
         "uri": {"type": "string", "format": "uri"},
         "template": template,
         "scheduled_for": {"type": ["string", "null"]}
-    },
-    "required": ["id", "content", "uri", "template"]
-}
-
-post_letter_request = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST letter notification schema",
-    "type": "object",
-    "title": "POST v2/notifications/letter",
-    "properties": {
-        "reference": {"type": "string"},
-        "template_id": uuid,
-        "personalisation": personalisation
-    },
-    "required": ["template_id", "personalisation"],
-    "additionalProperties": False
-}
-
-letter_content = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Letter content for POST letter notification",
-    "type": "object",
-    "title": "notification letter content",
-    "properties": {
-        "body": {"type": "string"},
-        "subject": {"type": "string"}
-    },
-    "required": ["body", "subject"]
-}
-
-post_letter_response = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST sms notification response schema",
-    "type": "object",
-    "title": "response v2/notifications/letter",
-    "properties": {
-        "id": uuid,
-        "reference": {"type": ["string", "null"]},
-        "content": letter_content,
-        "uri": {"type": "string", "format": "uri"},
-        "template": template,
-        # letters cannot be scheduled
-        "scheduled_for": {"type": "null"}
     },
     "required": ["id", "content", "uri", "template"]
 }
