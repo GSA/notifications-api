@@ -6,6 +6,34 @@ Notify is a Flask application running on [cloud.gov](https://cloud.gov), which a
 
 In addition to the Flask app, Notify uses Celery to manage the task queue. Celery stores tasks in Redis.
 
+## GitHub Repositories
+
+Application, infrastructure, and compliance work is spread across several repositories:
+
+### Application
+
+* [notifications-api](https://github.com/GSA/notifications-api) for the API app
+* [notifications-admin](https://github.com/GSA/notifications-admin) for the Admin UI app
+* [notifications-utils](https://github.com/GSA/notifications-utils) for common library functions
+
+### Infrastructure
+
+In addition to terraform directories in the api and admin apps above:
+
+#### We maintain:
+
+* [usnotify-ssb](https://github.com/GSA/usnotify-ssb) A supplemental service broker that provisions SES and SNS for us
+* [ttsnotify-brokerpak-sms](https://github.com/GSA/ttsnotify-brokerpak-sms) The brokerpak defining SNS (SMS sending)
+
+#### We use:
+
+* [datagov-brokerpak-smtp](https://github.com/GSA-TTS/datagov-brokerpak-smtp) The brokerpak defining SES
+* [cg-egress-proxy](https://github.com/GSA-TTS/cg-egress-proxy/) The caddy proxy that allows external API calls
+
+### Compliance
+
+* [us-notify-compliance](https://github.com/GSA/us-notify-compliance) for OSCAL control documentation and diagrams
+
 ## Terraform
 
 The cloud.gov environment is configured with Terraform. See [the `terraform` folder](../terraform/) to learn about that.
@@ -22,9 +50,13 @@ In SNS, we have 3 topics for SMS receipts. These are not currently functional, s
 
 Through Pinpoint, the API needs at least one number so that the application itself can send SMS for authentication codes.
 
-The API also has access to AWS S3 buckets for storing CSVs of messages and contact lists. It does not access a third S3 bucket that stores agency logos. 
+The API also has access to AWS S3 buckets for storing CSVs of messages and contact lists. It does not access a third S3 bucket that stores agency logos.
 
-We may be able to provision these services through cloud.gov, as well. In addition to [s3 support](https://cloud.gov/docs/services/s3/), there is [an SES brokerpak](https://github.com/GSA-TTS/datagov-brokerpak-smtp) and work on an SNS brokerpak.
+SES and SNS for use by the cloud.gov-deployed apps is currently in the process of migrating to being provisioned through cloud.gov. Currently, SES, SNS, and S3 for local-development are still manually provisioned in AWS.
+
+## New Relic
+
+We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for application monitoring and error reporting. When requesting access to New Relic, ask to be added to the Benefits-Studio subaccount.
 
 ## Onboarding
 
@@ -32,6 +64,7 @@ We may be able to provision these services through cloud.gov, as well. In additi
 - [ ] Get permissions for the repos
 - [ ] Get access to the cloud.gov org && space
 - [ ] Get [access to AWS](https://handbook.tts.gsa.gov/launching-software/infrastructure/#cloud-service-provider-csp-sandbox-accounts), if necessary
+- [ ] Get [access to New Relic](https://handbook.tts.gsa.gov/tools/new-relic/#how-do-i-get-access-to-new-relic), if necessary
 - [ ] Pull down creds from cloud.gov and create the local .env file
 - [ ] Do stuff!
 
@@ -39,8 +72,11 @@ We may be able to provision these services through cloud.gov, as well. In additi
 
 ### Steps to prepare SES
 
-1. Go to SES console for \$AWS_REGION and create new origin and destination emails. AWS will send a verification via email which you'll need to complete.
-2. Find and replace instances in the repo of "testsender", "testreceiver" and "dispostable.com", with your origin and destination email addresses, which you verified in step 1 above.
+1. After the first deploy of the application with the SSB-brokered SES service completes:
+    1. Log into the SES console and navigate to the SNS subscription page.
+    2. Select "Request confirmation" for any subscriptions still in "Pending Confirmation" state
+2. (For sandbox SES accounts) Go to SES console for \$AWS_REGION and create new origin and destination emails. AWS will send a verification via email which you'll need to complete.
+3. Find and replace instances in the repo of "testsender", "testreceiver" and "dispostable.com", with your origin and destination email addresses, which you verified in step 1 above.
 
 TODO: create env vars for these origin and destination email addresses for the root service, and create new migrations to update postgres seed fixtures
 

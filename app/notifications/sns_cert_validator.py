@@ -39,8 +39,7 @@ def get_certificate(url):
 def validate_arn(sns_payload):
     if VALIDATE_SNS_TOPICS:
         arn = sns_payload.get('TopicArn')
-        topic_name = arn.split(':')[5]
-        if topic_name not in VALID_SNS_TOPICS:
+        if arn not in VALID_SNS_TOPICS:
             raise ValidationError("Invalid Topic Name")
 
 

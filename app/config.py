@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from os import getenv
+from os import getenv, path
 
 from celery.schedules import crontab
 from kombu import Exchange, Queue
@@ -108,11 +108,11 @@ class Config(object):
     AWS_US_TOLL_FREE_NUMBER = getenv("AWS_US_TOLL_FREE_NUMBER")
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
-    NOTIFY_EMAIL_DOMAIN = getenv('NOTIFY_EMAIL_DOMAIN', 'notify.sandbox.10x.gsa.gov')
+    NOTIFY_EMAIL_DOMAIN = cloud_config.ses_email_domain
     SES_STUB_URL = None  # TODO: set to a URL in env and remove this to use a stubbed SES service
     # AWS SNS topics for delivery receipts
     VALIDATE_SNS_TOPICS = True
-    VALID_SNS_TOPICS = ['notify_test_bounce', 'notify_test_success', 'notify_test_complaint', 'notify_test_sms_inbound']
+    VALID_SNS_TOPICS = cloud_config.sns_topic_arns
 
     # these should always add up to 100%
     SMS_PROVIDER_RESTING_POINTS = {
@@ -146,6 +146,9 @@ class Config(object):
     # be careful increasing this size without being sure that we won't see slowness in pysftp
     MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
     MAX_LETTER_PDF_COUNT_PER_ZIP = 500
+
+    # Default data
+    CONFIG_FILES = path.dirname(__file__) + '/config_files/'
 
     NOTIFY_SERVICE_ID = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
     NOTIFY_USER_ID = '6af522d0-2915-4e52-83a3-3690455a5fe6'

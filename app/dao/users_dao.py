@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
-from random import SystemRandom
+from secrets import randbelow
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -19,16 +19,9 @@ def _remove_values_for_keys_if_present(dict, keys):
         dict.pop(key, None)
 
 
-def create_secret_code():
-    return ''.join(get_non_repeating_random_digits(5))
-
-
-def get_non_repeating_random_digits(length):
-    output = [None] * length
-    for index in range(length):
-        while output[index] in {None, output[index - 1]}:
-            output[index] = str(SystemRandom().randrange(10))
-    return output
+def create_secret_code(length=6):
+    random_number = randbelow(10 ** length)
+    return "{:0{length}d}".format(random_number, length=length)
 
 
 def save_user_attribute(usr, update_dict=None):

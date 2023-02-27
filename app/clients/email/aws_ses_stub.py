@@ -12,7 +12,7 @@ class AwsSesStubClientException(EmailClientException):
 
 
 class AwsSesStubClient(EmailClient):
-    def init_app(self, region, statsd_client, stub_url):
+    def init_app(self, statsd_client, stub_url):
         self.statsd_client = statsd_client
         self.url = stub_url
 

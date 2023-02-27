@@ -1,12 +1,13 @@
 import pytest
 
 from app.commands import (
+    _update_template,
     create_test_user,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import AnnualBilling, User
+from app.models import AnnualBilling, Template, User
 from tests.app.db import create_annual_billing, create_service
 
 
@@ -88,3 +89,20 @@ def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_pr
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == 0
+
+
+def test_update_template(
+    notify_db_session, email_2fa_code_template
+):
+
+    _update_template(
+        "299726d2-dba6-42b8-8209-30e1d66ea164",
+        "Example text message template!",
+        "sms",
+        ["Hi, I’m trying out U.S. Notify! Today is ((day of week)) and my favorite color is ((color))."],
+        ""
+    )
+
+    t = Template.query.all()
+
+    assert t[0].name == "Example text message template!"
