@@ -21,7 +21,6 @@ from app.dao.dao_utils import autocommit
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_CREATED,
     NOTIFICATION_PENDING,
     NOTIFICATION_PENDING_VIRUS_CHECK,
@@ -132,7 +131,7 @@ def update_notification_status_by_id(notification_id, status, sent_by=None):
 
 @autocommit
 def update_notification_status_by_reference(reference, status):
-    # this is used to update letters and emails
+    # this is used to update emails
     notification = Notification.query.filter(Notification.reference == reference).first()
 
     if not notification:
@@ -304,20 +303,6 @@ def insert_notification_history_delete_notifications(
           AND key_type in ('normal', 'team')
         limit :qry_limit
         """
-    select_into_temp_table_for_letters = """
-         CREATE TEMP TABLE NOTIFICATION_ARCHIVE ON COMMIT DROP AS
-         SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
-             key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
-             client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, document_download_count
-          FROM notifications
-        WHERE service_id = :service_id
-          AND notification_type = :notification_type
-          AND created_at < :timestamp_to_delete_backwards_from
-          AND notification_status NOT IN ('pending-virus-check', 'created', 'sending')
-          AND key_type in ('normal', 'team')
-        limit :qry_limit
-        """
     # Insert into NotificationHistory if the row already exists do nothing.
     insert_query = """
         insert into notification_history
@@ -336,8 +321,7 @@ def insert_notification_history_delete_notifications(
         "qry_limit": qry_limit
     }
 
-    select_to_use = select_into_temp_table_for_letters if notification_type == 'letter' else select_into_temp_table
-    db.session.execute(select_to_use, input_params)
+    db.session.execute(select_into_temp_table, input_params)
 
     result = db.session.execute("select count(*) from NOTIFICATION_ARCHIVE").fetchone()[0]
 
@@ -455,10 +439,8 @@ def dao_get_notifications_by_recipient_or_reference(
         except InvalidEmailError:
             normalised = search_term.lower()
 
-    elif notification_type in {LETTER_TYPE, None}:
-        # For letters, we store the address without spaces, so we need
-        # to removes spaces from the search term to match. We also do
-        # this when a notification type isn’t provided (this will
+    elif notification_type == None:
+        # This happens when a notification type isn’t provided (this will
         # happen if a user doesn’t have permission to see the dashboard)
         # because email addresses and phone numbers will never be stored
         # with spaces either.
@@ -466,7 +448,7 @@ def dao_get_notifications_by_recipient_or_reference(
 
     else:
         raise TypeError(
-            f'Notification type must be {EMAIL_TYPE}, {SMS_TYPE}, {LETTER_TYPE} or None'
+            f'Notification type must be {EMAIL_TYPE}, {SMS_TYPE}, or None'
         )
 
     normalised = escape_special_characters(normalised)
@@ -521,8 +503,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
     created_at > 'START DATE' AND
     created_at < 'END DATE' AND
     api_key_id IS NOT NULL AND
-    key_type != 'test' AND
-    notification_type != 'letter';
+    key_type != 'test';
     """
     under_10_secs = Notification.sent_at - Notification.created_at <= timedelta(seconds=10)
     sum_column = functions.coalesce(functions.sum(
@@ -542,7 +523,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
         Notification.created_at < end_date,
         Notification.api_key_id.isnot(None),
         Notification.key_type != KEY_TYPE_TEST,
-        Notification.notification_type != LETTER_TYPE
+        # Notification.notification_type != LETTER_TYPE
     ).one()
 
 
