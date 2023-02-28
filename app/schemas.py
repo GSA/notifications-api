@@ -265,7 +265,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'inbound_sms',
             'jobs',
             'reply_to_email_addresses',
-            'returned_letters',
             'service_sms_senders',
             'templates',
             'updated_at',
@@ -325,7 +324,6 @@ class DetailedServiceSchema(BaseSchema):
             'permissions',
             'rate_limit',
             'reply_to_email_addresses',
-            'returned_letters',
             'service_sms_senders',
             'templates',
             'users',
@@ -372,7 +370,7 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
 
     @validates_schema
     def validate_type(self, data, **kwargs):
-        if data.get('template_type') in {models.EMAIL_TYPE, models.LETTER_TYPE}:
+        if data.get('template_type') == models.EMAIL_TYPE:
             subject = data.get('subject')
             if not subject or subject.strip() == '':
                 raise ValidationError('Invalid template subject', 'subject')

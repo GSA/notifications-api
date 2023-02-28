@@ -19,33 +19,33 @@ NewStatsRow = collections.namedtuple('row', ('notification_type', 'status', 'key
 
 
 # email_counts and sms_counts are 3-tuple of requested, delivered, failed
-@pytest.mark.idparametrize('stats, email_counts, sms_counts, letter_counts', {
+@pytest.mark.idparametrize('stats, email_counts, sms_counts', {
     'empty': ([], [0, 0, 0], [0, 0, 0], [0, 0, 0]),
     'always_increment_requested': ([
         StatsRow('email', 'delivered', 1),
         StatsRow('email', 'failed', 1)
-    ], [2, 1, 1], [0, 0, 0], [0, 0, 0]),
+    ], [2, 1, 1], [0, 0, 0]),
     'dont_mix_template_types': ([
         StatsRow('email', 'delivered', 1),
         StatsRow('sms', 'delivered', 1),
-    ], [1, 1, 0], [1, 1, 0], [1, 1, 0]),
+    ], [1, 1, 0], [1, 1, 0]),
     'convert_fail_statuses_to_failed': ([
         StatsRow('email', 'failed', 1),
         StatsRow('email', 'technical-failure', 1),
         StatsRow('email', 'temporary-failure', 1),
         StatsRow('email', 'permanent-failure', 1),
-    ], [4, 0, 4], [0, 0, 0], [3, 0, 3]),
+    ], [4, 0, 4], [0, 0, 0]),
     'convert_sent_to_delivered': ([
         StatsRow('sms', 'sending', 1),
         StatsRow('sms', 'delivered', 1),
         StatsRow('sms', 'sent', 1),
-    ], [0, 0, 0], [3, 2, 0], [0, 0, 0]),
+    ], [0, 0, 0], [3, 2, 0]),
     'handles_none_rows': ([
         StatsRow('sms', 'sending', 1),
         StatsRow(None, None, None)
-    ], [0, 0, 0], [1, 0, 0], [0, 0, 0])
+    ], [0, 0, 0], [1, 0, 0])
 })
-def test_format_statistics(stats, email_counts, sms_counts, letter_counts):
+def test_format_statistics(stats, email_counts, sms_counts):
 
     ret = format_statistics(stats)
 

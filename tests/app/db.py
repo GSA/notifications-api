@@ -34,7 +34,6 @@ from app.models import (
     AnnualBilling,
     ApiKey,
     Complaint,
-    DailySortedLetter,
     Domain,
     EmailBranding,
     FactBilling,
@@ -50,7 +49,6 @@ from app.models import (
     Organisation,
     Permission,
     Rate,
-    ReturnedLetter,
     Service,
     ServiceCallbackApi,
     ServiceContactList,
@@ -643,23 +641,6 @@ def create_invited_org_user(organisation, invited_by, email_address='invite@exam
     return invited_org_user
 
 
-def create_daily_sorted_letter(billing_day=None,
-                               file_name="Notify-20180118123.rs.txt",
-                               unsorted_count=0,
-                               sorted_count=0):
-    daily_sorted_letter = DailySortedLetter(
-        billing_day=billing_day or date(2018, 1, 18),
-        file_name=file_name,
-        unsorted_count=unsorted_count,
-        sorted_count=sorted_count
-    )
-
-    db.session.add(daily_sorted_letter)
-    db.session.commit()
-
-    return daily_sorted_letter
-
-
 def create_ft_billing(local_date,
                       template,
                       *,
@@ -968,21 +949,6 @@ def set_up_usage_data(start_date):
         "service_with_sms_within_allowance": service_with_sms_within_allowance,
         "service_with_out_ft_billing_this_year": service_with_out_ft_billing_this_year,
     }
-
-
-def create_returned_letter(service=None, reported_at=None, notification_id=None):
-    if not service:
-        service = create_service(service_name='a - with sms and letter')
-    returned_letter = ReturnedLetter(
-        service_id=service.id,
-        reported_at=reported_at or datetime.utcnow(),
-        notification_id=notification_id or uuid.uuid4(),
-        created_at=datetime.utcnow(),
-    )
-
-    db.session.add(returned_letter)
-    db.session.commit()
-    return returned_letter
 
 
 def create_service_contact_list(

@@ -8,7 +8,6 @@ from app.models import (
     EMAIL_TYPE,
     INBOUND_SMS_TYPE,
     INTERNATIONAL_SMS_TYPE,
-    LETTER_TYPE,
     SMS_TYPE,
 )
 from tests.app.db import create_service, create_service_permission
@@ -29,7 +28,6 @@ def test_create_service_permission(service_without_permissions):
 
 
 def test_fetch_service_permissions_gets_service_permissions(service_without_permissions):
-    create_service_permission(service_id=service_without_permissions.id, permission=LETTER_TYPE)
     create_service_permission(service_id=service_without_permissions.id, permission=INTERNATIONAL_SMS_TYPE)
     create_service_permission(service_id=service_without_permissions.id, permission=SMS_TYPE)
 
@@ -37,7 +35,7 @@ def test_fetch_service_permissions_gets_service_permissions(service_without_perm
 
     assert len(service_permissions) == 3
     assert all(sp.service_id == service_without_permissions.id for sp in service_permissions)
-    assert all(sp.permission in [LETTER_TYPE, INTERNATIONAL_SMS_TYPE, SMS_TYPE] for sp in service_permissions)
+    assert all(sp.permission in [INTERNATIONAL_SMS_TYPE, SMS_TYPE] for sp in service_permissions)
 
 
 def test_remove_service_permission(service_without_permissions):

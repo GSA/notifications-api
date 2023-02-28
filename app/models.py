@@ -14,7 +14,6 @@ from notifications_utils.recipients import (
     validate_phone_number,
 )
 from notifications_utils.template import (
-    LetterPrintTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
@@ -463,7 +462,6 @@ class Service(db.Model, Versioned):
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)
     volume_email = db.Column(db.Integer(), nullable=True, unique=False)
-    volume_letter = db.Column(db.Integer(), nullable=True, unique=False)
     consent_to_research = db.Column(db.Boolean, nullable=True)
     count_as_live = db.Column(db.Boolean, nullable=False, default=True)
     go_live_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
@@ -937,11 +935,6 @@ class TemplateBase(db.Model):
             return PlainTextEmailTemplate(self.__dict__)
         if self.template_type == SMS_TYPE:
             return SMSMessageTemplate(self.__dict__)
-        if self.template_type == LETTER_TYPE:
-            return LetterPrintTemplate(
-                self.__dict__,
-                contact_block=self.get_reply_to_text(),
-            )
 
     def _as_utils_template_with_personalisation(self, values):
         template = self._as_utils_template()
@@ -957,7 +950,7 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject if self.template_type in {EMAIL_TYPE, LETTER_TYPE} else None,
+            "subject": self.subject if self.template_type == EMAIL_TYPE else None,
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1048,7 +1041,7 @@ SMS_PROVIDERS = [SNS_PROVIDER]
 EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
 
-NOTIFICATION_TYPE = [EMAIL_TYPE, SMS_TYPE, LETTER_TYPE]
+NOTIFICATION_TYPE = [EMAIL_TYPE, SMS_TYPE]
 notification_types = db.Enum(*NOTIFICATION_TYPE, name='notification_type')
 
 
@@ -1209,7 +1202,6 @@ NOTIFICATION_PERMANENT_FAILURE = 'permanent-failure'
 NOTIFICATION_PENDING_VIRUS_CHECK = 'pending-virus-check'
 NOTIFICATION_VALIDATION_FAILED = 'validation-failed'
 NOTIFICATION_VIRUS_SCAN_FAILED = 'virus-scan-failed'
-NOTIFICATION_RETURNED_LETTER = 'returned-letter'
 
 NOTIFICATION_STATUS_TYPES_FAILED = [
     NOTIFICATION_TECHNICAL_FAILURE,
@@ -1217,7 +1209,6 @@ NOTIFICATION_STATUS_TYPES_FAILED = [
     NOTIFICATION_PERMANENT_FAILURE,
     NOTIFICATION_VALIDATION_FAILED,
     NOTIFICATION_VIRUS_SCAN_FAILED,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_COMPLETED = [
@@ -1227,7 +1218,6 @@ NOTIFICATION_STATUS_TYPES_COMPLETED = [
     NOTIFICATION_TECHNICAL_FAILURE,
     NOTIFICATION_TEMPORARY_FAILURE,
     NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_RETURNED_LETTER,
     NOTIFICATION_CANCELLED,
 ]
 
@@ -1244,7 +1234,6 @@ NOTIFICATION_STATUS_TYPES_BILLABLE = [
     NOTIFICATION_FAILED,
     NOTIFICATION_TEMPORARY_FAILURE,
     NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
@@ -1279,15 +1268,11 @@ NOTIFICATION_STATUS_TYPES = [
     NOTIFICATION_PENDING_VIRUS_CHECK,
     NOTIFICATION_VALIDATION_FAILED,
     NOTIFICATION_VIRUS_SCAN_FAILED,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_NON_BILLABLE = list(set(NOTIFICATION_STATUS_TYPES) - set(NOTIFICATION_STATUS_TYPES_BILLABLE))
 
 NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(*NOTIFICATION_STATUS_TYPES, name='notify_status_type')
-
-NOTIFICATION_STATUS_LETTER_ACCEPTED = 'accepted'
-NOTIFICATION_STATUS_LETTER_RECEIVED = 'received'
 
 
 class NotificationStatusTypes(db.Model):
@@ -1470,10 +1455,7 @@ class Notification(db.Model):
 
         def _substitute_status_str(_status):
             return (
-                NOTIFICATION_STATUS_TYPES_FAILED if _status == NOTIFICATION_FAILED else
-                [NOTIFICATION_CREATED, NOTIFICATION_SENDING] if _status == NOTIFICATION_STATUS_LETTER_ACCEPTED else
-                NOTIFICATION_DELIVERED if _status == NOTIFICATION_STATUS_LETTER_RECEIVED else
-                [_status]
+                NOTIFICATION_STATUS_TYPES_FAILED if _status == NOTIFICATION_FAILED else [_status]
             )
 
         def _substitute_status_seq(_statuses):
@@ -1518,35 +1500,8 @@ class Notification(db.Model):
                 'sending': 'Sending',
                 'created': 'Sending',
                 'sent': 'Sent internationally'
-            },
-            'letter': {
-                'technical-failure': 'Technical failure',
-                'permanent-failure': 'Permanent failure',
-                'sending': 'Accepted',
-                'created': 'Accepted',
-                'delivered': 'Received',
-                'returned-letter': 'Returned',
             }
         }[self.template.template_type].get(self.status, self.status)
-
-    def get_letter_status(self):
-        """
-        Return the notification_status, as we should present for letters. The distinction between created and sending is
-        a bit more confusing for letters, not to mention that there's no concept of temporary or permanent failure yet.
-
-
-        """
-        # this should only ever be called for letter notifications - it makes no sense otherwise and I'd rather not
-        # get the two code flows mixed up at all
-        assert self.notification_type == LETTER_TYPE  # nosec B101 - current calling code validates correct type
-
-        if self.status in [NOTIFICATION_CREATED, NOTIFICATION_SENDING]:
-            return NOTIFICATION_STATUS_LETTER_ACCEPTED
-        elif self.status in [NOTIFICATION_DELIVERED, NOTIFICATION_RETURNED_LETTER]:
-            return NOTIFICATION_STATUS_LETTER_RECEIVED
-        else:
-            # Currently can only be technical-failure OR pending-virus-check OR validation-failed
-            return self.status
 
     def get_created_by_name(self):
         if self.created_by:
@@ -1597,7 +1552,7 @@ class Notification(db.Model):
             "line_6": None,
             "postcode": None,
             "type": self.notification_type,
-            "status": self.get_letter_status() if self.notification_type == LETTER_TYPE else self.status,
+            "status": self.status,
             "provider_response": self.provider_response,
             "template": template_dict,
             "body": self.content,
@@ -1906,20 +1861,6 @@ class AuthType(db.Model):
     name = db.Column(db.String, primary_key=True)
 
 
-class DailySortedLetter(db.Model):
-    __tablename__ = "daily_sorted_letter"
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    billing_day = db.Column(db.Date, nullable=False, index=True)
-    file_name = db.Column(db.String, nullable=True, index=True)
-    unsorted_count = db.Column(db.Integer, nullable=False, default=0)
-    sorted_count = db.Column(db.Integer, nullable=False, default=0)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-
-    __table_args__ = (UniqueConstraint('file_name', 'billing_day', name='uix_file_name_billing_day'),
-                      )
-
-
 class FactBilling(db.Model):
     __tablename__ = "ft_billing"
 
@@ -2018,18 +1959,6 @@ class ServiceDataRetention(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class ReturnedLetter(db.Model):
-    __tablename__ = 'returned_letters'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    reported_at = db.Column(db.Date, nullable=False)
-    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('services.id'), unique=False, index=True, nullable=False)
-    service = db.relationship(Service, backref=db.backref('returned_letters'))
-    notification_id = db.Column(UUID(as_uuid=True), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
 
 
 class ServiceContactList(db.Model):

@@ -357,7 +357,6 @@ def test_post_notification_returns_400_and_missing_template(client, sample_servi
 @pytest.mark.parametrize("notification_type, key_send_to, send_to", [
     ("sms", "phone_number", "+447700900855"),
     ("email", "email_address", "sample@email.com"),
-    ("letter", "personalisation", {"address_line_1": "The queen", "postcode": "SW1 1AA"})
 ])
 def test_post_notification_returns_401_and_well_formed_auth_error(client, sample_template,
                                                                   notification_type, key_send_to, send_to):

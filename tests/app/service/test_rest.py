@@ -261,7 +261,6 @@ def test_get_service_by_id(admin_request, sample_service):
         'restricted',
         'service_callback_api',
         'volume_email',
-        'volume_letter',
         'volume_sms',
     }
 
@@ -762,7 +761,6 @@ def test_update_service_flags(client, sample_service):
 @pytest.mark.parametrize('field', (
     'volume_email',
     'volume_sms',
-    'volume_letter',
 ))
 @pytest.mark.parametrize('value, expected_status, expected_persisted', (
     (1234, 200, 1234),
