@@ -50,8 +50,6 @@ applications:
       SECRET_KEY: ((SECRET_KEY))
       AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
       AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
-      AWS_REGION: us-west-2
-      AWS_PINPOINT_REGION: us-west-2
       AWS_US_TOLL_FREE_NUMBER: ((default_toll_free_number))
 
       REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"

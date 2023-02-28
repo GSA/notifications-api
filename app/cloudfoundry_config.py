@@ -60,6 +60,27 @@ class CloudfoundryConfig:
             return getenv('AWS_SECRET_ACCESS_KEY')
 
     @property
+    def sns_access_key(self):
+        try:
+            return self._sns_credentials('aws_access_key_id')
+        except KeyError:
+            return getenv('AWS_ACCESS_KEY_ID')
+
+    @property
+    def sns_secret_key(self):
+        try:
+            return self._sns_credentials('aws_secret_access_key')
+        except KeyError:
+            return getenv('AWS_SECRET_ACCESS_KEY')
+
+    @property
+    def sns_region(self):
+        try:
+            return self._sns_credentials('region')
+        except KeyError:
+            return getenv('AWS_REGION')
+
+    @property
     def sns_topic_arns(self):
         try:
             return [
@@ -72,6 +93,9 @@ class CloudfoundryConfig:
 
     def _ses_credentials(self, key):
         return self.parsed_services['datagov-smtp'][0]['credentials'][key]
+
+    def _sns_credentials(self, key):
+        return self.parsed_services['ttsnotify-sms'][0]['credentials'][key]
 
 
 cloud_config = CloudfoundryConfig()

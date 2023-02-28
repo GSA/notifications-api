@@ -104,7 +104,6 @@ class Config(object):
 
     # AWS Settings
     AWS_REGION = getenv('AWS_REGION')
-    AWS_PINPOINT_REGION = getenv("AWS_PINPOINT_REGION")
     AWS_US_TOLL_FREE_NUMBER = getenv("AWS_US_TOLL_FREE_NUMBER")
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
