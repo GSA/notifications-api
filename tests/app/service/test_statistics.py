@@ -20,7 +20,7 @@ NewStatsRow = collections.namedtuple('row', ('notification_type', 'status', 'key
 
 # email_counts and sms_counts are 3-tuple of requested, delivered, failed
 @pytest.mark.idparametrize('stats, email_counts, sms_counts', {
-    'empty': ([], [0, 0, 0], [0, 0, 0], [0, 0, 0]),
+    'empty': ([], [0, 0, 0], [0, 0, 0]),
     'always_increment_requested': ([
         StatsRow('email', 'delivered', 1),
         StatsRow('email', 'failed', 1)

@@ -9,12 +9,7 @@ from freezegun import freeze_time
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
-from app.models import (
-    EMAIL_TYPE,
-    SMS_TYPE,
-    Template,
-    TemplateHistory,
-)
+from app.models import EMAIL_TYPE, SMS_TYPE, Template, TemplateHistory
 from tests import create_admin_authorization_header
 from tests.app.db import create_service, create_template, create_template_folder
 

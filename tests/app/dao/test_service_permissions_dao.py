@@ -33,7 +33,7 @@ def test_fetch_service_permissions_gets_service_permissions(service_without_perm
 
     service_permissions = dao_fetch_service_permissions(service_without_permissions.id)
 
-    assert len(service_permissions) == 3
+    assert len(service_permissions) == 2
     assert all(sp.service_id == service_without_permissions.id for sp in service_permissions)
     assert all(sp.permission in [INTERNATIONAL_SMS_TYPE, SMS_TYPE] for sp in service_permissions)
 

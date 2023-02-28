@@ -1,7 +1,4 @@
-from app.models import (
-    NOTIFICATION_STATUS_TYPES,
-    NOTIFICATION_TYPES,
-)
+from app.models import NOTIFICATION_STATUS_TYPES, NOTIFICATION_TYPES
 from app.schema_validation.definitions import personalisation, uuid
 
 template = {

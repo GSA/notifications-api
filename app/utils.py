@@ -2,10 +2,7 @@ from datetime import datetime, timedelta
 from os import getenv
 
 from flask import url_for
-from notifications_utils.template import (
-    HTMLEmailTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import func
 

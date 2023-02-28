@@ -439,7 +439,7 @@ def dao_get_notifications_by_recipient_or_reference(
         except InvalidEmailError:
             normalised = search_term.lower()
 
-    elif notification_type == None:
+    elif notification_type is None:
         # This happens when a notification type isn’t provided (this will
         # happen if a user doesn’t have permission to see the dashboard)
         # because email addresses and phone numbers will never be stored

@@ -1,6 +1,6 @@
 import random
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from app import db
 from app.dao import fact_processing_time_dao

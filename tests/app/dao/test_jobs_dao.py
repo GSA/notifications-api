@@ -18,11 +18,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.models import (
-    JOB_STATUS_FINISHED,
-    SMS_TYPE,
-    Job,
-)
+from app.models import JOB_STATUS_FINISHED, SMS_TYPE, Job
 from tests.app.db import (
     create_job,
     create_notification,

@@ -431,7 +431,8 @@ def test_dao_fetch_live_services_data(sample_user):
         {'service_id': mock.ANY, 'service_name': 'second', 'organisation_name': None, 'consent_to_research': None,
             'contact_name': 'Test User', 'contact_email': 'notify@digital.cabinet-office.gov.uk',
             'contact_mobile': '+12028675309', 'live_date': datetime(2017, 4, 20, 10, 0), 'sms_volume_intent': None,
-            'organisation_type': None, 'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0, 'free_sms_fragment_limit': 300}
+            'organisation_type': None, 'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0,
+            'free_sms_fragment_limit': 300}
     ]
 
 
