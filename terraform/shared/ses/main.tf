@@ -23,6 +23,7 @@ resource "cloudfoundry_service_instance" "ses" {
   json_params = jsonencode({
     region                        = var.aws_region
     domain                        = var.email_domain
+    mail_from_subdomain           = var.mail_from_subdomain
     email_receipt_error           = var.email_receipt_error
     enable_feedback_notifications = true
   })

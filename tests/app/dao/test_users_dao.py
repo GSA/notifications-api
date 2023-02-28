@@ -183,21 +183,15 @@ def test_create_secret_code_different_subsequent_codes():
     assert code1 != code2
 
 
-def test_create_secret_code_returns_5_digits():
+def test_create_secret_code_returns_6_digits():
     code = create_secret_code()
-    assert len(str(code)) == 5
+    assert len(code) == 6
 
 
-def test_create_secret_code_never_repeats_consecutive_digits(mocker):
-    mocker.patch('app.dao.users_dao.SystemRandom.randrange', side_effect=[
-        1, 1, 1,
-        2,
-        3,
-        4, 4,
-        1,  # Repeated allowed if not consecutive
-        9, 9,  # Not called because we have 5 digits now
-    ])
-    assert create_secret_code() == '12341'
+def test_create_secret_code_can_customize_digits():
+    code_length = 10
+    code = create_secret_code(code_length)
+    assert len(code) == code_length
 
 
 @freeze_time('2018-07-07 12:00:00')

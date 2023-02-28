@@ -63,6 +63,7 @@ module "ses_email" {
   recursive_delete    = local.recursive_delete
   aws_region          = "us-gov-west-1"
   email_domain        = "notify.gov"
+  mail_from_subdomain = "mail"
   email_receipt_error = "notify-support@gsa.gov"
 }
 
