@@ -9,3 +9,4 @@ admin_base_url: https://notify-sandbox.app.cloud.gov
 ADMIN_CLIENT_SECRET: sandbox-notify-secret-key
 DANGEROUS_SALT: sandbox-notify-salt
 SECRET_KEY: sandbox-notify-secret-key
+default_toll_free_number: ""
