@@ -64,6 +64,7 @@ module "ses_email" {
   name                = "${local.app_name}-ses-${local.env}"
   recursive_delete    = local.recursive_delete
   aws_region          = "us-west-2"
+  mail_from_subdomain = "mail"
   email_receipt_error = "notify-support@gsa.gov"
 }
 
