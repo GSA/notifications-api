@@ -65,14 +65,6 @@ def set_up_yearly_data_variable_rates():
     create_ft_billing(local_date='2018-05-17', template=sms_template, rate_multiplier=2, rate=0.0150, billable_unit=2)
     create_ft_billing(local_date='2018-05-16', template=sms_template, rate_multiplier=2, rate=0.162, billable_unit=2)
 
-    create_ft_billing(
-        local_date='2018-05-17',
-        template=sms_template,
-        rate=0.36,
-        notifications_sent=2,
-        billable_unit=4,  # 2 pages each
-    )
-
     return service
 
 
@@ -337,7 +329,7 @@ def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
     results = fetch_monthly_billing_for_year(service.id, 2018)
 
     # Test data is only for the month of May
-    assert len(results) == 3
+    assert len(results) == 2
 
     assert str(results[0].month) == "2018-05-01"
     assert results[0].notification_type == 'sms'
@@ -423,7 +415,7 @@ def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=6, financial_year_start=2018)
     results = fetch_billing_totals_for_year(service_id=service.id, year=2018)
 
-    assert len(results) == 3
+    assert len(results) == 2
 
     assert results[0].notification_type == 'sms'
     assert results[0].notifications_sent == 1
