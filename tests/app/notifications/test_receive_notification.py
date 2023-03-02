@@ -71,10 +71,10 @@ def test_receive_notification_from_sns_without_permissions_does_not_persist(
     permissions
 ):
     mocked = mocker.patch("app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async")
-    create_service_with_inbound_number(inbound_number='12028675309', service_permissions=permissions)
+    create_service_with_inbound_number(inbound_number='12025550104', service_permissions=permissions)
     data = {
         "ID": "1234",
-        "MSISDN": "12028675309",
+        "MSISDN": "12025550104",
         "Message": "Some message to notify",
         "Trigger": "Trigger?",
         "Number": "testing",

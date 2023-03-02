@@ -82,7 +82,6 @@ from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
 from app.models import (
     KEY_TYPE_NORMAL,
-    NOTIFICATION_CANCELLED,
     EmailBranding,
     Permission,
     Service,
