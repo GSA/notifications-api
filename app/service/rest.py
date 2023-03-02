@@ -458,26 +458,6 @@ def get_notification_for_service(service_id, notification_id):
     ), 200
 
 
-# TODO: possibly unnecessary after removing letters
-@service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>/cancel', methods=['POST'])
-def cancel_notification_for_service(service_id, notification_id):
-    notification = notifications_dao.get_notification_by_id(notification_id, service_id)
-
-    if not notification:
-        raise InvalidRequest('Notification not found', status_code=404)
-    else:
-        raise InvalidRequest('Notification cannot be cancelled - only letters can be cancelled', status_code=400)
-
-    updated_notification = notifications_dao.update_notification_status_by_id(
-        notification_id,
-        NOTIFICATION_CANCELLED,
-    )
-
-    return jsonify(
-        notification_with_template_schema.dump(updated_notification)
-    ), 200
-
-
 def search_for_notification_by_to_field(service_id, search_term, statuses, notification_type):
     results = notifications_dao.dao_get_notifications_by_recipient_or_reference(
         service_id=service_id,
