@@ -1041,8 +1041,7 @@ SMS_PROVIDERS = [SNS_PROVIDER]
 EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
 
-NOTIFICATION_TYPE = [EMAIL_TYPE, SMS_TYPE]
-notification_types = db.Enum(*NOTIFICATION_TYPE, name='notification_type')
+notification_types = db.Enum(*NOTIFICATION_TYPES, name='notification_type')
 
 
 class ProviderDetails(db.Model):
