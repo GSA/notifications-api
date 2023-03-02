@@ -14,7 +14,7 @@ down_revision = '0389_no_more_letters.py'
 
 
 def upgrade():
-    # op.execute("DELETE FROM provider_rates where provider_id = (SELECT id from provider_details where display_name='DVLA')")
+    # based on migration 0066, but without provider_rates
     op.execute("DELETE FROM provider_details_history where display_name = 'DVLA'")
     op.execute("DELETE FROM provider_details where display_name = 'DVLA'")
     # ### end Alembic commands ###
@@ -29,5 +29,4 @@ def downgrade():
     op.execute(
         "INSERT INTO provider_details_history (id, display_name, identifier, priority, notification_type, active, version) values ('{}', 'DVLA', 'dvla', 50, 'letter', true, 1)".format(provider_id)
     )
-    op.execute("INSERT INTO provider_rates (id, valid_from, rate, provider_id) VALUES ('{}', '{}', 1.0, '{}')".format(uuid.uuid4(), datetime.utcnow(), provider_id))
     # ### end Alembic commands ###
