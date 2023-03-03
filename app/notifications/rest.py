@@ -5,13 +5,7 @@ from app import api_user, authenticated_service
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_TEAM,
-    LETTER_TYPE,
-    PRIORITY,
-    SMS_TYPE,
-)
+from app.models import EMAIL_TYPE, KEY_TYPE_TEAM, PRIORITY, SMS_TYPE
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -81,7 +75,6 @@ def send_notification(notification_type):
 
     if notification_type not in [SMS_TYPE, EMAIL_TYPE]:
         msg = "{} notification type is not supported".format(notification_type)
-        msg = msg + ", please use the latest version of the client" if notification_type == LETTER_TYPE else msg
         raise InvalidRequest(msg, 400)
 
     notification_form = (
@@ -111,7 +104,6 @@ def send_notification(notification_type):
     simulated = simulated_recipient(notification_form['to'], notification_type)
     notification_model = persist_notification(template_id=template.id,
                                               template_version=template.version,
-                                              postage=template.postage,
                                               recipient=request.get_json()['to'],
                                               service=authenticated_service,
                                               personalisation=notification_form.get('personalisation', None),

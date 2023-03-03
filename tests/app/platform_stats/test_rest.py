@@ -72,11 +72,6 @@ def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
                 'virus-scan-failed': 0, 'temporary-failure': 0, 'permanent-failure': 0, 'technical-failure': 0},
             'total': 4, 'test-key': 0
         },
-        'letter': {
-            'failures': {
-                'virus-scan-failed': 0, 'temporary-failure': 0, 'permanent-failure': 0, 'technical-failure': 0},
-            'total': 0, 'test-key': 0
-        },
         'sms': {
             'failures': {
                 'virus-scan-failed': 0, 'temporary-failure': 0, 'permanent-failure': 0, 'technical-failure': 0},
@@ -134,59 +129,21 @@ def test_get_data_for_billing_report(notify_db_session, admin_request):
         end_date='2019-06-30'
     )
 
-    # we set up 6 services, but only 4 returned. service_with_emails was skipped as it had no bills to pay,
+    # we set up 4 services, but only 1 returned. service_with_emails was skipped as it had no bills to pay,
     # and likewise the service with SMS within allowance was skipped. too.
-    assert len(response) == 4
-    assert response[0]["organisation_id"] == str(fixtures["org_1"].id)
-    assert response[0]["service_id"] == str(fixtures["service_1_sms_and_letter"].id)
-    assert response[0]["sms_cost"] == 0
-    assert response[0]["sms_chargeable_units"] == 0
-    assert response[0]["total_letters"] == 8
-    assert response[0]["letter_cost"] == 3.40
-    assert response[0]["letter_breakdown"] == "6 second class letters at 45p\n2 first class letters at 35p\n"
-    assert response[0]["purchase_order_number"] == "service purchase order number"
-    assert response[0]["contact_names"] == "service billing contact names"
-    assert response[0]["contact_email_addresses"] == "service@billing.contact email@addresses.gov.uk"
-    assert response[0]["billing_reference"] == "service billing reference"
-
-    assert response[1]["organisation_id"] == str(fixtures["org_for_service_with_letters"].id)
-    assert response[1]["service_id"] == str(fixtures["service_with_letters"].id)
-    assert response[1]["sms_cost"] == 0
-    assert response[1]["sms_chargeable_units"] == 0
-    assert response[1]["total_letters"] == 22
-    assert response[1]["letter_cost"] == 14
-    assert response[1]["letter_breakdown"] == "20 second class letters at 65p\n2 first class letters at 50p\n"
-    assert response[1]["purchase_order_number"] == "org3 purchase order number"
-    assert response[1]["contact_names"] == "org3 billing contact names"
-    assert response[1]["contact_email_addresses"] == "org3@billing.contact email@addresses.gov.uk"
-    assert response[1]["billing_reference"] == "org3 billing reference"
-
-    assert response[2]["organisation_id"] == ""
-    assert response[2]["service_id"] == str(fixtures["service_with_sms_without_org"].id)
-    assert response[2]["sms_cost"] == 0.33
-    assert response[2]["sms_chargeable_units"] == 3
-    assert response[2]["total_letters"] == 0
-    assert response[2]["letter_cost"] == 0
-    assert response[2]["letter_breakdown"] == ""
-    assert response[2]["purchase_order_number"] == "sms purchase order number"
-    assert response[2]["contact_names"] == "sms billing contact names"
-    assert response[2]["contact_email_addresses"] == "sms@billing.contact email@addresses.gov.uk"
-    assert response[2]["billing_reference"] == "sms billing reference"
-
-    assert response[3]["organisation_id"] == ""
-    assert response[3]["service_id"] == str(fixtures["service_with_letters_without_org"].id)
-    assert response[3]["sms_cost"] == 0
-    assert response[3]["sms_chargeable_units"] == 0
-    assert response[3]["total_letters"] == 18
-    assert response[3]["letter_cost"] == 24.45
-    assert response[3]["letter_breakdown"] == (
-        "2 second class letters at 35p\n1 first class letters at 50p\n15 international letters at £1.55\n"
-    )
-    assert response[3]["purchase_order_number"] is None
+    assert len(response) == 1
+    assert response[0]["organisation_id"] == ""
+    assert response[0]["service_id"] == str(fixtures["service_with_sms_without_org"].id)
+    assert response[0]["sms_cost"] == 0.33
+    assert response[0]["sms_chargeable_units"] == 3
+    assert response[0]["purchase_order_number"] == "sms purchase order number"
+    assert response[0]["contact_names"] == "sms billing contact names"
+    assert response[0]["contact_email_addresses"] == "sms@billing.contact email@addresses.gov.uk"
+    assert response[0]["billing_reference"] == "sms billing reference"
 
 
 def test_daily_volumes_report(
-        notify_db_session, sample_template, sample_email_template, sample_letter_template, admin_request
+        notify_db_session, sample_template, sample_email_template, admin_request
 ):
     set_up_usage_data(datetime(2022, 3, 1))
     response = admin_request.get(
@@ -196,16 +153,16 @@ def test_daily_volumes_report(
     )
 
     assert len(response) == 3
-    assert response[0] == {'day': '2022-03-01', 'email_totals': 10, 'letter_sheet_totals': 3,
-                           'letter_totals': 2, 'sms_chargeable_units': 2, 'sms_fragment_totals': 2, 'sms_totals': 1}
-    assert response[1] == {'day': '2022-03-03', 'email_totals': 0, 'letter_sheet_totals': 10, 'letter_totals': 18,
+    assert response[0] == {'day': '2022-03-01', 'email_totals': 10,
+                           'sms_chargeable_units': 2, 'sms_fragment_totals': 2, 'sms_totals': 1}
+    assert response[1] == {'day': '2022-03-03', 'email_totals': 0,
                            'sms_chargeable_units': 2, 'sms_fragment_totals': 2, 'sms_totals': 2}
-    assert response[2] == {'day': '2022-03-08', 'email_totals': 0, 'letter_sheet_totals': 11, 'letter_totals': 12,
+    assert response[2] == {'day': '2022-03-08', 'email_totals': 0,
                            'sms_chargeable_units': 4, 'sms_fragment_totals': 4, 'sms_totals': 2}
 
 
 def test_volumes_by_service_report(
-        notify_db_session, sample_template, sample_email_template, sample_letter_template, admin_request
+        notify_db_session, sample_template, sample_email_template, admin_request
 ):
     fixture = set_up_usage_data(datetime(2022, 3, 1))
     response = admin_request.get(
@@ -214,29 +171,25 @@ def test_volumes_by_service_report(
         end_date='2022-03-01'
     )
 
-    assert len(response) == 7
+    assert len(response) == 5
 
     # since we are using a pre-set up fixture, we only care about some of the results
-    assert response[0] == {'email_totals': 0, 'free_allowance': 10, 'letter_cost': 0.0,
-                           'letter_sheet_totals': 0, 'letter_totals': 0,
+    assert response[0] == {'email_totals': 0, 'free_allowance': 10,
                            'organisation_id': str(fixture['org_1'].id),
                            'organisation_name': fixture['org_1'].name,
                            'service_id': str(fixture['service_1_sms_and_letter'].id),
                            'service_name': fixture['service_1_sms_and_letter'].name,
                            'sms_chargeable_units': 2, 'sms_notifications': 1}
-    assert response[1] == {'email_totals': 0, 'free_allowance': 10, 'letter_cost': 0.0, 'letter_sheet_totals': 0,
-                           'letter_totals': 0, 'organisation_id': str(fixture['org_1'].id),
+    assert response[1] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': str(fixture['org_1'].id),
                            'organisation_name': fixture['org_1'].name,
                            'service_id': str(fixture['service_with_out_ft_billing_this_year'].id),
                            'service_name': fixture['service_with_out_ft_billing_this_year'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}
-    assert response[4] == {'email_totals': 0, 'free_allowance': 10, 'letter_cost': 0.0, 'letter_sheet_totals': 0,
-                           'letter_totals': 0, 'organisation_id': '', 'organisation_name': '',
+    assert response[3] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': '', 'organisation_name': '',
                            'service_id': str(fixture['service_with_sms_without_org'].id),
                            'service_name': fixture['service_with_sms_without_org'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}
-    assert response[6] == {'email_totals': 0, 'free_allowance': 10, 'letter_cost': 0.0, 'letter_sheet_totals': 0,
-                           'letter_totals': 0, 'organisation_id': '', 'organisation_name': '',
+    assert response[4] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': '', 'organisation_name': '',
                            'service_id': str(fixture['service_with_sms_within_allowance'].id),
                            'service_name': fixture['service_with_sms_within_allowance'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}

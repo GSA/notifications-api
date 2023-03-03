@@ -37,7 +37,6 @@ def get_template_statistics_for_service_by_day(service_id):
             'template_id': str(row.template_id),
             'template_name': row.template_name,
             'template_type': row.notification_type,
-            'is_precompiled_letter': row.is_precompiled_letter,
             'status': row.status
         }
         for row in data

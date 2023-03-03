@@ -11,8 +11,6 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
     dao_get_last_notification_added_for_job_id,
-    dao_get_letters_and_sheets_volume_by_postage,
-    dao_get_letters_to_be_printed,
     dao_get_notification_by_reference,
     dao_get_notification_count_for_job_id,
     dao_get_notification_history_by_reference,
@@ -110,25 +108,6 @@ def test_should_update_status_by_id_if_created(sample_template, sample_notificat
     updated = update_notification_status_by_id(sample_notification.id, 'failed')
     assert Notification.query.get(sample_notification.id).status == 'failed'
     assert updated.status == 'failed'
-
-
-def test_should_update_status_by_id_if_pending_virus_check(sample_letter_template):
-    notification = create_notification(template=sample_letter_template, status='pending-virus-check')
-    assert Notification.query.get(notification.id).status == 'pending-virus-check'
-    updated = update_notification_status_by_id(notification.id, 'cancelled')
-    assert Notification.query.get(notification.id).status == 'cancelled'
-    assert updated.status == 'cancelled'
-
-
-def test_should_update_status_of_international_letter_to_cancelled(sample_letter_template):
-    notification = create_notification(
-        template=sample_letter_template,
-        international=True,
-        postage='europe',
-    )
-    assert Notification.query.get(notification.id).international is True
-    update_notification_status_by_id(notification.id, 'cancelled')
-    assert Notification.query.get(notification.id).status == 'cancelled'
 
 
 def test_should_update_status_by_id_and_set_sent_by(sample_template):
@@ -682,18 +661,6 @@ def test_dao_timeout_notifications_only_updates_for_older_notifications(sample_t
     assert Notification.query.get(pending.id).status == 'pending'
 
 
-def test_dao_timeout_notifications_doesnt_affect_letters(sample_letter_template):
-    with freeze_time(datetime.utcnow() - timedelta(minutes=2)):
-        sending = create_notification(sample_letter_template, status='sending')
-        pending = create_notification(sample_letter_template, status='pending')
-
-    temporary_failure_notifications = dao_timeout_notifications(datetime.utcnow())
-
-    assert len(temporary_failure_notifications) == 0
-    assert Notification.query.get(sending.id).status == 'sending'
-    assert Notification.query.get(pending.id).status == 'pending'
-
-
 def test_should_return_notifications_excluding_jobs_by_default(sample_template, sample_job, sample_api_key):
     create_notification(sample_template, job=sample_job)
     without_job = create_notification(sample_template, api_key=sample_api_key)
@@ -1196,7 +1163,6 @@ def test_dao_get_notifications_by_reference(
     service = create_service()
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type='email')
-    letter_template = create_template(service=service, template_type='letter')
     sms = create_notification(
         template=sms_template,
         to_field='07711111111',
@@ -1209,18 +1175,11 @@ def test_dao_get_notifications_by_reference(
         normalised_to='077@example.com',
         client_reference='77bB',
     )
-    letter = create_notification(
-        template=letter_template,
-        to_field='123 Example Street\nXX1X 1XX',
-        normalised_to='123examplestreetxx1x1xx',
-        client_reference='77bB',
-    )
 
     results = dao_get_notifications_by_recipient_or_reference(service.id, '77')
-    assert len(results.items) == 3
-    assert results.items[0].id == letter.id
-    assert results.items[1].id == email.id
-    assert results.items[2].id == sms.id
+    assert len(results.items) == 2
+    assert results.items[0].id == email.id
+    assert results.items[1].id == sms.id
 
     # If notification_type isn’t specified then we can’t normalise the
     # phone number to 4477… so this query will only find the email sent
@@ -1258,21 +1217,6 @@ def test_dao_get_notifications_by_reference(
 
     results = dao_get_notifications_by_recipient_or_reference(service.id, 'aA', notification_type='email')
     assert len(results.items) == 0
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, 'aA', notification_type='letter')
-    assert len(results.items) == 0
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, '123')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, 'xX 1x1  Xx')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
-
-    results = dao_get_notifications_by_recipient_or_reference(service.id, '77', notification_type='letter')
-    assert len(results.items) == 1
-    assert results.items[0].id == letter.id
 
 
 def test_dao_get_notifications_by_to_field_filters_status(sample_template):
@@ -1450,48 +1394,33 @@ def test_dao_update_notifications_by_reference_returns_zero_when_no_notification
     assert updated_history_count == 0
 
 
-def test_dao_update_notifications_by_reference_set_returned_letter_status(sample_letter_template):
-    notification = create_notification(template=sample_letter_template, reference='ref')
-
-    updated_count, updated_history_count = dao_update_notifications_by_reference(
-        references=['ref'],
-        update_dict={"status": "returned-letter"}
-    )
-
-    assert updated_count == 1
-    assert updated_history_count == 0
-    updated_notification = Notification.query.get(notification.id)
-    assert updated_notification.status == 'returned-letter'
-    assert updated_notification.updated_at <= datetime.utcnow()
-
-
 def test_dao_update_notifications_by_reference_updates_history_when_one_of_two_notifications_exists(
-        sample_letter_template
+        sample_template
 ):
-    notification1 = create_notification_history(template=sample_letter_template, reference='ref1')
-    notification2 = create_notification(template=sample_letter_template, reference='ref2')
+    notification1 = create_notification_history(template=sample_template, reference='ref1')
+    notification2 = create_notification(template=sample_template, reference='ref2')
 
     updated_count, updated_history_count = dao_update_notifications_by_reference(
         references=['ref1', 'ref2'],
-        update_dict={"status": "returned-letter"}
+        update_dict={"status": "delivered"}
     )
 
     assert updated_count == 1
     assert updated_history_count == 1
-    assert Notification.query.get(notification2.id).status == 'returned-letter'
-    assert NotificationHistory.query.get(notification1.id).status == 'returned-letter'
+    assert Notification.query.get(notification2.id).status == 'delivered'
+    assert NotificationHistory.query.get(notification1.id).status == 'delivered'
 
 
-def test_dao_get_notification_by_reference_with_one_match_returns_notification(sample_letter_template):
-    create_notification(template=sample_letter_template, reference='REF1')
+def test_dao_get_notification_by_reference_with_one_match_returns_notification(sample_template):
+    create_notification(template=sample_template, reference='REF1')
     notification = dao_get_notification_by_reference('REF1')
 
     assert notification.reference == 'REF1'
 
 
-def test_dao_get_notification_by_reference_with_multiple_matches_raises_error(sample_letter_template):
-    create_notification(template=sample_letter_template, reference='REF1')
-    create_notification(template=sample_letter_template, reference='REF1')
+def test_dao_get_notification_by_reference_with_multiple_matches_raises_error(sample_template):
+    create_notification(template=sample_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
 
     with pytest.raises(SQLAlchemyError):
         dao_get_notification_by_reference('REF1')
@@ -1503,19 +1432,19 @@ def test_dao_get_notification_by_reference_with_no_matches_raises_error(notify_d
 
 
 def test_dao_get_notification_history_by_reference_with_one_match_returns_notification(
-        sample_letter_template
+        sample_template
 ):
-    create_notification(template=sample_letter_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
     notification = dao_get_notification_history_by_reference('REF1')
 
     assert notification.reference == 'REF1'
 
 
 def test_dao_get_notification_history_by_reference_with_multiple_matches_raises_error(
-        sample_letter_template
+        sample_template
 ):
-    create_notification(template=sample_letter_template, reference='REF1')
-    create_notification(template=sample_letter_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
+    create_notification(template=sample_template, reference='REF1')
 
     with pytest.raises(SQLAlchemyError):
         dao_get_notification_history_by_reference('REF1')
@@ -1527,7 +1456,7 @@ def test_dao_get_notification_history_by_reference_with_no_matches_raises_error(
 
 
 @pytest.mark.parametrize("notification_type",
-                         ["letter", "email", "sms"]
+                         ["email", "sms"]
                          )
 def test_notifications_not_yet_sent(sample_service, notification_type):
     older_than = 4  # number of seconds the notification can not be older than
@@ -1546,7 +1475,7 @@ def test_notifications_not_yet_sent(sample_service, notification_type):
 
 
 @pytest.mark.parametrize("notification_type",
-                         ["letter", "email", "sms"]
+                         ["email", "sms"]
                          )
 def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_type):
     older_than = 5  # number of seconds the notification can not be older than
@@ -1561,76 +1490,6 @@ def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_
 
     results = notifications_not_yet_sent(older_than, notification_type)
     assert len(results) == 0
-
-
-def test_letters_to_be_printed_sort_by_service(notify_db_session):
-    first_service = create_service(service_name='first service', service_id='3a5cea08-29fd-4bb9-b582-8dedd928b149')
-    second_service = create_service(service_name='second service', service_id='642bf33b-54b5-45f2-8c13-942a46616704')
-    first_template = create_template(service=first_service, template_type='letter', postage='second')
-    second_template = create_template(service=second_service, template_type='letter', postage='second')
-    letters_ordered_by_service_then_time = [
-        create_notification(template=first_template, created_at=datetime(2020, 12, 1, 9, 30)),
-        create_notification(template=first_template, created_at=datetime(2020, 12, 1, 12, 30)),
-        create_notification(template=first_template, created_at=datetime(2020, 12, 1, 13, 30)),
-        create_notification(template=first_template, created_at=datetime(2020, 12, 1, 14, 30)),
-        create_notification(template=first_template, created_at=datetime(2020, 12, 1, 15, 30)),
-        create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 30)),
-        create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 31)),
-        create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 32)),
-        create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 33)),
-        create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 34))
-    ]
-
-    results = list(
-        dao_get_letters_to_be_printed(print_run_deadline=datetime(2020, 12, 1, 17, 30), postage='second', query_limit=4)
-    )
-    assert [x.id for x in results] == [x.id for x in letters_ordered_by_service_then_time]
-
-
-def test_letters_to_be_printed_does_not_include_letters_without_billable_units_set(
-        notify_db_session, sample_letter_template):
-    included_letter = create_notification(
-        template=sample_letter_template, created_at=datetime(2020, 12, 1, 9, 30), billable_units=3)
-    create_notification(
-        template=sample_letter_template, created_at=datetime(2020, 12, 1, 9, 31), billable_units=0)
-
-    results = list(
-        dao_get_letters_to_be_printed(print_run_deadline=datetime(2020, 12, 1, 17, 30), postage='second', query_limit=4)
-    )
-    assert len(results) == 1
-    assert results[0].id == included_letter.id
-
-
-def test_dao_get_letters_and_sheets_volume_by_postage(notify_db_session):
-    first_service = create_service(service_name='first service', service_id='3a5cea08-29fd-4bb9-b582-8dedd928b149')
-    second_service = create_service(service_name='second service', service_id='642bf33b-54b5-45f2-8c13-942a46616704')
-    first_template = create_template(service=first_service, template_type='letter', postage='second')
-    second_template = create_template(service=second_service, template_type='letter', postage='second')
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 9, 30), postage='first')
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 12, 30), postage='europe')
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 13, 30), postage='rest-of-world')
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 14, 30), billable_units=3)
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 14, 30), billable_units=0)
-    create_notification(template=first_template, created_at=datetime(2020, 12, 1, 15, 30))
-    create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 30), postage='first')
-    create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 31), postage='first')
-    create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 32))
-    create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 33))
-    create_notification(template=second_template, created_at=datetime(2020, 12, 1, 8, 34))
-
-    results = dao_get_letters_and_sheets_volume_by_postage(print_run_deadline=datetime(2020, 12, 1, 17, 30))
-
-    assert len(results) == 4
-
-    expected_results = [
-        {'letters_count': 1, 'sheets_count': 1, 'postage': 'europe'},
-        {'letters_count': 3, 'sheets_count': 3, 'postage': 'first'},
-        {'letters_count': 1, 'sheets_count': 1, 'postage': 'rest-of-world'},
-        {'letters_count': 5, 'sheets_count': 7, 'postage': 'second'}
-    ]
-
-    for result in results:
-        assert result._asdict() in expected_results
 
 
 @pytest.mark.parametrize('created_at_utc,date_to_check,expected_count', [

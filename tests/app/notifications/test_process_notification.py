@@ -11,7 +11,7 @@ from notifications_utils.recipients import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import LETTER_TYPE, Notification, NotificationHistory
+from app.models import SMS_TYPE, Notification, NotificationHistory
 from app.notifications.process_notifications import (
     create_content_for_notification,
     persist_notification,
@@ -251,11 +251,9 @@ def test_persist_notification_sets_daily_limit_cache_if_one_does_not_exists(
     (True, None, 'sms', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_sms'),
     (True, None, 'email', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_email'),
     (True, None, 'email', 'team', 'research-mode-tasks', 'provider_tasks.deliver_email'),
-    (True, None, 'letter', 'normal', 'research-mode-tasks', 'letters_pdf_tasks.get_pdf_for_templated_letter'),
     (False, None, 'sms', 'normal', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
     (False, None, 'email', 'normal', 'send-email-tasks', 'provider_tasks.deliver_email'),
     (False, None, 'sms', 'team', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
-    (False, None, 'letter', 'normal', 'create-letters-pdf-tasks', 'letters_pdf_tasks.get_pdf_for_templated_letter'),
     (False, None, 'sms', 'test', 'research-mode-tasks', 'provider_tasks.deliver_sms'),
     (True, 'notify-internal-tasks', 'email', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_email'),
     (False, 'notify-internal-tasks', 'sms', 'normal', 'notify-internal-tasks', 'provider_tasks.deliver_sms'),
@@ -452,50 +450,16 @@ def test_persist_email_notification_stores_normalised_email(
     assert persisted_notification.normalised_to == expected_recipient_normalised
 
 
-@pytest.mark.parametrize(
-    "postage_argument, template_postage, expected_postage",
-    [
-        ("second", "first", "second"),
-        ("first", "first", "first"),
-        ("first", "second", "first")
-    ]
-)
-def test_persist_letter_notification_finds_correct_postage(
-    mocker,
-    postage_argument,
-    template_postage,
-    expected_postage,
-    sample_service_full_permissions,
-    sample_api_key,
-):
-    template = create_template(sample_service_full_permissions, template_type=LETTER_TYPE, postage=template_postage)
-    mocker.patch('app.dao.templates_dao.dao_get_template_by_id', return_value=template)
-    persist_notification(
-        template_id=template.id,
-        template_version=template.version,
-        recipient="Jane Doe, 10 Downing Street, London",
-        service=sample_service_full_permissions,
-        personalisation=None,
-        notification_type=LETTER_TYPE,
-        api_key_id=sample_api_key.id,
-        key_type=sample_api_key.key_type,
-        postage=postage_argument
-    )
-    persisted_notification = Notification.query.all()[0]
-
-    assert persisted_notification.postage == expected_postage
-
-
 def test_persist_notification_with_billable_units_stores_correct_info(
     mocker
 ):
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service, template_type=LETTER_TYPE)
+    service = create_service(service_permissions=[SMS_TYPE])
+    template = create_template(service, template_type=SMS_TYPE)
     mocker.patch('app.dao.templates_dao.dao_get_template_by_id', return_value=template)
     persist_notification(
         template_id=template.id,
         template_version=template.version,
-        recipient="123 Main Street",
+        recipient="+12028675309",
         service=template.service,
         personalisation=None,
         notification_type=template.template_type,
@@ -506,22 +470,3 @@ def test_persist_notification_with_billable_units_stores_correct_info(
     persisted_notification = Notification.query.all()[0]
 
     assert persisted_notification.billable_units == 3
-
-
-@pytest.mark.parametrize('postage', ['europe', 'rest-of-world'])
-def test_persist_notification_for_international_letter(sample_letter_template, postage):
-    notification = persist_notification(
-        template_id=sample_letter_template.id,
-        template_version=sample_letter_template.version,
-        recipient="123 Main Street",
-        service=sample_letter_template.service,
-        personalisation=None,
-        notification_type=sample_letter_template.template_type,
-        api_key_id=None,
-        key_type="normal",
-        billable_units=3,
-        postage=postage,
-    )
-    persisted_notification = Notification.query.get(notification.id)
-    assert persisted_notification.postage == postage
-    assert persisted_notification.international

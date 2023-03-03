@@ -12,7 +12,7 @@ from app.dao.fact_billing_dao import (
 )
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
-from app.models import EMAIL_TYPE, LETTER_TYPE, SMS_TYPE
+from app.models import EMAIL_TYPE, SMS_TYPE
 
 
 @notify_celery.task(name="create-nightly-billing")
@@ -72,10 +72,6 @@ def create_nightly_notification_status():
         because all outstanding email / SMS are "timed out" after 3 days, and
         we reject delivery receipts after this point.
 
-      - Letter statuses don't change after 9 days. There's no "timeout" for
-        letters but this is the longest we've had to cope with in the past - due
-        to major issues with our print provider.
-
     Because the time range of the task exceeds the minimum possible retention
     period (3 days), we need to choose which table to query for each service.
 
@@ -89,8 +85,8 @@ def create_nightly_notification_status():
 
     yesterday = convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=1)
 
-    for notification_type in [SMS_TYPE, EMAIL_TYPE, LETTER_TYPE]:
-        days = 10 if notification_type == LETTER_TYPE else 4
+    for notification_type in [SMS_TYPE, EMAIL_TYPE]:
+        days = 4
 
         for i in range(days):
             process_day = yesterday - timedelta(days=i)

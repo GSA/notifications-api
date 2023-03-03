@@ -41,7 +41,6 @@ class SerialisedTemplate(SerialisedModel):
         'archived',
         'content',
         'id',
-        'postage',
         'process_type',
         'reply_to_text',
         'subject',

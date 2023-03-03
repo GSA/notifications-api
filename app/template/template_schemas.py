@@ -15,11 +15,10 @@ post_create_template_schema = {
         "subject": {"type": "string"},
         "created_by": uuid,
         "parent_folder_id": uuid,
-        "postage": {"type": "string", "format": "postage"},
     },
     "if": {
         "properties": {
-            "template_type": {"enum": ["email", "letter"]}
+            "template_type": {"enum": ["email"]}
         }
     },
     "then": {"required": ["subject"]},
@@ -39,7 +38,6 @@ post_update_template_schema = {
         "process_type": {"enum": TEMPLATE_PROCESS_TYPE},
         "content": {"type": "string"},
         "subject": {"type": "string"},
-        "postage": {"type": "string", "format": "postage"},
         "reply_to": nullable_uuid,
         "created_by": uuid,
         "archived": {"type": "boolean"},

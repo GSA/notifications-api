@@ -36,20 +36,6 @@ def create_post_email_response_from_notification(
     return resp
 
 
-def create_post_letter_response_from_notification(
-    notification_id, client_reference, template_id, template_version, service_id,
-    content, subject, url_root
-):
-    resp = __create_notification_response(
-        notification_id, client_reference, template_id, template_version, service_id, url_root
-    )
-    resp['content'] = {
-        "body": content,
-        "subject": subject
-    }
-    return resp
-
-
 def __create_notification_response(
     notification_id, client_reference, template_id, template_version, service_id, url_root
 ):

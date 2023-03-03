@@ -19,14 +19,10 @@ class QueueNames(object):
     JOBS = 'job-tasks'
     RETRY = 'retry-tasks'
     NOTIFY = 'notify-internal-tasks'
-    PROCESS_FTP = 'process-ftp-tasks'
-    CREATE_LETTERS_PDF = 'create-letters-pdf-tasks'
     CALLBACKS = 'service-callbacks'
     CALLBACKS_RETRY = 'service-callbacks-retry'
-    LETTERS = 'letter-tasks'
     SMS_CALLBACKS = 'sms-callbacks'
     ANTIVIRUS = 'antivirus-tasks'
-    SANITISE_LETTERS = 'sanitise-letter-tasks'
     SAVE_API_EMAIL = 'save-api-email-tasks'
     SAVE_API_SMS = 'save-api-sms-tasks'
 
@@ -43,10 +39,8 @@ class QueueNames(object):
             QueueNames.JOBS,
             QueueNames.RETRY,
             QueueNames.NOTIFY,
-            QueueNames.CREATE_LETTERS_PDF,
             QueueNames.CALLBACKS,
             QueueNames.CALLBACKS_RETRY,
-            QueueNames.LETTERS,
             QueueNames.SMS_CALLBACKS,
             QueueNames.SAVE_API_EMAIL,
             QueueNames.SAVE_API_SMS,
@@ -55,11 +49,7 @@ class QueueNames(object):
 
 class TaskNames(object):
     PROCESS_INCOMPLETE_JOBS = 'process-incomplete-jobs'
-    ZIP_AND_SEND_LETTER_PDFS = 'zip-and-send-letter-pdfs'
     SCAN_FILE = 'scan-file'
-    SANITISE_LETTER = 'sanitise-and-upload-letter'
-    CREATE_PDF_FOR_TEMPLATED_LETTER = 'create-pdf-for-templated-letter'
-    RECREATE_PDF_FOR_PRECOMPILED_LETTER = 'recreate-pdf-for-precompiled-letter'
 
 
 class Config(object):
@@ -141,10 +131,6 @@ class Config(object):
     MAX_VERIFY_CODE_COUNT = 5
     MAX_FAILED_LOGIN_COUNT = 10
     API_RATE_LIMIT_ENABLED = True
-
-    # be careful increasing this size without being sure that we won't see slowness in pysftp
-    MAX_LETTER_PDF_ZIP_FILESIZE = 40 * 1024 * 1024  # 40mb
-    MAX_LETTER_PDF_COUNT_PER_ZIP = 500
 
     # Default data
     CONFIG_FILES = path.dirname(__file__) + '/config_files/'
@@ -261,47 +247,9 @@ class Config(object):
                 'schedule': crontab(hour=4, minute=0),
                 'options': {'queue': QueueNames.PERIODIC},
             },
-            'remove_letter_jobs': {
-                'task': 'remove_letter_jobs',
-                'schedule': crontab(hour=4, minute=20),
-                # since we mark jobs as archived
-                'options': {'queue': QueueNames.PERIODIC},
-            },
-            'check-if-letters-still-in-created': {
-                'task': 'check-if-letters-still-in-created',
-                'schedule': crontab(day_of_week='mon-fri', hour=7, minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'check-if-letters-still-pending-virus-check': {
-                'task': 'check-if-letters-still-pending-virus-check',
-                'schedule': crontab(day_of_week='mon-fri', hour='9,15', minute=0),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {
                 'task': 'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers',
                 'schedule': crontab(day_of_week='mon-fri', hour=10, minute=30),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'raise-alert-if-letter-notifications-still-sending': {
-                'task': 'raise-alert-if-letter-notifications-still-sending',
-                'schedule': crontab(hour=17, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            # The collate-letter-pdf does assume it is called in an hour that BST does not make a
-            # difference to the truncate date which translates to the filename to process
-            'collate-letter-pdfs-to-be-sent': {
-                'task': 'collate-letter-pdfs-to-be-sent',
-                'schedule': crontab(hour=17, minute=50),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'raise-alert-if-no-letter-ack-file': {
-                'task': 'raise-alert-if-no-letter-ack-file',
-                'schedule': crontab(hour=23, minute=00),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
-            'trigger-link-tests': {
-                'task': 'trigger-link-tests',
-                'schedule': timedelta(minutes=15),
                 'options': {'queue': QueueNames.PERIODIC}
             },
         }

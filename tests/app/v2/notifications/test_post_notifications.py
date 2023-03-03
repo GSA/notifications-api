@@ -57,7 +57,6 @@ def test_post_sms_notification_returns_201(client, sample_template_with_placehol
     assert len(notifications) == 1
     assert notifications[0].status == NOTIFICATION_CREATED
     notification_id = notifications[0].id
-    assert notifications[0].postage is None
     assert notifications[0].document_download_count is None
     assert resp_json['id'] == str(notification_id)
     assert resp_json['reference'] == reference
@@ -358,7 +357,6 @@ def test_post_notification_returns_400_and_missing_template(client, sample_servi
 @pytest.mark.parametrize("notification_type, key_send_to, send_to", [
     ("sms", "phone_number", "+447700900855"),
     ("email", "email_address", "sample@email.com"),
-    ("letter", "personalisation", {"address_line_1": "The queen", "postcode": "SW1 1AA"})
 ])
 def test_post_notification_returns_401_and_well_formed_auth_error(client, sample_template,
                                                                   notification_type, key_send_to, send_to):
@@ -429,7 +427,6 @@ def test_post_email_notification_returns_201(client, sample_email_template_with_
     assert validate(resp_json, post_email_response) == resp_json
     notification = Notification.query.one()
     assert notification.status == NOTIFICATION_CREATED
-    assert notification.postage is None
     assert resp_json['id'] == str(notification.id)
     assert resp_json['reference'] == reference
     assert notification.reference is None
@@ -1156,32 +1153,3 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
         assert mock_send_task.called
         assert not save_task.called
         assert len(Notification.query.all()) == 1
-
-
-def test_post_notification_does_not_use_save_queue_for_letters(client, sample_letter_template, mocker):
-    mock_save = mocker.patch("app.v2.notifications.post_notifications.save_email_or_sms_to_queue")
-    mock_create_pdf_task = mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    with set_config_values(current_app, {
-        'HIGH_VOLUME_SERVICE': [str(sample_letter_template.service_id)],
-
-    }):
-        data = {
-            'template_id': str(sample_letter_template.id),
-            'personalisation': {
-                'address_line_1': 'Her Royal Highness Queen Elizabeth II',
-                'address_line_2': 'Buckingham Palace',
-                'address_line_3': 'London',
-                'postcode': 'SW1 1AA',
-            }
-        }
-        response = client.post(
-            path='/v2/notifications/letter',
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json'),
-                     create_service_authorization_header(service_id=sample_letter_template.service_id)]
-        )
-        assert response.status_code == 201
-        json_resp = response.get_json()
-        assert not mock_save.called
-        mock_create_pdf_task.assert_called_once_with([str(json_resp['id'])], queue='create-letters-pdf-tasks')

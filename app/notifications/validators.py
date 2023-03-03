@@ -5,7 +5,6 @@ from notifications_utils.clients.redis import (
     daily_limit_cache_key,
     rate_limit_cache_key,
 )
-from notifications_utils.postal_address import PostalAddress
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
@@ -15,15 +14,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
-from app.dao.service_letter_contact_dao import dao_get_letter_contact_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     SMS_TYPE,
     ServicePermission,
 )
@@ -33,12 +29,7 @@ from app.notifications.process_notifications import (
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
-from app.v2.errors import (
-    BadRequestError,
-    RateLimitError,
-    TooManyRequestsError,
-    ValidationError,
-)
+from app.v2.errors import BadRequestError, RateLimitError, TooManyRequestsError
 
 REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
     'redis_exceeded_rate_limit_duration_seconds',
@@ -208,8 +199,6 @@ def check_reply_to(service_id, reply_to_id, type_):
         return check_service_email_reply_to_id(service_id, reply_to_id, type_)
     elif type_ == SMS_TYPE:
         return check_service_sms_sender_id(service_id, reply_to_id, type_)
-    elif type_ == LETTER_TYPE:
-        return check_service_letter_contact_id(service_id, reply_to_id, type_)
 
 
 def check_service_email_reply_to_id(service_id, reply_to_id, notification_type):
@@ -230,44 +219,3 @@ def check_service_sms_sender_id(service_id, sms_sender_id, notification_type):
             message = 'sms_sender_id {} does not exist in database for service id {}' \
                 .format(sms_sender_id, service_id)
             raise BadRequestError(message=message)
-
-
-def check_service_letter_contact_id(service_id, letter_contact_id, notification_type):
-    if letter_contact_id:
-        try:
-            return dao_get_letter_contact_by_id(service_id, letter_contact_id).contact_block
-        except NoResultFound:
-            message = 'letter_contact_id {} does not exist in database for service id {}' \
-                .format(letter_contact_id, service_id)
-            raise BadRequestError(message=message)
-
-
-def validate_address(service, letter_data):
-    address = PostalAddress.from_personalisation(
-        letter_data,
-        allow_international_letters=(INTERNATIONAL_LETTERS in str(service.permissions)),
-    )
-    if not address.has_enough_lines:
-        raise ValidationError(
-            message=f'Address must be at least {PostalAddress.MIN_LINES} lines'
-        )
-    if address.has_too_many_lines:
-        raise ValidationError(
-            message=f'Address must be no more than {PostalAddress.MAX_LINES} lines'
-        )
-    if not address.has_valid_last_line:
-        if address.allow_international_letters:
-            raise ValidationError(
-                message='Last line of address must be a real UK postcode or another country'
-            )
-        raise ValidationError(
-            message='Must be a real UK postcode'
-        )
-    if address.has_invalid_characters:
-        raise ValidationError(
-            message='Address lines must not start with any of the following characters: @ ( ) = [ ] ” \\ / , < >'
-        )
-    if address.international:
-        return address.postage
-    else:
-        return None

@@ -2,11 +2,7 @@ from datetime import datetime, timedelta
 from os import getenv
 
 from flask import url_for
-from notifications_utils.template import (
-    HTMLEmailTemplate,
-    LetterPrintTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import func
 
@@ -46,11 +42,10 @@ def url_with_token(data, url, config, base_url=None):
 
 
 def get_template_instance(template, values):
-    from app.models import EMAIL_TYPE, LETTER_TYPE, SMS_TYPE
+    from app.models import EMAIL_TYPE, SMS_TYPE
     return {
         SMS_TYPE: SMSMessageTemplate,
         EMAIL_TYPE: HTMLEmailTemplate,
-        LETTER_TYPE: LetterPrintTemplate,
     }[template['template_type']](template, values)
 
 
@@ -86,14 +81,12 @@ def get_local_month_from_utc_column(column):
 
 
 def get_public_notify_type_text(notify_type, plural=False):
-    from app.models import PRECOMPILED_LETTER, SMS_TYPE, UPLOAD_DOCUMENT
+    from app.models import SMS_TYPE, UPLOAD_DOCUMENT
     notify_type_text = notify_type
     if notify_type == SMS_TYPE:
         notify_type_text = 'text message'
     elif notify_type == UPLOAD_DOCUMENT:
         notify_type_text = 'document'
-    elif notify_type == PRECOMPILED_LETTER:
-        notify_type_text = 'precompiled letter'
 
     return '{}{}'.format(notify_type_text, 's' if plural else '')
 
