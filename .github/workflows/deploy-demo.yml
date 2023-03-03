@@ -51,8 +51,6 @@ jobs:
         DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         ADMIN_CLIENT_SECRET: ${{ secrets.ADMIN_CLIENT_SECRET }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
@@ -64,8 +62,6 @@ jobs:
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
           --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
-          --var AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
-          --var AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
           --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
 
     - name: Check for changes to egress config

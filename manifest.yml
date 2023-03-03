@@ -48,8 +48,6 @@ applications:
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
       DANGEROUS_SALT: ((DANGEROUS_SALT))
       SECRET_KEY: ((SECRET_KEY))
-      AWS_ACCESS_KEY_ID: ((AWS_ACCESS_KEY_ID))
-      AWS_SECRET_ACCESS_KEY: ((AWS_SECRET_ACCESS_KEY))
       AWS_US_TOLL_FREE_NUMBER: ((default_toll_free_number))
 
       REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
