@@ -34,7 +34,7 @@ def get_performance_dashboard():
     start_date = datetime.strptime(request.args.get('start_date', today), '%Y-%m-%d').date()
     end_date = datetime.strptime(request.args.get('end_date', today), '%Y-%m-%d').date()
     total_for_all_time = get_total_notifications_for_date_range(start_date=None, end_date=None)
-    total_notifications, emails, sms, letters = transform_results_into_totals(total_for_all_time)
+    total_notifications, emails, sms = transform_results_into_totals(total_for_all_time)
     totals_for_date_range = get_total_notifications_for_date_range(start_date=start_date, end_date=end_date)
     processing_time_results = get_processing_time_percentage_for_date_range(start_date=start_date, end_date=end_date)
     services = get_live_services_with_organisation()
@@ -42,12 +42,10 @@ def get_performance_dashboard():
         "total_notifications": total_notifications,
         "email_notifications": emails,
         "sms_notifications": sms,
-        "letter_notifications": letters,
         "notifications_by_type": transform_into_notification_by_type_json(totals_for_date_range),
         "processing_time": transform_processing_time_results_to_json(processing_time_results),
         "live_service_count": len(services),
         "services_using_notify": transform_services_to_json(services)
-
     }
 
     return jsonify(stats)
@@ -57,21 +55,18 @@ def transform_results_into_totals(total_notifications_results):
     total_notifications = 0
     emails = 0
     sms = 0
-    letters = 0
     for x in total_notifications_results:
         total_notifications += x.emails
         total_notifications += x.sms
-        total_notifications += x.letters
         emails += x.emails
         sms += x.sms
-        letters += x.letters
-    return total_notifications, emails, sms, letters
+    return total_notifications, emails, sms
 
 
 def transform_into_notification_by_type_json(total_notifications):
     j = []
     for x in total_notifications:
-        j.append({"date": x.local_date, "emails": x.emails, "sms": x.sms, "letters": x.letters})
+        j.append({"date": x.local_date, "emails": x.emails, "sms": x.sms})
     return j
 
 

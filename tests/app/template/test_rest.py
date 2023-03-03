@@ -1,45 +1,22 @@
-import base64
 import json
 import random
 import string
 import uuid
 from datetime import datetime, timedelta
 
-import botocore
 import pytest
-import requests_mock
 from freezegun import freeze_time
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from PyPDF2.errors import PdfReadError
 
-from app.dao.templates_dao import (
-    dao_get_template_by_id,
-    dao_get_template_versions,
-    dao_redact_template,
-    dao_update_template,
-)
-from app.models import (
-    EMAIL_TYPE,
-    LETTER_TYPE,
-    SMS_TYPE,
-    Template,
-    TemplateHistory,
-)
+from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
+from app.models import EMAIL_TYPE, SMS_TYPE, Template, TemplateHistory
 from tests import create_admin_authorization_header
-from tests.app.db import (
-    create_letter_contact,
-    create_notification,
-    create_service,
-    create_template,
-    create_template_folder,
-)
-from tests.conftest import set_config_values
+from tests.app.db import create_service, create_template, create_template_folder
 
 
 @pytest.mark.parametrize('template_type, subject', [
     (SMS_TYPE, None),
     (EMAIL_TYPE, 'subject'),
-    (LETTER_TYPE, 'subject'),
 ])
 def test_should_create_a_new_template_for_a_service(
     client, sample_user, template_type, subject
@@ -54,8 +31,6 @@ def test_should_create_a_new_template_for_a_service(
     }
     if subject:
         data.update({'subject': subject})
-    if template_type == LETTER_TYPE:
-        data.update({'postage': 'first'})
     data = json.dumps(data)
     auth_header = create_admin_authorization_header()
 
@@ -78,11 +53,6 @@ def test_should_create_a_new_template_for_a_service(
         assert json_resp['data']['subject'] == 'subject'
     else:
         assert not json_resp['data']['subject']
-
-    if template_type == LETTER_TYPE:
-        assert json_resp['data']['postage'] == 'first'
-    else:
-        assert not json_resp['data']['postage']
 
     template = Template.query.get(json_resp['data']['id'])
     from app.schemas import template_schema
@@ -113,35 +83,6 @@ def test_create_a_new_template_for_a_service_adds_folder_relationship(
     assert response.status_code == 201
     template = Template.query.filter(Template.name == 'my template').first()
     assert template.folder == parent_folder
-
-
-@pytest.mark.parametrize("template_type, expected_postage", [
-    (SMS_TYPE, None), (EMAIL_TYPE, None), (LETTER_TYPE, "second")
-])
-def test_create_a_new_template_for_a_service_adds_postage_for_letters_only(
-    client, sample_service, template_type, expected_postage
-):
-    data = {
-        'name': 'my template',
-        'template_type': template_type,
-        'content': 'template <b>content</b>',
-        'service': str(sample_service.id),
-        'created_by': str(sample_service.users[0].id)
-    }
-    if template_type in [EMAIL_TYPE, LETTER_TYPE]:
-        data["subject"] = "Hi, I have good news"
-
-    data = json.dumps(data)
-    auth_header = create_admin_authorization_header()
-
-    response = client.post(
-        '/service/{}/template'.format(sample_service.id),
-        headers=[('Content-Type', 'application/json'), auth_header],
-        data=data
-    )
-    assert response.status_code == 201
-    template = Template.query.filter(Template.name == 'my template').first()
-    assert template.postage == expected_postage
 
 
 def test_create_template_should_return_400_if_folder_is_for_a_different_service(
@@ -218,7 +159,6 @@ def test_should_raise_error_if_service_does_not_exist_on_create(client, sample_u
 @pytest.mark.parametrize('permissions, template_type, subject, expected_error', [
     ([EMAIL_TYPE], SMS_TYPE, None, {'template_type': ['Creating text message templates is not allowed']}),
     ([SMS_TYPE], EMAIL_TYPE, 'subject', {'template_type': ['Creating email templates is not allowed']}),
-    ([SMS_TYPE], LETTER_TYPE, 'subject', {'template_type': ['Creating letter templates is not allowed']}),
 ])
 def test_should_raise_error_on_create_if_no_permission(
         client, sample_user, permissions, template_type, subject, expected_error):
@@ -249,8 +189,7 @@ def test_should_raise_error_on_create_if_no_permission(
 
 @pytest.mark.parametrize('template_type, permissions, expected_error', [
     (SMS_TYPE, [EMAIL_TYPE], {'template_type': ['Updating text message templates is not allowed']}),
-    (EMAIL_TYPE, [LETTER_TYPE], {'template_type': ['Updating email templates is not allowed']}),
-    (LETTER_TYPE, [SMS_TYPE], {'template_type': ['Updating letter templates is not allowed']})
+    (EMAIL_TYPE, [SMS_TYPE], {'template_type': ['Updating email templates is not allowed']}),
 ])
 def test_should_be_error_on_update_if_no_permission(
     client,
@@ -323,8 +262,8 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert json_resp['message'] == 'No result found'
 
 
-@pytest.mark.parametrize('template_type', [EMAIL_TYPE, LETTER_TYPE])
-def test_must_have_a_subject_on_an_email_or_letter_template(client, sample_user, sample_service, template_type):
+@pytest.mark.parametrize('template_type', [EMAIL_TYPE])
+def test_must_have_a_subject_on_an_email_template(client, sample_user, sample_service, template_type):
     data = {
         'name': 'my template',
         'template_type': template_type,
@@ -347,8 +286,8 @@ def test_must_have_a_subject_on_an_email_or_letter_template(client, sample_user,
 
 def test_update_should_update_a_template(client, sample_user):
 
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service, template_type="letter", postage="second")
+    service = create_service()
+    template = create_template(service, template_type="sms")
 
     assert template.created_by == service.created_by
     assert template.created_by != sample_user
@@ -356,7 +295,6 @@ def test_update_should_update_a_template(client, sample_user):
     data = {
         'content': 'my template has new content, swell!',
         'created_by': str(sample_user.id),
-        'postage': 'first'
     }
     data = json.dumps(data)
     auth_header = create_admin_authorization_header()
@@ -372,7 +310,6 @@ def test_update_should_update_a_template(client, sample_user):
     assert update_json_resp['data']['content'] == (
         'my template has new content, swell!'
     )
-    assert update_json_resp['data']['postage'] == 'first'
     assert update_json_resp['data']['name'] == template.name
     assert update_json_resp['data']['template_type'] == template.template_type
     assert update_json_resp['data']['version'] == 2
@@ -427,50 +364,6 @@ def test_should_be_able_to_archive_template_should_remove_template_folders(
     updated_template = Template.query.get(template.id)
     assert updated_template.archived
     assert not updated_template.folder
-
-
-def test_get_precompiled_template_for_service(
-    client,
-    notify_user,
-    sample_service,
-):
-    assert len(sample_service.templates) == 0
-
-    response = client.get(
-        '/service/{}/template/precompiled'.format(sample_service.id),
-        headers=[create_admin_authorization_header()],
-    )
-    assert response.status_code == 200
-    assert len(sample_service.templates) == 1
-
-    data = json.loads(response.get_data(as_text=True))
-    assert data['name'] == 'Pre-compiled PDF'
-    assert data['hidden'] is True
-
-
-def test_get_precompiled_template_for_service_when_service_has_existing_precompiled_template(
-    client,
-    notify_user,
-    sample_service,
-):
-    create_template(
-        sample_service,
-        template_name='Exisiting precompiled template',
-        template_type=LETTER_TYPE,
-        hidden=True)
-    assert len(sample_service.templates) == 1
-
-    response = client.get(
-        '/service/{}/template/precompiled'.format(sample_service.id),
-        headers=[create_admin_authorization_header()],
-    )
-
-    assert response.status_code == 200
-    assert len(sample_service.templates) == 1
-
-    data = json.loads(response.get_data(as_text=True))
-    assert data['name'] == 'Exisiting precompiled template'
-    assert data['hidden'] is True
 
 
 def test_should_be_able_to_get_all_templates_for_a_service(client, sample_user, sample_service):
@@ -561,13 +454,11 @@ def test_should_get_return_all_fields_by_default(
         'hidden',
         'id',
         'name',
-        'postage',
         'process_type',
         'redact_personalisation',
         'reply_to',
         'reply_to_text',
         'service',
-        'service_letter_contact',
         'subject',
         'template_redacted',
         'template_type',
@@ -583,7 +474,6 @@ def test_should_get_return_all_fields_by_default(
 @pytest.mark.parametrize('template_type, expected_content', (
     (EMAIL_TYPE, None),
     (SMS_TYPE, None),
-    (LETTER_TYPE, None),
 ))
 def test_should_not_return_content_and_subject_if_requested(
     admin_request,
@@ -623,11 +513,6 @@ def test_should_not_return_content_and_subject_if_requested(
             None,
             'hello ((name)) we’ve received your ((thing))',
             SMS_TYPE
-        ),
-        (
-            'about your ((thing))',
-            'hello ((name)) we’ve received your ((thing))',
-            LETTER_TYPE
         )
     ]
 )
@@ -853,54 +738,6 @@ def test_update_set_process_type_on_template(client, sample_template):
     assert template.process_type == 'priority'
 
 
-def test_create_a_template_with_reply_to(admin_request, sample_user):
-    service = create_service(service_permissions=['letter'])
-    letter_contact = create_letter_contact(service, "Edinburgh, ED1 1AA")
-    data = {
-        'name': 'my template',
-        'subject': 'subject',
-        'template_type': 'letter',
-        'content': 'template <b>content</b>',
-        'service': str(service.id),
-        'created_by': str(sample_user.id),
-        'reply_to': str(letter_contact.id),
-    }
-
-    json_resp = admin_request.post('template.create_template', service_id=service.id, _data=data, _expected_status=201)
-
-    assert json_resp['data']['template_type'] == 'letter'
-    assert json_resp['data']['reply_to'] == str(letter_contact.id)
-    assert json_resp['data']['reply_to_text'] == letter_contact.contact_block
-
-    template = Template.query.get(json_resp['data']['id'])
-    from app.schemas import template_schema
-    assert sorted(json_resp['data']) == sorted(template_schema.dump(template))
-    th = TemplateHistory.query.filter_by(id=template.id, version=1).one()
-    assert th.service_letter_contact_id == letter_contact.id
-
-
-def test_create_a_template_with_foreign_service_reply_to(admin_request, sample_user):
-    service = create_service(service_permissions=['letter'])
-    service2 = create_service(service_name='test service', email_from='test@example.com',
-                              service_permissions=['letter'])
-    letter_contact = create_letter_contact(service2, "Edinburgh, ED1 1AA")
-    data = {
-        'name': 'my template',
-        'subject': 'subject',
-        'template_type': 'letter',
-        'content': 'template <b>content</b>',
-        'service': str(service.id),
-        'created_by': str(sample_user.id),
-        'reply_to': str(letter_contact.id),
-    }
-
-    json_resp = admin_request.post('template.create_template', service_id=service.id, _data=data, _expected_status=400)
-
-    assert json_resp['message'] == "letter_contact_id {} does not exist in database for service id {}".format(
-        str(letter_contact.id), str(service.id)
-    )
-
-
 @pytest.mark.parametrize('post_data, expected_errors', [
     (
         {},
@@ -912,15 +749,7 @@ def test_create_a_template_with_foreign_service_reply_to(admin_request, sample_u
             {"error": "ValidationError", "message": "service is a required property"},
             {"error": "ValidationError", "message": "created_by is a required property"},
         ]
-    ),
-    (
-        {"name": "my template", "template_type": "sms", "content": "hi", "postage": "third",
-         "service": "1af43c02-b5a8-4923-ad7f-5279b75ff2d0", "created_by": "30587644-9083-44d8-a114-98887f07f1e3"},
-        [
-            {"error": "ValidationError",
-             "message": "postage invalid. It must be first, second, europe or rest-of-world."},
-        ]
-    ),
+    )
 ])
 def test_create_template_validates_against_json_schema(
     admin_request,
@@ -935,113 +764,6 @@ def test_create_template_validates_against_json_schema(
         _expected_status=400
     )
     assert response['errors'] == expected_errors
-
-
-@pytest.mark.parametrize('template_default, service_default',
-                         [('template address', 'service address'),
-                          (None, 'service address'),
-                          ('template address', None),
-                          (None, None)
-                          ])
-def test_get_template_reply_to(client, sample_service, template_default, service_default):
-    auth_header = create_admin_authorization_header()
-    if service_default:
-        create_letter_contact(
-            service=sample_service, contact_block=service_default, is_default=True
-        )
-    if template_default:
-        template_default_contact = create_letter_contact(
-            service=sample_service, contact_block=template_default, is_default=False
-        )
-    reply_to_id = str(template_default_contact.id) if template_default else None
-    template = create_template(service=sample_service, template_type='letter', reply_to=reply_to_id)
-
-    resp = client.get('/service/{}/template/{}'.format(template.service_id, template.id),
-                      headers=[auth_header])
-
-    assert resp.status_code == 200, resp.get_data(as_text=True)
-    json_resp = json.loads(resp.get_data(as_text=True))
-
-    assert 'service_letter_contact_id' not in json_resp['data']
-    assert json_resp['data']['reply_to'] == reply_to_id
-    assert json_resp['data']['reply_to_text'] == template_default
-
-
-def test_update_template_reply_to(client, sample_letter_template):
-    auth_header = create_admin_authorization_header()
-    letter_contact = create_letter_contact(sample_letter_template.service, "Edinburgh, ED1 1AA")
-    data = {
-        'reply_to': str(letter_contact.id),
-    }
-
-    resp = client.post('/service/{}/template/{}'.format(sample_letter_template.service_id, sample_letter_template.id),
-                       data=json.dumps(data),
-                       headers=[('Content-Type', 'application/json'), auth_header])
-
-    assert resp.status_code == 200, resp.get_data(as_text=True)
-
-    template = dao_get_template_by_id(sample_letter_template.id)
-    assert template.service_letter_contact_id == letter_contact.id
-    th = TemplateHistory.query.filter_by(id=sample_letter_template.id, version=2).one()
-    assert th.service_letter_contact_id == letter_contact.id
-
-
-def test_update_template_reply_to_set_to_blank(client, notify_db_session):
-    auth_header = create_admin_authorization_header()
-    service = create_service(service_permissions=['letter'])
-    letter_contact = create_letter_contact(service, "Edinburgh, ED1 1AA")
-    template = create_template(service=service, template_type='letter', reply_to=letter_contact.id)
-
-    data = {
-        'reply_to': None,
-    }
-
-    resp = client.post('/service/{}/template/{}'.format(template.service_id, template.id),
-                       data=json.dumps(data),
-                       headers=[('Content-Type', 'application/json'), auth_header])
-
-    assert resp.status_code == 200, resp.get_data(as_text=True)
-
-    template = dao_get_template_by_id(template.id)
-    assert template.service_letter_contact_id is None
-    th = TemplateHistory.query.filter_by(id=template.id, version=2).one()
-    assert th.service_letter_contact_id is None
-
-
-def test_update_template_validates_postage(admin_request, sample_service_full_permissions):
-    template = create_template(service=sample_service_full_permissions, template_type='letter')
-
-    response = admin_request.post(
-        'template.update_template',
-        service_id=sample_service_full_permissions.id,
-        template_id=template.id,
-        _data={"postage": "third"},
-        _expected_status=400
-    )
-    assert 'postage invalid' in response['errors'][0]['message']
-
-
-def test_update_template_with_foreign_service_reply_to(client, sample_letter_template):
-    auth_header = create_admin_authorization_header()
-
-    service2 = create_service(service_name='test service', email_from='test@example.com',
-                              service_permissions=['letter'])
-    letter_contact = create_letter_contact(service2, "Edinburgh, ED1 1AA")
-
-    data = {
-        'reply_to': str(letter_contact.id),
-    }
-
-    resp = client.post('/service/{}/template/{}'.format(sample_letter_template.service_id, sample_letter_template.id),
-                       data=json.dumps(data),
-                       headers=[('Content-Type', 'application/json'), auth_header])
-
-    assert resp.status_code == 400, resp.get_data(as_text=True)
-    json_resp = json.loads(resp.get_data(as_text=True))
-
-    assert json_resp['message'] == "letter_contact_id {} does not exist in database for service id {}".format(
-        str(letter_contact.id), str(sample_letter_template.service_id)
-    )
 
 
 def test_update_redact_template(admin_request, sample_template):
@@ -1131,587 +853,3 @@ def test_update_redact_template_400s_if_no_created_by(admin_request, sample_temp
 
     assert sample_template.redact_personalisation is False
     assert sample_template.template_redacted.updated_at == original_updated_time
-
-
-def test_preview_letter_template_by_id_invalid_file_type(
-        sample_letter_notification,
-        admin_request):
-
-    resp = admin_request.get(
-        'template.preview_letter_template_by_notification_id',
-        service_id=sample_letter_notification.service_id,
-        template_id=sample_letter_notification.template_id,
-        notification_id=sample_letter_notification.id,
-        file_type='doc',
-        _expected_status=400
-    )
-
-    assert ['file_type must be pdf or png'] == resp['message']['content']
-
-
-@freeze_time('2012-12-12')
-@pytest.mark.parametrize('file_type', ('png', 'pdf'))
-def test_preview_letter_template_by_id_valid_file_type(
-    notify_api,
-    sample_letter_notification,
-    admin_request,
-    file_type,
-):
-    sample_letter_notification.created_at = datetime.utcnow()
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-            content = b'\x00\x01'
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/preview.{}'.format(file_type),
-                content=content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=200
-            )
-
-            resp = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=sample_letter_notification.service_id,
-                notification_id=sample_letter_notification.id,
-                file_type=file_type,
-            )
-
-            post_json = mock_post.last_request.json()
-            assert post_json['template']['id'] == str(sample_letter_notification.template_id)
-            assert post_json['values'] == {
-                'address_line_1': 'A1',
-                'address_line_2': 'A2',
-                'address_line_3': 'A3',
-                'address_line_4': 'A4',
-                'address_line_5': 'A5',
-                'address_line_6': 'A6',
-                'postcode': 'A_POST',
-            }
-            assert post_json['date'] == '2012-12-12T00:00:00'
-            assert post_json['filename'] is None
-            assert base64.b64decode(resp['content']) == content
-
-
-@freeze_time('2012-12-12')
-def test_preview_letter_template_by_id_shows_template_version_used_by_notification(
-    notify_api,
-    sample_letter_notification,
-    sample_letter_template,
-    admin_request
-):
-    sample_letter_notification.created_at = datetime.utcnow()
-    assert sample_letter_notification.template_version == 1
-
-    # Create a new template history to check that our preview doesn't use the newest version
-    # but instead the one linked with the notification
-    sample_letter_template.content = 'new content'
-    dao_update_template(sample_letter_template)
-    versions = dao_get_template_versions(sample_letter_notification.service.id, sample_letter_template.id)
-    assert len(versions) == 2
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-            content = b'\x00\x01'
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/preview.png',
-                content=content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=200
-            )
-
-            admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=sample_letter_notification.service_id,
-                notification_id=sample_letter_notification.id,
-                file_type='png',
-            )
-
-            post_json = mock_post.last_request.json()
-            assert post_json['template']['id'] == str(sample_letter_notification.template_id)
-            assert post_json['template']['version'] == '1'
-
-
-def test_preview_letter_template_by_id_template_preview_500(
-        notify_api,
-        client,
-        admin_request,
-        sample_letter_notification):
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        import requests_mock
-        with requests_mock.Mocker() as request_mock:
-            content = b'\x00\x01'
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/preview.pdf',
-                content=content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=404
-            )
-
-            resp = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=sample_letter_notification.service_id,
-                notification_id=sample_letter_notification.id,
-                file_type='pdf',
-                _expected_status=500
-            )
-
-            assert mock_post.last_request.json()
-            assert 'Status code: 404' in resp['message']
-            assert 'Error generating preview letter for {}'.format(sample_letter_notification.id) in resp['message']
-
-
-def test_preview_letter_template_precompiled_pdf_file_type(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker():
-
-            content = b'\x00\x01'
-
-            mock_get_letter_pdf = mocker.patch(
-                'app.template.rest.get_letter_pdf_and_metadata',
-                return_value=(content, {
-                    "message": "",
-                    "invalid_pages": "",
-                    "page_count": "1"
-                })
-            )
-
-            resp = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type='pdf'
-            )
-
-            assert mock_get_letter_pdf.called_once_with(notification)
-            assert base64.b64decode(resp['content']) == content
-
-
-def test_preview_letter_template_precompiled_s3_error(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker():
-
-            mocker.patch('app.template.rest.get_letter_pdf_and_metadata',
-                         side_effect=botocore.exceptions.ClientError(
-                             {'Error': {'Code': '403', 'Message': 'Unauthorized'}},
-                             'GetObject'
-                         ))
-
-            request = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type='pdf',
-                _expected_status=500
-            )
-
-            assert request['message'] == "Error extracting requested page from PDF file for notification_id {} type " \
-                                         "<class 'botocore.exceptions.ClientError'> An error occurred (403) " \
-                                         "when calling the GetObject operation: Unauthorized".format(notification.id)
-
-
-@pytest.mark.parametrize(
-    "requested_page, message, expected_post_url",
-    [
-        # page defaults to 1, page is valid, no overlay shown
-        ("", "", 'precompiled-preview.png'),
-        # page is valid, no overlay shown
-        ("1", "", 'precompiled-preview.png'),
-        # page is invalid but not because content is outside printable area so no overlay
-        ("1", "letter-not-a4-portrait-oriented", 'precompiled-preview.png'),
-        # page is invalid, overlay shown
-        ("1", "content-outside-printable-area", 'precompiled/overlay.png?page_number=1'),
-        # page is valid, no overlay shown
-        ("2", "content-outside-printable-area", 'precompiled-preview.png'),
-        # page is invalid, overlay shown
-        ("3", "content-outside-printable-area", 'precompiled/overlay.png?page_number=3'),
-    ]
-)
-def test_preview_letter_template_precompiled_for_png_shows_overlay_on_pages_with_content_outside_printable_area(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker,
-        requested_page,
-        message,
-        expected_post_url,
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-
-            pdf_content = b'\x00\x01'
-            expected_returned_content = b'\x00\x02'
-
-            metadata = {
-                "message": message,
-                "invalid_pages": "[1,3]",
-                "page_count": "4"
-            }
-
-            mock_get_letter_pdf = mocker.patch(
-                'app.template.rest.get_letter_pdf_and_metadata',
-                return_value=(pdf_content, metadata)
-            )
-
-            mocker.patch('app.template.rest.extract_page_from_pdf', return_value=pdf_content)
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/{}'.format(expected_post_url),
-                content=expected_returned_content,
-                headers={'X-pdf-page-count': '4'},
-                status_code=200
-            )
-
-            response = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                page=requested_page,
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type="png",
-            )
-
-            with pytest.raises(ValueError):
-                mock_post.last_request.json()
-            assert mock_get_letter_pdf.called_once_with(notification)
-            assert base64.b64decode(response['content']) == expected_returned_content
-            assert response["metadata"] == metadata
-
-
-@pytest.mark.parametrize(
-    "invalid_pages",
-    [
-        "[1,3]",
-        "[2,4]",  # it shouldn't make a difference if the error was on the first page or not
-    ]
-)
-def test_preview_letter_template_precompiled_for_pdf_shows_overlay_on_all_pages_if_content_outside_printable_area(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker,
-        invalid_pages,
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-
-            pdf_content = b'\x00\x01'
-            expected_returned_content = b'\x00\x02'
-
-            metadata = {
-                "message": "content-outside-printable-area",
-                "invalid_pages": invalid_pages,
-                "page_count": "4"
-            }
-
-            mock_get_letter_pdf = mocker.patch(
-                'app.template.rest.get_letter_pdf_and_metadata',
-                return_value=(pdf_content, metadata)
-            )
-
-            mocker.patch('app.template.rest.extract_page_from_pdf', return_value=pdf_content)
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/precompiled/overlay.pdf',
-                content=expected_returned_content,
-                headers={'X-pdf-page-count': '4'},
-                status_code=200
-            )
-
-            response = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type="pdf",
-            )
-
-            with pytest.raises(ValueError):
-                mock_post.last_request.json()
-            assert mock_get_letter_pdf.called_once_with(notification)
-            assert base64.b64decode(response['content']) == expected_returned_content
-            assert response["metadata"] == metadata
-
-
-@pytest.mark.parametrize('page_number,expect_preview_url', [
-    ('', 'http://localhost/notifications-template-preview/precompiled-preview.png?hide_notify=true'),
-    ('1', 'http://localhost/notifications-template-preview/precompiled-preview.png?hide_notify=true'),
-    ('2', 'http://localhost/notifications-template-preview/precompiled-preview.png')
-])
-def test_preview_letter_template_precompiled_png_file_type_hide_notify_tag_only_on_first_page(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker,
-        page_number,
-        expect_preview_url
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        pdf_content = b'\x00\x01'
-        png_content = b'\x00\x02'
-        encoded = base64.b64encode(png_content).decode('utf-8')
-
-        mocker.patch(
-            'app.template.rest.get_letter_pdf_and_metadata',
-            return_value=(pdf_content, {
-                "message": "",
-                "invalid_pages": "",
-                "page_count": "2"
-            })
-        )
-        mocker.patch('app.template.rest.extract_page_from_pdf', return_value=png_content)
-        mock_get_png_preview = mocker.patch('app.template.rest._get_png_preview_or_overlaid_pdf', return_value=encoded)
-
-        admin_request.get(
-            'template.preview_letter_template_by_notification_id',
-            service_id=notification.service_id,
-            notification_id=notification.id,
-            file_type='png',
-            page=page_number
-        )
-
-        mock_get_png_preview.assert_called_once_with(
-            expect_preview_url, encoded, notification.id, json=False
-        )
-
-
-def test_preview_letter_template_precompiled_png_template_preview_500_error(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-
-            pdf_content = b'\x00\x01'
-            png_content = b'\x00\x02'
-
-            mocker.patch('app.template.rest.get_letter_pdf_and_metadata', return_value=(pdf_content, {
-                "message": "",
-                "invalid_pages": "",
-                "page_count": "1"
-            }))
-
-            mocker.patch('app.template.rest.extract_page_from_pdf', return_value=pdf_content)
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/precompiled-preview.png',
-                content=png_content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=500
-            )
-
-            admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type='png',
-                _expected_status=500
-
-            )
-
-            with pytest.raises(ValueError):
-                mock_post.last_request.json()
-
-
-def test_preview_letter_template_precompiled_png_template_preview_400_error(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-
-            pdf_content = b'\x00\x01'
-            png_content = b'\x00\x02'
-
-            mocker.patch('app.template.rest.get_letter_pdf_and_metadata', return_value=(pdf_content, {
-                "message": "",
-                "invalid_pages": "",
-                "page_count": "1"
-            }))
-
-            mocker.patch('app.template.rest.extract_page_from_pdf', return_value=pdf_content)
-
-            mock_post = request_mock.post(
-                'http://localhost/notifications-template-preview/precompiled-preview.png',
-                content=png_content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=404
-            )
-
-            admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type='png',
-                _expected_status=500
-            )
-
-            with pytest.raises(ValueError):
-                mock_post.last_request.json()
-
-
-def test_preview_letter_template_precompiled_png_template_preview_pdf_error(
-        notify_api,
-        client,
-        admin_request,
-        sample_service,
-        mocker
-):
-
-    template = create_template(sample_service,
-                               template_type='letter',
-                               template_name='Pre-compiled PDF',
-                               subject='Pre-compiled PDF',
-                               hidden=True)
-
-    notification = create_notification(template)
-
-    with set_config_values(notify_api, {
-        'TEMPLATE_PREVIEW_API_HOST': 'http://localhost/notifications-template-preview',
-        'TEMPLATE_PREVIEW_API_KEY': 'test-key'
-    }):
-        with requests_mock.Mocker() as request_mock:
-
-            pdf_content = b'\x00\x01'
-            png_content = b'\x00\x02'
-
-            mocker.patch('app.template.rest.get_letter_pdf_and_metadata', return_value=(pdf_content, {
-                "message": "",
-                "invalid_pages": "",
-                "page_count": "1"
-            }))
-
-            error_message = "PDF Error message"
-            mocker.patch('app.template.rest.extract_page_from_pdf', side_effect=PdfReadError(error_message))
-
-            request_mock.post(
-                'http://localhost/notifications-template-preview/precompiled-preview.png',
-                content=png_content,
-                headers={'X-pdf-page-count': '1'},
-                status_code=404
-            )
-
-            request = admin_request.get(
-                'template.preview_letter_template_by_notification_id',
-                service_id=notification.service_id,
-                notification_id=notification.id,
-                file_type='png',
-                _expected_status=500
-            )
-
-            assert request['message'] == "Error extracting requested page from PDF file for notification_id {} type " \
-                                         "{} {}".format(notification.id, type(PdfReadError()), error_message)

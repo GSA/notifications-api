@@ -34,7 +34,6 @@ valid_json_get_response_with_optionals = {
     'body': 'some body',
     'subject': "some subject",
     'name': 'some name',
-    'postage': 'first',
 }
 
 valid_request_args = [{"id": str(uuid.uuid4()), "version": 1}, {"id": str(uuid.uuid4())}]
@@ -80,7 +79,6 @@ valid_json_post_response_with_optionals = {
     'version': 1,
     'body': "some body",
     'subject': 'some subject',
-    'postage': 'second',
     'html': '<p>some body</p>',
 }
 

@@ -9,8 +9,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
-    PRECOMPILED_TEMPLATE_NAME,
     SMS_TYPE,
 )
 from tests.app.db import (
@@ -57,8 +55,8 @@ def test_get_template_usage_by_month_returns_correct_data(
 def test_get_template_usage_by_month_returns_two_templates(admin_request, sample_template, sample_service):
     template_one = create_template(
         sample_service,
-        template_type=LETTER_TYPE,
-        template_name=PRECOMPILED_TEMPLATE_NAME,
+        template_type=SMS_TYPE,
+        template_name="TEST TEMPLATE",
         hidden=True
     )
     create_ft_notification_status(local_date=datetime(2017, 4, 2), template=template_one, count=1)
@@ -80,7 +78,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[0]["month"] == 4
     assert resp_json[0]["year"] == 2017
     assert resp_json[0]["count"] == 1
-    assert resp_json[0]["is_precompiled_letter"] is True
 
     assert resp_json[1]["template_id"] == str(sample_template.id)
     assert resp_json[1]["name"] == sample_template.name
@@ -88,7 +85,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[1]["month"] == 4
     assert resp_json[1]["year"] == 2017
     assert resp_json[1]["count"] == 3
-    assert resp_json[1]["is_precompiled_letter"] is False
 
     assert resp_json[2]["template_id"] == str(sample_template.id)
     assert resp_json[2]["name"] == sample_template.name
@@ -96,7 +92,6 @@ def test_get_template_usage_by_month_returns_two_templates(admin_request, sample
     assert resp_json[2]["month"] == 11
     assert resp_json[2]["year"] == 2017
     assert resp_json[2]["count"] == 1
-    assert resp_json[2]["is_precompiled_letter"] is False
 
 
 @pytest.mark.parametrize('today_only, stats', [
@@ -113,7 +108,7 @@ def test_get_service_notification_statistics(admin_request, sample_service, samp
             today_only=today_only
         )
 
-    assert set(resp['data'].keys()) == {SMS_TYPE, EMAIL_TYPE, LETTER_TYPE}
+    assert set(resp['data'].keys()) == {SMS_TYPE, EMAIL_TYPE}
     assert resp['data'][SMS_TYPE] == stats
 
 
@@ -126,7 +121,6 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
     assert resp['data'] == {
         SMS_TYPE: {'requested': 0, 'delivered': 0, 'failed': 0},
         EMAIL_TYPE: {'requested': 0, 'delivered': 0, 'failed': 0},
-        LETTER_TYPE: {'requested': 0, 'delivered': 0, 'failed': 0},
     }
 
 
@@ -167,7 +161,7 @@ def test_get_monthly_notification_stats_returns_empty_stats_with_correct_dates(a
     ]
     assert sorted(response['data'].keys()) == keys
     for val in response['data'].values():
-        assert val == {'sms': {}, 'email': {}, 'letter': {}}
+        assert val == {'sms': {}, 'email': {}}
 
 
 def test_get_monthly_notification_stats_returns_stats(admin_request, sample_service):
@@ -195,8 +189,7 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
             # it combines the two days
             'delivered': 2
         },
-        'email': {},
-        'letter': {}
+        'email': {}
     }
     assert response['data']['2016-07'] == {
         # it combines the two template types
@@ -206,8 +199,7 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
         },
         'email': {
             'delivered': 1
-        },
-        'letter': {}
+        }
     }
 
 
@@ -233,8 +225,7 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
         'sms': {
             'delivered': 1
         },
-        'email': {},
-        'letter': {}
+        'email': {}
     }
     assert response['data']['2016-06'] == {
         'sms': {
@@ -242,8 +233,7 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
             'created': 3,
             'delivered': 1,
         },
-        'email': {},
-        'letter': {}
+        'email': {}
     }
 
 
@@ -284,6 +274,5 @@ def test_get_monthly_notification_stats_only_gets_for_one_service(admin_request,
 
     assert response['data']['2016-06'] == {
         'sms': {'created': 1},
-        'email': {},
-        'letter': {}
+        'email': {}
     }

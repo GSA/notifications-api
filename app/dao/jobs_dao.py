@@ -2,23 +2,13 @@ import uuid
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.letter_timings import (
-    CANCELLABLE_JOB_LETTER_STATUSES,
-    letter_can_be_cancelled,
-)
 from sqlalchemy import and_, asc, desc, func
 
 from app import db
-from app.dao.dao_utils import autocommit
-from app.dao.templates_dao import dao_get_template_by_id
 from app.models import (
-    JOB_STATUS_CANCELLED,
     JOB_STATUS_FINISHED,
     JOB_STATUS_PENDING,
     JOB_STATUS_SCHEDULED,
-    LETTER_TYPE,
-    NOTIFICATION_CANCELLED,
-    NOTIFICATION_CREATED,
     FactNotificationStatus,
     Job,
     Notification,
@@ -181,40 +171,6 @@ def dao_get_jobs_older_than_data_retention(notification_types):
         ).order_by(desc(Job.created_at)).all())
 
     return jobs
-
-
-@autocommit
-def dao_cancel_letter_job(job):
-    number_of_notifications_cancelled = Notification.query.filter(
-        Notification.job_id == job.id
-    ).update({'status': NOTIFICATION_CANCELLED,
-              'updated_at': datetime.utcnow(),
-              'billable_units': 0})
-    job.job_status = JOB_STATUS_CANCELLED
-    dao_update_job(job)
-    return number_of_notifications_cancelled
-
-
-def can_letter_job_be_cancelled(job):
-    template = dao_get_template_by_id(job.template_id)
-    if template.template_type != LETTER_TYPE:
-        return False, "Only letter jobs can be cancelled through this endpoint. This is not a letter job."
-
-    notifications = Notification.query.filter(
-        Notification.job_id == job.id
-    ).all()
-    count_notifications = len(notifications)
-    if job.job_status != JOB_STATUS_FINISHED or count_notifications != job.notification_count:
-        return False, "We are still processing these letters, please try again in a minute."
-    count_cancellable_notifications = len([
-        n for n in notifications if n.status in CANCELLABLE_JOB_LETTER_STATUSES
-    ])
-    if count_cancellable_notifications != job.notification_count or not letter_can_be_cancelled(
-        NOTIFICATION_CREATED, job.created_at
-    ):
-        return False, "It’s too late to cancel sending, these letters have already been sent."
-
-    return True, None
 
 
 def find_jobs_with_missing_rows():

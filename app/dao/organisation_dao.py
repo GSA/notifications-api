@@ -89,9 +89,6 @@ def dao_update_organisation(organisation_id, **kwargs):
     if 'email_branding_id' in kwargs:
         _update_organisation_services(organisation, 'email_branding')
 
-    if 'letter_branding_id' in kwargs:
-        _update_organisation_services(organisation, 'letter_branding')
-
     return num_updated
 
 

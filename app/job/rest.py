@@ -9,8 +9,6 @@ from app.dao.fact_notification_status_dao import (
     fetch_notification_statuses_for_job,
 )
 from app.dao.jobs_dao import (
-    can_letter_job_be_cancelled,
-    dao_cancel_letter_job,
     dao_create_job,
     dao_get_future_scheduled_job_by_id_and_service_id,
     dao_get_job_by_service_id_and_job_id,
@@ -30,7 +28,6 @@ from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_PENDING,
     JOB_STATUS_SCHEDULED,
-    LETTER_TYPE,
 )
 from app.schemas import (
     job_schema,
@@ -64,17 +61,6 @@ def cancel_job(service_id, job_id):
     dao_update_job(job)
 
     return get_job_by_service_and_job_id(service_id, job_id)
-
-
-@job_blueprint.route('/<job_id>/cancel-letter-job', methods=['POST'])
-def cancel_letter_job(service_id, job_id):
-    job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
-    can_we_cancel, errors = can_letter_job_be_cancelled(job)
-    if can_we_cancel:
-        data = dao_cancel_letter_job(job)
-        return jsonify(data), 200
-    else:
-        return jsonify(message=errors), 400
 
 
 @job_blueprint.route('/<job_id>/notifications', methods=['GET'])
@@ -159,9 +145,6 @@ def create_job(service_id):
 
     data['template'] = data.pop('template_id')
     template = dao_get_template_by_id(data['template'])
-
-    if template.template_type == LETTER_TYPE and service.restricted:
-        raise InvalidRequest("Create letter job is not allowed for service in trial mode ", 403)
 
     if data.get('valid') != 'True':
         raise InvalidRequest("File is not valid, can't create job", 400)

@@ -20,7 +20,6 @@ from app.models import Organisation, Service
 from tests.app.db import (
     create_domain,
     create_email_branding,
-    create_letter_branding,
     create_organisation,
     create_service,
     create_user,
@@ -60,7 +59,6 @@ def test_update_organisation(notify_db_session):
     organisation = Organisation.query.one()
     user = create_user()
     email_branding = create_email_branding()
-    letter_branding = create_letter_branding()
 
     data = {
         'name': 'new name',
@@ -70,7 +68,6 @@ def test_update_organisation(notify_db_session):
         "agreement_signed_at": datetime.datetime.utcnow(),
         "agreement_signed_by_id": user.id,
         "agreement_signed_version": 999.99,
-        "letter_branding_id": letter_branding.id,
         "email_branding_id": email_branding.id,
     }
 
@@ -122,12 +119,10 @@ def test_update_organisation_does_not_update_the_service_if_certain_attributes_n
     sample_organisation,
 ):
     email_branding = create_email_branding()
-    letter_branding = create_letter_branding()
 
     sample_service.organisation_type = 'state'
     sample_organisation.organisation_type = 'federal'
     sample_organisation.email_branding = email_branding
-    sample_organisation.letter_branding = letter_branding
 
     sample_organisation.services.append(sample_service)
     db.session.commit()
@@ -143,9 +138,6 @@ def test_update_organisation_does_not_update_the_service_if_certain_attributes_n
 
     assert sample_organisation.email_branding == email_branding
     assert sample_service.email_branding is None
-
-    assert sample_organisation.letter_branding == letter_branding
-    assert sample_service.letter_branding is None
 
 
 def test_update_organisation_updates_the_service_org_type_if_org_type_is_provided(
@@ -173,18 +165,14 @@ def test_update_organisation_updates_the_service_branding_if_branding_is_provide
     sample_organisation,
 ):
     email_branding = create_email_branding()
-    letter_branding = create_letter_branding()
 
     sample_organisation.services.append(sample_service)
     db.session.commit()
 
     dao_update_organisation(sample_organisation.id, email_branding_id=email_branding.id)
-    dao_update_organisation(sample_organisation.id, letter_branding_id=letter_branding.id)
 
     assert sample_organisation.email_branding == email_branding
-    assert sample_organisation.letter_branding == letter_branding
     assert sample_service.email_branding == email_branding
-    assert sample_service.letter_branding == letter_branding
 
 
 def test_update_organisation_does_not_override_service_branding(
@@ -193,22 +181,16 @@ def test_update_organisation_does_not_override_service_branding(
 ):
     email_branding = create_email_branding()
     custom_email_branding = create_email_branding(name='custom')
-    letter_branding = create_letter_branding()
-    custom_letter_branding = create_letter_branding(name='custom', filename='custom')
 
     sample_service.email_branding = custom_email_branding
-    sample_service.letter_branding = custom_letter_branding
 
     sample_organisation.services.append(sample_service)
     db.session.commit()
 
     dao_update_organisation(sample_organisation.id, email_branding_id=email_branding.id)
-    dao_update_organisation(sample_organisation.id, letter_branding_id=letter_branding.id)
 
     assert sample_organisation.email_branding == email_branding
-    assert sample_organisation.letter_branding == letter_branding
     assert sample_service.email_branding == custom_email_branding
-    assert sample_service.letter_branding == custom_letter_branding
 
 
 def test_update_organisation_updates_services_with_new_crown_type(

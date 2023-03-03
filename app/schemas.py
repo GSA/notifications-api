@@ -229,14 +229,10 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
     created_by = field_for(models.Service, 'created_by', required=True)
     organisation_type = field_for(models.Service, 'organisation_type')
-    letter_logo_filename = fields.Method(dump_only=True, serialize='get_letter_logo_filename')
     permissions = fields.Method("serialize_service_permissions", "deserialize_service_permissions")
     email_branding = field_for(models.Service, 'email_branding')
     organisation = field_for(models.Service, 'organisation')
     go_live_at = field_for(models.Service, 'go_live_at', format=DATETIME_FORMAT_NO_TIMEZONE)
-
-    def get_letter_logo_filename(self, service):
-        return service.letter_branding and service.letter_branding.filename
 
     def serialize_service_permissions(self, service):
         return [p.permission for p in service.permissions]
@@ -253,9 +249,6 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
         return in_data
 
-    def get_letter_contact(self, service):
-        return service.get_default_letter_contact()
-
     class Meta(BaseSchema.Meta):
         model = models.Service
         exclude = (
@@ -271,10 +264,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'inbound_number',
             'inbound_sms',
             'jobs',
-            'letter_contacts',
-            'letter_logo_filename',
             'reply_to_email_addresses',
-            'returned_letters',
             'service_sms_senders',
             'templates',
             'updated_at',
@@ -334,7 +324,6 @@ class DetailedServiceSchema(BaseSchema):
             'permissions',
             'rate_limit',
             'reply_to_email_addresses',
-            'returned_letters',
             'service_sms_senders',
             'templates',
             'users',
@@ -365,7 +354,7 @@ class BaseTemplateSchema(BaseSchema):
 
     class Meta(BaseSchema.Meta):
         model = models.Template
-        exclude = ("service_id", "jobs", "service_letter_contact_id")
+        exclude = ("service_id", "jobs")
 
 
 class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
@@ -381,20 +370,10 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
 
     @validates_schema
     def validate_type(self, data, **kwargs):
-        if data.get('template_type') in {models.EMAIL_TYPE, models.LETTER_TYPE}:
+        if data.get('template_type') == models.EMAIL_TYPE:
             subject = data.get('subject')
             if not subject or subject.strip() == '':
                 raise ValidationError('Invalid template subject', 'subject')
-
-
-class TemplateSchemaNested(TemplateSchema):
-    """
-    Contains extra 'is_precompiled_letter' field for use with NotificationWithTemplateSchema
-    """
-    is_precompiled_letter = fields.Method('get_is_precompiled_letter')
-
-    def get_is_precompiled_letter(self, template):
-        return template.is_precompiled_letter
 
 
 class TemplateSchemaNoDetail(TemplateSchema):
@@ -405,13 +384,11 @@ class TemplateSchemaNoDetail(TemplateSchema):
             'created_by',
             'created_by_id',
             'hidden',
-            'postage',
             'process_type',
             'redact_personalisation',
             'reply_to',
             'reply_to_text',
             'service',
-            'service_letter_contact',
             'subject',
             'template_redacted',
             'updated_at',
@@ -545,7 +522,7 @@ class NotificationWithTemplateSchema(BaseSchema):
         exclude = ('_personalisation',)
 
     template = fields.Nested(
-        TemplateSchemaNested,
+        TemplateSchema,
         only=[
             'id',
             'version',
@@ -553,8 +530,7 @@ class NotificationWithTemplateSchema(BaseSchema):
             'template_type',
             'content',
             'subject',
-            'redact_personalisation',
-            'is_precompiled_letter'
+            'redact_personalisation'
         ],
         dump_only=True
     )

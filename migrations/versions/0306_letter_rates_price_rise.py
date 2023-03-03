@@ -26,8 +26,6 @@ from datetime import datetime
 from alembic import op
 from sqlalchemy.sql import text
 
-from app.models import LetterRate
-
 
 revision = '0306_letter_rates_price_rise'
 down_revision = '0305_add_gp_org_type'
@@ -39,28 +37,28 @@ CHANGEOVER_DATE = datetime(2019, 9, 30, 23, 0)
 def upgrade():
     # all old rates are going in the bin
     conn = op.get_bind()
-    conn.execute(text("UPDATE letter_rates SET end_date = :start WHERE end_date IS NULL"), start=CHANGEOVER_DATE)
+    # conn.execute(text("UPDATE letter_rates SET end_date = :start WHERE end_date IS NULL"), start=CHANGEOVER_DATE)
 
-    base_prices = {
-        'second': 30,
-        'first': 56,
-    }
-    op.bulk_insert(LetterRate.__table__, [
-        {
-            'id': uuid.uuid4(),
-            'start_date': CHANGEOVER_DATE,
-            'end_date': None,
-            'sheet_count': sheet_count,
-            'rate': (base_prices[post_class] + (5 * sheet_count)) / 100.0,
-            'crown': crown,
-            'post_class': post_class,
-        }
-        for sheet_count, crown, post_class in itertools.product(
-            range(1, 6),
-            [True, False],
-            ['first', 'second']
-        )
-    ])
+    # base_prices = {
+    #     'second': 30,
+    #     'first': 56,
+    # }
+    # op.bulk_insert('letter_rates', [
+    #     {
+    #         'id': uuid.uuid4(),
+    #         'start_date': CHANGEOVER_DATE,
+    #         'end_date': None,
+    #         'sheet_count': sheet_count,
+    #         'rate': (base_prices[post_class] + (5 * sheet_count)) / 100.0,
+    #         'crown': crown,
+    #         'post_class': post_class,
+    #     }
+    #     for sheet_count, crown, post_class in itertools.product(
+    #         range(1, 6),
+    #         [True, False],
+    #         ['first', 'second']
+    #     )
+    # ])
 
 
 def downgrade():

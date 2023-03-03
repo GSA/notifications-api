@@ -7,22 +7,16 @@ from app.models import (
     EMAIL_TYPE,
     MOBILE_TYPE,
     NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
     NOTIFICATION_FAILED,
     NOTIFICATION_PENDING,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_STATUS_LETTER_ACCEPTED,
-    NOTIFICATION_STATUS_LETTER_RECEIVED,
     NOTIFICATION_STATUS_TYPES_FAILED,
     NOTIFICATION_TECHNICAL_FAILURE,
-    PRECOMPILED_TEMPLATE_NAME,
     SMS_TYPE,
     Notification,
     ServiceGuestList,
 )
 from tests.app.db import (
     create_inbound_number,
-    create_letter_contact,
     create_notification,
     create_reply_to_email,
     create_service,
@@ -63,22 +57,16 @@ def test_should_not_build_service_guest_list_from_invalid_contact(recipient_type
 @pytest.mark.parametrize('initial_statuses, expected_statuses', [
     # passing in single statuses as strings
     (NOTIFICATION_FAILED, NOTIFICATION_STATUS_TYPES_FAILED),
-    (NOTIFICATION_STATUS_LETTER_ACCEPTED, [NOTIFICATION_SENDING, NOTIFICATION_CREATED]),
     (NOTIFICATION_CREATED, [NOTIFICATION_CREATED]),
     (NOTIFICATION_TECHNICAL_FAILURE, [NOTIFICATION_TECHNICAL_FAILURE]),
     # passing in lists containing single statuses
     ([NOTIFICATION_FAILED], NOTIFICATION_STATUS_TYPES_FAILED),
     ([NOTIFICATION_CREATED], [NOTIFICATION_CREATED]),
     ([NOTIFICATION_TECHNICAL_FAILURE], [NOTIFICATION_TECHNICAL_FAILURE]),
-    (NOTIFICATION_STATUS_LETTER_RECEIVED, NOTIFICATION_DELIVERED),
     # passing in lists containing multiple statuses
     ([NOTIFICATION_FAILED, NOTIFICATION_CREATED], NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_CREATED]),
     ([NOTIFICATION_CREATED, NOTIFICATION_PENDING], [NOTIFICATION_CREATED, NOTIFICATION_PENDING]),
     ([NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE], [NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE]),
-    (
-        [NOTIFICATION_FAILED, NOTIFICATION_STATUS_LETTER_ACCEPTED],
-        NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_SENDING, NOTIFICATION_CREATED]
-    ),
     # checking we don't end up with duplicates
     (
         [NOTIFICATION_FAILED, NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
@@ -121,11 +109,6 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
     ('sms', 'temporary-failure', 'Phone not accepting messages right now'),
     ('sms', 'permanent-failure', 'Phone number doesn’t exist'),
     ('sms', 'sent', 'Sent internationally'),
-    ('letter', 'created', 'Accepted'),
-    ('letter', 'sending', 'Accepted'),
-    ('letter', 'technical-failure', 'Technical failure'),
-    ('letter', 'permanent-failure', 'Permanent failure'),
-    ('letter', 'delivered', 'Received')
 ])
 def test_notification_for_csv_returns_formatted_status(
     sample_service,
@@ -184,28 +167,11 @@ def test_notification_subject_is_none_for_sms(sample_service):
     assert notification.subject is None
 
 
-@pytest.mark.parametrize('template_type', ['email', 'letter'])
+@pytest.mark.parametrize('template_type', ['email'])
 def test_notification_subject_fills_in_placeholders(sample_service, template_type):
     template = create_template(service=sample_service, template_type=template_type, subject='((name))')
     notification = create_notification(template=template, personalisation={'name': 'hello'})
     assert notification.subject == 'hello'
-
-
-def test_letter_notification_serializes_with_address(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'address_line_1': 'foo',
-        'address_line_3': 'bar',
-        'address_line_5': None,
-        'postcode': 'SW1 1AA'
-    }
-    res = sample_letter_notification.serialize()
-    assert res['line_1'] == 'foo'
-    assert res['line_2'] is None
-    assert res['line_3'] == 'bar'
-    assert res['line_4'] is None
-    assert res['line_5'] is None
-    assert res['line_6'] is None
-    assert res['postcode'] == 'SW1 1AA'
 
 
 def test_notification_serializes_created_by_name_with_no_created_by_id(client, sample_notification):
@@ -227,11 +193,6 @@ def test_sms_notification_serializes_without_subject(client, sample_template):
 def test_email_notification_serializes_with_subject(client, sample_email_template):
     res = sample_email_template.serialize_for_v2()
     assert res['subject'] == 'Email Subject'
-
-
-def test_letter_notification_serializes_with_subject(client, sample_letter_template):
-    res = sample_letter_template.serialize_for_v2()
-    assert res['subject'] == 'Template subject'
 
 
 def test_notification_references_template_history(client, sample_template):
@@ -280,60 +241,9 @@ def test_service_get_default_reply_to_email_address(sample_service):
     assert sample_service.get_default_reply_to_email_address() == 'default@email.com'
 
 
-def test_service_get_default_contact_letter(sample_service):
-    create_letter_contact(service=sample_service, contact_block='London,\nNW1A 1AA')
-
-    assert sample_service.get_default_letter_contact() == 'London,\nNW1A 1AA'
-
-
 def test_service_get_default_sms_sender(notify_db_session):
     service = create_service()
     assert service.get_default_sms_sender() == 'testing'
-
-
-def test_letter_notification_serializes_correctly(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'addressline1': 'test',
-        'addressline2': 'London',
-        'postcode': 'N1',
-    }
-
-    json = sample_letter_notification.serialize()
-    assert json['line_1'] == 'test'
-    assert json['line_2'] == 'London'
-    assert json['postcode'] == 'N1'
-
-
-def test_letter_notification_postcode_can_be_null_for_precompiled_letters(client, sample_letter_notification):
-    sample_letter_notification.personalisation = {
-        'address_line_1': 'test',
-        'address_line_2': 'London',
-    }
-
-    json = sample_letter_notification.serialize()
-    assert json['line_1'] == 'test'
-    assert json['line_2'] == 'London'
-    assert json['postcode'] is None
-
-
-def test_is_precompiled_letter_false(sample_letter_template):
-    assert not sample_letter_template.is_precompiled_letter
-
-
-def test_is_precompiled_letter_true(sample_letter_template):
-    sample_letter_template.hidden = True
-    sample_letter_template.name = PRECOMPILED_TEMPLATE_NAME
-    assert sample_letter_template.is_precompiled_letter
-
-
-def test_is_precompiled_letter_hidden_true_not_name(sample_letter_template):
-    sample_letter_template.hidden = True
-    assert not sample_letter_template.is_precompiled_letter
-
-
-def test_is_precompiled_letter_name_correct_not_hidden(sample_letter_template):
-    sample_letter_template.name = PRECOMPILED_TEMPLATE_NAME
-    assert not sample_letter_template.is_precompiled_letter
 
 
 def test_template_folder_is_parent(sample_service):

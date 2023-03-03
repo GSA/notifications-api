@@ -10,14 +10,12 @@ from notifications_utils.recipients import (
     validate_and_format_phone_number,
 )
 from notifications_utils.template import (
-    LetterPrintTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
 
 from app import redis_store
 from app.celery import provider_tasks
-from app.celery.letters_pdf_tasks import get_pdf_for_templated_letter
 from app.config import QueueNames
 from app.dao.notifications_dao import (
     dao_create_notification,
@@ -25,9 +23,7 @@ from app.dao.notifications_dao import (
 )
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_POSTAGE_TYPES,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_CREATED,
     SMS_TYPE,
     Notification,
@@ -57,16 +53,6 @@ def create_content_for_notification(template, personalisation):
                 'template_type': template.template_type,
             },
             personalisation,
-        )
-    if template.template_type == LETTER_TYPE:
-        template_object = LetterPrintTemplate(
-            {
-                'content': template.content,
-                'subject': template.subject,
-                'template_type': template.template_type,
-            },
-            personalisation,
-            contact_block=template.reply_to_text,
         )
 
     check_placeholders(template_object)
@@ -101,7 +87,6 @@ def persist_notification(
     status=NOTIFICATION_CREATED,
     reply_to_text=None,
     billable_units=None,
-    postage=None,
     document_download_count=None,
     updated_at=None
 ):
@@ -149,10 +134,6 @@ def persist_notification(
         current_app.logger.info('Persisting notification with type: {}'.format(EMAIL_TYPE))
         notification.normalised_to = format_email_address(notification.to)
         current_app.logger.info('Persisting notification to formatted email: {}'.format(notification.normalised_to))
-    elif notification_type == LETTER_TYPE:
-        notification.postage = postage
-        notification.international = postage in INTERNATIONAL_POSTAGE_TYPES
-        notification.normalised_to = ''.join(notification.to.split()).lower()
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
@@ -194,10 +175,6 @@ def send_notification_to_queue_detached(
         if not queue:
             queue = QueueNames.SEND_EMAIL
         deliver_task = provider_tasks.deliver_email
-    if notification_type == LETTER_TYPE:
-        if not queue:
-            queue = QueueNames.CREATE_LETTERS_PDF
-        deliver_task = get_pdf_for_templated_letter
 
     try:
         deliver_task.apply_async([str(notification_id)], queue=queue)

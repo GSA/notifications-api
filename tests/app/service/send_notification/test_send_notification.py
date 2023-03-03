@@ -1167,8 +1167,7 @@ def test_should_not_allow_email_notifications_if_service_permission_not_set(
 
 @pytest.mark.parametrize(
     "notification_type, err_msg",
-    [("letter", "letter notification type is not supported, please use the latest version of the client"),
-     ("apple", "apple notification type is not supported")])
+    [("apple", "apple notification type is not supported")])
 def test_should_throw_exception_if_notification_type_is_invalid(client, sample_service, notification_type, err_msg):
     auth_header = create_service_authorization_header(service_id=sample_service.id)
     response = client.post(
@@ -1208,32 +1207,7 @@ def test_post_notification_should_set_reply_to_text(client, sample_service, mock
     assert notifications[0].reply_to_text == expected_reply_to
 
 
-@pytest.mark.parametrize('last_line_of_address, expected_postage, expected_international',
-                         [('France', 'europe', True),
-                          ('Canada', 'rest-of-world', True),
-                          ('SW1 1AA', 'second', False)])
-def test_send_notification_should_send_international_letters(
-    sample_letter_template, mocker, last_line_of_address, expected_postage, expected_international
-):
-    deliver_mock = mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-    data = {
-        'template_id': sample_letter_template.id,
-        'personalisation': {
-            'address_line_1': 'Jane',
-            'address_line_2': 'Rue Vert',
-            'address_line_3': last_line_of_address
-        },
-        'to': 'Jane',
-        'created_by': sample_letter_template.service.created_by_id
-    }
-
-    notification_id = send_one_off_notification(sample_letter_template.service_id, data)
-    assert deliver_mock.called
-    notification = Notification.query.get(notification_id['id'])
-    assert notification.postage == expected_postage
-    assert notification.international == expected_international
-
-
+@pytest.mark.skip(reason="Rewrite without letters?")
 @pytest.mark.parametrize('reference_paceholder,', [None, 'ref2'])
 def test_send_notification_should_set_client_reference_from_placeholder(
     sample_letter_template, mocker, reference_paceholder

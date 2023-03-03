@@ -42,7 +42,6 @@ def test_get_template_statistics_for_service_by_day_returns_template_info(admin_
     assert json_resp['data'][0]['template_id'] == str(sample_notification.template_id)
     assert json_resp['data'][0]['template_name'] == 'sms Template Name'
     assert json_resp['data'][0]['template_type'] == 'sms'
-    assert json_resp['data'][0]['is_precompiled_letter'] is False
 
 
 @pytest.mark.parametrize('var_name', ['limit_days', 'whole_days'])
@@ -77,8 +76,7 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
                 count=3,
                 template_name=sample_template.name,
                 notification_type=sample_template.template_type,
-                status='created',
-                is_precompiled_letter=False
+                status='created'
             )
         ]
     )
@@ -93,8 +91,7 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
         "count": 3,
         "template_name": sample_template.name,
         "template_type": sample_template.template_type,
-        "status": "created",
-        "is_precompiled_letter": False
+        "status": "created"
 
     }]
     # dao only called for 2nd, since redis returned values for first call
