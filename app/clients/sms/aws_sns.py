@@ -1,3 +1,4 @@
+import re
 from time import monotonic
 
 import botocore
@@ -23,6 +24,7 @@ class AwsSnsClient(SmsClient):
         super(SmsClient, self).__init__(*args, **kwargs)
         self.current_app = current_app
         self.statsd_client = statsd_client
+        self._valid_sender_regex = re.compile(r"^\+?\d{5,14}$")
 
     @property
     def name(self):
@@ -30,6 +32,9 @@ class AwsSnsClient(SmsClient):
 
     def get_name(self):
         return self.name
+
+    def _valid_sender_number(self, sender):
+        return sender and re.match(self._valid_sender_regex, sender)
 
     def send_sms(self, to, content, reference, sender=None, international=False):
         matched = False
@@ -47,7 +52,7 @@ class AwsSnsClient(SmsClient):
                 }
             }
 
-            if sender:
+            if self._valid_sender_number(sender):
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": sender,
