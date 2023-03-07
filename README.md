@@ -48,16 +48,16 @@ Our other repositories are:
 
 1. Install [pipenv](https://pipenv.pypa.io/en/latest/)
 
-1. Install dependencies into a virtual environment
-
-    `make bootstrap`
-
 1. Create the .env file
 
     ```
     cp sample.env .env
     # follow the instructions in .env
     ```
+
+1. Run the project setup
+
+    `make bootstrap`
 
 1. Run the web server and background worker
 
