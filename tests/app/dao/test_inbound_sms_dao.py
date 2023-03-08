@@ -107,6 +107,7 @@ def test_should_delete_inbound_sms_according_to_data_retention(notify_db_session
     create_service_data_retention(short_retention_service, notification_type='sms', days_of_retention=3)
     create_service_data_retention(short_retention_service, notification_type='email', days_of_retention=4)
 
+    # this is the 7-day retention set of dates, in case we want to change back
     # dates = [
     #     datetime(2017, 6, 5, 4, 00),  # just before three days, kept for all services
     #     datetime(2017, 6, 5, 3, 59),  # older than three days, deleted for 3-day

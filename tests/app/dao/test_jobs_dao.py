@@ -238,24 +238,24 @@ def test_get_future_scheduled_job_gets_a_job_yet_to_send(sample_scheduled_job):
 
 
 @freeze_time('2016-10-31 10:00:00')
-def test_should_get_jobs_seven_days_old(sample_template):
+def test_should_get_jobs_older_than_retention(sample_template):
     """
-    Jobs older than seven days are deleted, but only two day's worth (two-day window)
+    Jobs older than retention period are deleted, but only two day's worth (two-day window)
     """
     # This has been adjusted for a 1-day retention period
-    seven_days_ago = datetime.utcnow() - timedelta(days=1)
-    within_seven_days = seven_days_ago + timedelta(seconds=1)
+    one_day_ago = datetime.utcnow() - timedelta(days=1)
+    within_one_day = one_day_ago + timedelta(seconds=1)
 
-    eight_days_ago = seven_days_ago - timedelta(days=1)
+    two_days_ago = one_day_ago - timedelta(days=1)
 
-    nine_days_ago = eight_days_ago - timedelta(days=2)
-    nine_days_one_second_ago = nine_days_ago - timedelta(seconds=1)
+    three_days_ago = two_days_ago - timedelta(days=2)
+    three_days_one_second_ago = three_days_ago - timedelta(seconds=1)
 
-    create_job(sample_template, created_at=seven_days_ago)
-    create_job(sample_template, created_at=within_seven_days)
-    job_to_delete = create_job(sample_template, created_at=eight_days_ago)
-    create_job(sample_template, created_at=nine_days_ago, archived=True)
-    create_job(sample_template, created_at=nine_days_one_second_ago, archived=True)
+    create_job(sample_template, created_at=one_day_ago)
+    create_job(sample_template, created_at=within_one_day)
+    job_to_delete = create_job(sample_template, created_at=two_days_ago)
+    create_job(sample_template, created_at=three_days_ago, archived=True)
+    create_job(sample_template, created_at=three_days_one_second_ago, archived=True)
 
     jobs = dao_get_jobs_older_than_data_retention(notification_types=[sample_template.template_type])
 
@@ -301,15 +301,15 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 
 
 @freeze_time('2016-10-31 10:00:00')
-def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
+def test_should_get_jobs_older_than_retention_by_scheduled_for_date(sample_service):
     # This has been adjusted for a 1-day retention period
-    six_days_ago = datetime.utcnow() - timedelta(days=0)
-    eight_days_ago = datetime.utcnow() - timedelta(days=2)
+    right_now = datetime.utcnow() - timedelta(days=0)
+    two_days_ago = datetime.utcnow() - timedelta(days=2)
     sms_template = create_template(sample_service, template_type=SMS_TYPE)
 
-    create_job(sms_template, created_at=eight_days_ago)
-    create_job(sms_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
-    job_to_remain = create_job(sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago)
+    create_job(sms_template, created_at=two_days_ago)
+    create_job(sms_template, created_at=two_days_ago, scheduled_for=two_days_ago)
+    job_to_remain = create_job(sms_template, created_at=two_days_ago, scheduled_for=right_now)
 
     jobs = dao_get_jobs_older_than_data_retention(
         notification_types=[SMS_TYPE]

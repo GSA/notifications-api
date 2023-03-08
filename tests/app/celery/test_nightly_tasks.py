@@ -41,7 +41,7 @@ def mock_s3_get_list_diff(bucket_name, subfolder='', suffix='', last_modified=No
 
 
 @freeze_time('2016-10-18T10:00:00')
-def test_will_remove_csv_files_for_jobs_older_than_seven_days(
+def test_will_remove_csv_files_for_jobs_older_than_retention_period(
         notify_db_session, mocker, sample_template
 ):
     """
@@ -50,18 +50,18 @@ def test_will_remove_csv_files_for_jobs_older_than_seven_days(
     mocker.patch('app.celery.nightly_tasks.s3.remove_job_from_s3')
 
     # This has been adjusted for a 1-day retention period
-    seven_days_ago = datetime.utcnow() - timedelta(days=1)
-    just_under_seven_days = seven_days_ago + timedelta(seconds=1)
-    eight_days_ago = seven_days_ago - timedelta(days=1)
-    nine_days_ago = eight_days_ago - timedelta(days=1)
-    just_under_nine_days = nine_days_ago + timedelta(seconds=1)
-    nine_days_one_second_ago = nine_days_ago - timedelta(seconds=1)
+    one_day_ago = datetime.utcnow() - timedelta(days=1)
+    just_under_one_day = one_day_ago + timedelta(seconds=1)
+    two_days_ago = one_day_ago - timedelta(days=1)
+    three_days_ago = two_days_ago - timedelta(days=1)
+    just_under_three_days = three_days_ago + timedelta(seconds=1)
+    three_days_one_second_ago = three_days_ago - timedelta(seconds=1)
 
-    create_job(sample_template, created_at=nine_days_one_second_ago, archived=True)
-    job1_to_delete = create_job(sample_template, created_at=eight_days_ago)
-    job2_to_delete = create_job(sample_template, created_at=just_under_nine_days)
-    dont_delete_me_1 = create_job(sample_template, created_at=seven_days_ago)
-    create_job(sample_template, created_at=just_under_seven_days)
+    create_job(sample_template, created_at=three_days_one_second_ago, archived=True)
+    job1_to_delete = create_job(sample_template, created_at=two_days_ago)
+    job2_to_delete = create_job(sample_template, created_at=just_under_three_days)
+    dont_delete_me_1 = create_job(sample_template, created_at=one_day_ago)
+    create_job(sample_template, created_at=just_under_one_day)
 
     remove_sms_email_csv_files()
 
