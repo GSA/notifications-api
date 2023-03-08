@@ -74,7 +74,7 @@ def test_will_remove_csv_files_for_jobs_older_than_retention_period(
 
 
 @freeze_time('2016-10-18T10:00:00')
-def test_will_remove_csv_files_for_jobs_older_than_retention_period(
+def test_will_remove_csv_files_for_jobs_older_than_custom_retention_period(
     notify_db_session, mocker
 ):
     """
