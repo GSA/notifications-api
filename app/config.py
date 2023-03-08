@@ -77,6 +77,9 @@ class Config(object):
     ROUTE_SECRET_KEY_1 = getenv('ROUTE_SECRET_KEY_1', 'dev-route-secret-key-1')
     ROUTE_SECRET_KEY_2 = getenv('ROUTE_SECRET_KEY_2', 'dev-route-secret-key-2')
 
+    # Data retention settings
+    RETENTION_DAYS = 1
+
     # DB settings
     SQLALCHEMY_DATABASE_URI = cloud_config.database_url
     SQLALCHEMY_RECORD_QUERIES = False

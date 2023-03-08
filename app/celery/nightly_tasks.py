@@ -74,8 +74,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             'datetime_to_delete_before': day_to_delete_backwards_from
         })
 
-    seven_days_ago = get_local_midnight_in_utc(
-        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=1)
+    default_retention_days = get_local_midnight_in_utc(
+        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=current_app.config['RETENTION_DAYS'])
     )
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
@@ -83,7 +83,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
     # This query takes a couple of mins to run.
     service_ids_that_have_sent_notifications_recently = get_service_ids_with_notifications_before(
         notification_type,
-        seven_days_ago
+        default_retention_days
     )
 
     service_ids_to_purge = service_ids_that_have_sent_notifications_recently - service_ids_with_data_retention
@@ -92,7 +92,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
         delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
             'service_id': service_id,
             'notification_type': notification_type,
-            'datetime_to_delete_before': seven_days_ago
+            'datetime_to_delete_before': default_retention_days
         })
 
     current_app.logger.info(

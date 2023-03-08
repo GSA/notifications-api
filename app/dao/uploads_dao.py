@@ -51,7 +51,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         Job.job_status.notin_([JOB_STATUS_CANCELLED, JOB_STATUS_SCHEDULED]),
         func.coalesce(
             Job.processing_started, Job.created_at
-        ) >= today - func.coalesce(ServiceDataRetention.days_of_retention, 1),
+        ) >= today - func.coalesce(ServiceDataRetention.days_of_retention, current_app.config['RETENTION_DAYS']),
         Job.contact_list_id.is_(None),
     ]
     if limit_days is not None:
@@ -62,7 +62,10 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         Job.original_file_name,
         Job.notification_count,
         Template.template_type,
-        func.coalesce(ServiceDataRetention.days_of_retention, 1).label('days_of_retention'),
+        func.coalesce(
+            ServiceDataRetention.days_of_retention,
+            current_app.config['RETENTION_DAYS']
+        ).label('days_of_retention'),
         Job.created_at.label("created_at"),
         Job.scheduled_for.label("scheduled_for"),
         Job.processing_started.label('processing_started'),
@@ -86,7 +89,9 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         Notification.api_key_id == None,  # noqa
         Notification.status != NOTIFICATION_CANCELLED,
         Template.hidden == True,  # noqa
-        Notification.created_at >= today - func.coalesce(ServiceDataRetention.days_of_retention, 1)
+        Notification.created_at >= today - func.coalesce(
+            ServiceDataRetention.days_of_retention, current_app.config['RETENTION_DAYS']
+        )
     ]
     if limit_days is not None:
         letters_query_filter.append(Notification.created_at >= midnight_n_days_ago(limit_days))

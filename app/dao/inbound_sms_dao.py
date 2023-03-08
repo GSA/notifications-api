@@ -140,9 +140,9 @@ def delete_inbound_sms_older_than_retention():
 
     current_app.logger.info('Deleting inbound sms for services without flexible data retention')
 
-    seven_days_ago = midnight_n_days_ago(1)
+    default_retention_days = midnight_n_days_ago(current_app.config['RETENTION_DAYS'])
 
-    deleted += _delete_inbound_sms(seven_days_ago, query_filter=[
+    deleted += _delete_inbound_sms(default_retention_days, query_filter=[
         InboundSms.service_id.notin_(x.service_id for x in flexible_data_retention),
     ])
 

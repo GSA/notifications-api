@@ -158,7 +158,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             Job.service_id == f.service_id
         ).order_by(desc(Job.created_at)).all())
 
-    end_date = today - timedelta(days=1)
+    end_date = today - timedelta(days=current_app.config['RETENTION_DAYS'])
     for notification_type in notification_types:
         services_with_data_retention = [
             x.service_id for x in flexible_data_retention if x.notification_type == notification_type
