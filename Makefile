@@ -56,7 +56,14 @@ test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run pytest -n4 --maxfail=10
+	pipenv run pytest -n4 --maxfail=10 --show-capture=no
+
+.PHONY: last-test
+last-test: export NEW_RELIC_ENVIRONMENT=test
+last-test: ## Run tests
+	pipenv run flake8 .
+	pipenv run isort --check-only ./app ./tests
+	pipenv run pytest -n4 --maxfail=10 --show-capture=no --lf -vv
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt

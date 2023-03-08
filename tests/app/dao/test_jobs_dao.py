@@ -242,7 +242,8 @@ def test_should_get_jobs_seven_days_old(sample_template):
     """
     Jobs older than seven days are deleted, but only two day's worth (two-day window)
     """
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    # This has been adjusted for a 1-day retention period
+    seven_days_ago = datetime.utcnow() - timedelta(days=1)
     within_seven_days = seven_days_ago + timedelta(seconds=1)
 
     eight_days_ago = seven_days_ago - timedelta(days=1)
@@ -301,8 +302,9 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 
 @freeze_time('2016-10-31 10:00:00')
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
-    six_days_ago = datetime.utcnow() - timedelta(days=6)
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
+    # This has been adjusted for a 1-day retention period
+    six_days_ago = datetime.utcnow() - timedelta(days=0)
+    eight_days_ago = datetime.utcnow() - timedelta(days=2)
     sms_template = create_template(sample_service, template_type=SMS_TYPE)
 
     create_job(sms_template, created_at=eight_days_ago)

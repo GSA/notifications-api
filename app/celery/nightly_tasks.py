@@ -75,7 +75,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
         })
 
     seven_days_ago = get_local_midnight_in_utc(
-        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7)
+        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=1)
     )
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 

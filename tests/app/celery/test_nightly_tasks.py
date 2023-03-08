@@ -49,7 +49,8 @@ def test_will_remove_csv_files_for_jobs_older_than_seven_days(
     """
     mocker.patch('app.celery.nightly_tasks.s3.remove_job_from_s3')
 
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    # This has been adjusted for a 1-day retention period
+    seven_days_ago = datetime.utcnow() - timedelta(days=1)
     just_under_seven_days = seven_days_ago + timedelta(seconds=1)
     eight_days_ago = seven_days_ago - timedelta(days=1)
     nine_days_ago = eight_days_ago - timedelta(days=1)
@@ -288,13 +289,13 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     nothing_to_delete_email_template = create_template(service_nothing_to_delete, template_type='email')
 
     # will be deleted as service has no custom retention, but past our default 7 days
-    create_notification(service_will_delete_1.templates[0], created_at=datetime.now() - timedelta(days=8))
-    create_notification(service_will_delete_2.templates[0], created_at=datetime.now() - timedelta(days=8))
+    create_notification(service_will_delete_1.templates[0], created_at=datetime.now() - timedelta(days=3))
+    create_notification(service_will_delete_2.templates[0], created_at=datetime.now() - timedelta(days=3))
 
     # will be kept as it's recent, and we won't run delete_notifications_for_service_and_type
-    create_notification(nothing_to_delete_sms_template, created_at=datetime.now() - timedelta(days=2))
+    create_notification(nothing_to_delete_sms_template, created_at=datetime.now() - timedelta(days=1))
     # this is an old notification, but for email not sms, so we won't run delete_notifications_for_service_and_type
-    create_notification(nothing_to_delete_email_template, created_at=datetime.now() - timedelta(days=8))
+    create_notification(nothing_to_delete_email_template, created_at=datetime.now() - timedelta(days=3))
 
     mock_subtask = mocker.patch('app.celery.nightly_tasks.delete_notifications_for_service_and_type')
 
@@ -305,11 +306,11 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
         call(queue=ANY, kwargs={
             'service_id': service_will_delete_1.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 3, 26, 4, 0)
+            'datetime_to_delete_before': datetime(2021, 4, 1, 4, 0)
         }),
         call(queue=ANY, kwargs={
             'service_id': service_will_delete_2.id,
             'notification_type': 'sms',
-            'datetime_to_delete_before': datetime(2021, 3, 26, 4, 0)
+            'datetime_to_delete_before': datetime(2021, 4, 1, 4, 0)
         }),
     ])

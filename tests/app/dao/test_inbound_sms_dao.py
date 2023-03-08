@@ -107,12 +107,20 @@ def test_should_delete_inbound_sms_according_to_data_retention(notify_db_session
     create_service_data_retention(short_retention_service, notification_type='sms', days_of_retention=3)
     create_service_data_retention(short_retention_service, notification_type='email', days_of_retention=4)
 
+    # dates = [
+    #     datetime(2017, 6, 5, 4, 00),  # just before three days, kept for all services
+    #     datetime(2017, 6, 5, 3, 59),  # older than three days, deleted for 3-day
+    #     datetime(2017, 6, 1, 4, 00),  # just before seven days, deleted for 3-day
+    #     datetime(2017, 6, 1, 3, 59),  # older than seven days, deleted for 3-day & default 7-day
+    #     datetime(2017, 5, 1, 0, 0),  # older than thirty days, deleted for all
+    # ]
+
     dates = [
-        datetime(2017, 6, 5, 4, 00),  # just before three days
-        datetime(2017, 6, 5, 3, 59),  # older than three days
-        datetime(2017, 6, 1, 4, 00),  # just before seven days
-        datetime(2017, 6, 1, 3, 59),  # older than seven days
-        datetime(2017, 5, 1, 0, 0),  # older than thirty days
+        datetime(2017, 6, 7, 4, 00),  # just before one day, kept for all services
+        datetime(2017, 6, 7, 3, 59),  # just after one day, deleted for default 1-day
+        datetime(2017, 6, 5, 4, 00),  # just before three days, deleted for default 1-day
+        datetime(2017, 6, 5, 3, 59),  # older than three days, deleted for default 1-day & 3-day
+        datetime(2017, 5, 1, 0, 0),  # older than thirty days, deleted for all
     ]
 
     for date, service in product(dates, services):
@@ -127,10 +135,10 @@ def test_should_delete_inbound_sms_according_to_data_retention(notify_db_session
     assert deleted_count == 7
     assert {
         x.created_at for x in dao_get_inbound_sms_for_service(short_retention_service.id)
-    } == set(dates[:1])
+    } == set(dates[:3])
     assert {
         x.created_at for x in dao_get_inbound_sms_for_service(no_retention_service.id)
-    } == set(dates[:3])
+    } == set(dates[:1])
     assert {
         x.created_at for x in dao_get_inbound_sms_for_service(long_retention_service.id)
     } == set(dates[:4])

@@ -35,7 +35,7 @@ def post_inbound_sms_for_service(service_id):
     #     user_number = try_validate_and_format_phone_number(user_number, international=True)
 
     inbound_data_retention = fetch_service_data_retention_by_notification_type(service_id, 'sms')
-    limit_days = inbound_data_retention.days_of_retention if inbound_data_retention else 7
+    limit_days = inbound_data_retention.days_of_retention if inbound_data_retention else 1
 
     results = dao_get_inbound_sms_for_service(service_id, user_number=user_number, limit_days=limit_days)
     return jsonify(data=[row.serialize() for row in results])
@@ -47,7 +47,7 @@ def get_most_recent_inbound_sms_for_service(service_id):
     page = request.args.get('page', 1)
 
     inbound_data_retention = fetch_service_data_retention_by_notification_type(service_id, 'sms')
-    limit_days = inbound_data_retention.days_of_retention if inbound_data_retention else 7
+    limit_days = inbound_data_retention.days_of_retention if inbound_data_retention else 1
 
     # get most recent message for each user for service
     results = dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(service_id, int(page), limit_days)
