@@ -65,6 +65,8 @@ Probably not PII, this is the country code of the phone.
 Data Retention Policy
 ---------------------
 
-Seven (7) days by default. Each service can be set with a custom policy via `ServiceDataRetention` by a Platform Admin. The `ServiceDataRetention` setting applies per-service and per-message type and controls both entries in the `notifications` table as well as `csv` contact files uploaded to s3
+By default, data retention policies are set to 1 day, set by the `RETENTION_DAYS` config value. Because retention relies on a nightly job, this means that data will be cleared during that job once it has been in the system for more than 24 hours. As a result, data could exist in the system for up to 48 hours (if it is added just after the job runs, for example).
+
+Each service can be set with a custom policy via `ServiceDataRetention` by a Platform Admin. The `ServiceDataRetention` setting applies per-service and per-message type and controls both entries in the `notifications` table as well as `csv` contact files uploaded to s3
 
 Data cleanup is controlled by several tasks in the `nightly_tasks.py` file, kicked off by Celery Beat.
