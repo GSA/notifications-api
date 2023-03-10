@@ -18,6 +18,14 @@ class TooManyRequestsError(InvalidRequest):
         self.message = self.message_template.format(sending_limit)
 
 
+class TotalRequestsError(InvalidRequest):
+    status_code = 429
+    message_template = 'Exceeded total application limits ({}) for today'
+
+    def __init__(self, sending_limit):
+        self.message = self.message_template.format(sending_limit)
+
+
 class RateLimitError(InvalidRequest):
     status_code = 429
     message_template = 'Exceeded rate limit for key type {} of {} requests per {} seconds'

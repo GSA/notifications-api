@@ -270,6 +270,8 @@ class Config(object):
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
+    DAILY_MESSAGE_LIMIT = 5000
+
     HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
 
     TEMPLATE_PREVIEW_API_HOST = getenv('TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013')

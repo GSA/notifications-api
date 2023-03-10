@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import current_app
 from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
@@ -29,7 +31,12 @@ from app.notifications.process_notifications import (
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
-from app.v2.errors import BadRequestError, RateLimitError, TooManyRequestsError
+from app.v2.errors import (
+    BadRequestError,
+    RateLimitError,
+    TooManyRequestsError,
+    TotalRequestsError,
+)
 
 REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
     'redis_exceeded_rate_limit_duration_seconds',
@@ -68,8 +75,31 @@ def check_service_over_daily_message_limit(key_type, service):
     return int(service_stats)
 
 
+def check_application_over_daily_message_total(key_type, service):
+    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
+        return 0
+
+    # cache_key = daily_total_cache_key()
+    cache_key = "{}-{}".format(datetime.utcnow().strftime("%Y-%m-%d"), "total")
+    daily_message_limit = current_app.config['DAILY_MESSAGE_LIMIT']
+    total_stats = redis_store.get(cache_key)
+    if total_stats is None:
+        # first message of the day, set the cache to 0 and the expiry to 24 hours
+        total_stats = 0
+        redis_store.set(cache_key, total_stats, ex=86400)
+        return total_stats
+    if int(total_stats) >= daily_message_limit:
+        current_app.logger.info(
+            "while sending for service {}, daily message limit of {} reached".format(
+                service.id, daily_message_limit)
+        )
+        raise TotalRequestsError(daily_message_limit)
+    return int(total_stats)
+
+
 def check_rate_limiting(service, api_key):
     check_service_over_api_rate_limit(service, api_key)
+    check_application_over_daily_message_total(api_key.key_type, service)
     check_service_over_daily_message_limit(api_key.key_type, service)
 
 

@@ -12,6 +12,7 @@ from app.notifications.process_notifications import (
     create_content_for_notification,
 )
 from app.notifications.validators import (
+    check_application_over_daily_message_total,
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
     check_notification_content_is_not_empty,
@@ -33,7 +34,12 @@ from app.serialised_models import (
     SerialisedTemplate,
 )
 from app.utils import get_template_instance
-from app.v2.errors import BadRequestError, RateLimitError, TooManyRequestsError
+from app.v2.errors import (
+    BadRequestError,
+    RateLimitError,
+    TooManyRequestsError,
+    TotalRequestsError,
+)
 from tests.app.db import (
     create_api_key,
     create_reply_to_email,
@@ -110,6 +116,18 @@ def test_check_service_message_limit_over_message_limit_fails(key_type, mocker, 
         check_service_over_daily_message_limit(key_type, service)
     assert e.value.status_code == 429
     assert e.value.message == 'Exceeded send limits (4) for today'
+    assert e.value.fields == []
+
+
+@pytest.mark.parametrize('key_type', ['team', 'normal'])
+def test_check_service_message_limit_over_total_limit_fails(key_type, mocker, notify_db_session):
+    service = create_service()
+    mocker.patch('app.redis_store.get', return_value="5001")
+
+    with pytest.raises(TotalRequestsError) as e:
+        check_application_over_daily_message_total(key_type, service)
+    assert e.value.status_code == 429
+    assert e.value.message == 'Exceeded total application limits (5000) for today'
     assert e.value.fields == []
 
 
