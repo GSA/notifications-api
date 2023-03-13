@@ -93,7 +93,6 @@ class Config(object):
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
     # AWS Settings
-    AWS_REGION = getenv('AWS_REGION')
     AWS_US_TOLL_FREE_NUMBER = getenv("AWS_US_TOLL_FREE_NUMBER")
     # Whether to ignore POSTs from SNS for replies to SMS we sent
     RECEIVE_INBOUND_SMS = False
@@ -279,12 +278,12 @@ class Config(object):
     DOCUMENT_DOWNLOAD_API_KEY = getenv('DOCUMENT_DOWNLOAD_API_KEY', 'auth-token')
 
 
-def _default_s3_credentials(bucket_name):
+def _s3_credentials_from_env(bucket_prefix):
     return {
-        'bucket': bucket_name,
-        'access_key_id': getenv('AWS_ACCESS_KEY_ID'),
-        'secret_access_key': getenv('AWS_SECRET_ACCESS_KEY'),
-        'region': getenv('AWS_REGION')
+        'bucket': getenv(f"{bucket_prefix}_BUCKET_NAME"),
+        'access_key_id': getenv(f"{bucket_prefix}_AWS_ACCESS_KEY_ID"),
+        'secret_access_key': getenv(f"{bucket_prefix}_AWS_SECRET_ACCESS_KEY"),
+        'region': getenv(f"{bucket_prefix}_AWS_REGION")
     }
 
 
@@ -294,8 +293,8 @@ class Development(Config):
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
     # Buckets
-    CSV_UPLOAD_BUCKET = _default_s3_credentials('local-notifications-csv-upload')
-    CONTACT_LIST_BUCKET = _default_s3_credentials('local-contact-list')
+    CSV_UPLOAD_BUCKET = _s3_credentials_from_env('CSV')
+    CONTACT_LIST_BUCKET = _s3_credentials_from_env('CONTACT')
 
     # credential overrides
     DANGEROUS_SALT = 'development-notify-salt'
@@ -316,9 +315,6 @@ class Test(Development):
         '7e5950cb-9954-41f5-8376-962b8c8555cf',
         '10d1b9c9-0072-4fa9-ae1c-595e333841da',
     ]
-
-    CSV_UPLOAD_BUCKET = _default_s3_credentials('test-notifications-csv-upload')
-    CONTACT_LIST_BUCKET = _default_s3_credentials('test-contact-list')
 
     # this is overriden in CI
     SQLALCHEMY_DATABASE_URI = getenv('SQLALCHEMY_DATABASE_TEST_URI')

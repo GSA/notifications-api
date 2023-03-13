@@ -3,9 +3,9 @@ from os import getenv
 
 from app.aws.s3 import get_s3_file
 
-default_access_key = getenv('AWS_ACCESS_KEY_ID')
-default_secret_key = getenv('AWS_SECRET_ACCESS_KEY')
-default_region = getenv('AWS_REGION')
+default_access_key = getenv('CSV_AWS_ACCESS_KEY_ID')
+default_secret_key = getenv('CSV_AWS_SECRET_ACCESS_KEY')
+default_region = getenv('CSV_AWS_REGION')
 
 
 def single_s3_object_stub(key='foo', last_modified=None):

@@ -15,7 +15,7 @@ def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
         Message=content,
         MessageAttributes={
             'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Transactional'},
-            'AWS.MM.SMS.OriginationNumber': {'DataType': 'String', 'StringValue': '+18446120782'}
+            'AWS.MM.SMS.OriginationNumber': {'DataType': 'String', 'StringValue': '+18556438890'}
         }
     )
 

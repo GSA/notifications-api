@@ -11,6 +11,7 @@ from requests import HTTPError
 
 import app
 from app import aws_sns_client, notification_provider_clients
+from app.cloudfoundry_config import cloud_config
 from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
@@ -164,7 +165,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     )
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        '"Sample service" <sample.service@notify.sandbox.10x.gsa.gov>',
+        f"\"Sample service\" <sample.service@{cloud_config.ses_email_domain}>",
         'jo.smith@example.com',
         'Jo <em>some HTML</em>',
         body='Hello Jo\nThis is an email from GOV.\u200bUK with <em>some HTML</em>\n',

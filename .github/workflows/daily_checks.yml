@@ -16,10 +16,8 @@ env:
   NEW_RELIC_ENVIRONMENT: test
   FLASK_APP: application.py
   WERKZEUG_DEBUG_PIN: off
-  NOTIFY_EMAIL_DOMAIN: dispostable.com
   REDIS_ENABLED: 0
-  AWS_REGION: us-west-2
-  AWS_US_TOLL_FREE_NUMBER: "+18446120782"
+  AWS_US_TOLL_FREE_NUMBER: "+18556438890"
 
 jobs:
   pip-audit:
