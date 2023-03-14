@@ -1,6 +1,7 @@
 import datetime
 import uuid
 from collections import namedtuple
+from unittest.mock import call
 
 import pytest
 from boto3.exceptions import Boto3Error
@@ -217,7 +218,11 @@ def test_persist_notification_increments_cache_for_trial_or_live_service(
             key_type=api_key.key_type,
             reference="ref2")
 
-        mock_incr.assert_called_once_with(str(service.id) + "-2016-01-01-count", )
+        assert mock_incr.call_count == 2
+        mock_incr.assert_has_calls([
+            call(str(service.id) + "-2016-01-01-count", ),
+            call("2016-01-01-total", )
+        ])
 
 
 @pytest.mark.parametrize('restricted_service', [True, False])
@@ -242,7 +247,11 @@ def test_persist_notification_sets_daily_limit_cache_if_one_does_not_exists(
             key_type=api_key.key_type,
             reference="ref2")
 
-        mock_set.assert_called_once_with(str(service.id) + "-2016-01-01-count", 1, ex=86400)
+        assert mock_set.call_count == 2
+        mock_set.assert_has_calls([
+            call(str(service.id) + "-2016-01-01-count", 1, ex=86400),
+            call("2016-01-01-total", 1, ex=86400)
+        ])
 
 
 @pytest.mark.parametrize((
