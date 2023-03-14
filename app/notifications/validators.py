@@ -78,7 +78,6 @@ def check_application_over_daily_message_total(key_type, service):
     if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
         return 0
 
-    # cache_key = daily_total_cache_key()
     cache_key = daily_total_cache_key()
     daily_message_limit = current_app.config['DAILY_MESSAGE_LIMIT']
     total_stats = redis_store.get(cache_key)
