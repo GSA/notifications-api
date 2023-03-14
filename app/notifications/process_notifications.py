@@ -142,7 +142,7 @@ def persist_notification(
         if key_type != KEY_TYPE_TEST and current_app.config['REDIS_ENABLED']:
             current_app.logger.info('Redis enabled, querying cache key for service id: {}'.format(service.id))
             cache_key = redis.daily_limit_cache_key(service.id)
-            total_key = "{}-{}".format(datetime.utcnow().strftime("%Y-%m-%d"), "total")
+            total_key = redis.daily_total_cache_key()
             current_app.logger.info('Redis daily limit cache key: {}'.format(cache_key))
             if redis_store.get(cache_key) is None:
                 current_app.logger.info('Redis daily limit cache key does not exist')

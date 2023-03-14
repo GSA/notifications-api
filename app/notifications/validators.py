@@ -1,10 +1,9 @@
-from datetime import datetime
-
 from flask import current_app
 from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     daily_limit_cache_key,
+    daily_total_cache_key,
     rate_limit_cache_key,
 )
 from notifications_utils.recipients import (
@@ -80,7 +79,7 @@ def check_application_over_daily_message_total(key_type, service):
         return 0
 
     # cache_key = daily_total_cache_key()
-    cache_key = "{}-{}".format(datetime.utcnow().strftime("%Y-%m-%d"), "total")
+    cache_key = daily_total_cache_key()
     daily_message_limit = current_app.config['DAILY_MESSAGE_LIMIT']
     total_stats = redis_store.get(cache_key)
     if total_stats is None:
