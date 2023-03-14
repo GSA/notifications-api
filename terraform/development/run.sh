@@ -45,13 +45,17 @@ set -e
 
 service_account="$username-terraform"
 
-if [[ ! -f "secrets.auto.tfvars" ]]; then
+if [[ ! -s "secrets.auto.tfvars" ]]; then
   # create user in notify-local-dev space to create s3 buckets
   ../create_service_account.sh -s notify-local-dev -u $service_account > secrets.auto.tfvars
 
   # grant user access to notify-staging to create a service key for SES and SNS
   cg_username=`cf service-key $service_account service-account-key | tail -n +2 | jq -r '.credentials.username'`
   cf set-space-role $cg_username $org notify-staging SpaceDeveloper
+fi
+
+if [[ ! -f "../../.env" ]]; then
+  cp ../../sample.env ../../.env
 fi
 
 set +e
