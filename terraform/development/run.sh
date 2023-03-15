@@ -43,6 +43,9 @@ done
 
 set -e
 
+# ensure we're in the correct directory
+cd $(dirname $0)
+
 service_account="$username-terraform"
 
 if [[ ! -s "secrets.auto.tfvars" ]]; then
