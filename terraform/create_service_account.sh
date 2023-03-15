@@ -19,14 +19,15 @@ Options:
 
 Notes:
 * OrgManager is required for terraform to create <env>-egress spaces
-* Requires cf-cli@8
+* Requires cf-cli@8 & jq
 "
 
 cf_version=`cf --version | cut -d " " -f 3`
 if [[ $cf_version != 8.* ]]; then
-  echo "$usage"
+  echo "$usage" >&2
   exit 1
 fi
+command -v jq >/dev/null || { echo "$usage" >&2; exit 1; }
 
 set -e
 set -o pipefail
@@ -61,17 +62,17 @@ while getopts ":hms:u:r:o:" opt; do
 done
 
 if [[ $space = "" || $service = "" ]]; then
-  echo "$usage"
+  echo "$usage" >&2
   exit 1
 fi
 
-cf target -o $org -s $space 1>&2
+cf target -o $org -s $space >&2
 
 # create user account service
-cf create-service cloud-gov-service-account $role $service 1>&2
+cf create-service cloud-gov-service-account $role $service >&2
 
 # create service key
-cf create-service-key $service service-account-key 1>&2
+cf create-service-key $service service-account-key >&2
 
 # output service key to stdout in secrets.auto.tfvars format
 creds=`cf service-key $service service-account-key | tail -n +2 | jq '.credentials'`
@@ -79,7 +80,7 @@ username=`echo $creds | jq -r '.username'`
 password=`echo $creds | jq -r '.password'`
 
 if [[ $org_manager = "true" ]]; then
-  cf set-org-role $username $org OrgManager 1>&2
+  cf set-org-role $username $org OrgManager >&2
 fi
 
 cat << EOF
