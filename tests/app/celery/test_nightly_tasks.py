@@ -78,7 +78,7 @@ def test_will_remove_csv_files_for_jobs_older_than_custom_retention_period(
     notify_db_session, mocker
 ):
     """
-    Jobs older than retention period are deleted, but unless archived
+    Jobs older than retention period are deleted, unless archived
     """
     mocker.patch('app.celery.nightly_tasks.s3.remove_job_from_s3')
     service_1 = create_service(service_name='service 1')
