@@ -240,7 +240,7 @@ def test_get_future_scheduled_job_gets_a_job_yet_to_send(sample_scheduled_job):
 @freeze_time('2016-10-31 10:00:00')
 def test_should_get_jobs_older_than_retention(sample_template):
     """
-    Jobs older than retention period are deleted, but only two day's worth (two-day window)
+    Jobs older than retention period are deleted, unless archived
     """
     # This has been adjusted for a 1-day retention period
     one_day_ago = datetime.utcnow() - timedelta(days=1)
