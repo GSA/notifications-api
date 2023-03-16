@@ -287,7 +287,7 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     nothing_to_delete_sms_template = create_template(service_nothing_to_delete, template_type='sms')
     nothing_to_delete_email_template = create_template(service_nothing_to_delete, template_type='email')
 
-    # will be deleted as service has no custom retention, but past our default 7 days
+    # will be deleted as service has no custom retention, but past our default retention period
     create_notification(service_will_delete_1.templates[0], created_at=datetime.now() - timedelta(days=8))
     create_notification(service_will_delete_2.templates[0], created_at=datetime.now() - timedelta(days=8))
 
