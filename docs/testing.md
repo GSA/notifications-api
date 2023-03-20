@@ -34,7 +34,7 @@ Within GitHub Actions, several scans take place every day to ensure security and
 
 #### [drift.yml](../.github/workflows/drift.yml)
 
-`drift.yml` checks the deployed infrastructure against the expected configuration. A failure here is a flag to check audit logs for unexpected access and/or behavior and potentially destroy and re-deploy the infrastructure and application.
+`drift.yml` checks the deployed infrastructure against the expected configuration. A failure here is a flag to check audit logs for unexpected access and/or behavior and potentially destroy and re-deploy the application. Destruction and redeployment of all underlying infrastructure is an extreme remediation, and should only be attempted after ensuring that a good database backup is in hand.
 
 ## Manual testing
 
