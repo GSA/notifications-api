@@ -23,6 +23,19 @@ We're using GitHub Actions. See [/.github](../.github/) for the configuration.
 
 In addition to commit-triggered scans, the `daily_checks.yml` workflow runs the relevant dependency audits, static scan, and/or dynamic scans at 10am UTC each day. Developers will be notified of failures in daily scans by GitHub notifications.
 
+### Nightly Scans
+
+Within GitHub Actions, several scans take place every day to ensure security and compliance.
+
+
+#### [daily-checks.yml](../.github/workflows/daily_checks.yml)
+
+`daily-checks.yml` runs `pip-audit`, `bandit`, and `owasp` scans to ensure that any newly found vulnerabilities do not impact notify. Failures should be addressed quickly as they will also block the next attempted deploy.
+
+#### [drift.yml](../.github/workflows/drift.yml)
+
+`drift.yml` checks the deployed infrastructure against the expected configuration. A failure here is a flag to check audit logs for unexpected access and/or behavior and potentially destroy and re-deploy the infrastructure and application.
+
 ## Manual testing
 
 If you're checking out the system locally, you may want to create a user quickly.
