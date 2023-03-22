@@ -1,0 +1,36 @@
+---
+name: Restage apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which environment needs to be restaged"
+        required: true
+        default: staging
+        type: environment
+
+jobs:
+  restage_apps:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        app: ["api", "admin"]
+    steps:
+      - name: Restage ${{matrix.app}}
+        uses: 18f/cg-deploy-action@main
+        with:
+          cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+          cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+          cf_org: gsa-tts-benefits-studio-prototyping
+          cf_space: notify-${{ inputs.environment }}
+          full_command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
+      - name: Restage ${{matrix.app}} egress
+        uses: 18f/cg-deploy-action@main
+        with:
+          cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+          cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+          cf_org: gsa-tts-benefits-studio-prototyping
+          cf_space: notify-${{ inputs.environment }}-egress
+          full_command: "cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}"
