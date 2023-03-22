@@ -116,3 +116,9 @@ TODO: create env vars for these origin and destination email addresses for the r
 1. Select the number you just created and then `Register existing toll-free number`
 1. Complete and submit the form. Approval usually takes about 2 weeks.
 1. Set this phone number as the `AWS_US_TOLL_FREE_NUMBER` in the environment you are creating
+
+#### Current Production Phone Numbers
+
+* +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number
+* +18447891134 - to be used by Pilot Partner 1
+* +18888402596 - to be used by Pilot Partner 2
