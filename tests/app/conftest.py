@@ -23,7 +23,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     SERVICE_PERMISSION_TYPES,
     SMS_TYPE,
@@ -49,7 +48,6 @@ from tests.app.db import (
     create_inbound_number,
     create_invited_org_user,
     create_job,
-    create_letter_contact,
     create_notification,
     create_service,
     create_template,
@@ -86,7 +84,6 @@ def create_sample_notification(
     rate_multiplier=1.0,
     scheduled_for=None,
     normalised_to=None,
-    postage=None,
 ):
     if created_at is None:
         created_at = datetime.utcnow()
@@ -133,7 +130,6 @@ def create_sample_notification(
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
         "normalised_to": normalised_to,
-        "postage": postage,
     }
     if job_row_number is not None:
         data["job_row_number"] = job_row_number
@@ -240,12 +236,6 @@ def _sample_service_full_permissions(notify_db_session):
     return service
 
 
-@pytest.fixture(scope='function', name='sample_service_custom_letter_contact_block')
-def _sample_service_custom_letter_contact_block(sample_service):
-    create_letter_contact(sample_service, contact_block='((contact block))')
-    return sample_service
-
-
 @pytest.fixture(scope='function')
 def sample_template(sample_user):
     service = create_service(service_permissions=[EMAIL_TYPE, SMS_TYPE], check_if_service_exists=True)
@@ -304,17 +294,6 @@ def sample_email_template(sample_user):
 def sample_template_without_email_permission(notify_db_session):
     service = create_service(service_permissions=[SMS_TYPE], check_if_service_exists=True)
     return create_template(service, template_type=EMAIL_TYPE)
-
-
-@pytest.fixture
-def sample_letter_template(sample_service_full_permissions):
-    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE, postage='second')
-
-
-@pytest.fixture
-def sample_trial_letter_template(sample_service_full_permissions):
-    sample_service_full_permissions.restricted = True
-    return create_template(sample_service_full_permissions, template_type=LETTER_TYPE)
 
 
 @pytest.fixture(scope='function')
@@ -409,25 +388,6 @@ def sample_scheduled_job(sample_template_with_placeholders):
     )
 
 
-@pytest.fixture
-def sample_letter_job(sample_letter_template):
-    service = sample_letter_template.service
-    data = {
-        'id': uuid.uuid4(),
-        'service_id': service.id,
-        'service': service,
-        'template_id': sample_letter_template.id,
-        'template_version': sample_letter_template.version,
-        'original_file_name': 'some.csv',
-        'notification_count': 1,
-        'created_at': datetime.utcnow(),
-        'created_by': service.created_by,
-    }
-    job = Job(**data)
-    dao_create_job(job)
-    return job
-
-
 @pytest.fixture(scope='function')
 def sample_notification_with_job(notify_db_session):
     service = create_service(check_if_service_exists=True)
@@ -486,27 +446,12 @@ def sample_notification(notify_db_session):
         'client_reference': None,
         'rate_multiplier': 1.0,
         'normalised_to': None,
-        'postage': None,
     }
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
     return notification
-
-
-@pytest.fixture
-def sample_letter_notification(sample_letter_template):
-    address = {
-        'address_line_1': 'A1',
-        'address_line_2': 'A2',
-        'address_line_3': 'A3',
-        'address_line_4': 'A4',
-        'address_line_5': 'A5',
-        'address_line_6': 'A6',
-        'postcode': 'A_POST'
-    }
-    return create_notification(sample_letter_template, reference='foo', personalisation=address)
 
 
 @pytest.fixture(scope='function')
@@ -816,31 +761,6 @@ def create_custom_template(service, user, template_config_name, template_type, c
         db.session.add(create_history(template, TemplateHistory))
         db.session.commit()
     return template
-
-
-@pytest.fixture(scope='function')
-def letter_volumes_email_template(notify_service):
-    email_template_content = '\n'.join([
-        "((total_volume)) letters (((total_sheets)) sheets) sent via Notify are coming in today''s batch. These include: ",  # noqa
-        "",
-        "((first_class_volume)) first class letters (((first_class_sheets)) sheets).",
-        "((second_class_volume)) second class letters (((second_class_sheets)) sheets).",
-        "((international_volume)) international letters (((international_sheets)) sheets).",
-        "",
-        "Thanks",
-        "",
-        "GOV.​UK Notify team",
-        "https://www.gov.uk/notify"
-    ])
-
-    return create_custom_template(
-        service=notify_service,
-        user=notify_service.users[0],
-        template_config_name='LETTERS_VOLUME_EMAIL_TEMPLATE_ID',
-        content=email_template_content,
-        subject="Notify letter volume for ((date)): ((total_volume)) letters, ((total_sheets)) sheets",
-        template_type='email'
-    )
 
 
 @pytest.fixture

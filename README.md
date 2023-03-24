@@ -42,22 +42,33 @@ Our other repositories are:
 
 ## Local setup
 
+### Common steps
+
+1. Install pre-requisites for setup:
+    * [jq](https://stedolan.github.io/jq/): `brew install jq`
+    * [terraform](https://www.terraform.io/): `brew install terraform` or `brew install tfenv` and use `tfenv` to install `terraform ~> 1.4.0`
+    * [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html): `brew install cloudfoundry/tap/cf-cli@8`
+1. [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
+1. Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov
+1. Run the development terraform with:
+
+        ```
+        $ cd terraform/development
+        $ ./run.sh
+        ```
+
+1. If you want to send data to New Relic from your local develpment environment, set `NEW_RELIC_LICENSE_KEY` within `.env`
+1. Follow the instructions for either `Direct installation` or `Docker installation` below
+
 ### Direct installation
 
 1. Set up Postgres && Redis on your machine
 
 1. Install [pipenv](https://pipenv.pypa.io/en/latest/)
 
-1. Install dependencies into a virtual environment
+1. Run the project setup
 
     `make bootstrap`
-
-1. Create the .env file
-
-    ```
-    cp sample.env .env
-    # follow the instructions in .env
-    ```
 
 1. Run the web server and background worker
 
@@ -78,12 +89,7 @@ Our other repositories are:
 
 If you're working in VS Code, you can also leverage Docker for a containerized dev environment
 
-1. Create the .env file
-
-    ```
-    cp sample.env .env
-    # follow the instructions in .env
-    ```
+1. Uncomment the `Local Docker setup` lines in `.env` and comment out the `Local direct setup` lines.
 
 1. Install the Remote-Containers plug-in in VS Code
 

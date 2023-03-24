@@ -45,7 +45,7 @@ def test_get_notifications_request_invalid_statuses(
     partial_error_status = "is not one of " \
         "[cancelled, created, sending, sent, delivered, pending, failed, " \
         "technical-failure, temporary-failure, permanent-failure, pending-virus-check, " \
-        "validation-failed, virus-scan-failed, returned-letter, accepted, received]"
+        "validation-failed, virus-scan-failed]"
 
     with pytest.raises(ValidationError) as e:
         validate({'status': invalid_statuses + valid_statuses}, get_notifications_request)
@@ -67,7 +67,7 @@ def test_get_notifications_request_invalid_statuses(
 def test_get_notifications_request_invalid_template_types(
         invalid_template_types, valid_template_types
 ):
-    partial_error_template_type = "is not one of [sms, email, letter]"
+    partial_error_template_type = "is not one of [sms, email]"
 
     with pytest.raises(ValidationError) as e:
         validate({'template_type': invalid_template_types + valid_template_types}, get_notifications_request)
@@ -93,12 +93,12 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
     for invalid_status in ["elephant", "giraffe"]:
         assert "status {} is not one of [cancelled, created, sending, sent, delivered, " \
             "pending, failed, technical-failure, temporary-failure, permanent-failure, " \
-            "pending-virus-check, validation-failed, virus-scan-failed, returned-letter, accepted, received]".format(
+            "pending-virus-check, validation-failed, virus-scan-failed]".format(
                 invalid_status
             ) in error_messages
 
     for invalid_template_type in ["orange", "avocado"]:
-        assert "template_type {} is not one of [sms, email, letter]" \
+        assert "template_type {} is not one of [sms, email]" \
             .format(invalid_template_type) in error_messages
 
 

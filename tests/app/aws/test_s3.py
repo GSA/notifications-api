@@ -1,17 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from os import getenv
 
-import pytest
-import pytz
-from freezegun import freeze_time
+from app.aws.s3 import get_s3_file
 
-from app.aws.s3 import (
-    default_access_key,
-    default_region,
-    default_secret_key,
-    get_list_of_files_by_suffix,
-    get_s3_file,
-)
-from tests.app.conftest import datetime_in_past
+default_access_key = getenv('CSV_AWS_ACCESS_KEY_ID')
+default_secret_key = getenv('CSV_AWS_SECRET_ACCESS_KEY')
+default_region = getenv('CSV_AWS_REGION')
 
 
 def single_s3_object_stub(key='foo', last_modified=None):
@@ -24,7 +18,7 @@ def single_s3_object_stub(key='foo', last_modified=None):
 
 def test_get_s3_file_makes_correct_call(notify_api, mocker):
     get_s3_mock = mocker.patch('app.aws.s3.get_s3_object')
-    get_s3_file('foo-bucket', 'bar-file.txt')
+    get_s3_file('foo-bucket', 'bar-file.txt', default_access_key, default_secret_key, default_region)
 
     get_s3_mock.assert_called_with(
         'foo-bucket',
@@ -33,52 +27,3 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
         default_secret_key,
         default_region,
     )
-
-
-@freeze_time("2018-01-11 00:00:00")
-@pytest.mark.parametrize('suffix_str, days_before, returned_no', [
-    ('.ACK.txt', None, 1),
-    ('.ack.txt', None, 1),
-    ('.ACK.TXT', None, 1),
-    ('', None, 2),
-    ('', 1, 1),
-])
-def test_get_list_of_files_by_suffix(notify_api, mocker, suffix_str, days_before, returned_no):
-    paginator_mock = mocker.patch('app.aws.s3.client')
-    multiple_pages_s3_object = [
-        {
-            "Contents": [
-                single_s3_object_stub('bar/foo.ACK.txt', datetime_in_past(1, 0)),
-            ]
-        },
-        {
-            "Contents": [
-                single_s3_object_stub('bar/foo1.rs.txt', datetime_in_past(2, 0)),
-            ]
-        }
-    ]
-    paginator_mock.return_value.get_paginator.return_value.paginate.return_value = multiple_pages_s3_object
-    if (days_before):
-        key = get_list_of_files_by_suffix('foo-bucket', subfolder='bar', suffix=suffix_str,
-                                          last_modified=datetime.now(tz=pytz.utc) - timedelta(days=days_before))
-    else:
-        key = get_list_of_files_by_suffix('foo-bucket', subfolder='bar', suffix=suffix_str)
-
-    assert sum(1 for x in key) == returned_no
-    for k in key:
-        assert k == 'bar/foo.ACK.txt'
-
-
-def test_get_list_of_files_by_suffix_empty_contents_return_with_no_error(notify_api, mocker):
-    paginator_mock = mocker.patch('app.aws.s3.client')
-    multiple_pages_s3_object = [
-        {
-            "other_content": [
-                'some_values',
-            ]
-        }
-    ]
-    paginator_mock.return_value.get_paginator.return_value.paginate.return_value = multiple_pages_s3_object
-    key = get_list_of_files_by_suffix('foo-bucket', subfolder='bar', suffix='.pdf')
-
-    assert sum(1 for x in key) == 0

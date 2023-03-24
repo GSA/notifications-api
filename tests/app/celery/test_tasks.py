@@ -9,7 +9,6 @@ from celery.exceptions import Retry
 from freezegun import freeze_time
 from notifications_utils.recipients import Row
 from notifications_utils.template import (
-    LetterPrintTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
@@ -23,13 +22,11 @@ from app.celery.tasks import (
     process_incomplete_job,
     process_incomplete_jobs,
     process_job,
-    process_returned_letters_list,
     process_row,
     s3,
     save_api_email,
     save_api_sms,
     save_email,
-    save_letter,
     save_sms,
     send_inbound_sms_to_service,
 )
@@ -41,13 +38,10 @@ from app.models import (
     JOB_STATUS_FINISHED,
     JOB_STATUS_IN_PROGRESS,
     KEY_TYPE_NORMAL,
-    LETTER_TYPE,
     NOTIFICATION_CREATED,
     SMS_TYPE,
     Job,
     Notification,
-    NotificationHistory,
-    ReturnedLetter,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import DATETIME_FORMAT
@@ -57,9 +51,7 @@ from tests.app.db import (
     create_api_key,
     create_inbound_sms,
     create_job,
-    create_letter_contact,
     create_notification,
-    create_notification_history,
     create_reply_to_email,
     create_service,
     create_service_inbound_api,
@@ -67,7 +59,6 @@ from tests.app.db import (
     create_template,
     create_user,
 )
-from tests.conftest import set_config_values
 
 
 class AnyStringWith(str):
@@ -91,7 +82,6 @@ def test_should_have_decorated_tasks_functions():
     assert process_job.__wrapped__.__name__ == 'process_job'
     assert save_sms.__wrapped__.__name__ == 'save_sms'
     assert save_email.__wrapped__.__name__ == 'save_email'
-    assert save_letter.__wrapped__.__name__ == 'save_letter'
 
 
 @pytest.fixture
@@ -298,41 +288,6 @@ def test_should_process_email_job_with_sender_id(email_job_with_placeholders, mo
     )
 
 
-@freeze_time("2016-01-01 11:09:00.061258")
-def test_should_process_letter_job(sample_letter_job, mocker):
-    csv = """address_line_1,address_line_2,address_line_3,address_line_4,postcode,name
-    A1,A2,A3,A4,A_POST,Alice
-    """
-    s3_mock = mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
-                           return_value=(csv, {"sender_id": None}))
-    process_row_mock = mocker.patch('app.celery.tasks.process_row')
-    mocker.patch('app.celery.tasks.create_uuid', return_value="uuid")
-
-    process_job(sample_letter_job.id)
-
-    s3_mock.assert_called_once_with(
-        service_id=str(sample_letter_job.service.id),
-        job_id=str(sample_letter_job.id)
-    )
-
-    row_call = process_row_mock.mock_calls[0][1]
-    assert row_call[0].index == 0
-    assert row_call[0].recipient == ['A1', 'A2', 'A3', 'A4', None, None, 'A_POST', None]
-    assert row_call[0].personalisation == {
-        'addressline1': 'A1',
-        'addressline2': 'A2',
-        'addressline3': 'A3',
-        'addressline4': 'A4',
-        'postcode': 'A_POST'
-    }
-    assert row_call[2] == sample_letter_job
-    assert row_call[3] == sample_letter_job.service
-
-    assert process_row_mock.call_count == 1
-
-    assert sample_letter_job.job_status == 'finished'
-
-
 def test_should_process_all_sms_job(sample_job_with_placeholdered_template,
                                     mocker):
     mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
@@ -365,8 +320,6 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template,
     (SMS_TYPE, True, 'save_sms', 'research-mode-tasks'),
     (EMAIL_TYPE, False, 'save_email', 'database-tasks'),
     (EMAIL_TYPE, True, 'save_email', 'research-mode-tasks'),
-    (LETTER_TYPE, False, 'save_letter', 'database-tasks'),
-    (LETTER_TYPE, True, 'save_letter', 'research-mode-tasks'),
 ])
 def test_process_row_sends_letter_task(template_type, research_mode, expected_function, expected_queue, mocker):
     mocker.patch('app.celery.tasks.create_uuid', return_value='noti_uuid')
@@ -930,279 +883,6 @@ def test_save_sms_does_not_send_duplicate_and_does_not_put_in_retry_queue(sample
     assert not retry.called
 
 
-@pytest.mark.parametrize('personalisation, expected_to, expected_normalised', (
-    ({
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'addressline3': 'Baz',
-        'addressline4': 'Wibble',
-        'addressline5': 'Wobble',
-        'addressline6': 'Wubble',
-        'postcode': 'SE1 2SA',
-    }, (
-        'Foo\n'
-        'Bar\n'
-        'Baz\n'
-        'Wibble\n'
-        'Wobble\n'
-        'Wubble\n'
-        'SE1 2SA'
-    ), (
-        'foobarbazwibblewobblewubblese12sa'
-    )),
-    ({
-        # The address isn’t normalised when we store it in the
-        # `personalisation` column, but is normalised for storing in the
-        # `to` column
-        'addressline2': '    Foo    ',
-        'addressline4': 'Bar',
-        'addressline6': 'se12sa',
-    }, (
-        'Foo\n'
-        'Bar\n'
-        'SE1 2SA'
-    ), (
-        'foobarse12sa'
-    )),
-))
-def test_save_letter_saves_letter_to_database(
-    mocker,
-    notify_db_session,
-    personalisation,
-    expected_to,
-    expected_normalised,
-):
-    service = create_service()
-    contact_block = create_letter_contact(service=service, contact_block="Address contact", is_default=True)
-    template = create_template(service=service, template_type=LETTER_TYPE, reply_to=contact_block.id)
-    job = create_job(template=template)
-
-    mocker.patch('app.celery.tasks.create_random_identifier', return_value="this-is-random-in-real-life")
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    notification_json = _notification_json(
-        template=job.template,
-        to='This is ignored for letters',
-        personalisation=personalisation,
-        job_id=job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-    created_at = datetime.utcnow()
-
-    save_letter(
-        job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.id == notification_id
-    assert notification_db.to == expected_to
-    assert notification_db.normalised_to == expected_normalised
-    assert notification_db.job_id == job.id
-    assert notification_db.template_id == job.template.id
-    assert notification_db.template_version == job.template.version
-    assert notification_db.status == 'created'
-    assert notification_db.created_at >= created_at
-    assert notification_db.notification_type == 'letter'
-    assert notification_db.sent_at is None
-    assert notification_db.sent_by is None
-    assert notification_db.personalisation == personalisation
-    assert notification_db.reference == "this-is-random-in-real-life"
-    assert notification_db.reply_to_text == contact_block.contact_block
-
-
-@pytest.mark.parametrize('last_line_of_address, postage, expected_postage, expected_international',
-                         [('SW1 1AA', 'first', 'first', False),
-                          ('SW1 1AA', 'second', 'second', False),
-                          ('New Zealand', 'second', 'rest-of-world', True),
-                          ('France', 'first', 'europe', True)])
-def test_save_letter_saves_letter_to_database_with_correct_postage(
-    mocker, notify_db_session, last_line_of_address, postage, expected_postage, expected_international
-):
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service=service, template_type=LETTER_TYPE, postage=postage)
-    letter_job = create_job(template=template)
-
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-    notification_json = _notification_json(
-        template=letter_job.template,
-        to='Foo',
-        personalisation={'addressline1': 'Foo', 'addressline2': 'Bar', 'postcode': last_line_of_address},
-        job_id=letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-    save_letter(
-        letter_job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.id == notification_id
-    assert notification_db.postage == expected_postage
-    assert notification_db.international == expected_international
-
-
-@pytest.mark.parametrize('reference_paceholder,', [None, 'ref2'])
-def test_save_letter_saves_letter_to_database_with_correct_client_reference(
-    mocker, notify_db_session, reference_paceholder
-):
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service=service, template_type=LETTER_TYPE)
-    letter_job = create_job(template=template)
-
-    personalisation = {'addressline1': 'Foo', 'addressline2': 'Bar', 'postcode': 'SW1A 1AA'}
-    if reference_paceholder:
-        personalisation['reference'] = reference_paceholder
-
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-    notification_json = _notification_json(
-        template=letter_job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-    save_letter(
-        letter_job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.id == notification_id
-    assert notification_db.client_reference == reference_paceholder
-
-
-def test_save_letter_saves_letter_to_database_with_formatted_postcode(mocker, notify_db_session):
-    service = create_service(service_permissions=[LETTER_TYPE])
-    template = create_template(service=service, template_type=LETTER_TYPE)
-    letter_job = create_job(template=template)
-
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-    notification_json = _notification_json(
-        template=letter_job.template,
-        to='Foo',
-        personalisation={'addressline1': 'Foo', 'addressline2': 'Bar', 'postcode': 'se1 64sa'},
-        job_id=letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-    save_letter(
-        letter_job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.id == notification_id
-    assert notification_db.personalisation["postcode"] == "se1 64sa"
-
-
-def test_save_letter_saves_letter_to_database_right_reply_to(mocker, notify_db_session):
-    service = create_service()
-    create_letter_contact(service=service, contact_block="Address contact", is_default=True)
-    template = create_template(service=service, template_type=LETTER_TYPE, reply_to=None)
-    job = create_job(template=template)
-
-    mocker.patch('app.celery.tasks.create_random_identifier', return_value="this-is-random-in-real-life")
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    personalisation = {
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'addressline3': 'Baz',
-        'addressline4': 'Wibble',
-        'addressline5': 'Wobble',
-        'addressline6': 'Wubble',
-        'postcode': 'SE1 3WS',
-    }
-    notification_json = _notification_json(
-        template=job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-    created_at = datetime.utcnow()
-
-    save_letter(
-        job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.id == notification_id
-    assert notification_db.to == (
-        'Foo\n'
-        'Bar\n'
-        'Baz\n'
-        'Wibble\n'
-        'Wobble\n'
-        'Wubble\n'
-        'SE1 3WS'
-    )
-    assert notification_db.job_id == job.id
-    assert notification_db.template_id == job.template.id
-    assert notification_db.template_version == job.template.version
-    assert notification_db.status == 'created'
-    assert notification_db.created_at >= created_at
-    assert notification_db.notification_type == 'letter'
-    assert notification_db.sent_at is None
-    assert notification_db.sent_by is None
-    assert notification_db.personalisation == personalisation
-    assert notification_db.reference == "this-is-random-in-real-life"
-    assert not notification_db.reply_to_text
-
-
-def test_save_letter_uses_template_reply_to_text(mocker, notify_db_session):
-    service = create_service()
-    create_letter_contact(service=service, contact_block="Address contact", is_default=True)
-    template_contact = create_letter_contact(
-        service=service,
-        contact_block="Template address contact",
-        is_default=False
-    )
-    template = create_template(
-        service=service,
-        template_type=LETTER_TYPE,
-        reply_to=template_contact.id
-    )
-
-    job = create_job(template=template)
-
-    mocker.patch('app.celery.tasks.create_random_identifier', return_value="this-is-random-in-real-life")
-    mocker.patch('app.celery.tasks.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    personalisation = {
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'postcode': 'Flob',
-    }
-    notification_json = _notification_json(
-        template=job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=job.id,
-        row_number=1
-    )
-
-    save_letter(
-        job.service_id,
-        uuid.uuid4(),
-        encryption.encrypt(notification_json),
-    )
-
-    notification_db = Notification.query.one()
-    assert notification_db.reply_to_text == "Template address contact"
-
-
 def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
     service = create_service_with_defined_sms_sender(sms_sender_value='2028675309')
     template = create_template(service=service)
@@ -1239,115 +919,6 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(mocker, 
 
     persisted_notification = Notification.query.one()
     assert persisted_notification.reply_to_text == 'new-sender'
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-@pytest.mark.parametrize('env', ['staging', 'live'])
-def test_save_letter_sets_delivered_letters_as_pdf_permission_in_research_mode_in_staging_live(
-        notify_api, mocker, notify_db_session, sample_letter_job, env):
-    sample_letter_job.service.research_mode = True
-    sample_reference = "this-is-random-in-real-life"
-    mock_create_fake_letter_response_file = mocker.patch(
-        'app.celery.research_mode_tasks.create_fake_letter_response_file.apply_async')
-    mocker.patch('app.celery.tasks.create_random_identifier', return_value=sample_reference)
-
-    personalisation = {
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'postcode': 'Flob',
-    }
-    notification_json = _notification_json(
-        template=sample_letter_job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=sample_letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-
-    with set_config_values(notify_api, {
-        'NOTIFY_ENVIRONMENT': env
-    }):
-        save_letter(
-            sample_letter_job.service_id,
-            notification_id,
-            encryption.encrypt(notification_json),
-        )
-
-    notification = Notification.query.filter(Notification.id == notification_id).one()
-    assert notification.status == 'delivered'
-    assert not mock_create_fake_letter_response_file.called
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-@pytest.mark.parametrize('env', ['development', 'preview'])
-def test_save_letter_calls_create_fake_response_for_letters_in_research_mode_on_development_preview(
-        notify_api, mocker, notify_db_session, sample_letter_job, env):
-    sample_letter_job.service.research_mode = True
-    sample_reference = "this-is-random-in-real-life"
-    mock_create_fake_letter_response_file = mocker.patch(
-        'app.celery.research_mode_tasks.create_fake_letter_response_file.apply_async')
-    mocker.patch('app.celery.tasks.create_random_identifier', return_value=sample_reference)
-
-    personalisation = {
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'postcode': 'Flob',
-    }
-    notification_json = _notification_json(
-        template=sample_letter_job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=sample_letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-
-    with set_config_values(notify_api, {
-        'NOTIFY_ENVIRONMENT': env
-    }):
-        save_letter(
-            sample_letter_job.service_id,
-            notification_id,
-            encryption.encrypt(notification_json),
-        )
-
-    mock_create_fake_letter_response_file.assert_called_once_with(
-        (sample_reference,),
-        queue=QueueNames.RESEARCH_MODE
-    )
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_save_letter_calls_get_pdf_for_templated_letter_task_not_in_research(
-        mocker, notify_db_session, sample_letter_job):
-    mock_create_letters_pdf = mocker.patch('app.celery.letters_pdf_tasks.get_pdf_for_templated_letter.apply_async')
-
-    personalisation = {
-        'addressline1': 'Foo',
-        'addressline2': 'Bar',
-        'postcode': 'Flob',
-    }
-    notification_json = _notification_json(
-        template=sample_letter_job.template,
-        to='Foo',
-        personalisation=personalisation,
-        job_id=sample_letter_job.id,
-        row_number=1
-    )
-    notification_id = uuid.uuid4()
-
-    save_letter(
-        sample_letter_job.service_id,
-        notification_id,
-        encryption.encrypt(notification_json),
-    )
-
-    assert mock_create_letters_pdf.called
-    mock_create_letters_pdf.assert_called_once_with(
-        [str(notification_id)],
-        queue=QueueNames.CREATE_LETTERS_PDF
-    )
 
 
 def test_should_cancel_job_if_service_is_inactive(sample_service,
@@ -1399,49 +970,6 @@ def test_get_sms_template_instance(mocker, sample_template, sample_job):
     assert isinstance(template, SMSMessageTemplate)
     assert recipient_csv.placeholders == [
         'phone number'
-    ]
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_get_letter_template_instance(mocker, sample_job):
-    mocker.patch(
-        'app.celery.tasks.s3.get_job_and_metadata_from_s3',
-        return_value=('', {}),
-    )
-    sample_contact_block = create_letter_contact(
-        service=sample_job.service,
-        contact_block='((reference number))'
-    )
-    sample_template = create_template(
-        service=sample_job.service,
-        template_type=LETTER_TYPE,
-        reply_to=sample_contact_block.id,
-    )
-    sample_job.template_id = sample_template.id
-
-    (
-        recipient_csv,
-        template,
-        _sender_id,
-    ) = get_recipient_csv_and_template_and_sender_id(sample_job)
-
-    assert isinstance(template, LetterPrintTemplate)
-    assert template.contact_block == (
-        '((reference number))'
-    )
-    assert template.placeholders == {
-        'reference number'
-    }
-    assert recipient_csv.placeholders == [
-        'reference number',
-        'address line 1',
-        'address line 2',
-        'address line 3',
-        'address line 4',
-        'address line 5',
-        'address line 6',
-        'postcode',
-        'address line 7',
     ]
 
 
@@ -1719,28 +1247,6 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     assert mock_email_saver.call_count == 8  # There are 10 in the file and we've added two already
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_incomplete_job_letter(mocker, sample_letter_template):
-    mocker.patch('app.celery.tasks.s3.get_job_and_metadata_from_s3',
-                 return_value=(load_example_csv('multiple_letter'), {'sender_id': None}))
-    mock_letter_saver = mocker.patch('app.celery.tasks.save_letter.apply_async')
-
-    job = create_job(template=sample_letter_template, notification_count=10,
-                     created_at=datetime.utcnow() - timedelta(hours=2),
-                     scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-                     processing_started=datetime.utcnow() - timedelta(minutes=31),
-                     job_status=JOB_STATUS_ERROR)
-
-    create_notification(sample_letter_template, job, 0)
-    create_notification(sample_letter_template, job, 1)
-
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
-
-    process_incomplete_job(str(job.id))
-
-    assert mock_letter_saver.call_count == 8
-
-
 @freeze_time('2017-01-01')
 def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processing_started_time(mocker, sample_template):
     mock_process_incomplete_job = mocker.patch('app.celery.tasks.process_incomplete_job')
@@ -1765,47 +1271,6 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
     assert job2.processing_started == datetime.utcnow()
 
     assert mock_process_incomplete_job.mock_calls == [call(str(job1.id)), call(str(job2.id))]
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_list(sample_letter_template):
-    create_notification(sample_letter_template, reference='ref1')
-    create_notification(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    notifications = Notification.query.all()
-
-    assert [n.status for n in notifications] == ['returned-letter', 'returned-letter']
-    assert all(n.updated_at for n in notifications)
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_list_updates_history_if_notification_is_already_purged(
-        sample_letter_template
-):
-    create_notification_history(sample_letter_template, reference='ref1')
-    create_notification_history(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    notifications = NotificationHistory.query.all()
-
-    assert [n.status for n in notifications] == ['returned-letter', 'returned-letter']
-    assert all(n.updated_at for n in notifications)
-
-
-@pytest.mark.skip(reason="Needs updating for TTS: Remove mail")
-def test_process_returned_letters_populates_returned_letters_table(
-        sample_letter_template
-):
-    create_notification_history(sample_letter_template, reference='ref1')
-    create_notification_history(sample_letter_template, reference='ref2')
-
-    process_returned_letters_list(['ref1', 'ref2', 'unknown-ref'])
-
-    returned_letters = ReturnedLetter.query.all()
-    assert len(returned_letters) == 2
 
 
 @freeze_time('2020-03-25 14:30')

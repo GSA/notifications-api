@@ -60,5 +60,5 @@ Rules for use:
 1. start a pipenv shell as a shortcut to load `.env` file variables: `$ pipenv shell`
 1. Deploy the application:
   ```
-  cf push --vars-file deploy-config/sandbox.yml --var AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --var AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+  cf push --vars-file deploy-config/sandbox.yml
   ```

@@ -1,5 +1,3 @@
-import datetime
-
 import pytest
 from flask import json, url_for
 
@@ -67,7 +65,6 @@ def test_get_notification_by_id_returns_200(
         'sent_at': sample_notification.sent_at,
         'completed_at': sample_notification.completed_at(),
         'scheduled_for': None,
-        'postage': None,
         'provider_response': None
     }
 
@@ -120,7 +117,6 @@ def test_get_notification_by_id_with_placeholders_returns_200(
         'sent_at': sample_notification.sent_at,
         'completed_at': sample_notification.completed_at(),
         'scheduled_for': None,
-        'postage': None,
         'provider_response': None
     }
 
@@ -214,35 +210,6 @@ def test_get_notification_by_id_invalid_id(client, sample_notification, id):
          "message": "notification_id is not a valid UUID"
          }],
         "status_code": 400}
-
-
-@pytest.mark.parametrize('created_at_month, postage, estimated_delivery', [
-    (12, 'second', '2000-12-06T16:00:00.000000Z'),  # 4pm GMT in winter
-    (6, 'second', '2000-06-05T15:00:00.000000Z'),  # 4pm BST in summer
-
-    (12, 'first', '2000-12-05T16:00:00.000000Z'),  # 4pm GMT in winter
-    (6, 'first', '2000-06-03T15:00:00.000000Z'),  # 4pm BST in summer (two days before 2nd class due to weekends)
-])
-def test_get_notification_adds_delivery_estimate_for_letters(
-    client,
-    sample_letter_notification,
-    created_at_month,
-    postage,
-    estimated_delivery,
-):
-    sample_letter_notification.created_at = datetime.date(2000, created_at_month, 1)
-    sample_letter_notification.postage = postage
-
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
-    response = client.get(
-        path='/v2/notifications/{}'.format(sample_letter_notification.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    json_response = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 200
-    assert json_response['postage'] == postage
-    assert json_response['estimated_delivery'] == estimated_delivery
 
 
 @pytest.mark.parametrize('template_type', ['sms', 'email'])
@@ -376,7 +343,7 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(cli
 
     assert json_response['status_code'] == 400
     assert len(json_response['errors']) == 1
-    assert json_response['errors'][0]['message'] == "template_type orange is not one of [sms, email, letter]"
+    assert json_response['errors'][0]['message'] == "template_type orange is not one of [sms, email]"
 
 
 def test_get_all_notifications_filter_by_single_status(client, sample_template):
@@ -415,7 +382,7 @@ def test_get_all_notifications_filter_by_status_invalid_status(client, sample_no
     assert len(json_response['errors']) == 1
     assert json_response['errors'][0]['message'] == "status elephant is not one of [cancelled, created, sending, " \
         "sent, delivered, pending, failed, technical-failure, temporary-failure, permanent-failure, " \
-        "pending-virus-check, validation-failed, virus-scan-failed, returned-letter, accepted, received]"
+        "pending-virus-check, validation-failed, virus-scan-failed]"
 
 
 def test_get_all_notifications_filter_by_multiple_statuses(client, sample_template):
@@ -583,11 +550,10 @@ def test_get_all_notifications_filter_multiple_query_parameters(client, sample_e
 
 def test_get_all_notifications_renames_letter_statuses(
     client,
-    sample_letter_notification,
     sample_notification,
     sample_email_notification,
 ):
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
+    auth_header = create_service_authorization_header(service_id=sample_email_notification.service_id)
     response = client.get(
         path=url_for('v2_notifications.get_notifications'),
         headers=[('Content-Type', 'application/json'), auth_header]
@@ -599,127 +565,5 @@ def test_get_all_notifications_renames_letter_statuses(
     for noti in json_response['notifications']:
         if noti['type'] == 'sms' or noti['type'] == 'email':
             assert noti['status'] == 'created'
-        elif noti['type'] == 'letter':
-            assert noti['status'] == 'accepted'
         else:
             pytest.fail()
-
-
-@pytest.mark.parametrize('db_status,expected_status', [
-    ('created', 'accepted'),
-    ('sending', 'accepted'),
-    ('delivered', 'received'),
-    ('pending', 'pending'),
-    ('technical-failure', 'technical-failure')
-])
-def test_get_notifications_renames_letter_statuses(client, sample_letter_template, db_status, expected_status):
-    letter_noti = create_notification(
-        sample_letter_template,
-        status=db_status,
-        personalisation={'address_line_1': 'Mr Foo', 'address_line_2': '1 Bar Street', 'postcode': 'N1'}
-    )
-    auth_header = create_service_authorization_header(service_id=letter_noti.service_id)
-    response = client.get(
-        path=url_for('v2_notifications.get_notification_by_id', notification_id=letter_noti.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    json_response = json.loads(response.get_data(as_text=True))
-    assert response.status_code == 200
-    assert json_response['status'] == expected_status
-
-
-def test_get_pdf_for_notification_returns_pdf_content(
-    client,
-    sample_letter_notification,
-    mocker,
-):
-    mock_get_letter_pdf = mocker.patch(
-        'app.v2.notifications.get_notifications.get_letter_pdf_and_metadata', return_value=(b'foo', {
-            "message": "",
-            "invalid_pages": "",
-            "page_count": "1"
-        })
-    )
-    sample_letter_notification.status = 'created'
-
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
-    response = client.get(
-        path=url_for('v2_notifications.get_pdf_for_notification', notification_id=sample_letter_notification.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    assert response.status_code == 200
-    assert response.get_data() == b'foo'
-    mock_get_letter_pdf.assert_called_once_with(sample_letter_notification)
-
-
-def test_get_pdf_for_notification_returns_400_if_pdf_not_found(
-    client,
-    sample_letter_notification,
-    mocker,
-):
-    # if no files are returned get_letter_pdf throws StopIteration as the iterator runs out
-    mock_get_letter_pdf = mocker.patch(
-        'app.v2.notifications.get_notifications.get_letter_pdf_and_metadata',
-        side_effect=(StopIteration, {})
-    )
-    sample_letter_notification.status = 'created'
-
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
-    response = client.get(
-        path=url_for('v2_notifications.get_pdf_for_notification', notification_id=sample_letter_notification.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    assert response.status_code == 400
-    assert response.json['errors'] == [{
-        'error': 'PDFNotReadyError',
-        'message': 'PDF not available yet, try again later'
-    }]
-    mock_get_letter_pdf.assert_called_once_with(sample_letter_notification)
-
-
-@pytest.mark.parametrize('status, expected_message', [
-    ('virus-scan-failed', 'File did not pass the virus scan'),
-    ('technical-failure', 'PDF not available for letters in status technical-failure'),
-])
-def test_get_pdf_for_notification_only_returns_pdf_content_if_right_status(
-    client,
-    sample_letter_notification,
-    mocker,
-    status,
-    expected_message
-):
-    mock_get_letter_pdf = mocker.patch(
-        'app.v2.notifications.get_notifications.get_letter_pdf_and_metadata', return_value=(b'foo', {
-            "message": "",
-            "invalid_pages": "",
-            "page_count": "1"
-        })
-    )
-    sample_letter_notification.status = status
-
-    auth_header = create_service_authorization_header(service_id=sample_letter_notification.service_id)
-    response = client.get(
-        path=url_for('v2_notifications.get_pdf_for_notification', notification_id=sample_letter_notification.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    assert response.status_code == 400
-    assert response.json['errors'] == [{
-        'error': 'BadRequestError',
-        'message': expected_message
-    }]
-    assert mock_get_letter_pdf.called is False
-
-
-def test_get_pdf_for_notification_fails_for_non_letters(client, sample_notification):
-    auth_header = create_service_authorization_header(service_id=sample_notification.service_id)
-    response = client.get(
-        path=url_for('v2_notifications.get_pdf_for_notification', notification_id=sample_notification.id),
-        headers=[('Content-Type', 'application/json'), auth_header]
-    )
-
-    assert response.status_code == 400
-    assert response.json['errors'] == [{'error': 'BadRequestError', 'message': 'Notification is not a letter'}]

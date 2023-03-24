@@ -15,13 +15,10 @@ from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     NOTIFICATION_PERMANENT_FAILURE,
     SMS_TYPE,
-    UPLOAD_LETTERS,
     AnnualBilling,
     ApiKey,
     FactBilling,
@@ -35,7 +32,6 @@ from app.models import (
     Service,
     ServiceContactList,
     ServiceEmailReplyTo,
-    ServiceLetterContact,
     ServicePermission,
     ServiceSmsSender,
     Template,
@@ -53,10 +49,7 @@ from app.utils import (
 DEFAULT_SERVICE_PERMISSIONS = [
     SMS_TYPE,
     EMAIL_TYPE,
-    LETTER_TYPE,
     INTERNATIONAL_SMS_TYPE,
-    UPLOAD_LETTERS,
-    INTERNATIONAL_LETTERS,
 ]
 
 
@@ -113,16 +106,12 @@ def dao_fetch_live_services_data():
         Service.go_live_at.label("live_date"),
         Service.volume_sms.label('sms_volume_intent'),
         Service.volume_email.label('email_volume_intent'),
-        Service.volume_letter.label('letter_volume_intent'),
         case([
             (this_year_ft_billing.c.notification_type == 'email', func.sum(this_year_ft_billing.c.notifications_sent))
         ], else_=0).label("email_totals"),
         case([
             (this_year_ft_billing.c.notification_type == 'sms', func.sum(this_year_ft_billing.c.notifications_sent))
         ], else_=0).label("sms_totals"),
-        case([
-            (this_year_ft_billing.c.notification_type == 'letter', func.sum(this_year_ft_billing.c.notifications_sent))
-        ], else_=0).label("letter_totals"),
         AnnualBilling.free_sms_fragment_limit,
     ).join(
         Service.annual_billing
@@ -156,7 +145,6 @@ def dao_fetch_live_services_data():
         Service.go_live_at,
         Service.volume_sms,
         Service.volume_email,
-        Service.volume_letter,
         this_year_ft_billing.c.notification_type,
         AnnualBilling.free_sms_fragment_limit,
     ).order_by(
@@ -169,7 +157,6 @@ def dao_fetch_live_services_data():
         if existing_service is not None:
             existing_service["email_totals"] += row.email_totals
             existing_service["sms_totals"] += row.sms_totals
-            existing_service["letter_totals"] += row.letter_totals
         else:
             results.append(row._asdict())
     return results
@@ -315,9 +302,6 @@ def dao_create_service(
         if organisation.email_branding:
             service.email_branding = organisation.email_branding
 
-        if organisation.letter_branding:
-            service.letter_branding = organisation.letter_branding
-
     if organisation:
         service.crown = organisation.crown
     service.count_as_live = not user.platform_admin
@@ -378,7 +362,6 @@ def delete_service_and_all_associated_db_objects(service):
 
     _delete_commit(ServiceSmsSender.query.filter_by(service=service))
     _delete_commit(ServiceEmailReplyTo.query.filter_by(service=service))
-    _delete_commit(ServiceLetterContact.query.filter_by(service=service))
     _delete_commit(ServiceContactList.query.filter_by(service=service))
     _delete_commit(InvitedUser.query.filter_by(service=service))
     _delete_commit(Permission.query.filter_by(service=service))

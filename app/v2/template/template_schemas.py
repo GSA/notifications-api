@@ -36,7 +36,6 @@ get_template_by_id_response = {
         "body": {"type": "string"},
         "subject": {"type": ["string", "null"]},
         "name": {"type": "string"},
-        "postage": {"type": "string", "format": "postage"}
     },
     "required": ["id", "type", "created_at", "updated_at", "version", "created_by", "body", "name"],
 }
@@ -64,7 +63,6 @@ post_template_preview_response = {
         "version": {"type": "integer"},
         "body": {"type": "string"},
         "subject": {"type": ["string", "null"]},
-        "postage": {"type": "string", "format": "postage"},
         "html": {"type": ["string", "null"]},
     },
     "required": ["id", "type", "version", "body"],
@@ -80,5 +78,4 @@ def create_post_template_preview_response(template, template_object):
         "body": template_object.content_with_placeholders_filled_in,
         "html": getattr(template_object, 'html_body', None),
         "subject": getattr(template_object, 'subject', None),
-        "postage": template.postage
     }

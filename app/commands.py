@@ -19,12 +19,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
-from app.celery.letters_pdf_tasks import (
-    get_pdf_for_templated_letter,
-    resanitise_pdf,
-)
-from app.celery.tasks import process_row, record_daily_sorted_counts
-from app.config import QueueNames
+from app.celery.tasks import process_row
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     set_default_free_allowance_for_service,
@@ -61,7 +56,6 @@ from app.models import (
     AnnualBilling,
     Domain,
     EmailBranding,
-    LetterBranding,
     Notification,
     Organisation,
     Service,
@@ -163,22 +157,6 @@ def insert_inbound_numbers_from_file(file_name):
                 db.session.commit()
 
 
-@notify_command(name='replay-create-pdf-for-templated-letter')
-@click.option('-n', '--notification_id', type=click.UUID, required=True,
-              help="Notification id of the letter that needs the get_pdf_for_templated_letter task replayed")
-def replay_create_pdf_for_templated_letter(notification_id):
-    print("Create task to get_pdf_for_templated_letter for notification: {}".format(notification_id))
-    get_pdf_for_templated_letter.apply_async([str(notification_id)], queue=QueueNames.CREATE_LETTERS_PDF)
-
-
-@notify_command(name='recreate-pdf-for-precompiled-or-uploaded-letter')
-@click.option('-n', '--notification_id', type=click.UUID, required=True,
-              help="Notification ID of the precompiled or uploaded letter")
-def recreate_pdf_for_precompiled_or_uploaded_letter(notification_id):
-    print(f"Call resanitise_pdf task for notification: {notification_id}")
-    resanitise_pdf.apply_async([str(notification_id)], queue=QueueNames.LETTERS)
-
-
 def setup_commands(application):
     application.cli.add_command(command_group)
 
@@ -233,11 +211,11 @@ def rebuild_ft_billing_for_day(service_id, day):
 def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permissions):
     #  permissions
     #  manage_users | manage_templates | manage_settings
-    #  send messages ==> send_texts | send_emails | send_letters
+    #  send messages ==> send_texts | send_emails
     #  Access API keys manage_api_keys
     #  platform_admin
     #  view_activity
-    # "send_texts,send_emails,send_letters,view_activity"
+    # "send_texts,send_emails,view_activity"
     from app.service_invite.rest import create_invited_user
     file = open(file_name)
     for email_address in file:
@@ -264,52 +242,6 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                 print("*** ERROR occurred for email address: {}. \n{}".format(email_address.strip(), e))
 
     file.close()
-
-
-@notify_command(name='populate-notification-postage')
-@click.option(
-    '-s',
-    '--start_date',
-    default=datetime(2017, 2, 1),
-    help="start date inclusive",
-    type=click_dt(format='%Y-%m-%d')
-)
-@statsd(namespace="tasks")
-def populate_notification_postage(start_date):
-    current_app.logger.info('populating historical notification postage')
-
-    total_updated = 0
-
-    while start_date < datetime.utcnow():
-        # process in ten day chunks
-        end_date = start_date + timedelta(days=10)
-
-        sql = \
-            """
-            UPDATE {}
-            SET postage = 'second'
-            WHERE notification_type = 'letter' AND
-            postage IS NULL AND
-            created_at BETWEEN :start AND :end
-            """
-
-        execution_start = datetime.utcnow()
-
-        if end_date > datetime.utcnow() - timedelta(days=8):
-            print('Updating notifications table as well')
-            db.session.execute(sql.format('notifications'), {'start': start_date, 'end': end_date})
-
-        result = db.session.execute(sql.format('notification_history'), {'start': start_date, 'end': end_date})
-        db.session.commit()
-
-        current_app.logger.info('notification postage took {}ms. Migrated {} rows for {} to {}'.format(
-            datetime.utcnow() - execution_start, result.rowcount, start_date, end_date))
-
-        start_date += timedelta(days=10)
-
-        total_updated += result.rowcount
-
-    current_app.logger.info('Total inserted/updated records = {}'.format(total_updated))
 
 
 @notify_command(name='archive-jobs-created-between-dates')
@@ -342,18 +274,6 @@ def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Total archived jobs = {}'.format(total_updated))
 
 
-@notify_command(name='replay-daily-sorted-count-files')
-@click.option('-f', '--file_extension', required=False, help="File extension to search for, defaults to rs.txt")
-@statsd(namespace="tasks")
-def replay_daily_sorted_count_files(file_extension):
-    bucket_location = '{}-ftp'.format(current_app.config['NOTIFY_EMAIL_DOMAIN'])
-    for filename in s3.get_list_of_files_by_suffix(bucket_name=bucket_location,
-                                                   subfolder='root/dispatch',
-                                                   suffix=file_extension or '.rs.txt'):
-        print("Create task to record daily sorted counts for file: ", filename)
-        record_daily_sorted_counts.apply_async([filename], queue=QueueNames.NOTIFY)
-
-
 @notify_command(name='populate-organisations-from-file')
 @click.option('-f', '--file_name', required=True,
               help="Pipe delimited file containing organisation name, sector, crown, argeement_signed, domains")
@@ -364,7 +284,6 @@ def populate_organisations_from_file(file_name):
     # [3] argeement_signed:: TRUE | FALSE
     # [4] domains:: comma separated list of domains related to the organisation
     # [5] email branding name: name of the default email branding for the org
-    # [6] letter branding name: name of the default letter branding for the org
 
     # The expectation is that the organisation, organisation_to_service
     # and user_to_organisation will be cleared before running this command.
@@ -385,19 +304,13 @@ def populate_organisations_from_file(file_name):
             email_branding_column = columns[5].strip()
             if len(email_branding_column) > 0:
                 email_branding = EmailBranding.query.filter(EmailBranding.name == email_branding_column).one()
-            letter_branding = None
-            letter_branding_column = columns[6].strip()
-            if len(letter_branding_column) > 0:
-                letter_branding = LetterBranding.query.filter(LetterBranding.name == letter_branding_column).one()
             data = {
                 'name': columns[0],
                 'active': True,
                 'agreement_signed': boolean_or_none(columns[3]),
                 'crown': boolean_or_none(columns[2]),
                 'organisation_type': columns[1].lower(),
-                'email_branding_id': email_branding.id if email_branding else None,
-                'letter_branding_id': letter_branding.id if letter_branding else None
-
+                'email_branding_id': email_branding.id if email_branding else None
             }
             org = Organisation(**data)
             try:
@@ -452,57 +365,6 @@ def populate_organisation_agreement_details_from_file(file_name):
             db.session.commit()
 
 
-@notify_command(name='get-letter-details-from-zips-sent-file')
-@click.argument('file_paths', required=True, nargs=-1)
-@statsd(namespace="tasks")
-def get_letter_details_from_zips_sent_file(file_paths):
-    """Get notification details from letters listed in zips_sent file(s)
-
-    This takes one or more file paths for the zips_sent files in S3 as its parameters, for example:
-    get-letter-details-from-zips-sent-file '2019-04-01/zips_sent/filename_1' '2019-04-01/zips_sent/filename_2'
-    """
-
-    rows_from_file = []
-
-    for path in file_paths:
-        file_contents = s3.get_s3_file(
-            bucket_name=current_app.config['LETTERS_PDF_BUCKET_NAME'],
-            file_location=path
-        )
-        rows_from_file.extend(json.loads(file_contents))
-
-    notification_references = tuple(row[18:34] for row in rows_from_file)
-    get_letters_data_from_references(notification_references)
-
-
-@notify_command(name='get-notification-and-service-ids-for-letters-that-failed-to-print')
-@click.option('-f', '--file_name', required=True,
-              help="""Full path of the file to upload, file should contain letter filenames, one per line""")
-def get_notification_and_service_ids_for_letters_that_failed_to_print(file_name):
-    print("Getting service and notification ids for letter filenames list {}".format(file_name))
-    file = open(file_name)
-    references = tuple([row[7:23] for row in file])
-
-    get_letters_data_from_references(tuple(references))
-    file.close()
-
-
-def get_letters_data_from_references(notification_references):
-    sql = """
-        SELECT id, service_id, template_id, reference, job_id, created_at
-        FROM notifications
-        WHERE reference IN :notification_references
-        ORDER BY service_id, job_id"""
-    result = db.session.execute(sql, {'notification_references': notification_references}).fetchall()
-
-    with open('zips_sent_details.csv', 'w') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(['notification_id', 'service_id', 'template_id', 'reference', 'job_id', 'created_at'])
-
-        for row in result:
-            csv_writer.writerow(row)
-
-
 @notify_command(name='associate-services-to-organisations')
 def associate_services_to_organisations():
     services = Service.get_history_model().query.filter_by(
@@ -521,12 +383,11 @@ def associate_services_to_organisations():
 
 @notify_command(name='populate-service-volume-intentions')
 @click.option('-f', '--file_name', required=True,
-              help="Pipe delimited file containing service_id, SMS, email, letters")
+              help="Pipe delimited file containing service_id, SMS, email")
 def populate_service_volume_intentions(file_name):
     # [0] service_id
     # [1] SMS:: volume intentions for service
     # [2] Email:: volume intentions for service
-    # [3] Letters:: volume intentions for service
 
     with open(file_name, 'r') as f:
         for line in itertools.islice(f, 1, None):
@@ -535,7 +396,6 @@ def populate_service_volume_intentions(file_name):
             service = dao_fetch_service_by_id(columns[0])
             service.volume_sms = columns[1]
             service.volume_email = columns[2]
-            service.volume_letter = columns[3]
             dao_update_service(service)
     print("populate-service-volume-intentions complete")
 

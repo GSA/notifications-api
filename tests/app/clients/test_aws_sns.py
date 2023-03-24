@@ -13,7 +13,10 @@ def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
     boto_mock.publish.assert_called_once_with(
         PhoneNumber="+16135555555",
         Message=content,
-        MessageAttributes={'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Transactional'}}
+        MessageAttributes={
+            'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Transactional'},
+            'AWS.MM.SMS.OriginationNumber': {'DataType': 'String', 'StringValue': '+18556438890'}
+        }
     )
 
 

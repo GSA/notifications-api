@@ -1,17 +1,11 @@
-from datetime import datetime
-
-from flask import Blueprint, abort, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from app.dao.fact_notification_status_dao import (
     fetch_notification_statuses_for_job,
 )
 from app.dao.jobs_dao import dao_get_notification_outcomes_for_job
-from app.dao.uploads_dao import (
-    dao_get_uploaded_letters_by_print_date,
-    dao_get_uploads_by_service_id,
-)
+from app.dao.uploads_dao import dao_get_uploads_by_service_id
 from app.errors import register_errors
-from app.schemas import notification_with_template_schema
 from app.utils import midnight_n_days_ago, pagination_links
 
 upload_blueprint = Blueprint('upload', __name__, url_prefix='/service/<uuid:service_id>/upload')
@@ -73,31 +67,3 @@ def get_paginated_uploads(service_id, limit_days, page):
             service_id=service_id
         )
     }
-
-
-@upload_blueprint.route('/uploaded-letters/<letter_print_date>', methods=['GET'])
-def get_uploaded_letter_by_service_and_print_day(service_id, letter_print_date):
-    try:
-        letter_print_datetime = datetime.strptime(letter_print_date, '%Y-%m-%d')
-    except ValueError:
-        abort(400)
-    pagination = dao_get_uploaded_letters_by_print_date(
-        service_id,
-        letter_print_date=letter_print_datetime,
-        page=request.args.get('page', type=int),
-        page_size=current_app.config['PAGE_SIZE']
-    )
-    return jsonify({
-        'notifications': notification_with_template_schema.dump(
-            pagination.items,
-            many=True,
-        ),
-        'page_size': pagination.per_page,
-        'total': pagination.total,
-        'links': pagination_links(
-            pagination,
-            '.get_uploaded_letter_by_service_and_print_day',
-            service_id=service_id,
-            letter_print_date=letter_print_date,
-        ),
-    })

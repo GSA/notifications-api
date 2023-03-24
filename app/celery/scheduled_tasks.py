@@ -8,15 +8,13 @@ from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery, zendesk_client
-from app.aws import s3
-from app.celery.letters_pdf_tasks import get_pdf_for_templated_letter
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
     process_job,
     process_row,
 )
-from app.config import QueueNames, TaskNames
+from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
 )
@@ -29,12 +27,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import (
-    dao_old_letters_with_created_status,
-    dao_precompiled_letters_still_pending_virus_check,
-    letters_missing_from_sending_bucket,
-    notifications_not_yet_sent,
-)
+from app.dao.notifications_dao import notifications_not_yet_sent
 from app.dao.provider_details_dao import (
     dao_adjust_provider_priority_back_to_resting_points,
 )
@@ -43,7 +36,6 @@ from app.dao.services_dao import (
     dao_find_services_with_high_failure_rates,
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
-from app.letters.utils import generate_letter_pdf_filename
 from app.models import (
     EMAIL_TYPE,
     JOB_STATUS_ERROR,
@@ -164,88 +156,6 @@ def replay_created_notifications():
 
         for n in notifications_to_resend:
             send_notification_to_queue(notification=n, research_mode=n.service.research_mode)
-
-    # if the letter has not be send after an hour, then create a zendesk ticket
-    letters = letters_missing_from_sending_bucket(resend_created_notifications_older_than)
-
-    if len(letters) > 0:
-        msg = "{} letters were created over an hour ago, " \
-              "but do not have an updated_at timestamp or billable units. " \
-              "\n Creating app.celery.letters_pdf_tasks.create_letters tasks to upload letter to S3 " \
-              "and update notifications for the following notification ids: " \
-              "\n {}".format(len(letters), [x.id for x in letters])
-
-        current_app.logger.info(msg)
-        for letter in letters:
-            get_pdf_for_templated_letter.apply_async([str(letter.id)], queue=QueueNames.CREATE_LETTERS_PDF)
-
-
-@notify_celery.task(name='check-if-letters-still-pending-virus-check')
-def check_if_letters_still_pending_virus_check():
-    letters = []
-
-    for letter in dao_precompiled_letters_still_pending_virus_check():
-        # find letter in the scan bucket
-        filename = generate_letter_pdf_filename(
-            letter.reference,
-            letter.created_at,
-            ignore_folder=True,
-            postage=letter.postage
-        )
-
-        if s3.file_exists(current_app.config['LETTERS_SCAN_BUCKET_NAME'], filename):
-            current_app.logger.warning(
-                f'Letter id {letter.id} got stuck in pending-virus-check. Sending off for scan again.'
-            )
-            notify_celery.send_task(
-                name=TaskNames.SCAN_FILE,
-                kwargs={'filename': filename},
-                queue=QueueNames.ANTIVIRUS,
-            )
-        else:
-            letters.append(letter)
-
-    if len(letters) > 0:
-        letter_ids = [(str(letter.id), letter.reference) for letter in letters]
-
-        msg = f"""{len(letters)} precompiled letters have been pending-virus-check for over 90 minutes.
-            We couldn't find them in the scan bucket. We'll need to find out where the files are and kick them off
-            again or move them to technical failure.
-
-            Notifications: {sorted(letter_ids)}"""
-
-        if current_app.config['NOTIFY_ENVIRONMENT'] in ['live', 'production', 'test']:
-            ticket = NotifySupportTicket(
-                subject=f"[{current_app.config['NOTIFY_ENVIRONMENT']}] Letters still pending virus check",
-                message=msg,
-                ticket_type=NotifySupportTicket.TYPE_INCIDENT,
-                technical_ticket=True,
-                ticket_categories=['notify_letters']
-            )
-            zendesk_client.send_ticket_to_zendesk(ticket)
-            current_app.logger.error(msg)
-
-
-@notify_celery.task(name='check-if-letters-still-in-created')
-def check_if_letters_still_in_created():
-    letters = dao_old_letters_with_created_status()
-
-    if len(letters) > 0:
-        msg = "{} letters were created before 17.30 yesterday and still have 'created' status. " \
-              "Follow runbook to resolve: " \
-              "https://github.com/alphagov/notifications-manuals/wiki/Support-Runbook" \
-              "#deal-with-Letters-still-in-created.".format(len(letters))
-
-        if current_app.config['NOTIFY_ENVIRONMENT'] in ['live', 'production', 'test']:
-            ticket = NotifySupportTicket(
-                subject=f"[{current_app.config['NOTIFY_ENVIRONMENT']}] Letters still in 'created' status",
-                message=msg,
-                ticket_type=NotifySupportTicket.TYPE_INCIDENT,
-                technical_ticket=True,
-                ticket_categories=['notify_letters']
-            )
-            zendesk_client.send_ticket_to_zendesk(ticket)
-            current_app.logger.error(msg)
 
 
 @notify_celery.task(name='check-for-missing-rows-in-completed-jobs')

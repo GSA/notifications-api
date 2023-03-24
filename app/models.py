@@ -6,11 +6,6 @@ from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import (
     EncryptionError,
 )
-from notifications_utils.insensitive_dict import InsensitiveDict
-from notifications_utils.letter_timings import get_letter_timings
-from notifications_utils.postal_address import (
-    address_lines_1_to_6_and_postcode_keys,
-)
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -19,7 +14,6 @@ from notifications_utils.recipients import (
     validate_phone_number,
 )
 from notifications_utils.template import (
-    LetterPrintTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
@@ -35,7 +29,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -52,8 +45,8 @@ SMS_TYPE = 'sms'
 EMAIL_TYPE = 'email'
 LETTER_TYPE = 'letter'
 
-TEMPLATE_TYPES = [SMS_TYPE, EMAIL_TYPE, LETTER_TYPE]
-NOTIFICATION_TYPES = [SMS_TYPE, EMAIL_TYPE, LETTER_TYPE]
+TEMPLATE_TYPES = [SMS_TYPE, EMAIL_TYPE]
+NOTIFICATION_TYPES = [SMS_TYPE, EMAIL_TYPE]
 
 template_types = db.Enum(*TEMPLATE_TYPES, name='template_type')
 
@@ -297,53 +290,22 @@ service_email_branding = db.Table(
 )
 
 
-class LetterBranding(db.Model):
-    __tablename__ = 'letter_branding'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = db.Column(db.String(255), unique=True, nullable=False)
-    filename = db.Column(db.String(255), unique=True, nullable=False)
-
-    def serialize(self):
-        return {
-            "id": str(self.id),
-            "name": self.name,
-            "filename": self.filename,
-        }
-
-
-service_letter_branding = db.Table(
-    'service_letter_branding',
-    db.Model.metadata,
-    # service_id is a primary key as you can only have one letter branding per service
-    db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('services.id'), primary_key=True, nullable=False),
-    db.Column('letter_branding_id', UUID(as_uuid=True), db.ForeignKey('letter_branding.id'), nullable=False),
-)
-
-
 INTERNATIONAL_SMS_TYPE = 'international_sms'
 INBOUND_SMS_TYPE = 'inbound_sms'
 SCHEDULE_NOTIFICATIONS = 'schedule_notifications'
 EMAIL_AUTH = 'email_auth'
-LETTERS_AS_PDF = 'letters_as_pdf'
-PRECOMPILED_LETTER = 'precompiled_letter'
 UPLOAD_DOCUMENT = 'upload_document'
 EDIT_FOLDER_PERMISSIONS = 'edit_folder_permissions'
-UPLOAD_LETTERS = 'upload_letters'
-INTERNATIONAL_LETTERS = 'international_letters'
 
 SERVICE_PERMISSION_TYPES = [
     EMAIL_TYPE,
     SMS_TYPE,
-    LETTER_TYPE,
     INTERNATIONAL_SMS_TYPE,
     INBOUND_SMS_TYPE,
     SCHEDULE_NOTIFICATIONS,
     EMAIL_AUTH,
-    LETTERS_AS_PDF,
     UPLOAD_DOCUMENT,
     EDIT_FOLDER_PERMISSIONS,
-    UPLOAD_LETTERS,
-    INTERNATIONAL_LETTERS,
 ]
 
 
@@ -410,13 +372,6 @@ class Organisation(db.Model):
         nullable=True,
     )
 
-    letter_branding = db.relationship('LetterBranding')
-    letter_branding_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey('letter_branding.id'),
-        nullable=True,
-    )
-
     notes = db.Column(db.Text, nullable=True)
     purchase_order_number = db.Column(db.String(255), nullable=True)
     billing_contact_names = db.Column(db.Text, nullable=True)
@@ -443,7 +398,6 @@ class Organisation(db.Model):
             "active": self.active,
             "crown": self.crown,
             "organisation_type": self.organisation_type,
-            "letter_branding_id": self.letter_branding_id,
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
             "agreement_signed_at": self.agreement_signed_at,
@@ -508,7 +462,6 @@ class Service(db.Model, Versioned):
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)
     volume_email = db.Column(db.Integer(), nullable=True, unique=False)
-    volume_letter = db.Column(db.Integer(), nullable=True, unique=False)
     consent_to_research = db.Column(db.Boolean, nullable=True)
     count_as_live = db.Column(db.Boolean, nullable=False, default=True)
     go_live_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
@@ -527,11 +480,6 @@ class Service(db.Model, Versioned):
     email_branding = db.relationship(
         'EmailBranding',
         secondary=service_email_branding,
-        uselist=False,
-        backref=db.backref('services', lazy='dynamic'))
-    letter_branding = db.relationship(
-        'LetterBranding',
-        secondary=service_letter_branding,
         uselist=False,
         backref=db.backref('services', lazy='dynamic'))
 
@@ -561,10 +509,6 @@ class Service(db.Model, Versioned):
     def get_default_reply_to_email_address(self):
         default_reply_to = [x for x in self.reply_to_email_addresses if x.is_default]
         return default_reply_to[0].email_address if default_reply_to else None
-
-    def get_default_letter_contact(self):
-        default_letter_contact = [x for x in self.letter_contacts if x.is_default]
-        return default_letter_contact[0].contact_block if default_letter_contact else None
 
     def has_permission(self, permission):
         return permission in [p.permission for p in self.permissions]
@@ -923,9 +867,6 @@ template_folder_map = db.Table(
 )
 
 
-PRECOMPILED_TEMPLATE_NAME = 'Pre-compiled PDF'
-
-
 class TemplateBase(db.Model):
     __abstract__ = True
 
@@ -944,7 +885,6 @@ class TemplateBase(db.Model):
     archived = db.Column(db.Boolean, nullable=False, default=False)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
     subject = db.Column(db.Text)
-    postage = db.Column(db.String, nullable=True)
 
     @declared_attr
     def service_id(cls):
@@ -970,58 +910,31 @@ class TemplateBase(db.Model):
 
     redact_personalisation = association_proxy('template_redacted', 'redact_personalisation')
 
-    @declared_attr
-    def service_letter_contact_id(cls):
-        return db.Column(UUID(as_uuid=True), db.ForeignKey('service_letter_contacts.id'), nullable=True)
-
-    @declared_attr
-    def service_letter_contact(cls):
-        return db.relationship('ServiceLetterContact', viewonly=True)
-
+    # TODO: possibly unnecessary after removing letters
     @property
     def reply_to(self):
-        if self.template_type == LETTER_TYPE:
-            return self.service_letter_contact_id
-        else:
-            return None
+        return None
 
     @reply_to.setter
     def reply_to(self, value):
-        if self.template_type == LETTER_TYPE:
-            self.service_letter_contact_id = value
-        elif value is None:
+        if value is None:
             pass
         else:
             raise ValueError('Unable to set sender for {} template'.format(self.template_type))
 
     def get_reply_to_text(self):
-        if self.template_type == LETTER_TYPE:
-            return self.service_letter_contact.contact_block if self.service_letter_contact else None
-        elif self.template_type == EMAIL_TYPE:
+        if self.template_type == EMAIL_TYPE:
             return self.service.get_default_reply_to_email_address()
         elif self.template_type == SMS_TYPE:
             return try_validate_and_format_phone_number(self.service.get_default_sms_sender())
         else:
             return None
 
-    @hybrid_property
-    def is_precompiled_letter(self):
-        return self.hidden and self.name == PRECOMPILED_TEMPLATE_NAME and self.template_type == LETTER_TYPE
-
-    @is_precompiled_letter.setter
-    def is_precompiled_letter(self, value):
-        pass
-
     def _as_utils_template(self):
         if self.template_type == EMAIL_TYPE:
             return PlainTextEmailTemplate(self.__dict__)
         if self.template_type == SMS_TYPE:
             return SMSMessageTemplate(self.__dict__)
-        if self.template_type == LETTER_TYPE:
-            return LetterPrintTemplate(
-                self.__dict__,
-                contact_block=self.get_reply_to_text(),
-            )
 
     def _as_utils_template_with_personalisation(self, values):
         template = self._as_utils_template()
@@ -1037,7 +950,7 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject if self.template_type in {EMAIL_TYPE, LETTER_TYPE} else None,
+            "subject": self.subject if self.template_type == EMAIL_TYPE else None,
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1045,8 +958,6 @@ class TemplateBase(db.Model):
                 }
                 for key in self._as_utils_template().placeholders
             },
-            "postage": self.postage,
-            "letter_contact_block": self.service_letter_contact.contact_block if self.service_letter_contact else None,
         }
 
         return serialized
@@ -1130,8 +1041,7 @@ SMS_PROVIDERS = [SNS_PROVIDER]
 EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
 
-NOTIFICATION_TYPE = [EMAIL_TYPE, SMS_TYPE, LETTER_TYPE]
-notification_types = db.Enum(*NOTIFICATION_TYPE, name='notification_type')
+notification_types = db.Enum(*NOTIFICATION_TYPES, name='notification_type')
 
 
 class ProviderDetails(db.Model):
@@ -1291,7 +1201,6 @@ NOTIFICATION_PERMANENT_FAILURE = 'permanent-failure'
 NOTIFICATION_PENDING_VIRUS_CHECK = 'pending-virus-check'
 NOTIFICATION_VALIDATION_FAILED = 'validation-failed'
 NOTIFICATION_VIRUS_SCAN_FAILED = 'virus-scan-failed'
-NOTIFICATION_RETURNED_LETTER = 'returned-letter'
 
 NOTIFICATION_STATUS_TYPES_FAILED = [
     NOTIFICATION_TECHNICAL_FAILURE,
@@ -1299,7 +1208,6 @@ NOTIFICATION_STATUS_TYPES_FAILED = [
     NOTIFICATION_PERMANENT_FAILURE,
     NOTIFICATION_VALIDATION_FAILED,
     NOTIFICATION_VIRUS_SCAN_FAILED,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_COMPLETED = [
@@ -1309,7 +1217,6 @@ NOTIFICATION_STATUS_TYPES_COMPLETED = [
     NOTIFICATION_TECHNICAL_FAILURE,
     NOTIFICATION_TEMPORARY_FAILURE,
     NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_RETURNED_LETTER,
     NOTIFICATION_CANCELLED,
 ]
 
@@ -1326,7 +1233,6 @@ NOTIFICATION_STATUS_TYPES_BILLABLE = [
     NOTIFICATION_FAILED,
     NOTIFICATION_TEMPORARY_FAILURE,
     NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
@@ -1338,11 +1244,6 @@ NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
     NOTIFICATION_PERMANENT_FAILURE,
 ]
 
-NOTIFICATION_STATUS_TYPES_BILLABLE_FOR_LETTERS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_RETURNED_LETTER,
-]
 # we don't really have a concept of billable emails - however the ft billing table only includes emails that we have
 # actually sent.
 NOTIFICATION_STATUS_TYPES_SENT_EMAILS = [
@@ -1366,31 +1267,11 @@ NOTIFICATION_STATUS_TYPES = [
     NOTIFICATION_PENDING_VIRUS_CHECK,
     NOTIFICATION_VALIDATION_FAILED,
     NOTIFICATION_VIRUS_SCAN_FAILED,
-    NOTIFICATION_RETURNED_LETTER,
 ]
 
 NOTIFICATION_STATUS_TYPES_NON_BILLABLE = list(set(NOTIFICATION_STATUS_TYPES) - set(NOTIFICATION_STATUS_TYPES_BILLABLE))
 
 NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(*NOTIFICATION_STATUS_TYPES, name='notify_status_type')
-
-NOTIFICATION_STATUS_LETTER_ACCEPTED = 'accepted'
-NOTIFICATION_STATUS_LETTER_RECEIVED = 'received'
-
-DVLA_RESPONSE_STATUS_SENT = 'Sent'
-
-FIRST_CLASS = 'first'
-SECOND_CLASS = 'second'
-EUROPE = 'europe'
-REST_OF_WORLD = 'rest-of-world'
-POSTAGE_TYPES = [FIRST_CLASS, SECOND_CLASS, EUROPE, REST_OF_WORLD]
-UK_POSTAGE_TYPES = [FIRST_CLASS, SECOND_CLASS]
-INTERNATIONAL_POSTAGE_TYPES = [EUROPE, REST_OF_WORLD]
-RESOLVE_POSTAGE_FOR_FILE_NAME = {
-    FIRST_CLASS: 1,
-    SECOND_CLASS: 2,
-    EUROPE: 'E',
-    REST_OF_WORLD: 'N',
-}
 
 
 class NotificationStatusTypes(db.Model):
@@ -1406,6 +1287,10 @@ class NotificationAllTimeView(db.Model):
     tables and therefore rely on *both* sets of indices.
     """
     __tablename__ = 'notifications_all_time_view'
+
+    # Tell alembic not to create this as a table. We have a migration where we manually set this up as a view.
+    # This is custom logic we apply - not built-in logic. See `migrations/env.py`
+    __table_args__ = {"info": {"managed_by_alembic": False}}
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     job_id = db.Column(UUID(as_uuid=True))
@@ -1428,7 +1313,6 @@ class NotificationAllTimeView(db.Model):
     phone_prefix = db.Column(db.String)
     rate_multiplier = db.Column(db.Numeric(asdecimal=False))
     created_by_id = db.Column(UUID(as_uuid=True))
-    postage = db.Column(db.String)
     document_download_count = db.Column(db.Integer)
 
 
@@ -1491,7 +1375,6 @@ class Notification(db.Model):
 
     document_download_count = db.Column(db.Integer, nullable=True)
 
-    postage = db.Column(db.String, nullable=True)
     provider_response = db.Column(db.Text, nullable=True)
     # queue_name = db.Column(db.Text, nullable=True)
 
@@ -1571,10 +1454,7 @@ class Notification(db.Model):
 
         def _substitute_status_str(_status):
             return (
-                NOTIFICATION_STATUS_TYPES_FAILED if _status == NOTIFICATION_FAILED else
-                [NOTIFICATION_CREATED, NOTIFICATION_SENDING] if _status == NOTIFICATION_STATUS_LETTER_ACCEPTED else
-                NOTIFICATION_DELIVERED if _status == NOTIFICATION_STATUS_LETTER_RECEIVED else
-                [_status]
+                NOTIFICATION_STATUS_TYPES_FAILED if _status == NOTIFICATION_FAILED else [_status]
             )
 
         def _substitute_status_seq(_statuses):
@@ -1619,35 +1499,8 @@ class Notification(db.Model):
                 'sending': 'Sending',
                 'created': 'Sending',
                 'sent': 'Sent internationally'
-            },
-            'letter': {
-                'technical-failure': 'Technical failure',
-                'permanent-failure': 'Permanent failure',
-                'sending': 'Accepted',
-                'created': 'Accepted',
-                'delivered': 'Received',
-                'returned-letter': 'Returned',
             }
         }[self.template.template_type].get(self.status, self.status)
-
-    def get_letter_status(self):
-        """
-        Return the notification_status, as we should present for letters. The distinction between created and sending is
-        a bit more confusing for letters, not to mention that there's no concept of temporary or permanent failure yet.
-
-
-        """
-        # this should only ever be called for letter notifications - it makes no sense otherwise and I'd rather not
-        # get the two code flows mixed up at all
-        assert self.notification_type == LETTER_TYPE  # nosec B101 - current calling code validates correct type
-
-        if self.status in [NOTIFICATION_CREATED, NOTIFICATION_SENDING]:
-            return NOTIFICATION_STATUS_LETTER_ACCEPTED
-        elif self.status in [NOTIFICATION_DELIVERED, NOTIFICATION_RETURNED_LETTER]:
-            return NOTIFICATION_STATUS_LETTER_RECEIVED
-        else:
-            # Currently can only be technical-failure OR pending-virus-check OR validation-failed
-            return self.status
 
     def get_created_by_name(self):
         if self.created_by:
@@ -1698,7 +1551,7 @@ class Notification(db.Model):
             "line_6": None,
             "postcode": None,
             "type": self.notification_type,
-            "status": self.get_letter_status() if self.notification_type == LETTER_TYPE else self.status,
+            "status": self.status,
             "provider_response": self.provider_response,
             "template": template_dict,
             "body": self.content,
@@ -1708,28 +1561,7 @@ class Notification(db.Model):
             "sent_at": get_dt_string_or_none(self.sent_at),
             "completed_at": self.completed_at(),
             "scheduled_for": None,
-            "postage": self.postage
         }
-
-        if self.notification_type == LETTER_TYPE:
-            personalisation = InsensitiveDict(self.personalisation)
-
-            (
-                serialized['line_1'],
-                serialized['line_2'],
-                serialized['line_3'],
-                serialized['line_4'],
-                serialized['line_5'],
-                serialized['line_6'],
-                serialized['postcode'],
-            ) = (
-                personalisation.get(line) for line in address_lines_1_to_6_and_postcode_keys
-            )
-
-            serialized['estimated_delivery'] = \
-                get_letter_timings(serialized['created_at'], postage=self.postage)\
-                .earliest_delivery\
-                .strftime(DATETIME_FORMAT)
 
         return serialized
 
@@ -1770,8 +1602,6 @@ class NotificationHistory(db.Model, HistoryModel):
     rate_multiplier = db.Column(db.Numeric(asdecimal=False), nullable=True)
 
     created_by_id = db.Column(UUID(as_uuid=True), nullable=True)
-
-    postage = db.Column(db.String, nullable=True)
 
     document_download_count = db.Column(db.Integer, nullable=True)
 
@@ -1880,7 +1710,6 @@ MANAGE_TEMPLATES = 'manage_templates'
 MANAGE_SETTINGS = 'manage_settings'
 SEND_TEXTS = 'send_texts'
 SEND_EMAILS = 'send_emails'
-SEND_LETTERS = 'send_letters'
 MANAGE_API_KEYS = 'manage_api_keys'
 PLATFORM_ADMIN = 'platform_admin'
 VIEW_ACTIVITY = 'view_activity'
@@ -1892,7 +1721,6 @@ PERMISSION_LIST = [
     MANAGE_SETTINGS,
     SEND_TEXTS,
     SEND_EMAILS,
-    SEND_LETTERS,
     MANAGE_API_KEYS,
     PLATFORM_ADMIN,
     VIEW_ACTIVITY,
@@ -2000,18 +1828,6 @@ class InboundSmsHistory(db.Model, HistoryModel):
     provider = db.Column(db.String, nullable=False)
 
 
-class LetterRate(db.Model):
-    __tablename__ = 'letter_rates'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    start_date = db.Column(db.DateTime, nullable=False)
-    end_date = db.Column(db.DateTime, nullable=True)
-    sheet_count = db.Column(db.Integer, nullable=False)  # double sided sheet
-    rate = db.Column(db.Numeric(), nullable=False)
-    crown = db.Column(db.Boolean, nullable=False)
-    post_class = db.Column(db.String, nullable=False)
-
-
 class ServiceEmailReplyTo(db.Model):
     __tablename__ = "service_email_reply_to"
 
@@ -2038,50 +1854,10 @@ class ServiceEmailReplyTo(db.Model):
         }
 
 
-class ServiceLetterContact(db.Model):
-    __tablename__ = "service_letter_contacts"
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('services.id'), unique=False, index=True, nullable=False)
-    service = db.relationship(Service, backref=db.backref("letter_contacts"))
-
-    contact_block = db.Column(db.Text, nullable=False, index=False, unique=False)
-    is_default = db.Column(db.Boolean, nullable=False, default=True)
-    archived = db.Column(db.Boolean, nullable=False, default=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-
-    def serialize(self):
-        return {
-            'id': str(self.id),
-            'service_id': str(self.service_id),
-            'contact_block': self.contact_block,
-            'is_default': self.is_default,
-            'archived': self.archived,
-            'created_at': self.created_at.strftime(DATETIME_FORMAT),
-            'updated_at': get_dt_string_or_none(self.updated_at),
-        }
-
-
 class AuthType(db.Model):
     __tablename__ = 'auth_type'
 
     name = db.Column(db.String, primary_key=True)
-
-
-class DailySortedLetter(db.Model):
-    __tablename__ = "daily_sorted_letter"
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    billing_day = db.Column(db.Date, nullable=False, index=True)
-    file_name = db.Column(db.String, nullable=True, index=True)
-    unsorted_count = db.Column(db.Integer, nullable=False, default=0)
-    sorted_count = db.Column(db.Integer, nullable=False, default=0)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-
-    __table_args__ = (UniqueConstraint('file_name', 'billing_day', name='uix_file_name_billing_day'),
-                      )
 
 
 class FactBilling(db.Model):
@@ -2095,7 +1871,6 @@ class FactBilling(db.Model):
     rate_multiplier = db.Column(db.Integer(), nullable=False, primary_key=True)
     international = db.Column(db.Boolean, nullable=False, primary_key=True)
     rate = db.Column(db.Numeric(), nullable=False, primary_key=True)
-    postage = db.Column(db.String, nullable=False, primary_key=True)
     billable_units = db.Column(db.Integer(), nullable=True)
     notifications_sent = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
@@ -2183,18 +1958,6 @@ class ServiceDataRetention(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class ReturnedLetter(db.Model):
-    __tablename__ = 'returned_letters'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    reported_at = db.Column(db.Date, nullable=False)
-    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('services.id'), unique=False, index=True, nullable=False)
-    service = db.relationship(Service, backref=db.backref('returned_letters'))
-    notification_id = db.Column(UUID(as_uuid=True), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
 
 
 class ServiceContactList(db.Model):

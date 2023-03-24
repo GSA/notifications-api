@@ -15,7 +15,7 @@ revision = '0377_add_inbound_sms_number'
 down_revision = '0376_add_provider_response'
 
 INBOUND_NUMBER_ID = '9b5bc009-b847-4b1f-8a54-f3b5f95cff18'
-INBOUND_NUMBER = current_app.config['NOTIFY_INTERNATIONAL_SMS_SENDER']
+INBOUND_NUMBER = current_app.config['NOTIFY_INTERNATIONAL_SMS_SENDER'].strip('+')
 DEFAULT_SERVICE_ID = current_app.config['NOTIFY_SERVICE_ID']
 
 def upgrade():
@@ -26,20 +26,20 @@ def upgrade():
     select_by_col = 'number'
     select_by_val = INBOUND_NUMBER
     op.execute(f"delete from {table_name} where {select_by_col} = '{select_by_val}'")
-    
+
     # add the inbound number for the default service to inbound_numbers
     table_name = 'inbound_numbers'
     provider = 'sns'
     active = 'true'
     op.execute(f"insert into {table_name} (id, number, provider, service_id, active, created_at) VALUES('{INBOUND_NUMBER_ID}', '{INBOUND_NUMBER}', '{provider}','{DEFAULT_SERVICE_ID}', '{active}', 'now()')")
-    
+
     # add the inbound number for the default service to service_sms_senders
     table_name = 'service_sms_senders'
     sms_sender = INBOUND_NUMBER
     select_by_col = 'id'
     select_by_val = '286d6176-adbe-7ea7-ba26-b7606ee5e2a4'
     op.execute(f"update {table_name} set {'sms_sender'}='{sms_sender}' where {select_by_col} = '{select_by_val}'")
-    
+
     # add the inbound number for the default service to inbound_numbers
     table_name = 'service_permissions'
     permission = 'inbound_sms'

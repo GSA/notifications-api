@@ -35,14 +35,6 @@ def validate_schema_email_address(instance):
     return True
 
 
-@format_checker.checks('postage', raises=ValidationError)
-def validate_schema_postage(instance):
-    if isinstance(instance, str):
-        if instance not in ["first", "second", "europe", "rest-of-world"]:
-            raise ValidationError("invalid. It must be first, second, europe or rest-of-world.")
-    return True
-
-
 @format_checker.checks('datetime_within_next_day', raises=ValidationError)
 def validate_schema_date_with_hour(instance):
     if isinstance(instance, str):

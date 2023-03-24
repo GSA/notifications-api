@@ -17,27 +17,23 @@ from tests.app.db import create_service, create_service_data_retention
 
 def test_fetch_service_data_retention(sample_service):
     email_data_retention = insert_service_data_retention(sample_service.id, 'email', 3)
-    letter_data_retention = insert_service_data_retention(sample_service.id, 'letter', 30)
     sms_data_retention = insert_service_data_retention(sample_service.id, 'sms', 5)
 
     list_of_data_retention = fetch_service_data_retention(sample_service.id)
 
-    assert len(list_of_data_retention) == 3
+    assert len(list_of_data_retention) == 2
     assert list_of_data_retention[0] == email_data_retention
     assert list_of_data_retention[1] == sms_data_retention
-    assert list_of_data_retention[2] == letter_data_retention
 
 
 def test_fetch_service_data_retention_only_returns_row_for_service(sample_service):
     another_service = create_service(service_name="Another service")
     email_data_retention = insert_service_data_retention(sample_service.id, 'email', 3)
-    letter_data_retention = insert_service_data_retention(sample_service.id, 'letter', 30)
     insert_service_data_retention(another_service.id, 'sms', 5)
 
     list_of_data_retention = fetch_service_data_retention(sample_service.id)
-    assert len(list_of_data_retention) == 2
+    assert len(list_of_data_retention) == 1
     assert list_of_data_retention[0] == email_data_retention
-    assert list_of_data_retention[1] == letter_data_retention
 
 
 def test_fetch_service_data_retention_returns_empty_list_when_no_rows_for_service(sample_service):
@@ -136,10 +132,7 @@ def test_update_service_data_retention_does_not_update_row_if_data_retention_is_
 
 @pytest.mark.parametrize('notification_type, alternate',
                          [('sms', 'email'),
-                          ('email', 'sms'),
-                          ('letter', 'email'),
-                          ('letter', 'sms')]
-                         )
+                          ('email', 'sms')])
 def test_fetch_service_data_retention_by_notification_type(sample_service, notification_type, alternate):
     data_retention = create_service_data_retention(service=sample_service, notification_type=notification_type)
     create_service_data_retention(service=sample_service, notification_type=alternate)

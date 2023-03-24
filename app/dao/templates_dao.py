@@ -1,19 +1,11 @@
 import uuid
 from datetime import datetime
 
-from flask import current_app
 from sqlalchemy import asc, desc
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.users_dao import get_user_by_id
-from app.models import (
-    LETTER_TYPE,
-    SECOND_CLASS,
-    Template,
-    TemplateHistory,
-    TemplateRedacted,
-)
+from app.models import Template, TemplateHistory, TemplateRedacted
 
 
 @autocommit
@@ -44,37 +36,6 @@ def dao_create_template(template):
 )
 def dao_update_template(template):
     db.session.add(template)
-
-
-@autocommit
-def dao_update_template_reply_to(template_id, reply_to):
-    Template.query.filter_by(id=template_id).update(
-        {"service_letter_contact_id": reply_to,
-         "updated_at": datetime.utcnow(),
-         "version": Template.version + 1,
-         }
-    )
-    template = Template.query.filter_by(id=template_id).one()
-
-    history = TemplateHistory(**
-                              {
-                                  "id": template.id,
-                                  "name": template.name,
-                                  "template_type": template.template_type,
-                                  "created_at": template.created_at,
-                                  "updated_at": template.updated_at,
-                                  "content": template.content,
-                                  "service_id": template.service_id,
-                                  "subject": template.subject,
-                                  "postage": template.postage,
-                                  "created_by_id": template.created_by_id,
-                                  "version": template.version,
-                                  "archived": template.archived,
-                                  "process_type": template.process_type,
-                                  "service_letter_contact_id": template.service_letter_contact_id,
-                              })
-    db.session.add(history)
-    return template
 
 
 @autocommit
@@ -132,28 +93,3 @@ def dao_get_template_versions(service_id, template_id):
     ).order_by(
         desc(TemplateHistory.version)
     ).all()
-
-
-def get_precompiled_letter_template(service_id):
-    template = Template.query.filter_by(
-        service_id=service_id,
-        template_type=LETTER_TYPE,
-        hidden=True
-    ).first()
-    if template is not None:
-        return template
-
-    template = Template(
-        name='Pre-compiled PDF',
-        created_by=get_user_by_id(current_app.config['NOTIFY_USER_ID']),
-        service_id=service_id,
-        template_type=LETTER_TYPE,
-        hidden=True,
-        subject='Pre-compiled PDF',
-        content='',
-        postage=SECOND_CLASS
-    )
-
-    dao_create_template(template)
-
-    return template

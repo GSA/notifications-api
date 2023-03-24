@@ -14,10 +14,7 @@ from app.dao.inbound_numbers_dao import (
     dao_set_inbound_number_to_service,
 )
 from app.dao.organisation_dao import dao_add_service_to_organisation
-from app.dao.service_permissions_dao import (
-    dao_add_service_permission,
-    dao_remove_service_permission,
-)
+from app.dao.service_permissions_dao import dao_remove_service_permission
 from app.dao.service_user_dao import (
     dao_get_service_user,
     dao_update_service_user,
@@ -46,14 +43,11 @@ from app.dao.services_dao import (
 from app.dao.users_dao import create_user_code, save_model_user
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     SMS_TYPE,
-    UPLOAD_LETTERS,
     ApiKey,
     InvitedUser,
     Job,
@@ -73,11 +67,9 @@ from app.models import (
 from tests.app.db import (
     create_annual_billing,
     create_api_key,
-    create_email_branding,
     create_ft_billing,
     create_inbound_number,
     create_invited_user,
-    create_letter_branding,
     create_notification,
     create_notification_history,
     create_organisation,
@@ -92,7 +84,6 @@ from tests.app.db import (
 
 def test_create_service(notify_db_session):
     user = create_user()
-    create_letter_branding()
     assert Service.query.count() == 0
     service = Service(name="service_name",
                       email_from="email_from",
@@ -112,7 +103,6 @@ def test_create_service(notify_db_session):
     assert user in service_db.users
     assert service_db.organisation_type == 'federal'
     assert service_db.crown is None
-    assert not service.letter_branding
     assert not service.organisation_id
 
 
@@ -140,57 +130,8 @@ def test_create_service_with_organisation(notify_db_session):
     assert user in service_db.users
     assert service_db.organisation_type == 'state'
     assert service_db.crown is None
-    assert not service.letter_branding
     assert service.organisation_id == organisation.id
     assert service.organisation == organisation
-
-
-@pytest.mark.parametrize('email_address, organisation_type', (
-    ("test@example.gov.uk", 'nhs_central'),
-    ("test@example.gov.uk", 'nhs_local'),
-    ("test@example.gov.uk", 'nhs_gp'),
-    ("test@nhs.net", 'nhs_local'),
-    ("test@nhs.net", 'local'),
-    ("test@nhs.net", 'central'),
-    ("test@nhs.uk", 'central'),
-    ("test@example.nhs.uk", 'central'),
-    ("TEST@NHS.UK", 'central'),
-))
-@pytest.mark.parametrize('branding_name_to_create, expected_branding', (
-    ('NHS', True),
-    # Need to check that nothing breaks in environments that don’t have
-    # the NHS branding set up
-    ('SHN', False),
-))
-@pytest.mark.skip(reason='Update for TTS')
-def test_create_nhs_service_get_default_branding_based_on_email_address(
-    notify_db_session,
-    branding_name_to_create,
-    expected_branding,
-    email_address,
-    organisation_type,
-):
-    user = create_user(email=email_address)
-    letter_branding = create_letter_branding(name=branding_name_to_create)
-    email_branding = create_email_branding(name=branding_name_to_create)
-
-    service = Service(
-        name="service_name",
-        email_from="email_from",
-        message_limit=1000,
-        restricted=False,
-        organisation_type=organisation_type,
-        created_by=user,
-    )
-    dao_create_service(service, user)
-    service_db = Service.query.one()
-
-    if expected_branding:
-        assert service_db.letter_branding == letter_branding
-        assert service_db.email_branding == email_branding
-    else:
-        assert service_db.letter_branding is None
-        assert service_db.email_branding is None
 
 
 def test_cannot_create_two_services_with_same_name(notify_db_session):
@@ -337,7 +278,7 @@ def test_should_remove_user_from_service(notify_db_session):
 
 
 def test_removing_a_user_from_a_service_deletes_their_permissions(sample_user, sample_service):
-    assert len(Permission.query.all()) == 8
+    assert len(Permission.query.all()) == 7
 
     dao_remove_user_from_service(sample_service, sample_user)
 
@@ -457,8 +398,6 @@ def test_dao_fetch_live_services_data(sample_user):
     create_service(service_name='not_active', active=False)
     create_service(service_name='not_live', count_as_live=False)
     email_template = create_template(service=service, template_type='email')
-    template_letter_1 = create_template(service=service, template_type='letter')
-    template_letter_2 = create_template(service=service_2, template_type='letter')
     dao_add_service_to_organisation(service=service, organisation_id=org.id)
     # two sms billing records for 1st service within current financial year:
     create_ft_billing(local_date='2019-04-20', template=sms_template)
@@ -467,10 +406,6 @@ def test_dao_fetch_live_services_data(sample_user):
     create_ft_billing(local_date='2018-04-20', template=sms_template)
     # one email billing record for 1st service within current financial year:
     create_ft_billing(local_date='2019-04-20', template=email_template)
-    # one letter billing record for 1st service within current financial year:
-    create_ft_billing(local_date='2019-04-15', template=template_letter_1)
-    # one letter billing record for 2nd service within current financial year:
-    create_ft_billing(local_date='2019-04-16', template=template_letter_2)
 
     # 1st service: billing from 2018 and 2019
     create_annual_billing(service.id, 500, 2018)
@@ -488,19 +423,15 @@ def test_dao_fetch_live_services_data(sample_user):
             'organisation_type': 'federal', 'consent_to_research': None, 'contact_name': 'Test User',
             'contact_email': 'notify@digital.cabinet-office.gov.uk', 'contact_mobile': '+12028675309',
             'live_date': datetime(2014, 4, 20, 10, 0), 'sms_volume_intent': None, 'email_volume_intent': None,
-            'letter_volume_intent': None, 'sms_totals': 2, 'email_totals': 1, 'letter_totals': 1,
-            'free_sms_fragment_limit': 100},
+            'sms_totals': 2, 'email_totals': 1, 'free_sms_fragment_limit': 100},
         {'service_id': mock.ANY, 'service_name': 'third', 'organisation_name': None, 'consent_to_research': None,
             'organisation_type': None, 'contact_name': None, 'contact_email': None,
             'contact_mobile': None, 'live_date': datetime(2016, 4, 20, 10, 0), 'sms_volume_intent': None,
-            'email_volume_intent': None, 'letter_volume_intent': None,
-            'sms_totals': 0, 'email_totals': 0, 'letter_totals': 0,
-            'free_sms_fragment_limit': 200},
+            'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0, 'free_sms_fragment_limit': 200},
         {'service_id': mock.ANY, 'service_name': 'second', 'organisation_name': None, 'consent_to_research': None,
             'contact_name': 'Test User', 'contact_email': 'notify@digital.cabinet-office.gov.uk',
             'contact_mobile': '+12028675309', 'live_date': datetime(2017, 4, 20, 10, 0), 'sms_volume_intent': None,
-            'organisation_type': None, 'email_volume_intent': None, 'letter_volume_intent': None,
-            'sms_totals': 0, 'email_totals': 0, 'letter_totals': 1,
+            'organisation_type': None, 'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0,
             'free_sms_fragment_limit': 300}
     ]
 
@@ -521,16 +452,16 @@ def test_create_service_returns_service_with_default_permissions(notify_db_sessi
 
     service = dao_fetch_service_by_id(service.id)
     _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
 
 @pytest.mark.parametrize("permission_to_remove, permissions_remaining", [
     (SMS_TYPE, (
-        EMAIL_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+        EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     )),
     (EMAIL_TYPE, (
-        SMS_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+        SMS_TYPE, INTERNATIONAL_SMS_TYPE,
     )),
 ])
 def test_remove_permission_from_service_by_id_returns_service_with_correct_permissions(
@@ -547,37 +478,14 @@ def test_removing_all_permission_returns_service_with_no_permissions(notify_db_s
     service = create_service()
     dao_remove_service_permission(service_id=service.id, permission=SMS_TYPE)
     dao_remove_service_permission(service_id=service.id, permission=EMAIL_TYPE)
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
     dao_remove_service_permission(service_id=service.id, permission=INTERNATIONAL_SMS_TYPE)
-    dao_remove_service_permission(service_id=service.id, permission=UPLOAD_LETTERS)
-    dao_remove_service_permission(service_id=service.id, permission=INTERNATIONAL_LETTERS)
 
     service = dao_fetch_service_by_id(service.id)
     assert len(service.permissions) == 0
 
 
-def test_create_service_by_id_adding_and_removing_letter_returns_service_without_letter(service_factory):
-    service = service_factory.get('testing', email_from='testing')
-
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
-    dao_add_service_permission(service_id=service.id, permission=LETTER_TYPE)
-
-    service = dao_fetch_service_by_id(service.id)
-    _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
-    ))
-
-    dao_remove_service_permission(service_id=service.id, permission=LETTER_TYPE)
-    service = dao_fetch_service_by_id(service.id)
-
-    _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
-    ))
-
-
 def test_create_service_creates_a_history_record_with_current_data(notify_db_session):
     user = create_user()
-    create_letter_branding()
     assert Service.query.count() == 0
     assert Service.get_history_model().query.count() == 0
     service = Service(name="service_name",
@@ -640,11 +548,13 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
                       created_by=user)
     dao_create_service(service, user, service_permissions=[
         SMS_TYPE,
-        EMAIL_TYPE,
+        # EMAIL_TYPE,
         INTERNATIONAL_SMS_TYPE,
     ])
 
-    service.permissions.append(ServicePermission(service_id=service.id, permission='letter'))
+    assert Service.query.count() == 1
+
+    service.permissions.append(ServicePermission(service_id=service.id, permission=EMAIL_TYPE))
     dao_update_service(service)
 
     assert Service.query.count() == 1
@@ -655,7 +565,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     assert service_from_db.version == 2
 
     _assert_service_permissions(service.permissions, (
-        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE,
+        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
     permission = [p for p in service.permissions if p.permission == 'sms'][0]
@@ -668,7 +578,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     service_from_db = Service.query.first()
     assert service_from_db.version == 3
     _assert_service_permissions(service.permissions, (
-        EMAIL_TYPE, INTERNATIONAL_SMS_TYPE, LETTER_TYPE,
+        EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
     history = Service.get_history_model().query.filter_by(name='service_name').order_by('version').all()
@@ -709,7 +619,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     user.organisations = [organisation]
 
     assert ServicePermission.query.count() == len((
-        SMS_TYPE, EMAIL_TYPE, LETTER_TYPE, INTERNATIONAL_SMS_TYPE, UPLOAD_LETTERS, INTERNATIONAL_LETTERS
+        SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE,
     ))
 
     delete_service_and_all_associated_db_objects(service)
@@ -742,7 +652,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
     dao_create_service(service_one, user)
     assert user.id == service_one.users[0].id
     test_user_permissions = Permission.query.filter_by(service=service_one, user=user).all()
-    assert len(test_user_permissions) == 8
+    assert len(test_user_permissions) == 7
 
     other_user = User(
         name='Other Test User',
@@ -760,23 +670,23 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
 
     assert other_user.id == service_two.users[0].id
     other_user_permissions = Permission.query.filter_by(service=service_two, user=other_user).all()
-    assert len(other_user_permissions) == 8
+    assert len(other_user_permissions) == 7
 
     other_user_service_one_permissions = Permission.query.filter_by(service=service_one, user=other_user).all()
     assert len(other_user_service_one_permissions) == 0
 
     # adding the other_user to service_one should leave all other_user permissions on service_two intact
     permissions = []
-    for p in ['send_emails', 'send_texts', 'send_letters']:
+    for p in ['send_emails', 'send_texts']:
         permissions.append(Permission(permission=p))
 
     dao_add_user_to_service(service_one, other_user, permissions=permissions)
 
     other_user_service_one_permissions = Permission.query.filter_by(service=service_one, user=other_user).all()
-    assert len(other_user_service_one_permissions) == 3
+    assert len(other_user_service_one_permissions) == 2
 
     other_user_service_two_permissions = Permission.query.filter_by(service=service_two, user=other_user).all()
-    assert len(other_user_service_two_permissions) == 8
+    assert len(other_user_service_two_permissions) == 7
 
 
 def test_fetch_stats_filters_on_service(notify_db_session):
@@ -1165,14 +1075,6 @@ def test_dao_allocating_inbound_number_shows_on_service(notify_db_session):
 def _assert_service_permissions(service_permissions, expected):
     assert len(service_permissions) == len(expected)
     assert set(expected) == set(p.permission for p in service_permissions)
-
-
-def create_email_sms_letter_template():
-    service = create_service()
-    template_one = create_template(service=service, template_name='1', template_type='email')
-    template_two = create_template(service=service, template_name='2', template_type='sms')
-    template_three = create_template(service=service, template_name='3', template_type='letter')
-    return template_one, template_three, template_two
 
 
 @freeze_time("2019-12-02 12:00:00.000000")

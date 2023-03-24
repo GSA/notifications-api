@@ -34,3 +34,9 @@ variable "email_receipt_error" {
   type        = string
   description = "email address to list in SPF records for errors to be sent to"
 }
+
+variable "mail_from_subdomain" {
+  type        = string
+  description = "Subdomain of email_domain to set as the mail-from header"
+  default     = ""
+}

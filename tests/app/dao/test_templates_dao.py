@@ -11,16 +11,14 @@ from app.dao.templates_dao import (
     dao_get_template_versions,
     dao_redact_template,
     dao_update_template,
-    dao_update_template_reply_to,
 )
 from app.models import Template, TemplateHistory, TemplateRedacted
-from tests.app.db import create_letter_contact, create_template
+from tests.app.db import create_template
 
 
 @pytest.mark.parametrize('template_type, subject', [
     ('sms', None),
     ('email', 'subject'),
-    ('letter', 'subject'),
 ])
 def test_create_template(sample_service, sample_user, template_type, subject):
     data = {
@@ -30,8 +28,6 @@ def test_create_template(sample_service, sample_user, template_type, subject):
         'service': sample_service,
         'created_by': sample_user
     }
-    if template_type == 'letter':
-        data['postage'] = 'second'
     if subject:
         data.update({'subject': subject})
     template = Template(**data)
@@ -54,24 +50,6 @@ def test_create_template_creates_redact_entry(sample_service):
     assert redacted.updated_by_id == sample_service.created_by_id
 
 
-def test_create_template_with_reply_to(sample_service, sample_user):
-    letter_contact = create_letter_contact(sample_service, 'Edinburgh, ED1 1AA')
-
-    data = {
-        'name': 'Sample Template',
-        'template_type': "letter",
-        'content': "Template content",
-        'service': sample_service,
-        'created_by': sample_user,
-        'reply_to': letter_contact.id,
-        'postage': 'second'
-    }
-    template = Template(**data)
-    dao_create_template(template)
-
-    assert dao_get_all_templates_for_service(sample_service.id)[0].reply_to == letter_contact.id
-
-
 def test_update_template(sample_service, sample_user):
     data = {
         'name': 'Sample Template',
@@ -88,88 +66,6 @@ def test_update_template(sample_service, sample_user):
     created.name = 'new name'
     dao_update_template(created)
     assert dao_get_all_templates_for_service(sample_service.id)[0].name == 'new name'
-
-
-def test_dao_update_template_reply_to_none_to_some(sample_service, sample_user):
-    letter_contact = create_letter_contact(sample_service, 'Edinburgh, ED1 1AA')
-
-    data = {
-        'name': 'Sample Template',
-        'template_type': "letter",
-        'content': "Template content",
-        'service': sample_service,
-        'created_by': sample_user,
-        'postage': 'second'
-    }
-    template = Template(**data)
-    dao_create_template(template)
-    created = Template.query.get(template.id)
-    assert created.reply_to is None
-    assert created.service_letter_contact_id is None
-
-    dao_update_template_reply_to(template_id=template.id,
-                                 reply_to=letter_contact.id)
-
-    updated = Template.query.get(template.id)
-    assert updated.reply_to == letter_contact.id
-    assert updated.version == 2
-    assert updated.updated_at
-
-    template_history = TemplateHistory.query.filter_by(id=created.id, version=2).one()
-    assert template_history.service_letter_contact_id == letter_contact.id
-    assert template_history.updated_at == updated.updated_at
-
-
-def test_dao_update_template_reply_to_some_to_some(sample_service, sample_user):
-    letter_contact = create_letter_contact(sample_service, 'Edinburgh, ED1 1AA')
-    letter_contact_2 = create_letter_contact(sample_service, 'London, N1 1DE')
-
-    data = {
-        'name': 'Sample Template',
-        'template_type': "letter",
-        'content': "Template content",
-        'service': sample_service,
-        'created_by': sample_user,
-        'service_letter_contact_id': letter_contact.id,
-        'postage': 'second',
-    }
-    template = Template(**data)
-    dao_create_template(template)
-    created = Template.query.get(template.id)
-    dao_update_template_reply_to(template_id=created.id, reply_to=letter_contact_2.id)
-    updated = Template.query.get(template.id)
-    assert updated.reply_to == letter_contact_2.id
-    assert updated.version == 2
-    assert updated.updated_at
-
-    updated_history = TemplateHistory.query.filter_by(id=created.id, version=2).one()
-    assert updated_history.service_letter_contact_id == letter_contact_2.id
-    assert updated_history.updated_at == updated_history.updated_at
-
-
-def test_dao_update_template_reply_to_some_to_none(sample_service, sample_user):
-    letter_contact = create_letter_contact(sample_service, 'Edinburgh, ED1 1AA')
-    data = {
-        'name': 'Sample Template',
-        'template_type': "letter",
-        'content': "Template content",
-        'service': sample_service,
-        'created_by': sample_user,
-        'service_letter_contact_id': letter_contact.id,
-        'postage': 'second'
-    }
-    template = Template(**data)
-    dao_create_template(template)
-    created = Template.query.get(template.id)
-    dao_update_template_reply_to(template_id=created.id, reply_to=None)
-    updated = Template.query.get(template.id)
-    assert updated.reply_to is None
-    assert updated.version == 2
-    assert updated.updated_at
-
-    history = TemplateHistory.query.filter_by(id=created.id, version=2).one()
-    assert history.service_letter_contact_id is None
-    assert history.updated_at == updated.updated_at
 
 
 def test_redact_template(sample_template):

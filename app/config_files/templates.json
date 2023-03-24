@@ -14,7 +14,7 @@
         "content": ["((user_name)) has invited you to collaborate on ((service_name)) on U.S. Notify.",
             "",
             "",
-            "U.S. Notify makes it easy to keep people updated by helping you send text messages, emails and letters.",
+            "U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.",
             "",
             "",
             "Click this link to create an account on U.S. Notify:",
@@ -165,7 +165,7 @@
         "name": "Notify organization invitation email",
         "type": "email",
         "subject": "((user_name)) has invited you to collaborate on ((organisation_name)) on U.S. Notify",
-        "content": ["((user_name)) has invited you to collaborate on ((organisation_name)) on U.S. Notify.","","","U.S. Notify makes it easy to keep people updated by helping you send text messages, emails and letters.","","","Open this link to create an account on U.S. Notify:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organisation_name)) secure."]
+        "content": ["((user_name)) has invited you to collaborate on ((organisation_name)) on U.S. Notify.","","","U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.","","","Open this link to create an account on U.S. Notify:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organisation_name)) secure."]
     },
     {
         "id": "c73f1d71-4049-46d5-a647-d013bdeca3f0",
@@ -232,7 +232,7 @@
             "",
             "((signed_by_name)) has accepted the U.S. Notify data sharing and financial agreement on your behalf, for ((org_name)).",
             "",
-            "U.S. Notify lets teams in the public sector send emails, text messages and letters. It’s built and run by a team in the TTS Public Benefits Studio (part of GSA).",
+            "U.S. Notify lets teams in the public sector send text messages and emails. It’s built and run by a team in the TTS Public Benefits Studio (part of GSA).",
             "",
             "If you need another copy of the agreement you can download it here: ((mou_link))",
             "",

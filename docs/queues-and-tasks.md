@@ -12,14 +12,11 @@ There are a bunch of queues:
 - job tasks
 - retry tasks
 - notify internal tasks
-- process ftp tasks
-- create letters pdf tasks
 - service callbacks
 - service callbacks retry
 - letter tasks
 - sms callbacks
 - antivirus tasks
-- sanitise letter tasks
 - save api email tasks
 - save api sms tasks
 
@@ -29,7 +26,6 @@ And these tasks:
 - check if letters still in created
 - check if letters still pending virus check
 - check job status
-- collate letter pdfs to be sent
 - create fake letter response file
 - create nightly billing
 - create nightly billing for day
@@ -45,11 +41,9 @@ And these tasks:
 - delete verify codes
 - deliver email
 - deliver sms
-- get pdf for templated letter
 - process incomplete jobs
 - process job
 - process returned letters list
-- process sanitised letter
 - process ses result
 - process virus scan error
 - process virus scan failed
@@ -59,9 +53,7 @@ And these tasks:
 - remove letter jobs
 - remove sms email jobs
 - replay created notifications
-- resanitise pdf
 - run scheduled jobs
-- sanitise letter
 - save api email
 - save api sms
 - save daily notification processing time

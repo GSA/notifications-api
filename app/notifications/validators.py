@@ -3,9 +3,9 @@ from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     daily_limit_cache_key,
+    daily_total_cache_key,
     rate_limit_cache_key,
 )
-from notifications_utils.postal_address import PostalAddress
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
@@ -15,15 +15,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
-from app.dao.service_letter_contact_dao import dao_get_letter_contact_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
     EMAIL_TYPE,
-    INTERNATIONAL_LETTERS,
     INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    LETTER_TYPE,
     SMS_TYPE,
     ServicePermission,
 )
@@ -37,7 +34,7 @@ from app.v2.errors import (
     BadRequestError,
     RateLimitError,
     TooManyRequestsError,
-    ValidationError,
+    TotalRequestsError,
 )
 
 REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
@@ -77,8 +74,30 @@ def check_service_over_daily_message_limit(key_type, service):
     return int(service_stats)
 
 
+def check_application_over_daily_message_total(key_type, service):
+    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
+        return 0
+
+    cache_key = daily_total_cache_key()
+    daily_message_limit = current_app.config['DAILY_MESSAGE_LIMIT']
+    total_stats = redis_store.get(cache_key)
+    if total_stats is None:
+        # first message of the day, set the cache to 0 and the expiry to 24 hours
+        total_stats = 0
+        redis_store.set(cache_key, total_stats, ex=86400)
+        return total_stats
+    if int(total_stats) >= daily_message_limit:
+        current_app.logger.info(
+            "while sending for service {}, daily message limit of {} reached".format(
+                service.id, daily_message_limit)
+        )
+        raise TotalRequestsError(daily_message_limit)
+    return int(total_stats)
+
+
 def check_rate_limiting(service, api_key):
     check_service_over_api_rate_limit(service, api_key)
+    check_application_over_daily_message_total(api_key.key_type, service)
     check_service_over_daily_message_limit(api_key.key_type, service)
 
 
@@ -208,8 +227,6 @@ def check_reply_to(service_id, reply_to_id, type_):
         return check_service_email_reply_to_id(service_id, reply_to_id, type_)
     elif type_ == SMS_TYPE:
         return check_service_sms_sender_id(service_id, reply_to_id, type_)
-    elif type_ == LETTER_TYPE:
-        return check_service_letter_contact_id(service_id, reply_to_id, type_)
 
 
 def check_service_email_reply_to_id(service_id, reply_to_id, notification_type):
@@ -230,44 +247,3 @@ def check_service_sms_sender_id(service_id, sms_sender_id, notification_type):
             message = 'sms_sender_id {} does not exist in database for service id {}' \
                 .format(sms_sender_id, service_id)
             raise BadRequestError(message=message)
-
-
-def check_service_letter_contact_id(service_id, letter_contact_id, notification_type):
-    if letter_contact_id:
-        try:
-            return dao_get_letter_contact_by_id(service_id, letter_contact_id).contact_block
-        except NoResultFound:
-            message = 'letter_contact_id {} does not exist in database for service id {}' \
-                .format(letter_contact_id, service_id)
-            raise BadRequestError(message=message)
-
-
-def validate_address(service, letter_data):
-    address = PostalAddress.from_personalisation(
-        letter_data,
-        allow_international_letters=(INTERNATIONAL_LETTERS in str(service.permissions)),
-    )
-    if not address.has_enough_lines:
-        raise ValidationError(
-            message=f'Address must be at least {PostalAddress.MIN_LINES} lines'
-        )
-    if address.has_too_many_lines:
-        raise ValidationError(
-            message=f'Address must be no more than {PostalAddress.MAX_LINES} lines'
-        )
-    if not address.has_valid_last_line:
-        if address.allow_international_letters:
-            raise ValidationError(
-                message='Last line of address must be a real UK postcode or another country'
-            )
-        raise ValidationError(
-            message='Must be a real UK postcode'
-        )
-    if address.has_invalid_characters:
-        raise ValidationError(
-            message='Address lines must not start with any of the following characters: @ ( ) = [ ] ” \\ / , < >'
-        )
-    if address.international:
-        return address.postage
-    else:
-        return None

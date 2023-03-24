@@ -7,8 +7,6 @@ from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
 from app.dao.jobs_dao import (
-    can_letter_job_be_cancelled,
-    dao_cancel_letter_job,
     dao_create_job,
     dao_get_future_scheduled_job_by_id_and_service_id,
     dao_get_job_by_service_id_and_job_id,
@@ -20,13 +18,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.models import (
-    EMAIL_TYPE,
-    JOB_STATUS_FINISHED,
-    LETTER_TYPE,
-    SMS_TYPE,
-    Job,
-)
+from app.models import JOB_STATUS_FINISHED, SMS_TYPE, Job
 from tests.app.db import (
     create_job,
     create_notification,
@@ -308,36 +300,17 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 
 
 @freeze_time('2016-10-31 10:00:00')
-def test_should_get_jobs_seven_days_old_filters_type(sample_service):
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    letter_template = create_template(sample_service, template_type=LETTER_TYPE)
-    sms_template = create_template(sample_service, template_type=SMS_TYPE)
-    email_template = create_template(sample_service, template_type=EMAIL_TYPE)
-
-    job_to_remain = create_job(letter_template, created_at=eight_days_ago)
-    create_job(sms_template, created_at=eight_days_ago)
-    create_job(email_template, created_at=eight_days_ago)
-
-    jobs = dao_get_jobs_older_than_data_retention(
-        notification_types=[EMAIL_TYPE, SMS_TYPE]
-    )
-
-    assert len(jobs) == 2
-    assert job_to_remain.id not in [job.id for job in jobs]
-
-
-@freeze_time('2016-10-31 10:00:00')
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
     six_days_ago = datetime.utcnow() - timedelta(days=6)
     eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    letter_template = create_template(sample_service, template_type=LETTER_TYPE)
+    sms_template = create_template(sample_service, template_type=SMS_TYPE)
 
-    create_job(letter_template, created_at=eight_days_ago)
-    create_job(letter_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
-    job_to_remain = create_job(letter_template, created_at=eight_days_ago, scheduled_for=six_days_ago)
+    create_job(sms_template, created_at=eight_days_ago)
+    create_job(sms_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
+    job_to_remain = create_job(sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago)
 
     jobs = dao_get_jobs_older_than_data_retention(
-        notification_types=[LETTER_TYPE]
+        notification_types=[SMS_TYPE]
     )
 
     assert len(jobs) == 2
@@ -357,98 +330,6 @@ def assert_job_stat(job, result, sent, delivered, failed):
     assert result.sent == sent
     assert result.delivered == delivered
     assert result.failed == failed
-
-
-@freeze_time('2019-06-13 13:00')
-def test_dao_cancel_letter_job_cancels_job_and_returns_number_of_cancelled_notifications(
-    sample_letter_template
-):
-    job = create_job(template=sample_letter_template, notification_count=1, job_status='finished')
-    notification = create_notification(template=job.template, job=job, status='created')
-    result = dao_cancel_letter_job(job)
-    assert result == 1
-    assert notification.status == 'cancelled'
-    assert job.job_status == 'cancelled'
-
-
-@freeze_time('2019-06-13 13:00')
-def test_can_letter_job_be_cancelled_returns_true_if_job_can_be_cancelled(sample_letter_template):
-    job = create_job(template=sample_letter_template, notification_count=1, job_status='finished')
-    create_notification(template=job.template, job=job, status='created')
-    result, errors = can_letter_job_be_cancelled(job)
-    assert result
-    assert not errors
-
-
-@freeze_time('2019-06-13 13:00')
-def test_can_letter_job_be_cancelled_returns_false_and_error_message_if_notification_status_sending(
-    sample_letter_template
-):
-    job = create_job(template=sample_letter_template, notification_count=2, job_status='finished')
-    create_notification(template=job.template, job=job, status='sending')
-    create_notification(template=job.template, job=job, status='created')
-    result, errors = can_letter_job_be_cancelled(job)
-    assert not result
-    assert errors == "It’s too late to cancel sending, these letters have already been sent."
-
-
-def test_can_letter_job_be_cancelled_returns_false_and_error_message_if_letters_already_sent_to_dvla(
-    sample_letter_template
-):
-    with freeze_time('2019-06-13 13:00'):
-        job = create_job(template=sample_letter_template, notification_count=1, job_status='finished')
-        letter = create_notification(template=job.template, job=job, status='created')
-
-    with freeze_time('2019-06-13 22:32'):
-        result, errors = can_letter_job_be_cancelled(job)
-    assert not result
-    assert errors == "It’s too late to cancel sending, these letters have already been sent."
-    assert letter.status == 'created'
-    assert job.job_status == 'finished'
-
-
-@freeze_time('2019-06-13 13:00')
-def test_can_letter_job_be_cancelled_returns_false_and_error_message_if_not_a_letter_job(
-    sample_template
-):
-    job = create_job(template=sample_template, notification_count=1, job_status='finished')
-    create_notification(template=job.template, job=job, status='created')
-    result, errors = can_letter_job_be_cancelled(job)
-    assert not result
-    assert errors == "Only letter jobs can be cancelled through this endpoint. This is not a letter job."
-
-
-@freeze_time('2019-06-13 13:00')
-def test_can_letter_job_be_cancelled_returns_false_and_error_message_if_job_not_finished(
-    sample_letter_template
-):
-    job = create_job(template=sample_letter_template, notification_count=1, job_status="in progress")
-    create_notification(template=job.template, job=job, status='created')
-    result, errors = can_letter_job_be_cancelled(job)
-    assert not result
-    assert errors == "We are still processing these letters, please try again in a minute."
-
-
-@freeze_time('2019-06-13 13:00')
-def test_can_letter_job_be_cancelled_returns_false_and_error_message_if_notifications_not_in_db_yet(
-    sample_letter_template
-):
-    job = create_job(template=sample_letter_template, notification_count=2, job_status='finished')
-    create_notification(template=job.template, job=job, status='created')
-    result, errors = can_letter_job_be_cancelled(job)
-    assert not result
-    assert errors == "We are still processing these letters, please try again in a minute."
-
-
-def test_can_letter_job_be_cancelled_respects_bst(sample_letter_template):
-    job = create_job(template=sample_letter_template, created_at=datetime(2020, 4, 9, 23, 30), job_status='finished')
-    create_notification(template=job.template, job=job, status='created', created_at=datetime(2020, 4, 9, 23, 32))
-
-    with freeze_time('2020-04-10 10:00'):
-        result, errors = can_letter_job_be_cancelled(job)
-
-    assert not errors
-    assert result
 
 
 def test_find_jobs_with_missing_rows(sample_email_template):
