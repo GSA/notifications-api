@@ -1,4 +1,4 @@
 email.us-west-2.amazonaws.com
-sns.us-west-2.amazonaws.com
+sns.us-east-1.amazonaws.com
 gov-collector.newrelic.com
 egress-proxy-notify-api-demo.apps.internal
