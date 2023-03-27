@@ -30,7 +30,7 @@ US Notify utilizes several cloud.gov-provided services:
 * Elasticache (redis) for cacheing data and enqueueing background tasks
 * RDS (PostgreSQL) for system data storage
 
-US Notify also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/datagov-ssb):
+US Notify also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
 
 * [SNS](https://aws.amazon.com/sns/) for sending SMS messages
 * [SES](https://aws.amazon.com/ses/) for sending email messages
