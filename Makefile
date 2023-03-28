@@ -67,7 +67,7 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 audit:
 	pipenv requirements > requirements.txt
 	pipenv requirements --dev > requirements_for_test.txt
-	pipenv run pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-237
+	pipenv run pip-audit -r requirements.txt --ignore-vuln GHSA-8fww-64cx-x8p5
 	-pipenv run pip-audit -r requirements_for_test.txt
 
 .PHONY: static-scan
