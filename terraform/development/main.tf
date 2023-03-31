@@ -43,6 +43,9 @@ data "cloudfoundry_service_instance" "ses_email" {
 resource "cloudfoundry_service_key" "ses_key" {
   name             = local.key_name
   service_instance = data.cloudfoundry_service_instance.ses_email.id
+  params_json = jsonencode({
+    source_ips = [var.source_ip]
+  })
 }
 
 data "cloudfoundry_service_instance" "sns_sms" {
@@ -52,6 +55,9 @@ data "cloudfoundry_service_instance" "sns_sms" {
 resource "cloudfoundry_service_key" "sns_key" {
   name             = local.key_name
   service_instance = data.cloudfoundry_service_instance.sns_sms.id
+  params_json = jsonencode({
+    source_ips = [var.source_ip]
+  })
 }
 
 locals {
