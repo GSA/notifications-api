@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "cloudfoundry" {
-  api_url      = local.cf_api_url
+  api_url      = "https://api.fr.cloud.gov"
   user         = var.cf_user
   password     = var.cf_password
   app_logs_max = 30
