@@ -42,10 +42,10 @@ for experimenting with infrastructure changes without going through the full CI/
 Rules for use:
 
 1. Ensure that no other developer is using the environment, as there is nothing stopping changes from overwriting each other.
-1. Clean up when you are done: 
+1. Clean up when you are done:
     - `terraform destroy` from within the `terraform/sandbox` directory will take care of the provisioned services
     - Delete the apps and routes shown in `cf apps` by running `cf delete APP_NAME -r`
-    - Delete the space deployers still shown in `cf services` by running `terraform/destroy_service_account.sh -s notify-sandbox -u <space-deployer>`
+    - Delete the space deployer you created by following the instructions within `terraform/sandbox/secrets.auto.tfvars`
 
 ### Deploying to the sandbox
 
@@ -58,7 +58,8 @@ Rules for use:
     $ terraform apply
     ```
 1. start a pipenv shell as a shortcut to load `.env` file variables: `$ pipenv shell`
+1. Output requirements.txt file: `pipenv requirements > requirements.txt`
 1. Deploy the application:
   ```
-  cf push --vars-file deploy-config/sandbox.yml
+  cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
   ```

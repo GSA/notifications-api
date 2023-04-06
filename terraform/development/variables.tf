@@ -3,3 +3,7 @@ variable "cf_password" {
 }
 variable "cf_user" {}
 variable "username" {}
+variable "source_ip" {
+  type    = string
+  default = "0.0.0.0/0"
+}

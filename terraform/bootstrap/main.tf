@@ -1,17 +1,13 @@
 locals {
-  cf_api_url      = "https://api.fr.cloud.gov"
   s3_service_name = "notify-terraform-state"
 }
 
 module "s3" {
-  source = "github.com/18f/terraform-cloudgov//s3"
+  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.3.0"
 
-  cf_api_url      = local.cf_api_url
-  cf_user         = var.cf_user
-  cf_password     = var.cf_password
-  cf_org_name     = "gsa-tts-benefits-studio-prototyping"
-  cf_space_name   = "notify-management"
-  s3_service_name = local.s3_service_name
+  cf_org_name   = "gsa-tts-benefits-studio-prototyping"
+  cf_space_name = "notify-management"
+  name          = local.s3_service_name
 }
 
 resource "cloudfoundry_service_key" "bucket_creds" {
