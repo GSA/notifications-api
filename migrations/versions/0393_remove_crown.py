@@ -1,15 +1,14 @@
 """
 
-Revision ID: d2db89558026
+Revision ID: 0393_remove_crown
 Revises: 0392_drop_letter_permissions
 Create Date: 2023-04-10 14:13:38.207790
 
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
-revision = 'd2db89558026'
+revision = '0393_remove_crown'
 down_revision = '0392_drop_letter_permissions'
 
 
