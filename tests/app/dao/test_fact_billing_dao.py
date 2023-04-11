@@ -289,7 +289,7 @@ def test_get_rate_chooses_right_rate_depending_on_date(notify_db_session, date, 
     create_rate(start_date=datetime(2018, 9, 30, 23, 0), value=2.2, notification_type='sms')
 
     rates = get_rates_for_billing()
-    rate = get_rate(rates, "sms", date, True)
+    rate = get_rate(rates, "sms", date)
     assert rate == expected_rate
 
 

@@ -211,8 +211,7 @@ def sample_service(sample_user):
         'message_limit': 1000,
         'restricted': False,
         'email_from': email_from,
-        'created_by': sample_user,
-        'crown': True
+        'created_by': sample_user
     }
     service = Service.query.filter_by(name=service_name).first()
     if not service:

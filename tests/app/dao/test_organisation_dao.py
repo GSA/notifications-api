@@ -62,7 +62,6 @@ def test_update_organisation(notify_db_session):
 
     data = {
         'name': 'new name',
-        "crown": True,
         "organisation_type": 'state',
         "agreement_signed": True,
         "agreement_signed_at": datetime.datetime.utcnow(),
@@ -193,26 +192,11 @@ def test_update_organisation_does_not_override_service_branding(
     assert sample_service.email_branding == custom_email_branding
 
 
-def test_update_organisation_updates_services_with_new_crown_type(
-    sample_service,
-    sample_organisation
-):
-    sample_organisation.services.append(sample_service)
-    db.session.commit()
-
-    assert Service.query.get(sample_service.id).crown
-
-    dao_update_organisation(sample_organisation.id, crown=False)
-
-    assert not Service.query.get(sample_service.id).crown
-
-
 def test_add_service_to_organisation(sample_service, sample_organisation):
     assert sample_organisation.services == []
 
     sample_service.organisation_type = "federal"
     sample_organisation.organisation_type = "state"
-    sample_organisation.crown = False
 
     dao_add_service_to_organisation(sample_service, sample_organisation.id)
 
@@ -220,7 +204,6 @@ def test_add_service_to_organisation(sample_service, sample_organisation):
     assert sample_organisation.services[0].id == sample_service.id
 
     assert sample_service.organisation_type == sample_organisation.organisation_type
-    assert sample_service.crown == sample_organisation.crown
     assert Service.get_history_model().query.filter_by(
         id=sample_service.id,
         version=2
