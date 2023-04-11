@@ -209,9 +209,8 @@ def send_notifications_on_mou_signed(organisation_id):
         send_notification_to_queue(saved_notification, research_mode=False, queue=QueueNames.NOTIFY)
 
     personalisation = {
-        'mou_link': '{}/agreement/{}.pdf'.format(
-            current_app.config['ADMIN_BASE_URL'],
-            'crown' if organisation.crown else 'non-crown'
+        'mou_link': '{}/agreement/agreement.pdf'.format(
+            current_app.config['ADMIN_BASE_URL']
         ),
         'org_name': organisation.name,
         'org_dashboard_link': '{}/organisations/{}'.format(

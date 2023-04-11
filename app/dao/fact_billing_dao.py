@@ -357,7 +357,6 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
     def _email_query():
         return db.session.query(
             NotificationAllTimeView.template_id,
-            literal(service.crown).label('crown'),
             literal(service.id).label('service_id'),
             literal(notification_type).label('notification_type'),
             literal('ses').label('sent_by'),
@@ -382,7 +381,6 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
         international = func.coalesce(NotificationAllTimeView.international, False)
         return db.session.query(
             NotificationAllTimeView.template_id,
-            literal(service.crown).label('crown'),
             literal(service.id).label('service_id'),
             literal(notification_type).label('notification_type'),
             sent_by.label('sent_by'),
@@ -430,7 +428,7 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 
 
 def get_rate(
-    rates, notification_type, date, crown=None
+    rates, notification_type, date
 ):
     start_of_day = get_local_midnight_in_utc(date)
 
@@ -450,8 +448,7 @@ def update_fact_billing(data, process_day):
     rates = get_rates_for_billing()
     rate = get_rate(rates,
                     data.notification_type,
-                    process_day,
-                    data.crown)
+                    process_day)
     billing_record = create_billing_record(data, rate, process_day)
 
     table = FactBilling.__table__

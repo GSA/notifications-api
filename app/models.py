@@ -330,7 +330,6 @@ class OrganisationTypes(db.Model):
     __tablename__ = 'organisation_types'
 
     name = db.Column(db.String(255), primary_key=True)
-    is_crown = db.Column(db.Boolean, nullable=True)
     annual_free_sms_fragment_limit = db.Column(db.BigInteger, nullable=False)
 
 
@@ -352,7 +351,6 @@ class Organisation(db.Model):
     agreement_signed_on_behalf_of_name = db.Column(db.String(255), nullable=True)
     agreement_signed_on_behalf_of_email_address = db.Column(db.String(255), nullable=True)
     agreement_signed_version = db.Column(db.Float, nullable=True)
-    crown = db.Column(db.Boolean, nullable=True)
     organisation_type = db.Column(
         db.String(255),
         db.ForeignKey('organisation_types.name'),
@@ -396,7 +394,6 @@ class Organisation(db.Model):
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
-            "crown": self.crown,
             "organisation_type": self.organisation_type,
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
@@ -457,7 +454,6 @@ class Service(db.Model, Versioned):
         unique=False,
         nullable=True,
     )
-    crown = db.Column(db.Boolean, index=False, nullable=True)
     rate_limit = db.Column(db.Integer, index=False, nullable=False, default=3000)
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)

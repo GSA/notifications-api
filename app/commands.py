@@ -276,14 +276,13 @@ def update_jobs_archived_flag(start_date, end_date):
 
 @notify_command(name='populate-organisations-from-file')
 @click.option('-f', '--file_name', required=True,
-              help="Pipe delimited file containing organisation name, sector, crown, argeement_signed, domains")
+              help="Pipe delimited file containing organisation name, sector, agreement_signed, domains")
 def populate_organisations_from_file(file_name):
     # [0] organisation name:: name of the organisation insert if organisation is missing.
     # [1] sector:: Federal | State only
-    # [2] crown:: TRUE | FALSE only
-    # [3] argeement_signed:: TRUE | FALSE
-    # [4] domains:: comma separated list of domains related to the organisation
-    # [5] email branding name: name of the default email branding for the org
+    # [2] agreement_signed:: TRUE | FALSE
+    # [3] domains:: comma separated list of domains related to the organisation
+    # [4] email branding name: name of the default email branding for the org
 
     # The expectation is that the organisation, organisation_to_service
     # and user_to_organisation will be cleared before running this command.
@@ -308,7 +307,6 @@ def populate_organisations_from_file(file_name):
                 'name': columns[0],
                 'active': True,
                 'agreement_signed': boolean_or_none(columns[3]),
-                'crown': boolean_or_none(columns[2]),
                 'organisation_type': columns[1].lower(),
                 'email_branding_id': email_branding.id if email_branding else None
             }
