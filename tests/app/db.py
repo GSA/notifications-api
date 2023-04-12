@@ -51,7 +51,6 @@ from app.models import (
     Rate,
     Service,
     ServiceCallbackApi,
-    ServiceContactList,
     ServiceEmailReplyTo,
     ServiceGuestList,
     ServiceInboundApi,
@@ -376,7 +375,6 @@ def create_job(
         processing_finished=None,
         original_file_name='some.csv',
         archived=False,
-        contact_list_id=None,
 ):
     data = {
         'id': uuid.uuid4(),
@@ -393,7 +391,6 @@ def create_job(
         'processing_started': processing_started,
         'processing_finished': processing_finished,
         'archived': archived,
-        'contact_list_id': contact_list_id,
     }
     job = Job(**data)
     dao_create_job(job)
@@ -942,31 +939,6 @@ def set_up_usage_data(start_date):
         "service_with_sms_within_allowance": service_with_sms_within_allowance,
         "service_with_out_ft_billing_this_year": service_with_out_ft_billing_this_year,
     }
-
-
-def create_service_contact_list(
-    service=None,
-    original_file_name='EmergencyContactList.xls',
-    row_count=100,
-    template_type='email',
-    created_by_id=None,
-    archived=False,
-):
-    if not service:
-        service = create_service(service_name='service for contact list', user=create_user())
-
-    contact_list = ServiceContactList(
-        service_id=service.id,
-        original_file_name=original_file_name,
-        row_count=row_count,
-        template_type=template_type,
-        created_by_id=created_by_id or service.users[0].id,
-        created_at=datetime.utcnow(),
-        archived=archived,
-    )
-    db.session.add(contact_list)
-    db.session.commit()
-    return contact_list
 
 
 def create_webauthn_credential(

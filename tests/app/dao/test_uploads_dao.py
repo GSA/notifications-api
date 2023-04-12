@@ -9,7 +9,6 @@ from tests.app.db import (
     create_job,
     create_notification,
     create_service,
-    create_service_contact_list,
     create_service_data_retention,
     create_template,
 )
@@ -43,9 +42,6 @@ def create_uploaded_template(service):
 @freeze_time("2020-02-02 09:00")  # GMT time
 def test_get_uploads_for_service(sample_template):
     create_service_data_retention(sample_template.service, 'sms', days_of_retention=9)
-    contact_list = create_service_contact_list()
-    # Jobs created from contact lists should be filtered out
-    create_job(sample_template, contact_list_id=contact_list.id)
     job = create_job(sample_template, processing_started=datetime.utcnow())
     letter_template = create_uploaded_template(sample_template.service)
     letter = create_uploaded_letter(letter_template, sample_template.service)

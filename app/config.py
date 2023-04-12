@@ -296,7 +296,6 @@ class Development(Config):
 
     # Buckets
     CSV_UPLOAD_BUCKET = _s3_credentials_from_env('CSV')
-    CONTACT_LIST_BUCKET = _s3_credentials_from_env('CONTACT')
 
     # credential overrides
     DANGEROUS_SALT = 'development-notify-salt'
@@ -333,8 +332,6 @@ class Production(Config):
     # buckets
     CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
         f"notify-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
-    CONTACT_LIST_BUCKET = cloud_config.s3_credentials(
-        f"notify-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
 
     FROM_NUMBER = 'US Notify'
     CRONITOR_ENABLED = True
