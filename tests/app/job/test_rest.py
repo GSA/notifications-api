@@ -16,7 +16,6 @@ from tests.app.db import (
     create_job,
     create_notification,
     create_service,
-    create_service_contact_list,
     create_template,
 )
 from tests.conftest import set_config
@@ -184,39 +183,6 @@ def test_create_scheduled_job(client, sample_template, mocker, fake_uuid):
     assert resp_json['data']['template'] == str(sample_template.id)
     assert resp_json['data']['original_file_name'] == 'thisisatest.csv'
     assert resp_json['data']['notification_count'] == 1
-
-
-@pytest.mark.parametrize('contact_list_archived', (
-    True, False,
-))
-def test_create_job_with_contact_list_id(
-    client,
-    mocker,
-    sample_template,
-    fake_uuid,
-    contact_list_archived,
-):
-    mocker.patch('app.celery.tasks.process_job.apply_async')
-    mocker.patch('app.job.rest.get_job_metadata_from_s3', return_value={
-        'template_id': str(sample_template.id)
-    })
-    contact_list = create_service_contact_list(archived=contact_list_archived)
-    data = {
-        'id': fake_uuid,
-        'valid': 'True',
-        'original_file_name': contact_list.original_file_name,
-        'created_by': str(sample_template.service.users[0].id),
-        'notification_count': 100,
-        'contact_list_id': str(contact_list.id),
-    }
-    response = client.post(
-        f'/service/{sample_template.service_id}/job',
-        data=json.dumps(data),
-        headers=[('Content-Type', 'application/json'), create_admin_authorization_header()])
-    resp_json = response.get_json()
-    assert response.status_code == 201
-    assert resp_json['data']['contact_list_id'] == str(contact_list.id)
-    assert resp_json['data']['original_file_name'] == 'EmergencyContactList.xls'
 
 
 def test_create_job_returns_403_if_service_is_not_active(client, fake_uuid, sample_service, mocker):
@@ -645,7 +611,6 @@ def test_get_jobs(admin_request, sample_template):
         'template_type': 'sms',
         'template_version': 1,
         'updated_at': None,
-        'contact_list_id': None
     }
 
 
@@ -662,20 +627,6 @@ def test_get_jobs_with_limit_days(admin_request, sample_template):
         resp_json = admin_request.get('job.get_jobs_by_service', service_id=sample_template.service_id, limit_days=7)
 
     assert len(resp_json['data']) == 2
-
-
-def test_get_jobs_by_contact_list(admin_request, sample_template):
-    contact_list = create_service_contact_list()
-    create_job(template=sample_template)
-    create_job(template=sample_template, contact_list_id=contact_list.id)
-
-    resp_json = admin_request.get(
-        'job.get_jobs_by_service',
-        service_id=sample_template.service_id,
-        contact_list_id=contact_list.id,
-    )
-
-    assert len(resp_json['data']) == 1
 
 
 def test_get_jobs_should_return_statistics(admin_request, sample_template):
