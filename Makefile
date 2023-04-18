@@ -56,8 +56,8 @@ test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run coverage run -m pytest -n4 --maxfail=10
-	pipenv run coverage report
+	pipenv run coverage run --omit=*/notifications_utils/* -m pytest -n4 --maxfail=10
+	pipenv run coverage report --fail-under=50
 	pipenv run coverage html -d .coverage_cache
 
 .PHONY: freeze-requirements
