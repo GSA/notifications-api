@@ -53,10 +53,12 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: export NEW_RELIC_ENVIRONMENT=test
-test: ## Run tests
+test: ## Run tests and create coverage report
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run pytest -n4 --maxfail=10
+	pipenv run coverage run --omit=*/notifications_utils/* -m pytest -n4 --maxfail=10
+	pipenv run coverage report --fail-under=50
+	pipenv run coverage html -d .coverage_cache
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
