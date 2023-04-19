@@ -51,7 +51,7 @@ jobs:
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
     - name: Check coverage threshold
-      run: pipenv run coverage report --fail-under=50
+      run: pipenv run coverage report --fail-under=60
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
