@@ -1,3 +1,5 @@
+import os
+
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -7,7 +9,11 @@ from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
 from app.config import QueueNames
 from app.dao import notifications_dao
-from app.dao.notifications_dao import update_notification_status_by_id
+from app.dao.notifications_dao import (
+    check_service_rate_usage,
+    increment_service_rate_usage,
+    update_notification_status_by_id,
+)
 from app.delivery import send_to_providers
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import NOTIFICATION_TECHNICAL_FAILURE
@@ -20,7 +26,15 @@ def deliver_sms(self, notification_id):
         notification = notifications_dao.get_notification_by_id(notification_id)
         if not notification:
             raise NoResultFound()
+        total_used = check_service_rate_usage(notification.service_id)
+        current_app.logger.warning(f"SERVICE_RATE_USAGE = {total_used}")
+        rate_limit = int(os.getenv("SERVICE_RATE_LIMIT"))
+        current_app.logger.info(f"SERVICE_RATE_LIMIT={rate_limit}")
+        if total_used >= rate_limit:
+            raise RateLimitExceededException()
+
         send_to_providers.send_sms_to_provider(notification)
+        increment_service_rate_usage(notification.id, notification.service_id)
     except Exception as e:
         if isinstance(e, SmsClientResponseException):
             current_app.logger.warning(
@@ -75,3 +89,8 @@ def deliver_email(self, notification_id):
                       "Notification has been updated to technical-failure".format(notification_id)
             update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
             raise NotificationTechnicalFailureException(message)
+
+
+class RateLimitExceededException(Exception):
+    def __init__(self, message="Rate Limit Exceeded"):
+        super().__init__(message)

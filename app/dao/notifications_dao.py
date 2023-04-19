@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import time
 
 from flask import current_app
 from notifications_utils.international_billing_rates import (
@@ -267,6 +268,62 @@ def _filter_query(query, filter_dict=None):
         query = query.filter(Notification.notification_type.in_(template_types))
 
     return query
+
+
+@autocommit
+def increment_service_rate_usage(
+    notification_id, service_id
+):
+    """
+    Adds a timestamp for a successful notification to keep track of annual service limits
+    """
+    my_timestamp = int(time())
+    insert_query = """
+        INSERT into service_rate_limit (id, service_id, timestamp) values (:id,
+        :service_id, :timestamp)
+    """
+    input_params = {
+        "id": str(notification_id),
+        "service_id": str(service_id),
+        "timestamp": my_timestamp
+    }
+
+    db.session.execute(insert_query, input_params)
+
+
+@autocommit
+def check_service_rate_usage(
+    service_id
+):
+    """
+    This gets the total count of notifications successfully sent by a service from the time the service
+    went 'live'.  If the service has not gone live, the count is returned as 0 (?).
+    """
+    select_go_live_query = """
+        select go_live_at from services where id=:service_id
+    """
+    input_params = {
+        "service_id": service_id
+    }
+    dt = db.session.execute(select_go_live_query, input_params).fetchone()[0]
+
+    # If there is no go_live_at timestamp, we are in trial mode and can skip this rate checking
+    if dt is None:
+        return 0
+
+    go_live_timestamp = int(dt.timestamp())
+
+    select_query = """
+        select count(*) from service_rate_limit where service_id=:service_id and timestamp >:go_live_timestamp
+    """
+    input_params = {
+        "service_id": str(service_id),
+        "timestamp": go_live_timestamp
+    }
+
+    result = db.session.execute(select_query, input_params).fetchone()[0]
+    current_app.logger.warning(f"CHECK_SERVICE_RATE_USAGE result = {result}")
+    return result
 
 
 @autocommit

@@ -24,7 +24,16 @@ def test_should_call_send_sms_to_provider_from_deliver_sms_task(
         mocker):
     mocker.patch('app.delivery.send_to_providers.send_sms_to_provider')
 
+    # Doing these patches because the test_notification_api database does not have the
+    # service_rate_limit table for some reason.  It seems like in conftest.py the
+    # test_notification_api table is created on the fly and upgrades to the head revision ...
+    # so the table should be there.  Doing an upgrade with 0395 migration script creates the
+    # table in the real db.
+    mocker.patch('app.celery.provider_tasks.check_service_rate_usage', return_value=0)
+    mocker.patch('app.celery.provider_tasks.increment_service_rate_usage')
+
     deliver_sms(sample_notification.id)
+
     app.delivery.send_to_providers.send_sms_to_provider.assert_called_with(sample_notification)
 
 
