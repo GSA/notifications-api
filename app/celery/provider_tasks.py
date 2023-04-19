@@ -28,7 +28,9 @@ def deliver_sms(self, notification_id):
             raise NoResultFound()
         total_used = check_service_rate_usage(notification.service_id)
         current_app.logger.warning(f"SERVICE_RATE_USAGE = {total_used}")
-        rate_limit = int(os.getenv("SERVICE_RATE_LIMIT"))
+        # Hardcoded 250000 is there because I'm not sure how to propagate a new env variable to development
+        # It is not picking it up from sample.env
+        rate_limit = int(os.getenv("SERVICE_RATE_LIMIT", 250000))
         current_app.logger.info(f"SERVICE_RATE_LIMIT={rate_limit}")
         if total_used >= rate_limit:
             raise RateLimitExceededException()
