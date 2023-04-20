@@ -37,6 +37,24 @@ def test_should_call_send_sms_to_provider_from_deliver_sms_task(
     app.delivery.send_to_providers.send_sms_to_provider.assert_called_with(sample_notification)
 
 
+def test_should_not_call_send_sms_to_provider_from_deliver_sms_task_due_to_rate_limit_exceeded(
+        sample_notification,
+        mocker):
+    mocker.patch('app.delivery.send_to_providers.send_sms_to_provider')
+
+    # Doing these patches because the test_notification_api database does not have the
+    # service_rate_limit table for some reason.  It seems like in conftest.py the
+    # test_notification_api table is created on the fly and upgrades to the head revision ...
+    # so the table should be there.  Doing an upgrade with 0395 migration script creates the
+    # table in the real db.
+    mocker.patch('app.celery.provider_tasks.check_service_rate_usage', return_value=250001)
+    mocker.patch('app.celery.provider_tasks.increment_service_rate_usage')
+
+    deliver_sms(sample_notification.id)
+
+    app.delivery.send_to_providers.send_sms_to_provider.assert_not_called()
+
+
 def test_should_add_to_retry_queue_if_notification_not_found_in_deliver_sms_task(
         notify_db_session,
         mocker):
@@ -62,6 +80,13 @@ def test_send_sms_should_not_switch_providers_on_non_provider_failure(
         'app.delivery.send_to_providers.dao_reduce_sms_provider_priority'
     )
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
+    # Doing these patches because the test_notification_api database does not have the
+    # service_rate_limit table for some reason.  It seems like in conftest.py the
+    # test_notification_api table is created on the fly and upgrades to the head revision ...
+    # so the table should be there.  Doing an upgrade with 0395 migration script creates the
+    # table in the real db.
+    mocker.patch('app.celery.provider_tasks.check_service_rate_usage', return_value=0)
+    mocker.patch('app.celery.provider_tasks.increment_service_rate_usage')
 
     deliver_sms(sample_notification.id)
 
@@ -75,6 +100,13 @@ def test_should_retry_and_log_warning_if_SmsClientResponseException_for_deliver_
     )
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
     mock_logger_warning = mocker.patch('app.celery.tasks.current_app.logger.warning')
+    # Doing these patches because the test_notification_api database does not have the
+    # service_rate_limit table for some reason.  It seems like in conftest.py the
+    # test_notification_api table is created on the fly and upgrades to the head revision ...
+    # so the table should be there.  Doing an upgrade with 0395 migration script creates the
+    # table in the real db.
+    mocker.patch('app.celery.provider_tasks.check_service_rate_usage', return_value=0)
+    mocker.patch('app.celery.provider_tasks.increment_service_rate_usage')
 
     deliver_sms(sample_notification.id)
 
@@ -89,6 +121,13 @@ def test_should_retry_and_log_exception_for_non_SmsClientResponseException_excep
     mocker.patch('app.delivery.send_to_providers.send_sms_to_provider', side_effect=Exception("something went wrong"))
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
     mock_logger_exception = mocker.patch('app.celery.tasks.current_app.logger.exception')
+    # Doing these patches because the test_notification_api database does not have the
+    # service_rate_limit table for some reason.  It seems like in conftest.py the
+    # test_notification_api table is created on the fly and upgrades to the head revision ...
+    # so the table should be there.  Doing an upgrade with 0395 migration script creates the
+    # table in the real db.
+    mocker.patch('app.celery.provider_tasks.check_service_rate_usage', return_value=0)
+    mocker.patch('app.celery.provider_tasks.increment_service_rate_usage')
 
     deliver_sms(sample_notification.id)
 

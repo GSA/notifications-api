@@ -21,6 +21,7 @@ from app.models import NOTIFICATION_TECHNICAL_FAILURE
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
 def deliver_sms(self, notification_id):
+    notification = None
     try:
         current_app.logger.info("Start sending SMS for notification id: {}".format(notification_id))
         notification = notifications_dao.get_notification_by_id(notification_id)
@@ -33,7 +34,10 @@ def deliver_sms(self, notification_id):
         rate_limit = int(os.getenv("SERVICE_RATE_LIMIT", 250000))
         current_app.logger.info(f"SERVICE_RATE_LIMIT={rate_limit}")
         if total_used >= rate_limit:
-            raise RateLimitExceededException()
+            # We do not raise an exception here, because this is not a failed exception and we
+            # neither want to retry, nor do we want to store this notification in the database.
+            current_app.logger.warning(f"Rate limit exceeded for service {notification.service_id}")
+            return
 
         send_to_providers.send_sms_to_provider(notification)
         increment_service_rate_usage(notification.id, notification.service_id)
@@ -53,6 +57,8 @@ def deliver_sms(self, notification_id):
                 self.retry(queue=QueueNames.RETRY, countdown=0)
             else:
                 self.retry(queue=QueueNames.RETRY)
+            if notification:
+                increment_service_rate_usage(notification.id, notification.service_id)
         except self.MaxRetriesExceededError:
             message = "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. " \
                       "Notification has been updated to technical-failure".format(notification_id)
@@ -91,8 +97,3 @@ def deliver_email(self, notification_id):
                       "Notification has been updated to technical-failure".format(notification_id)
             update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
             raise NotificationTechnicalFailureException(message)
-
-
-class RateLimitExceededException(Exception):
-    def __init__(self, message="Rate Limit Exceeded"):
-        super().__init__(message)
