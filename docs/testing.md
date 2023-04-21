@@ -56,5 +56,5 @@ docker run -v $(pwd):/zap/wrk/:rw --network="notify-network" -t owasp/zap2docker
 The equivalent command if you are running the API locally:
 
 ```
-docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf
+docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf -r report.html
 ```

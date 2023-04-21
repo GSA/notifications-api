@@ -290,9 +290,7 @@ def init_app(app):
     def after_request(response):
         CONCURRENT_REQUESTS.dec()
 
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        response.headers.add('X-Content-Type-Options', 'nosniff')
         return response
 
     @app.errorhandler(Exception)
@@ -301,20 +299,34 @@ def init_app(app):
         # error.code is set for our exception types.
         msg = getattr(error, 'message', str(error))
         code = getattr(error, 'code', 500)
-        return jsonify(result='error', message=msg), code
+        response = make_response(
+            jsonify(result='error', message=msg),
+            code,
+            error.get_headers()
+        )
+        response.content_type = "application/json"
+        return response
 
     @app.errorhandler(WerkzeugHTTPException)
     def werkzeug_exception(e):
-        return make_response(
+        response = make_response(
             jsonify(result='error', message=e.description),
             e.code,
             e.get_headers()
         )
+        response.content_type = 'application/json'
+        return response
 
     @app.errorhandler(404)
     def page_not_found(e):
         msg = e.description or "Not found"
-        return jsonify(result='error', message=msg), 404
+        response = make_response(
+            jsonify(result='error', message=msg),
+            404,
+            e.get_headers()
+        )
+        response.content_type = 'application/json'
+        return response
 
 
 def create_uuid():
