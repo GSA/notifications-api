@@ -4,7 +4,7 @@ from flask import current_app
 from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, statsd_client
+from app import notify_celery
 from app.aws import s3
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
@@ -134,7 +134,6 @@ def timeout_notifications():
         notifications = dao_timeout_notifications(cutoff_time)
 
         for notification in notifications:
-            statsd_client.incr(f'timeout-sending.{notification.sent_by}')
             check_and_queue_callback_task(notification)
 
         current_app.logger.info(

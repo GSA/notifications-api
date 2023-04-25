@@ -57,7 +57,7 @@ class AwsSesClient(EmailClient):
     Amazon SES email client.
     '''
 
-    def init_app(self, statsd_client, *args, **kwargs):
+    def init_app(self, *args, **kwargs):
         self._client = client(
             'ses',
             region_name=cloud_config.ses_region,
@@ -65,7 +65,6 @@ class AwsSesClient(EmailClient):
             aws_secret_access_key=cloud_config.ses_secret_key
         )
         super(AwsSesClient, self).__init__(*args, **kwargs)
-        self.statsd_client = statsd_client
 
     @property
     def name(self):
@@ -110,7 +109,6 @@ class AwsSesClient(EmailClient):
                 ReplyToAddresses=[punycode_encode_email(addr) for addr in reply_to_addresses]
             )
         except botocore.exceptions.ClientError as e:
-            self.statsd_client.incr("clients.ses.error")
 
             # http://docs.aws.amazon.com/ses/latest/DeveloperGuide/api-error-codes.html
             if e.response['Error']['Code'] == 'InvalidParameterValue':
@@ -121,16 +119,12 @@ class AwsSesClient(EmailClient):
             ):
                 raise AwsSesClientThrottlingSendRateException(str(e))
             else:
-                self.statsd_client.incr("clients.ses.error")
                 raise AwsSesClientException(str(e))
         except Exception as e:
-            self.statsd_client.incr("clients.ses.error")
             raise AwsSesClientException(str(e))
         else:
             elapsed_time = monotonic() - start_time
             current_app.logger.info("AWS SES request finished in {}".format(elapsed_time))
-            self.statsd_client.timing("clients.ses.request-time", elapsed_time)
-            self.statsd_client.incr("clients.ses.success")
             return response['MessageId']
 
 

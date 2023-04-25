@@ -23,7 +23,6 @@ from notifications_utils import logging, request_helper
 from notifications_utils.celery import NotifyCelery
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
-from notifications_utils.clients.statsd.statsd_client import StatsdClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
@@ -58,7 +57,6 @@ aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
-statsd_client = StatsdClient()
 redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 metrics = GDSMetrics()
@@ -91,13 +89,11 @@ def create_app(application):
     migrate.init_app(application, db=db)
     ma.init_app(application)
     zendesk_client.init_app(application)
-    statsd_client.init_app(application)
     logging.init_app(application)
-    aws_sns_client.init_app(application, statsd_client=statsd_client)
+    aws_sns_client.init_app(application)
 
-    aws_ses_client.init_app(statsd_client=statsd_client)
+    aws_ses_client.init_app()
     aws_ses_stub_client.init_app(
-        statsd_client=statsd_client,
         stub_url=application.config['SES_STUB_URL']
     )
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client

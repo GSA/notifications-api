@@ -116,9 +116,6 @@ class Config(object):
     # Monitoring
     CRONITOR_ENABLED = False
     CRONITOR_KEYS = json.loads(getenv('CRONITOR_KEYS', '{}'))
-    STATSD_HOST = getenv('STATSD_HOST')
-    STATSD_PORT = 8125
-    STATSD_ENABLED = bool(STATSD_HOST)
 
     # Antivirus
     ANTIVIRUS_ENABLED = getenv('ANTIVIRUS_ENABLED', '1') == '1'
