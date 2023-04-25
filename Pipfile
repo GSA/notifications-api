@@ -59,7 +59,8 @@ werkzeug = "~=2.2"
 prometheus-client = "==0.14.1"
 gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
 packaging = "==21.3"
-notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
+# TODO revert to main
+notifications-utils = {editable = true, ref = "notify-243", git = "https://github.com/GSA/notifications-utils.git"}
 newrelic = "*"
 
 [dev-packages]
