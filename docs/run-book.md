@@ -91,7 +91,7 @@ Also known as: **How to move code from my machine to production**
 
 ### datagov-brokerpak-smtp
 
-1. To include new verisons of the SMTP borkerpak in released SSB code, create a PR in the `usnotify-ssb` repo updating the version in use in `app-setup-smtp.sh`
+1. To include new verisons of the SMTP brokerpak in released SSB code, create a PR in the `usnotify-ssb` repo updating the version in use in `app-setup-smtp.sh`
 
 ### Vulnerability Mitigation Changes
 
@@ -157,7 +157,7 @@ Important policies:
 | Role Name | System | Permissions | Notes |
 | --------- | ------ | ----------- | ----- |
 | Cloud.gov Service Account | Cloud.gov | `OrgManager` and `SpaceDeveloper` | Creds stored in GitHub Environment secrets within api and admin app repos |
-| SSB Deployment Account | AWS | `IAMFulLAccess` | Creds stored in GitHub Environment secrets within usnotify-ssb repo |
+| SSB Deployment Account | AWS | `IAMFullAccess` | Creds stored in GitHub Environment secrets within usnotify-ssb repo |
 | SSB Cloud.gov Service Account | Cloud.gov | `SpaceDeveloper` | Creds stored in GitHub Environment secrets within usnotify-ssb repo |
 | SSB AWS Accounts | AWS | `sms_broker` or `smtp_broker` IAM role | Creds created and maintained by usnotify-ssb terraform |
 

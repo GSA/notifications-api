@@ -117,7 +117,7 @@ This should be complete for all regions U.S. Notify has been deployed to or is c
 1. Select `Toll-free registrations` and `Create registration`
 1. Select the number you just created and then `Register existing toll-free number`
 1. Complete and submit the form. Approval usually takes about 2 weeks.
-1. See the run book for information on how to set those numbers.
+1. See the [run book](./run-book.md) for information on how to set those numbers.
 
 Example answers for toll-free registration form
 
