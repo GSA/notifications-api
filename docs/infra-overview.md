@@ -49,9 +49,24 @@ Credentials for these services are created by running:
 1. `cd terraform/development`
 1. `./run.sh`
 
+in both the api repository as well as the admin repository.
+
 This will append credentials to your `.env` file. You will need to manually clean up any prior runs from that file if you run that command again.
 
-Offboarding: Service key bindings can be cleaned up from cloud.gov by running `./run.sh -d` yourself, or another developer running `./run.sh -d -u USER_TO_CLEANUP`
+You can remove your development infrastructure by running `./run.sh -d`
+
+#### Resetting
+
+`./reset.sh` can be used to import your development infrastructure information in case of a new computer or new working tree and the old terraform state file was not transferred.
+
+#### Offboarding
+
+`./reset.sh -u USER_TO_OFFBOARD` can be used to import another user's development resources in order to clean them up. Steps for use:
+
+1. Move your existing terraform state file aside temporarily, so it is not overwritten.
+1. `./reset.sh -u USER_TO_OFFBOARD`
+1. Answer no to the prompt about creating missing resources.
+1. Run `./run.sh -u USER_TO_OFFBOARD -d` to fully remove the rest of that user's resources.
 
 ### Cloud.gov
 
