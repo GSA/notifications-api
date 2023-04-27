@@ -5,7 +5,7 @@ from celery.exceptions import Retry
 from flask import current_app, json
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery, statsd_client
+from app import notify_celery
 from app.celery.service_callback_tasks import (
     create_complaint_callback_data,
     create_delivery_status_callback_data,
@@ -91,11 +91,6 @@ def process_ses_results(self, response):
             current_app.logger.info(
                 "SES callback return status of {} for notification: {}".format(notification_status, notification.id)
             )
-
-        statsd_client.incr("callback.ses.{}".format(notification_status))
-
-        if notification.sent_at:
-            statsd_client.timing_with_dates("callback.ses.elapsed-time", datetime.utcnow(), notification.sent_at)
 
         check_and_queue_callback_task(notification)
 

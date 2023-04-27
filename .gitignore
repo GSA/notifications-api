@@ -44,6 +44,7 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox/
 .coverage
+.coverage_cache
 .coverage.*
 .cache
 .pytest_cache
@@ -76,6 +77,7 @@ environment.sh
 varsfile
 
 celerybeat-schedule
+celerybeat-schedule.db
 
 # CloudFoundry
 .cf

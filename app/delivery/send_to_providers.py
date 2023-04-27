@@ -10,7 +10,7 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients, statsd_client
+from app import create_uuid, db, notification_provider_clients
 from app.celery.research_mode_tasks import (
     send_email_response,
     send_sms_response,
@@ -59,8 +59,6 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        created_at = notification.created_at
-        key_type = notification.key_type
         if service.research_mode or notification.key_type == KEY_TYPE_TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id), notification.to)
@@ -91,18 +89,6 @@ def send_sms_to_provider(notification):
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
 
-        delta_seconds = (datetime.utcnow() - created_at).total_seconds()
-        statsd_client.timing("sms.total-time", delta_seconds)
-
-        if key_type == KEY_TYPE_TEST:
-            statsd_client.timing("sms.test-key.total-time", delta_seconds)
-        else:
-            statsd_client.timing("sms.live-key.total-time", delta_seconds)
-            if service.high_volume:
-                statsd_client.timing("sms.live-key.high-volume.total-time", delta_seconds)
-            else:
-                statsd_client.timing("sms.live-key.not-high-volume.total-time", delta_seconds)
-
 
 def send_email_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
@@ -127,8 +113,6 @@ def send_email_to_provider(notification):
             template_dict,
             values=notification.personalisation
         )
-        created_at = notification.created_at
-        key_type = notification.key_type
         if service.research_mode or notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
@@ -147,16 +131,6 @@ def send_email_to_provider(notification):
             )
             notification.reference = reference
             update_notification_to_sending(notification, provider)
-        delta_seconds = (datetime.utcnow() - created_at).total_seconds()
-
-        if key_type == KEY_TYPE_TEST:
-            statsd_client.timing("email.test-key.total-time", delta_seconds)
-        else:
-            statsd_client.timing("email.live-key.total-time", delta_seconds)
-            if service.high_volume:
-                statsd_client.timing("email.live-key.high-volume.total-time", delta_seconds)
-            else:
-                statsd_client.timing("email.live-key.not-high-volume.total-time", delta_seconds)
 
 
 def update_notification_to_sending(notification, provider):
