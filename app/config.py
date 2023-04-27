@@ -288,6 +288,7 @@ def _s3_credentials_from_env(bucket_prefix):
 
 class Development(Config):
     DEBUG = True
+    NOTIFY_LOG_LEVEL = "DEBUG"
     SQLALCHEMY_ECHO = False
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
