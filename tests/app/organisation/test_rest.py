@@ -67,7 +67,6 @@ def test_get_organisation_by_id(admin_request, notify_db_session):
         'id',
         'name',
         'active',
-        'crown',
         'organisation_type',
         'agreement_signed',
         'agreement_signed_at',
@@ -88,7 +87,6 @@ def test_get_organisation_by_id(admin_request, notify_db_session):
     assert response['id'] == str(org.id)
     assert response['name'] == 'test_org_1'
     assert response['active'] is True
-    assert response['crown'] is None
     assert response['organisation_type'] is None
     assert response['agreement_signed'] is None
     assert response['agreement_signed_by_id'] is None
@@ -160,12 +158,10 @@ def test_get_organisation_by_domain(
         assert response['result'] == 'error'
 
 
-@pytest.mark.parametrize('crown', [True, False])
-def test_post_create_organisation(admin_request, notify_db_session, crown):
+def test_post_create_organisation(admin_request, notify_db_session):
     data = {
         'name': 'test organisation',
         'active': True,
-        'crown': crown,
         'organisation_type': 'state',
     }
 
@@ -179,7 +175,6 @@ def test_post_create_organisation(admin_request, notify_db_session, crown):
 
     assert data['name'] == response['name']
     assert data['active'] == response['active']
-    assert data['crown'] == response['crown']
     assert data['organisation_type'] == response['organisation_type']
 
     assert len(organisations) == 1
@@ -195,7 +190,6 @@ def test_post_create_organisation_sets_default_nhs_branding_for_nhs_orgs(
     data = {
         'name': 'test organisation',
         'active': True,
-        'crown': False,
         'organisation_type': org_type,
     }
 
@@ -215,7 +209,6 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
     data = {
         'name': sample_organisation.name,
         'active': True,
-        'crown': True,
         'organisation_type': 'federal',
     }
 
@@ -234,29 +227,15 @@ def test_post_create_organisation_existing_name_raises_400(admin_request, sample
 @pytest.mark.parametrize('data, expected_error', (
     ({
         'active': False,
-        'crown': True,
         'organisation_type': 'federal',
     }, 'name is a required property'),
     ({
         'active': False,
         'name': 'Service name',
-        'organisation_type': 'federal',
-    }, 'crown is a required property'),
-    ({
-        'active': False,
-        'name': 'Service name',
-        'crown': True,
     }, 'organisation_type is a required property'),
     ({
         'active': False,
         'name': 'Service name',
-        'crown': None,
-        'organisation_type': 'federal',
-    }, 'crown None is not of type boolean'),
-    ({
-        'active': False,
-        'name': 'Service name',
-        'crown': False,
         'organisation_type': 'foo',
     }, (
         'organisation_type foo is not one of '
@@ -280,22 +259,16 @@ def test_post_create_organisation_with_missing_data_gives_validation_error(
     assert response['errors'][0]['message'] == expected_error
 
 
-@pytest.mark.parametrize('crown', (
-    None, True, False
-))
 def test_post_update_organisation_updates_fields(
     admin_request,
     notify_db_session,
-    crown,
 ):
     org = create_organisation()
     data = {
         'name': 'new organisation name',
         'active': False,
-        'crown': crown,
         'organisation_type': 'federal',
     }
-    assert org.crown is None
 
     admin_request.post(
         'organisation.update_organisation',
@@ -310,7 +283,6 @@ def test_post_update_organisation_updates_fields(
     assert organisation[0].id == org.id
     assert organisation[0].name == data['name']
     assert organisation[0].active == data['active']
-    assert organisation[0].crown == crown
     assert organisation[0].domains == []
     assert organisation[0].organisation_type == 'federal'
 
@@ -327,7 +299,7 @@ def test_post_update_organisation_updates_domains(
 ):
     org = create_organisation(name='test_org_2')
     data = {
-        'domains': domain_list,
+        'domains': domain_list
     }
 
     admin_request.post(
@@ -354,9 +326,7 @@ def test_update_other_organisation_attributes_doesnt_clear_domains(
 
     admin_request.post(
         'organisation.update_organisation',
-        _data={
-            'crown': True,
-        },
+        _data={'domains': ['example.gov.uk']},
         organisation_id=org.id,
         _expected_status=204
     )
@@ -565,7 +535,7 @@ def test_post_update_organisation_set_mou_emails_signed_by(
     for n in notifications:
         # we pass in the same personalisation for all templates (though some templates don't use all fields)
         assert n.personalisation == {
-            'mou_link': 'http://localhost:6012/agreement/non-crown.pdf',
+            'mou_link': 'http://localhost:6012/agreement/agreement.pdf',
             'org_name': 'sample organisation',
             'org_dashboard_link': 'http://localhost:6012/organisations/{}'.format(sample_organisation.id),
             'signed_by_name': 'Test User',

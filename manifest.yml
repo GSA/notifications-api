@@ -2,6 +2,7 @@
 applications:
   - name: notify-api-((env))
     buildpack: python_buildpack
+    stack: cflinuxfs4
     instances: 1
     disk_quota: 1G
     routes:
@@ -12,7 +13,6 @@ applications:
       - notify-api-rds-((env))
       - notify-api-redis-((env))
       - notify-api-csv-upload-bucket-((env))
-      - notify-api-contact-list-bucket-((env))
       - name: notify-api-ses-((env))
         parameters:
           notification_webhook: "https://((public_api_route))/notifications/email/ses"

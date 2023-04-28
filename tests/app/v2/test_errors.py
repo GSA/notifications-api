@@ -15,8 +15,6 @@ def app_for_test():
     app = flask.Flask(__name__)
     app.config['TESTING'] = True
     init_app(app)
-    from app import statsd_client
-    statsd_client.init_app(app)
 
     from app.v2.errors import register_errors
     blue = Blueprint("v2_under_test", __name__, url_prefix='/v2/under_test')

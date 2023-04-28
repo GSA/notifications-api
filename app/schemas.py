@@ -256,9 +256,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             'annual_billing',
             'api_keys',
             'complaints',
-            'contact_list',
             'created_at',
-            'crown',
             'data_retention',
             'guest_list',
             'inbound_number',
@@ -310,9 +308,7 @@ class DetailedServiceSchema(BaseSchema):
             'all_template_folders',
             'annual_billing',
             'api_keys',
-            'contact_list',
             'created_by',
-            'crown',
             'email_branding',
             'email_from',
             'guest_list',
@@ -452,7 +448,6 @@ class JobSchema(BaseSchema):
 
     template_name = fields.Method('get_template_name', dump_only=True)
     template_type = fields.Method('get_template_type', dump_only=True)
-    contact_list_id = field_for(models.Job, 'contact_list_id')
 
     def get_template_name(self, job):
         return job.template.name

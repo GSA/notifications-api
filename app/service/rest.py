@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app.aws import s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
@@ -28,12 +27,6 @@ from app.dao.fact_notification_status_dao import (
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
 from app.dao.organisation_dao import dao_get_organisation_by_service_id
-from app.dao.service_contact_list_dao import (
-    dao_archive_contact_list,
-    dao_get_contact_list_by_id,
-    dao_get_contact_lists,
-    save_service_contact_list,
-)
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
     fetch_service_data_retention_by_id,
@@ -80,13 +73,7 @@ from app.dao.services_dao import (
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    KEY_TYPE_NORMAL,
-    EmailBranding,
-    Permission,
-    Service,
-    ServiceContactList,
-)
+from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -103,9 +90,6 @@ from app.schemas import (
 from app.service import statistics
 from app.service.send_notification import send_one_off_notification
 from app.service.sender import send_notification_to_service_users
-from app.service.service_contact_list_schema import (
-    create_service_contact_list_schema,
-)
 from app.service.service_data_retention_schema import (
     add_service_data_retention_request,
     update_service_data_retention_request,
@@ -923,45 +907,3 @@ def check_if_reply_to_address_already_in_use(service_id, email_address):
         raise InvalidRequest(
             "Your service already uses ‘{}’ as an email reply-to address.".format(email_address), status_code=409
         )
-
-
-@service_blueprint.route('/<uuid:service_id>/contact-list', methods=['GET'])
-def get_contact_list(service_id):
-    contact_lists = dao_get_contact_lists(service_id)
-
-    return jsonify([x.serialize() for x in contact_lists])
-
-
-@service_blueprint.route('/<uuid:service_id>/contact-list/<uuid:contact_list_id>', methods=['GET'])
-def get_contact_list_by_id(service_id, contact_list_id):
-    contact_list = dao_get_contact_list_by_id(
-        service_id=service_id,
-        contact_list_id=contact_list_id
-    )
-
-    return jsonify(contact_list.serialize())
-
-
-@service_blueprint.route('/<uuid:service_id>/contact-list/<uuid:contact_list_id>', methods=['DELETE'])
-def delete_contact_list_by_id(service_id, contact_list_id):
-    contact_list = dao_get_contact_list_by_id(
-        service_id=service_id,
-        contact_list_id=contact_list_id,
-    )
-    dao_archive_contact_list(contact_list)
-    s3.remove_contact_list_from_s3(service_id, contact_list_id)
-
-    return '', 204
-
-
-@service_blueprint.route('/<uuid:service_id>/contact-list', methods=['POST'])
-def create_contact_list(service_id):
-    service_contact_list = validate(request.get_json(), create_service_contact_list_schema)
-    service_contact_list['created_by_id'] = service_contact_list.pop('created_by')
-    service_contact_list['created_at'] = datetime.utcnow()
-    service_contact_list['service_id'] = str(service_id)
-    list_to_save = ServiceContactList(**service_contact_list)
-
-    save_service_contact_list(list_to_save)
-
-    return jsonify(list_to_save.serialize()), 201

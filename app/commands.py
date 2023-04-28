@@ -11,7 +11,6 @@ from click_datetime import Datetime as click_dt
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
-from notifications_utils.statsd_decorators import statsd
 from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
@@ -247,7 +246,6 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @notify_command(name='archive-jobs-created-between-dates')
 @click.option('-s', '--start_date', required=True, help="start date inclusive", type=click_dt(format='%Y-%m-%d'))
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
-@statsd(namespace="tasks")
 def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
 
@@ -276,14 +274,13 @@ def update_jobs_archived_flag(start_date, end_date):
 
 @notify_command(name='populate-organisations-from-file')
 @click.option('-f', '--file_name', required=True,
-              help="Pipe delimited file containing organisation name, sector, crown, argeement_signed, domains")
+              help="Pipe delimited file containing organisation name, sector, agreement_signed, domains")
 def populate_organisations_from_file(file_name):
     # [0] organisation name:: name of the organisation insert if organisation is missing.
     # [1] sector:: Federal | State only
-    # [2] crown:: TRUE | FALSE only
-    # [3] argeement_signed:: TRUE | FALSE
-    # [4] domains:: comma separated list of domains related to the organisation
-    # [5] email branding name: name of the default email branding for the org
+    # [2] agreement_signed:: TRUE | FALSE
+    # [3] domains:: comma separated list of domains related to the organisation
+    # [4] email branding name: name of the default email branding for the org
 
     # The expectation is that the organisation, organisation_to_service
     # and user_to_organisation will be cleared before running this command.
@@ -308,7 +305,6 @@ def populate_organisations_from_file(file_name):
                 'name': columns[0],
                 'active': True,
                 'agreement_signed': boolean_or_none(columns[3]),
-                'crown': boolean_or_none(columns[2]),
                 'organisation_type': columns[1].lower(),
                 'email_branding_id': email_branding.id if email_branding else None
             }

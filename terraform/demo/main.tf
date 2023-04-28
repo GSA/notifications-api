@@ -35,15 +35,6 @@ module "csv_upload_bucket" {
   name             = "${local.app_name}-csv-upload-bucket-${local.env}"
 }
 
-module "contact_list_bucket" {
-  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.2.0"
-
-  cf_org_name      = local.cf_org_name
-  cf_space_name    = local.cf_space_name
-  recursive_delete = local.recursive_delete
-  name             = "${local.app_name}-contact-list-bucket-${local.env}"
-}
-
 module "egress-space" {
   source = "../shared/egress_space"
 

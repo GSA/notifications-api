@@ -102,7 +102,6 @@ def test_create_service(notify_db_session):
     assert service.active is True
     assert user in service_db.users
     assert service_db.organisation_type == 'federal'
-    assert service_db.crown is None
     assert not service.organisation_id
 
 
@@ -129,7 +128,6 @@ def test_create_service_with_organisation(notify_db_session):
     assert service.active is True
     assert user in service_db.users
     assert service_db.organisation_type == 'state'
-    assert service_db.crown is None
     assert service.organisation_id == organisation.id
     assert service.organisation == organisation
 

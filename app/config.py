@@ -116,9 +116,6 @@ class Config(object):
     # Monitoring
     CRONITOR_ENABLED = False
     CRONITOR_KEYS = json.loads(getenv('CRONITOR_KEYS', '{}'))
-    STATSD_HOST = getenv('STATSD_HOST')
-    STATSD_PORT = 8125
-    STATSD_ENABLED = bool(STATSD_HOST)
 
     # Antivirus
     ANTIVIRUS_ENABLED = getenv('ANTIVIRUS_ENABLED', '1') == '1'
@@ -291,12 +288,12 @@ def _s3_credentials_from_env(bucket_prefix):
 
 class Development(Config):
     DEBUG = True
+    NOTIFY_LOG_LEVEL = "DEBUG"
     SQLALCHEMY_ECHO = False
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 
     # Buckets
     CSV_UPLOAD_BUCKET = _s3_credentials_from_env('CSV')
-    CONTACT_LIST_BUCKET = _s3_credentials_from_env('CONTACT')
 
     # credential overrides
     DANGEROUS_SALT = 'development-notify-salt'
@@ -333,8 +330,6 @@ class Production(Config):
     # buckets
     CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
         f"notify-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}")
-    CONTACT_LIST_BUCKET = cloud_config.s3_credentials(
-        f"notify-api-contact-list-bucket-{Config.NOTIFY_ENVIRONMENT}")
 
     FROM_NUMBER = 'US Notify'
     CRONITOR_ENABLED = True

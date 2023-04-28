@@ -23,7 +23,6 @@ from tests.app.db import (
     create_job,
     create_notification,
     create_service,
-    create_service_contact_list,
     create_template,
 )
 
@@ -163,26 +162,6 @@ def test_get_jobs_for_service_in_processed_at_then_created_at_order(notify_db_se
 
     for index in range(0, len(created_jobs)):
         assert jobs[index].id == created_jobs[index].id
-
-
-def test_get_jobs_for_service_by_contact_list(sample_template):
-    contact_list = create_service_contact_list()
-    job_1 = create_job(sample_template)
-    job_2 = create_job(sample_template, contact_list_id=contact_list.id)
-
-    assert dao_get_jobs_by_service_id(
-        sample_template.service.id
-    ).items == [
-        job_2,
-        job_1,
-    ]
-
-    assert dao_get_jobs_by_service_id(
-        sample_template.service.id,
-        contact_list_id=contact_list.id,
-    ).items == [
-        job_2,
-    ]
 
 
 def test_update_job(sample_job):

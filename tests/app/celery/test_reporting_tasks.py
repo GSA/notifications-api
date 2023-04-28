@@ -34,7 +34,7 @@ from tests.app.db import (
 
 
 def mocker_get_rate(
-    non_letter_rates, notification_type, local_date, crown=None, rate_multiplier=None
+    non_letter_rates, notification_type, local_date, rate_multiplier=None
 ):
     if notification_type == SMS_TYPE:
         return Decimal(1.33)

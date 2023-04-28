@@ -30,7 +30,6 @@ from app.models import (
     Organisation,
     Permission,
     Service,
-    ServiceContactList,
     ServiceEmailReplyTo,
     ServicePermission,
     ServiceSmsSender,
@@ -302,8 +301,6 @@ def dao_create_service(
         if organisation.email_branding:
             service.email_branding = organisation.email_branding
 
-    if organisation:
-        service.crown = organisation.crown
     service.count_as_live = not user.platform_admin
 
     db.session.add(service)
@@ -362,7 +359,6 @@ def delete_service_and_all_associated_db_objects(service):
 
     _delete_commit(ServiceSmsSender.query.filter_by(service=service))
     _delete_commit(ServiceEmailReplyTo.query.filter_by(service=service))
-    _delete_commit(ServiceContactList.query.filter_by(service=service))
     _delete_commit(InvitedUser.query.filter_by(service=service))
     _delete_commit(Permission.query.filter_by(service=service))
     _delete_commit(NotificationHistory.query.filter_by(service=service))

@@ -18,14 +18,7 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 from notifications_utils.timezones import convert_utc_to_local_timezone
-from sqlalchemy import (
-    CheckConstraint,
-    Index,
-    String,
-    UniqueConstraint,
-    and_,
-    func,
-)
+from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
@@ -330,7 +323,6 @@ class OrganisationTypes(db.Model):
     __tablename__ = 'organisation_types'
 
     name = db.Column(db.String(255), primary_key=True)
-    is_crown = db.Column(db.Boolean, nullable=True)
     annual_free_sms_fragment_limit = db.Column(db.BigInteger, nullable=False)
 
 
@@ -352,7 +344,6 @@ class Organisation(db.Model):
     agreement_signed_on_behalf_of_name = db.Column(db.String(255), nullable=True)
     agreement_signed_on_behalf_of_email_address = db.Column(db.String(255), nullable=True)
     agreement_signed_version = db.Column(db.Float, nullable=True)
-    crown = db.Column(db.Boolean, nullable=True)
     organisation_type = db.Column(
         db.String(255),
         db.ForeignKey('organisation_types.name'),
@@ -396,7 +387,6 @@ class Organisation(db.Model):
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
-            "crown": self.crown,
             "organisation_type": self.organisation_type,
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
@@ -457,7 +447,6 @@ class Service(db.Model, Versioned):
         unique=False,
         nullable=True,
     )
-    crown = db.Column(db.Boolean, index=False, nullable=True)
     rate_limit = db.Column(db.Integer, index=False, nullable=False, default=3000)
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)
@@ -565,7 +554,7 @@ class InboundNumber(db.Model):
     __tablename__ = "inbound_numbers"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    number = db.Column(db.String(11), unique=True, nullable=False)
+    number = db.Column(db.String(255), unique=True, nullable=False)
     provider = db.Column(db.String(), nullable=False)
     service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('services.id'), unique=True, index=True, nullable=True)
     service = db.relationship(Service, backref=db.backref("inbound_number", uselist=False))
@@ -1152,7 +1141,6 @@ class Job(db.Model):
         db.String(255), db.ForeignKey('job_status.name'), index=True, nullable=False, default='pending'
     )
     archived = db.Column(db.Boolean, nullable=False, default=False)
-    contact_list_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service_contact_list.id'), nullable=True)
 
 
 VERIFY_CODE_TYPES = [EMAIL_TYPE, SMS_TYPE]
@@ -1958,57 +1946,6 @@ class ServiceDataRetention(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class ServiceContactList(db.Model):
-    __tablename__ = 'service_contact_list'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    original_file_name = db.Column(db.String, nullable=False)
-    row_count = db.Column(db.Integer, nullable=False)
-    template_type = db.Column(template_types, nullable=False)
-    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('services.id'), unique=False, index=True, nullable=False)
-    service = db.relationship(Service, backref=db.backref('contact_list'))
-    created_by = db.relationship('User')
-    created_by_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), index=True, nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False)
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-    archived = db.Column(db.Boolean, nullable=False, default=False)
-
-    @property
-    def job_count(self):
-        today = datetime.datetime.utcnow().date()
-        return Job.query.filter(
-            Job.contact_list_id == self.id,
-            func.coalesce(
-                Job.processing_started, Job.created_at
-            ) >= today - func.coalesce(ServiceDataRetention.days_of_retention, 7)
-        ).outerjoin(
-            ServiceDataRetention, and_(
-                self.service_id == ServiceDataRetention.service_id,
-                func.cast(self.template_type, String) == func.cast(ServiceDataRetention.notification_type, String)
-            )
-        ).count()
-
-    @property
-    def has_jobs(self):
-        return bool(Job.query.filter(
-            Job.contact_list_id == self.id,
-        ).first())
-
-    def serialize(self):
-        contact_list = {
-            "id": str(self.id),
-            "original_file_name": self.original_file_name,
-            "row_count": self.row_count,
-            "recent_job_count": self.job_count,
-            "has_jobs": self.has_jobs,
-            "template_type": self.template_type,
-            "service_id": str(self.service_id),
-            "created_by": self.created_by.name,
-            "created_at": self.created_at.strftime(DATETIME_FORMAT),
-        }
-        return contact_list
 
 
 class WebauthnCredential(db.Model):

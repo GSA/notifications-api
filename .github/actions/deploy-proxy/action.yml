@@ -12,7 +12,7 @@ inputs:
     default: https://github.com/GSA-TTS/cg-egress-proxy.git
   proxy_version:
     description: git ref to be deployed
-    default: main
+    default: cflinuxfs4-deploy
 runs:
   using: composite
   steps:
@@ -36,7 +36,7 @@ runs:
     - name: Copy config files
       shell: bash
       run: cp ./deploy-config/egress_proxy/${{ inputs.app }}.*.acl ${{ steps.create-temp-dir.outputs.path }}
-    - name: Build and deploy proxy
+    - name: Deploy proxy
       shell: bash
       working-directory: ${{ steps.create-temp-dir.outputs.path }}
-      run: make && ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy
+      run: ./bin/cf-deployproxy -a ${{ inputs.app }} -p egress-proxy -e egress_proxy
