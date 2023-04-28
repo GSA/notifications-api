@@ -107,6 +107,7 @@ def create_service(
         email_from=None,
         prefix_sms=True,
         message_limit=1000,
+        total_message_limit=250000,
         organisation_type='federal',
         check_if_service_exists=False,
         go_live_user=None,
@@ -123,6 +124,7 @@ def create_service(
         service = Service(
             name=service_name,
             message_limit=message_limit,
+            total_message_limit=total_message_limit,
             restricted=restricted,
             email_from=email_from if email_from else service_name.lower().replace(' ', '.'),
             created_by=user if user else create_user(email='{}@digital.cabinet-office.gov.uk'.format(uuid.uuid4())),

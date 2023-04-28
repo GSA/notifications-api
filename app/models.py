@@ -435,6 +435,8 @@ class Service(db.Model, Versioned):
         onupdate=datetime.datetime.utcnow)
     active = db.Column(db.Boolean, index=False, unique=False, nullable=False, default=True)
     message_limit = db.Column(db.BigInteger, index=False, unique=False, nullable=False)
+    # TODO nullable if we are adding it late?
+    total_message_limit = db.Column(db.BigInteger, index=False, unique=False, nullable=False, default=250000)
     restricted = db.Column(db.Boolean, index=False, unique=False, nullable=False)
     research_mode = db.Column(db.Boolean, index=False, unique=False, nullable=False, default=False)
     email_from = db.Column(db.Text, index=False, unique=True, nullable=False)

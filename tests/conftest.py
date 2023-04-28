@@ -88,7 +88,6 @@ def _notify_db(notify_api, worker_id):
     ALEMBIC_CONFIG = os.path.join(BASE_DIR, 'migrations')
     config = Config(ALEMBIC_CONFIG + '/alembic.ini')
     config.set_main_option("script_location", ALEMBIC_CONFIG)
-
     with notify_api.app_context():
         upgrade(config, 'head')
 

@@ -13,6 +13,7 @@ from app.notifications.process_notifications import (
 )
 from app.notifications.validators import (
     check_service_over_daily_message_limit,
+    check_service_over_total_message_limit,
     validate_and_format_recipient,
     validate_template,
 )
@@ -46,6 +47,8 @@ def send_one_off_notification(service_id, post_data):
     validate_template(template.id, personalisation, service, template.template_type)
 
     check_service_over_daily_message_limit(KEY_TYPE_NORMAL, service)
+
+    check_service_over_total_message_limit(KEY_TYPE_NORMAL, service)
 
     validate_and_format_recipient(
         send_to=post_data['to'],

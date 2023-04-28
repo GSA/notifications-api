@@ -79,6 +79,7 @@ class SerialisedService(SerialisedModel):
         'contact_link',
         'email_from',
         'message_limit',
+        'total_message_limit',
         'permissions',
         'rate_limit',
         'research_mode',

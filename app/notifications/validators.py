@@ -5,6 +5,7 @@ from notifications_utils.clients.redis import (
     daily_limit_cache_key,
     daily_total_cache_key,
     rate_limit_cache_key,
+    total_limit_cache_key,
 )
 from notifications_utils.recipients import (
     get_international_phone_info,
@@ -71,6 +72,26 @@ def check_service_over_daily_message_limit(key_type, service):
                 service.id, int(service_stats), service.message_limit)
         )
         raise TooManyRequestsError(service.message_limit)
+    return int(service_stats)
+
+
+def check_service_over_total_message_limit(key_type, service):
+    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
+        return 0
+
+    cache_key = total_limit_cache_key(service.id)
+    service_stats = redis_store.get(cache_key)
+    if service_stats is None:
+        # first message of the day, set the cache to 0 and the expiry to 24 hours
+        service_stats = 0
+        redis_store.set(cache_key, service_stats, ex=86400)
+        return service_stats
+    if int(service_stats) >= service.total_message_limit:
+        current_app.logger.info(
+            "service {} has been rate limited for total use sent {} limit {}".format(
+                service.id, int(service_stats), service.total_message_limit)
+        )
+        raise TooManyRequestsError(service.total_message_limit)
     return int(service_stats)
 
 

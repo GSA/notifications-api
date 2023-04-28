@@ -30,7 +30,10 @@ from app.models import (
     SMS_TYPE,
 )
 from app.notifications.process_notifications import persist_notification
-from app.notifications.validators import check_service_over_daily_message_limit
+from app.notifications.validators import (
+    check_service_over_daily_message_limit,
+    check_service_over_total_message_limit,
+)
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT
@@ -59,7 +62,10 @@ def process_job(job_id, sender_id=None):
             "Job {} has been cancelled, service {} is inactive".format(job_id, service.id))
         return
 
-    if __sending_limits_for_job_exceeded(service, job, job_id):
+    if __daily_sending_limits_for_job_exceeded(service, job, job_id):
+        return
+
+    if __total_sending_limits_for_job_exceeded(service, job, job_id):
         return
 
     recipient_csv, template, sender_id = get_recipient_csv_and_template_and_sender_id(job)
@@ -134,10 +140,10 @@ def process_row(row, template, job, service, sender_id=None):
     return notification_id
 
 
-def __sending_limits_for_job_exceeded(service, job, job_id):
+def __daily_sending_limits_for_job_exceeded(service, job, job_id):
     try:
-        total_sent = check_service_over_daily_message_limit(KEY_TYPE_NORMAL, service)
-        if total_sent + job.notification_count > service.message_limit:
+        total_daily_sent = check_service_over_daily_message_limit(KEY_TYPE_NORMAL, service)
+        if total_daily_sent + job.notification_count > service.message_limit:
             raise TooManyRequestsError(service.message_limit)
         else:
             return False
@@ -146,7 +152,25 @@ def __sending_limits_for_job_exceeded(service, job, job_id):
         job.processing_finished = datetime.utcnow()
         dao_update_job(job)
         current_app.logger.info(
-            "Job {} size {} error. Sending limits {} exceeded".format(
+            "Job {} size {} error. Daily ending limits {} exceeded".format(
+                job_id, job.notification_count, service.message_limit)
+        )
+        return True
+
+
+def __total_sending_limits_for_job_exceeded(service, job, job_id):
+    try:
+        total_sent = check_service_over_total_message_limit(KEY_TYPE_NORMAL, service)
+        if total_sent + job.notification_count > service.total_message_limit:
+            raise TooManyRequestsError(service.total_message_limit)
+        else:
+            return False
+    except TooManyRequestsError:
+        job.job_status = 'total sending limits exceeded'
+        job.processing_finished = datetime.utcnow()
+        dao_update_job(job)
+        current_app.logger.info(
+            "Job {} size {} error. Total sending limits {} exceeded".format(
                 job_id, job.notification_count, service.message_limit)
         )
         return True

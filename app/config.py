@@ -267,6 +267,7 @@ class Config(object):
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
     DAILY_MESSAGE_LIMIT = 5000
+    TOTAL_MESSAGE_LIMIT = 7
 
     HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
 
