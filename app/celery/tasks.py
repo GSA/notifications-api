@@ -42,7 +42,6 @@ from app.v2.errors import TooManyRequestsError
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
-    current_app.logger.warning("ENTER process_job")
     start = datetime.utcnow()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info("Starting process-job task for job id {} with status: {}".format(job_id, job.job_status))
