@@ -891,7 +891,7 @@ def test_update_service_permissions_will_add_service_permissions(client, sample_
     auth_header = create_admin_authorization_header()
 
     data = {
-        'permissions': [EMAIL_TYPE, SMS_TYPE],
+        'permissions': [EMAIL_TYPE, SMS_TYPE]
     }
 
     resp = client.post(
@@ -1015,7 +1015,7 @@ def test_should_not_update_service_with_duplicate_name(notify_api,
                 email_from='another.name')
             data = {
                 'name': service_name,
-                'created_by': str(service.created_by.id),
+                'created_by': str(service.created_by.id)
             }
 
             auth_header = create_admin_authorization_header()
@@ -1046,7 +1046,7 @@ def test_should_not_update_service_with_duplicate_email_from(notify_api,
             data = {
                 'name': service_name,
                 'email_from': email_from,
-                'created_by': str(service.created_by.id),
+                'created_by': str(service.created_by.id)
             }
 
             auth_header = create_admin_authorization_header()
