@@ -2269,7 +2269,7 @@ def test_update_service_does_not_call_send_notification_for_live_service(sample_
     send_notification_mock = mocker.patch('app.service.rest.send_notification_to_service_users')
 
     data = {
-        "restricted": True,
+        "restricted": True
     }
 
     auth_header = create_admin_authorization_header()
@@ -2288,7 +2288,7 @@ def test_update_service_does_not_call_send_notification_when_restricted_not_chan
     send_notification_mock = mocker.patch('app.service.rest.send_notification_to_service_users')
 
     data = {
-        "name": 'Name of service',
+        "name": 'Name of service'
     }
 
     auth_header = create_admin_authorization_header()
