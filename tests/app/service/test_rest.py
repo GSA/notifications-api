@@ -677,7 +677,6 @@ def test_update_service(client, notify_db_session, sample_service):
         'created_by': str(sample_service.created_by.id),
         'email_branding': str(brand.id),
         'organisation_type': 'federal',
-        'total_message_limit': 250000,
     }
 
     auth_header = create_admin_authorization_header()
@@ -717,7 +716,6 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
 def test_update_service_remove_email_branding(admin_request, notify_db_session, sample_service):
     brand = EmailBranding(colour='#000000', logo='justice-league.png', name='Justice League')
     sample_service.email_branding = brand
-    sample_service.total_message_limit = 250000
     notify_db_session.commit()
 
     resp = admin_request.post(
@@ -733,7 +731,6 @@ def test_update_service_change_email_branding(admin_request, notify_db_session, 
     brand2 = EmailBranding(colour='#111111', logo='avengers.png', name='Avengers')
     notify_db_session.add_all([brand1, brand2])
     sample_service.email_branding = brand1
-    sample_service.total_message_limit = 250000
     notify_db_session.commit()
 
     resp = admin_request.post(
@@ -757,7 +754,6 @@ def test_update_service_flags(client, sample_service):
 
     data = {
         'research_mode': True,
-        'total_message_limit': 250000,
         'permissions': [INTERNATIONAL_SMS_TYPE]
     }
 
@@ -796,7 +792,6 @@ def test_update_service_sets_volumes(
         service_id=sample_service.id,
         _data={
             field: value,
-            'total_message_limit': 250000,
         },
         _expected_status=expected_status,
     )
@@ -821,7 +816,6 @@ def test_update_service_sets_research_consent(
         service_id=sample_service.id,
         _data={
             'consent_to_research': value,
-            'total_message_limit': 250000,
         },
         _expected_status=expected_status,
     )
@@ -898,7 +892,6 @@ def test_update_service_permissions_will_add_service_permissions(client, sample_
 
     data = {
         'permissions': [EMAIL_TYPE, SMS_TYPE],
-        'total_message_limit': 250000,
     }
 
     resp = client.post(
@@ -1023,7 +1016,6 @@ def test_should_not_update_service_with_duplicate_name(notify_api,
             data = {
                 'name': service_name,
                 'created_by': str(service.created_by.id),
-                'total_message_limit': 250000,
             }
 
             auth_header = create_admin_authorization_header()
@@ -1055,7 +1047,6 @@ def test_should_not_update_service_with_duplicate_email_from(notify_api,
                 'name': service_name,
                 'email_from': email_from,
                 'created_by': str(service.created_by.id),
-                'total_message_limit': 250000,
             }
 
             auth_header = create_admin_authorization_header()
@@ -1927,7 +1918,7 @@ def test_set_sms_prefixing_for_service(
     result = admin_request.post(
         'service.update_service',
         service_id=sample_service.id,
-        _data={'prefix_sms': posted_value, 'total_message_limit': 250000},
+        _data={'prefix_sms': posted_value},
     )
     assert result['data']['prefix_sms'] == stored_value
 
@@ -1939,7 +1930,7 @@ def test_set_sms_prefixing_for_service_cant_be_none(
     resp = admin_request.post(
         'service.update_service',
         service_id=sample_service.id,
-        _data={'prefix_sms': None, 'total_message_limit': 250000},
+        _data={'prefix_sms': None},
         _expected_status=400,
     )
     assert resp['message'] == {'prefix_sms': ['Field may not be null.']}
@@ -2279,7 +2270,6 @@ def test_update_service_does_not_call_send_notification_for_live_service(sample_
 
     data = {
         "restricted": True,
-        'total_message_limit': 250000,
     }
 
     auth_header = create_admin_authorization_header()
@@ -2299,7 +2289,6 @@ def test_update_service_does_not_call_send_notification_when_restricted_not_chan
 
     data = {
         "name": 'Name of service',
-        'total_message_limit': 250000,
     }
 
     auth_header = create_admin_authorization_header()

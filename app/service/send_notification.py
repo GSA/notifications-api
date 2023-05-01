@@ -1,3 +1,4 @@
+from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.config import QueueNames

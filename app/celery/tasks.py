@@ -42,6 +42,7 @@ from app.v2.errors import TooManyRequestsError
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
+    current_app.logger.warning("ENTER process_job")
     start = datetime.utcnow()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info("Starting process-job task for job id {} with status: {}".format(job_id, job.job_status))
@@ -166,10 +167,10 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         else:
             return False
     except TooManyRequestsError:
-        job.job_status = 'total sending limits exceeded'
+        job.job_status = 'sending limits exceeded'
         job.processing_finished = datetime.utcnow()
         dao_update_job(job)
-        current_app.logger.info(
+        current_app.logger.error(
             "Job {} size {} error. Total sending limits {} exceeded".format(
                 job_id, job.notification_count, service.message_limit)
         )

@@ -87,7 +87,7 @@ def check_service_over_total_message_limit(key_type, service):
         redis_store.set(cache_key, service_stats, ex=86400)
         return service_stats
     if int(service_stats) >= service.total_message_limit:
-        current_app.logger.info(
+        current_app.logger.warning(
             "service {} has been rate limited for total use sent {} limit {}".format(
                 service.id, int(service_stats), service.total_message_limit)
         )
