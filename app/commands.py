@@ -11,7 +11,6 @@ from click_datetime import Datetime as click_dt
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
-from notifications_utils.statsd_decorators import statsd
 from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
@@ -247,7 +246,6 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @notify_command(name='archive-jobs-created-between-dates')
 @click.option('-s', '--start_date', required=True, help="start date inclusive", type=click_dt(format='%Y-%m-%d'))
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
-@statsd(namespace="tasks")
 def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
 

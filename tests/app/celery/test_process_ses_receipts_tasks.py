@@ -4,7 +4,7 @@ from unittest.mock import ANY
 
 from freezegun import freeze_time
 
-from app import encryption, statsd_client
+from app import encryption
 from app.celery.process_ses_receipts_tasks import (
     process_ses_results,
     remove_emails_from_bounce,
@@ -141,8 +141,6 @@ def test_ses_callback_should_update_notification_status(
         sample_email_template,
         mocker):
     with freeze_time('2001-01-01T12:00:00'):
-        mocker.patch('app.statsd_client.incr')
-        mocker.patch('app.statsd_client.timing_with_dates')
         send_mock = mocker.patch(
             'app.celery.service_callback_tasks.send_delivery_status_to_service.apply_async'
         )
@@ -161,10 +159,6 @@ def test_ses_callback_should_update_notification_status(
         assert get_notification_by_id(notification.id).status == 'sending'
         assert process_ses_results(ses_notification_callback(reference='ref'))
         assert get_notification_by_id(notification.id).status == 'delivered'
-        statsd_client.timing_with_dates.assert_any_call(
-            "callback.ses.elapsed-time", datetime.utcnow(), notification.sent_at
-        )
-        statsd_client.incr.assert_any_call("callback.ses.delivered")
         send_mock.assert_called_once_with([str(notification.id), ANY], queue="service-callbacks")
         # assert second arg is an encrypted string
         assert isinstance(send_mock.call_args.args[0][1], str)
