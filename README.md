@@ -50,7 +50,7 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
     * [jq](https://stedolan.github.io/jq/): `brew install jq`
     * [terraform](https://www.terraform.io/): `brew install terraform` or `brew install tfenv` and use `tfenv` to install `terraform ~> 1.4.0`
     * [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html): `brew install cloudfoundry/tap/cf-cli@8`
-    * [postgresql](https://www.postgresql.org/): `brew install postgresql@15`
+    * [postgresql](https://www.postgresql.org/): `brew install postgresql@15` (Homebrew requires a version pin, but any recent version will work)
     * [redis](https://redis.io/): `brew install redis`
     * [pyenv](https://github.com/pyenv/pyenv): `brew install pyenv`
 1. [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
