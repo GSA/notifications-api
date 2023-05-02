@@ -44,10 +44,15 @@ Our other repositories are:
 
 ### Common steps
 
+On MacOS, using [Homebrew](https://brew.sh/) for package management is highly recommended. This helps avoid some known installation issues.
+
 1. Install pre-requisites for setup:
     * [jq](https://stedolan.github.io/jq/): `brew install jq`
     * [terraform](https://www.terraform.io/): `brew install terraform` or `brew install tfenv` and use `tfenv` to install `terraform ~> 1.4.0`
     * [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html): `brew install cloudfoundry/tap/cf-cli@8`
+    * [postgresql](https://www.postgresql.org/): `brew install postgresql@15` (Homebrew requires a version pin, but any recent version will work)
+    * [redis](https://redis.io/): `brew install redis`
+    * [pyenv](https://github.com/pyenv/pyenv): `brew install pyenv`
 1. [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
 1. Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov
 1. Run the development terraform with:
@@ -110,6 +115,12 @@ If you're working in VS Code, you can also leverage Docker for a containerized d
     `make run-celery`
 
 NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. VS Code _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
+
+### Known installation issues
+
+On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a different method of installing Python. Installation via `pyenv` is known to work.
+
+A direct installation of PostgreSQL will not put the `createdb` command on your `$PATH`. It can be added there in your shell startup script, or a Homebrew-managed installation of PostgreSQL will take care of it.
 
 ## License && public domain
 
