@@ -29,6 +29,7 @@ from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
 from app.clients import NotificationProviderClients
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
@@ -55,6 +56,7 @@ notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
+aws_cloudwatch_client = AwsCloudwatchClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
 redis_store = RedisClient()
