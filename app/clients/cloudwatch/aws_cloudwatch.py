@@ -11,7 +11,7 @@ from app.cloudfoundry_config import cloud_config
 
 class AwsCloudwatchClient(CloudwatchClient):
     """
-    AwsCloudwatch cloudwatch client
+    This client is responsible for retrieving sms delivery receipts from cloudwatch.
     """
 
     def init_app(self, current_app, *args, **kwargs):
@@ -30,6 +30,8 @@ class AwsCloudwatchClient(CloudwatchClient):
         return 'cloudwatch'
 
     def _get_all_logs(self, my_filter, log_group_name):
+
+        # Check all events in the last 30 minutes
         now = round(time.time() * 1000)
         beginning = now - 30 * 60 * 1000
 
@@ -59,6 +61,12 @@ class AwsCloudwatchClient(CloudwatchClient):
         return all_log_events
 
     def check_sms(self, message_id, notification_id):
+        """
+        Go through the cloudwatch logs, filtering by message id.  Check the success logs first.  If we find
+        the message id there, we are done.  Otherwise check the failure logs.  If we don't find the message
+        in the success or failure logs, raise an exception.  This method is called on a five minute delay,
+        which is presumably enough time for the cloudwatch log to be populated.
+        """
         # TODO presumably there is a better way to get the aws account number
         account_number = os.getenv("SES_DOMAIN_ARN")
         account_number = account_number.replace('arn:aws:ses:us-west-2:', '')
@@ -70,13 +78,9 @@ class AwsCloudwatchClient(CloudwatchClient):
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
         all_log_events = self._get_all_logs(filter_pattern, log_group_name)
 
-        self.current_app.logger.warning(f"ALL EVENTS {all_log_events}")
-
         if all_log_events and len(all_log_events) > 0:
             event = all_log_events[0]
-            self.current_app.logger.warning(f"HERE IS AN EVENT {event} of type {type(event)}")
             message = json.loads(event['message'])
-            self.current_app.logger.warning(f"HERE IS THE message {message}")
             return "success", message['delivery']['providerResponse']
 
         log_group_name = f'sns/us-west-2/{account_number}/DirectPublishToPhoneNumber/Failure'
@@ -86,4 +90,4 @@ class AwsCloudwatchClient(CloudwatchClient):
             message = json.loads(event['message'])
             return "fail", message['delivery']['providerResponse']
 
-        raise Exception(f'No event found for message_id {message_id}')
+        raise Exception(f'No event found for message_id {message_id} notification_id {notification_id}')
