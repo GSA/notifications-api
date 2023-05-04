@@ -59,7 +59,7 @@ class AwsCloudwatchClient(CloudwatchClient):
         return all_log_events
 
     def check_sms(self, message_id, notification_id):
-        # TODO presumably there is a better way to get the account number
+        # TODO presumably there is a better way to get the aws account number
         account_number = os.getenv("SES_DOMAIN_ARN")
         account_number = account_number.replace('arn:aws:ses:us-west-2:', '')
         account_number = account_number.split(":")

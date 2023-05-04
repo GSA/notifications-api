@@ -6,6 +6,10 @@ from app import aws_cloudwatch_client
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
     boto_mock = mocker.patch.object(aws_cloudwatch_client, '_client', create=True)
+    # TODO
+    #  we do this to get the AWS account number, and it seems like unit tests locally have
+    #  access to the env variables but when we push the PR they do not.  Is there a better way to get it?
+    mocker.patch.dict('os.environ', {"SES_DOMAIN_ARN": "1111:"})
     message_id = 'aaa'
     notification_id = 'bbb'
     boto_mock.filter_log_events.return_value = []
@@ -49,6 +53,8 @@ def test_check_sms_success(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, '_client', create=True)
     boto_mock.filter_log_events.side_effect = side_effect
+    mocker.patch.dict('os.environ', {"SES_DOMAIN_ARN": "1111:"})
+
     message_id = 'succeed'
     notification_id = 'ccc'
     with notify_api.app_context():
@@ -66,6 +72,8 @@ def test_check_sms_failure(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, '_client', create=True)
     boto_mock.filter_log_events.side_effect = side_effect
+    mocker.patch.dict('os.environ', {"SES_DOMAIN_ARN": "1111:"})
+
     message_id = 'fail'
     notification_id = 'bbb'
     with notify_api.app_context():
