@@ -5,11 +5,11 @@ import time
 
 from boto3 import client
 
-from app.clients.cloudwatch import CloudwatchClient
+from app.clients import Client
 from app.cloudfoundry_config import cloud_config
 
 
-class AwsCloudwatchClient(CloudwatchClient):
+class AwsCloudwatchClient(Client):
     """
     This client is responsible for retrieving sms delivery receipts from cloudwatch.
     """
@@ -21,7 +21,7 @@ class AwsCloudwatchClient(CloudwatchClient):
             aws_access_key_id=cloud_config.sns_access_key,
             aws_secret_access_key=cloud_config.sns_secret_key
         )
-        super(CloudwatchClient, self).__init__(*args, **kwargs)
+        super(Client, self).__init__(*args, **kwargs)
         self.current_app = current_app
         self._valid_sender_regex = re.compile(r"^\+?\d{5,14}$")
 
@@ -61,14 +61,8 @@ class AwsCloudwatchClient(CloudwatchClient):
         return all_log_events
 
     def check_sms(self, message_id, notification_id):
-        """
-        Go through the cloudwatch logs, filtering by message id.  Check the success logs first.  If we find
-        the message id there, we are done.  Otherwise check the failure logs.  If we don't find the message
-        in the success or failure logs, raise an exception.  This method is called on a five minute delay,
-        which is presumably enough time for the cloudwatch log to be populated.
-        """
-        # TODO presumably there is a better way to get the aws account number
-        account_number = os.getenv("SES_DOMAIN_ARN")
+        # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
+        account_number = cloud_config.ses_domain_arn
         account_number = account_number.replace('arn:aws:ses:us-west-2:', '')
         account_number = account_number.split(":")
         account_number = account_number[0]

@@ -4,8 +4,7 @@ from zoneinfo import ZoneInfo
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery
-from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
+from app import aws_cloudwatch_client, notify_celery
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
@@ -21,12 +20,18 @@ from app.models import (
 )
 
 
-@notify_celery.task(bind=True, name="check_sms_delivery_receipt", max_retries=3, default_retry_delay=300)
+@notify_celery.task(bind=True, name="check_sms_delivery_receipt", max_retries=48, default_retry_delay=300)
 def check_sms_delivery_receipt(self, message_id, notification_id):
-    current_app.logger.warning(f"CHECKING DELIVERY RECEIPT for {message_id} {notification_id}")
-    cloudwatch_client = AwsCloudwatchClient()
-    cloudwatch_client.init_app(current_app)
-    status, provider_response = cloudwatch_client.check_sms(message_id, notification_id)
+    """
+    This is called after deliver_sms to check the status of the message. This uses the same number of
+    retries and the same delay period as deliver_sms.  In addition, this fires five minutes after
+    deliver_sms initially. So the idea is that most messages will succeed and show up in the logs quickly.
+    Other message will resolve successfully after a retry or to.  A few will fail but it will take up to
+    4 hours to know for sure.  The call to check_sms will raise an exception if neither a success nor a
+    failure appears in the cloudwatch logs, so this should keep retrying until the log appears, or until
+    we run out of retries.
+    """
+    status, provider_response = aws_cloudwatch_client.check_sms(message_id, notification_id)
     if status == 'success':
         status = NOTIFICATION_SENT
     else:
