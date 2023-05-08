@@ -1,12 +1,16 @@
 Run Book
 ========
 
-Policies and Procedures needed before and during US Notify Operations
+Policies and Procedures needed before and during US Notify Operations. Many of these policies are taken from the U.S. Notify System Security & Privacy Plan (SSPP).
+
+Any changes to policies and procedures defined both here and in the SSPP must be kept in sync, and should be done collaboratively with the System ISSO and ISSM to ensure
+that the security of the system is maintained.
 
 1. [Alerts, Notifications, Monitoring](#alerts)
 1. [Restaging Apps](#restaging-apps)
 1. [Smoke-testing the App](#smoke-testing)
 1. [Configuration Management](#cm)
+1. [DNS Changes](#dns)
 1. [Known Gotchas](#gotcha)
 1. [User Account Management](#ac)
 1. [SMS Phone Number Management](#phone-numbers)
@@ -15,9 +19,15 @@ Policies and Procedures needed before and during US Notify Operations
 
 Operational alerts are posted to the [#pb-notify-alerts](https://gsa-tts.slack.com/archives/C04U9BGHUDB) Slack channel. Please join this channel and enable push notifications for all messages whenever you are on call.
 
-[NewRelic](https://one.newrelic.com/) is being used for monitoring the application.
+[NewRelic](https://one.newrelic.com/) is being used for monitoring the application. [NewRelic Dashboard](https://onenr.io/08wokrnrvwx) can be filtered by environment and API, Admin, or Both.
 
 [Cloud.gov Logging](https://logs.fr.cloud.gov/) is used to view and search application and platform logs.
+
+In addition to the application logs, there are several tables in the application that store useful information for audit logging purposes:
+
+* `events`
+* the various `*_history` tables
+
 
 ## <a name="restaging-apps"></a> Restaging Apps
 
@@ -102,6 +112,17 @@ US_Notify Administrators are responsible for ensuring that remediations for vuln
 * Medium - 90 days
 * Low - 180 days
 * Informational - 365 days (depending on the analysis of the issue)
+
+## <a name="dns"></a> DNS Changes
+
+U.S. Notify DNS records are maintained within [the 18f/dns repository](https://github.com/18F/dns/blob/main/terraform/notify.gov.tf). To create new DNS records for notify.gov or any subdomains:
+
+1. Update the `notify.gov.tf` terraform to update or create the new records within Route53 and push the branch to the 18f/dns repository.
+1. Open a PR.
+1. Verify that the plan output within circleci creates the records that you expect.
+1. Request a PR review from the 18F/tts-tech-portfolio team
+1. Once the PR is approved and merged, verify that the apply step happened correctly within [CircleCI](https://app.circleci.com/pipelines/github/18F/dns)
+
 
 ## <a name="gotcha"></a> Known Gotchas
 

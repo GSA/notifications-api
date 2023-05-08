@@ -12,7 +12,7 @@ inputs:
     default: https://github.com/GSA-TTS/cg-egress-proxy.git
   proxy_version:
     description: git ref to be deployed
-    default: cflinuxfs4-deploy
+    default: main
 runs:
   using: composite
   steps:

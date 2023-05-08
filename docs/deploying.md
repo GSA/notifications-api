@@ -1,19 +1,20 @@
 # Deploying
 
-We deploy automatically to cloud.gov for demo and staging environments.
+We deploy automatically to cloud.gov for production, demo, and staging environments.
 
 Deployment to staging runs via the [base deployment action](../.github/workflows/deploy.yml) on GitHub, which pulls credentials from GitHub's secrets store in the staging environment.
 
 Deployment to demo runs via the [demo deployment action](../.github/workflows/deploy-demo.yml) on GitHub, which pulls credentials from GitHub's secrets store in the demo environment.
 
+Deployment to production runs via the [production deployment action](../.github/workflows/deploy-prod.yml) on GitHub, which pulls credentials from GitHub's secrets store in the production environment.
+
 The [action that we use](https://github.com/18F/cg-deploy-action) deploys using [a rolling strategy](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html), so all deployments should have zero downtime.
 
-The API has 2 deployment environments:
+The API has 3 deployment environments:
 
 - Staging, which deploys from `main`
 - Demo, which deploys from `production`
-
-In the future, we will add a Production deploy environment, which will deploy in parallel to Demo.
+- Production, which deploys from `production`
 
 Configurations for these are located in [the `deploy-config` folder](../deploy-config/).
 
