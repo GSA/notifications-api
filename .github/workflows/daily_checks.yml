@@ -27,7 +27,7 @@ jobs:
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
         run: pipenv requirements > requirements.txt
-      - uses: pypa/gh-action-pip-audit@v1.0.4
+      - uses: pypa/gh-action-pip-audit@v1.0.6
         with:
           inputs: requirements.txt
 
