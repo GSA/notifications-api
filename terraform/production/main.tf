@@ -13,7 +13,7 @@ module "database" {
   cf_space_name    = local.cf_space_name
   name             = "${local.app_name}-rds-${local.env}"
   recursive_delete = local.recursive_delete
-  rds_plan_name    = "TKTK-production-rds-plan"
+  rds_plan_name    = "small-psql-redundant"
 }
 
 module "redis" {
@@ -23,7 +23,7 @@ module "redis" {
   cf_space_name    = local.cf_space_name
   name             = "${local.app_name}-redis-${local.env}"
   recursive_delete = local.recursive_delete
-  redis_plan_name  = "TKTK-production-redis-plan"
+  redis_plan_name  = "redis-3node-large"
 }
 
 module "csv_upload_bucket" {
