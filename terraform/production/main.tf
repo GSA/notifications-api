@@ -13,7 +13,7 @@ module "database" {
   cf_space_name    = local.cf_space_name
   name             = "${local.app_name}-rds-${local.env}"
   recursive_delete = local.recursive_delete
-  rds_plan_name    = "TKTK-production-rds-plan"
+  rds_plan_name    = "small-psql-redundant"
 }
 
 module "redis" {
@@ -23,7 +23,7 @@ module "redis" {
   cf_space_name    = local.cf_space_name
   name             = "${local.app_name}-redis-${local.env}"
   recursive_delete = local.recursive_delete
-  redis_plan_name  = "TKTK-production-redis-plan"
+  redis_plan_name  = "redis-3node-large"
 }
 
 module "csv_upload_bucket" {
@@ -72,9 +72,10 @@ module "sns_sms" {
 ###########################################################################
 # The following lines need to be commented out for the initial `terraform apply`
 # It can be re-enabled after:
+# TODO: decide on public API domain name
 # 1) the app has first been deployed
 # 2) the route has been manually created by an OrgManager:
-#     `cf create-domain TKTK-org-name TKTK-production-domain-name`
+#     `cf create-domain gsa-tts-benefits-studio-prototyping api.notify.gov`
 ###########################################################################
 # module "domain" {
 #   source = "github.com/18f/terraform-cloudgov//domain?ref=v0.2.0"
@@ -85,5 +86,5 @@ module "sns_sms" {
 #   name             = "${local.app_name}-domain-${local.env}"
 #   recursive_delete = local.recursive_delete
 #   cdn_plan_name    = "domain"
-#   domain_name      = "TKTK-production-domain-name"
+#   domain_name      = "api.notify.gov"
 # }

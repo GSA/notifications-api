@@ -102,6 +102,24 @@ We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for 
 
 These steps are required for new cloud.gov environments. Local development borrows SES & SNS infrastructure from the `notify-staging` cloud.gov space, so these steps are not required for new developers.
 
+### Steps to do a clean prod deploy to cloud.gov
+
+Steps for deploying production from scratch. These can be updated for a new cloud.gov environment by subbing out `prod` or `production` for your desired environment within the steps.
+
+1. Deploy API app
+    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+    1. Ensure that the `domain` module is commented out in `terraform/production/main.tf`
+    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+    1. Create any necessary DNS records (check `notify-api-ses-production` service credentials for instructions) within https://github.com/18f/dns
+    1. Follow the `Steps to prepare SES` below
+    1. (Optional) if using a public API route, uncomment the `domain` module and re-trigger a deploy
+1. Deploy Admin app
+    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+    1. Ensure that the `api_network_route` and `domain` modules are commented out in `terraform/production/main.tf`
+    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+    1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
+    1. Create DNS records for `domain` module within https://github.com/18f/dns
+
 ### Steps to prepare SES
 
 1. After the first deploy of the application with the SSB-brokered SES service completes:

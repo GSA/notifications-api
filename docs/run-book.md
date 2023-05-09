@@ -19,7 +19,7 @@ that the security of the system is maintained.
 
 Operational alerts are posted to the [#pb-notify-alerts](https://gsa-tts.slack.com/archives/C04U9BGHUDB) Slack channel. Please join this channel and enable push notifications for all messages whenever you are on call.
 
-[NewRelic](https://one.newrelic.com/) is being used for monitoring the application.
+[NewRelic](https://one.newrelic.com/) is being used for monitoring the application. [NewRelic Dashboard](https://onenr.io/08wokrnrvwx) can be filtered by environment and API, Admin, or Both.
 
 [Cloud.gov Logging](https://logs.fr.cloud.gov/) is used to view and search application and platform logs.
 
