@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import time
 from zoneinfo import ZoneInfo
 
 from flask import current_app
@@ -21,7 +22,7 @@ from app.models import (
 
 
 @notify_celery.task(bind=True, name="check_sms_delivery_receipt", max_retries=48, default_retry_delay=300)
-def check_sms_delivery_receipt(self, message_id, notification_id):
+def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     """
     This is called after deliver_sms to check the status of the message. This uses the same number of
     retries and the same delay period as deliver_sms.  In addition, this fires five minutes after
@@ -31,17 +32,20 @@ def check_sms_delivery_receipt(self, message_id, notification_id):
     failure appears in the cloudwatch logs, so this should keep retrying until the log appears, or until
     we run out of retries.
     """
-    status, provider_response = aws_cloudwatch_client.check_sms(message_id, notification_id)
+    status, provider_response = aws_cloudwatch_client.check_sms(message_id, notification_id, sent_at)
     if status == 'success':
         status = NOTIFICATION_SENT
     else:
         status = NOTIFICATION_FAILED
     update_notification_status_by_id(notification_id, status, provider_response=provider_response)
+    current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
 
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
 def deliver_sms(self, notification_id):
     try:
+        # Get the time we are doing the sending, to minimize the time period we need to check over for receipt
+        now = round(time() * 1000)
         current_app.logger.info("Start sending SMS for notification id: {}".format(notification_id))
         notification = notifications_dao.get_notification_by_id(notification_id)
         if not notification:
@@ -51,7 +55,7 @@ def deliver_sms(self, notification_id):
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
         my_eta = datetime.now(ZoneInfo('US/Eastern')) + timedelta(seconds=300)
         check_sms_delivery_receipt.apply_async(
-            [message_id, notification_id],
+            [message_id, notification_id, now],
             eta=my_eta,
             queue=QueueNames.CHECK_SMS
         )

@@ -28,12 +28,11 @@ class AwsCloudwatchClient(Client):
     def name(self):
         return 'cloudwatch'
 
-    def _get_all_logs(self, my_filter, log_group_name):
+    def _get_log(self, my_filter, log_group_name, sent_at):
 
-        # Check all events in the last 30 minutes
+        # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
         now = round(time.time() * 1000)
-        beginning = now - 30 * 60 * 1000
-
+        beginning = sent_at
         next_token = None
         all_log_events = []
         while True:
@@ -54,12 +53,16 @@ class AwsCloudwatchClient(Client):
                 )
             log_events = response.get('events', [])
             all_log_events.extend(log_events)
+            if len(log_events) > 0:
+                # We found it
+                break
             next_token = response.get('nextToken')
             if not next_token:
                 break
         return all_log_events
 
-    def check_sms(self, message_id, notification_id):
+    def check_sms(self, message_id, notification_id, created_at):
+
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = cloud_config.ses_domain_arn
         account_number = account_number.replace('arn:aws:ses:us-west-2:', '')
@@ -69,7 +72,7 @@ class AwsCloudwatchClient(Client):
         log_group_name = f'sns/us-west-2/{account_number}/DirectPublishToPhoneNumber'
         filter_pattern = '{$.notification.messageId="XXXXX"}'
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
-        all_log_events = self._get_all_logs(filter_pattern, log_group_name)
+        all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
 
         if all_log_events and len(all_log_events) > 0:
             event = all_log_events[0]
@@ -77,7 +80,7 @@ class AwsCloudwatchClient(Client):
             return "success", message['delivery']['providerResponse']
 
         log_group_name = f'sns/us-west-2/{account_number}/DirectPublishToPhoneNumber/Failure'
-        all_failed_events = self._get_all_logs(filter_pattern, log_group_name)
+        all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_failed_events and len(all_failed_events) > 0:
             event = all_failed_events[0]
             message = json.loads(event['message'])

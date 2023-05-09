@@ -58,7 +58,7 @@ def test_check_sms_success(notify_api, mocker):
     message_id = 'succeed'
     notification_id = 'ccc'
     with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id)
+        aws_cloudwatch_client.check_sms(message_id, notification_id, 1000000000000)
 
     # We check the 'success' log group first and if we find the message_id, we are done, so there is only 1 call
     assert boto_mock.filter_log_events.call_count == 1
@@ -77,7 +77,7 @@ def test_check_sms_failure(notify_api, mocker):
     message_id = 'fail'
     notification_id = 'bbb'
     with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id)
+        aws_cloudwatch_client.check_sms(message_id, notification_id, 1000000000000)
 
     # We check the 'success' log group and find nothing, so we then check the 'fail' log group -- two calls.
     assert boto_mock.filter_log_events.call_count == 2
