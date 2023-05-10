@@ -43,6 +43,10 @@ run-celery-beat: ## Run celery beat
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
 
+.PHONE: user-report
+cloudgov-user-report:
+	@pipenv run python -m terraform.ops.cloudgov_user_report
+
 .PHONY: help
 help:
 	@cat $(MAKEFILE_LIST) | grep -E '^[a-zA-Z_-]+:.*?## .*$$' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

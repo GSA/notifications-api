@@ -153,6 +153,7 @@ Important policies:
 * All users must utilize `.gov` email addresses.
 * Users who leave the team or otherwise have role changes must have their accounts updated to reflect the new roles required (or disabled) within 14 days.
 * SpaceDeployer credentials must be rotated within 14 days of anyone with SpaceDeveloper cloud.gov access leaving the team.
+* A user report must be created annually (See AC-2(j)). `make cloudgov-user-report` can be used to create a full report of all cloud.gov users.
 
 ### Types of Infrastructure Users
 
