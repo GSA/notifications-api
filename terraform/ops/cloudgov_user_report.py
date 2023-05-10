@@ -24,9 +24,15 @@ class RoleCollector:
         else:
             self._map[user.guid]["roles"].append(role)
 
-    def iterator(self):
-        for key in self._map.keys():
-            yield self._map[key]
+    def print(self):
+        for user_roles in self._map.values():
+            user = user_roles['user']
+            print(f"{user.type}: {user.username} has roles:")
+            for role in user_roles['roles']:
+                if role.space:
+                    print(f"  {role.type} in {role.space.name}")
+                else:
+                    print(f"  {role.type}")
 
 
 role_collector = RoleCollector()
@@ -74,11 +80,5 @@ for role in map(Role, client.v3.roles.list(space_guids=space_guids, include="use
     role_collector.add(role)
 
 
-for user_roles in role_collector.iterator():
-    user = user_roles['user']
-    print(f"{user.type}: {user.username} has roles:")
-    for role in user_roles['roles']:
-        if role.space:
-            print(f"  {role.type} in {role.space.name}")
-        else:
-            print(f"  {role.type}")
+if __name__ == '__main__':
+    role_collector.print()
