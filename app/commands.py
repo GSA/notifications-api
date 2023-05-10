@@ -62,7 +62,7 @@ from app.models import (
     TemplateHistory,
     User,
 )
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 @click.group(name='command', help='Additional commands')
@@ -192,8 +192,8 @@ def rebuild_ft_billing_for_day(service_id, day):
         rebuild_ft_data(day, service_id)
     else:
         services = get_service_ids_that_need_billing_populated(
-            get_local_midnight_in_utc(day),
-            get_local_midnight_in_utc(day + timedelta(days=1))
+            get_midnight_in_utc(day),
+            get_midnight_in_utc(day + timedelta(days=1))
         )
         for row in services:
             rebuild_ft_data(day, row.service_id)

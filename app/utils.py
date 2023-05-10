@@ -3,7 +3,6 @@ from os import getenv
 
 from flask import url_for
 from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
-from notifications_utils.timezones import convert_local_timezone_to_utc
 from sqlalchemy import func
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
@@ -49,19 +48,19 @@ def get_template_instance(template, values):
     }[template['template_type']](template, values)
 
 
-def get_local_midnight_in_utc(date):
+def get_midnight_in_utc(date):
     """
-     This function converts date from midnight in local time to UTC,
+     This function converts date to midnight in UTC,
      removing the tzinfo from the datetime because the database stores the timestamps without timezone.
      :param date: the day to calculate the local midnight in UTC for
      :return: the datetime of local midnight in UTC, for example 2016-06-17 = 2016-06-16 23:00:00
     """
-    return convert_local_timezone_to_utc(datetime.combine(date, datetime.min.time()))
+    return datetime.combine(date, datetime.min.time())
 
 
 def get_midnight_for_day_before(date):
     day_before = date - timedelta(1)
-    return get_local_midnight_in_utc(day_before)
+    return get_midnight_in_utc(day_before)
 
 
 def get_local_month_from_utc_column(column):
@@ -95,7 +94,7 @@ def midnight_n_days_ago(number_of_days):
     """
     Returns midnight a number of days ago. Takes care of daylight savings etc.
     """
-    return get_local_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
+    return get_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
 
 
 def escape_special_characters(string):

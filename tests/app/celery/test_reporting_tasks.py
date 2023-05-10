@@ -73,7 +73,7 @@ def test_create_nightly_notification_status_triggers_tasks(
     mock_celery.assert_called_with(
         kwargs={
             'service_id': sample_service.id,
-            'process_day': '2019-07-30',
+            'process_day': '2019-07-31',
             'notification_type': SMS_TYPE
         },
         queue=QueueNames.REPORTING
@@ -352,7 +352,7 @@ def test_create_nightly_billing_for_day_use_BST(
     )
 
     create_notification(
-        created_at=datetime(2018, 3, 26, 3, 59),
+        created_at=datetime(2018, 3, 25, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -361,7 +361,7 @@ def test_create_nightly_billing_for_day_use_BST(
 
     # too early
     create_notification(
-        created_at=datetime(2018, 3, 25, 3, 59),
+        created_at=datetime(2018, 3, 24, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
