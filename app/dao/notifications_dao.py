@@ -95,7 +95,7 @@ def _update_notification_status(notification, status, provider_response=None):
 
 
 @autocommit
-def update_notification_status_by_id(notification_id, status, sent_by=None):
+def update_notification_status_by_id(notification_id, status, sent_by=None, provider_response=None):
     notification = Notification.query.with_for_update().filter(Notification.id == notification_id).first()
 
     if not notification:
@@ -121,6 +121,8 @@ def update_notification_status_by_id(notification_id, status, sent_by=None):
         and not country_records_delivery(notification.phone_prefix)
     ):
         return None
+    if provider_response:
+        notification.provider_response = provider_response
     if not notification.sent_by and sent_by:
         notification.sent_by = sent_by
     return _update_notification_status(
