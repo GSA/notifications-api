@@ -38,7 +38,7 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 
 def send_sms_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
-
+    message_id = None
     if not service.active:
         technical_failure(notification=notification)
         return
@@ -79,7 +79,7 @@ def send_sms_to_provider(notification):
                     'international': notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-                provider.send_sms(**send_sms_kwargs)
+                message_id = provider.send_sms(**send_sms_kwargs)
             except Exception as e:
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
@@ -88,6 +88,7 @@ def send_sms_to_provider(notification):
             else:
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
+    return message_id
 
 
 def send_email_to_provider(notification):
@@ -98,7 +99,6 @@ def send_email_to_provider(notification):
         return
     if notification.status == 'created':
         provider = provider_to_use(EMAIL_TYPE, False)
-
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id, service_id=service.id, version=notification.template_version
         ).__dict__

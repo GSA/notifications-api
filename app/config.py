@@ -13,6 +13,7 @@ class QueueNames(object):
     PRIORITY = 'priority-tasks'
     DATABASE = 'database-tasks'
     SEND_SMS = 'send-sms-tasks'
+    CHECK_SMS = 'check-sms_tasks'
     SEND_EMAIL = 'send-email-tasks'
     RESEARCH_MODE = 'research-mode-tasks'
     REPORTING = 'reporting-tasks'
@@ -33,6 +34,7 @@ class QueueNames(object):
             QueueNames.PERIODIC,
             QueueNames.DATABASE,
             QueueNames.SEND_SMS,
+            QueueNames.CHECK_SMS,
             QueueNames.SEND_EMAIL,
             QueueNames.RESEARCH_MODE,
             QueueNames.REPORTING,
