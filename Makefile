@@ -43,7 +43,7 @@ run-celery-beat: ## Run celery beat
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
 
-.PHONE: user-report
+.PHONY: cloudgov-user-report
 cloudgov-user-report:
 	@pipenv run python -m terraform.ops.cloudgov_user_report
 
