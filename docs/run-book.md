@@ -19,7 +19,7 @@ that the security of the system is maintained.
 
 Operational alerts are posted to the [#pb-notify-alerts](https://gsa-tts.slack.com/archives/C04U9BGHUDB) Slack channel. Please join this channel and enable push notifications for all messages whenever you are on call.
 
-[NewRelic](https://one.newrelic.com/) is being used for monitoring the application.
+[NewRelic](https://one.newrelic.com/) is being used for monitoring the application. [NewRelic Dashboard](https://onenr.io/08wokrnrvwx) can be filtered by environment and API, Admin, or Both.
 
 [Cloud.gov Logging](https://logs.fr.cloud.gov/) is used to view and search application and platform logs.
 
@@ -153,6 +153,7 @@ Important policies:
 * All users must utilize `.gov` email addresses.
 * Users who leave the team or otherwise have role changes must have their accounts updated to reflect the new roles required (or disabled) within 14 days.
 * SpaceDeployer credentials must be rotated within 14 days of anyone with SpaceDeveloper cloud.gov access leaving the team.
+* A user report must be created annually (See AC-2(j)). `make cloudgov-user-report` can be used to create a full report of all cloud.gov users.
 
 ### Types of Infrastructure Users
 

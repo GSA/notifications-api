@@ -2,7 +2,7 @@ name: Run Terraform plan in production
 
 on:
   pull_request:
-    branches: [ production-disabled-for-now ]
+    branches: [ production ]
     paths: [ 'terraform/**' ]
 
 defaults:

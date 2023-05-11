@@ -16,7 +16,7 @@ VALID_SNS_TOPICS = Config.VALID_SNS_TOPICS
 
 _signing_cert_cache = {}
 _cert_url_re = re.compile(
-    r'sns\.([a-z]{1,3}-[a-z]+-[0-9]{1,2})\.amazonaws\.com',
+    r'sns\.([a-z]{1,3}(?:-gov)?-[a-z]+-[0-9]{1,2})\.amazonaws\.com',
 )
 
 

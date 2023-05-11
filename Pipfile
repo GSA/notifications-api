@@ -79,6 +79,7 @@ jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
 pip-audit = "*"
 bandit = "*"
 honcho = "*"
+cloudfoundry-client = "*"
 
 [requires]
 python_version = "3.9"

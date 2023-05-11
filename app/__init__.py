@@ -29,6 +29,7 @@ from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
 from app.clients import NotificationProviderClients
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
@@ -55,6 +56,7 @@ notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
+aws_cloudwatch_client = AwsCloudwatchClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
 redis_store = RedisClient()
@@ -96,6 +98,7 @@ def create_app(application):
     aws_ses_stub_client.init_app(
         stub_url=application.config['SES_STUB_URL']
     )
+    aws_cloudwatch_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = [aws_ses_stub_client] if application.config['SES_STUB_URL'] else [aws_ses_client]
     notification_provider_clients.init_app(
