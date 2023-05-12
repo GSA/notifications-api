@@ -1,8 +1,46 @@
+import datetime
+
 import botocore
 from boto3 import Session
 from flask import current_app
 
+from app.config import _s3_credentials_from_env
+
 FILE_LOCATION_STRUCTURE = 'service-{}-notify/{}.csv'
+
+
+def _get_s3_client():
+    bucket = _s3_credentials_from_env('CSV')
+
+    session = Session(
+        aws_access_key_id=bucket['access_key_id'],
+        aws_secret_access_key=bucket['secret_access_key'],
+        region_name=bucket['region']
+    )
+    s3_client = session.client('s3')
+    return s3_client
+
+
+def delete_incomplete_uploads():
+    s3_client = _get_s3_client()
+    now = datetime.datetime.utcnow()
+    threshold_date = now - datetime.timedelta(days=7)
+
+    bucket = _s3_credentials_from_env('CSV')
+    bucket_name = bucket['bucket']
+
+    response = s3_client.list_multipart_uploads(Bucket=bucket_name)
+    # Looks like if you actually have no multipart uploads, then the 'Uploads' key is omitted from the response.
+    # I'm not sure how we can test this since trial mode has a strict limit on the number of text messages we can
+    # send, which means our csvs are never multipart uploads.
+    if response.get("Uploads"):
+        for upload in response['Uploads']:
+            upload_initiated_date = upload['Initiated']
+            if upload_initiated_date < threshold_date:
+                current_app.logger.info(f"Deleting incomplete upload {upload['UploadId']} for key {upload['Key']}")
+                s3_client.abort_multipart_upload(Bucket=bucket_name, Key=upload['Key'], UploadId=upload['UploadId'])
+    else:
+        current_app.logger.warning("No multipart uploads found in bucket")
 
 
 def get_s3_file(

@@ -240,6 +240,11 @@ class Config(object):
                 'schedule': crontab(hour=2, minute=0),
                 'options': {'queue': QueueNames.PERIODIC}
             },
+            'delete-incomplete-s3-uploads': {
+                'task': 'delete-incomplete-s3-uploads',
+                'schedule': crontab(hour=4, minute=0),
+                'options': {'queue': QueueNames.PERIODIC}
+            },
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
                 'schedule': crontab(hour=4, minute=0),

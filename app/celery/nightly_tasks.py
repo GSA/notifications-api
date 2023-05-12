@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery
 from app.aws import s3
+from app.aws.s3 import delete_incomplete_uploads
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
 from app.cronitor import cronitor
@@ -124,6 +125,7 @@ def delete_notifications_for_service_and_type(service_id, notification_type, dat
 @notify_celery.task(name='timeout-sending-notifications')
 @cronitor('timeout-sending-notifications')
 def timeout_notifications():
+    current_app.logger.warning("START timeout_notification!!!!!")
     notifications = ['dummy value so len() > 0']
 
     cutoff_time = datetime.utcnow() - timedelta(
@@ -161,6 +163,7 @@ def delete_inbound_sms():
 @notify_celery.task(name='save-daily-notification-processing-time')
 @cronitor("save-daily-notification-processing-time")
 def save_daily_notification_processing_time(local_date=None):
+
     # local_date is a string in the format of "YYYY-MM-DD"
     if local_date is None:
         # if a date is not provided, we run against yesterdays data
@@ -178,3 +181,11 @@ def save_daily_notification_processing_time(local_date=None):
             messages_within_10_secs=result.messages_within_10_secs
         )
     )
+
+
+@notify_celery.task(name='delete-incomplete-s3-uploads')
+@cronitor("delete-incomplete-s3-uploads")
+def delete_incomplete_s3_uploads():
+    current_app.logger.warning("START delete_incomplete_s3_uploads!!!!!")
+    delete_incomplete_uploads()
+    raise Exception("FINISHED!!!!!")
