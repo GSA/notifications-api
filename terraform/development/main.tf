@@ -77,19 +77,3 @@ resource "null_resource" "output_creds_to_env" {
     command     = "echo \"${local.credentials}\" >> .env"
   }
 }
-
-
-#resource "aws_s3_bucket_lifecycle_configuration" "bucket-lifecycle-config" {
-#
-#  bucket = module.csv_upload_bucket.bucket_id
-#
-#  rule {
-#    id = "abort-incomplete-uploads-config"
-#
-#    abort_incomplete_multipart_upload {
-#      days_after_initiation = 7
-#    }
-#
-#    status = "Enabled"
-#  }
-#}

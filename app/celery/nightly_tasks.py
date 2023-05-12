@@ -139,7 +139,6 @@ def delete_notifications_for_service_and_type(service_id, notification_type, dat
 @notify_celery.task(name='timeout-sending-notifications')
 @cronitor('timeout-sending-notifications')
 def timeout_notifications():
-    current_app.logger.warning("START timeout_notification!!!!!")
     notifications = ['dummy value so len() > 0']
 
     cutoff_time = datetime.utcnow() - timedelta(

@@ -2,21 +2,7 @@ import botocore
 from boto3 import Session
 from flask import current_app
 
-from app.config import _s3_credentials_from_env
-
 FILE_LOCATION_STRUCTURE = 'service-{}-notify/{}.csv'
-
-
-def _get_s3_client():
-    bucket = _s3_credentials_from_env('CSV')
-
-    session = Session(
-        aws_access_key_id=bucket['access_key_id'],
-        aws_secret_access_key=bucket['secret_access_key'],
-        region_name=bucket['region']
-    )
-    s3_client = session.client('s3')
-    return s3_client
 
 
 def get_s3_file(
