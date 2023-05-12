@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery
 from app.aws import s3
-from app.aws.s3 import delete_incomplete_uploads
+from app.aws.s3 import remove_csv_object
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
 from app.cronitor import cronitor
@@ -15,6 +15,7 @@ from app.dao.inbound_sms_dao import delete_inbound_sms_older_than_retention
 from app.dao.jobs_dao import (
     dao_archive_job,
     dao_get_jobs_older_than_data_retention,
+    dao_get_unfinished_jobs,
 )
 from app.dao.notifications_dao import (
     dao_get_notifications_processing_time_stats,
@@ -41,6 +42,19 @@ def _remove_csv_files(job_types):
         s3.remove_job_from_s3(job.service_id, job.id)
         dao_archive_job(job)
         current_app.logger.info("Job ID {} has been removed from s3.".format(job.id))
+
+
+@notify_celery.task(name="cleanup-unfinished-jobs")
+def cleanup_unfinished_jobs():
+    now = datetime.utcnow()
+    jobs = dao_get_unfinished_jobs()
+    for job in jobs:
+        # The query already checks that the processing_finished time is null, so here we are saying
+        # if it started more than 4 hours ago, that's too long
+        acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+        if now > acceptable_finish_time:
+            remove_csv_object(job.original_file_name)
+            dao_archive_job(job)
 
 
 @notify_celery.task(name="delete-notifications-older-than-retention")
@@ -181,11 +195,3 @@ def save_daily_notification_processing_time(local_date=None):
             messages_within_10_secs=result.messages_within_10_secs
         )
     )
-
-
-@notify_celery.task(name='delete-incomplete-s3-uploads')
-@cronitor("delete-incomplete-s3-uploads")
-def delete_incomplete_s3_uploads():
-    current_app.logger.warning("START delete_incomplete_s3_uploads!!!!!")
-    delete_incomplete_uploads()
-    raise Exception("FINISHED!!!!!")
