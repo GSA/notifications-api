@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from flask import current_app
 from dateutil.parser import parse
 from flask_marshmallow.fields import fields
 from marshmallow import (
