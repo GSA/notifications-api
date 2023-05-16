@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 
+from flask import current_app
 from dateutil.parser import parse
 from flask_marshmallow.fields import fields
 from marshmallow import (
@@ -274,7 +275,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     def validate_permissions(self, value):
         permissions = [v.permission for v in value]
         for p in permissions:
-            if p not in models.SERVICE_PERMISSION_TYPES:
+            if p not in models.SERVICE_PERMISSION_TYPES and p != "international_letters":
                 raise ValidationError("Invalid Service Permission: '{}'".format(p))
 
         if len(set(permissions)) != len(permissions):
