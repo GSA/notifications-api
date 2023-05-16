@@ -23,7 +23,7 @@ def get_months_for_year(start, end, year):
 
 
 def get_financial_year(year):
-    return get_april_fools(year), get_april_fools(year + 1) - timedelta(microseconds=1)
+    return get_new_years(year), get_new_years(year + 1) - timedelta(microseconds=1)
 
 
 def get_financial_year_dates(year):
@@ -37,13 +37,12 @@ def get_financial_year_dates(year):
 
 def get_current_financial_year():
     now = datetime.utcnow()
-    current_month = int(now.strftime('%-m'))
     current_year = int(now.strftime('%Y'))
-    year = current_year if current_month > 3 else current_year - 1
+    year = current_year
     return get_financial_year(year)
 
 
-def get_april_fools(year):
+def get_new_years(year):
     """
      This function converts the start of the financial year April 1, 00:00 as BST (British Standard Time) to UTC,
      the tzinfo is lastly removed from the datetime because the database stores the timestamps without timezone.
@@ -51,7 +50,7 @@ def get_april_fools(year):
      :return: the datetime of April 1 for the given year, for example 2016 = 2016-03-31 23:00:00
     """
     return local_timezone.localize(
-        datetime(year, 4, 1, 0, 0, 0)).astimezone(pytz.UTC).replace(tzinfo=None)
+        datetime(year, 1, 1, 0, 0, 0)).astimezone(pytz.UTC).replace(tzinfo=None)
 
 
 def get_month_start_and_end_date_in_utc(month_year):
@@ -81,7 +80,7 @@ def get_financial_year_for_datetime(start_date):
         start_date = datetime.combine(start_date, time.min)
 
     year = int(start_date.strftime('%Y'))
-    if start_date < get_april_fools(year):
+    if start_date < get_new_years(year):
         return year - 1
     else:
         return year

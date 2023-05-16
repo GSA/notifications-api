@@ -79,8 +79,8 @@ def test_set_default_free_allowance_for_service_using_correct_year(sample_servic
 
     mock_dao.assert_called_once_with(
         sample_service.id,
-        250000,
-        2020
+        150000,
+        2021
     )
 
 

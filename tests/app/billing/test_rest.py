@@ -128,7 +128,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
 
-    for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
+    for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
         create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
 
@@ -145,7 +145,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
 
     sms_row = next(x for x in json_response if x['notification_type'] == 'sms')
 
-    assert sms_row["month"] == "April"
+    assert sms_row["month"] == "January"
     assert sms_row["notification_type"] == "sms"
     assert sms_row["chargeable_units"] == 1
     assert sms_row["notifications_sent"] == 1
@@ -185,7 +185,7 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
 
-    for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
+    for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
         create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
 

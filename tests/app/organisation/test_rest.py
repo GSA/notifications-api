@@ -789,7 +789,7 @@ def test_get_organisation_users_returns_users_for_organisation(admin_request, sa
     assert response['data'][0]['id'] == str(first.id)
 
 
-@freeze_time('2020-02-24 13:30')
+@freeze_time('2019-12-24 13:30')
 def test_get_organisation_services_usage(admin_request, notify_db_session):
     org = create_organisation(name='Organisation without live services')
     service = create_service()
