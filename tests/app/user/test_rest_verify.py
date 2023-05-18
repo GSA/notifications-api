@@ -292,7 +292,6 @@ def test_send_sms_code_returns_204_when_too_many_codes_already_created(client, s
     assert VerifyCode.query.count() == 5
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('post_data, expected_url_starts_with', (
     (
         {},

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from unittest import mock
 
 import pytest
+import sqlalchemy
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -585,7 +586,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     assert history[2].version == 3
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
+# @pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_create_service_and_history_is_transactional(notify_db_session):
     user = create_user()
     assert Service.query.count() == 0
@@ -596,10 +597,11 @@ def test_create_service_and_history_is_transactional(notify_db_session):
                       restricted=False,
                       created_by=user)
 
-    with pytest.raises(IntegrityError) as excinfo:
+    try:
         dao_create_service(service, user)
+    except sqlalchemy.exc.IntegrityError as seeei:
+        assert 'null value in column "name" of relation "services_history" violates not-null constraint' in str(seeei)
 
-    assert 'column "name" violates not-null constraint' in str(excinfo.value)
     assert Service.query.count() == 0
     assert Service.get_history_model().query.count() == 0
 
