@@ -237,8 +237,7 @@ def test_create_nightly_billing_for_day_different_templates(
         assert record.rate_multiplier == multiplier[i]
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
-def test_create_nightly_billing_for_day_different_sent_by(
+def test_create_nightly_billing_for_day_same_sent_by(
     sample_service,
     sample_template,
     sample_email_template,
@@ -273,12 +272,12 @@ def test_create_nightly_billing_for_day_different_sent_by(
     create_nightly_billing_for_day(str(yesterday.date()))
 
     records = FactBilling.query.order_by('rate_multiplier').all()
-    assert len(records) == 2
+    assert len(records) == 1
 
     for _, record in enumerate(records):
         assert record.local_date == datetime.date(yesterday)
         assert record.rate == Decimal(1.33)
-        assert record.billable_units == 1
+        assert record.billable_units == 2
         assert record.rate_multiplier == 1.0
 
 

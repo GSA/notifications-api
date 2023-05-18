@@ -89,7 +89,6 @@ def test_should_retry_and_log_exception_for_non_SmsClientResponseException_excep
     assert mock_logger_exception.called
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_sms_task(sample_notification, mocker):
     mocker.patch('app.delivery.send_to_providers.send_sms_to_provider', side_effect=Exception("EXPECTED"))
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry', side_effect=MaxRetriesExceededError())
@@ -128,7 +127,6 @@ def test_should_add_to_retry_queue_if_notification_not_found_in_deliver_email_ta
     app.celery.provider_tasks.deliver_email.retry.assert_called_with(queue="retry-tasks")
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize(
     'exception_class', [
         Exception(),
@@ -150,7 +148,6 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_email_task
     assert sample_notification.status == 'technical-failure'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableException(sample_notification, mocker):
     mocker.patch(
         'app.delivery.send_to_providers.send_email_to_provider',
