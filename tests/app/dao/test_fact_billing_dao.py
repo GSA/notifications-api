@@ -211,8 +211,6 @@ def test_fetch_billing_data_for_day_returns_empty_list(notify_db_session):
     assert results == []
 
 
-# TODO: ready for reactivation?
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_fetch_billing_data_for_day_uses_correct_table(notify_db_session):
     service = create_service()
     create_service_data_retention(service, notification_type='email', days_of_retention=3)
