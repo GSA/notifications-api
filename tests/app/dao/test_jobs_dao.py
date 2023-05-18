@@ -116,7 +116,6 @@ def test_get_jobs_for_service(sample_template):
     assert one_job_from_db != other_job_from_db
 
 
-# @pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_get_jobs_for_service_with_limit_days_param(sample_template):
     one_job = create_job(sample_template)
     old_job = create_job(sample_template, created_at=datetime.now() - timedelta(days=8))

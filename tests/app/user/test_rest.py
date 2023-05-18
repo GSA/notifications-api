@@ -618,7 +618,6 @@ def test_send_user_reset_password_should_send_reset_password_link(admin_request,
     assert notification.reply_to_text == notify_service.get_default_reply_to_email_address()
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('data, expected_url', (
     ({
         'email': 'notify@digital.cabinet-office.gov.uk',

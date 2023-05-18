@@ -11,7 +11,6 @@ from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('extra_args, expected_start_of_invite_url', [
     (
         {},

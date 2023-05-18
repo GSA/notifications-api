@@ -490,7 +490,6 @@ def test_post_update_organisation_set_mou_doesnt_email_if_no_signed_by(
     assert queue_mock.called is False
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('on_behalf_of_name, on_behalf_of_email_address, templates_and_recipients', [
     (
         None,

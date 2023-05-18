@@ -38,39 +38,21 @@ def create_uploaded_template(service):
     )
 
 
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
 @freeze_time("2020-02-02 09:00")  # GMT time
 def test_get_uploads_for_service(sample_template):
     create_service_data_retention(sample_template.service, 'sms', days_of_retention=9)
     job = create_job(sample_template, processing_started=datetime.utcnow())
-    letter_template = create_uploaded_template(sample_template.service)
-    letter = create_uploaded_letter(letter_template, sample_template.service)
 
     other_service = create_service(service_name="other service")
     other_template = create_template(service=other_service)
     other_job = create_job(other_template, processing_started=datetime.utcnow())
-    other_letter_template = create_uploaded_template(other_service)
-    create_uploaded_letter(other_letter_template, other_service)
 
     uploads_from_db = dao_get_uploads_by_service_id(job.service_id).items
     other_uploads_from_db = dao_get_uploads_by_service_id(other_job.service_id).items
 
-    assert len(uploads_from_db) == 2
+    assert len(uploads_from_db) == 1
 
     assert uploads_from_db[0] == (
-        None,
-        'Uploaded letters',
-        1,
-        'letter',
-        None,
-        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
-        None,
-        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
-        None,
-        'letter_day',
-        None,
-    )
-    assert uploads_from_db[1] == (
         job.id,
         job.original_file_name,
         job.notification_count,
@@ -84,21 +66,8 @@ def test_get_uploads_for_service(sample_template):
         None,
     )
 
-    assert len(other_uploads_from_db) == 2
-    assert other_uploads_from_db[0] == (
-        None,
-        'Uploaded letters',
-        1,
-        'letter',
-        None,
-        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
-        None,
-        letter.created_at.replace(hour=22, minute=30, second=0, microsecond=0),
-        None,
-        "letter_day",
-        None,
-    )
-    assert other_uploads_from_db[1] == (other_job.id,
+    assert len(other_uploads_from_db) == 1
+    assert other_uploads_from_db[0] == (other_job.id,
                                         other_job.original_file_name,
                                         other_job.notification_count,
                                         other_job.template.template_type,
@@ -110,81 +79,9 @@ def test_get_uploads_for_service(sample_template):
                                         "job",
                                         None)
 
-    assert uploads_from_db[1] != other_uploads_from_db[1]
+    assert uploads_from_db[0] != other_uploads_from_db[0]
 
 
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
-@freeze_time("2020-02-02 18:00")
-def test_get_uploads_for_service_groups_letters(sample_template):
-    letter_template = create_uploaded_template(sample_template.service)
-
-    # Just gets into yesterday’s print run
-    create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 1, 22, 29, 59)
-    ))
-
-    # Yesterday but in today’s print run
-    create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 1, 22, 30)
-    ))
-    # First thing today
-    create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 5, 0)
-    ))
-    # Just before today’s print deadline
-    create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 22, 29, 59)
-    ))
-
-    # Just missed today’s print deadline
-    create_uploaded_letter(letter_template, sample_template.service, created_at=(
-        datetime(2020, 2, 2, 22, 30)
-    ))
-
-    uploads_from_db = dao_get_uploads_by_service_id(sample_template.service_id).items
-
-    assert [
-        (upload.notification_count, upload.created_at)
-        for upload in uploads_from_db
-    ] == [
-        (1, datetime(2020, 2, 3, 22, 30)),
-        (3, datetime(2020, 2, 2, 22, 30)),
-        (1, datetime(2020, 2, 1, 22, 30)),
-    ]
-
-
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
-def test_get_uploads_does_not_return_cancelled_jobs_or_letters(sample_template):
-    create_job(sample_template, job_status='scheduled')
-    create_job(sample_template, job_status='cancelled')
-    letter_template = create_uploaded_template(sample_template.service)
-    create_uploaded_letter(letter_template, sample_template.service, status='cancelled')
-
-    assert len(dao_get_uploads_by_service_id(sample_template.service_id).items) == 0
-
-
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
-def test_get_uploads_orders_by_created_at_desc(sample_template):
-    letter_template = create_uploaded_template(sample_template.service)
-
-    upload_1 = create_job(sample_template, processing_started=datetime.utcnow(),
-                          job_status=JOB_STATUS_IN_PROGRESS)
-    upload_2 = create_job(sample_template, processing_started=datetime.utcnow(),
-                          job_status=JOB_STATUS_IN_PROGRESS)
-    create_uploaded_letter(letter_template, sample_template.service, status='delivered')
-
-    results = dao_get_uploads_by_service_id(service_id=sample_template.service_id).items
-
-    assert [
-        (result.id, result.upload_type) for result in results
-    ] == [
-        (None, 'letter_day'),
-        (upload_2.id, 'job'),
-        (upload_1.id, 'job'),
-    ]
-
-
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
 def test_get_uploads_orders_by_processing_started_desc(sample_template):
     days_ago = datetime.utcnow() - timedelta(days=3)
     upload_1 = create_job(sample_template, processing_started=datetime.utcnow() - timedelta(days=1),
@@ -315,7 +212,6 @@ def test_get_uploads_is_paginated(sample_template):
     assert results.items[0].upload_type == 'job'
 
 
-@pytest.mark.skip(reason="Investigate what remains after removing letters")
 def test_get_uploads_returns_empty_list(sample_service):
     items = dao_get_uploads_by_service_id(sample_service.id).items
     assert items == []
