@@ -72,7 +72,6 @@ def test_create_invited_user(
     mocked.assert_called_once_with([(str(notification.id))], queue="notify-internal-tasks")
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_create_invited_user_without_auth_type(admin_request, sample_service, mocker, invitation_email_template):
     mocker.patch('app.celery.provider_tasks.deliver_email.apply_async')
     email_address = 'invited_user@service.gov.uk'
@@ -125,13 +124,12 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
     assert mocked.call_count == 0
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_get_all_invited_users_by_service(client, notify_db_session, sample_service):
     invites = []
     for i in range(0, 5):
         email = 'invited_user_{}@service.gov.uk'.format(i)
         invited_user = create_invited_user(sample_service, to_email_address=email)
-
+        print(f"INVITED USER = {invited_user.auth_type}")
         invites.append(invited_user)
 
     url = '/service/{}/invite'.format(sample_service.id)
@@ -146,6 +144,7 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
     json_resp = json.loads(response.get_data(as_text=True))
 
     invite_from = sample_service.users[0]
+    print(f"INVITE FROM {json_resp['data']}")
 
     for invite in json_resp['data']:
         assert invite['service'] == str(sample_service.id)

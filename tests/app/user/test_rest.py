@@ -47,7 +47,6 @@ def test_get_user_list(admin_request, sample_service):
     assert sorted(expected_permissions) == sorted(fetched['permissions'][str(sample_service.id)])
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_get_user(admin_request, sample_service, sample_organisation):
     """
     Tests GET endpoint '/<user_id>' to retrieve a single service.
@@ -123,7 +122,6 @@ def test_post_user(admin_request, notify_db_session):
     assert user.auth_type == EMAIL_AUTH_TYPE
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_post_user_without_auth_type(admin_request, notify_db_session):
     User.query.delete()
     data = {
@@ -819,7 +817,6 @@ def test_activate_user_fails_if_already_active(admin_request, sample_user):
     assert sample_user.state == 'active'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_update_user_auth_type(admin_request, sample_user):
     assert sample_user.auth_type == 'sms_auth'
     resp = admin_request.post(

@@ -828,7 +828,7 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_during_bst(notif
     assert not stats.get('permanent-failure')
 
 
-@pytest.mark.skip(reason="Need a better way to test variable DST date")
+# @pytest.mark.skip(reason="Need a better way to test variable DST date")
 def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_fall_back(notify_db_session):
     template = create_template(service=create_service())
     with freeze_time('2021-10-30T22:59:59'):
