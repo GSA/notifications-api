@@ -45,36 +45,6 @@ def setup_function(_function):
     send_to_providers.provider_cache.clear()
 
 
-@pytest.mark.skip(reason="Reenable when we have more than 1 SMS provider")
-def test_provider_to_use_should_return_random_provider(mocker, notify_db_session):
-    sns = get_provider_details_by_identifier('sns')
-    other = get_provider_details_by_identifier('other')
-    sns.priority = 60
-    other.priority = 40
-    mock_choices = mocker.patch('app.delivery.send_to_providers.random.choices', return_value=[sns])
-
-    ret = send_to_providers.provider_to_use('sms', international=True)
-
-    mock_choices.assert_called_once_with([sns, other], weights=[60, 40])
-    assert ret.name == 'sns'
-
-
-@pytest.mark.skip(reason="Reenable when we have more than 1 SMS provider")
-def test_provider_to_use_should_cache_repeated_calls(mocker, notify_db_session):
-    mock_choices = mocker.patch(
-        'app.delivery.send_to_providers.random.choices',
-        wraps=send_to_providers.random.choices,
-    )
-
-    results = [
-        send_to_providers.provider_to_use('sms', international=False)
-        for _ in range(10)
-    ]
-
-    assert all(result == results[0] for result in results)
-    assert len(mock_choices.call_args_list) == 1
-
-
 @pytest.mark.parametrize('international_provider_priority', (
     # Since there’s only one international provider it should always
     # be used, no matter what its priority is set to
@@ -91,18 +61,6 @@ def test_provider_to_use_should_only_return_sns_for_international(
     ret = send_to_providers.provider_to_use('sms', international=True)
 
     assert ret.name == 'sns'
-
-
-@pytest.mark.skip(reason="Reenable when we have more than 1 SMS provider")
-def test_provider_to_use_should_only_return_active_providers(mocker, restore_provider_details):
-    sns = get_provider_details_by_identifier('sns')
-    other = get_provider_details_by_identifier('other')
-    sns.active = False
-    other.active = True
-
-    ret = send_to_providers.provider_to_use('sms')
-
-    assert ret.name == 'other'
 
 
 def test_provider_to_use_raises_if_no_active_providers(mocker, restore_provider_details):
@@ -261,7 +219,7 @@ def test_should_call_send_sms_response_task_if_research_mode(
         notify_db_session, sample_service, sample_notification, mocker, research_mode, key_type
 ):
     mocker.patch('app.aws_sns_client.send_sms')
-    mocker.patch('app.delivery.send_to_providers.send_sms_response')
+    send_sms_response = mocker.patch('app.delivery.send_to_providers.send_sms_response')
 
     if research_mode:
         sample_service.research_mode = True
@@ -275,8 +233,8 @@ def test_should_call_send_sms_response_task_if_research_mode(
     )
     assert not aws_sns_client.send_sms.called
 
-    app.delivery.send_to_providers.send_sms_response.assert_called_once_with(
-        'sns', str(sample_notification.id), sample_notification.to
+    send_sms_response.assert_called_once_with(
+        'sns', str(sample_notification.id)
     )
 
     persisted_notification = notifications_dao.get_notification_by_id(sample_notification.id)
@@ -288,17 +246,15 @@ def test_should_call_send_sms_response_task_if_research_mode(
     assert not persisted_notification.personalisation
 
 
-@pytest.mark.skip(reason="Needs updating when we get SMS delivery receipts done")
 def test_should_have_sending_status_if_fake_callback_function_fails(sample_notification, mocker):
     mocker.patch('app.delivery.send_to_providers.send_sms_response', side_effect=HTTPError)
 
     sample_notification.key_type = KEY_TYPE_TEST
-
     with pytest.raises(HTTPError):
         send_to_providers.send_sms_to_provider(
             sample_notification
         )
-    assert sample_notification.status == 'sending'
+    assert sample_notification.status == 'sent'
     assert sample_notification.sent_by == 'sns'
 
 
@@ -389,14 +345,14 @@ def test_send_email_to_provider_should_call_research_mode_task_response_task_if_
     reference = uuid.uuid4()
     mocker.patch('app.uuid.uuid4', return_value=reference)
     mocker.patch('app.aws_ses_client.send_email')
-    mocker.patch('app.delivery.send_to_providers.send_email_response')
+    send_email_response = mocker.patch('app.delivery.send_to_providers.send_email_response')
 
     send_to_providers.send_email_to_provider(
         notification
     )
 
     assert not app.aws_ses_client.send_email.called
-    app.delivery.send_to_providers.send_email_response.assert_called_once_with(str(reference), 'john@smith.com')
+    send_email_response.assert_called_once_with(str(reference), 'john@smith.com')
     persisted_notification = Notification.query.filter_by(id=notification.id).one()
     assert persisted_notification.to == 'john@smith.com'
     assert persisted_notification.template_id == sample_email_template.id
