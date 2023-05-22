@@ -386,7 +386,6 @@ def test_reset_failed_login_count_returns_404_when_user_does_not_exist(client):
     assert resp.status_code == 404
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 # we send sms_auth users and webauthn_auth users email code to validate their email access
 @pytest.mark.parametrize('auth_type', USER_AUTH_TYPES)
 @pytest.mark.parametrize('data, expected_auth_url', (

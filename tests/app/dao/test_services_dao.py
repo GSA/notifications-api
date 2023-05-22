@@ -586,7 +586,6 @@ def test_update_service_permission_creates_a_history_record_with_current_data(no
     assert history[2].version == 3
 
 
-# @pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_create_service_and_history_is_transactional(notify_db_session):
     user = create_user()
     assert Service.query.count() == 0
@@ -828,7 +827,6 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_during_bst(notif
     assert not stats.get('permanent-failure')
 
 
-# @pytest.mark.skip(reason="Need a better way to test variable DST date")
 def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_fall_back(notify_db_session):
     template = create_template(service=create_service())
     with freeze_time('2021-10-30T22:59:59'):
