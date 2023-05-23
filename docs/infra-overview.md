@@ -117,8 +117,8 @@ Steps for deploying production from scratch. These can be updated for a new clou
     1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
     1. Ensure that the `api_network_route` and `domain` modules are commented out in `terraform/production/main.tf`
     1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
-    1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
     1. Create DNS records for `domain` module within https://github.com/18f/dns
+    1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
 
 ### Steps to prepare SES
 
