@@ -65,3 +65,14 @@ def remove_job_from_s3(service_id, job_id):
 def remove_s3_object(bucket_name, object_key, access_key, secret_key, region):
     obj = get_s3_object(bucket_name, object_key, access_key, secret_key, region)
     return obj.delete()
+
+
+def remove_csv_object(object_key):
+    obj = get_s3_object(
+        current_app.config['CSV_UPLOAD_BUCKET']['bucket'],
+        object_key,
+        current_app.config['CSV_UPLOAD_BUCKET']['access_key_id'],
+        current_app.config['CSV_UPLOAD_BUCKET']['secret_access_key'],
+        current_app.config['CSV_UPLOAD_BUCKET']['region']
+    )
+    return obj.delete()
