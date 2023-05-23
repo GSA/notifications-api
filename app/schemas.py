@@ -274,7 +274,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     def validate_permissions(self, value):
         permissions = [v.permission for v in value]
         for p in permissions:
-            if p not in models.SERVICE_PERMISSION_TYPES and p != "international_letters":
+            if p not in models.SERVICE_PERMISSION_TYPES:
                 raise ValidationError("Invalid Service Permission: '{}'".format(p))
 
         if len(set(permissions)) != len(permissions):
