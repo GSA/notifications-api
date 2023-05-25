@@ -127,10 +127,7 @@ def test_get_organisation_by_id_returns_domains(admin_request, notify_db_session
     ('foo.gov.uk', 200),
     ('bar.gov.uk', 200),
     ('oof.gov.uk', 404),
-    pytest.param(
-        'rab.gov.uk', 200,
-        marks=pytest.mark.xfail(raises=AssertionError),
-    ),
+    ('rab.gov.uk', 200),
     (None, 400),
     ('personally.identifying.information@example.com', 400),
 ))
@@ -152,7 +149,9 @@ def test_get_organisation_by_domain(
         domain=domain,
     )
 
-    if expected_status == 200:
+    if domain == 'rab.gov.uk' and expected_status == 200:
+        assert response['id'] == str(other_org.id)
+    elif expected_status == 200:
         assert response['id'] == str(org.id)
     else:
         assert response['result'] == 'error'
