@@ -65,7 +65,6 @@ def sns_callback(notification_id):
 
     # This will only work if all notifications, including successful ones, are in the notifications table
     # If we decide to delete successful notifications, we will have to get this from notifications history
-    print(f"NOTIFICATION_ID {str(notification_id)} status {notification.status} dtime {notification.completed_at}")
     return json.dumps({
         "CID": str(notification_id),
         "status": notification.status,

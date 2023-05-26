@@ -86,7 +86,6 @@ def test_check_and_queue_callback_task(mocker, sample_notification):
 
     # callback_api doesn't match by equality for some
     # reason, so we need to take this approach instead
-    print(f'mock_create.mock_calls is: {mock_create.mock_calls}')
     mock_create_args = mock_create.mock_calls[0][1]
     assert mock_create_args[0] == sample_notification
     assert mock_create_args[1].id == callback_api.id

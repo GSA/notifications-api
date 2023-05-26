@@ -129,7 +129,6 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
     for i in range(0, 5):
         email = 'invited_user_{}@service.gov.uk'.format(i)
         invited_user = create_invited_user(sample_service, to_email_address=email)
-        print(f"INVITED USER = {invited_user.auth_type}")
         invites.append(invited_user)
 
     url = '/service/{}/invite'.format(sample_service.id)
@@ -144,7 +143,6 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
     json_resp = json.loads(response.get_data(as_text=True))
 
     invite_from = sample_service.users[0]
-    print(f"INVITE FROM {json_resp['data']}")
 
     for invite in json_resp['data']:
         assert invite['service'] == str(sample_service.id)
