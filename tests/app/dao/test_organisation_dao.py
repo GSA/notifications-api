@@ -90,10 +90,6 @@ def test_update_organisation(notify_db_session):
     (['ABC', 'DEF'], {'abc', 'def'}),
     ([], set()),
     (None, {'123', '456'}),
-    pytest.param(
-        ['abc', 'ABC'], {'abc'},
-        marks=pytest.mark.xfail(raises=IntegrityError)
-    ),
 ))
 def test_update_organisation_domains_lowercases(
     notify_db_session,
@@ -111,6 +107,29 @@ def test_update_organisation_domains_lowercases(
     dao_update_organisation(organisation.id, domains=domain_list)
 
     assert {domain.domain for domain in organisation.domains} == expected_domains
+
+
+@pytest.mark.parametrize('domain_list, expected_domains', (
+        (['abc', 'ABC'], {'abc'}),
+))
+def test_update_organisation_domains_lowercases_integrity_error(
+    notify_db_session,
+    domain_list,
+    expected_domains,
+):
+    create_organisation()
+
+    organisation = Organisation.query.one()
+
+    # Seed some domains
+    dao_update_organisation(organisation.id, domains=['123', '456'])
+
+    with pytest.raises(expected_exception=IntegrityError):
+
+        # This should overwrite the seeded domains
+        dao_update_organisation(organisation.id, domains=domain_list)
+
+        assert {domain.domain for domain in organisation.domains} == expected_domains
 
 
 def test_update_organisation_does_not_update_the_service_if_certain_attributes_not_provided(

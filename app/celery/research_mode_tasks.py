@@ -5,6 +5,7 @@ from requests import HTTPError, request
 
 from app.celery.process_ses_receipts_tasks import process_ses_results
 from app.config import QueueNames
+from app.dao.notifications_dao import get_notification_by_id
 from app.models import SMS_TYPE
 
 temp_fail = "2028675303"
@@ -16,8 +17,8 @@ perm_fail_email = "perm-fail@simulator.notify"
 temp_fail_email = "temp-fail@simulator.notify"
 
 
-def send_sms_response(provider, reference, to):
-    body = sns_callback(reference, to)
+def send_sms_response(provider, reference):
+    body = sns_callback(reference)
     headers = {"Content-type": "application/json"}
 
     make_request(SMS_TYPE, provider, body, headers)
@@ -59,25 +60,16 @@ def make_request(notification_type, provider, data, headers):
     return response.json()
 
 
-def sns_callback(notification_id, to):
-    raise Exception("Need to update for SNS callback format along with test_send_to_providers")
+def sns_callback(notification_id):
+    notification = get_notification_by_id(notification_id)
 
-    # example from mmg_callback
-    # if to.strip().endswith(temp_fail):
-    #     # status: 4 - expired (temp failure)
-    #     status = "4"
-    # elif to.strip().endswith(perm_fail):
-    #     # status: 5 - rejected (perm failure)
-    #     status = "5"
-    # else:
-    #     # status: 3 - delivered
-    #     status = "3"
-
-    # return json.dumps({"reference": "mmg_reference",
-    #                    "CID": str(notification_id),
-    #                    "MSISDN": to,
-    #                    "status": status,
-    #                    "deliverytime": "2016-04-05 16:01:07"})
+    # This will only work if all notifications, including successful ones, are in the notifications table
+    # If we decide to delete successful notifications, we will have to get this from notifications history
+    return json.dumps({
+        "CID": str(notification_id),
+        "status": notification.status,
+        # "deliverytime": notification.completed_at
+    })
 
 
 def ses_notification_callback(reference):

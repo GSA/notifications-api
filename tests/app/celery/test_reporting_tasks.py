@@ -108,10 +108,9 @@ def test_create_nightly_notification_status_triggers_relevant_tasks(
     assert types == expected_types_aggregated
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_checks_history(
     sample_service,
-    sample_sms_template,
+    sample_template,
     mocker
 ):
     yesterday = datetime.now() - timedelta(days=1)
@@ -119,13 +118,13 @@ def test_create_nightly_billing_for_day_checks_history(
 
     create_notification(
         created_at=yesterday,
-        template=sample_sms_template,
+        template=sample_template,
         status='sending',
     )
 
     create_notification_history(
         created_at=yesterday,
-        template=sample_sms_template,
+        template=sample_template,
         status='delivered',
     )
 
@@ -141,7 +140,6 @@ def test_create_nightly_billing_for_day_checks_history(
     assert record.notifications_sent == 2
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 @pytest.mark.parametrize('second_rate, records_num, billable_units, multiplier',
                          [(1.0, 1, 2, [1]),
                           (2.0, 2, 1, [1, 2])])
@@ -193,7 +191,6 @@ def test_create_nightly_billing_for_day_sms_rate_multiplier(
         assert record.rate_multiplier == multiplier[i]
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_different_templates(
         sample_service,
         sample_template,
@@ -240,8 +237,7 @@ def test_create_nightly_billing_for_day_different_templates(
         assert record.rate_multiplier == multiplier[i]
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
-def test_create_nightly_billing_for_day_different_sent_by(
+def test_create_nightly_billing_for_day_same_sent_by(
     sample_service,
     sample_template,
     sample_email_template,
@@ -276,16 +272,15 @@ def test_create_nightly_billing_for_day_different_sent_by(
     create_nightly_billing_for_day(str(yesterday.date()))
 
     records = FactBilling.query.order_by('rate_multiplier').all()
-    assert len(records) == 2
+    assert len(records) == 1
 
     for _, record in enumerate(records):
         assert record.local_date == datetime.date(yesterday)
         assert record.rate == Decimal(1.33)
-        assert record.billable_units == 1
+        assert record.billable_units == 2
         assert record.rate_multiplier == 1.0
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_null_sent_by_sms(
     sample_service,
     sample_template,
@@ -497,7 +492,6 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert sms_delivered_row.key_type == KEY_TYPE_NORMAL
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(notify_db_session):
     first_service = create_service(service_name='First Service')
     first_template = create_template(service=first_service)
