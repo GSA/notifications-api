@@ -43,6 +43,10 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     update_notification_status_by_id(notification_id, status, provider_response=provider_response)
     current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
 
+    if status == NOTIFICATION_SENT:
+        insert_notification_history_delete_notifications_by_id(notification_id)
+        current_app.logger.info(f"Archived notification {notification_id} that was successfully sent")
+
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
 def deliver_sms(self, notification_id):
@@ -78,13 +82,11 @@ def deliver_sms(self, notification_id):
                 self.retry(queue=QueueNames.RETRY, countdown=0)
             else:
                 self.retry(queue=QueueNames.RETRY)
-            insert_notification_history_delete_notifications_by_id(notification_id)
         except self.MaxRetriesExceededError:
             message = "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. " \
                       "Notification has been updated to technical-failure".format(notification_id)
             update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
             raise NotificationTechnicalFailureException(message)
-    insert_notification_history_delete_notifications_by_id(notification_id)
 
 
 @notify_celery.task(bind=True, name="deliver_email", max_retries=48, default_retry_delay=300)
