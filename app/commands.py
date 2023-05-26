@@ -11,7 +11,6 @@ from click_datetime import Datetime as click_dt
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
-from notifications_utils.statsd_decorators import statsd
 from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
@@ -19,6 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
+from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import process_row
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
@@ -247,7 +247,6 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @notify_command(name='archive-jobs-created-between-dates')
 @click.option('-s', '--start_date', required=True, help="start date inclusive", type=click_dt(format='%Y-%m-%d'))
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
-@statsd(namespace="tasks")
 def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
 
@@ -464,6 +463,12 @@ def fix_billable_units():
         )
     db.session.commit()
     print("End fix_billable_units")
+
+
+@notify_command(name='delete-unfinished-jobs')
+def delete_unfinished_jobs():
+    cleanup_unfinished_jobs()
+    print("End cleanup_unfinished_jobs")
 
 
 @notify_command(name='process-row-from-job')

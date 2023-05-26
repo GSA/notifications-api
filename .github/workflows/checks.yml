@@ -46,10 +46,12 @@ jobs:
       run: pipenv run flake8 .
     - name: Check imports alphabetized
       run: pipenv run isort --check-only ./app ./tests
-    - name: Run tests
-      run: pipenv run pytest -n4 --maxfail=10
+    - name: Run tests with coverage
+      run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest -n4 --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+    - name: Check coverage threshold
+      run: pipenv run coverage report --fail-under=50
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
@@ -73,7 +75,7 @@ jobs:
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
         run: pipenv requirements > requirements.txt
-      - uses: pypa/gh-action-pip-audit@v1.0.4
+      - uses: pypa/gh-action-pip-audit@v1.0.6
         with:
           inputs: requirements.txt
 

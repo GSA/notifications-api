@@ -23,13 +23,13 @@ from notifications_utils import logging, request_helper
 from notifications_utils.celery import NotifyCelery
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
-from notifications_utils.clients.statsd.statsd_client import StatsdClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
 from app.clients import NotificationProviderClients
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
@@ -56,9 +56,9 @@ notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
+aws_cloudwatch_client = AwsCloudwatchClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
-statsd_client = StatsdClient()
 redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 metrics = GDSMetrics()
@@ -91,15 +91,14 @@ def create_app(application):
     migrate.init_app(application, db=db)
     ma.init_app(application)
     zendesk_client.init_app(application)
-    statsd_client.init_app(application)
     logging.init_app(application)
-    aws_sns_client.init_app(application, statsd_client=statsd_client)
+    aws_sns_client.init_app(application)
 
-    aws_ses_client.init_app(statsd_client=statsd_client)
+    aws_ses_client.init_app()
     aws_ses_stub_client.init_app(
-        statsd_client=statsd_client,
         stub_url=application.config['SES_STUB_URL']
     )
+    aws_cloudwatch_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = [aws_ses_stub_client] if application.config['SES_STUB_URL'] else [aws_ses_client]
     notification_provider_clients.init_app(
@@ -290,9 +289,7 @@ def init_app(app):
     def after_request(response):
         CONCURRENT_REQUESTS.dec()
 
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        response.headers.add('X-Content-Type-Options', 'nosniff')
         return response
 
     @app.errorhandler(Exception)
@@ -301,20 +298,34 @@ def init_app(app):
         # error.code is set for our exception types.
         msg = getattr(error, 'message', str(error))
         code = getattr(error, 'code', 500)
-        return jsonify(result='error', message=msg), code
+        response = make_response(
+            jsonify(result='error', message=msg),
+            code,
+            error.get_headers()
+        )
+        response.content_type = "application/json"
+        return response
 
     @app.errorhandler(WerkzeugHTTPException)
     def werkzeug_exception(e):
-        return make_response(
+        response = make_response(
             jsonify(result='error', message=e.description),
             e.code,
             e.get_headers()
         )
+        response.content_type = 'application/json'
+        return response
 
     @app.errorhandler(404)
     def page_not_found(e):
         msg = e.description or "Not found"
-        return jsonify(result='error', message=msg), 404
+        response = make_response(
+            jsonify(result='error', message=msg),
+            404,
+            e.get_headers()
+        )
+        response.content_type = 'application/json'
+        return response
 
 
 def create_uuid():

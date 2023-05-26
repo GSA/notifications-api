@@ -11,7 +11,6 @@ from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('extra_args, expected_start_of_invite_url', [
     (
         {},
@@ -73,7 +72,6 @@ def test_create_invited_user(
     mocked.assert_called_once_with([(str(notification.id))], queue="notify-internal-tasks")
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_create_invited_user_without_auth_type(admin_request, sample_service, mocker, invitation_email_template):
     mocker.patch('app.celery.provider_tasks.deliver_email.apply_async')
     email_address = 'invited_user@service.gov.uk'
@@ -126,13 +124,11 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
     assert mocked.call_count == 0
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_get_all_invited_users_by_service(client, notify_db_session, sample_service):
     invites = []
     for i in range(0, 5):
         email = 'invited_user_{}@service.gov.uk'.format(i)
         invited_user = create_invited_user(sample_service, to_email_address=email)
-
         invites.append(invited_user)
 
     url = '/service/{}/invite'.format(sample_service.id)

@@ -49,9 +49,24 @@ Credentials for these services are created by running:
 1. `cd terraform/development`
 1. `./run.sh`
 
+in both the api repository as well as the admin repository.
+
 This will append credentials to your `.env` file. You will need to manually clean up any prior runs from that file if you run that command again.
 
-Offboarding: Service key bindings can be cleaned up from cloud.gov by running `./run.sh -d` yourself, or another developer running `./run.sh -d -u USER_TO_CLEANUP`
+You can remove your development infrastructure by running `./run.sh -d`
+
+#### Resetting
+
+`./reset.sh` can be used to import your development infrastructure information in case of a new computer or new working tree and the old terraform state file was not transferred.
+
+#### Offboarding
+
+`./reset.sh -u USER_TO_OFFBOARD` can be used to import another user's development resources in order to clean them up. Steps for use:
+
+1. Move your existing terraform state file aside temporarily, so it is not overwritten.
+1. `./reset.sh -u USER_TO_OFFBOARD`
+1. Answer no to the prompt about creating missing resources.
+1. Run `./run.sh -u USER_TO_OFFBOARD -d` to fully remove the rest of that user's resources.
 
 ### Cloud.gov
 
@@ -87,6 +102,24 @@ We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for 
 
 These steps are required for new cloud.gov environments. Local development borrows SES & SNS infrastructure from the `notify-staging` cloud.gov space, so these steps are not required for new developers.
 
+### Steps to do a clean prod deploy to cloud.gov
+
+Steps for deploying production from scratch. These can be updated for a new cloud.gov environment by subbing out `prod` or `production` for your desired environment within the steps.
+
+1. Deploy API app
+    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+    1. Ensure that the `domain` module is commented out in `terraform/production/main.tf`
+    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+    1. Create any necessary DNS records (check `notify-api-ses-production` service credentials for instructions) within https://github.com/18f/dns
+    1. Follow the `Steps to prepare SES` below
+    1. (Optional) if using a public API route, uncomment the `domain` module and re-trigger a deploy
+1. Deploy Admin app
+    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+    1. Ensure that the `api_network_route` and `domain` modules are commented out in `terraform/production/main.tf`
+    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+    1. Create DNS records for `domain` module within https://github.com/18f/dns
+    1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
+
 ### Steps to prepare SES
 
 1. After the first deploy of the application with the SSB-brokered SES service completes:
@@ -99,6 +132,8 @@ TODO: create env vars for these origin and destination email addresses for the r
 ### Steps to prepare SNS
 
 #### Move SNS out of sandbox.
+
+This should be complete for all regions U.S. Notify has been deployed to or is currently planned to be deployed to.
 
 1. Visit the SNS console for the region you will be sending from. Notes:
     1. SNS settings are per-region, so each environment must have its own region
@@ -115,10 +150,8 @@ TODO: create env vars for these origin and destination email addresses for the r
 1. Select `Toll-free registrations` and `Create registration`
 1. Select the number you just created and then `Register existing toll-free number`
 1. Complete and submit the form. Approval usually takes about 2 weeks.
-1. Set this phone number as the `AWS_US_TOLL_FREE_NUMBER` in the environment you are creating
+1. See the [run book](./run-book.md) for information on how to set those numbers.
 
-#### Current Production Phone Numbers
+Example answers for toll-free registration form
 
-* +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number
-* +18447891134 - to be used by Pilot Partner 1
-* +18888402596 - to be used by Pilot Partner 2
+![example answers for toll-free registration form](./toll-free-registration.png)

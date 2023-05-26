@@ -1,0 +1,87 @@
+name: Deploy to production environment
+
+on:
+  push:
+    branches: [ production ]
+
+permissions:
+  contents: read
+
+# deploy-prod and deploy-demo will run in parallel now.
+# TODO: Research if we want to serialize them
+# by moving the jobs into a single file similar to
+# https://github.com/GSA/usnotify-ssb/blob/main/.github/workflows/apply.yml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - name: Check for changes to Terraform
+      id: changed-terraform-files
+      uses: tj-actions/changed-files@v34
+      with:
+        files: |
+          terraform/production
+          terraform/shared
+          .github/workflows/deploy-prod.yml
+    - name: Terraform init
+      if: steps.changed-terraform-files.outputs.any_changed == 'true'
+      working-directory: terraform/production
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+      run: terraform init
+    - name: Terraform apply
+      if: steps.changed-terraform-files.outputs.any_changed == 'true'
+      working-directory: terraform/production
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+        TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+        TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+      run: terraform apply -auto-approve -input=false
+
+    - uses: ./.github/actions/setup-project
+    - name: Install application dependencies
+      run: make bootstrap
+
+    - name: Create requirements.txt because Cloud Foundry does a weird pipenv thing
+      run: pipenv requirements > requirements.txt
+
+    - name: Deploy to cloud.gov
+      uses: 18f/cg-deploy-action@main
+      env:
+        DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        ADMIN_CLIENT_SECRET: ${{ secrets.ADMIN_CLIENT_SECRET }}
+        NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+      with:
+        cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+        cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+        cf_org: gsa-tts-benefits-studio-prototyping
+        cf_space: notify-production
+        push_arguments: >-
+          --vars-file deploy-config/production.yml
+          --var DANGEROUS_SALT="$DANGEROUS_SALT"
+          --var SECRET_KEY="$SECRET_KEY"
+          --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
+          --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
+
+    - name: Check for changes to egress config
+      id: changed-egress-config
+      uses: tj-actions/changed-files@v34
+      with:
+        files: |
+          deploy-config/egress_proxy/notify-api-production.*.acl
+          .github/actions/deploy-proxy/action.yml
+          .github/workflows/deploy-prod.yml
+    - name: Deploy egress proxy
+      if: steps.changed-egress-config.outputs.any_changed == 'true'
+      uses: ./.github/actions/deploy-proxy
+      with:
+        cf_space: notify-production
+        app: notify-api-production

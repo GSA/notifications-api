@@ -4,35 +4,24 @@ username=`whoami`
 org="gsa-tts-benefits-studio-prototyping"
 
 usage="
-$0: Create development infrastructure
+$0: Reset terraform state so run.sh can be run again or for a new username
 
 Usage:
   $0 -h
-  $0 [-u <USER NAME>] [-k] [-d]
+  $0 [-u <USER NAME>]
 
 Options:
 -h: show help and exit
 -u <USER NAME>: your username. Default: $username
--k: keep service user. Default is to remove them after run
--d: Destroy development resources. Default is to create them
 
 Notes:
 * Requires cf-cli@8
 "
 
-action="apply"
-creds="remove"
-
-while getopts ":hkdu:" opt; do
+while getopts ":hu:" opt; do
   case "$opt" in
     u)
       username=${OPTARG}
-      ;;
-    k)
-      creds="keep"
-      ;;
-    d)
-      action="destroy"
       ;;
     h)
       echo "$usage"
@@ -41,7 +30,11 @@ while getopts ":hkdu:" opt; do
   esac
 done
 
-set -e
+read -p "Are you sure you want to import terraform state and remove existing service keys for $username (y/n)? " verify
+
+if [[ $verify != "y" ]]; then
+  exit 0
+fi
 
 # ensure we're in the correct directory
 cd $(dirname $0)
@@ -57,20 +50,16 @@ if [[ ! -s "secrets.auto.tfvars" ]]; then
   cf set-space-role $cg_username $org notify-staging SpaceDeveloper
 fi
 
-if [[ ! -f "../../.env" ]]; then
-  cp ../../sample.env ../../.env
-fi
-
-set +e
-
+echo "Importing terraform state for $username"
 terraform init
-terraform $action -var="username=$username"
 
-set -e
+key_name=$username-api-dev-key
 
-if [[ $creds = "remove" ]]; then
-  ../destroy_service_account.sh -s notify-local-dev -u $service_account
-  rm secrets.auto.tfvars
-fi
+cf t -s notify-local-dev
+terraform import -var "username=$username" module.csv_upload_bucket.cloudfoundry_service_instance.bucket $(cf service --guid $username-csv-upload-bucket)
+cf delete-service-key -f $username-csv-upload-bucket $key_name
+cf t -s notify-staging
+cf delete-service-key -f notify-api-ses-staging $key_name
+cf delete-service-key -f notify-api-sns-staging $key_name
 
-exit 0
+./run.sh -u $username

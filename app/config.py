@@ -13,6 +13,7 @@ class QueueNames(object):
     PRIORITY = 'priority-tasks'
     DATABASE = 'database-tasks'
     SEND_SMS = 'send-sms-tasks'
+    CHECK_SMS = 'check-sms_tasks'
     SEND_EMAIL = 'send-email-tasks'
     RESEARCH_MODE = 'research-mode-tasks'
     REPORTING = 'reporting-tasks'
@@ -33,6 +34,7 @@ class QueueNames(object):
             QueueNames.PERIODIC,
             QueueNames.DATABASE,
             QueueNames.SEND_SMS,
+            QueueNames.CHECK_SMS,
             QueueNames.SEND_EMAIL,
             QueueNames.RESEARCH_MODE,
             QueueNames.REPORTING,
@@ -116,9 +118,6 @@ class Config(object):
     # Monitoring
     CRONITOR_ENABLED = False
     CRONITOR_KEYS = json.loads(getenv('CRONITOR_KEYS', '{}'))
-    STATSD_HOST = getenv('STATSD_HOST')
-    STATSD_PORT = 8125
-    STATSD_ENABLED = bool(STATSD_HOST)
 
     # Antivirus
     ANTIVIRUS_ENABLED = getenv('ANTIVIRUS_ENABLED', '1') == '1'
@@ -241,6 +240,11 @@ class Config(object):
                 'schedule': crontab(hour=2, minute=0),
                 'options': {'queue': QueueNames.PERIODIC}
             },
+            'cleanup-unfinished-jobs': {
+                'task': 'cleanup-unfinished-jobs',
+                'schedule': crontab(hour=0, minute=5),
+                'options': {'queue': QueueNames.PERIODIC}
+            },
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
                 'schedule': crontab(hour=4, minute=0),
@@ -291,6 +295,7 @@ def _s3_credentials_from_env(bucket_prefix):
 
 class Development(Config):
     DEBUG = True
+    NOTIFY_LOG_LEVEL = "DEBUG"
     SQLALCHEMY_ECHO = False
     DVLA_EMAIL_ADDRESSES = ['success@simulator.amazonses.com']
 

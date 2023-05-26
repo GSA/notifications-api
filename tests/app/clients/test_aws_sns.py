@@ -5,7 +5,6 @@ from app import aws_sns_client
 
 def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
     boto_mock = mocker.patch.object(aws_sns_client, '_client', create=True)
-    mocker.patch.object(aws_sns_client, 'statsd_client', create=True)
     to = "6135555555"
     content = reference = 'foo'
     with notify_api.app_context():
@@ -22,7 +21,6 @@ def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
 
 def test_send_sms_returns_raises_error_if_there_is_no_valid_number_is_found(notify_api, mocker):
     mocker.patch.object(aws_sns_client, '_client', create=True)
-    mocker.patch.object(aws_sns_client, 'statsd_client', create=True)
     to = ""
     content = reference = 'foo'
     with pytest.raises(ValueError) as excinfo:

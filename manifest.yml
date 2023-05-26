@@ -2,6 +2,7 @@
 applications:
   - name: notify-api-((env))
     buildpack: python_buildpack
+    stack: cflinuxfs4
     instances: 1
     disk_quota: 1G
     routes:

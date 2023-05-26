@@ -1,6 +1,5 @@
 import pytest
 
-from app import statsd_client
 from app.clients.sms import SmsClient, SmsClientResponseException
 
 
@@ -12,13 +11,12 @@ def fake_client(notify_api):
             return 'fake'
 
     fake_client = FakeSmsClient()
-    fake_client.init_app(notify_api, statsd_client)
+    # fake_client.init_app(notify_api)
     return fake_client
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: New SMS client")
 def test_send_sms(fake_client, mocker):
-    mock_send = mocker.patch.object(fake_client, 'try_send_sms')
+    mock_send = mocker.patch.object(fake_client, 'send_sms')
 
     fake_client.send_sms(
         to='to',
@@ -29,14 +27,13 @@ def test_send_sms(fake_client, mocker):
     )
 
     mock_send.assert_called_with(
-        'to', 'content', 'reference', False, 'testing'
+        to='to', content='content', reference='reference', international=False, sender='testing'
     )
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: New SMS client")
 def test_send_sms_error(fake_client, mocker):
     mocker.patch.object(
-        fake_client, 'try_send_sms', side_effect=SmsClientResponseException('error')
+        fake_client, 'send_sms', side_effect=SmsClientResponseException('error')
     )
 
     with pytest.raises(SmsClientResponseException):

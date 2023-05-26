@@ -43,6 +43,10 @@ run-celery-beat: ## Run celery beat
 	-A run_celery.notify_celery beat \
 	--loglevel=INFO
 
+.PHONY: cloudgov-user-report
+cloudgov-user-report:
+	@pipenv run python -m terraform.ops.cloudgov_user_report
+
 .PHONY: help
 help:
 	@cat $(MAKEFILE_LIST) | grep -E '^[a-zA-Z_-]+:.*?## .*$$' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -53,10 +57,12 @@ generate-version-file: ## Generates the app version file
 
 .PHONY: test
 test: export NEW_RELIC_ENVIRONMENT=test
-test: ## Run tests
+test: ## Run tests and create coverage report
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run pytest -n4 --maxfail=10
+	pipenv run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+	pipenv run coverage report --fail-under=50
+	pipenv run coverage html -d .coverage_cache
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt

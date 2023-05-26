@@ -39,6 +39,15 @@ class CloudfoundryConfig:
             domain_arn = getenv('SES_DOMAIN_ARN', 'dev.notify.gov')
         return domain_arn.split('/')[-1]
 
+    # TODO remove this after notifications-api #258
+    @property
+    def ses_domain_arn(self):
+        try:
+            domain_arn = self._ses_credentials('domain_arn')
+        except KeyError:
+            domain_arn = getenv('SES_DOMAIN_ARN', 'dev.notify.gov')
+        return domain_arn
+
     @property
     def ses_region(self):
         try:
