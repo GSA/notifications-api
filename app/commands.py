@@ -18,6 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
+from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import process_row
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
@@ -462,6 +463,12 @@ def fix_billable_units():
         )
     db.session.commit()
     print("End fix_billable_units")
+
+
+@notify_command(name='delete-unfinished-jobs')
+def delete_unfinished_jobs():
+    cleanup_unfinished_jobs()
+    print("End cleanup_unfinished_jobs")
 
 
 @notify_command(name='process-row-from-job')

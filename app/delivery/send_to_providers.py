@@ -61,7 +61,7 @@ def send_sms_to_provider(notification):
         )
         if service.research_mode or notification.key_type == KEY_TYPE_TEST:
             update_notification_to_sending(notification, provider)
-            send_sms_response(provider.name, str(notification.id), notification.to)
+            send_sms_response(provider.name, str(notification.id))
 
         else:
             try:

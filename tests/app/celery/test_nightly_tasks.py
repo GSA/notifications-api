@@ -7,6 +7,7 @@ from freezegun import freeze_time
 from app.celery import nightly_tasks
 from app.celery.nightly_tasks import (
     _delete_notifications_older_than_retention_by_type,
+    cleanup_unfinished_jobs,
     delete_email_notifications_older_than_retention,
     delete_inbound_sms,
     delete_sms_notifications_older_than_retention,
@@ -15,7 +16,7 @@ from app.celery.nightly_tasks import (
     save_daily_notification_processing_time,
     timeout_notifications,
 )
-from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime
+from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime, Job
 from tests.app.db import (
     create_job,
     create_notification,
@@ -313,3 +314,17 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
             'datetime_to_delete_before': date(2021, 3, 26)
         }),
     ])
+
+
+def test_cleanup_unfinished_jobs(mocker):
+    mock_s3 = mocker.patch('app.celery.nightly_tasks.remove_csv_object')
+    mock_dao_archive = mocker.patch('app.celery.nightly_tasks.dao_archive_job')
+    mock_dao = mocker.patch('app.celery.nightly_tasks.dao_get_unfinished_jobs')
+    mock_job_unfinished = Job()
+    mock_job_unfinished.processing_started = datetime(2023, 1, 1, 0, 0, 0)
+    mock_job_unfinished.original_file_name = "blah"
+
+    mock_dao.return_value = [mock_job_unfinished]
+    cleanup_unfinished_jobs()
+    mock_s3.assert_called_once_with('blah')
+    mock_dao_archive.assert_called_once_with(mock_job_unfinished)

@@ -1,8 +1,3 @@
-
-import pytest
-
-
-@pytest.mark.skip(reason="Needs updating for TTS")
 def test_all_routes_have_authentication(client):
     # This tests that each blueprint registered on the application has a before_request function registered.
     # The None row is removed from the comparison as that is not blueprint specific but app specific.

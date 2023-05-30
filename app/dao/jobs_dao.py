@@ -43,6 +43,10 @@ def dao_get_job_by_service_id_and_job_id(service_id, job_id):
     return Job.query.filter_by(service_id=service_id, id=job_id).one()
 
 
+def dao_get_unfinished_jobs():
+    return Job.query.filter(Job.processing_finished.is_(None)).all()
+
+
 def dao_get_jobs_by_service_id(
     service_id,
     *,

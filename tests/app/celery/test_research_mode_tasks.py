@@ -12,6 +12,7 @@ from app.celery.research_mode_tasks import (
     sns_callback,
 )
 from app.config import QueueNames
+from app.models import NOTIFICATION_DELIVERED, NOTIFICATION_FAILED, Notification
 from tests.conftest import Matcher
 
 dvla_response_file_matcher = Matcher(
@@ -20,24 +21,33 @@ dvla_response_file_matcher = Matcher(
 )
 
 
-@pytest.mark.skip(reason="Re-enable when SMS receipts exist")
-def test_make_sns_callback(notify_api, rmock):
+def test_make_sns_callback(notify_api, rmock, mocker):
     endpoint = "http://localhost:6011/notifications/sms/sns"
+    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    n = Notification()
+    n.id = 1234
+    n.status = NOTIFICATION_DELIVERED
+    get_notification_by_id.return_value = n
     rmock.request(
         "POST",
         endpoint,
         json={"status": "success"},
         status_code=200)
-    send_sms_response("sns", "1234", "2028675309")
+    send_sms_response("sns", "1234")
 
     assert rmock.called
     assert rmock.request_history[0].url == endpoint
-    assert json.loads(rmock.request_history[0].text)['MSISDN'] == '2028675309'
+    assert json.loads(rmock.request_history[0].text)['status'] == 'delivered'
 
 
-@pytest.mark.skip(reason="Re-enable when SMS receipts exist")
 def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
     endpoint = "http://localhost:6011/notifications/sms/sns"
+    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    n = Notification()
+    n.id = 1234
+    n.status = NOTIFICATION_FAILED
+    get_notification_by_id.return_value = n
+
     rmock.request(
         "POST",
         endpoint,
@@ -46,12 +56,12 @@ def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
     mock_logger = mocker.patch('app.celery.tasks.current_app.logger.error')
 
     with pytest.raises(HTTPError):
-        send_sms_response("mmg", "1234", "07700900001")
+        send_sms_response("sns", "1234")
 
     assert rmock.called
     assert rmock.request_history[0].url == endpoint
     mock_logger.assert_called_once_with(
-        'API POST request on http://localhost:6011/notifications/sms/mmg failed with status 500'
+        'API POST request on http://localhost:6011/notifications/sms/sns failed with status 500'
     )
 
 
@@ -65,31 +75,13 @@ def test_make_ses_callback(notify_api, mocker):
     assert mock_task.apply_async.call_args[0][0][0] == ses_notification_callback(some_ref)
 
 
-@pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
-def test_delievered_sns_callback():
-    phone_number = "2028675309"
-    data = json.loads(sns_callback("1234", phone_number))
-    assert data['MSISDN'] == phone_number
-    assert data['status'] == "3"
-    assert data['reference'] == "sns_reference"
-    assert data['CID'] == "1234"
+def test_delivered_sns_callback(mocker):
+    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    n = Notification()
+    n.id = 1234
+    n.status = NOTIFICATION_DELIVERED
+    get_notification_by_id.return_value = n
 
-
-@pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
-def test_perm_failure_sns_callback():
-    phone_number = "2028675302"
-    data = json.loads(sns_callback("1234", phone_number))
-    assert data['MSISDN'] == phone_number
-    assert data['status'] == "5"
-    assert data['reference'] == "sns_reference"
-    assert data['CID'] == "1234"
-
-
-@pytest.mark.skip(reason="Re-enable when SNS delivery receipts exist")
-def test_temp_failure_sns_callback():
-    phone_number = "2028675303"
-    data = json.loads(sns_callback("1234", phone_number))
-    assert data['MSISDN'] == phone_number
-    assert data['status'] == "4"
-    assert data['reference'] == "sns_reference"
+    data = json.loads(sns_callback("1234"))
+    assert data['status'] == "delivered"
     assert data['CID'] == "1234"

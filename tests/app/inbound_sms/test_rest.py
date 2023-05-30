@@ -76,7 +76,6 @@ def test_post_to_get_inbound_sms_filters_international_user_number(admin_request
     )['data']
 
     assert len(sms) == 2
-    print(f'sms is: {sms}')
     assert sms[1]['id'] == str(one.id)
     assert sms[1]['user_number'] == str(one.user_number)
 
