@@ -63,7 +63,7 @@ def get_midnight_for_day_before(date):
     return get_midnight_in_utc(day_before)
 
 
-def get_local_month_from_utc_column(column):
+def get_month_from_utc_column(column):
     """
      Where queries need to count notifications by month it needs to be
      the month in local time.
@@ -75,7 +75,7 @@ def get_local_month_from_utc_column(column):
     """
     return func.date_trunc(
         "month",
-        func.timezone(getenv("TIMEZONE", "America/New_York"), func.timezone("UTC", column))
+        func.timezone(getenv("TIMEZONE", "UTC"), func.timezone("UTC", column))
     )
 
 

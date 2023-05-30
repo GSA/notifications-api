@@ -28,8 +28,8 @@ from app.models import (
     Template,
 )
 from app.utils import (
-    get_local_month_from_utc_column,
     get_midnight_in_utc,
+    get_month_from_utc_column,
     midnight_n_days_ago,
 )
 
@@ -358,7 +358,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 
     if start_date <= datetime.utcnow() <= end_date:
         today = get_midnight_in_utc(datetime.utcnow())
-        month = get_local_month_from_utc_column(Notification.created_at)
+        month = get_month_from_utc_column(Notification.created_at)
 
         stats_for_today = db.session.query(
             Notification.template_id.label('template_id'),
