@@ -67,11 +67,11 @@ def test_should_retry_and_log_warning_if_SmsClientResponseException_for_deliver_
     )
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
     mock_logger_warning = mocker.patch('app.celery.tasks.current_app.logger.warning')
+    assert sample_notification.status == 'created'
 
     deliver_sms(sample_notification.id)
 
     assert provider_tasks.deliver_sms.retry.called is True
-    assert sample_notification.status == 'created'
     assert mock_logger_warning.called
 
 
@@ -82,10 +82,10 @@ def test_should_retry_and_log_exception_for_non_SmsClientResponseException_excep
     mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
     mock_logger_exception = mocker.patch('app.celery.tasks.current_app.logger.exception')
 
+    assert sample_notification.status == 'created'
     deliver_sms(sample_notification.id)
 
     assert provider_tasks.deliver_sms.retry.called is True
-    assert sample_notification.status == 'created'
     assert mock_logger_exception.called
 
 

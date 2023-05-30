@@ -11,7 +11,10 @@ from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
 from app.config import QueueNames
 from app.dao import notifications_dao
-from app.dao.notifications_dao import update_notification_status_by_id
+from app.dao.notifications_dao import (
+    insert_notification_history_delete_notifications_by_id,
+    update_notification_status_by_id,
+)
 from app.delivery import send_to_providers
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
@@ -39,6 +42,10 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
         status = NOTIFICATION_FAILED
     update_notification_status_by_id(notification_id, status, provider_response=provider_response)
     current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
+
+    if status == NOTIFICATION_SENT:
+        insert_notification_history_delete_notifications_by_id(notification_id)
+        current_app.logger.info(f"Archived notification {notification_id} that was successfully sent")
 
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
