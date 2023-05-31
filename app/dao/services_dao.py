@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast
@@ -387,7 +387,7 @@ def delete_service_and_all_associated_db_objects(service):
 
 
 def dao_fetch_todays_stats_for_service(service_id):
-    today = date.today()
+    today = datetime.utcnow().date()
     start_date = get_midnight_in_utc(today)
     return db.session.query(
         Notification.notification_type,

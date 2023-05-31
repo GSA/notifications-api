@@ -426,7 +426,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     second_service = create_service(service_name='second Service')
     second_template = create_template(service=second_service, template_type='email')
 
-    process_day = date.today() - timedelta(days=5)
+    process_day = datetime.utcnow().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(template=first_template, status='delivered')
         create_notification(template=second_template, status='temporary-failure')
@@ -441,7 +441,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification_history(template=second_template, status='delivered')
 
     # these created notifications from a different day get ignored
-    with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.max)):
+    with freeze_time(datetime.combine(datetime.utcnow().date() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
 

@@ -714,7 +714,7 @@ def test_fetch_usage_year_for_organisation_only_queries_present_year(notify_db_s
     last_year = current_year - 1
     date_two_years_ago = date(2021, 3, 31)
     date_in_last_financial_year = date(2022, 3, 31)
-    date_in_this_year = date.today()
+    date_in_this_year = datetime.utcnow().date()
 
     org = create_organisation(name='Organisation 1')
 

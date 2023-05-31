@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, datetime
 
 from flask import url_for
 from freezegun import freeze_time
@@ -74,7 +74,7 @@ def test_get_complaint_sets_start_and_end_date_to_today_if_not_specified(mocker,
     dao_mock = mocker.patch('app.complaint.complaint_rest.fetch_count_of_complaints', return_value=5)
     response = client.get(url_for('complaint.get_complaint_count'), headers=[create_admin_authorization_header()])
 
-    dao_mock.assert_called_once_with(start_date=date.today(), end_date=date.today())
+    dao_mock.assert_called_once_with(start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date())
     assert response.status_code == 200
     assert json.loads(response.get_data(as_text=True)) == 5
 
