@@ -495,7 +495,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(notify_db_session):
     first_service = create_service(service_name='First Service')
     first_template = create_template(service=first_service)
-    process_day = date.today()
+    process_day = datetime.utcnow().date()
 
     # first run: one notification, expect one row (just one status)
     notification = create_notification(template=first_template, status='sending')
