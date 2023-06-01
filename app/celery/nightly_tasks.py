@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery
@@ -27,7 +26,7 @@ from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
 from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
@@ -79,9 +78,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
     flexible_data_retention = fetch_service_data_retention_for_all_services_by_notification_type(notification_type)
 
     for f in flexible_data_retention:
-        day_to_delete_backwards_from = get_local_midnight_in_utc(
-            convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=f.days_of_retention)
-        )
+        day_to_delete_backwards_from = get_midnight_in_utc(datetime.utcnow()).date() \
+                                       - timedelta(days=f.days_of_retention)
 
         delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
             'service_id': f.service_id,
@@ -89,9 +87,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             'datetime_to_delete_before': day_to_delete_backwards_from
         })
 
-    seven_days_ago = get_local_midnight_in_utc(
-        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7)
-    )
+    seven_days_ago = get_midnight_in_utc(datetime.utcnow()).date() - timedelta(days=7)
+
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
     # get a list of all service ids that we'll need to delete for. Typically that might only be 5% of services.
@@ -184,8 +181,8 @@ def save_daily_notification_processing_time(local_date=None):
     else:
         local_date = datetime.strptime(local_date, "%Y-%m-%d").date()
 
-    start_time = get_local_midnight_in_utc(local_date)
-    end_time = get_local_midnight_in_utc(local_date + timedelta(days=1))
+    start_time = get_midnight_in_utc(local_date)
+    end_time = get_midnight_in_utc(local_date + timedelta(days=1))
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(

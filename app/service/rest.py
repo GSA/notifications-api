@@ -2,7 +2,6 @@ import itertools
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
@@ -500,9 +499,7 @@ def get_monthly_notification_stats(service_id):
 
     now = datetime.utcnow()
     if end_date > now:
-        todays_deltas = fetch_notification_status_for_service_for_day(
-            convert_utc_to_local_timezone(now), service_id=service_id
-        )
+        todays_deltas = fetch_notification_status_for_service_for_day(now, service_id=service_id)
         statistics.add_monthly_notification_status_stats(data, todays_deltas)
 
     return jsonify(data=data)
@@ -530,7 +527,6 @@ def get_detailed_services(start_date, end_date, only_active=False, include_from_
         stats = dao_fetch_todays_stats_for_all_services(include_from_test_key=include_from_test_key,
                                                         only_active=only_active)
     else:
-
         stats = fetch_stats_for_all_services_by_date_range(start_date=start_date,
                                                            end_date=end_date,
                                                            include_from_test_key=include_from_test_key,

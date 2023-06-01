@@ -73,7 +73,7 @@ def test_create_nightly_notification_status_triggers_tasks(
     mock_celery.assert_called_with(
         kwargs={
             'service_id': sample_service.id,
-            'process_day': '2019-07-30',
+            'process_day': '2019-07-31',
             'notification_type': SMS_TYPE
         },
         queue=QueueNames.REPORTING
@@ -347,7 +347,7 @@ def test_create_nightly_billing_for_day_use_BST(
     )
 
     create_notification(
-        created_at=datetime(2018, 3, 26, 3, 59),
+        created_at=datetime(2018, 3, 25, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -356,7 +356,7 @@ def test_create_nightly_billing_for_day_use_BST(
 
     # too early
     create_notification(
-        created_at=datetime(2018, 3, 25, 3, 59),
+        created_at=datetime(2018, 3, 24, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -426,7 +426,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     second_service = create_service(service_name='second Service')
     second_template = create_template(service=second_service, template_type='email')
 
-    process_day = date.today() - timedelta(days=5)
+    process_day = datetime.utcnow().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(template=first_template, status='delivered')
         create_notification(template=second_template, status='temporary-failure')
@@ -441,7 +441,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification_history(template=second_template, status='delivered')
 
     # these created notifications from a different day get ignored
-    with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.max)):
+    with freeze_time(datetime.combine(datetime.utcnow().date() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
 
@@ -495,7 +495,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(notify_db_session):
     first_service = create_service(service_name='First Service')
     first_template = create_template(service=first_service)
-    process_day = date.today()
+    process_day = datetime.utcnow().date()
 
     # first run: one notification, expect one row (just one status)
     notification = create_notification(template=first_template, status='sending')

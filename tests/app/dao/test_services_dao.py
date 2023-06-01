@@ -778,7 +778,7 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today(notify_db_sessio
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert 'delivered' not in stats
+    assert stats['delivered'] == 1
     assert stats['failed'] == 1
     assert stats['created'] == 1
 
@@ -808,7 +808,7 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_spri
 
 def test_dao_fetch_todays_stats_for_service_only_includes_today_during_bst(notify_db_session):
     template = create_template(service=create_service())
-    with freeze_time('2021-03-29T03:59:59'):
+    with freeze_time('2021-03-28T23:59:59'):
         # just before midnight BST -- not included
         create_notification(template=template, to_field='1', status='permanent-failure')
     with freeze_time('2021-03-29T04:00:01'):

@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime
+from datetime import datetime
 
 from flask import url_for
 
@@ -27,7 +27,8 @@ def test_template_history_version(notify_api, sample_user, sample_template):
             assert json_resp['data']['version'] == 1
             assert json_resp['data']['process_type'] == 'normal'
             assert json_resp['data']['created_by']['name'] == sample_user.name
-            assert datetime.strptime(json_resp['data']['created_at'], '%Y-%m-%d %H:%M:%S.%f').date() == date.today()
+            assert datetime.strptime(json_resp['data']['created_at'], '%Y-%m-%d %H:%M:%S.%f').date() == \
+                   datetime.utcnow().date()
 
 
 def test_previous_template_history_version(notify_api, sample_template):

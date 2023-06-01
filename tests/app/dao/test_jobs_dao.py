@@ -135,8 +135,8 @@ def test_get_jobs_for_service_with_limit_days_param(sample_template):
 @freeze_time('2017-06-10')
 def test_get_jobs_for_service_with_limit_days_edge_case(sample_template):
     one_job = create_job(sample_template)
-    just_after_midnight_job = create_job(sample_template, created_at=datetime(2017, 6, 3, 4, 0, 1))
-    just_before_midnight_job = create_job(sample_template, created_at=datetime(2017, 6, 3, 3, 59, 0))
+    just_after_midnight_job = create_job(sample_template, created_at=datetime(2017, 6, 3, 0, 0, 1))
+    just_before_midnight_job = create_job(sample_template, created_at=datetime(2017, 6, 2, 23, 59, 0))
 
     jobs_limit_days = dao_get_jobs_by_service_id(one_job.service_id, limit_days=7).items
     assert len(jobs_limit_days) == 2

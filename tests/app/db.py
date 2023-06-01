@@ -297,7 +297,6 @@ def create_notification(
     }
     notification = Notification(**data)
     dao_create_notification(notification)
-
     return notification
 
 

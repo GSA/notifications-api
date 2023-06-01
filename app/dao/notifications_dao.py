@@ -35,7 +35,7 @@ from app.models import (
 )
 from app.utils import (
     escape_special_characters,
-    get_local_midnight_in_utc,
+    get_midnight_in_utc,
     midnight_n_days_ago,
 )
 
@@ -612,8 +612,8 @@ def get_service_ids_with_notifications_before(notification_type, timestamp):
 
 
 def get_service_ids_with_notifications_on_date(notification_type, date):
-    start_date = get_local_midnight_in_utc(date)
-    end_date = get_local_midnight_in_utc(date + timedelta(days=1))
+    start_date = get_midnight_in_utc(date)
+    end_date = get_midnight_in_utc(date + timedelta(days=1))
 
     notification_table_query = db.session.query(
         Notification.service_id.label('service_id')
