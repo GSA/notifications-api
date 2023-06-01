@@ -47,7 +47,7 @@ and structure.  This allows us to easily review the documentions and discuss
 them as a team.  It also guarantees that the ADR has all of the required
 information.
 
-**ADRs are intended to be living documents.**  As such, it is not uncommon t
+**ADRs are intended to be living documents.**  As such, it is not uncommon to
 see multiple pull requests (PRs) filed to update them, especially during an
 active discussion and research taking place.  This is also why there is a
 *status* marker on them as a part of their metadata.
