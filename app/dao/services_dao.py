@@ -408,7 +408,6 @@ def dao_fetch_todays_stats_for_all_services(include_from_test_key=True, only_act
     start_date = get_midnight_in_utc(today)
     end_date = get_midnight_in_utc(today + timedelta(days=1))
 
-
     subquery = db.session.query(
         Notification.notification_type,
         Notification.status,
