@@ -104,16 +104,16 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
     ).all()
 
 
-def fetch_notification_status_for_service_for_day(bst_day, service_id):
+def fetch_notification_status_for_service_for_day(fetch_day, service_id):
     return db.session.query(
         # return current month as a datetime so the data has the same shape as the ft_notification_status query
-        literal(bst_day.replace(day=1), type_=DateTime).label('month'),
+        literal(fetch_day.replace(day=1), type_=DateTime).label('month'),
         Notification.notification_type,
         Notification.status.label('notification_status'),
         func.count().label('count')
     ).filter(
-        Notification.created_at >= get_midnight_in_utc(bst_day),
-        Notification.created_at < get_midnight_in_utc(bst_day + timedelta(days=1)),
+        Notification.created_at >= get_midnight_in_utc(fetch_day),
+        Notification.created_at < get_midnight_in_utc(fetch_day + timedelta(days=1)),
         Notification.service_id == service_id,
         Notification.key_type != KEY_TYPE_TEST
     ).group_by(

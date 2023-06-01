@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from os import getenv
 
 from flask import url_for
 from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
@@ -75,7 +74,7 @@ def get_month_from_utc_column(column):
     """
     return func.date_trunc(
         "month",
-        func.timezone(getenv("TIMEZONE", "UTC"), func.timezone("UTC", column))
+        func.timezone("UTC", func.timezone("UTC", column))
     )
 
 
