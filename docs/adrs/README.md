@@ -36,7 +36,7 @@ proposal and then share it with the rest of the team to discuss it and decide
 whether or not to move forward, with or without any changes.
 
 
-## How are ADRs created and maintained?
+## How are ADRs created, reviewed, and maintained?
 
 First, we have an ADR template that folks can use to work off of.  The template
 exists as both a GitHub issue template and a standalone Markdown file that can
@@ -52,6 +52,12 @@ see multiple pull requests (PRs) filed to update them, especially during an
 active discussion and research taking place.  This is also why there is a
 *status* marker on them as a part of their metadata.
 
+Once an ADR has been reviewed and is ready to be finalized (either as accepted,
+rejected, or some other status), some final edits are made to update the ADR
+with decision details and next steps.  After this, future PRs can be opened to
+make additional updates, especially if an ADR becomes deprecated or superceded
+by another one.
+
 
 ### Creating an ADR
 
@@ -59,7 +65,7 @@ To create a new ADR in this repository, you can do one of two things:
 
 - Open a new GitHub issue and select the Architecture Decision Record issue type
 - Clone the repo locally, create a new branch for yourself, and make a copy of
-  the Markdown template.
+  the Markdown template
 
 In either scenario, check to see what the latest ADR filename is, because they
 always start with a number (e.g., `0001`).  Name your ADR with a number one
@@ -68,6 +74,51 @@ should start with `0022-`.
 
 At this point, it is a matter of filling in the details outlined in the template
 that are relevant to the ADR.
+
+
+### Reviewing an ADR
+
+Once an ADR is created, it's time for review and discussion!  This could happen
+a few ways:
+
+- Asynchronously via comments on the pull request itself
+- Synchronously with a scheduled meeting(s) and a facilitator
+- A combination of these, depending on the nature of the ADR and needs of the
+  team
+
+Whichever way is chosen, the review process should allow the team to dig into
+the proposal and talk through its merits, address anything needing
+clarification, discuss any potential alternatives, and develop an understanding
+of the trade-offs in deciding to move forward with the proposal or not.
+
+If it turns out that one of the alternatives proves to be a better solution, the
+ADR should be updated to reflect that and a follow-up discussion and/or review
+should be held to make sure everything is accurate and up-to-date.
+
+**Please note:** Similar to sprint retrospectives, these review sessions *must*
+ensure a healthy and open dialog within the team; therefore, we actively work
+to promote psychological safety so that everyone and their contributions are
+welcomed and respected.
+
+As a reminder, we can reference these statements, just as we would in a sprint
+retrospective:
+
+>We are here to improve our team and our way of working incrementally over time.
+>This is a safe space, where we can openly discuss anything related to the team
+>or project in a [blameless manner](https://opensource.com/article/19/4/psychology-behind-blameless-retrospective).
+
+[Retrospective Prime Directive](https://retrospectivewiki.org/index.php?title=The_Prime_Directive):
+
+>“Regardless of what we discover, we understand and truly believe that everyone
+>did the best job they could, given what they knew at the time, their skills and
+>abilities, the resources available, and the situation at hand.”
+
+*– Norm Kerth, Project Retrospectives:  A Handbook for Team Review*
+
+An approach we can take during the discussions is to use the principles of
+[The Art of Alignment](https://drive.google.com/file/d/1pPIzJG1kcnudR1HjZiB5UZgwYJ1dyetS/view?usp=share_link).
+There are also other frameworks and tools for sharing proposals and achieving
+consensus within a team.
 
 
 ### Maintaining an ADR
