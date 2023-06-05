@@ -81,6 +81,7 @@ objective as possible while including all relevant details so that a clear
 justification is provided.  Include a list of consequences for choosing this
 option, both positive and negative:
 
+
 ### Consequences
 
 - Positive
