@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/01/2023 | N/A | Proposed | @ccostino | @GSA/notify-contributors |
+| 06/01/2023 | 06/05/2023 | Accepted | @ccostino | @stvnrlly |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -130,6 +130,7 @@ them.  Some example material to reference:
 - [The Markdown ADR (MADR) Template Explained and Distilled](https://www.ozimmer.ch/practices/2022/11/22/MADRTemplatePrimer.html)
 - [The Ultimate Guide to Architectural Decision Records](https://betterprogramming.pub/the-ultimate-guide-to-architectural-decision-records-6d74fd3850ee)
 
+
 ### Consequences
 
 - Positive
@@ -146,4 +147,7 @@ them.  Some example material to reference:
 
 ## VALIDATION AND NEXT STEPS
 
-TBD, pending discussion and review.
+@stvnrlly and I went over this proposal and have worked together to get it in
+the shape it needs to be for the team to work off of.  The corresponding ADR
+README.md that was a part of the original pull request was also refined to make
+sure it contains all relevant information and instructions.

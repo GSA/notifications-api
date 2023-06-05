@@ -130,6 +130,18 @@ your local machine and make the changes necessary.
 In either scenario, you'll create a pull request (PR) with your changes that
 will then be ready for review from others on the team.
 
+ADR statuses can be one of the following:
+
+- Proposed
+- Accepted
+- Rejected
+- Deprecated
+- Superseded By (new ADR number and link)
+
+Once the ADR itself is updated, this README also needs to be updated so that the
+ADR is listed in the Architecture Decision Log just below.  This lists all of
+our ADRs in reverse chronological order so we have a convenient index of them.
+
 
 ## Architecture Decision Log
 
