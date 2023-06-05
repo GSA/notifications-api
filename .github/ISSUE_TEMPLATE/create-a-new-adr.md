@@ -12,7 +12,7 @@ assignees: ''
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| Date when ADR was created - MM/DD/YYYY format | Date when ADR was last updated - MM/DD/YYYY format - or N/A | Current ADR status - one of Proposed / Under Review / Accepted / Rejected / Deprecated / Superceded By ADR - link to ADR | GitHub username(s) of author(s) | GitHub username(s) or team name(s) of other folks involved |
+| Date when ADR was created - MM/DD/YYYY format | Date when ADR was last updated - MM/DD/YYYY format - or N/A | Current ADR status - one of Proposed /  Accepted / Rejected / Deprecated / Superseded By ADR - link to ADR | GitHub username(s) of author(s) | GitHub username(s) or team name(s) of other folks involved |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
