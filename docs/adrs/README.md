@@ -1,0 +1,151 @@
+# US Notify Architectural Decision Records (ADRs)
+
+This sub-folder in the US Notify API project contains the bulk of our
+Architectural Decision Records (henceforth referred to as ADRs) for the overall
+product and service.
+
+
+## What are ADRs?
+
+ADRs serve a few purposes for our team:
+
+- Document important decisions related to the behavior, architecture, and/or
+  dependencies of the platform
+- Capture the decision making process behind a change, from its initial proposal
+  all the way through to its decided outcomes
+- Identify alternative approaches and note why they were ultimately not chosen
+- Denote who is the decision maker(s) for a change within the team
+
+The collection of ADRs in this repository make up our architectural decision log
+(ADL).  An index of the log is maintained right here in this README just below.
+
+For more information, you can see the details in
+[our first ADR](./0001-establishing-adrs-for-us-notify.md) that establishes
+everything!
+
+
+## When should we write an ADR?
+
+An ADR should be written when the team is discussing any significant change to
+the system that will alter its behavior, infrastructure, and/or dependencies.
+
+We should also consider writing an ADR when we're ready to propose something
+that is new to the system, e.g., adding a new feature, leveraging a new cloud
+service for additional capabilities, etc.  An ADR is a great format to write a
+proposal and then share it with the rest of the team to discuss it and decide
+whether or not to move forward, with or without any changes.
+
+
+## How are ADRs created, reviewed, and maintained?
+
+First, we have an ADR template that folks can use to work off of.  The template
+exists as both a GitHub issue template and a standalone Markdown file that can
+be copied as needed if folks prefer to work locally first.
+
+By following the template, we ensure that our ADRs are consistent in language
+and structure.  This allows us to easily review the documentions and discuss
+them as a team.  It also guarantees that the ADR has all of the required
+information.
+
+**ADRs are intended to be living documents.**  As such, it is not uncommon to
+see multiple pull requests (PRs) filed to update them, especially during an
+active discussion and research taking place.  This is also why there is a
+*status* marker on them as a part of their metadata.
+
+Once an ADR has been reviewed and is ready to be finalized (either as accepted,
+rejected, or some other status), some final edits are made to update the ADR
+with decision details and next steps.  After this, future PRs can be opened to
+make additional updates, especially if an ADR becomes deprecated or superceded
+by another one.
+
+
+### Creating an ADR
+
+To create a new ADR in this repository, you can do one of two things:
+
+- Open a new GitHub issue and select the Architecture Decision Record issue type
+- Clone the repo locally, create a new branch for yourself, and make a copy of
+  the Markdown template
+
+In either scenario, check to see what the latest ADR filename is, because they
+always start with a number (e.g., `0001`).  Name your ADR with a number one
+after the last ADR written; if the latest ADR starts with `0021-`, your ADR
+should start with `0022-`.
+
+At this point, it is a matter of filling in the details outlined in the template
+that are relevant to the ADR.
+
+
+### Reviewing an ADR
+
+Once an ADR is created, it's time for review and discussion!  This could happen
+a few ways:
+
+- Asynchronously via comments on the pull request itself
+- Synchronously with a scheduled meeting(s) and a facilitator
+- A combination of these, depending on the nature of the ADR and needs of the
+  team
+
+Whichever way is chosen, the review process should allow the team to dig into
+the proposal and talk through its merits, address anything needing
+clarification, discuss any potential alternatives, and develop an understanding
+of the trade-offs in deciding to move forward with the proposal or not.
+
+If it turns out that one of the alternatives proves to be a better solution, the
+ADR should be updated to reflect that and a follow-up discussion and/or review
+should be held to make sure everything is accurate and up-to-date.
+
+**Please note:** Similar to sprint retrospectives, these review sessions *must*
+ensure a healthy and open dialog within the team; therefore, we actively work
+to promote psychological safety so that everyone and their contributions are
+welcomed and respected.
+
+As a reminder, we can reference these statements, just as we would in a sprint
+retrospective:
+
+>We are here to improve our team and our way of working incrementally over time.
+>This is a safe space, where we can openly discuss anything related to the team
+>or project in a [blameless manner](https://opensource.com/article/19/4/psychology-behind-blameless-retrospective).
+
+[Retrospective Prime Directive](https://retrospectivewiki.org/index.php?title=The_Prime_Directive):
+
+>“Regardless of what we discover, we understand and truly believe that everyone
+>did the best job they could, given what they knew at the time, their skills and
+>abilities, the resources available, and the situation at hand.”
+
+*– Norm Kerth, Project Retrospectives:  A Handbook for Team Review*
+
+An approach we can take during the discussions is to use the principles of
+[The Art of Alignment](https://drive.google.com/file/d/1pPIzJG1kcnudR1HjZiB5UZgwYJ1dyetS/view?usp=share_link).
+There are also other frameworks and tools for sharing proposals and achieving
+consensus within a team.
+
+
+### Maintaining an ADR
+
+If an ADR requires some updates or is ready to be accepted or rejected, you can
+either edit the file directly in GitHub or create a new branch in the repo on
+your local machine and make the changes necessary.
+
+In either scenario, you'll create a pull request (PR) with your changes that
+will then be ready for review from others on the team.
+
+ADR statuses can be one of the following:
+
+- Proposed
+- Accepted
+- Rejected
+- Deprecated
+- Superseded By (new ADR number and link)
+
+Once the ADR itself is updated, this README also needs to be updated so that the
+ADR is listed in the Architecture Decision Log just below.  This lists all of
+our ADRs in reverse chronological order so we have a convenient index of them.
+
+
+## Architecture Decision Log
+
+This is the log of all of our ADRs in reverse chronological order (newest is up
+top!).
+
+- [ADR-0001](./0001-establishing-adrs-for-us-notify.md) - Establishing ADRs for US Notify
