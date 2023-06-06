@@ -148,4 +148,5 @@ our ADRs in reverse chronological order so we have a convenient index of them.
 This is the log of all of our ADRs in reverse chronological order (newest is up
 top!).
 
+- [ADR-0002](./0002-how-to-handle-timezones.md) - Determine How to Handle Timezones in US Notify
 - [ADR-0001](./0001-establishing-adrs-for-us-notify.md) - Establishing ADRs for US Notify
