@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast
@@ -8,7 +8,7 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.date_util import get_current_financial_year
+from app.dao.date_util import get_current_calendar_year
 from app.dao.organisation_dao import dao_get_organisation_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
@@ -42,7 +42,7 @@ from app.models import (
 from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
-    get_local_midnight_in_utc,
+    get_midnight_in_utc,
 )
 
 DEFAULT_SERVICE_PERMISSIONS = [
@@ -79,7 +79,7 @@ def dao_count_live_services():
 
 
 def dao_fetch_live_services_data():
-    year_start_date, year_end_date = get_current_financial_year()
+    year_start_date, year_end_date = get_current_calendar_year()
 
     most_recent_annual_billing = db.session.query(
         AnnualBilling.service_id,
@@ -387,9 +387,8 @@ def delete_service_and_all_associated_db_objects(service):
 
 
 def dao_fetch_todays_stats_for_service(service_id):
-    today = date.today()
-    start_date = get_local_midnight_in_utc(today)
-
+    today = datetime.utcnow().date()
+    start_date = get_midnight_in_utc(today)
     return db.session.query(
         Notification.notification_type,
         Notification.status,
@@ -405,9 +404,9 @@ def dao_fetch_todays_stats_for_service(service_id):
 
 
 def dao_fetch_todays_stats_for_all_services(include_from_test_key=True, only_active=True):
-    today = date.today()
-    start_date = get_local_midnight_in_utc(today)
-    end_date = get_local_midnight_in_utc(today + timedelta(days=1))
+    today = datetime.utcnow().date()
+    start_date = get_midnight_in_utc(today)
+    end_date = get_midnight_in_utc(today + timedelta(days=1))
 
     subquery = db.session.query(
         Notification.notification_type,

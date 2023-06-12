@@ -1,15 +1,14 @@
 from datetime import date, datetime, timedelta
 
 from flask import current_app
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy import Date, Integer, and_, desc, func, union
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case, literal
 
 from app import db
 from app.dao.date_util import (
-    get_financial_year_dates,
-    get_financial_year_for_datetime,
+    get_calendar_year_dates,
+    get_calendar_year_for_datetime,
 )
 from app.dao.organisation_dao import dao_get_organisation_live_services
 from app.models import (
@@ -27,12 +26,12 @@ from app.models import (
     Rate,
     Service,
 )
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 def fetch_sms_free_allowance_remainder_until_date(end_date):
     # ASSUMPTION: AnnualBilling has been populated for year.
-    billing_year = get_financial_year_for_datetime(end_date)
+    billing_year = get_calendar_year_for_datetime(end_date)
     start_of_year = date(billing_year, 4, 1)
 
     billable_units = func.coalesce(func.sum(FactBilling.billable_units * FactBilling.rate_multiplier), 0)
@@ -178,8 +177,8 @@ def fetch_monthly_billing_for_year(service_id, year):
     Since the data in ft_billing is only refreshed once a day for all services,
     we also update the table on-the-fly if we need accurate data for this year.
     """
-    _, year_end = get_financial_year_dates(year)
-    today = convert_utc_to_local_timezone(datetime.utcnow()).date()
+    _, year_end = get_calendar_year_dates(year)
+    today = datetime.utcnow().date()
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:
@@ -217,7 +216,7 @@ def fetch_monthly_billing_for_year(service_id, year):
 
 
 def query_service_email_usage_for_year(service_id, year):
-    year_start, year_end = get_financial_year_dates(year)
+    year_start, year_end = get_calendar_year_dates(year)
 
     return db.session.query(
         FactBilling.local_date,
@@ -266,7 +265,7 @@ def query_service_sms_usage_for_year(service_id, year):
     on a given local_date. This means we don't need to worry about how to assign
     free allowance if it happens to run out when a rate changes.
     """
-    year_start, year_end = get_financial_year_dates(year)
+    year_start, year_end = get_calendar_year_dates(year)
     this_rows_chargeable_units = FactBilling.billable_units * FactBilling.rate_multiplier
 
     # Subquery for the number of chargeable units in all rows preceding this one,
@@ -330,8 +329,8 @@ def delete_billing_data_for_service_for_day(process_day, service_id):
 
 
 def fetch_billing_data_for_day(process_day, service_id=None, check_permissions=False):
-    start_date = get_local_midnight_in_utc(process_day)
-    end_date = get_local_midnight_in_utc(process_day + timedelta(days=1))
+    start_date = get_midnight_in_utc(process_day)
+    end_date = get_midnight_in_utc(process_day + timedelta(days=1))
     current_app.logger.info("Populate ft_billing for {} to {}".format(start_date, end_date))
     transit_data = []
     if not service_id:
@@ -430,7 +429,7 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 def get_rate(
     rates, notification_type, date
 ):
-    start_of_day = get_local_midnight_in_utc(date)
+    start_of_day = get_midnight_in_utc(date)
 
     if notification_type == SMS_TYPE:
         return next(
@@ -569,7 +568,7 @@ def query_organisation_sms_usage_for_year(organisation_id, year):
     """
     See docstring for query_service_sms_usage_for_year()
     """
-    year_start, year_end = get_financial_year_dates(year)
+    year_start, year_end = get_calendar_year_dates(year)
     this_rows_chargeable_units = FactBilling.billable_units * FactBilling.rate_multiplier
 
     # Subquery for the number of chargeable units in all rows preceding this one,
@@ -623,8 +622,8 @@ def query_organisation_sms_usage_for_year(organisation_id, year):
 
 
 def fetch_usage_year_for_organisation(organisation_id, year):
-    year_start, year_end = get_financial_year_dates(year)
-    today = convert_utc_to_local_timezone(datetime.utcnow()).date()
+    year_start, year_end = get_calendar_year_dates(year)
+    today = datetime.utcnow().date()
     services = dao_get_organisation_live_services(organisation_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.

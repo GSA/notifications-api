@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery
 from app.aws import s3
+from app.aws.s3 import remove_csv_object
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
 from app.cronitor import cronitor
@@ -14,6 +14,7 @@ from app.dao.inbound_sms_dao import delete_inbound_sms_older_than_retention
 from app.dao.jobs_dao import (
     dao_archive_job,
     dao_get_jobs_older_than_data_retention,
+    dao_get_unfinished_jobs,
 )
 from app.dao.notifications_dao import (
     dao_get_notifications_processing_time_stats,
@@ -25,7 +26,7 @@ from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
 from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
@@ -40,6 +41,19 @@ def _remove_csv_files(job_types):
         s3.remove_job_from_s3(job.service_id, job.id)
         dao_archive_job(job)
         current_app.logger.info("Job ID {} has been removed from s3.".format(job.id))
+
+
+@notify_celery.task(name="cleanup-unfinished-jobs")
+def cleanup_unfinished_jobs():
+    now = datetime.utcnow()
+    jobs = dao_get_unfinished_jobs()
+    for job in jobs:
+        # The query already checks that the processing_finished time is null, so here we are saying
+        # if it started more than 4 hours ago, that's too long
+        acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+        if now > acceptable_finish_time:
+            remove_csv_object(job.original_file_name)
+            dao_archive_job(job)
 
 
 @notify_celery.task(name="delete-notifications-older-than-retention")
@@ -64,9 +78,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
     flexible_data_retention = fetch_service_data_retention_for_all_services_by_notification_type(notification_type)
 
     for f in flexible_data_retention:
-        day_to_delete_backwards_from = get_local_midnight_in_utc(
-            convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=f.days_of_retention)
-        )
+        day_to_delete_backwards_from = get_midnight_in_utc(datetime.utcnow()).date() \
+                                       - timedelta(days=f.days_of_retention)
 
         delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
             'service_id': f.service_id,
@@ -74,9 +87,8 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             'datetime_to_delete_before': day_to_delete_backwards_from
         })
 
-    seven_days_ago = get_local_midnight_in_utc(
-        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7)
-    )
+    seven_days_ago = get_midnight_in_utc(datetime.utcnow()).date() - timedelta(days=7)
+
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
     # get a list of all service ids that we'll need to delete for. Typically that might only be 5% of services.
@@ -161,6 +173,7 @@ def delete_inbound_sms():
 @notify_celery.task(name='save-daily-notification-processing-time')
 @cronitor("save-daily-notification-processing-time")
 def save_daily_notification_processing_time(local_date=None):
+
     # local_date is a string in the format of "YYYY-MM-DD"
     if local_date is None:
         # if a date is not provided, we run against yesterdays data
@@ -168,8 +181,8 @@ def save_daily_notification_processing_time(local_date=None):
     else:
         local_date = datetime.strptime(local_date, "%Y-%m-%d").date()
 
-    start_time = get_local_midnight_in_utc(local_date)
-    end_time = get_local_midnight_in_utc(local_date + timedelta(days=1))
+    start_time = get_midnight_in_utc(local_date)
+    end_time = get_midnight_in_utc(local_date + timedelta(days=1))
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(

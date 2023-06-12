@@ -1,20 +1,13 @@
 from datetime import date, datetime, time, timedelta
 
-import pytz
-from notifications_utils.timezones import (
-    convert_local_timezone_to_utc,
-    convert_utc_to_local_timezone,
-    local_timezone,
-)
-
 
 def get_months_for_financial_year(year):
     return [
-        convert_local_timezone_to_utc(month) for month in (
+        month for month in (
             get_months_for_year(4, 13, year)
             + get_months_for_year(1, 4, year + 1)
         )
-        if convert_local_timezone_to_utc(month) < datetime.now()
+        if month < datetime.now()
     ]
 
 
@@ -22,35 +15,28 @@ def get_months_for_year(start, end, year):
     return [datetime(year, month, 1) for month in range(start, end)]
 
 
-def get_financial_year(year):
+def get_calendar_year(year):
     return get_new_years(year), get_new_years(year + 1) - timedelta(microseconds=1)
 
 
-def get_financial_year_dates(year):
-    year_start_datetime, year_end_datetime = get_financial_year(year)
+def get_calendar_year_dates(year):
+    year_start_datetime, year_end_datetime = get_calendar_year(year)
 
     return (
-        convert_utc_to_local_timezone(year_start_datetime).date(),
-        convert_utc_to_local_timezone(year_end_datetime).date()
+        year_start_datetime.date(),
+        year_end_datetime.date()
     )
 
 
-def get_current_financial_year():
+def get_current_calendar_year():
     now = datetime.utcnow()
     current_year = int(now.strftime('%Y'))
     year = current_year
-    return get_financial_year(year)
+    return get_calendar_year(year)
 
 
 def get_new_years(year):
-    """
-     This function converts the start of the financial year April 1, 00:00 as BST (British Standard Time) to UTC,
-     the tzinfo is lastly removed from the datetime because the database stores the timestamps without timezone.
-     :param year: the year to calculate the April 1, 00:00 BST for
-     :return: the datetime of April 1 for the given year, for example 2016 = 2016-03-31 23:00:00
-    """
-    return local_timezone.localize(
-        datetime(year, 1, 1, 0, 0, 0)).astimezone(pytz.UTC).replace(tzinfo=None)
+    return datetime(year, 1, 1, 0, 0, 0)
 
 
 def get_month_start_and_end_date_in_utc(month_year):
@@ -63,19 +49,19 @@ def get_month_start_and_end_date_in_utc(month_year):
     _, num_days = calendar.monthrange(month_year.year, month_year.month)
     first_day = datetime(month_year.year, month_year.month, 1, 0, 0, 0)
     last_day = datetime(month_year.year, month_year.month, num_days, 23, 59, 59, 99999)
-    return convert_local_timezone_to_utc(first_day), convert_local_timezone_to_utc(last_day)
+    return first_day, last_day
 
 
-def get_current_financial_year_start_year():
+def get_current_calendar_year_start_year():
     now = datetime.now()
     financial_year_start = now.year
-    start_date, end_date = get_financial_year(now.year)
+    start_date, end_date = get_calendar_year(now.year)
     if now < start_date:
         financial_year_start = financial_year_start - 1
     return financial_year_start
 
 
-def get_financial_year_for_datetime(start_date):
+def get_calendar_year_for_datetime(start_date):
     if type(start_date) == date:
         start_date = datetime.combine(start_date, time.min)
 

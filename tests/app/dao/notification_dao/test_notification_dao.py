@@ -1495,7 +1495,7 @@ def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_
 @pytest.mark.parametrize('created_at_utc,date_to_check,expected_count', [
     # Clocks change on the 27th of March 2022, so the query needs to look at the
     # time range 00:00 - 23:00 (UTC) thereafter.
-    ('2022-03-27T00:30', date(2022, 3, 27), 0),  # 27/03 00:30 GMT
+    ('2022-03-27T00:30', date(2022, 3, 27), 1),  # 27/03 00:30 GMT
     ('2022-03-27T22:30', date(2022, 3, 27), 1),  # 27/03 23:30 BST
     ('2022-03-27T23:30', date(2022, 3, 27), 1),  # 28/03 00:30 BST
     ('2022-03-26T23:30', date(2022, 3, 26), 1),  # 26/03 23:30 GMT

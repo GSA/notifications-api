@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy import asc, desc, func
 
 from app import db
@@ -155,8 +154,8 @@ def _update_provider_details_without_commit(provider_details):
 def dao_get_provider_stats():
     # this query does not include the current day since the task to populate ft_billing runs overnight
 
-    current_local_datetime = convert_utc_to_local_timezone(datetime.utcnow())
-    first_day_of_the_month = current_local_datetime.date().replace(day=1)
+    current_datetime = datetime.utcnow()
+    first_day_of_the_month = current_datetime.date().replace(day=1)
 
     subquery = db.session.query(
         FactBilling.provider,

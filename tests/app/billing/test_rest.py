@@ -5,7 +5,7 @@ from freezegun import freeze_time
 
 from app.billing.rest import update_free_sms_fragment_limit_data
 from app.dao.annual_billing_dao import dao_get_free_sms_fragment_limit_for_year
-from app.dao.date_util import get_current_financial_year_start_year
+from app.dao.date_util import get_current_calendar_year_start_year
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -32,7 +32,7 @@ def test_create_update_free_sms_fragment_limit_invalid_schema(admin_request, sam
 
 
 def test_create_free_sms_fragment_limit_current_year_updates_future_years(admin_request, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     future_billing = create_annual_billing(sample_service.id, 1, current_year + 1)
 
     admin_request.post(
@@ -54,7 +54,7 @@ def test_create_or_update_free_sms_fragment_limit_past_year_doenst_update_other_
     sample_service,
     update_existing
 ):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     create_annual_billing(sample_service.id, 1, current_year)
     if update_existing:
         create_annual_billing(sample_service.id, 1, current_year - 1)
@@ -71,7 +71,7 @@ def test_create_or_update_free_sms_fragment_limit_past_year_doenst_update_other_
 
 
 def test_create_free_sms_fragment_limit_updates_existing_year(admin_request, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     annual_billing = create_annual_billing(sample_service.id, 1, current_year)
 
     admin_request.post(
@@ -112,7 +112,7 @@ def test_get_free_sms_fragment_limit_current_year_creates_new_row_if_annual_bill
 
 
 def test_update_free_sms_fragment_limit_data(client, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     create_annual_billing(sample_service.id, free_sms_fragment_limit=250000, financial_year_start=current_year - 1)
 
     update_free_sms_fragment_limit_data(sample_service.id, 9999, current_year)

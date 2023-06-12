@@ -17,7 +17,6 @@ from notifications_utils.template import (
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -109,7 +108,7 @@ class User(db.Model):
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
     auth_type = db.Column(
-        db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=EMAIL_AUTH_TYPE
+        db.String, db.ForeignKey('auth_type.name'), index=True, nullable=False, default=SMS_AUTH_TYPE
     )
     email_access_validated_at = db.Column(
         db.DateTime, index=False, unique=False, nullable=False, default=datetime.datetime.utcnow
@@ -1503,7 +1502,6 @@ class Notification(db.Model):
             return None
 
     def serialize_for_csv(self):
-        created_at_in_est = convert_utc_to_local_timezone(self.created_at)
         serialized = {
             "row_number": '' if self.job_row_number is None else self.job_row_number + 1,
             "recipient": self.to,
@@ -1512,7 +1510,7 @@ class Notification(db.Model):
             "template_type": self.template.template_type,
             "job_name": self.job.original_file_name if self.job else '',
             "status": self.formatted_status,
-            "created_at": created_at_in_est.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "created_by_name": self.get_created_by_name(),
             "created_by_email_address": self.get_created_by_email_address(),
         }
@@ -1653,7 +1651,7 @@ class InvitedUser(db.Model):
         db.ForeignKey('auth_type.name'),
         index=True,
         nullable=False,
-        default=EMAIL_AUTH_TYPE
+        default=SMS_AUTH_TYPE
     )
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
 

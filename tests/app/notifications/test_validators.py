@@ -587,7 +587,6 @@ def test_check_reply_to_sms_type(sample_service):
     assert check_reply_to(sample_service.id, sms_sender.id, SMS_TYPE) == '123456'
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 def test_check_if_service_can_send_files_by_email_raises_if_no_contact_link_set(sample_service):
     with pytest.raises(BadRequestError) as e:
         check_if_service_can_send_files_by_email(
