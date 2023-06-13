@@ -36,6 +36,16 @@ body:
         - Superseded By
     validations:
       required: true
+  - type: dropdown
+    id: implemented
+    attributes:
+      label: Implemented
+      description: Is this ADR implemented?
+      options:
+        - Yes
+        - No
+    validations:
+      required: true
   - type: input
     id: superseded_by
     attributes:
