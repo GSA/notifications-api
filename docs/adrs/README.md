@@ -59,6 +59,25 @@ make additional updates, especially if an ADR becomes deprecated or superceded
 by another one.
 
 
+### Draft and Private ADRs
+
+For ADRs that we are collaborating over in real-time or much more synchronously
+as opposed to PR reviews and such, and/or storing private ADRs that we cannot
+share publicly, we have an
+:lock: [Architectural Decision Record Drive folder](https://drive.google.com/drive/folders/1APnbNZ81AuhZ8RFSyU5i9m_ZIetdHc-Q)
+to store these documents in.
+
+For Draft ADRs that can become **public**, once they're in a state that there
+isn't as a great a need for synchronous collaboration they can be copied to a
+Markdown file using the ADR template in GitHub and moved here, following the
+process we have outlined in this document.
+
+For ADRs that must remain **private**, there is a place to store them in the
+aforementioned Drive folder once they're in a finalized state.  We will still
+reference them in the Architectural Decision Log below, but there either won't
+be links or the link will go to a :lock: *private document* instead.
+
+
 ### Creating an ADR
 
 To create a new ADR in this repository, you can do one of two things:
@@ -116,7 +135,7 @@ retrospective:
 *– Norm Kerth, Project Retrospectives:  A Handbook for Team Review*
 
 An approach we can take during the discussions is to use the principles of
-[The Art of Alignment](https://drive.google.com/file/d/1pPIzJG1kcnudR1HjZiB5UZgwYJ1dyetS/view?usp=share_link).
+:lock: [The Art of Alignment](https://drive.google.com/file/d/1pPIzJG1kcnudR1HjZiB5UZgwYJ1dyetS/view?usp=share_link).
 There are also other frameworks and tools for sharing proposals and achieving
 consensus within a team.
 
@@ -138,6 +157,9 @@ ADR statuses can be one of the following:
 - Deprecated
 - Superseded By (new ADR number and link)
 
+There is also a field for tracking if an ADR is implemented or not (`Yes` or
+`No`).
+
 Once the ADR itself is updated, this README also needs to be updated so that the
 ADR is listed in the Architecture Decision Log just below.  This lists all of
 our ADRs in reverse chronological order so we have a convenient index of them.
@@ -148,8 +170,8 @@ our ADRs in reverse chronological order so we have a convenient index of them.
 This is the log of all of our ADRs in reverse chronological order (newest is up
 top!).
 
-| ADR | TITLE | CURRENT STATUS | LAST MODIFIED |
+| ADR | TITLE | CURRENT STATUS | IMPLEMENTED | LAST MODIFIED |
 | :---: | :---: | :---: | :---: |
-| [ADR-0003](./0003-implementing-invite-expirations.md) | [Implementing User Invite Expirations](./0003-implementing-invite-expirations.md) | Proposed | 06/06/2023 |
-| [ADR-0002](./0002-how-to-handle-timezones.md) | [Determine How to Handle Timezones in US Notify](./0002-how-to-handle-timezones.md) | Accepted | 06/06/2023 |
-| [ADR-0001](./0001-establishing-adrs-for-us-notify.md) | [Establishing ADRs for US Notify](./0001-establishing-adrs-for-us-notify.md) | Accepted | 06/05/2023 |
+| [ADR-0003](./0003-implementing-invite-expirations.md) | [Implementing User Invite Expirations](./0003-implementing-invite-expirations.md) | Proposed | No | 06/06/2023 |
+| [ADR-0002](./0002-how-to-handle-timezones.md) | [Determine How to Handle Timezones in US Notify](./0002-how-to-handle-timezones.md) | Accepted | Yes | 06/06/2023 |
+| [ADR-0001](./0001-establishing-adrs-for-us-notify.md) | [Establishing ADRs for US Notify](./0001-establishing-adrs-for-us-notify.md) | Accepted | Yes | 06/05/2023 |
