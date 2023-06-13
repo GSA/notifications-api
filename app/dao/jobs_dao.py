@@ -11,7 +11,7 @@ from app.models import (
     JOB_STATUS_SCHEDULED,
     FactNotificationStatus,
     Job,
-    Notification,
+    NotificationAllTimeView,
     ServiceDataRetention,
     Template,
 )
@@ -20,12 +20,12 @@ from app.utils import midnight_n_days_ago
 
 def dao_get_notification_outcomes_for_job(service_id, job_id):
     notification_statuses = db.session.query(
-        func.count(Notification.status).label('count'), Notification.status
+        func.count(NotificationAllTimeView.status).label('count'), NotificationAllTimeView.status
     ).filter(
-        Notification.service_id == service_id,
-        Notification.job_id == job_id
+        NotificationAllTimeView.service_id == service_id,
+        NotificationAllTimeView.job_id == job_id
     ).group_by(
-        Notification.status
+        NotificationAllTimeView.status
     ).all()
 
     if not notification_statuses:
@@ -185,12 +185,12 @@ def find_jobs_with_missing_rows():
         Job.job_status == JOB_STATUS_FINISHED,
         Job.processing_finished < ten_minutes_ago,
         Job.processing_finished > yesterday,
-        Job.id == Notification.job_id,
+        Job.id == NotificationAllTimeView.job_id,
 
     ).group_by(
         Job
     ).having(
-        func.count(Notification.id) != Job.notification_count
+        func.count(NotificationAllTimeView.id) != Job.notification_count
     )
 
     return jobs_with_rows_missing.all()
@@ -202,11 +202,12 @@ def find_missing_row_for_job(job_id, job_size):
     ).subquery()
 
     query = db.session.query(
-        Notification.job_row_number,
+        NotificationAllTimeView.job_row_number,
         expected_row_numbers.c.row.label('missing_row')
     ).outerjoin(
-        Notification, and_(expected_row_numbers.c.row == Notification.job_row_number, Notification.job_id == job_id)
+        NotificationAllTimeView, and_(expected_row_numbers.c.row == NotificationAllTimeView.job_row_number,
+                                      NotificationAllTimeView.job_id == job_id)
     ).filter(
-        Notification.job_row_number == None  # noqa
+        NotificationAllTimeView.job_row_number == None  # noqa
     )
     return query.all()

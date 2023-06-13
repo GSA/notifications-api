@@ -31,6 +31,7 @@ from app.models import (
     SMS_TYPE,
     FactNotificationStatus,
     Notification,
+    NotificationAllTimeView,
     NotificationHistory,
 )
 from app.utils import (
@@ -162,16 +163,16 @@ def dao_update_notification(notification):
 def get_notifications_for_job(service_id, job_id, filter_dict=None, page=1, page_size=None):
     if page_size is None:
         page_size = current_app.config['PAGE_SIZE']
-    query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
+    query = NotificationAllTimeView.query.filter_by(service_id=service_id, job_id=job_id)
     query = _filter_query(query, filter_dict)
-    return query.order_by(asc(Notification.job_row_number)).paginate(
+    return query.order_by(asc(NotificationAllTimeView.job_row_number)).paginate(
         page=page,
         per_page=page_size
     )
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
-    return Notification.query.filter_by(job_id=job_id).count()
+    return NotificationAllTimeView.query.filter_by(job_id=job_id).count()
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):

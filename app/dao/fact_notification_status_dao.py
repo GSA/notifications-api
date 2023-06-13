@@ -108,17 +108,17 @@ def fetch_notification_status_for_service_for_day(fetch_day, service_id):
     return db.session.query(
         # return current month as a datetime so the data has the same shape as the ft_notification_status query
         literal(fetch_day.replace(day=1), type_=DateTime).label('month'),
-        Notification.notification_type,
-        Notification.status.label('notification_status'),
+        NotificationAllTimeView.notification_type,
+        NotificationAllTimeView.status.label('notification_status'),
         func.count().label('count')
     ).filter(
-        Notification.created_at >= get_midnight_in_utc(fetch_day),
-        Notification.created_at < get_midnight_in_utc(fetch_day + timedelta(days=1)),
-        Notification.service_id == service_id,
-        Notification.key_type != KEY_TYPE_TEST
+        NotificationAllTimeView.created_at >= get_midnight_in_utc(fetch_day),
+        NotificationAllTimeView.created_at < get_midnight_in_utc(fetch_day + timedelta(days=1)),
+        NotificationAllTimeView.service_id == service_id,
+        NotificationAllTimeView.key_type != KEY_TYPE_TEST
     ).group_by(
-        Notification.notification_type,
-        Notification.status
+        NotificationAllTimeView.notification_type,
+        NotificationAllTimeView.status
     ).all()
 
 
@@ -137,18 +137,18 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(service_
     )
 
     stats_for_today = db.session.query(
-        Notification.notification_type.cast(db.Text),
-        Notification.status,
-        *([Notification.template_id] if by_template else []),
+        NotificationAllTimeView.notification_type.cast(db.Text),
+        NotificationAllTimeView.status,
+        *([NotificationAllTimeView.template_id] if by_template else []),
         func.count().label('count')
     ).filter(
-        Notification.created_at >= get_midnight_in_utc(now),
-        Notification.service_id == service_id,
-        Notification.key_type != KEY_TYPE_TEST
+        NotificationAllTimeView.created_at >= get_midnight_in_utc(now),
+        NotificationAllTimeView.service_id == service_id,
+        NotificationAllTimeView.key_type != KEY_TYPE_TEST
     ).group_by(
-        Notification.notification_type,
-        *([Notification.template_id] if by_template else []),
-        Notification.status
+        NotificationAllTimeView.notification_type,
+        *([NotificationAllTimeView.template_id] if by_template else []),
+        NotificationAllTimeView.status
     )
 
     all_stats_table = stats_for_7_days.union_all(stats_for_today).subquery()
@@ -167,11 +167,13 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(service_
     if by_template:
         query = query.filter(all_stats_table.c.template_id == Template.id)
 
-    return query.group_by(
+    x = query.group_by(
         *([Template.name, all_stats_table.c.template_id] if by_template else []),
         all_stats_table.c.notification_type,
         all_stats_table.c.status,
     ).all()
+
+    return x
 
 
 def fetch_notification_status_totals_for_all_services(start_date, end_date):
@@ -191,16 +193,16 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
     today = get_midnight_in_utc(datetime.utcnow())
     if start_date <= datetime.utcnow().date() <= end_date:
         stats_for_today = db.session.query(
-            Notification.notification_type.cast(db.Text).label('notification_type'),
-            Notification.status,
-            Notification.key_type,
+            NotificationAllTimeView.notification_type.cast(db.Text).label('notification_type'),
+            NotificationAllTimeView.status,
+            NotificationAllTimeView.key_type,
             func.count().label('count')
         ).filter(
-            Notification.created_at >= today
+            NotificationAllTimeView.created_at >= today
         ).group_by(
-            Notification.notification_type.cast(db.Text),
-            Notification.status,
-            Notification.key_type,
+            NotificationAllTimeView.notification_type.cast(db.Text),
+            NotificationAllTimeView.status,
+            NotificationAllTimeView.key_type,
         )
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = db.session.query(
@@ -267,19 +269,19 @@ def fetch_stats_for_all_services_by_date_range(start_date, end_date, include_fro
     if start_date <= datetime.utcnow().date() <= end_date:
         today = get_midnight_in_utc(datetime.utcnow())
         subquery = db.session.query(
-            Notification.notification_type.cast(db.Text).label('notification_type'),
-            Notification.status.label('status'),
-            Notification.service_id.label('service_id'),
+            NotificationAllTimeView.notification_type.cast(db.Text).label('notification_type'),
+            NotificationAllTimeView.status.label('status'),
+            NotificationAllTimeView.service_id.label('service_id'),
             func.count(Notification.id).label('count')
         ).filter(
-            Notification.created_at >= today
+            NotificationAllTimeView.created_at >= today
         ).group_by(
-            Notification.notification_type,
-            Notification.status,
-            Notification.service_id
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            NotificationAllTimeView.service_id
         )
         if not include_from_test_key:
-            subquery = subquery.filter(Notification.key_type != KEY_TYPE_TEST)
+            subquery = subquery.filter(NotificationAllTimeView.key_type != KEY_TYPE_TEST)
         subquery = subquery.subquery()
 
         stats_for_today = db.session.query(
@@ -358,24 +360,24 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 
     if start_date <= datetime.utcnow() <= end_date:
         today = get_midnight_in_utc(datetime.utcnow())
-        month = get_month_from_utc_column(Notification.created_at)
+        month = get_month_from_utc_column(NotificationAllTimeView.created_at)
 
         stats_for_today = db.session.query(
-            Notification.template_id.label('template_id'),
+            NotificationAllTimeView.template_id.label('template_id'),
             Template.name.label('name'),
             Template.template_type.label('template_type'),
             extract('month', month).label('month'),
             extract('year', month).label('year'),
             func.count().label('count')
         ).join(
-            Template, Notification.template_id == Template.id,
+            Template, NotificationAllTimeView.template_id == Template.id,
         ).filter(
-            Notification.created_at >= today,
-            Notification.service_id == service_id,
-            Notification.key_type != KEY_TYPE_TEST,
-            Notification.status != NOTIFICATION_CANCELLED
+            NotificationAllTimeView.created_at >= today,
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KEY_TYPE_TEST,
+            NotificationAllTimeView.status != NOTIFICATION_CANCELLED
         ).group_by(
-            Notification.template_id,
+            NotificationAllTimeView.template_id,
             Template.hidden,
             Template.name,
             Template.template_type,

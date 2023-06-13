@@ -515,10 +515,13 @@ def get_detailed_service(service_id, today_only=False):
 def get_service_statistics(service_id, today_only, limit_days=7):
     # today_only flag is used by the send page to work out if the service will exceed their daily usage by sending a job
     if today_only:
+        print("TODAY ONLY")
         stats = dao_fetch_todays_stats_for_service(service_id)
     else:
+        print("PAST WEEK")
         stats = fetch_notification_status_for_service_for_today_and_7_previous_days(service_id, limit_days=limit_days)
 
+    print(f"GET_SERVICE_STATISTICS returns {statistics.format_statistics(stats)}")
     return statistics.format_statistics(stats)
 
 

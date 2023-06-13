@@ -98,7 +98,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
 
-    assert notification.status == 'sent'
+    assert notification.status == 'sending'
     assert notification.sent_at <= datetime.utcnow()
     assert notification.sent_by == 'sns'
     assert notification.billable_units == 1
@@ -207,7 +207,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     assert persisted_notification.template_id == expected_template_id
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.template_version != t.version
-    assert persisted_notification.status == 'sent'
+    assert persisted_notification.status == 'sending'
     assert not persisted_notification.personalisation
 
 
@@ -240,7 +240,7 @@ def test_should_call_send_sms_response_task_if_research_mode(
     persisted_notification = notifications_dao.get_notification_by_id(sample_notification.id)
     assert persisted_notification.to == sample_notification.to
     assert persisted_notification.template_id == sample_notification.template_id
-    assert persisted_notification.status == 'sent'
+    assert persisted_notification.status == 'sending'
     assert persisted_notification.sent_at <= datetime.utcnow()
     assert persisted_notification.sent_by == 'sns'
     assert not persisted_notification.personalisation
@@ -254,7 +254,7 @@ def test_should_have_sending_status_if_fake_callback_function_fails(sample_notif
         send_to_providers.send_sms_to_provider(
             sample_notification
         )
-    assert sample_notification.status == 'sent'
+    assert sample_notification.status == 'sending'
     assert sample_notification.sent_by == 'sns'
 
 
@@ -534,7 +534,7 @@ def test_should_not_update_notification_if_research_mode_on_exception(
 
 @pytest.mark.parametrize("starting_status, expected_status", [
     ("delivered", "delivered"),
-    ("created", "sent"),
+    ("created", "sending"),
     ("technical-failure", "technical-failure"),
 ])
 def test_update_notification_to_sending_does_not_update_status_from_a_final_status(
@@ -556,11 +556,11 @@ def __update_notification(notification_to_update, research_mode, expected_status
 
 @pytest.mark.parametrize('research_mode,key_type, billable_units, expected_status', [
     (True, KEY_TYPE_NORMAL, 0, 'delivered'),
-    (False, KEY_TYPE_NORMAL, 1, 'sent'),
+    (False, KEY_TYPE_NORMAL, 1, 'sending'),
     (False, KEY_TYPE_TEST, 0, 'sending'),
     (True, KEY_TYPE_TEST, 0, 'sending'),
     (True, KEY_TYPE_TEAM, 0, 'delivered'),
-    (False, KEY_TYPE_TEAM, 1, 'sent')
+    (False, KEY_TYPE_TEAM, 1, 'sending')
 ])
 def test_should_update_billable_units_and_status_according_to_research_mode_and_key_type(
     sample_template,
@@ -631,7 +631,7 @@ def test_should_send_sms_to_international_providers(
         international=True
     )
 
-    assert notification_international.status == 'sent'
+    assert notification_international.status == 'sending'
     assert notification_international.sent_by == 'sns'
 
 
