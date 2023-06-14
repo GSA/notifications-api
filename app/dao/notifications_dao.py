@@ -270,6 +270,10 @@ def _filter_query(query, filter_dict=None):
         # TODO WHY
         if len(statuses) == 5 and 'temporary-failure' in statuses:
             statuses = ['failed']
+        elif len(statuses) == 10:
+            statuses = ['failed', 'sending', 'delivered']
+        elif statuses == ['pending']:
+            statuses = ['sending']
         print(f"STATUSES = {statuses}")
 
         query = query.filter(Notification.status.in_(statuses))
