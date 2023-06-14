@@ -43,13 +43,13 @@ def set_up_yearly_data():
 
     # use different rates for adjacent financial years to make sure the query
     # doesn't accidentally bleed over into them
-    for dt in (date(2016, 3, 31), date(2017, 4, 1)):
+    for dt in (date(2015, 12, 31), date(2017, 1, 1)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.163)
         create_ft_billing(local_date=dt, template=email_template, rate=0, billable_unit=0)
 
     # a selection of dates that represent the extreme ends of the financial year
     # and some arbitrary dates in between
-    for dt in (date(2016, 4, 1), date(2016, 4, 29), date(2017, 2, 6), date(2017, 3, 31)):
+    for dt in (date(2016, 1, 1), date(2016, 1, 31), date(2016, 12, 6), date(2016, 12, 31)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.162)
         create_ft_billing(local_date=dt, template=email_template, rate=0, billable_unit=0)
 
@@ -295,9 +295,10 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=1, financial_year_start=2016)
     results = fetch_monthly_billing_for_year(service.id, 2016)
 
-    assert len(results) == 6  # 3 billed months for each type
+    assert len(results) == 4  # 3 billed months for each type
+    print(f"RESULTS {results}")
 
-    assert str(results[0].month) == "2016-04-01"
+    assert str(results[0].month) == "2016-01-01"
     assert results[0].notification_type == 'email'
     assert results[0].notifications_sent == 2
     assert results[0].chargeable_units == 0
@@ -306,7 +307,7 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     assert results[0].free_allowance_used == 0
     assert results[0].charged_units == 0
 
-    assert str(results[1].month) == "2016-04-01"
+    assert str(results[1].month) == "2016-01-01"
     assert results[1].notification_type == 'sms'
     assert results[1].notifications_sent == 2
     assert results[1].chargeable_units == 2
@@ -316,8 +317,7 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     assert results[1].free_allowance_used == 1
     assert results[1].charged_units == 1
 
-    assert str(results[2].month) == "2017-02-01"
-    assert str(results[5].month) == "2017-03-01"
+    assert str(results[2].month) == "2016-12-01"
 
 
 def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
@@ -394,8 +394,8 @@ def test_fetch_billing_totals_for_year(notify_db_session):
 
 def test_fetch_billing_totals_for_year_uses_current_annual_billing(notify_db_session):
     service = set_up_yearly_data()
-    create_annual_billing(service_id=service.id, free_sms_fragment_limit=400, financial_year_start=2015)
-    create_annual_billing(service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2016)
+    create_annual_billing(service_id=service.id, free_sms_fragment_limit=400, financial_year_start=2016)
+    create_annual_billing(service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2017)
 
     result = next(
         result for result in
@@ -404,7 +404,10 @@ def test_fetch_billing_totals_for_year_uses_current_annual_billing(notify_db_ses
     )
 
     assert result.chargeable_units == 4
-    assert result.cost > 0
+    # No charge for 2016 because we have free sms fragments.
+    # There would be a charge for 2017,
+    # but we are only billing for 2016 so cost is zero
+    assert result.cost == 0
 
 
 def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
@@ -741,9 +744,9 @@ def test_fetch_usage_year_for_organisation_only_queries_present_year(notify_db_s
     results = fetch_usage_year_for_organisation(organisation_id=org.id, year=last_year)
 
     assert len(results) == 1
-    assert results[str(service_1.id)]['sms_billable_units'] == 4
-    assert results[str(service_1.id)]['chargeable_billable_sms'] == 4
-    assert results[str(service_1.id)]['sms_cost'] == 4.0
+    assert results[str(service_1.id)]['sms_billable_units'] == 2
+    assert results[str(service_1.id)]['chargeable_billable_sms'] == 2
+    assert results[str(service_1.id)]['sms_cost'] == 2.0
 
 
 @freeze_time('2020-02-27 13:30')
@@ -762,10 +765,10 @@ def test_fetch_usage_year_for_organisation_only_returns_data_for_live_services(n
                       notifications_sent=100)
     create_ft_billing(local_date=datetime.utcnow().date(), template=trial_sms_template, billable_unit=200, rate=0.0158,
                       notifications_sent=100)
-    create_annual_billing(service_id=live_service.id, free_sms_fragment_limit=0, financial_year_start=2019)
-    create_annual_billing(service_id=trial_service.id, free_sms_fragment_limit=0, financial_year_start=2019)
+    create_annual_billing(service_id=live_service.id, free_sms_fragment_limit=0, financial_year_start=2020)
+    create_annual_billing(service_id=trial_service.id, free_sms_fragment_limit=0, financial_year_start=2020)
 
-    results = fetch_usage_year_for_organisation(organisation_id=org.id, year=2019)
+    results = fetch_usage_year_for_organisation(organisation_id=org.id, year=2020)
 
     assert len(results) == 1
     assert results[str(live_service.id)]['sms_billable_units'] == 19

@@ -2,7 +2,7 @@ from flask import current_app
 
 from app import db
 from app.dao.dao_utils import autocommit
-from app.dao.date_util import get_current_financial_year_start_year
+from app.dao.date_util import get_current_calendar_year_start_year
 from app.models import AnnualBilling
 
 
@@ -38,7 +38,7 @@ def dao_update_annual_billing_for_future_years(service_id, free_sms_fragment_lim
 def dao_get_free_sms_fragment_limit_for_year(service_id, financial_year_start=None):
 
     if not financial_year_start:
-        financial_year_start = get_current_financial_year_start_year()
+        financial_year_start = get_current_calendar_year_start_year()
 
     return AnnualBilling.query.filter_by(
         service_id=service_id,
@@ -72,7 +72,7 @@ def set_default_free_allowance_for_service(service, year_start=None):
         }
     }
     if not year_start:
-        year_start = get_current_financial_year_start_year()
+        year_start = get_current_calendar_year_start_year()
     # handle cases where the year is less than 2020 or greater than 2021
     if year_start < 2020:
         year_start = 2020

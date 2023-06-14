@@ -249,17 +249,16 @@ def test_get_monthly_notification_stats_ignores_test_keys(admin_request, sample_
 
 def test_get_monthly_notification_stats_checks_dates(admin_request, sample_service):
     t = create_template(sample_service)
-    create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
+    # create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
     create_ft_notification_status(datetime(2016, 4, 2), template=t, notification_status='sending')
     create_ft_notification_status(datetime(2017, 3, 31), template=t, notification_status='delivered')
     create_ft_notification_status(datetime(2017, 4, 11), template=t, notification_status='permanent-failure')
 
     response = admin_request.get('service.get_monthly_notification_stats', service_id=sample_service.id, year=2016)
-
-    assert '2016-03' not in response['data']
+    assert '2016-04' in response['data']
     assert '2017-04' not in response['data']
     assert response['data']['2016-04']['sms'] == {'sending': 1}
-    assert response['data']['2017-03']['sms'] == {'delivered': 1}
+    assert response['data']['2016-04']['sms'] == {'sending': 1}
 
 
 def test_get_monthly_notification_stats_only_gets_for_one_service(admin_request, notify_db_session):

@@ -8,7 +8,7 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.date_util import get_current_financial_year
+from app.dao.date_util import get_current_calendar_year
 from app.dao.organisation_dao import dao_get_organisation_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
@@ -79,7 +79,7 @@ def dao_count_live_services():
 
 
 def dao_fetch_live_services_data():
-    year_start_date, year_end_date = get_current_financial_year()
+    year_start_date, year_end_date = get_current_calendar_year()
 
     most_recent_annual_billing = db.session.query(
         AnnualBilling.service_id,
