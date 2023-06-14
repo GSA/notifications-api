@@ -239,17 +239,21 @@ def get_notifications_for_service(
 
     query = Notification.query.filter(*filters)
     query = _filter_query(query, filter_dict)
+    print(f"QUERY IS {query}")
     if personalisation:
         query = query.options(
             joinedload('template')
         )
 
-    return query.order_by(desc(Notification.created_at)).paginate(
+    x =  query.order_by(desc(Notification.created_at)).paginate(
         page=page,
         per_page=page_size,
         count=count_pages,
         error_out=error_out,
     )
+
+    print(f"IN NOTIFICATION DAO, pagination yields {x.items}")
+    return x
 
 
 def _filter_query(query, filter_dict=None):
@@ -260,8 +264,14 @@ def _filter_query(query, filter_dict=None):
 
     # filter by status
     statuses = multidict.getlist('status')
+
     if statuses:
         statuses = Notification.substitute_status(statuses)
+        # TODO WHY
+        if len(statuses) == 5 and 'temporary-failure' in statuses:
+            statuses = ['failed']
+        print(f"STATUSES = {statuses}")
+
         query = query.filter(Notification.status.in_(statuses))
 
     # filter by template

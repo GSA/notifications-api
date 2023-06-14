@@ -352,8 +352,10 @@ def get_service_history(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications', methods=['GET', 'POST'])
 def get_all_notifications_for_service(service_id):
+    print(f"ENTER GET_ALL_NOTIFICATIONS_FOR_SERVICE")
     if request.method == 'GET':
         data = notifications_filter_schema.load(request.args)
+        print(f"DATA IS {data}")
     elif request.method == 'POST':
         # Must transform request.get_json() to MultiDict as NotificationsFilterSchema expects a MultiDict.
         # Unlike request.args, request.get_json() does not return a MultiDict but instead just a dict.
@@ -387,6 +389,7 @@ def get_all_notifications_for_service(service_id):
         include_from_test_key=include_from_test_key,
         include_one_off=include_one_off
     )
+    print(f"PAGINATION ITEMS =  {pagination.items}")
 
     kwargs = request.args.to_dict()
     kwargs['service_id'] = service_id
@@ -395,7 +398,7 @@ def get_all_notifications_for_service(service_id):
         notifications = [notification.serialize_for_csv() for notification in pagination.items]
     else:
         notifications = notification_with_template_schema.dump(pagination.items, many=True)
-
+    print(f"NOTIFICATIONS AFTER FORMATTING {notifications}")
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
@@ -429,7 +432,7 @@ def get_all_notifications_for_service(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>', methods=['GET'])
 def get_notification_for_service(service_id, notification_id):
-
+    print(f"ENTER GET_NOTIFICATION_FOR_SERVICE")
     notification = notifications_dao.get_notification_with_personalisation(
         service_id,
         notification_id,
