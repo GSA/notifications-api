@@ -321,7 +321,6 @@ def test_fetch_notification_statuses_for_job(sample_template):
 
 @freeze_time('2018-10-31 14:00')
 def test_fetch_stats_for_all_services_by_date_range(notify_db_session):
-    # TODO WHY CHANGE THE NUMBERS
     service_1, service_2 = set_up_data()
     results = fetch_stats_for_all_services_by_date_range(start_date=date(2018, 10, 29),
                                                          end_date=date(2018, 10, 31))
@@ -330,17 +329,17 @@ def test_fetch_stats_for_all_services_by_date_range(notify_db_session):
     assert results[0].service_id == service_1.id
     assert results[0].notification_type == 'email'
     assert results[0].status == 'delivered'
-    assert results[0].count == 7  # 4
+    assert results[0].count == 4
 
     assert results[1].service_id == service_1.id
     assert results[1].notification_type == 'sms'
     assert results[1].status == 'created'
-    assert results[1].count == 5  # 2
+    assert results[1].count == 2
 
     assert results[2].service_id == service_1.id
     assert results[2].notification_type == 'sms'
     assert results[2].status == 'delivered'
-    assert results[2].count == 14  # 11
+    assert results[2].count == 11
 
     assert results[3].service_id == service_2.id
     assert not results[3].notification_type

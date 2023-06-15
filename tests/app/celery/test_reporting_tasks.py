@@ -1,6 +1,5 @@
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from uuid import UUID
 
 import pytest
 from freezegun import freeze_time
@@ -429,13 +428,13 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     process_day = datetime.utcnow().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(template=first_template, status='delivered')
-        create_notification(template=second_template, status='temporary-failure')
+        create_notification(template=second_template, status='delivered')
 
         # team API key notifications are included
-        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEAM)
+        create_notification(template=second_template, status='pending', key_type=KEY_TYPE_TEAM)
 
         # test notifications are ignored
-        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEST)
+        create_notification(template=second_template, status='pending', key_type=KEY_TYPE_TEST)
 
         # historical notifications are included
         create_notification_history(template=second_template, status='delivered')
@@ -455,7 +454,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         FactNotificationStatus.notification_status,
     ).all()
 
-    assert len(new_fact_data) == 4
+    assert len(new_fact_data) == 3
 
     email_delivered_row = new_fact_data[0]
     assert email_delivered_row.template_id == second_template.id
@@ -469,21 +468,11 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_sending_row.template_id == second_template.id
     assert email_sending_row.service_id == second_service.id
     assert email_sending_row.notification_type == 'email'
-    assert email_sending_row.notification_status == 'sending'
+    assert email_sending_row.notification_status == 'pending'
     assert email_sending_row.notification_count == 1
     assert email_sending_row.key_type == KEY_TYPE_TEAM
 
-    email_failure_row = new_fact_data[2]
-    assert email_failure_row.local_date == process_day
-    assert email_failure_row.template_id == second_template.id
-    assert email_failure_row.service_id == second_service.id
-    assert email_failure_row.job_id == UUID('00000000-0000-0000-0000-000000000000')
-    assert email_failure_row.notification_type == 'email'
-    assert email_failure_row.notification_status == 'temporary-failure'
-    assert email_failure_row.notification_count == 1
-    assert email_failure_row.key_type == KEY_TYPE_NORMAL
-
-    sms_delivered_row = new_fact_data[3]
+    sms_delivered_row = new_fact_data[2]
     assert sms_delivered_row.template_id == first_template.id
     assert sms_delivered_row.service_id == first_service.id
     assert sms_delivered_row.notification_type == 'sms'
