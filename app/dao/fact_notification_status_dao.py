@@ -23,6 +23,7 @@ from app.models import (
     NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     Notification,
+    NotificationAllTimeView,
     Service,
     Template,
 )
@@ -37,7 +38,6 @@ from app.utils import (
 def update_fact_notification_status(process_day, notification_type, service_id):
     start_date = get_midnight_in_utc(process_day)
     end_date = get_midnight_in_utc(process_day + timedelta(days=1))
-    print(f"fact start {start_date} and end {end_date}")
 
     # delete any existing rows in case some no longer exist e.g. if all messages are sent
     FactNotificationStatus.query.filter(
@@ -48,25 +48,25 @@ def update_fact_notification_status(process_day, notification_type, service_id):
 
     query = db.session.query(
         literal(process_day).label("process_day"),
-        Notification.template_id,
+        NotificationAllTimeView.template_id,
         literal(service_id).label("service_id"),
-        func.coalesce(Notification.job_id, '00000000-0000-0000-0000-000000000000').label('job_id'),
+        func.coalesce(NotificationAllTimeView.job_id, '00000000-0000-0000-0000-000000000000').label('job_id'),
         literal(notification_type).label("notification_type"),
-        Notification.key_type,
-        Notification.status,
+        NotificationAllTimeView.key_type,
+        NotificationAllTimeView.status,
         func.count().label('notification_count')
     ).filter(
-        Notification.created_at >= start_date,
-        Notification.created_at < end_date,
-        Notification.notification_type == notification_type,
-        Notification.service_id == service_id,
-        Notification.key_type.in_((KEY_TYPE_NORMAL, KEY_TYPE_TEAM)),
+        NotificationAllTimeView.created_at >= start_date,
+        NotificationAllTimeView.created_at < end_date,
+        NotificationAllTimeView.notification_type == notification_type,
+        NotificationAllTimeView.service_id == service_id,
+        NotificationAllTimeView.key_type.in_((KEY_TYPE_NORMAL, KEY_TYPE_TEAM)),
     ).group_by(
-        Notification.template_id,
-        Notification.template_id,
+        NotificationAllTimeView.template_id,
+        NotificationAllTimeView.template_id,
         'job_id',
-        Notification.key_type,
-        Notification.status
+        NotificationAllTimeView.key_type,
+        NotificationAllTimeView.status
     )
 
     db.session.connection().execute(
@@ -167,13 +167,11 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(service_
     if by_template:
         query = query.filter(all_stats_table.c.template_id == Template.id)
 
-    x = query.group_by(
+    return query.group_by(
         *([Template.name, all_stats_table.c.template_id] if by_template else []),
         all_stats_table.c.notification_type,
         all_stats_table.c.status,
     ).all()
-
-    return x
 
 
 def fetch_notification_status_totals_for_all_services(start_date, end_date):

@@ -44,7 +44,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
 
     if status == NOTIFICATION_DELIVERED:
         sanitize_notifications_by_id(notification_id)
-        current_app.logger.info(f"Did not Archive notification {notification_id} that was successfully delivered")
+        current_app.logger.info(f"Sanitized notification {notification_id} that was successfully delivered")
 
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)

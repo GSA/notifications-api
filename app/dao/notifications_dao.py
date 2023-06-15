@@ -238,7 +238,6 @@ def get_notifications_for_service(
 
     query = Notification.query.filter(*filters)
     query = _filter_query(query, filter_dict)
-    print(f"QUERY IS {query}")
     if personalisation:
         query = query.options(
             joinedload('template')
@@ -262,16 +261,10 @@ def _filter_query(query, filter_dict=None):
     statuses = multidict.getlist('status')
 
     if statuses:
-        statuses = Notification.substitute_status(statuses)
-        # TODO WHY
-        if len(statuses) == 5 and 'temporary-failure' in statuses:
-            statuses = ['failed']
-        elif len(statuses) == 10:
-            statuses = ['failed', 'sending', 'delivered']
-        elif statuses == ['pending']:
-            statuses = ['sending']
-        print(f"STATUSES = {statuses}")
+        # statuses = Notification.substitute_status(statuses)
 
+        if statuses == ['pending']:
+            statuses = ['sending']
         query = query.filter(Notification.status.in_(statuses))
 
     # filter by template
