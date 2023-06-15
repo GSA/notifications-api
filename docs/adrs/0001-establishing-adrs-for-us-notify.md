@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/01/2023 | 06/05/2023 | Accepted | @ccostino | @stvnrlly |
+| 06/01/2023 | 06/15/2023 | Accepted | @ccostino | @stvnrlly |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -103,11 +103,11 @@ These are the key considerations for creating ADRs for US Notify:
     - Requires being mindful of what can live in the public space vs. not
 
 
-## PROPOSED OPTION:  Architectural Decision Records
+## CHOSEN OPTION:  Architectural Decision Records
 
-I am proposing that our team adopts using Architectural Decision Records going
-forward for any decisions that need to be proposed or discussed that will have a
-significant impact on the platform.
+Our team has chosen to adopt Architectural Decision Records going forward for
+any decisions that need to be proposed or discussed that will have a significant
+impact on the platform.
 
 By documenting our changes in this fashion, it will improve our team's
 development practices and software quality in a few ways:

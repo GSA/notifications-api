@@ -172,6 +172,6 @@ top!).
 
 | ADR | TITLE | CURRENT STATUS | IMPLEMENTED | LAST MODIFIED |
 | :---: | :---: | :---: | :---: | :---: |
-| [ADR-0003](./0003-implementing-invite-expirations.md) | [Implementing User Invite Expirations](./0003-implementing-invite-expirations.md) | Proposed | No | 06/06/2023 |
-| [ADR-0002](./0002-how-to-handle-timezones.md) | [Determine How to Handle Timezones in US Notify](./0002-how-to-handle-timezones.md) | Accepted | Yes | 06/06/2023 |
-| [ADR-0001](./0001-establishing-adrs-for-us-notify.md) | [Establishing ADRs for US Notify](./0001-establishing-adrs-for-us-notify.md) | Accepted | Yes | 06/05/2023 |
+| [ADR-0003](./0003-implementing-invite-expirations.md) | [Implementing User Invite Expirations](./0003-implementing-invite-expirations.md) | Proposed | No | 06/15/2023 |
+| [ADR-0002](./0002-how-to-handle-timezones.md) | [Determine How to Handle Timezones in US Notify](./0002-how-to-handle-timezones.md) | Accepted | Yes | 06/15/2023 |
+| [ADR-0001](./0001-establishing-adrs-for-us-notify.md) | [Establishing ADRs for US Notify](./0001-establishing-adrs-for-us-notify.md) | Accepted | Yes | 06/15/2023 |

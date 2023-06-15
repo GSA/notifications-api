@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/06/2023 | N/A | Proposed | @ccostino | @GSA/notify-contributors |
+| 06/06/2023 | 06/15/2023 | Proposed | @ccostino | @GSA/notify-contributors |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -82,7 +82,7 @@ change:
     (especially any related to scheduled jobs).
 
 
-## PROPOSED OR CHOSEN OPTION:  Proposed/Chosen Option Title Here
+## PROPOSED OPTION:  Adjust `InvitedUser` management in the API
 
 I am proposing we adjust the `InvitedUser` management in the API and get these
 updates in place first for future UI changes, because without them we cannot
