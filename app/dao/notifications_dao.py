@@ -31,7 +31,6 @@ from app.models import (
     SMS_TYPE,
     FactNotificationStatus,
     Notification,
-    NotificationAllTimeView,
     NotificationHistory,
 )
 from app.utils import (
@@ -163,16 +162,16 @@ def dao_update_notification(notification):
 def get_notifications_for_job(service_id, job_id, filter_dict=None, page=1, page_size=None):
     if page_size is None:
         page_size = current_app.config['PAGE_SIZE']
-    query = NotificationAllTimeView.query.filter_by(service_id=service_id, job_id=job_id)
+    query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
     query = _filter_query(query, filter_dict)
-    return query.order_by(asc(NotificationAllTimeView.job_row_number)).paginate(
+    return query.order_by(asc(Notification.job_row_number)).paginate(
         page=page,
         per_page=page_size
     )
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
-    return NotificationAllTimeView.query.filter_by(job_id=job_id).count()
+    return Notification.query.filter_by(job_id=job_id).count()
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
@@ -245,15 +244,12 @@ def get_notifications_for_service(
             joinedload('template')
         )
 
-    x =  query.order_by(desc(Notification.created_at)).paginate(
+    return query.order_by(desc(Notification.created_at)).paginate(
         page=page,
         per_page=page_size,
         count=count_pages,
         error_out=error_out,
     )
-
-    print(f"IN NOTIFICATION DAO, pagination yields {x.items}")
-    return x
 
 
 def _filter_query(query, filter_dict=None):
@@ -287,34 +283,19 @@ def _filter_query(query, filter_dict=None):
 
 
 @autocommit
-def insert_notification_history_delete_notifications_by_id(
+def sanitize_notifications_by_id(
     notification_id
 ):
-    """
-    Deletes one notification after it has run successfully and moves it to the notification_history
-    table.
-    """
-    input_params = {
-        "notification_id": notification_id
-    }
-    # Insert into NotificationHistory if the row already exists do nothing.
-    insert_query = """
-        insert into notification_history
-         SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
-             key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
-             client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, document_download_count
-          from NOTIFICATIONS WHERE id= :notification_id
-          ON CONFLICT ON CONSTRAINT notification_history_pkey
-          DO NOTHING
-    """
-    delete_query = """
-        DELETE FROM notifications
-        where id= :notification_id
-    """
+    # TODO what to do for international?
+    phone_prefix = '1'
+    Notification.query.filter(
+        Notification.id.in_([notification_id]),
+    ).update(
+        {'to': phone_prefix, 'normalised_to': phone_prefix},
+        synchronize_session=False
+    )
 
-    db.session.execute(insert_query, input_params)
-    db.session.execute(delete_query, input_params)
+    db.session.commit()
 
 
 @autocommit

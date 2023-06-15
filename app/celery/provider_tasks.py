@@ -11,7 +11,7 @@ from app.clients.sms import SmsClientResponseException
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.dao.notifications_dao import (
-    insert_notification_history_delete_notifications_by_id,
+    sanitize_notifications_by_id,
     update_notification_status_by_id,
 )
 from app.delivery import send_to_providers
@@ -43,8 +43,8 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
 
     if status == NOTIFICATION_DELIVERED:
-        insert_notification_history_delete_notifications_by_id(notification_id)
-        current_app.logger.info(f"Archived notification {notification_id} that was successfully delivered")
+        sanitize_notifications_by_id(notification_id)
+        current_app.logger.info(f"Did not Archive notification {notification_id} that was successfully delivered")
 
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)

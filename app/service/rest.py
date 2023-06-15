@@ -352,7 +352,6 @@ def get_service_history(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications', methods=['GET', 'POST'])
 def get_all_notifications_for_service(service_id):
-    print(f"ENTER GET_ALL_NOTIFICATIONS_FOR_SERVICE")
     if request.method == 'GET':
         data = notifications_filter_schema.load(request.args)
         print(f"DATA IS {data}")
@@ -432,7 +431,6 @@ def get_all_notifications_for_service(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>', methods=['GET'])
 def get_notification_for_service(service_id, notification_id):
-    print(f"ENTER GET_NOTIFICATION_FOR_SERVICE")
     notification = notifications_dao.get_notification_with_personalisation(
         service_id,
         notification_id,
