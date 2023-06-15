@@ -1,6 +1,6 @@
 ---
-name: Create a new ADR
-about: Use this template to create a new Architectural Decision Record.
+name: Create a new ADR Draft
+about: Use this template to create a new Architectural Decision Record Draft.
 title: ADR
 labels: documentation
 assignees: ''
