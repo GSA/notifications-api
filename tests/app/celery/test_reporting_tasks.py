@@ -432,10 +432,10 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification(template=second_template, status='failed')
 
         # team API key notifications are included
-        create_notification(template=second_template, status='pending', key_type=KEY_TYPE_TEAM)
+        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEAM)
 
         # test notifications are ignored
-        create_notification(template=second_template, status='pending', key_type=KEY_TYPE_TEST)
+        create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEST)
 
         # historical notifications are included
         create_notification_history(template=second_template, status='delivered')
@@ -479,7 +479,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_failure_row.service_id == second_service.id
     assert email_failure_row.job_id == UUID('00000000-0000-0000-0000-000000000000')
     assert email_failure_row.notification_type == 'email'
-    assert email_failure_row.notification_status == 'pending'
+    assert email_failure_row.notification_status == 'sending'
     assert email_failure_row.notification_count == 1
     assert email_failure_row.key_type == KEY_TYPE_TEAM
 

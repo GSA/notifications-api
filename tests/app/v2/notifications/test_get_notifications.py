@@ -347,25 +347,24 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(cli
 
 
 def test_get_all_notifications_filter_by_single_status(client, sample_template):
-    # TODO had to change all the pendings to sendings.  Is that correct?
-    notification = create_notification(template=sample_template, status="sending")
+    notification = create_notification(template=sample_template, status="pending")
     create_notification(template=sample_template)
 
     auth_header = create_service_authorization_header(service_id=notification.service_id)
     response = client.get(
-        path='/v2/notifications?status=sending',
+        path='/v2/notifications?status=pending',
         headers=[('Content-Type', 'application/json'), auth_header])
 
     json_response = json.loads(response.get_data(as_text=True))
 
     assert response.status_code == 200
     assert response.headers['Content-type'] == "application/json"
-    assert json_response['links']['current'].endswith("/v2/notifications?status=sending")
+    assert json_response['links']['current'].endswith("/v2/notifications?status=pending")
     assert 'next' in json_response['links'].keys()
     assert len(json_response['notifications']) == 1
 
     assert json_response['notifications'][0]['id'] == str(notification.id)
-    assert json_response['notifications'][0]['status'] == "sending"
+    assert json_response['notifications'][0]['status'] == "pending"
 
 
 def test_get_all_notifications_filter_by_status_invalid_status(client, sample_notification):
@@ -414,11 +413,10 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
 
 
 def test_get_all_notifications_filter_by_failed_status(client, sample_template):
-    # TODO had to change temporary-failure, permanent-failure, technical-failure to failed
     created_notification = create_notification(template=sample_template, status="created")
     failed_notifications = [
         create_notification(template=sample_template, status=_status)
-        for _status in ["failed", "failed", "failed"]
+        for _status in ["failed"]
     ]
 
     auth_header = create_service_authorization_header(service_id=created_notification.service_id)
@@ -432,7 +430,7 @@ def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     assert response.headers['Content-type'] == "application/json"
     assert json_response['links']['current'].endswith("/v2/notifications?status=failed")
     assert 'next' in json_response['links'].keys()
-    assert len(json_response['notifications']) == 3
+    assert len(json_response['notifications']) == 1
 
     returned_notification_ids = [n['id'] for n in json_response['notifications']]
     for _id in [_notification.id for _notification in failed_notifications]:

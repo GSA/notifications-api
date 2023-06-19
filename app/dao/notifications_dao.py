@@ -261,8 +261,6 @@ def _filter_query(query, filter_dict=None):
     statuses = multidict.getlist('status')
 
     if statuses:
-        if statuses == ['pending']:
-            statuses = ['sending']
         query = query.filter(Notification.status.in_(statuses))
 
     # filter by template
