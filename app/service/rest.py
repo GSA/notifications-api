@@ -16,7 +16,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import get_financial_year
+from app.dao.date_util import get_calendar_year
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
@@ -488,7 +488,7 @@ def get_monthly_notification_stats(service_id):
     except ValueError:
         raise InvalidRequest('Year must be a number', status_code=400)
 
-    start_date, end_date = get_financial_year(year)
+    start_date, end_date = get_calendar_year(year)
 
     data = statistics.create_empty_monthly_notification_status_stats_dict(year)
 
@@ -629,7 +629,7 @@ def resume_service(service_id):
 @service_blueprint.route('/<uuid:service_id>/notifications/templates_usage/monthly', methods=['GET'])
 def get_monthly_template_usage(service_id):
     try:
-        start_date, end_date = get_financial_year(int(request.args.get('year', 'NaN')))
+        start_date, end_date = get_calendar_year(int(request.args.get('year', 'NaN')))
         data = fetch_monthly_template_usage_for_service(
             start_date=start_date,
             end_date=end_date,

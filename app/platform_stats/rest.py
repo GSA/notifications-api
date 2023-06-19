@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
-from app.dao.date_util import get_financial_year_for_datetime
+from app.dao.date_util import get_calendar_year_for_datetime
 from app.dao.fact_billing_dao import (
     fetch_billing_details_for_all_services,
     fetch_daily_sms_provider_volumes_for_platform,
@@ -54,8 +54,8 @@ def validate_date_range_is_within_a_financial_year(start_date, end_date):
     if end_date < start_date:
         raise InvalidRequest(message="Start date must be before end date", status_code=400)
 
-    start_fy = get_financial_year_for_datetime(get_midnight_in_utc(start_date))
-    end_fy = get_financial_year_for_datetime(get_midnight_in_utc(end_date))
+    start_fy = get_calendar_year_for_datetime(get_midnight_in_utc(start_date))
+    end_fy = get_calendar_year_for_datetime(get_midnight_in_utc(end_date))
 
     if start_fy != end_fy:
         raise InvalidRequest(message="Date must be in a single financial year.", status_code=400)

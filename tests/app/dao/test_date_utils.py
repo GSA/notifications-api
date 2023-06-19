@@ -3,23 +3,23 @@ from datetime import date, datetime
 import pytest
 
 from app.dao.date_util import (
-    get_april_fools,
-    get_financial_year,
-    get_financial_year_for_datetime,
+    get_calendar_year,
+    get_calendar_year_for_datetime,
     get_month_start_and_end_date_in_utc,
+    get_new_years,
 )
 
 
-def test_get_financial_year():
-    start, end = get_financial_year(2000)
-    assert str(start) == '2000-04-01 00:00:00'
-    assert str(end) == '2001-03-31 23:59:59.999999'
+def test_get_calendar_year():
+    start, end = get_calendar_year(2000)
+    assert str(start) == '2000-01-01 00:00:00'
+    assert str(end) == '2000-12-31 23:59:59.999999'
 
 
-def test_get_april_fools():
-    april_fools = get_april_fools(2016)
-    assert str(april_fools) == '2016-04-01 00:00:00'
-    assert april_fools.tzinfo is None
+def test_get_new_years():
+    new_years = get_new_years(2016)
+    assert str(new_years) == '2016-01-01 00:00:00'
+    assert new_years.tzinfo is None
 
 
 @pytest.mark.parametrize("month, year, expected_start, expected_end", [
@@ -38,9 +38,9 @@ def test_get_month_start_and_end_date_in_utc(month, year, expected_start, expect
 
 @pytest.mark.parametrize("dt, fy", [
     (datetime(2018, 4, 1, 1, 0, 0), 2018),
-    (datetime(2019, 3, 31, 23, 59, 59), 2018),
-    (date(2019, 3, 31), 2018),
+    (datetime(2019, 3, 31, 23, 59, 59), 2019),
+    (date(2019, 3, 31), 2019),
     (date(2019, 4, 2), 2019),
 ])
-def test_get_financial_year_for_datetime(dt, fy):
-    assert get_financial_year_for_datetime(dt) == fy
+def test_get_calendar_year_for_datetime(dt, fy):
+    assert get_calendar_year_for_datetime(dt) == fy

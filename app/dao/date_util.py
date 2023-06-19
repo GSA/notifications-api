@@ -15,12 +15,12 @@ def get_months_for_year(start, end, year):
     return [datetime(year, month, 1) for month in range(start, end)]
 
 
-def get_financial_year(year):
-    return get_april_fools(year), get_april_fools(year + 1) - timedelta(microseconds=1)
+def get_calendar_year(year):
+    return get_new_years(year), get_new_years(year + 1) - timedelta(microseconds=1)
 
 
-def get_financial_year_dates(year):
-    year_start_datetime, year_end_datetime = get_financial_year(year)
+def get_calendar_year_dates(year):
+    year_start_datetime, year_end_datetime = get_calendar_year(year)
 
     return (
         year_start_datetime.date(),
@@ -28,16 +28,15 @@ def get_financial_year_dates(year):
     )
 
 
-def get_current_financial_year():
+def get_current_calendar_year():
     now = datetime.utcnow()
-    current_month = int(now.strftime('%-m'))
     current_year = int(now.strftime('%Y'))
-    year = current_year if current_month > 3 else current_year - 1
-    return get_financial_year(year)
+    year = current_year
+    return get_calendar_year(year)
 
 
-def get_april_fools(year):
-    return datetime(year, 4, 1, 0, 0, 0)
+def get_new_years(year):
+    return datetime(year, 1, 1, 0, 0, 0)
 
 
 def get_month_start_and_end_date_in_utc(month_year):
@@ -53,21 +52,21 @@ def get_month_start_and_end_date_in_utc(month_year):
     return first_day, last_day
 
 
-def get_current_financial_year_start_year():
+def get_current_calendar_year_start_year():
     now = datetime.now()
     financial_year_start = now.year
-    start_date, end_date = get_financial_year(now.year)
+    start_date, end_date = get_calendar_year(now.year)
     if now < start_date:
         financial_year_start = financial_year_start - 1
     return financial_year_start
 
 
-def get_financial_year_for_datetime(start_date):
+def get_calendar_year_for_datetime(start_date):
     if type(start_date) == date:
         start_date = datetime.combine(start_date, time.min)
 
     year = int(start_date.strftime('%Y'))
-    if start_date < get_april_fools(year):
+    if start_date < get_new_years(year):
         return year - 1
     else:
         return year
