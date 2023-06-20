@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/06/2023 | N/A | Accepted | @terrazoon, @ccostino | @GSA/notify-contributors |
+| 06/06/2023 | 06/15/2023 | Accepted | @terrazoon, @ccostino | @GSA/notify-contributors |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -106,7 +106,7 @@ Cons of converting parts of the frontend now:
   customization, if any.
 
 
-## PROPOSED OR CHOSEN OPTION:  Proposed/Chosen Option Title Here
+## CHOSEN OPTION:  Backend UTC, frontend UTC
 
 After talking through each of these options together as a team, we have decided
 to move forward with converting the backend to UTC fully and pairing that work
