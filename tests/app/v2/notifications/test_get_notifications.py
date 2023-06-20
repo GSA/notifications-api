@@ -414,11 +414,7 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
 
 def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     created_notification = create_notification(template=sample_template, status="created")
-    failed_notifications = [
-        create_notification(template=sample_template, status=_status)
-        for _status in ["failed"]
-    ]
-
+    failed_notifications = [create_notification(template=sample_template, status='failed')]
     auth_header = create_service_authorization_header(service_id=created_notification.service_id)
     response = client.get(
         path='/v2/notifications?status=failed',
