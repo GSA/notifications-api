@@ -28,7 +28,6 @@ from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     NOTIFICATION_TECHNICAL_FAILURE,
     SMS_TYPE,
@@ -137,9 +136,7 @@ def update_notification_to_sending(notification, provider):
     notification.sent_at = datetime.utcnow()
     notification.sent_by = provider.name
     if notification.status not in NOTIFICATION_STATUS_TYPES_COMPLETED:
-        # We currently have no callback method for SMS deliveries
-        # TODO create celery task to request SMS delivery receipts from cloudwatch api
-        notification.status = NOTIFICATION_SENT if notification.notification_type == "sms" else NOTIFICATION_SENDING
+        notification.status = NOTIFICATION_SENDING
 
     dao_update_notification(notification)
 

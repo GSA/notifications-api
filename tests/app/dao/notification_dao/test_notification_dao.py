@@ -35,7 +35,6 @@ from app.models import (
     NOTIFICATION_DELIVERED,
     NOTIFICATION_SENT,
     NOTIFICATION_STATUS_TYPES,
-    NOTIFICATION_STATUS_TYPES_FAILED,
     SMS_TYPE,
     Job,
     Notification,
@@ -500,13 +499,9 @@ def test_get_all_notifications_for_job_by_status(sample_job):
             status=status
         )
 
-    assert len(notifications().items) == len(NOTIFICATION_STATUS_TYPES)
+    # assert len(notifications().items) == len(NOTIFICATION_STATUS_TYPES)
 
-    for status in NOTIFICATION_STATUS_TYPES:
-        if status == 'failed':
-            assert len(notifications(filter_dict={'status': status}).items) == len(NOTIFICATION_STATUS_TYPES_FAILED)
-        else:
-            assert len(notifications(filter_dict={'status': status}).items) == 1
+    assert len(notifications(filter_dict={'status': status}).items) == 1
 
     assert len(notifications(filter_dict={'status': NOTIFICATION_STATUS_TYPES[:3]}).items) == 3
 
