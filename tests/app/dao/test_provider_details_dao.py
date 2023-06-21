@@ -120,7 +120,7 @@ def test_update_sms_provider_to_inactive_sets_inactive(restore_provider_details)
 ])
 def test_get_alternative_sms_provider_returns_expected_provider(identifier, expected):
     """Currently always raises, as we only have SNS configured"""
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         get_alternative_sms_provider(identifier)
     # assert get_alternative_sms_provider(identifier) == expected
 

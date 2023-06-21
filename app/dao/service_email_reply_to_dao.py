@@ -80,7 +80,7 @@ def _get_existing_default(service_id):
         if len(old_default) == 1:
             return old_default[0]
         else:
-            raise Exception(
+            raise ValueError(
                 "There should only be one default reply to email for each service. Service {} has {}".format(
                     service_id, len(old_default)))
     return None

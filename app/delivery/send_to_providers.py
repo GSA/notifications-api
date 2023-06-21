@@ -156,7 +156,7 @@ def provider_to_use(notification_type, international=True):
         current_app.logger.error(
             "{} failed as no active providers".format(notification_type)
         )
-        raise Exception("No active {} providers".format(notification_type))
+        raise ValueError("No active {} providers".format(notification_type))
 
     if len(active_providers) == 1:
         chosen_provider = active_providers[0]

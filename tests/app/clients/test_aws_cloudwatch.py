@@ -15,7 +15,7 @@ def test_check_sms_no_event_error_condition(notify_api, mocker):
     boto_mock.filter_log_events.return_value = []
     with notify_api.app_context():
         aws_cloudwatch_client.init_app(current_app)
-        with pytest.raises(Exception):
+        with pytest.raises(TypeError):
             aws_cloudwatch_client.check_sms(message_id, notification_id)
 
 
