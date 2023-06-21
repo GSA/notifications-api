@@ -15,7 +15,7 @@ The initial launch of the beta.notify.gov site requires minimal public-facing co
 - No ability for members of the public to create an account or view "how-to" documentation
 
 ### Primary concerns:
-- Removing the self-sevice option altogether creates more work on the team members, who have to create an account/service
+- Removing the self-service option altogether creates more work on the team members, who have to create an account/service
 - Removing the self-service option obviates the initial service creator from progressing through the `service creation wizard` content
 - LOE to make currently publicly visible documentation only accessible after login
 
