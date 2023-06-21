@@ -54,7 +54,7 @@ List all options that have either been discussed or thought of as a potential so
 - More work on Studio team to construct a process to get pilot partners initial account access/service creation
 - More content to review by oversight teams
 
-- ### Option 3: A minimal landing page that offers a sign-in button AND a field to input a pilot invite code, which would allow a user to then self-service create an account and initial service. All other pages are only accessible after login.
+### Option 3: A minimal landing page that offers a sign-in button AND a field to input a pilot invite code, which would allow a user to then self-service create an account and initial service. All other pages are only accessible after login.
 
 **Pros:**
 
