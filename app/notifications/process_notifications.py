@@ -121,8 +121,6 @@ def persist_notification(
         updated_at=updated_at
     )
 
-    current_app.logger.info('Persisting notification with to address: {}'.format(notification.to))
-
     if notification_type == SMS_TYPE:
         formatted_recipient = validate_and_format_phone_number(recipient, international=True)
         recipient_info = get_international_phone_info(formatted_recipient)
@@ -133,7 +131,6 @@ def persist_notification(
     elif notification_type == EMAIL_TYPE:
         current_app.logger.info('Persisting notification with type: {}'.format(EMAIL_TYPE))
         notification.normalised_to = format_email_address(notification.to)
-        current_app.logger.info('Persisting notification to formatted email: {}'.format(notification.normalised_to))
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:

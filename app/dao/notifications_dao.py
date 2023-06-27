@@ -271,7 +271,6 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
-@autocommit
 def sanitize_successful_notification_by_id(
     notification_id
 ):
@@ -283,6 +282,7 @@ def sanitize_successful_notification_by_id(
         {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'},
         synchronize_session=False
     )
+    db.session.commit()
 
 
 @autocommit
