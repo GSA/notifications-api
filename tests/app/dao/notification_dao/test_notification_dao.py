@@ -24,6 +24,7 @@ from app.dao.notifications_dao import (
     get_notifications_for_service,
     get_service_ids_with_notifications_on_date,
     notifications_not_yet_sent,
+    sanitize_successful_notification_by_id,
     update_notification_status_by_id,
     update_notification_status_by_reference,
 )
@@ -82,6 +83,26 @@ def test_should_by_able_to_update_status_by_id(sample_template, sample_job, sns_
     assert Notification.query.get(notification.id).status == 'delivered'
     assert notification.updated_at == datetime(2000, 1, 2, 12, 0, 0)
     assert notification.status == 'delivered'
+
+
+def test_should_be_able_to_sanitize_successful_notification(sample_template, sample_job, sns_provider):
+    with freeze_time('2000-01-01 12:00:00'):
+        data = _notification_json(sample_template, job_id=sample_job.id, status='sending')
+        notification = Notification(**data)
+        notification.to = '15555555555'
+        notification.normalised_to = '15555555555'
+        dao_create_notification(notification)
+        assert notification.status == 'sending'
+        assert notification.normalised_to == '15555555555'
+        assert notification.to == '15555555555'
+
+    assert Notification.query.get(notification.id).status == 'sending'
+
+    with freeze_time('2000-01-02 12:00:00'):
+        sanitize_successful_notification_by_id(notification.id)
+        assert Notification.query.get(notification.id).status == 'delivered'
+        assert Notification.query.get(notification.id).normalised_to == '1'
+        assert Notification.query.get(notification.id).to == '1'
 
 
 def test_should_not_update_status_by_id_if_not_sending_and_does_not_update_job(sample_job):

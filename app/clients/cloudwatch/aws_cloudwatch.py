@@ -84,6 +84,6 @@ class AwsCloudwatchClient(Client):
         if all_failed_events and len(all_failed_events) > 0:
             event = all_failed_events[0]
             message = json.loads(event['message'])
-            return "fail", message['delivery']['providerResponse']
+            return "failure", message['delivery']['providerResponse']
 
         raise Exception(f'No event found for message_id {message_id} notification_id {notification_id}')

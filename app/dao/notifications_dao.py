@@ -271,8 +271,7 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
-@autocommit
-def sanitize_notifications_by_id(
+def sanitize_successful_notification_by_id(
     notification_id
 ):
     # TODO what to do for international?
@@ -280,10 +279,9 @@ def sanitize_notifications_by_id(
     Notification.query.filter(
         Notification.id.in_([notification_id]),
     ).update(
-        {'to': phone_prefix, 'normalised_to': phone_prefix},
+        {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'},
         synchronize_session=False
     )
-
     db.session.commit()
 
 
