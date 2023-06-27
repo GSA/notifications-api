@@ -280,7 +280,6 @@ def sanitize_successful_notification_by_id(
         Notification.id.in_([notification_id]),
     ).update(
         {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'},
-        synchronize_session=False
     )
     db.session.commit()
 
