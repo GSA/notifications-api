@@ -11,7 +11,7 @@ from app.clients.sms import SmsClientResponseException
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.dao.notifications_dao import (
-    sanitize_notifications_by_id,
+    sanitize_successful_notification_by_id,
     update_notification_status_by_id,
 )
 from app.delivery import send_to_providers
@@ -37,14 +37,16 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     status, provider_response = aws_cloudwatch_client.check_sms(message_id, notification_id, sent_at)
     if status == 'success':
         status = NOTIFICATION_DELIVERED
-    else:
+    elif status == 'failure':
         status = NOTIFICATION_FAILED
-    update_notification_status_by_id(notification_id, status, provider_response=provider_response)
-    current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
+    # if status is not success or failure the client raised an exception and this method will retry
 
     if status == NOTIFICATION_DELIVERED:
-        sanitize_notifications_by_id(notification_id)
+        sanitize_successful_notification_by_id(notification_id)
         current_app.logger.info(f"Sanitized notification {notification_id} that was successfully delivered")
+    else:
+        update_notification_status_by_id(notification_id, status, provider_response=provider_response)
+        current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
 
 
 @notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
