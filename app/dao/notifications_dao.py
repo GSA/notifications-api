@@ -271,17 +271,28 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
+@autocommit
 def sanitize_successful_notification_by_id(
     notification_id
 ):
     # TODO what to do for international?
-    phone_prefix = '1'
-    Notification.query.filter(
-        Notification.id.in_([notification_id]),
-    ).update(
-        {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'}
-    )
-    db.session.commit()
+    # phone_prefix = '1'
+    # Notification.query.filter(
+    #     Notification.id.in_([notification_id]),
+    # ).update(
+    #     {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'}
+    # )
+    # db.session.commit()
+
+    update_query = """
+    update notifications set notification_status='delivered', "to"='1', normalised_to='1'
+    where id=:notification_id
+    """
+    input_params = {
+        "notification_id": notification_id
+    }
+
+    db.session.execute(update_query, input_params)
 
 
 @autocommit
