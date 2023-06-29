@@ -71,3 +71,13 @@ Option 2 provides the most benefit with least Studio work required. When weighin
 
 ## VALIDATION AND NEXT STEPS
 TK TK
+
+## APPENDIX
+
+Mockup of Option 1:
+![Option 1](https://github.com/GSA/notifications-api/assets/6556888/483b9764-fa3f-43c7-b3c7-a239ae7344ff)
+
+Mockup of Option 2:
+![Option 2](https://github.com/GSA/notifications-api/assets/6556888/ea7442e4-745a-49d2-a90c-156cc6129356)
+
+
