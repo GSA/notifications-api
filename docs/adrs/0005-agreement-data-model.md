@@ -8,7 +8,10 @@
 
 ## CONTEXT AND PROBLEM STATEMENT
 
-**OPEN ISSUE(S):** https://github.com/GSA/notifications-api/issues/141, https://github.com/GSA/notifications-admin/issues/53, https://github.com/GSA/notifications-admin/issues/51 
+**OPEN ISSUE(S):**
+* https://github.com/GSA/notifications-api/issues/141
+* https://github.com/GSA/notifications-admin/issues/53
+* https://github.com/GSA/notifications-admin/issues/51
 
 We will be entering into Memoranda of Understanding (MOU) and Interagency
 Agreements (IAA) with partner agencies. Data from those agreements will be
@@ -42,19 +45,19 @@ An implementation should address these needs:
 - The information and tools to stop sending before overspending
 - The ability to connect data to organization and service models
 
-This is a minimal implementation of agreement data. It's quite possible that 
+This is a minimal implementation of agreement data. It's quite possible that
 it will change and expand over time, but those needs are not yet clear.
 
-Because we will continue to have the actual agreement docs safely in Google 
-Drive, this implementation does not need to be a source of truth and does not 
+Because we will continue to have the actual agreement docs safely in Google
+Drive, this implementation does not need to be a source of truth and does not
 need to retain history over time.
 
 
 ### SECURITY COMPLIANCE CONSIDERATIONS
 
-We will need to take care about permissions to change this data. Existing 
-permissions are fairly binary: you are a user or you are an admin. We should 
-consider whether that's still sufficient or if an in-between role would be 
+We will need to take care about permissions to change this data. Existing
+permissions are fairly binary: you are a user or you are an admin. We should
+consider whether that's still sufficient or if an in-between role would be
 useful.
 
 
@@ -71,11 +74,11 @@ As a team, we've gone through the following options:
       harder and, in turn, makes it easier to break validation logic elsewhere
       in the application
 
-- Add MOU and IAA models: two new classes in `models.py` with the same fields 
+- Add MOU and IAA models: two new classes in `models.py` with the same fields
   but different configurations.
   - Pros:
     - Cleanest representation of the real world
-    - Allows SQL-level support for required/unique fields 
+    - Allows SQL-level support for required/unique fields
   - Cons:
     - Most complex data model
 
@@ -102,7 +105,7 @@ should be able to perform a migration.
 - Positive
   - We’ll gain more granular control over message limits for paid (IAA)
     agreements
-  - We can offer more agreement transparency to users. For example, identifying 
+  - We can offer more agreement transparency to users. For example, identifying
     agreements that will need renewal
 
 - Negative
@@ -114,20 +117,20 @@ should be able to perform a migration.
 
 ## VALIDATION AND NEXT STEPS
 
-This process includes adding the new model and updating the existing models to 
+This process includes adding the new model and updating the existing models to
 use them.
 
 1. Add the new model:
-  - Add Agreement to models.py with the fields identified above
-  - Create migration to add/update table
+   - Add Agreement to models.py with the fields identified above
+   - Create migration to add/update table
 
 2. Update the Organisation model:
-  - Add one-to-many field linking one Organisation to multiple Agreements
-  - Add model property to convert budget amount into message limit
-  - Add model property to provide remaining budget based on sent messages
-  - Add model property about whether free tier or not
-  - Add model property for free tier usage (retrieve messages sent in a year)
+   - Add one-to-many field linking one Organisation to multiple Agreements
+   - Add model property to convert budget amount into message limit
+   - Add model property to provide remaining budget based on sent messages
+   - Add model property about whether free tier or not
+   - Add model property for free tier usage (retrieve messages sent in a year)
 
-This will set up a new system, but stops short of connecting agreements to the 
-services actually sending the messages. This approach will be laid out in a 
+This will set up a new system, but stops short of connecting agreements to the
+services actually sending the messages. This approach will be laid out in a
 forthcoming ADR about managing message limits.
