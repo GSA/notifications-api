@@ -1,4 +1,4 @@
-# TITLE:  Determine How to Handle Timezones in US Notify
+# TITLE: Agreement info in data model
 
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
