@@ -259,8 +259,8 @@ def _filter_query(query, filter_dict=None):
 
     # filter by status
     statuses = multidict.getlist('status')
+
     if statuses:
-        statuses = Notification.substitute_status(statuses)
         query = query.filter(Notification.status.in_(statuses))
 
     # filter by template
@@ -272,34 +272,27 @@ def _filter_query(query, filter_dict=None):
 
 
 @autocommit
-def insert_notification_history_delete_notifications_by_id(
+def sanitize_successful_notification_by_id(
     notification_id
 ):
-    """
-    Deletes one notification after it has run successfully and moves it to the notification_history
-    table.
+    # TODO what to do for international?
+    # phone_prefix = '1'
+    # Notification.query.filter(
+    #     Notification.id.in_([notification_id]),
+    # ).update(
+    #     {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'}
+    # )
+    # db.session.commit()
+
+    update_query = """
+    update notifications set notification_status='delivered', "to"='1', normalised_to='1'
+    where id=:notification_id
     """
     input_params = {
         "notification_id": notification_id
     }
-    # Insert into NotificationHistory if the row already exists do nothing.
-    insert_query = """
-        insert into notification_history
-         SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
-             key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
-             client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, document_download_count
-          from NOTIFICATIONS WHERE id= :notification_id
-          ON CONFLICT ON CONSTRAINT notification_history_pkey
-          DO NOTHING
-    """
-    delete_query = """
-        DELETE FROM notifications
-        where id= :notification_id
-    """
 
-    db.session.execute(insert_query, input_params)
-    db.session.execute(delete_query, input_params)
+    db.session.execute(update_query, input_params)
 
 
 @autocommit

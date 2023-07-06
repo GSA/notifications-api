@@ -162,7 +162,7 @@ class Config(object):
         'broker_transport_options': {
             'visibility_timeout': 310,
         },
-        'timezone': getenv("TIMEZONE", 'America/New_York'),
+        'timezone': getenv("TIMEZONE", 'UTC'),
         'imports': [
             'app.celery.tasks',
             'app.celery.scheduled_tasks',
@@ -213,47 +213,47 @@ class Config(object):
             # app/celery/nightly_tasks.py
             'timeout-sending-notifications': {
                 'task': 'timeout-sending-notifications',
-                'schedule': crontab(hour=0, minute=5),
+                'schedule': crontab(hour=4, minute=5),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'create-nightly-billing': {
                 'task': 'create-nightly-billing',
-                'schedule': crontab(hour=0, minute=15),
+                'schedule': crontab(hour=4, minute=15),
                 'options': {'queue': QueueNames.REPORTING}
             },
             'create-nightly-notification-status': {
                 'task': 'create-nightly-notification-status',
-                'schedule': crontab(hour=0, minute=30),  # after 'timeout-sending-notifications'
+                'schedule': crontab(hour=4, minute=30),  # after 'timeout-sending-notifications'
                 'options': {'queue': QueueNames.REPORTING}
             },
             'delete-notifications-older-than-retention': {
                 'task': 'delete-notifications-older-than-retention',
-                'schedule': crontab(hour=3, minute=0),  # after 'create-nightly-notification-status'
+                'schedule': crontab(hour=7, minute=0),  # after 'create-nightly-notification-status'
                 'options': {'queue': QueueNames.REPORTING}
             },
             'delete-inbound-sms': {
                 'task': 'delete-inbound-sms',
-                'schedule': crontab(hour=1, minute=40),
+                'schedule': crontab(hour=5, minute=40),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'save-daily-notification-processing-time': {
                 'task': 'save-daily-notification-processing-time',
-                'schedule': crontab(hour=2, minute=0),
+                'schedule': crontab(hour=6, minute=0),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'cleanup-unfinished-jobs': {
                 'task': 'cleanup-unfinished-jobs',
-                'schedule': crontab(hour=0, minute=5),
+                'schedule': crontab(hour=4, minute=5),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
-                'schedule': crontab(hour=4, minute=0),
+                'schedule': crontab(hour=8, minute=0),
                 'options': {'queue': QueueNames.PERIODIC},
             },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {
                 'task': 'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers',
-                'schedule': crontab(day_of_week='mon-fri', hour=10, minute=30),
+                'schedule': crontab(day_of_week='mon-fri', hour=14, minute=30),
                 'options': {'queue': QueueNames.PERIODIC}
             },
         }

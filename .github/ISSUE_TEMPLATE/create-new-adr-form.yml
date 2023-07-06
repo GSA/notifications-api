@@ -42,8 +42,8 @@ body:
       label: Implemented
       description: Is this ADR implemented?
       options:
-        - Yes
-        - No
+        - 'Yes'
+        - 'No'
     validations:
       required: true
   - type: input

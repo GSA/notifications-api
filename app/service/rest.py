@@ -395,7 +395,6 @@ def get_all_notifications_for_service(service_id):
         notifications = [notification.serialize_for_csv() for notification in pagination.items]
     else:
         notifications = notification_with_template_schema.dump(pagination.items, many=True)
-
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
@@ -429,7 +428,6 @@ def get_all_notifications_for_service(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>', methods=['GET'])
 def get_notification_for_service(service_id, notification_id):
-
     notification = notifications_dao.get_notification_with_personalisation(
         service_id,
         notification_id,
