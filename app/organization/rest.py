@@ -1,6 +1,6 @@
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.config import QueueNames
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
@@ -92,7 +92,15 @@ def create_organization():
     data = request.get_json()
     validate(data, post_create_organization_schema)
     organization = Organization(**data)
-    dao_create_organization(organization)
+    try:
+        dao_create_organization(organization)
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        if "duplicate key" in error:
+            return jsonify(result='error', message='Organization name already exists'), 400
+        else:
+            return jsonify(result='error', message='Error'), 400
+
     return jsonify(organization.serialize()), 201
 
 
@@ -101,7 +109,16 @@ def update_organization(organization_id):
     data = request.get_json()
     validate(data, post_update_organization_schema)
 
-    result = dao_update_organization(organization_id, **data)
+    try:
+        result = dao_update_organization(organization_id, **data)
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        if "duplicate key" in error and "domain_pkey" in error:
+            return jsonify(result='error', message='Domain already exists'), 400
+        elif "duplicate key" in error and "organisation_name" in error:
+            return jsonify(result='error', message='Organization name already exists'), 400
+        else:
+            return jsonify(result='error', message='Error'), 400
 
     if data.get('agreement_signed') is True:
         # if a platform admin has manually adjusted the organization, don't tell people

@@ -205,6 +205,9 @@ def test_post_create_organization_sets_default_nhs_branding_for_nhs_orgs(
 
 
 def test_post_create_organization_existing_name_raises_400(admin_request, sample_organization):
+    organization = Organization.query.all()
+    assert len(organization) == 1
+
     data = {
         'name': sample_organization.name,
         'active': True,
@@ -221,6 +224,27 @@ def test_post_create_organization_existing_name_raises_400(admin_request, sample
 
     assert len(organization) == 1
     assert response['message'] == 'Organization name already exists'
+
+
+def test_post_create_organization_works(admin_request, sample_organization):
+    organization = Organization.query.all()
+    assert len(organization) == 1
+
+    data = {
+        'name': "org 2",
+        'active': True,
+        'organization_type': 'federal',
+    }
+
+    admin_request.post(
+        'organization.create_organization',
+        _data=data,
+        _expected_status=201
+    )
+
+    organization = Organization.query.all()
+
+    assert len(organization) == 2
 
 
 @pytest.mark.parametrize('data, expected_error', (

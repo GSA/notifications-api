@@ -62,24 +62,19 @@ def dao_create_organization(organization):
 
 @autocommit
 def dao_update_organization(organization_id, **kwargs):
-
     domains = kwargs.pop('domains', None)
-
     num_updated = Organization.query.filter_by(id=organization_id).update(
         kwargs
     )
 
     if isinstance(domains, list):
-
         Domain.query.filter_by(organization_id=organization_id).delete()
-
         db.session.bulk_save_objects([
             Domain(domain=domain.lower(), organization_id=organization_id)
             for domain in domains
         ])
 
     organization = Organization.query.get(organization_id)
-
     if 'organization_type' in kwargs:
         _update_organization_services(organization, 'organization_type', only_where_none=False)
 
