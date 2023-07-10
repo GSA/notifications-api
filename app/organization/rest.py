@@ -115,6 +115,7 @@ def update_organization(organization_id):
         error = str(e.__dict__['orig'])
         if "duplicate key" in error and "domain_pkey" in error:
             return jsonify(result='error', message='Domain already exists'), 400
+        # 'organisation' here because of ix_organisation_name index in db
         elif "duplicate key" in error and "organisation_name" in error:
             return jsonify(result='error', message='Organization name already exists'), 400
         else:
