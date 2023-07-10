@@ -121,9 +121,9 @@ class User(db.Model):
         'Service',
         secondary='user_to_service',
         backref='users')
-    organisations = db.relationship(
-        'Organisation',
-        secondary='user_to_organisation',
+    organizations = db.relationship(
+        'Organization',
+        secondary='user_to_organization',
         backref='users')
 
     @validates("mobile_number")
@@ -185,7 +185,7 @@ class User(db.Model):
             'email_access_validated_at': self.email_access_validated_at.strftime(DATETIME_FORMAT),
             'logged_in_at': get_dt_string_or_none(self.logged_in_at),
             'mobile_number': self.mobile_number,
-            'organisations': [x.id for x in self.organisations if x.active],
+            'organizations': [x.id for x in self.organizations if x.active],
             'password_changed_at': self.password_changed_at.strftime(DATETIME_FORMAT_NO_TIMEZONE),
             'permissions': self.get_permissions(),
             'platform_admin': self.platform_admin,
@@ -213,12 +213,12 @@ class ServiceUser(db.Model):
     )
 
 
-user_to_organisation = db.Table(
-    'user_to_organisation',
+user_to_organization = db.Table(
+    'user_to_organization',
     db.Model.metadata,
     db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('users.id')),
-    db.Column('organisation_id', UUID(as_uuid=True), db.ForeignKey('organisation.id')),
-    UniqueConstraint('user_id', 'organisation_id', name='uix_user_to_organisation')
+    db.Column('organization_id', UUID(as_uuid=True), db.ForeignKey('organization.id')),
+    UniqueConstraint('user_id', 'organization_id', name='uix_user_to_organization')
 )
 
 
@@ -310,23 +310,23 @@ class ServicePermissionTypes(db.Model):
 class Domain(db.Model):
     __tablename__ = "domain"
     domain = db.Column(db.String(255), primary_key=True)
-    organisation_id = db.Column('organisation_id', UUID(as_uuid=True), db.ForeignKey('organisation.id'), nullable=False)
+    organization_id = db.Column('organization_id', UUID(as_uuid=True), db.ForeignKey('organization.id'), nullable=False)
 
 
-ORGANISATION_TYPES = [
+ORGANIZATION_TYPES = [
     "federal", "state", "other"
 ]
 
 
-class OrganisationTypes(db.Model):
-    __tablename__ = 'organisation_types'
+class OrganizationTypes(db.Model):
+    __tablename__ = 'organization_types'
 
     name = db.Column(db.String(255), primary_key=True)
     annual_free_sms_fragment_limit = db.Column(db.BigInteger, nullable=False)
 
 
-class Organisation(db.Model):
-    __tablename__ = "organisation"
+class Organization(db.Model):
+    __tablename__ = "organization"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False)
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
@@ -343,9 +343,9 @@ class Organisation(db.Model):
     agreement_signed_on_behalf_of_name = db.Column(db.String(255), nullable=True)
     agreement_signed_on_behalf_of_email_address = db.Column(db.String(255), nullable=True)
     agreement_signed_version = db.Column(db.Float, nullable=True)
-    organisation_type = db.Column(
+    organization_type = db.Column(
         db.String(255),
-        db.ForeignKey('organisation_types.name'),
+        db.ForeignKey('organization_types.name'),
         unique=False,
         nullable=True,
     )
@@ -386,7 +386,7 @@ class Organisation(db.Model):
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
-            "organisation_type": self.organisation_type,
+            "organization_type": self.organization_type,
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
             "agreement_signed_at": self.agreement_signed_at,
@@ -411,7 +411,7 @@ class Organisation(db.Model):
             'active': self.active,
             'count_of_live_services': len(self.live_services),
             'domains': self.domain_list,
-            'organisation_type': self.organisation_type,
+            'organization_type': self.organization_type,
         }
 
 
@@ -440,9 +440,9 @@ class Service(db.Model, Versioned):
     created_by_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), index=True, nullable=False)
     created_by = db.relationship('User', foreign_keys=[created_by_id])
     prefix_sms = db.Column(db.Boolean, nullable=False, default=True)
-    organisation_type = db.Column(
+    organization_type = db.Column(
         db.String(255),
-        db.ForeignKey('organisation_types.name'),
+        db.ForeignKey('organization_types.name'),
         unique=False,
         nullable=True,
     )
@@ -456,8 +456,8 @@ class Service(db.Model, Versioned):
     go_live_user = db.relationship('User', foreign_keys=[go_live_user_id])
     go_live_at = db.Column(db.DateTime, nullable=True)
 
-    organisation_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organisation.id'), index=True, nullable=True)
-    organisation = db.relationship('Organisation', backref='services')
+    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id'), index=True, nullable=True)
+    organization = db.relationship('Organization', backref='services')
 
     notes = db.Column(db.Text, nullable=True)
     purchase_order_number = db.Column(db.String(255), nullable=True)
@@ -1661,15 +1661,15 @@ class InvitedUser(db.Model):
         return self.permissions.split(',')
 
 
-class InvitedOrganisationUser(db.Model):
-    __tablename__ = 'invited_organisation_users'
+class InvitedOrganizationUser(db.Model):
+    __tablename__ = 'invited_organization_users'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email_address = db.Column(db.String(255), nullable=False)
     invited_by_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     invited_by = db.relationship('User')
-    organisation_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organisation.id'), nullable=False)
-    organisation = db.relationship('Organisation')
+    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id'), nullable=False)
+    organization = db.relationship('Organization')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     status = db.Column(
@@ -1684,7 +1684,7 @@ class InvitedOrganisationUser(db.Model):
             'id': str(self.id),
             'email_address': self.email_address,
             'invited_by': str(self.invited_by_id),
-            'organisation': str(self.organisation_id),
+            'organization': str(self.organization_id),
             'created_at': self.created_at.strftime(DATETIME_FORMAT),
             'status': self.status
         }

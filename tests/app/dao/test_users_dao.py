@@ -195,7 +195,7 @@ def test_create_secret_code_can_customize_digits():
 
 
 @freeze_time('2018-07-07 12:00:00')
-def test_dao_archive_user(sample_user, sample_organisation, fake_uuid):
+def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     sample_user.current_session_id = fake_uuid
 
     # create 2 services for sample_user to be a member of (each with another active user)
@@ -212,7 +212,7 @@ def test_dao_archive_user(sample_user, sample_organisation, fake_uuid):
     create_permissions(service_2_user, service_2, 'manage_settings')
 
     # make sample_user an org member
-    sample_organisation.users = [sample_user]
+    sample_organization.users = [sample_user]
 
     # give sample_user folder permissions for a service_1 folder
     folder = create_template_folder(service_1)
@@ -224,7 +224,7 @@ def test_dao_archive_user(sample_user, sample_organisation, fake_uuid):
 
     assert sample_user.get_permissions() == {}
     assert sample_user.services == []
-    assert sample_user.organisations == []
+    assert sample_user.organizations == []
     assert sample_user.auth_type == EMAIL_AUTH_TYPE
     assert sample_user.email_address == '_archived_2018-07-07_notify@digital.cabinet-office.gov.uk'
     assert sample_user.mobile_number is None

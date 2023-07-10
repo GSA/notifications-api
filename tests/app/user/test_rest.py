@@ -21,7 +21,7 @@ from app.models import (
     User,
 )
 from tests.app.db import (
-    create_organisation,
+    create_organization,
     create_service,
     create_template_folder,
     create_user,
@@ -47,12 +47,12 @@ def test_get_user_list(admin_request, sample_service):
     assert sorted(expected_permissions) == sorted(fetched['permissions'][str(sample_service.id)])
 
 
-def test_get_user(admin_request, sample_service, sample_organisation):
+def test_get_user(admin_request, sample_service, sample_organization):
     """
     Tests GET endpoint '/<user_id>' to retrieve a single service.
     """
     sample_user = sample_service.users[0]
-    sample_user.organisations = [sample_organisation]
+    sample_user.organizations = [sample_organization]
     json_resp = admin_request.get(
         'user.get_user',
         user_id=sample_user.id
@@ -69,20 +69,20 @@ def test_get_user(admin_request, sample_service, sample_organisation):
     assert fetched['auth_type'] == SMS_AUTH_TYPE
     assert fetched['permissions'].keys() == {str(sample_service.id)}
     assert fetched['services'] == [str(sample_service.id)]
-    assert fetched['organisations'] == [str(sample_organisation.id)]
+    assert fetched['organizations'] == [str(sample_organization.id)]
     assert fetched['can_use_webauthn'] is False
     assert sorted(fetched['permissions'][str(sample_service.id)]) == sorted(expected_permissions)
 
 
-def test_get_user_doesnt_return_inactive_services_and_orgs(admin_request, sample_service, sample_organisation):
+def test_get_user_doesnt_return_inactive_services_and_orgs(admin_request, sample_service, sample_organization):
     """
     Tests GET endpoint '/<user_id>' to retrieve a single service.
     """
     sample_service.active = False
-    sample_organisation.active = False
+    sample_organization.active = False
 
     sample_user = sample_service.users[0]
-    sample_user.organisations = [sample_organisation]
+    sample_user.organizations = [sample_organization]
 
     json_resp = admin_request.get(
         'user.get_user',
@@ -93,7 +93,7 @@ def test_get_user_doesnt_return_inactive_services_and_orgs(admin_request, sample
 
     assert fetched['id'] == str(sample_user.id)
     assert fetched['services'] == []
-    assert fetched['organisations'] == []
+    assert fetched['organizations'] == []
     assert fetched['permissions'] == {}
 
 
@@ -894,8 +894,8 @@ def test_cannot_update_user_password_using_attributes_method(admin_request, samp
 
 
 def test_get_orgs_and_services_nests_services(admin_request, sample_user):
-    org1 = create_organisation(name='org1')
-    org2 = create_organisation(name='org2')
+    org1 = create_organization(name='org1')
+    org2 = create_organization(name='org2')
     service1 = create_service(service_name='service1')
     service2 = create_service(service_name='service2')
     service3 = create_service(service_name='service3')
@@ -903,16 +903,16 @@ def test_get_orgs_and_services_nests_services(admin_request, sample_user):
     org1.services = [service1, service2]
     org2.services = []
 
-    sample_user.organisations = [org1, org2]
+    sample_user.organizations = [org1, org2]
     sample_user.services = [service1, service2, service3]
 
-    resp = admin_request.get('user.get_organisations_and_services_for_user', user_id=sample_user.id)
+    resp = admin_request.get('user.get_organizations_and_services_for_user', user_id=sample_user.id)
 
     assert set(resp.keys()) == {
-        'organisations',
+        'organizations',
         'services',
     }
-    assert resp['organisations'] == [
+    assert resp['organizations'] == [
         {
             'name': org1.name,
             'id': str(org1.id),
@@ -929,26 +929,26 @@ def test_get_orgs_and_services_nests_services(admin_request, sample_user):
             'name': service1.name,
             'id': str(service1.id),
             'restricted': False,
-            'organisation': str(org1.id),
+            'organization': str(org1.id),
         },
         {
             'name': service2.name,
             'id': str(service2.id),
             'restricted': False,
-            'organisation': str(org1.id),
+            'organization': str(org1.id),
         },
         {
             'name': service3.name,
             'id': str(service3.id),
             'restricted': False,
-            'organisation': None,
+            'organization': None,
         },
     ]
 
 
 def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
-    org1 = create_organisation(name='org1', active=True)
-    org2 = create_organisation(name='org2', active=False)
+    org1 = create_organization(name='org1', active=True)
+    org2 = create_organization(name='org2', active=False)
 
     # in an active org
     service1 = create_service(service_name='service1', active=True)
@@ -962,16 +962,16 @@ def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
     org1.services = [service1, service2]
     org2.services = [service3]
 
-    sample_user.organisations = [org1, org2]
+    sample_user.organizations = [org1, org2]
     sample_user.services = [service1, service2, service3, service4, service5]
 
-    resp = admin_request.get('user.get_organisations_and_services_for_user', user_id=sample_user.id)
+    resp = admin_request.get('user.get_organizations_and_services_for_user', user_id=sample_user.id)
 
     assert set(resp.keys()) == {
-        'organisations',
+        'organizations',
         'services',
     }
-    assert resp['organisations'] == [
+    assert resp['organizations'] == [
         {
             'name': org1.name,
             'id': str(org1.id),
@@ -983,19 +983,19 @@ def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
             'name': service1.name,
             'id': str(service1.id),
             'restricted': False,
-            'organisation': str(org1.id)
+            'organization': str(org1.id)
         },
         {
             'name': service3.name,
             'id': str(service3.id),
             'restricted': False,
-            'organisation': str(org2.id)
+            'organization': str(org2.id)
         },
         {
             'name': service4.name,
             'id': str(service4.id),
             'restricted': False,
-            'organisation': None,
+            'organization': None,
         },
     ]
 
@@ -1003,26 +1003,26 @@ def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
 def test_get_orgs_and_services_only_shows_users_orgs_and_services(admin_request, sample_user):
     other_user = create_user(email='other@user.com')
 
-    org1 = create_organisation(name='org1')
-    org2 = create_organisation(name='org2')
+    org1 = create_organization(name='org1')
+    org2 = create_organization(name='org2')
     service1 = create_service(service_name='service1')
     service2 = create_service(service_name='service2')
 
     org1.services = [service1]
 
-    sample_user.organisations = [org2]
+    sample_user.organizations = [org2]
     sample_user.services = [service1]
 
-    other_user.organisations = [org1, org2]
+    other_user.organizations = [org1, org2]
     other_user.services = [service1, service2]
 
-    resp = admin_request.get('user.get_organisations_and_services_for_user', user_id=sample_user.id)
+    resp = admin_request.get('user.get_organizations_and_services_for_user', user_id=sample_user.id)
 
     assert set(resp.keys()) == {
-        'organisations',
+        'organizations',
         'services',
     }
-    assert resp['organisations'] == [
+    assert resp['organizations'] == [
         {
             'name': org2.name,
             'id': str(org2.id),
@@ -1036,7 +1036,7 @@ def test_get_orgs_and_services_only_shows_users_orgs_and_services(admin_request,
             'name': service1.name,
             'id': str(service1.id),
             'restricted': False,
-            'organisation': str(org1.id),
+            'organization': str(org1.id),
         }
     ]
 

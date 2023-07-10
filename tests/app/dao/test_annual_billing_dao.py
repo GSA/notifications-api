@@ -61,7 +61,7 @@ def test_dao_update_annual_billing_for_future_years(notify_db_session, sample_se
                           ])
 def test_set_default_free_allowance_for_service(notify_db_session, org_type, year, expected_default):
 
-    service = create_service(organisation_type=org_type)
+    service = create_service(organization_type=org_type)
 
     set_default_free_allowance_for_service(service=service, year_start=year)
 
@@ -88,12 +88,12 @@ def test_set_default_free_allowance_for_service_using_correct_year(sample_servic
 def test_set_default_free_allowance_for_service_updates_existing_year(sample_service):
     set_default_free_allowance_for_service(service=sample_service, year_start=None)
     annual_billing = AnnualBilling.query.all()
-    assert not sample_service.organisation_type
+    assert not sample_service.organization_type
     assert len(annual_billing) == 1
     assert annual_billing[0].service_id == sample_service.id
     assert annual_billing[0].free_sms_fragment_limit == 150000
 
-    sample_service.organisation_type = 'federal'
+    sample_service.organization_type = 'federal'
 
     set_default_free_allowance_for_service(service=sample_service, year_start=None)
     annual_billing = AnnualBilling.query.all()

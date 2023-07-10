@@ -8,7 +8,7 @@ from flask import current_app, url_for
 from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.dao.organisation_dao import dao_add_service_to_organisation
+from app.dao.organization_dao import dao_add_service_to_organization
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import (
@@ -46,7 +46,7 @@ from tests.app.db import (
     create_ft_notification_status,
     create_inbound_number,
     create_notification,
-    create_organisation,
+    create_organization,
     create_reply_to_email,
     create_service,
     create_service_sms_sender,
@@ -172,14 +172,14 @@ def test_find_services_by_name_handles_no_service_name(notify_db_session, admin_
 
 @freeze_time('2019-05-02')
 def test_get_live_services_data(sample_user, admin_request):
-    org = create_organisation()
+    org = create_organization()
 
     service = create_service(go_live_user=sample_user, go_live_at=datetime(2018, 1, 1))
     service_2 = create_service(service_name='second', go_live_at=datetime(2019, 1, 1), go_live_user=sample_user)
 
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type='email')
-    dao_add_service_to_organisation(service=service, organisation_id=org.id)
+    dao_add_service_to_organization(service=service, organization_id=org.id)
     create_ft_billing(local_date='2019-04-20', template=sms_template)
     create_ft_billing(local_date='2019-04-20', template=email_template)
 
@@ -198,12 +198,12 @@ def test_get_live_services_data(sample_user, admin_request):
             'email_totals': 1,
             'email_volume_intent': None,
             'live_date': 'Mon, 01 Jan 2018 00:00:00 GMT',
-            'organisation_name': 'test_org_1',
+            'organization_name': 'test_org_1',
             'service_id': ANY,
             'service_name': 'Sample service',
             'sms_totals': 1,
             'sms_volume_intent': None,
-            'organisation_type': None,
+            'organization_type': None,
             'free_sms_fragment_limit': 1
         },
         {
@@ -214,12 +214,12 @@ def test_get_live_services_data(sample_user, admin_request):
             'email_totals': 0,
             'email_volume_intent': None,
             'live_date': 'Tue, 01 Jan 2019 00:00:00 GMT',
-            'organisation_name': None,
+            'organization_name': None,
             'service_id': ANY,
             'service_name': 'second',
             'sms_totals': 0,
             'sms_volume_intent': None,
-            'organisation_type': None,
+            'organization_type': None,
             'free_sms_fragment_limit': 2
         },
     ]
@@ -251,8 +251,8 @@ def test_get_service_by_id(admin_request, sample_service):
         'message_limit',
         'name',
         'notes',
-        'organisation',
-        'organisation_type',
+        'organization',
+        'organization_type',
         'permissions',
         'prefix_sms',
         'purchase_order_number',
@@ -266,9 +266,9 @@ def test_get_service_by_id(admin_request, sample_service):
 
 
 @pytest.mark.parametrize('detailed', [True, False])
-def test_get_service_by_id_returns_organisation_type(admin_request, sample_service, detailed):
+def test_get_service_by_id_returns_organization_type(admin_request, sample_service, detailed):
     json_resp = admin_request.get('service.get_service_by_id', service_id=sample_service.id, detailed=detailed)
-    assert json_resp['data']['organisation_type'] is None
+    assert json_resp['data']['organization_type'] is None
 
 
 def test_get_service_list_has_default_permissions(admin_request, service_factory):
@@ -402,21 +402,21 @@ def test_create_service(
     ('test.gov.uk', True),
     ('test.example.gov.uk', True),
 ))
-def test_create_service_with_domain_sets_organisation(
+def test_create_service_with_domain_sets_organization(
     admin_request,
     sample_user,
     domain,
     expected_org,
 ):
-    red_herring_org = create_organisation(name='Sub example')
+    red_herring_org = create_organization(name='Sub example')
     create_domain('specific.example.gov.uk', red_herring_org.id)
     create_domain('aaaaaaaa.example.gov.uk', red_herring_org.id)
 
-    org = create_organisation()
+    org = create_organization()
     create_domain('example.gov.uk', org.id)
     create_domain('test.gov.uk', org.id)
 
-    another_org = create_organisation(name='Another')
+    another_org = create_organization(name='Another')
     create_domain('cabinet-office.gov.uk', another_org.id)
     create_domain('cabinetoffice.gov.uk', another_org.id)
 
@@ -436,9 +436,9 @@ def test_create_service_with_domain_sets_organisation(
     json_resp = admin_request.post('service.create_service', _data=data, _expected_status=201)
 
     if expected_org:
-        assert json_resp['data']['organisation'] == str(org.id)
+        assert json_resp['data']['organization'] == str(org.id)
     else:
-        assert json_resp['data']['organisation'] is None
+        assert json_resp['data']['organization'] is None
 
 
 def test_create_service_should_create_annual_billing_for_service(
@@ -482,11 +482,11 @@ def test_create_service_should_raise_exception_and_not_create_service_if_annual_
     assert len(Service.query.filter(Service.name == 'created service').all()) == 0
 
 
-def test_create_service_inherits_branding_from_organisation(
+def test_create_service_inherits_branding_from_organization(
     admin_request,
     sample_user,
 ):
-    org = create_organisation()
+    org = create_organization()
     email_branding = create_email_branding()
     org.email_branding = email_branding
     create_domain('example.gov.uk', org.id)
@@ -665,7 +665,7 @@ def test_update_service(client, notify_db_session, sample_service):
         'email_from': 'updated.service.name',
         'created_by': str(sample_service.created_by.id),
         'email_branding': str(brand.id),
-        'organisation_type': 'federal',
+        'organization_type': 'federal',
     }
 
     auth_header = create_admin_authorization_header()
@@ -680,7 +680,7 @@ def test_update_service(client, notify_db_session, sample_service):
     assert result['data']['name'] == 'updated service name'
     assert result['data']['email_from'] == 'updated.service.name'
     assert result['data']['email_branding'] == str(brand.id)
-    assert result['data']['organisation_type'] == 'federal'
+    assert result['data']['organization_type'] == 'federal'
 
 
 def test_cant_update_service_org_type_to_random_value(client, sample_service):
@@ -688,7 +688,7 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
         'name': 'updated service name',
         'email_from': 'updated.service.name',
         'created_by': str(sample_service.created_by.id),
-        'organisation_type': 'foo',
+        'organization_type': 'foo',
     }
 
     auth_header = create_admin_authorization_header()
@@ -2985,18 +2985,18 @@ def test_get_service_sms_senders_for_service_returns_empty_list_when_service_doe
     assert json.loads(response.get_data(as_text=True)) == []
 
 
-def test_get_organisation_for_service_id(admin_request, sample_service, sample_organisation):
-    dao_add_service_to_organisation(sample_service, sample_organisation.id)
+def test_get_organization_for_service_id(admin_request, sample_service, sample_organization):
+    dao_add_service_to_organization(sample_service, sample_organization.id)
     response = admin_request.get(
-        'service.get_organisation_for_service',
+        'service.get_organization_for_service',
         service_id=sample_service.id
     )
-    assert response == sample_organisation.serialize()
+    assert response == sample_organization.serialize()
 
 
-def test_get_organisation_for_service_id_return_empty_dict_if_service_not_in_organisation(admin_request, fake_uuid):
+def test_get_organization_for_service_id_return_empty_dict_if_service_not_in_organization(admin_request, fake_uuid):
     response = admin_request.get(
-        'service.get_organisation_for_service',
+        'service.get_organization_for_service',
         service_id=fake_uuid
     )
     assert response == {}
