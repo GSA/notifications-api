@@ -138,21 +138,8 @@ def persist_notification(
         dao_create_notification(notification)
         if key_type != KEY_TYPE_TEST and current_app.config['REDIS_ENABLED']:
             current_app.logger.info('Redis enabled, querying cache key for service id: {}'.format(service.id))
-            cache_key = redis.daily_limit_cache_key(service.id)
             total_key = redis.daily_total_cache_key()
-            current_app.logger.info('Redis daily limit cache key: {}'.format(cache_key))
-            if redis_store.get(cache_key) is None:
-                current_app.logger.info('Redis daily limit cache key does not exist')
-                # if cache does not exist set the cache to 1 with an expiry of 24 hours,
-                # The cache should be set by the time we create the notification
-                # but in case it is this will make sure the expiry is set to 24 hours,
-                # where if we let the incr method create the cache it will be set a ttl.
-                redis_store.set(cache_key, 1, ex=86400)
-                current_app.logger.info('Set redis daily limit cache key to 1')
-            else:
-                current_app.logger.info('Redis daily limit cache key does exist')
-                redis_store.incr(cache_key)
-                current_app.logger.info('Redis daily limit cache key has been incremented')
+
             if redis_store.get(total_key) is None:
                 current_app.logger.info('Redis daily total cache key does not exist')
                 redis_store.set(total_key, 1, ex=86400)
