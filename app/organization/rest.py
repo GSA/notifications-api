@@ -1,6 +1,6 @@
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 
 from app.config import QueueNames
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
@@ -43,6 +43,8 @@ def handle_integrity_error(exc):
     """
     Handle integrity errors caused by the unique constraint on ix_organization_name
     """
+    print(exc)
+    current_app.logger.exception(exc)
     if 'ix_organization_name' in str(exc):
         return jsonify(result="error",
                        message="Organization name already exists"), 400
@@ -50,7 +52,6 @@ def handle_integrity_error(exc):
         return jsonify(result='error',
                        message='Domain already exists'), 400
 
-    current_app.logger.exception(exc)
     return jsonify(result='error', message="Internal server error"), 500
 
 
@@ -92,14 +93,7 @@ def create_organization():
     data = request.get_json()
     validate(data, post_create_organization_schema)
     organization = Organization(**data)
-    try:
-        dao_create_organization(organization)
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        if "duplicate key" in error:
-            return jsonify(result='error', message='Organization name already exists'), 400
-        else:
-            return jsonify(result='error', message='Error'), 400
+    dao_create_organization(organization)
 
     return jsonify(organization.serialize()), 201
 
@@ -109,17 +103,7 @@ def update_organization(organization_id):
     data = request.get_json()
     validate(data, post_update_organization_schema)
 
-    try:
-        result = dao_update_organization(organization_id, **data)
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        if "duplicate key" in error and "domain_pkey" in error:
-            return jsonify(result='error', message='Domain already exists'), 400
-        # 'organisation' here because of ix_organisation_name index in db
-        elif "duplicate key" in error and "organisation_name" in error:
-            return jsonify(result='error', message='Organization name already exists'), 400
-        else:
-            return jsonify(result='error', message='Error'), 400
+    result = dao_update_organization(organization_id, **data)
 
     if data.get('agreement_signed') is True:
         # if a platform admin has manually adjusted the organization, don't tell people
