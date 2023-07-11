@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pytest
 from flask import current_app
 from freezegun import freeze_time
@@ -12,7 +10,6 @@ from app.notifications.process_notifications import (
     create_content_for_notification,
 )
 from app.notifications.validators import (
-    check_application_over_daily_message_total,
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
     check_notification_content_is_not_empty,
@@ -20,7 +17,6 @@ from app.notifications.validators import (
     check_reply_to,
     check_service_email_reply_to_id,
     check_service_over_api_rate_limit,
-    check_service_over_daily_message_limit,
     check_service_sms_sender_id,
     check_template_is_active,
     check_template_is_for_notification_type,
@@ -34,12 +30,7 @@ from app.serialised_models import (
     SerialisedTemplate,
 )
 from app.utils import get_template_instance
-from app.v2.errors import (
-    BadRequestError,
-    RateLimitError,
-    TooManyRequestsError,
-    TotalRequestsError,
-)
+from app.v2.errors import BadRequestError, RateLimitError
 from tests.app.db import (
     create_api_key,
     create_reply_to_email,
@@ -56,79 +47,6 @@ from tests.conftest import set_config
 def enable_redis(notify_api):
     with set_config(notify_api, 'REDIS_ENABLED', True):
         yield
-
-
-@pytest.mark.parametrize('key_type', ['team', 'normal'])
-def test_check_service_message_limit_in_cache_under_message_limit_passes(
-        key_type,
-        sample_service,
-        mocker):
-    serialised_service = SerialisedService.from_id(sample_service.id)
-    mock_get = mocker.patch('app.notifications.validators.redis_store.get', return_value="1")
-    mock_set = mocker.patch('app.notifications.validators.redis_store.set')
-    service_stats = check_service_over_daily_message_limit(key_type, serialised_service)
-    assert service_stats == 1
-    mock_get.assert_called_once_with(f'{serialised_service.id}-{datetime.utcnow().strftime("%Y-%m-%d")}-count')
-    mock_set.assert_not_called()
-
-
-def test_check_service_over_daily_message_limit_should_not_interact_with_cache_for_test_key(sample_service, mocker):
-    mocker.patch('app.notifications.validators.redis_store')
-    mock_get = mocker.patch('app.notifications.validators.redis_store.get', side_effect=[None])
-    serialised_service = SerialisedService.from_id(sample_service.id)
-    service_stats = check_service_over_daily_message_limit('test', serialised_service)
-    assert service_stats == 0
-    mock_get.assert_not_called()
-
-
-@pytest.mark.parametrize('key_type', ['team', 'normal'])
-def test_check_service_over_daily_message_limit_should_set_cache_value_as_zero_if_cache_not_set(
-        key_type,
-        sample_template,
-        sample_service,
-        mocker
-):
-    serialised_service = SerialisedService.from_id(sample_service.id)
-    with freeze_time("2016-01-01 12:00:00.000000"):
-        mocker.patch('app.notifications.validators.redis_store.set')
-        service_stats = check_service_over_daily_message_limit(key_type, serialised_service)
-        app.notifications.validators.redis_store.set.assert_called_with(
-            str(sample_service.id) + "-2016-01-01-count", 0, ex=86400
-        )
-        assert service_stats == 0
-
-
-def test_check_service_over_daily_message_limit_does_nothing_if_redis_disabled(notify_api, sample_service, mocker):
-    serialised_service = SerialisedService.from_id(sample_service.id)
-    with set_config(notify_api, 'REDIS_ENABLED', False):
-        mock_cache_key = mocker.patch('notifications_utils.clients.redis.daily_limit_cache_key')
-        service_stats = check_service_over_daily_message_limit('normal', serialised_service)
-        assert service_stats == 0
-        assert mock_cache_key.method_calls == []
-
-
-@pytest.mark.parametrize('key_type', ['team', 'normal'])
-def test_check_service_message_limit_over_message_limit_fails(key_type, mocker, notify_db_session):
-    service = create_service(message_limit=4)
-    mocker.patch('app.redis_store.get', return_value="5")
-
-    with pytest.raises(TooManyRequestsError) as e:
-        check_service_over_daily_message_limit(key_type, service)
-    assert e.value.status_code == 429
-    assert e.value.message == 'Exceeded send limits (4) for today'
-    assert e.value.fields == []
-
-
-@pytest.mark.parametrize('key_type', ['team', 'normal'])
-def test_check_service_message_limit_over_total_limit_fails(key_type, mocker, notify_db_session):
-    service = create_service()
-    mocker.patch('app.redis_store.get', return_value="5001")
-
-    with pytest.raises(TotalRequestsError) as e:
-        check_application_over_daily_message_total(key_type, service)
-    assert e.value.status_code == 429
-    assert e.value.message == 'Exceeded total application limits (5000) for today'
-    assert e.value.fields == []
 
 
 @pytest.mark.parametrize('template_type, notification_type',
@@ -475,18 +393,16 @@ def test_check_service_over_api_rate_limit_should_do_nothing_if_limiting_is_disa
         app.redis_store.exceeded_rate_limit.assert_not_called()
 
 
-def test_check_rate_limiting_validates_api_rate_limit_and_daily_limit(
+def test_check_rate_limiting_validates_api_rate_limit(
     notify_db_session, mocker
 ):
     mock_rate_limit = mocker.patch('app.notifications.validators.check_service_over_api_rate_limit')
-    mock_daily_limit = mocker.patch('app.notifications.validators.check_service_over_daily_message_limit')
     service = create_service()
     api_key = create_api_key(service=service)
 
     check_rate_limiting(service, api_key)
 
     mock_rate_limit.assert_called_once_with(service, api_key)
-    mock_daily_limit.assert_called_once_with(api_key.key_type, service)
 
 
 @pytest.mark.parametrize('key_type', ['test', 'normal'])

@@ -2,7 +2,6 @@ import json
 from datetime import timedelta
 from os import getenv, path
 
-import notifications_utils
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
@@ -273,8 +272,6 @@ class Config(object):
     SIMULATED_SMS_NUMBERS = ('+12028675000', '+12028675111', '+12028675222')
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
-
-    DAILY_MESSAGE_LIMIT = notifications_utils.DAILY_MESSAGE_LIMIT
 
     HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
 
