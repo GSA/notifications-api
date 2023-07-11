@@ -145,8 +145,8 @@ def register_blueprint(application):
         receive_notifications_blueprint,
     )
     from app.notifications.rest import notifications as notifications_blueprint
-    from app.organisation.invite_rest import organisation_invite_blueprint
-    from app.organisation.rest import organisation_blueprint
+    from app.organization.invite_rest import organization_invite_blueprint
+    from app.organization.rest import organization_blueprint
     from app.performance_dashboard.rest import performance_dashboard_blueprint
     from app.platform_stats.rest import platform_stats_blueprint
     from app.provider_details.rest import (
@@ -202,8 +202,8 @@ def register_blueprint(application):
     service_invite_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_invite_blueprint)
 
-    organisation_invite_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(organisation_invite_blueprint)
+    organization_invite_blueprint.before_request(requires_admin_auth)
+    application.register_blueprint(organization_invite_blueprint)
 
     inbound_number_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(inbound_number_blueprint)
@@ -229,8 +229,8 @@ def register_blueprint(application):
     service_callback_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_callback_blueprint)
 
-    organisation_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(organisation_blueprint, url_prefix='/organisations')
+    organization_blueprint.before_request(requires_admin_auth)
+    application.register_blueprint(organization_blueprint, url_prefix='/organizations')
 
     complaint_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(complaint_blueprint)

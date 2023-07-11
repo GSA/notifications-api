@@ -124,8 +124,8 @@ use them.
    - Add Agreement to models.py with the fields identified above
    - Create migration to add/update table
 
-2. Update the Organisation model:
-   - Add one-to-many field linking one Organisation to multiple Agreements
+2. Update the Organization model:
+   - Add one-to-many field linking one Organization to multiple Agreements
    - Add model property to convert budget amount into message limit
    - Add model property to provide remaining budget based on sent messages
    - Add model property about whether free tier or not

@@ -136,12 +136,12 @@ def get_user_and_accounts(user_id):
     return User.query.filter(
         User.id == user_id
     ).options(
-        # eagerly load the user's services and organisations, and also the service's org and vice versa
+        # eagerly load the user's services and organizations, and also the service's org and vice versa
         # (so we can see if the user knows about it)
         joinedload('services'),
-        joinedload('organisations'),
-        joinedload('organisations.services'),
-        joinedload('services.organisation'),
+        joinedload('organizations'),
+        joinedload('organizations.services'),
+        joinedload('services.organization'),
     ).one()
 
 
@@ -157,7 +157,7 @@ def dao_archive_user(user):
     for service_user in service_users:
         db.session.delete(service_user)
 
-    user.organisations = []
+    user.organizations = []
 
     user.auth_type = EMAIL_AUTH_TYPE
     user.email_address = get_archived_db_column_value(user.email_address)

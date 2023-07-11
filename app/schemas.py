@@ -228,10 +228,10 @@ class ProviderDetailsHistorySchema(BaseSchema):
 class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
     created_by = field_for(models.Service, 'created_by', required=True)
-    organisation_type = field_for(models.Service, 'organisation_type')
+    organization_type = field_for(models.Service, 'organization_type')
     permissions = fields.Method("serialize_service_permissions", "deserialize_service_permissions")
     email_branding = field_for(models.Service, 'email_branding')
-    organisation = field_for(models.Service, 'organisation')
+    organization = field_for(models.Service, 'organization')
     go_live_at = field_for(models.Service, 'go_live_at', format=DATETIME_FORMAT_NO_TIMEZONE)
 
     def serialize_service_permissions(self, service):
@@ -297,7 +297,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
 
 class DetailedServiceSchema(BaseSchema):
     statistics = fields.Dict()
-    organisation_type = field_for(models.Service, 'organisation_type')
+    organization_type = field_for(models.Service, 'organization_type')
     go_live_at = FlexibleDateTime()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()

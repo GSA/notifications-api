@@ -52,13 +52,13 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
     assert set(x.number for x in inbound_numbers) == {'07700900373', '07700900473', '07700900375'}
 
 
-@pytest.mark.parametrize("organisation_type, expected_allowance",
+@pytest.mark.parametrize("organization_type, expected_allowance",
                          [('federal', 40000),
                           ('state', 40000)])
 def test_populate_annual_billing_with_defaults(
-        notify_db_session, notify_api, organisation_type, expected_allowance
+        notify_db_session, notify_api, organization_type, expected_allowance
 ):
-    service = create_service(service_name=organisation_type, organisation_type=organisation_type)
+    service = create_service(service_name=organization_type, organization_type=organization_type)
 
     notify_api.test_cli_runner().invoke(
         populate_annual_billing_with_defaults, ['-y', 2022]
@@ -76,7 +76,7 @@ def test_populate_annual_billing_with_defaults(
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(
         notify_db_session, notify_api
 ):
-    service = create_service(organisation_type='federal')
+    service = create_service(organization_type='federal')
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2021)
     notify_api.test_cli_runner().invoke(
         populate_annual_billing_with_defaults, ['-y', 2022]

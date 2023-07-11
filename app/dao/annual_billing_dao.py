@@ -78,10 +78,10 @@ def set_default_free_allowance_for_service(service, year_start=None):
         year_start = 2020
     if year_start > 2022:
         year_start = 2022
-    if service.organisation_type:
-        free_allowance = default_free_sms_fragment_limits[service.organisation_type][year_start]
+    if service.organization_type:
+        free_allowance = default_free_sms_fragment_limits[service.organization_type][year_start]
     else:
-        current_app.logger.info(f"no organisation type for service {service.id}. Using other default of "
+        current_app.logger.info(f"no organization type for service {service.id}. Using other default of "
                                 f"{default_free_sms_fragment_limits['other'][year_start]}")
         free_allowance = default_free_sms_fragment_limits['other'][year_start]
 

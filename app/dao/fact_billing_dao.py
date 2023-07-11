@@ -10,7 +10,7 @@ from app.dao.date_util import (
     get_calendar_year_dates,
     get_calendar_year_for_datetime,
 )
-from app.dao.organisation_dao import dao_get_organisation_live_services
+from app.dao.organization_dao import dao_get_organization_live_services
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,
@@ -22,7 +22,7 @@ from app.models import (
     FactBilling,
     NotificationAllTimeView,
     NotificationHistory,
-    Organisation,
+    Organization,
     Rate,
     Service,
 )
@@ -77,8 +77,8 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
     sms_cost = chargeable_sms * FactBilling.rate
 
     query = db.session.query(
-        Organisation.name.label('organisation_name'),
-        Organisation.id.label('organisation_id'),
+        Organization.name.label('organization_name'),
+        Organization.id.label('organization_id'),
         Service.name.label("service_name"),
         Service.id.label("service_id"),
         allowance_left_at_start_date_query.c.free_sms_fragment_limit,
@@ -92,7 +92,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
     ).outerjoin(
         allowance_left_at_start_date_query, Service.id == allowance_left_at_start_date_query.c.service_id
     ).outerjoin(
-        Service.organisation
+        Service.organization
     ).join(
         FactBilling, FactBilling.service_id == Service.id,
     ).filter(
@@ -100,15 +100,15 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
         FactBilling.local_date <= end_date,
         FactBilling.notification_type == SMS_TYPE,
     ).group_by(
-        Organisation.name,
-        Organisation.id,
+        Organization.name,
+        Organization.id,
         Service.id,
         Service.name,
         allowance_left_at_start_date_query.c.free_sms_fragment_limit,
         allowance_left_at_start_date_query.c.sms_remainder,
         FactBilling.rate,
     ).order_by(
-        Organisation.name,
+        Organization.name,
         Service.name
     )
 
@@ -497,7 +497,7 @@ def create_billing_record(data, rate, process_day):
     return billing_record
 
 
-def fetch_email_usage_for_organisation(organisation_id, start_date, end_date):
+def fetch_email_usage_for_organization(organization_id, start_date, end_date):
     query = db.session.query(
         Service.name.label("service_name"),
         Service.id.label("service_id"),
@@ -510,7 +510,7 @@ def fetch_email_usage_for_organisation(organisation_id, start_date, end_date):
         FactBilling.local_date >= start_date,
         FactBilling.local_date <= end_date,
         FactBilling.notification_type == EMAIL_TYPE,
-        Service.organisation_id == organisation_id,
+        Service.organization_id == organization_id,
         Service.restricted.is_(False)
     ).group_by(
         Service.id,
@@ -521,9 +521,9 @@ def fetch_email_usage_for_organisation(organisation_id, start_date, end_date):
     return query.all()
 
 
-def fetch_sms_billing_for_organisation(organisation_id, financial_year):
+def fetch_sms_billing_for_organization(organization_id, financial_year):
     # ASSUMPTION: AnnualBilling has been populated for year.
-    ft_billing_subquery = query_organisation_sms_usage_for_year(organisation_id, financial_year).subquery()
+    ft_billing_subquery = query_organization_sms_usage_for_year(organization_id, financial_year).subquery()
 
     sms_billable_units = func.sum(func.coalesce(ft_billing_subquery.c.chargeable_units, 0))
 
@@ -551,7 +551,7 @@ def fetch_sms_billing_for_organisation(organisation_id, financial_year):
     ).outerjoin(
         ft_billing_subquery, Service.id == ft_billing_subquery.c.service_id
     ).filter(
-        Service.organisation_id == organisation_id,
+        Service.organization_id == organization_id,
         Service.restricted.is_(False)
     ).group_by(
         Service.id,
@@ -564,7 +564,7 @@ def fetch_sms_billing_for_organisation(organisation_id, financial_year):
     return query.all()
 
 
-def query_organisation_sms_usage_for_year(organisation_id, year):
+def query_organization_sms_usage_for_year(organization_id, year):
     """
     See docstring for query_service_sms_usage_for_year()
     """
@@ -616,15 +616,15 @@ def query_organisation_sms_usage_for_year(organisation_id, year):
             FactBilling.notification_type == SMS_TYPE,
         )
     ).filter(
-        Service.organisation_id == organisation_id,
+        Service.organization_id == organization_id,
         AnnualBilling.financial_year_start == year,
     )
 
 
-def fetch_usage_year_for_organisation(organisation_id, year):
+def fetch_usage_year_for_organization(organization_id, year):
     year_start, year_end = get_calendar_year_dates(year)
     today = datetime.utcnow().date()
-    services = dao_get_organisation_live_services(organisation_id)
+    services = dao_get_organization_live_services(organization_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:
@@ -646,8 +646,8 @@ def fetch_usage_year_for_organisation(organisation_id, year):
             'emails_sent': 0,
             'active': service.active
         }
-    sms_usages = fetch_sms_billing_for_organisation(organisation_id, year)
-    email_usages = fetch_email_usage_for_organisation(organisation_id, year_start, year_end)
+    sms_usages = fetch_sms_billing_for_organization(organization_id, year)
+    email_usages = fetch_email_usage_for_organization(organization_id, year_start, year_end)
     for usage in sms_usages:
         service_with_usage[str(usage.service_id)] = {
             'service_id': usage.service_id,
@@ -669,15 +669,15 @@ def fetch_usage_year_for_organisation(organisation_id, year):
 def fetch_billing_details_for_all_services():
     billing_details = db.session.query(
         Service.id.label('service_id'),
-        func.coalesce(Service.purchase_order_number, Organisation.purchase_order_number).label('purchase_order_number'),
-        func.coalesce(Service.billing_contact_names, Organisation.billing_contact_names).label('billing_contact_names'),
+        func.coalesce(Service.purchase_order_number, Organization.purchase_order_number).label('purchase_order_number'),
+        func.coalesce(Service.billing_contact_names, Organization.billing_contact_names).label('billing_contact_names'),
         func.coalesce(
             Service.billing_contact_email_addresses,
-            Organisation.billing_contact_email_addresses
+            Organization.billing_contact_email_addresses
         ).label('billing_contact_email_addresses'),
-        func.coalesce(Service.billing_reference, Organisation.billing_reference).label('billing_reference'),
+        func.coalesce(Service.billing_reference, Organization.billing_reference).label('billing_reference'),
     ).outerjoin(
-        Service.organisation
+        Service.organization
     ).all()
 
     return billing_details
@@ -797,8 +797,8 @@ def fetch_volumes_by_service(start_date, end_date):
     results = db.session.query(
         Service.name.label("service_name"),
         Service.id.label("service_id"),
-        Service.organisation_id.label("organisation_id"),
-        Organisation.name.label("organisation_name"),
+        Service.organization_id.label("organization_id"),
+        Organization.name.label("organization_name"),
         annual_billing.c.free_sms_fragment_limit.label("free_allowance"),
         func.coalesce(func.sum(volume_stats.c.sms_totals), 0).label("sms_notifications"),
         func.coalesce(func.sum(volume_stats.c.sms_fragments_times_multiplier), 0
@@ -807,7 +807,7 @@ def fetch_volumes_by_service(start_date, end_date):
     ).select_from(
         Service
     ).outerjoin(
-        Organisation, Service.organisation_id == Organisation.id
+        Organization, Service.organization_id == Organization.id
     ).join(
         annual_billing, Service.id == annual_billing.c.service_id
     ).outerjoin(  # include services without volume
@@ -819,11 +819,11 @@ def fetch_volumes_by_service(start_date, end_date):
     ).group_by(
         Service.id,
         Service.name,
-        Service.organisation_id,
-        Organisation.name,
+        Service.organization_id,
+        Organization.name,
         annual_billing.c.free_sms_fragment_limit
     ).order_by(
-        Organisation.name,
+        Organization.name,
         Service.name,
     ).all()
 

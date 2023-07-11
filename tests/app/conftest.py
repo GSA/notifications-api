@@ -13,7 +13,7 @@ from app.dao.api_key_dao import save_model_api_key
 from app.dao.invited_user_dao import save_invited_user
 from app.dao.jobs_dao import dao_create_job
 from app.dao.notifications_dao import dao_create_notification
-from app.dao.organisation_dao import dao_create_organisation
+from app.dao.organization_dao import dao_create_organization
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
@@ -31,7 +31,7 @@ from app.models import (
     Job,
     Notification,
     NotificationHistory,
-    Organisation,
+    Organization,
     Permission,
     ProviderDetails,
     ProviderDetailsHistory,
@@ -534,8 +534,8 @@ def sample_invited_user(notify_db_session):
 
 
 @pytest.fixture(scope='function')
-def sample_invited_org_user(sample_user, sample_organisation):
-    return create_invited_org_user(sample_organisation, sample_user)
+def sample_invited_org_user(sample_user, sample_organization):
+    return create_invited_org_user(sample_organization, sample_user)
 
 
 @pytest.fixture(scope='function')
@@ -631,9 +631,9 @@ def org_invite_email_template(notify_service):
     return create_custom_template(
         service=notify_service,
         user=notify_service.users[0],
-        template_config_name='ORGANISATION_INVITATION_EMAIL_TEMPLATE_ID',
-        content='((user_name)) ((organisation_name)) ((url))',
-        subject='Invitation to ((organisation_name))',
+        template_config_name='ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID',
+        content='((user_name)) ((organization_name)) ((url))',
+        subject='Invitation to ((organization_name))',
         template_type='email'
     )
 
@@ -813,9 +813,9 @@ def sample_inbound_numbers(sample_service):
 
 
 @pytest.fixture
-def sample_organisation(notify_db_session):
-    org = Organisation(name='sample organisation')
-    dao_create_organisation(org)
+def sample_organization(notify_db_session):
+    org = Organization(name='sample organization')
+    dao_create_organization(org)
     return org
 
 

@@ -164,8 +164,8 @@
         "id": "203566f0-d835-47c5-aa06-932439c86573",
         "name": "Notify organization invitation email",
         "type": "email",
-        "subject": "((user_name)) has invited you to collaborate on ((organisation_name)) on U.S. Notify",
-        "content": ["((user_name)) has invited you to collaborate on ((organisation_name)) on U.S. Notify.","","","U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.","","","Open this link to create an account on U.S. Notify:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organisation_name)) secure."]
+        "subject": "((user_name)) has invited you to collaborate on ((organization_name)) on U.S. Notify",
+        "content": ["((user_name)) has invited you to collaborate on ((organization_name)) on U.S. Notify.","","","U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.","","","Open this link to create an account on U.S. Notify:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organization_name)) secure."]
     },
     {
         "id": "c73f1d71-4049-46d5-a647-d013bdeca3f0",

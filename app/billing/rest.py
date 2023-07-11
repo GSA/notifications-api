@@ -63,7 +63,7 @@ def get_free_sms_fragment_limit(service_id):
     if annual_billing is None:
         service = Service.query.get(service_id)
         # An entry does not exist in annual_billing table for that service and year.
-        # Set the annual billing to the default free allowance based on the organisation type of the service.
+        # Set the annual billing to the default free allowance based on the organization type of the service.
 
         annual_billing = set_default_free_allowance_for_service(
             service=service,

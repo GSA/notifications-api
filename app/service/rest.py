@@ -25,7 +25,7 @@ from app.dao.fact_notification_status_dao import (
     fetch_stats_for_all_services_by_date_range,
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
-from app.dao.organisation_dao import dao_get_organisation_by_service_id
+from app.dao.organization_dao import dao_get_organization_by_service_id
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
     fetch_service_data_retention_by_id,
@@ -109,7 +109,7 @@ register_errors(service_blueprint)
 @service_blueprint.errorhandler(IntegrityError)
 def handle_integrity_error(exc):
     """
-    Handle integrity errors caused by the unique constraint on ix_organisation_name
+    Handle integrity errors caused by the unique constraint on ix_organization_name
     """
     if any(
         'duplicate key value violates unique constraint "{}"'.format(constraint) in str(exc)
@@ -794,10 +794,10 @@ def get_service_sms_senders_for_service(service_id):
     return jsonify([sms_sender.serialize() for sms_sender in sms_senders]), 200
 
 
-@service_blueprint.route('/<uuid:service_id>/organisation', methods=['GET'])
-def get_organisation_for_service(service_id):
-    organisation = dao_get_organisation_by_service_id(service_id=service_id)
-    return jsonify(organisation.serialize() if organisation else {}), 200
+@service_blueprint.route('/<uuid:service_id>/organization', methods=['GET'])
+def get_organization_for_service(service_id):
+    organization = dao_get_organization_by_service_id(service_id=service_id)
+    return jsonify(organization.serialize() if organization else {}), 200
 
 
 @service_blueprint.route('/<uuid:service_id>/data-retention', methods=['GET'])

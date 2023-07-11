@@ -61,4 +61,4 @@ def test_performance_dashboard(sample_service, admin_request):
                                           {"date": "2021-03-02", "percentage_under_10_seconds": 80.0}]
     assert results["live_service_count"] == 1
     assert results["services_using_notify"][0]["service_name"] == sample_service.name
-    assert not results["services_using_notify"][0]["organisation_name"]
+    assert not results["services_using_notify"][0]["organization_name"]
