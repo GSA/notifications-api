@@ -92,7 +92,12 @@ jobs:
       - name: Install bandit
         run: pip install bandit
       - name: Run scan
-        run: bandit -r app/ --confidence-level medium
+        run: bandit -r app/ -f txt -o /tmp/bandit-output.txt --confidence-level medium
+      - name: Upload bandit artifact
+        uses: action/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: /tmp/bandit-output.txt
 
   dynamic-scan:
     runs-on: ubuntu-latest
