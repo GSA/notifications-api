@@ -10,6 +10,7 @@ from app.notifications.process_notifications import (
     create_content_for_notification,
 )
 from app.notifications.validators import (
+    check_application_over_daily_message_total,
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
     check_notification_content_is_not_empty,
@@ -30,7 +31,7 @@ from app.serialised_models import (
     SerialisedTemplate,
 )
 from app.utils import get_template_instance
-from app.v2.errors import BadRequestError, RateLimitError
+from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 from tests.app.db import (
     create_api_key,
     create_reply_to_email,
@@ -47,6 +48,18 @@ from tests.conftest import set_config
 def enable_redis(notify_api):
     with set_config(notify_api, 'REDIS_ENABLED', True):
         yield
+
+
+@pytest.mark.parametrize('key_type', ['team', 'normal'])
+def test_check_service_message_limit_over_total_limit_fails(key_type, mocker, notify_db_session):
+    service = create_service()
+    mocker.patch('app.redis_store.get', return_value="5001")
+
+    with pytest.raises(TotalRequestsError) as e:
+        check_application_over_daily_message_total(key_type, service)
+    assert e.value.status_code == 429
+    assert e.value.message == 'Exceeded total application limits (5000) for today'
+    assert e.value.fields == []
 
 
 @pytest.mark.parametrize('template_type, notification_type',
@@ -91,12 +104,12 @@ def test_check_template_is_active_fails(sample_template):
 def test_service_can_send_to_recipient_passes(key_type, notify_db_session):
     trial_mode_service = create_service(service_name='trial mode', restricted=True)
     serialised_service = SerialisedService.from_id(trial_mode_service.id)
-    assert service_can_send_to_recipient(trial_mode_service.users[0].email_address,
-                                         key_type,
-                                         serialised_service) is None
-    assert service_can_send_to_recipient(trial_mode_service.users[0].mobile_number,
-                                         key_type,
-                                         serialised_service) is None
+    assert not service_can_send_to_recipient(trial_mode_service.users[0].email_address,
+                                             key_type,
+                                             serialised_service)
+    assert not service_can_send_to_recipient(trial_mode_service.users[0].mobile_number,
+                                             key_type,
+                                             serialised_service)
 
 
 @pytest.mark.parametrize('user_number, recipient_number', [
@@ -126,12 +139,12 @@ def test_service_can_send_to_recipient_passes_with_non_normalized_email(sample_s
                          ['test', 'normal'])
 def test_service_can_send_to_recipient_passes_for_live_service_non_team_member(key_type, sample_service):
     serialised_service = SerialisedService.from_id(sample_service.id)
-    assert service_can_send_to_recipient("some_other_email@test.com",
-                                         key_type,
-                                         serialised_service) is None
-    assert service_can_send_to_recipient('07513332413',
-                                         key_type,
-                                         serialised_service) is None
+    assert not service_can_send_to_recipient("some_other_email@test.com",
+                                             key_type,
+                                             serialised_service)
+    assert not service_can_send_to_recipient('07513332413',
+                                             key_type,
+                                             serialised_service)
 
 
 def test_service_can_send_to_recipient_passes_for_guest_list_recipient_passes(sample_service):
@@ -393,7 +406,7 @@ def test_check_service_over_api_rate_limit_should_do_nothing_if_limiting_is_disa
         app.redis_store.exceeded_rate_limit.assert_not_called()
 
 
-def test_check_rate_limiting_validates_api_rate_limit(
+def test_check_rate_limiting_validates_api_rate_limit_and_daily_limit(
     notify_db_session, mocker
 ):
     mock_rate_limit = mocker.patch('app.notifications.validators.check_service_over_api_rate_limit')

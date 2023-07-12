@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from os import getenv, path
 
+import notifications_utils
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
@@ -274,6 +275,7 @@ class Config(object):
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
     HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
+    DAILY_MESSAGE_LIMIT = notifications_utils.DAILY_MESSAGE_LIMIT
 
     TEMPLATE_PREVIEW_API_HOST = getenv('TEMPLATE_PREVIEW_API_HOST', 'http://localhost:6013')
     TEMPLATE_PREVIEW_API_KEY = getenv('TEMPLATE_PREVIEW_API_KEY', 'my-secret-key')
