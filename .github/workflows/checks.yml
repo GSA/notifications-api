@@ -78,11 +78,6 @@ jobs:
       - uses: pypa/gh-action-pip-audit@v1.0.6
         with:
           inputs: requirements.txt
-      - name: Upload pip-audit artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: pip-audit-report
-          path: /tmp/pip-audit-output.txt
 
   static-scan:
     runs-on: ubuntu-latest
@@ -92,12 +87,7 @@ jobs:
       - name: Install bandit
         run: pip install bandit
       - name: Run scan
-        run: bandit -r app/ -f txt -o /tmp/bandit-output.txt --confidence-level medium
-      - name: Upload bandit artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: bandit-report
-          path: /tmp/bandit-output.txt
+        run: bandit -r app/ --confidence-level medium
 
   dynamic-scan:
     runs-on: ubuntu-latest
