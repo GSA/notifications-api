@@ -2,7 +2,6 @@ from flask import current_app
 from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
-    daily_limit_cache_key,
     daily_total_cache_key,
     rate_limit_cache_key,
 )
@@ -30,12 +29,7 @@ from app.notifications.process_notifications import (
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
-from app.v2.errors import (
-    BadRequestError,
-    RateLimitError,
-    TooManyRequestsError,
-    TotalRequestsError,
-)
+from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 
 REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
     'redis_exceeded_rate_limit_duration_seconds',
@@ -52,26 +46,6 @@ def check_service_over_api_rate_limit(service, api_key):
             if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
                 current_app.logger.info("service {} has been rate limited for throughput".format(service.id))
                 raise RateLimitError(rate_limit, interval, api_key.key_type)
-
-
-def check_service_over_daily_message_limit(key_type, service):
-    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
-        return 0
-
-    cache_key = daily_limit_cache_key(service.id)
-    service_stats = redis_store.get(cache_key)
-    if service_stats is None:
-        # first message of the day, set the cache to 0 and the expiry to 24 hours
-        service_stats = 0
-        redis_store.set(cache_key, service_stats, ex=86400)
-        return service_stats
-    if int(service_stats) >= service.message_limit:
-        current_app.logger.info(
-            "service {} has been rate limited for daily use sent {} limit {}".format(
-                service.id, int(service_stats), service.message_limit)
-        )
-        raise TooManyRequestsError(service.message_limit)
-    return int(service_stats)
 
 
 def check_application_over_daily_message_total(key_type, service):
@@ -98,7 +72,6 @@ def check_application_over_daily_message_total(key_type, service):
 def check_rate_limiting(service, api_key):
     check_service_over_api_rate_limit(service, api_key)
     check_application_over_daily_message_total(api_key.key_type, service)
-    check_service_over_daily_message_limit(api_key.key_type, service)
 
 
 def check_template_is_for_notification_type(notification_type, template_type):
