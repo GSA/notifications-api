@@ -10,7 +10,7 @@ from app.notifications.process_notifications import (
     create_content_for_notification,
 )
 from app.notifications.validators import (
-    check_application_over_daily_message_total,
+    check_application_over_retention_limit,
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
     check_notification_content_is_not_empty,
@@ -56,7 +56,7 @@ def test_check_service_message_limit_over_total_limit_fails(key_type, mocker, no
     mocker.patch('app.redis_store.get', return_value="5001")
 
     with pytest.raises(TotalRequestsError) as e:
-        check_application_over_daily_message_total(key_type, service)
+        check_application_over_retention_limit(key_type, service)
     assert e.value.status_code == 429
     assert e.value.message == 'Exceeded total application limits (5000) for today'
     assert e.value.fields == []

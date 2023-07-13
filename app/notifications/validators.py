@@ -48,7 +48,7 @@ def check_service_over_api_rate_limit(service, api_key):
                 raise RateLimitError(rate_limit, interval, api_key.key_type)
 
 
-def check_application_over_daily_message_total(key_type, service):
+def check_application_over_retention_limit(key_type, service):
     if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
         return 0
 
@@ -71,7 +71,7 @@ def check_application_over_daily_message_total(key_type, service):
 
 def check_rate_limiting(service, api_key):
     check_service_over_api_rate_limit(service, api_key)
-    check_application_over_daily_message_total(api_key.key_type, service)
+    check_application_over_retention_limit(api_key.key_type, service)
 
 
 def check_template_is_for_notification_type(notification_type, template_type):
