@@ -34,13 +34,17 @@ def upgrade():
 
   services = conn.execute(find_services_sql)
   for service in services:
-      setting = conn.execute(f"SELECT service_id, channel, provider FROM service_broadcast_settings WHERE service_id = '{service.id}';").first()
+      input_params = {"service_id": service.id}
+      setting = conn.execute(
+          "SELECT service_id, channel, provider FROM service_broadcast_settings WHERE service_id=:service_id;",
+          input_params).first()
       if setting:
         print(f"Service {service.id} already has service_broadcast_settings. No action required")
       else:
         channel = "severe" if service.restricted else "test"
         print(f"Service {service.id} does not have service_broadcast_settings. Will insert one with channel {channel}")
-        conn.execute(f"INSERT INTO service_broadcast_settings (service_id, channel, created_at) VALUES ('{service.id}', '{channel}', now());")
+        conn.execute("INSERT INTO service_broadcast_settings (service_id, channel, created_at) VALUES (%s, %s, now());",
+                     {service.id, channel})
 
 
 def downgrade():

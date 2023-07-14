@@ -19,7 +19,7 @@ def upgrade():
                     sa.Column('name', sa.String(length=255), nullable=False),
                     sa.PrimaryKeyConstraint('name'))
     for provider in PROVIDER_TYPES:
-        op.execute(f"INSERT INTO broadcast_provider_types VALUES ('{provider}')")
+        op.execute("INSERT INTO broadcast_provider_types VALUES ('{}')".format(provider))
     op.create_foreign_key('service_broadcast_settings_provider_fkey',
                           'service_broadcast_settings',
                           'broadcast_provider_types',

@@ -34,16 +34,16 @@ def upgrade():
     op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
     
     # modify content of verification email in templates
-    table_name = 'templates'
-    col = 'content'
+    # table_name = 'templates'
+    # col = 'content'
     val = """Hi ((name)),\n\nTo complete your registration for US Notify please click the link below\n\n((url))"""
-    select_by_col = 'name'
-    select_by_val = 'Notify email verification code'
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # select_by_col = 'name'
+    # select_by_val = 'Notify email verification code'
+    op.execute("update templates set content='{}' where name = 'Notify email verification code'".format(val))
     
     # modify content of verification email in templates_history
-    table_name = 'templates_history'
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # table_name = 'templates_history'
+    op.execute("update templates_history set content='{}' where name = 'Notify email verification code'".format(val))
     
     # TODO: modify other templates as necessary and re-run this migration
     

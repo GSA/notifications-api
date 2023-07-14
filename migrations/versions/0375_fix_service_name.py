@@ -14,19 +14,20 @@ from flask import current_app
 
 service_id = current_app.config['NOTIFY_SERVICE_ID']
 
+
 def upgrade():
     op.get_bind()
     
     # modify name of default service user in services
-    table_name = 'services'
-    col = 'name'
-    val = 'US Notify'
-    select_by_col = 'id'
-    select_by_val = service_id
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # table_name = 'services'
+    # col = 'name'
+    # val = 'US Notify'
+    # select_by_col = 'id'
+    # select_by_val = service_id
+    op.execute("update services set name='US Notify' where id = '{}'".format(service_id))
     
-    table_name = 'services_history'
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # table_name = 'services_history'
+    op.execute("update services_history set name='US Notify' where id = '{}'".format(service_id))
     
 
 def downgrade():
