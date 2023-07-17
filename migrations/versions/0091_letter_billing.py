@@ -8,6 +8,7 @@ Create Date: 2017-05-31 11:43:55.744631
 import uuid
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
 revision = '0091_letter_billing'
@@ -31,16 +32,34 @@ def upgrade():
     op.create_index(op.f('ix_letter_rate_details_letter_rate_id'), 'letter_rate_details', ['letter_rate_id'],
                     unique=False)
 
-    op.get_bind()
+    conn = op.get_bind()
     letter_id = uuid.uuid4()
-    op.execute("insert into letter_rates(id, valid_from) values('{}', '2017-03-31 23:00:00')".format(letter_id))
-    insert_details = "insert into letter_rate_details(id, letter_rate_id, page_total, rate) values('{}', '{}', {}, {})"
-    op.execute(
-        insert_details.format(uuid.uuid4(), letter_id, 1, 29.3))
-    op.execute(
-        insert_details.format(uuid.uuid4(), letter_id, 2, 32))
-    op.execute(
-        insert_details.format(uuid.uuid4(), letter_id, 3, 35))
+    input_params = {
+        "letter_id": letter_id
+    }
+    conn.execute(text("insert into letter_rates(id, valid_from) values(:letter_id, '2017-03-31 23:00:00')"), input_params)
+    insert_details = "insert into letter_rate_details(id, letter_rate_id, page_total, rate) values(:id, :letter_id, :page_total, :rate)"
+    input_params = {
+        "id": uuid.uuid4(),
+        "letter_id": letter_id,
+        "page_total": 1,
+        "rate": 29.3
+    }
+    conn.execute(text(insert_details), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "letter_id": letter_id,
+        "page_total": 2,
+        "rate": 32
+    }
+    conn.execute(text(insert_details), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "letter_id": letter_id,
+        "page_total": 3,
+        "rate": 35
+    }
+    conn.execute(text(insert_details), input_params)
 
 
 def downgrade():
