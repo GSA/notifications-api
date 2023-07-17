@@ -28,6 +28,10 @@ def upgrade():
     conn.execute(text(
         "INSERT INTO provider_rates (id, valid_from, rate, provider_id) VALUES (:id, :time_now, 1.8, "
         "(SELECT id FROM provider_details WHERE identifier = 'mmg'))"), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "time_now": datetime.utcnow()
+    }
     conn.execute(text(
         "INSERT INTO provider_rates (id, valid_from, rate, provider_id) VALUES (:id, :time_now, 2.5, "
         "(SELECT id FROM provider_details WHERE identifier = 'firetext'))"), input_params)
