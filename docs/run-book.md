@@ -123,6 +123,18 @@ U.S. Notify DNS records are maintained within [the 18f/dns repository](https://g
 1. Request a PR review from the 18F/tts-tech-portfolio team
 1. Once the PR is approved and merged, verify that the apply step happened correctly within [CircleCI](https://app.circleci.com/pipelines/github/18F/dns)
 
+## Exporting test results for compliance monitoring
+
+- Head to https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml
+- Open the most recent scan (it should be today's)
+- Scroll down to "Artifacts", click to download the .zip of OWASP ZAP results
+- Rename to `api_zap_scan_DATE.zip` and add it to 🔒 https://drive.google.com/drive/folders/1CFO-hFf9UjzU2JsZxdZeGRfw-a47u7e1
+- Click any of the jobs to open the logs
+- In top right of logs, click the gear icon
+- Select "Download log archive" to download a .zip of the test output for all jobs
+- Rename to `api_static_scan_DATE.zip` and add it to 🔒 https://drive.google.com/drive/folders/1dSe9H7Ag_hLfi5hmQDB2ktWaDwWSf4_R
+- Repeat for https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
+
 
 ## <a name="gotcha"></a> Known Gotchas
 
@@ -153,6 +165,7 @@ Important policies:
 * All users must utilize `.gov` email addresses.
 * Users who leave the team or otherwise have role changes must have their accounts updated to reflect the new roles required (or disabled) within 14 days.
 * SpaceDeployer credentials must be rotated within 14 days of anyone with SpaceDeveloper cloud.gov access leaving the team.
+* A user report must be created annually (See AC-2(j)). `make cloudgov-user-report` can be used to create a full report of all cloud.gov users.
 
 ### Types of Infrastructure Users
 

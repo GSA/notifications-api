@@ -73,7 +73,7 @@ def test_create_nightly_notification_status_triggers_tasks(
     mock_celery.assert_called_with(
         kwargs={
             'service_id': sample_service.id,
-            'process_day': '2019-07-30',
+            'process_day': '2019-07-31',
             'notification_type': SMS_TYPE
         },
         queue=QueueNames.REPORTING
@@ -108,10 +108,9 @@ def test_create_nightly_notification_status_triggers_relevant_tasks(
     assert types == expected_types_aggregated
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_checks_history(
     sample_service,
-    sample_sms_template,
+    sample_template,
     mocker
 ):
     yesterday = datetime.now() - timedelta(days=1)
@@ -119,13 +118,13 @@ def test_create_nightly_billing_for_day_checks_history(
 
     create_notification(
         created_at=yesterday,
-        template=sample_sms_template,
+        template=sample_template,
         status='sending',
     )
 
     create_notification_history(
         created_at=yesterday,
-        template=sample_sms_template,
+        template=sample_template,
         status='delivered',
     )
 
@@ -141,7 +140,6 @@ def test_create_nightly_billing_for_day_checks_history(
     assert record.notifications_sent == 2
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 @pytest.mark.parametrize('second_rate, records_num, billable_units, multiplier',
                          [(1.0, 1, 2, [1]),
                           (2.0, 2, 1, [1, 2])])
@@ -193,7 +191,6 @@ def test_create_nightly_billing_for_day_sms_rate_multiplier(
         assert record.rate_multiplier == multiplier[i]
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_different_templates(
         sample_service,
         sample_template,
@@ -240,8 +237,7 @@ def test_create_nightly_billing_for_day_different_templates(
         assert record.rate_multiplier == multiplier[i]
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
-def test_create_nightly_billing_for_day_different_sent_by(
+def test_create_nightly_billing_for_day_same_sent_by(
     sample_service,
     sample_template,
     sample_email_template,
@@ -276,16 +272,15 @@ def test_create_nightly_billing_for_day_different_sent_by(
     create_nightly_billing_for_day(str(yesterday.date()))
 
     records = FactBilling.query.order_by('rate_multiplier').all()
-    assert len(records) == 2
+    assert len(records) == 1
 
     for _, record in enumerate(records):
         assert record.local_date == datetime.date(yesterday)
         assert record.rate == Decimal(1.33)
-        assert record.billable_units == 1
+        assert record.billable_units == 2
         assert record.rate_multiplier == 1.0
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_billing_for_day_null_sent_by_sms(
     sample_service,
     sample_template,
@@ -352,7 +347,7 @@ def test_create_nightly_billing_for_day_use_BST(
     )
 
     create_notification(
-        created_at=datetime(2018, 3, 26, 3, 59),
+        created_at=datetime(2018, 3, 25, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -361,7 +356,7 @@ def test_create_nightly_billing_for_day_use_BST(
 
     # too early
     create_notification(
-        created_at=datetime(2018, 3, 25, 3, 59),
+        created_at=datetime(2018, 3, 24, 23, 59),
         template=sample_template,
         status='delivered',
         rate_multiplier=1.0,
@@ -431,10 +426,10 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     second_service = create_service(service_name='second Service')
     second_template = create_template(service=second_service, template_type='email')
 
-    process_day = date.today() - timedelta(days=5)
+    process_day = datetime.utcnow().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(template=first_template, status='delivered')
-        create_notification(template=second_template, status='temporary-failure')
+        create_notification(template=second_template, status='failed')
 
         # team API key notifications are included
         create_notification(template=second_template, status='sending', key_type=KEY_TYPE_TEAM)
@@ -446,7 +441,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification_history(template=second_template, status='delivered')
 
     # these created notifications from a different day get ignored
-    with freeze_time(datetime.combine(date.today() - timedelta(days=4), time.max)):
+    with freeze_time(datetime.combine(datetime.utcnow().date() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
 
@@ -474,9 +469,9 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_sending_row.template_id == second_template.id
     assert email_sending_row.service_id == second_service.id
     assert email_sending_row.notification_type == 'email'
-    assert email_sending_row.notification_status == 'sending'
+    assert email_sending_row.notification_status == 'failed'
     assert email_sending_row.notification_count == 1
-    assert email_sending_row.key_type == KEY_TYPE_TEAM
+    assert email_sending_row.key_type == KEY_TYPE_NORMAL
 
     email_failure_row = new_fact_data[2]
     assert email_failure_row.local_date == process_day
@@ -484,9 +479,9 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_failure_row.service_id == second_service.id
     assert email_failure_row.job_id == UUID('00000000-0000-0000-0000-000000000000')
     assert email_failure_row.notification_type == 'email'
-    assert email_failure_row.notification_status == 'temporary-failure'
+    assert email_failure_row.notification_status == 'sending'
     assert email_failure_row.notification_count == 1
-    assert email_failure_row.key_type == KEY_TYPE_NORMAL
+    assert email_failure_row.key_type == KEY_TYPE_TEAM
 
     sms_delivered_row = new_fact_data[3]
     assert sms_delivered_row.template_id == first_template.id
@@ -497,11 +492,10 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert sms_delivered_row.key_type == KEY_TYPE_NORMAL
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Timezone handling")
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(notify_db_session):
     first_service = create_service(service_name='First Service')
     first_template = create_template(service=first_service)
-    process_day = date.today()
+    process_day = datetime.utcnow().date()
 
     # first run: one notification, expect one row (just one status)
     notification = create_notification(template=first_template, status='sending')

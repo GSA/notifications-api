@@ -2,7 +2,6 @@ import itertools
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
@@ -17,7 +16,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import get_financial_year
+from app.dao.date_util import get_calendar_year
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
@@ -26,7 +25,7 @@ from app.dao.fact_notification_status_dao import (
     fetch_stats_for_all_services_by_date_range,
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
-from app.dao.organisation_dao import dao_get_organisation_by_service_id
+from app.dao.organization_dao import dao_get_organization_by_service_id
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
     fetch_service_data_retention_by_id,
@@ -110,7 +109,7 @@ register_errors(service_blueprint)
 @service_blueprint.errorhandler(IntegrityError)
 def handle_integrity_error(exc):
     """
-    Handle integrity errors caused by the unique constraint on ix_organisation_name
+    Handle integrity errors caused by the unique constraint on ix_organization_name
     """
     if any(
         'duplicate key value violates unique constraint "{}"'.format(constraint) in str(exc)
@@ -396,7 +395,6 @@ def get_all_notifications_for_service(service_id):
         notifications = [notification.serialize_for_csv() for notification in pagination.items]
     else:
         notifications = notification_with_template_schema.dump(pagination.items, many=True)
-
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
@@ -430,7 +428,6 @@ def get_all_notifications_for_service(service_id):
 
 @service_blueprint.route('/<uuid:service_id>/notifications/<uuid:notification_id>', methods=['GET'])
 def get_notification_for_service(service_id, notification_id):
-
     notification = notifications_dao.get_notification_with_personalisation(
         service_id,
         notification_id,
@@ -491,7 +488,7 @@ def get_monthly_notification_stats(service_id):
     except ValueError:
         raise InvalidRequest('Year must be a number', status_code=400)
 
-    start_date, end_date = get_financial_year(year)
+    start_date, end_date = get_calendar_year(year)
 
     data = statistics.create_empty_monthly_notification_status_stats_dict(year)
 
@@ -500,9 +497,7 @@ def get_monthly_notification_stats(service_id):
 
     now = datetime.utcnow()
     if end_date > now:
-        todays_deltas = fetch_notification_status_for_service_for_day(
-            convert_utc_to_local_timezone(now), service_id=service_id
-        )
+        todays_deltas = fetch_notification_status_for_service_for_day(now, service_id=service_id)
         statistics.add_monthly_notification_status_stats(data, todays_deltas)
 
     return jsonify(data=data)
@@ -530,7 +525,6 @@ def get_detailed_services(start_date, end_date, only_active=False, include_from_
         stats = dao_fetch_todays_stats_for_all_services(include_from_test_key=include_from_test_key,
                                                         only_active=only_active)
     else:
-
         stats = fetch_stats_for_all_services_by_date_range(start_date=start_date,
                                                            end_date=end_date,
                                                            include_from_test_key=include_from_test_key,
@@ -635,7 +629,7 @@ def resume_service(service_id):
 @service_blueprint.route('/<uuid:service_id>/notifications/templates_usage/monthly', methods=['GET'])
 def get_monthly_template_usage(service_id):
     try:
-        start_date, end_date = get_financial_year(int(request.args.get('year', 'NaN')))
+        start_date, end_date = get_calendar_year(int(request.args.get('year', 'NaN')))
         data = fetch_monthly_template_usage_for_service(
             start_date=start_date,
             end_date=end_date,
@@ -800,10 +794,10 @@ def get_service_sms_senders_for_service(service_id):
     return jsonify([sms_sender.serialize() for sms_sender in sms_senders]), 200
 
 
-@service_blueprint.route('/<uuid:service_id>/organisation', methods=['GET'])
-def get_organisation_for_service(service_id):
-    organisation = dao_get_organisation_by_service_id(service_id=service_id)
-    return jsonify(organisation.serialize() if organisation else {}), 200
+@service_blueprint.route('/<uuid:service_id>/organization', methods=['GET'])
+def get_organization_for_service(service_id):
+    organization = dao_get_organization_by_service_id(service_id=service_id)
+    return jsonify(organization.serialize() if organization else {}), 200
 
 
 @service_blueprint.route('/<uuid:service_id>/data-retention', methods=['GET'])

@@ -83,17 +83,15 @@ def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
 @pytest.mark.parametrize('start_date, end_date',
                          [('2019-04-01', '2019-06-30'),
                           ('2019-08-01', '2019-09-30'),
-                          ('2019-01-01', '2019-03-31'),
-                          ('2019-12-01', '2020-02-28')])
+                          ('2019-01-01', '2019-03-31')])
 def test_validate_date_range_is_within_a_financial_year(start_date, end_date):
     validate_date_range_is_within_a_financial_year(start_date, end_date)
 
 
 @pytest.mark.parametrize('start_date, end_date',
                          [('2019-04-01', '2020-06-30'),
-                          ('2019-01-01', '2019-04-30'),
-                          ('2019-12-01', '2020-04-30'),
-                          ('2019-03-31', '2019-04-01')])
+                          ('2018-01-01', '2019-04-30'),
+                          ('2019-12-01', '2020-04-30')])
 def test_validate_date_range_is_within_a_financial_year_raises(start_date, end_date):
     with pytest.raises(expected_exception=InvalidRequest) as e:
         validate_date_range_is_within_a_financial_year(start_date, end_date)
@@ -132,7 +130,7 @@ def test_get_data_for_billing_report(notify_db_session, admin_request):
     # we set up 4 services, but only 1 returned. service_with_emails was skipped as it had no bills to pay,
     # and likewise the service with SMS within allowance was skipped. too.
     assert len(response) == 1
-    assert response[0]["organisation_id"] == ""
+    assert response[0]["organization_id"] == ""
     assert response[0]["service_id"] == str(fixtures["service_with_sms_without_org"].id)
     assert response[0]["sms_cost"] == 0.33
     assert response[0]["sms_chargeable_units"] == 3
@@ -175,21 +173,21 @@ def test_volumes_by_service_report(
 
     # since we are using a pre-set up fixture, we only care about some of the results
     assert response[0] == {'email_totals': 0, 'free_allowance': 10,
-                           'organisation_id': str(fixture['org_1'].id),
-                           'organisation_name': fixture['org_1'].name,
+                           'organization_id': str(fixture['org_1'].id),
+                           'organization_name': fixture['org_1'].name,
                            'service_id': str(fixture['service_1_sms_and_letter'].id),
                            'service_name': fixture['service_1_sms_and_letter'].name,
                            'sms_chargeable_units': 2, 'sms_notifications': 1}
-    assert response[1] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': str(fixture['org_1'].id),
-                           'organisation_name': fixture['org_1'].name,
+    assert response[1] == {'email_totals': 0, 'free_allowance': 10, 'organization_id': str(fixture['org_1'].id),
+                           'organization_name': fixture['org_1'].name,
                            'service_id': str(fixture['service_with_out_ft_billing_this_year'].id),
                            'service_name': fixture['service_with_out_ft_billing_this_year'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}
-    assert response[3] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': '', 'organisation_name': '',
+    assert response[3] == {'email_totals': 0, 'free_allowance': 10, 'organization_id': '', 'organization_name': '',
                            'service_id': str(fixture['service_with_sms_without_org'].id),
                            'service_name': fixture['service_with_sms_without_org'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}
-    assert response[4] == {'email_totals': 0, 'free_allowance': 10, 'organisation_id': '', 'organisation_name': '',
+    assert response[4] == {'email_totals': 0, 'free_allowance': 10, 'organization_id': '', 'organization_name': '',
                            'service_id': str(fixture['service_with_sms_within_allowance'].id),
                            'service_name': fixture['service_with_sms_within_allowance'].name,
                            'sms_chargeable_units': 0, 'sms_notifications': 0}

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
-from app.dao.date_util import get_financial_year_for_datetime
+from app.dao.date_util import get_calendar_year_for_datetime
 from app.dao.fact_billing_dao import (
     fetch_billing_details_for_all_services,
     fetch_daily_sms_provider_volumes_for_platform,
@@ -17,7 +17,7 @@ from app.errors import InvalidRequest, register_errors
 from app.platform_stats.platform_stats_schema import platform_stats_request
 from app.schema_validation import validate
 from app.service.statistics import format_admin_stats
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 platform_stats_blueprint = Blueprint('platform_stats', __name__)
 
@@ -54,8 +54,8 @@ def validate_date_range_is_within_a_financial_year(start_date, end_date):
     if end_date < start_date:
         raise InvalidRequest(message="Start date must be before end date", status_code=400)
 
-    start_fy = get_financial_year_for_datetime(get_local_midnight_in_utc(start_date))
-    end_fy = get_financial_year_for_datetime(get_local_midnight_in_utc(end_date))
+    start_fy = get_calendar_year_for_datetime(get_midnight_in_utc(start_date))
+    end_fy = get_calendar_year_for_datetime(get_midnight_in_utc(end_date))
 
     if start_fy != end_fy:
         raise InvalidRequest(message="Date must be in a single financial year.", status_code=400)
@@ -77,8 +77,8 @@ def get_data_for_billing_report():
     for s in sms_costs:
         if float(s.sms_cost) > 0:
             entry = {
-                "organisation_id": str(s.organisation_id) if s.organisation_id else "",
-                "organisation_name": s.organisation_name or "",
+                "organization_id": str(s.organization_id) if s.organization_id else "",
+                "organization_name": s.organization_name or "",
                 "service_id": str(s.service_id),
                 "service_name": s.service_name,
                 "sms_cost": float(s.sms_cost),
@@ -99,8 +99,8 @@ def get_data_for_billing_report():
     # sorting first by name == '' means that blank orgs will be sorted last.
 
     result = sorted(combined.values(), key=lambda x: (
-        x['organisation_name'] == '',
-        x['organisation_name'],
+        x['organization_name'] == '',
+        x['organization_name'],
         x['service_name']
     ))
     return jsonify(result)
@@ -158,8 +158,8 @@ def volumes_by_service_report():
         report.append({
             "service_name": row.service_name,
             "service_id": str(row.service_id),
-            "organisation_name": row.organisation_name if row.organisation_name else '',
-            "organisation_id": str(row.organisation_id) if row.organisation_id else '',
+            "organization_name": row.organization_name if row.organization_name else '',
+            "organization_id": str(row.organization_id) if row.organization_id else '',
             "free_allowance": int(row.free_allowance),
             "sms_notifications": int(row.sms_notifications),
             "sms_chargeable_units": int(row.sms_chargeable_units),

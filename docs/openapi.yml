@@ -70,9 +70,9 @@ components:
           type: string
         notes:
           type: string
-        organisation:
+        organization:
           type: string
-        organisation_type:
+        organization_type:
           type: string
           enum: ["federal", "state", "other"]
           default: "federal"
@@ -121,7 +121,7 @@ components:
           type: string
         name:
           type: string
-        organisations:
+        organizations:
           type: array
           items:
             type: string
@@ -247,7 +247,7 @@ paths:
                   status:
                     type: string
                     enum: ["ok"]
-  /_status/live-service-and-organisation-counts:
+  /_status/live-service-and-organization-counts:
     get:
       description: 'Retrieve a count of live services and organizations in the Notify system'
       tags:
@@ -262,7 +262,7 @@ paths:
                 properties:
                   services:
                     type: number
-                  organisations:
+                  organizations:
                     type: number
   /user:
     get:
@@ -302,7 +302,7 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/userObject"
-  /organisations:
+  /organizations:
     get:
       security:
         - bearerAuth: []
@@ -329,7 +329,7 @@ paths:
                       type: string
                     name:
                       type: string
-                    organisation_type:
+                    organization_type:
                       type: string
                       enum: ["federal", "state", "other"]
   /service:

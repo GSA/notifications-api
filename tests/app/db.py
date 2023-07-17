@@ -10,9 +10,9 @@ from app.dao.invited_org_user_dao import save_invited_org_user
 from app.dao.invited_user_dao import save_invited_user
 from app.dao.jobs_dao import dao_create_job
 from app.dao.notifications_dao import dao_create_notification
-from app.dao.organisation_dao import (
-    dao_add_service_to_organisation,
-    dao_create_organisation,
+from app.dao.organization_dao import (
+    dao_add_service_to_organization,
+    dao_create_organization,
 )
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_callback_api_dao import save_service_callback_api
@@ -41,12 +41,12 @@ from app.models import (
     FactProcessingTime,
     InboundNumber,
     InboundSms,
-    InvitedOrganisationUser,
+    InvitedOrganizationUser,
     InvitedUser,
     Job,
     Notification,
     NotificationHistory,
-    Organisation,
+    Organization,
     Permission,
     Rate,
     Service,
@@ -107,11 +107,11 @@ def create_service(
         email_from=None,
         prefix_sms=True,
         message_limit=1000,
-        organisation_type='federal',
+        organization_type='federal',
         check_if_service_exists=False,
         go_live_user=None,
         go_live_at=None,
-        organisation=None,
+        organization=None,
         purchase_order_number=None,
         billing_contact_names=None,
         billing_contact_email_addresses=None,
@@ -127,8 +127,8 @@ def create_service(
             email_from=email_from if email_from else service_name.lower().replace(' ', '.'),
             created_by=user if user else create_user(email='{}@digital.cabinet-office.gov.uk'.format(uuid.uuid4())),
             prefix_sms=prefix_sms,
-            organisation_type=organisation_type,
-            organisation=organisation,
+            organization_type=organization_type,
+            organization=organization,
             go_live_user=go_live_user,
             go_live_at=go_live_at,
             purchase_order_number=purchase_order_number,
@@ -297,7 +297,6 @@ def create_notification(
     }
     notification = Notification(**data)
     dao_create_notification(notification)
-
     return notification
 
 
@@ -584,9 +583,9 @@ def create_annual_billing(
     return annual_billing
 
 
-def create_domain(domain, organisation_id):
+def create_domain(domain, organization_id):
 
-    domain = Domain(domain=domain, organisation_id=organisation_id)
+    domain = Domain(domain=domain, organization_id=organization_id)
 
     db.session.add(domain)
     db.session.commit()
@@ -594,12 +593,12 @@ def create_domain(domain, organisation_id):
     return domain
 
 
-def create_organisation(
+def create_organization(
     name='test_org_1',
     active=True,
-    organisation_type=None,
+    organization_type=None,
     domains=None,
-    organisation_id=None,
+    organization_id=None,
     purchase_order_number=None,
     billing_contact_names=None,
     billing_contact_email_addresses=None,
@@ -607,30 +606,30 @@ def create_organisation(
     email_branding_id=None,
 ):
     data = {
-        'id': organisation_id,
+        'id': organization_id,
         'name': name,
         'active': active,
-        'organisation_type': organisation_type,
+        'organization_type': organization_type,
         'purchase_order_number': purchase_order_number,
         'billing_contact_names': billing_contact_names,
         'billing_contact_email_addresses': billing_contact_email_addresses,
         'billing_reference': billing_reference,
         'email_branding_id': email_branding_id
     }
-    organisation = Organisation(**data)
-    dao_create_organisation(organisation)
+    organization = Organization(**data)
+    dao_create_organization(organization)
 
     for domain in domains or []:
-        create_domain(domain, organisation.id)
+        create_domain(domain, organization.id)
 
-    return organisation
+    return organization
 
 
-def create_invited_org_user(organisation, invited_by, email_address='invite@example.com'):
-    invited_org_user = InvitedOrganisationUser(
+def create_invited_org_user(organization, invited_by, email_address='invite@example.com'):
+    invited_org_user = InvitedOrganizationUser(
         email_address=email_address,
         invited_by=invited_by,
-        organisation=organisation,
+        organization=organization,
     )
     save_invited_org_user(invited_org_user)
     return invited_org_user
@@ -863,16 +862,16 @@ def set_up_usage_data(start_date):
     create_annual_billing(
         service_id=service_1_sms_and_letter.id, free_sms_fragment_limit=10, financial_year_start=year
     )
-    org_1 = create_organisation(
+    org_1 = create_organization(
         name="Org for {}".format(service_1_sms_and_letter.name),
         purchase_order_number="org1 purchase order number",
         billing_contact_names="org1 billing contact names",
         billing_contact_email_addresses="org1@billing.contact email@addresses.gov.uk",
         billing_reference="org1 billing reference"
     )
-    dao_add_service_to_organisation(
+    dao_add_service_to_organization(
         service=service_1_sms_and_letter,
-        organisation_id=org_1.id
+        organization_id=org_1.id
     )
 
     create_ft_billing(local_date=one_week_earlier, template=sms_template_1, billable_unit=2, rate=0.11)
@@ -882,15 +881,15 @@ def set_up_usage_data(start_date):
     # service with emails only:
     service_with_emails = create_service(service_name='b - emails')
     email_template = create_template(service=service_with_emails, template_type='email')
-    org_2 = create_organisation(
+    org_2 = create_organization(
         name='Org for {}'.format(service_with_emails.name),
     )
-    dao_add_service_to_organisation(service=service_with_emails, organisation_id=org_2.id)
+    dao_add_service_to_organization(service=service_with_emails, organization_id=org_2.id)
     create_annual_billing(service_id=service_with_emails.id, free_sms_fragment_limit=0, financial_year_start=year)
 
     create_ft_billing(local_date=start_date, template=email_template, notifications_sent=10)
 
-    # service with chargeable SMS, without an organisation
+    # service with chargeable SMS, without an organization
     service_with_sms_without_org = create_service(
         service_name='b - chargeable sms',
         purchase_order_number="sms purchase order number",
@@ -927,7 +926,7 @@ def set_up_usage_data(start_date):
     create_annual_billing(
         service_id=service_with_out_ft_billing_this_year.id, free_sms_fragment_limit=10, financial_year_start=year
     )
-    dao_add_service_to_organisation(service=service_with_out_ft_billing_this_year, organisation_id=org_1.id)
+    dao_add_service_to_organization(service=service_with_out_ft_billing_this_year, organization_id=org_1.id)
 
     # dictionary with services and orgs to return
     return {

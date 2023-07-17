@@ -29,6 +29,7 @@ from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
 from app.clients import NotificationProviderClients
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
@@ -55,6 +56,7 @@ notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
+aws_cloudwatch_client = AwsCloudwatchClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
 redis_store = RedisClient()
@@ -96,6 +98,7 @@ def create_app(application):
     aws_ses_stub_client.init_app(
         stub_url=application.config['SES_STUB_URL']
     )
+    aws_cloudwatch_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = [aws_ses_stub_client] if application.config['SES_STUB_URL'] else [aws_ses_client]
     notification_provider_clients.init_app(
@@ -142,8 +145,8 @@ def register_blueprint(application):
         receive_notifications_blueprint,
     )
     from app.notifications.rest import notifications as notifications_blueprint
-    from app.organisation.invite_rest import organisation_invite_blueprint
-    from app.organisation.rest import organisation_blueprint
+    from app.organization.invite_rest import organization_invite_blueprint
+    from app.organization.rest import organization_blueprint
     from app.performance_dashboard.rest import performance_dashboard_blueprint
     from app.platform_stats.rest import platform_stats_blueprint
     from app.provider_details.rest import (
@@ -199,8 +202,8 @@ def register_blueprint(application):
     service_invite_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_invite_blueprint)
 
-    organisation_invite_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(organisation_invite_blueprint)
+    organization_invite_blueprint.before_request(requires_admin_auth)
+    application.register_blueprint(organization_invite_blueprint)
 
     inbound_number_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(inbound_number_blueprint)
@@ -226,8 +229,8 @@ def register_blueprint(application):
     service_callback_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_callback_blueprint)
 
-    organisation_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(organisation_blueprint, url_prefix='/organisations')
+    organization_blueprint.before_request(requires_admin_auth)
+    application.register_blueprint(organization_blueprint, url_prefix='/organizations')
 
     complaint_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(complaint_blueprint)

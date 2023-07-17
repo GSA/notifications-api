@@ -11,7 +11,7 @@ from app.dao.annual_billing_dao import (
     dao_update_annual_billing_for_future_years,
     set_default_free_allowance_for_service,
 )
-from app.dao.date_util import get_current_financial_year_start_year
+from app.dao.date_util import get_current_calendar_year_start_year
 from app.dao.fact_billing_dao import (
     fetch_billing_totals_for_year,
     fetch_monthly_billing_for_year,
@@ -63,7 +63,7 @@ def get_free_sms_fragment_limit(service_id):
     if annual_billing is None:
         service = Service.query.get(service_id)
         # An entry does not exist in annual_billing table for that service and year.
-        # Set the annual billing to the default free allowance based on the organisation type of the service.
+        # Set the annual billing to the default free allowance based on the organization type of the service.
 
         annual_billing = set_default_free_allowance_for_service(
             service=service,
@@ -87,7 +87,7 @@ def create_or_update_free_sms_fragment_limit(service_id):
 
 
 def update_free_sms_fragment_limit_data(service_id, free_sms_fragment_limit, financial_year_start):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     if not financial_year_start:
         financial_year_start = current_year
 

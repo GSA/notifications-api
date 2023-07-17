@@ -21,6 +21,7 @@ Our other repositories are:
 
 - [Roadmap](https://notifications-admin.app.cloud.gov/features/roadmap)
 - [Using the API](./docs/api-usage.md)
+- [Architectural Decision Records](./docs/adrs/)
 
 ### Infrastructure
 

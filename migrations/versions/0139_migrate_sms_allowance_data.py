@@ -8,7 +8,7 @@ Create Date: 2017-11-10 21:42:59.715203
 from datetime import datetime
 from alembic import op
 import uuid
-from app.dao.date_util import get_current_financial_year_start_year
+from app.dao.date_util import get_current_calendar_year_start_year
 
 
 revision = '0139_migrate_sms_allowance_data'
@@ -16,7 +16,7 @@ down_revision = '0138_sms_sender_nullable'
 
 
 def upgrade():
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     default_limit = 250000
 
     # Step 1: update the column free_sms_fragment_limit in service table if it is empty

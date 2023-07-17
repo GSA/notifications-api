@@ -18,6 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.aws import s3
+from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import process_row
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
@@ -30,10 +31,10 @@ from app.dao.fact_billing_dao import (
     update_fact_billing,
 )
 from app.dao.jobs_dao import dao_get_job_by_id
-from app.dao.organisation_dao import (
-    dao_add_service_to_organisation,
-    dao_get_organisation_by_email_address,
-    dao_get_organisation_by_id,
+from app.dao.organization_dao import (
+    dao_add_service_to_organization,
+    dao_get_organization_by_email_address,
+    dao_get_organization_by_id,
 )
 from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
@@ -56,13 +57,13 @@ from app.models import (
     Domain,
     EmailBranding,
     Notification,
-    Organisation,
+    Organization,
     Service,
     Template,
     TemplateHistory,
     User,
 )
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 @click.group(name='command', help='Additional commands')
@@ -192,8 +193,8 @@ def rebuild_ft_billing_for_day(service_id, day):
         rebuild_ft_data(day, service_id)
     else:
         services = get_service_ids_that_need_billing_populated(
-            get_local_midnight_in_utc(day),
-            get_local_midnight_in_utc(day + timedelta(days=1))
+            get_midnight_in_utc(day),
+            get_midnight_in_utc(day + timedelta(days=1))
         )
         for row in services:
             rebuild_ft_data(day, row.service_id)
@@ -272,18 +273,18 @@ def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info('Total archived jobs = {}'.format(total_updated))
 
 
-@notify_command(name='populate-organisations-from-file')
+@notify_command(name='populate-organizations-from-file')
 @click.option('-f', '--file_name', required=True,
-              help="Pipe delimited file containing organisation name, sector, agreement_signed, domains")
-def populate_organisations_from_file(file_name):
-    # [0] organisation name:: name of the organisation insert if organisation is missing.
+              help="Pipe delimited file containing organization name, sector, agreement_signed, domains")
+def populate_organizations_from_file(file_name):
+    # [0] organization name:: name of the organization insert if organization is missing.
     # [1] sector:: Federal | State only
     # [2] agreement_signed:: TRUE | FALSE
-    # [3] domains:: comma separated list of domains related to the organisation
+    # [3] domains:: comma separated list of domains related to the organization
     # [4] email branding name: name of the default email branding for the org
 
-    # The expectation is that the organisation, organisation_to_service
-    # and user_to_organisation will be cleared before running this command.
+    # The expectation is that the organization, organization_to_service
+    # and user_to_organization will be cleared before running this command.
     # Ignoring duplicates allows us to run the command again with the same file or same file with new rows.
     with open(file_name, 'r') as f:
         def boolean_or_none(field):
@@ -305,10 +306,10 @@ def populate_organisations_from_file(file_name):
                 'name': columns[0],
                 'active': True,
                 'agreement_signed': boolean_or_none(columns[3]),
-                'organisation_type': columns[1].lower(),
+                'organization_type': columns[1].lower(),
                 'email_branding_id': email_branding.id if email_branding else None
             }
-            org = Organisation(**data)
+            org = Organization(**data)
             try:
                 db.session.add(org)
                 db.session.commit()
@@ -318,7 +319,7 @@ def populate_organisations_from_file(file_name):
             domains = columns[4].split(',')
             for d in domains:
                 if len(d.strip()) > 0:
-                    domain = Domain(domain=d.strip(), organisation_id=org.id)
+                    domain = Domain(domain=d.strip(), organization_id=org.id)
                     try:
                         db.session.add(domain)
                         db.session.commit()
@@ -327,14 +328,14 @@ def populate_organisations_from_file(file_name):
                         db.session.rollback()
 
 
-@notify_command(name='populate-organisation-agreement-details-from-file')
+@notify_command(name='populate-organization-agreement-details-from-file')
 @click.option('-f', '--file_name', required=True,
               help="CSV file containing id, agreement_signed_version, "
               "agreement_signed_on_behalf_of_name, agreement_signed_at")
-def populate_organisation_agreement_details_from_file(file_name):
+def populate_organization_agreement_details_from_file(file_name):
     """
     The input file should be a comma separated CSV file with a header row and 4 columns
-    id: the organisation ID
+    id: the organization ID
     agreement_signed_version
     agreement_signed_on_behalf_of_name
     agreement_signed_at: The date the agreement was signed in the format of 'dd/mm/yyyy'
@@ -346,7 +347,7 @@ def populate_organisation_agreement_details_from_file(file_name):
         next(csv_reader)
 
         for row in csv_reader:
-            org = dao_get_organisation_by_id(row[0])
+            org = dao_get_organization_by_id(row[0])
 
             current_app.logger.info(f"Updating {org.name}")
 
@@ -361,20 +362,20 @@ def populate_organisation_agreement_details_from_file(file_name):
             db.session.commit()
 
 
-@notify_command(name='associate-services-to-organisations')
-def associate_services_to_organisations():
+@notify_command(name='associate-services-to-organizations')
+def associate_services_to_organizations():
     services = Service.get_history_model().query.filter_by(
         version=1
     ).all()
 
     for s in services:
         created_by_user = User.query.filter_by(id=s.created_by_id).first()
-        organisation = dao_get_organisation_by_email_address(created_by_user.email_address)
+        organization = dao_get_organization_by_email_address(created_by_user.email_address)
         service = dao_fetch_service_by_id(service_id=s.id)
-        if organisation:
-            dao_add_service_to_organisation(service=service, organisation_id=organisation.id)
+        if organization:
+            dao_add_service_to_organization(service=service, organization_id=organization.id)
 
-    print("finished associating services to organisations")
+    print("finished associating services to organizations")
 
 
 @notify_command(name='populate-service-volume-intentions')
@@ -462,6 +463,12 @@ def fix_billable_units():
         )
     db.session.commit()
     print("End fix_billable_units")
+
+
+@notify_command(name='delete-unfinished-jobs')
+def delete_unfinished_jobs():
+    cleanup_unfinished_jobs()
+    print("End cleanup_unfinished_jobs")
 
 
 @notify_command(name='process-row-from-job')

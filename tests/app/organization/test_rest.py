@@ -6,30 +6,30 @@ from flask import current_app
 from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.dao.organisation_dao import (
-    dao_add_service_to_organisation,
-    dao_add_user_to_organisation,
+from app.dao.organization_dao import (
+    dao_add_service_to_organization,
+    dao_add_user_to_organization,
 )
 from app.dao.services_dao import dao_archive_service
-from app.models import AnnualBilling, Organisation
+from app.models import AnnualBilling, Organization
 from tests.app.db import (
     create_annual_billing,
     create_domain,
     create_email_branding,
     create_ft_billing,
-    create_organisation,
+    create_organization,
     create_service,
     create_template,
     create_user,
 )
 
 
-def test_get_all_organisations(admin_request, notify_db_session):
-    create_organisation(name='inactive org', active=False, organisation_type='federal')
-    create_organisation(name='active org', domains=['example.com'])
+def test_get_all_organizations(admin_request, notify_db_session):
+    create_organization(name='inactive org', active=False, organization_type='federal')
+    create_organization(name='active org', domains=['example.com'])
 
     response = admin_request.get(
-        'organisation.get_organisations',
+        'organization.get_organizations',
         _expected_status=200
     )
 
@@ -40,34 +40,34 @@ def test_get_all_organisations(admin_request, notify_db_session):
         'active',
         'count_of_live_services',
         'domains',
-        'organisation_type',
+        'organization_type',
     }
     assert response[0]['name'] == 'active org'
     assert response[0]['active'] is True
     assert response[0]['count_of_live_services'] == 0
     assert response[0]['domains'] == ['example.com']
-    assert response[0]['organisation_type'] is None
+    assert response[0]['organization_type'] is None
     assert response[1]['name'] == 'inactive org'
     assert response[1]['active'] is False
     assert response[1]['count_of_live_services'] == 0
     assert response[1]['domains'] == []
-    assert response[1]['organisation_type'] == 'federal'
+    assert response[1]['organization_type'] == 'federal'
 
 
-def test_get_organisation_by_id(admin_request, notify_db_session):
-    org = create_organisation()
+def test_get_organization_by_id(admin_request, notify_db_session):
+    org = create_organization()
 
     response = admin_request.get(
-        'organisation.get_organisation_by_id',
+        'organization.get_organization_by_id',
         _expected_status=200,
-        organisation_id=org.id
+        organization_id=org.id
     )
 
     assert set(response.keys()) == {
         'id',
         'name',
         'active',
-        'organisation_type',
+        'organization_type',
         'agreement_signed',
         'agreement_signed_at',
         'agreement_signed_by_id',
@@ -87,7 +87,7 @@ def test_get_organisation_by_id(admin_request, notify_db_session):
     assert response['id'] == str(org.id)
     assert response['name'] == 'test_org_1'
     assert response['active'] is True
-    assert response['organisation_type'] is None
+    assert response['organization_type'] is None
     assert response['agreement_signed'] is None
     assert response['agreement_signed_by_id'] is None
     assert response['agreement_signed_version'] is None
@@ -104,17 +104,17 @@ def test_get_organisation_by_id(admin_request, notify_db_session):
     assert response['purchase_order_number'] is None
 
 
-def test_get_organisation_by_id_returns_domains(admin_request, notify_db_session):
+def test_get_organization_by_id_returns_domains(admin_request, notify_db_session):
 
-    org = create_organisation(domains=[
+    org = create_organization(domains=[
         'foo.gov.uk',
         'bar.gov.uk',
     ])
 
     response = admin_request.get(
-        'organisation.get_organisation_by_id',
+        'organization.get_organization_by_id',
         _expected_status=200,
-        organisation_id=org.id
+        organization_id=org.id
     )
 
     assert set(response['domains']) == {
@@ -127,129 +127,152 @@ def test_get_organisation_by_id_returns_domains(admin_request, notify_db_session
     ('foo.gov.uk', 200),
     ('bar.gov.uk', 200),
     ('oof.gov.uk', 404),
-    pytest.param(
-        'rab.gov.uk', 200,
-        marks=pytest.mark.xfail(raises=AssertionError),
-    ),
+    ('rab.gov.uk', 200),
     (None, 400),
     ('personally.identifying.information@example.com', 400),
 ))
-def test_get_organisation_by_domain(
+def test_get_organization_by_domain(
     admin_request,
     notify_db_session,
     domain,
     expected_status
 ):
-    org = create_organisation()
-    other_org = create_organisation('Other organisation')
+    org = create_organization()
+    other_org = create_organization('Other organization')
     create_domain('foo.gov.uk', org.id)
     create_domain('bar.gov.uk', org.id)
     create_domain('rab.gov.uk', other_org.id)
 
     response = admin_request.get(
-        'organisation.get_organisation_by_domain',
+        'organization.get_organization_by_domain',
         _expected_status=expected_status,
         domain=domain,
     )
 
-    if expected_status == 200:
+    if domain == 'rab.gov.uk' and expected_status == 200:
+        assert response['id'] == str(other_org.id)
+    elif expected_status == 200:
         assert response['id'] == str(org.id)
     else:
         assert response['result'] == 'error'
 
 
-def test_post_create_organisation(admin_request, notify_db_session):
+def test_post_create_organization(admin_request, notify_db_session):
     data = {
-        'name': 'test organisation',
+        'name': 'test organization',
         'active': True,
-        'organisation_type': 'state',
+        'organization_type': 'state',
     }
 
     response = admin_request.post(
-        'organisation.create_organisation',
+        'organization.create_organization',
         _data=data,
         _expected_status=201
     )
 
-    organisations = Organisation.query.all()
+    organizations = Organization.query.all()
 
     assert data['name'] == response['name']
     assert data['active'] == response['active']
-    assert data['organisation_type'] == response['organisation_type']
+    assert data['organization_type'] == response['organization_type']
 
-    assert len(organisations) == 1
+    assert len(organizations) == 1
     # check that for non-nhs orgs, default branding is not set
-    assert organisations[0].email_branding_id is None
+    assert organizations[0].email_branding_id is None
 
 
 @pytest.mark.parametrize('org_type', ["nhs_central", "nhs_local", "nhs_gp"])
 @pytest.mark.skip(reason='Update for TTS')
-def test_post_create_organisation_sets_default_nhs_branding_for_nhs_orgs(
+def test_post_create_organization_sets_default_nhs_branding_for_nhs_orgs(
     admin_request, notify_db_session, nhs_email_branding, org_type
 ):
     data = {
-        'name': 'test organisation',
+        'name': 'test organization',
         'active': True,
-        'organisation_type': org_type,
+        'organization_type': org_type,
     }
 
     admin_request.post(
-        'organisation.create_organisation',
+        'organization.create_organization',
         _data=data,
         _expected_status=201
     )
 
-    organisations = Organisation.query.all()
+    organizations = Organization.query.all()
 
-    assert len(organisations) == 1
-    assert organisations[0].email_branding_id == uuid.UUID(current_app.config['NHS_EMAIL_BRANDING_ID'])
+    assert len(organizations) == 1
+    assert organizations[0].email_branding_id == uuid.UUID(current_app.config['NHS_EMAIL_BRANDING_ID'])
 
 
-def test_post_create_organisation_existing_name_raises_400(admin_request, sample_organisation):
+def test_post_create_organization_existing_name_raises_400(admin_request, sample_organization):
+    organization = Organization.query.all()
+    assert len(organization) == 1
+
     data = {
-        'name': sample_organisation.name,
+        'name': sample_organization.name,
         'active': True,
-        'organisation_type': 'federal',
+        'organization_type': 'federal',
     }
 
     response = admin_request.post(
-        'organisation.create_organisation',
+        'organization.create_organization',
         _data=data,
         _expected_status=400
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert len(organisation) == 1
-    assert response['message'] == 'Organisation name already exists'
+    assert len(organization) == 1
+    assert response['message'] == 'Organization name already exists'
+
+
+def test_post_create_organization_works(admin_request, sample_organization):
+    organization = Organization.query.all()
+    assert len(organization) == 1
+
+    data = {
+        'name': "org 2",
+        'active': True,
+        'organization_type': 'federal',
+    }
+
+    admin_request.post(
+        'organization.create_organization',
+        _data=data,
+        _expected_status=201
+    )
+
+    organization = Organization.query.all()
+
+    assert len(organization) == 2
 
 
 @pytest.mark.parametrize('data, expected_error', (
     ({
         'active': False,
-        'organisation_type': 'federal',
+        'organization_type': 'federal',
     }, 'name is a required property'),
     ({
         'active': False,
         'name': 'Service name',
-    }, 'organisation_type is a required property'),
+    }, 'organization_type is a required property'),
     ({
         'active': False,
         'name': 'Service name',
-        'organisation_type': 'foo',
+        'organization_type': 'foo',
     }, (
-        'organisation_type foo is not one of '
+        'organization_type foo is not one of '
         '[federal, state, other]'
     )),
 ))
-def test_post_create_organisation_with_missing_data_gives_validation_error(
+def test_post_create_organization_with_missing_data_gives_validation_error(
     admin_request,
     notify_db_session,
     data,
     expected_error,
 ):
     response = admin_request.post(
-        'organisation.create_organisation',
+        'organization.create_organization',
         _data=data,
         _expected_status=400
     )
@@ -259,32 +282,32 @@ def test_post_create_organisation_with_missing_data_gives_validation_error(
     assert response['errors'][0]['message'] == expected_error
 
 
-def test_post_update_organisation_updates_fields(
+def test_post_update_organization_updates_fields(
     admin_request,
     notify_db_session,
 ):
-    org = create_organisation()
+    org = create_organization()
     data = {
-        'name': 'new organisation name',
+        'name': 'new organization name',
         'active': False,
-        'organisation_type': 'federal',
+        'organization_type': 'federal',
     }
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert len(organisation) == 1
-    assert organisation[0].id == org.id
-    assert organisation[0].name == data['name']
-    assert organisation[0].active == data['active']
-    assert organisation[0].domains == []
-    assert organisation[0].organisation_type == 'federal'
+    assert len(organization) == 1
+    assert organization[0].id == org.id
+    assert organization[0].name == data['name']
+    assert organization[0].active == data['active']
+    assert organization[0].domains == []
+    assert organization[0].organization_type == 'federal'
 
 
 @pytest.mark.parametrize('domain_list', (
@@ -292,42 +315,42 @@ def test_post_update_organisation_updates_fields(
     ['example.com', 'example.org', 'example.net'],
     [],
 ))
-def test_post_update_organisation_updates_domains(
+def test_post_update_organization_updates_domains(
     admin_request,
     notify_db_session,
     domain_list,
 ):
-    org = create_organisation(name='test_org_2')
+    org = create_organization(name='test_org_2')
     data = {
         'domains': domain_list
     }
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert len(organisation) == 1
+    assert len(organization) == 1
     assert [
-        domain.domain for domain in organisation[0].domains
+        domain.domain for domain in organization[0].domains
     ] == domain_list
 
 
-def test_update_other_organisation_attributes_doesnt_clear_domains(
+def test_update_other_organization_attributes_doesnt_clear_domains(
     admin_request,
     notify_db_session,
 ):
-    org = create_organisation(name='test_org_2')
+    org = create_organization(name='test_org_2')
     create_domain('example.gov.uk', org.id)
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data={'domains': ['example.gov.uk']},
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
@@ -340,35 +363,35 @@ def test_update_other_organisation_attributes_doesnt_clear_domains(
 
 @pytest.mark.parametrize('new_org_type', ["nhs_central", "nhs_local", "nhs_gp"])
 @pytest.mark.skip(reason='Update for TTS')
-def test_post_update_organisation_to_nhs_type_updates_branding_if_none_present(
+def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
     admin_request,
     nhs_email_branding,
     notify_db_session,
     new_org_type
 ):
-    org = create_organisation(organisation_type='central')
+    org = create_organization(organization_type='central')
     data = {
-        'organisation_type': new_org_type,
+        'organization_type': new_org_type,
     }
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert len(organisation) == 1
-    assert organisation[0].id == org.id
-    assert organisation[0].organisation_type == new_org_type
-    assert organisation[0].email_branding_id == uuid.UUID(current_app.config['NHS_EMAIL_BRANDING_ID'])
+    assert len(organization) == 1
+    assert organization[0].id == org.id
+    assert organization[0].organization_type == new_org_type
+    assert organization[0].email_branding_id == uuid.UUID(current_app.config['NHS_EMAIL_BRANDING_ID'])
 
 
 @pytest.mark.parametrize('new_org_type', ["nhs_central", "nhs_local", "nhs_gp"])
 @pytest.mark.skip(reason='Update for TTS')
-def test_post_update_organisation_to_nhs_type_does_not_update_branding_if_default_branding_set(
+def test_post_update_organization_to_nhs_type_does_not_update_branding_if_default_branding_set(
     admin_request,
     nhs_email_branding,
     notify_db_session,
@@ -378,119 +401,118 @@ def test_post_update_organisation_to_nhs_type_does_not_update_branding_if_defaul
         logo='example.png',
         name='custom branding'
     )
-    org = create_organisation(organisation_type='central', email_branding_id=current_branding.id)
+    org = create_organization(organization_type='central', email_branding_id=current_branding.id)
     data = {
-        'organisation_type': new_org_type,
+        'organization_type': new_org_type,
     }
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert len(organisation) == 1
-    assert organisation[0].id == org.id
-    assert organisation[0].organisation_type == new_org_type
-    assert organisation[0].email_branding_id == current_branding.id
+    assert len(organization) == 1
+    assert organization[0].id == org.id
+    assert organization[0].organization_type == new_org_type
+    assert organization[0].email_branding_id == current_branding.id
 
 
-def test_update_organisation_default_branding(
+def test_update_organization_default_branding(
     admin_request,
     notify_db_session,
 ):
 
-    org = create_organisation(name='Test Organisation')
+    org = create_organization(name='Test Organization')
 
     email_branding = create_email_branding()
 
     assert org.email_branding is None
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data={
             'email_branding_id': str(email_branding.id),
         },
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=204
     )
 
     assert org.email_branding == email_branding
 
 
-def test_post_update_organisation_raises_400_on_existing_org_name(
-        admin_request, sample_organisation):
-    org = create_organisation()
+def test_post_update_organization_raises_400_on_existing_org_name(
+        admin_request, sample_organization):
+    org = create_organization()
     data = {
-        'name': sample_organisation.name,
+        'name': sample_organization.name,
         'active': False
     }
 
     response = admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org.id,
+        organization_id=org.id,
         _expected_status=400
     )
 
-    assert response['message'] == 'Organisation name already exists'
+    assert response['message'] == 'Organization name already exists'
 
 
-def test_post_update_organisation_gives_404_status_if_org_does_not_exist(admin_request, notify_db_session):
-    data = {'name': 'new organisation name'}
+def test_post_update_organization_gives_404_status_if_org_does_not_exist(admin_request, notify_db_session):
+    data = {'name': 'new organization name'}
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id='31d42ce6-3dac-45a7-95cb-94423d5ca03c',
+        organization_id='31d42ce6-3dac-45a7-95cb-94423d5ca03c',
         _expected_status=404
     )
 
-    organisation = Organisation.query.all()
+    organization = Organization.query.all()
 
-    assert not organisation
+    assert not organization
 
 
-def test_post_update_organisation_returns_400_if_domain_is_duplicate(admin_request, notify_db_session):
-    org = create_organisation()
-    org2 = create_organisation(name='Second org')
+def test_post_update_organization_returns_400_if_domain_is_duplicate(admin_request, notify_db_session):
+    org = create_organization()
+    org2 = create_organization(name='Second org')
     create_domain('same.com', org.id)
 
     data = {'domains': ['new.com', 'same.com']}
 
     response = admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=org2.id,
+        organization_id=org2.id,
         _expected_status=400
     )
 
     assert response['message'] == 'Domain already exists'
 
 
-def test_post_update_organisation_set_mou_doesnt_email_if_no_signed_by(
-    sample_organisation,
+def test_post_update_organization_set_mou_doesnt_email_if_no_signed_by(
+    sample_organization,
     admin_request,
     mocker
 ):
-    queue_mock = mocker.patch('app.organisation.rest.send_notification_to_queue')
+    queue_mock = mocker.patch('app.organization.rest.send_notification_to_queue')
 
     data = {'agreement_signed': True}
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data=data,
-        organisation_id=sample_organisation.id,
+        organization_id=sample_organization.id,
         _expected_status=204
     )
 
     assert queue_mock.called is False
 
 
-@pytest.mark.skip(reason="Needs updating for TTS: Failing for unknown reason")
 @pytest.mark.parametrize('on_behalf_of_name, on_behalf_of_email_address, templates_and_recipients', [
     (
         None,
@@ -508,8 +530,8 @@ def test_post_update_organisation_set_mou_doesnt_email_if_no_signed_by(
         }
     ),
 ])
-def test_post_update_organisation_set_mou_emails_signed_by(
-    sample_organisation,
+def test_post_update_organization_set_mou_emails_signed_by(
+    sample_organization,
     admin_request,
     mou_signed_templates,
     mocker,
@@ -518,14 +540,14 @@ def test_post_update_organisation_set_mou_emails_signed_by(
     on_behalf_of_email_address,
     templates_and_recipients
 ):
-    queue_mock = mocker.patch('app.organisation.rest.send_notification_to_queue')
-    sample_organisation.agreement_signed_on_behalf_of_name = on_behalf_of_name
-    sample_organisation.agreement_signed_on_behalf_of_email_address = on_behalf_of_email_address
+    queue_mock = mocker.patch('app.organization.rest.send_notification_to_queue')
+    sample_organization.agreement_signed_on_behalf_of_name = on_behalf_of_name
+    sample_organization.agreement_signed_on_behalf_of_email_address = on_behalf_of_email_address
 
     admin_request.post(
-        'organisation.update_organisation',
+        'organization.update_organization',
         _data={'agreement_signed': True, 'agreement_signed_by_id': str(sample_user.id)},
-        organisation_id=sample_organisation.id,
+        organization_id=sample_organization.id,
         _expected_status=204
     )
 
@@ -536,41 +558,41 @@ def test_post_update_organisation_set_mou_emails_signed_by(
         # we pass in the same personalisation for all templates (though some templates don't use all fields)
         assert n.personalisation == {
             'mou_link': 'http://localhost:6012/agreement/agreement.pdf',
-            'org_name': 'sample organisation',
-            'org_dashboard_link': 'http://localhost:6012/organisations/{}'.format(sample_organisation.id),
+            'org_name': 'sample organization',
+            'org_dashboard_link': 'http://localhost:6012/organizations/{}'.format(sample_organization.id),
             'signed_by_name': 'Test User',
             'on_behalf_of_name': on_behalf_of_name
         }
 
 
-def test_post_link_service_to_organisation(admin_request, sample_service):
+def test_post_link_service_to_organization(admin_request, sample_service):
     data = {
         'service_id': str(sample_service.id)
     }
-    organisation = create_organisation(organisation_type='federal')
+    organization = create_organization(organization_type='federal')
 
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=organisation.id,
+        organization_id=organization.id,
         _expected_status=204
     )
-    assert len(organisation.services) == 1
-    assert sample_service.organisation_type == 'federal'
+    assert len(organization.services) == 1
+    assert sample_service.organization_type == 'federal'
 
 
 @freeze_time('2021-09-24 13:30')
-def test_post_link_service_to_organisation_inserts_annual_billing(admin_request, sample_service):
+def test_post_link_service_to_organization_inserts_annual_billing(admin_request, sample_service):
     data = {
         'service_id': str(sample_service.id)
     }
-    organisation = create_organisation(organisation_type='federal')
-    assert len(organisation.services) == 0
+    organization = create_organization(organization_type='federal')
+    assert len(organization.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=organisation.id,
+        organization_id=organization.id,
         _expected_status=204
     )
 
@@ -579,7 +601,7 @@ def test_post_link_service_to_organisation_inserts_annual_billing(admin_request,
     assert annual_billing[0].free_sms_fragment_limit == 150000
 
 
-def test_post_link_service_to_organisation_rollback_service_if_annual_billing_update_fails(
+def test_post_link_service_to_organization_rollback_service_if_annual_billing_update_fails(
         admin_request, sample_service, mocker
 ):
     mocker.patch('app.dao.annual_billing_dao.dao_create_or_update_annual_billing_for_year',
@@ -587,115 +609,115 @@ def test_post_link_service_to_organisation_rollback_service_if_annual_billing_up
     data = {
         'service_id': str(sample_service.id)
     }
-    assert not sample_service.organisation_type
+    assert not sample_service.organization_type
 
-    organisation = create_organisation(organisation_type='federal')
-    assert len(organisation.services) == 0
+    organization = create_organization(organization_type='federal')
+    assert len(organization.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
         admin_request.post(
-                'organisation.link_service_to_organisation',
+                'organization.link_service_to_organization',
                 _data=data,
-                organisation_id=organisation.id
+                organization_id=organization.id
             )
-    assert not sample_service.organisation_type
-    assert len(organisation.services) == 0
+    assert not sample_service.organization_type
+    assert len(organization.services) == 0
     assert len(AnnualBilling.query.all()) == 0
 
 
 @freeze_time('2021-09-24 13:30')
 def test_post_link_service_to_another_org(
-        admin_request, sample_service, sample_organisation):
+        admin_request, sample_service, sample_organization):
     data = {
         'service_id': str(sample_service.id)
     }
-    assert len(sample_organisation.services) == 0
-    assert not sample_service.organisation_type
+    assert len(sample_organization.services) == 0
+    assert not sample_service.organization_type
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=sample_organisation.id,
+        organization_id=sample_organization.id,
         _expected_status=204
     )
 
-    assert len(sample_organisation.services) == 1
-    assert not sample_service.organisation_type
+    assert len(sample_organization.services) == 1
+    assert not sample_service.organization_type
 
-    new_org = create_organisation(organisation_type='federal')
+    new_org = create_organization(organization_type='federal')
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=new_org.id,
+        organization_id=new_org.id,
         _expected_status=204
     )
-    assert not sample_organisation.services
+    assert not sample_organization.services
     assert len(new_org.services) == 1
-    assert sample_service.organisation_type == 'federal'
+    assert sample_service.organization_type == 'federal'
     annual_billing = AnnualBilling.query.all()
     assert len(annual_billing) == 1
     assert annual_billing[0].free_sms_fragment_limit == 150000
 
 
-def test_post_link_service_to_organisation_nonexistent_organisation(
+def test_post_link_service_to_organization_nonexistent_organization(
         admin_request, sample_service, fake_uuid):
     data = {
         'service_id': str(sample_service.id)
     }
 
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=fake_uuid,
+        organization_id=fake_uuid,
         _expected_status=404
     )
 
 
-def test_post_link_service_to_organisation_nonexistent_service(
-        admin_request, sample_organisation, fake_uuid):
+def test_post_link_service_to_organization_nonexistent_service(
+        admin_request, sample_organization, fake_uuid):
     data = {
         'service_id': fake_uuid
     }
 
     admin_request.post(
-        'organisation.link_service_to_organisation',
+        'organization.link_service_to_organization',
         _data=data,
-        organisation_id=str(sample_organisation.id),
+        organization_id=str(sample_organization.id),
         _expected_status=404
     )
 
 
-def test_post_link_service_to_organisation_missing_payload(
-        admin_request, sample_organisation, fake_uuid):
+def test_post_link_service_to_organization_missing_payload(
+        admin_request, sample_organization, fake_uuid):
     admin_request.post(
-        'organisation.link_service_to_organisation',
-        organisation_id=str(sample_organisation.id),
+        'organization.link_service_to_organization',
+        organization_id=str(sample_organization.id),
         _expected_status=400
     )
 
 
-def test_rest_get_organisation_services(
-        admin_request, sample_organisation, sample_service):
-    dao_add_service_to_organisation(sample_service, sample_organisation.id)
+def test_rest_get_organization_services(
+        admin_request, sample_organization, sample_service):
+    dao_add_service_to_organization(sample_service, sample_organization.id)
     response = admin_request.get(
-        'organisation.get_organisation_services',
-        organisation_id=str(sample_organisation.id),
+        'organization.get_organization_services',
+        organization_id=str(sample_organization.id),
         _expected_status=200
     )
 
     assert response == [sample_service.serialize_for_org_dashboard()]
 
 
-def test_rest_get_organisation_services_is_ordered_by_name(
-        admin_request, sample_organisation, sample_service):
+def test_rest_get_organization_services_is_ordered_by_name(
+        admin_request, sample_organization, sample_service):
     service_2 = create_service(service_name='service 2')
     service_1 = create_service(service_name='service 1')
-    dao_add_service_to_organisation(service_1, sample_organisation.id)
-    dao_add_service_to_organisation(service_2, sample_organisation.id)
-    dao_add_service_to_organisation(sample_service, sample_organisation.id)
+    dao_add_service_to_organization(service_1, sample_organization.id)
+    dao_add_service_to_organization(service_2, sample_organization.id)
+    dao_add_service_to_organization(sample_service, sample_organization.id)
 
     response = admin_request.get(
-        'organisation.get_organisation_services',
-        organisation_id=str(sample_organisation.id),
+        'organization.get_organization_services',
+        organization_id=str(sample_organization.id),
         _expected_status=200
     )
 
@@ -704,19 +726,19 @@ def test_rest_get_organisation_services_is_ordered_by_name(
     assert response[2]['name'] == service_2.name
 
 
-def test_rest_get_organisation_services_inactive_services_at_end(
-        admin_request, sample_organisation):
+def test_rest_get_organization_services_inactive_services_at_end(
+        admin_request, sample_organization):
     inactive_service = create_service(service_name='inactive service', active=False)
     service = create_service()
     inactive_service_1 = create_service(service_name='inactive service 1', active=False)
 
-    dao_add_service_to_organisation(inactive_service, sample_organisation.id)
-    dao_add_service_to_organisation(service, sample_organisation.id)
-    dao_add_service_to_organisation(inactive_service_1, sample_organisation.id)
+    dao_add_service_to_organization(inactive_service, sample_organization.id)
+    dao_add_service_to_organization(service, sample_organization.id)
+    dao_add_service_to_organization(inactive_service_1, sample_organization.id)
 
     response = admin_request.get(
-        'organisation.get_organisation_services',
-        organisation_id=str(sample_organisation.id),
+        'organization.get_organization_services',
+        organization_id=str(sample_organization.id),
         _expected_status=200
     )
 
@@ -725,44 +747,44 @@ def test_rest_get_organisation_services_inactive_services_at_end(
     assert response[2]['name'] == inactive_service_1.name
 
 
-def test_add_user_to_organisation_returns_added_user(admin_request, sample_organisation, sample_user):
+def test_add_user_to_organization_returns_added_user(admin_request, sample_organization, sample_user):
     response = admin_request.post(
-        'organisation.add_user_to_organisation',
-        organisation_id=str(sample_organisation.id),
+        'organization.add_user_to_organization',
+        organization_id=str(sample_organization.id),
         user_id=str(sample_user.id),
         _expected_status=200
     )
 
     assert response['data']['id'] == str(sample_user.id)
-    assert len(response['data']['organisations']) == 1
-    assert response['data']['organisations'][0] == str(sample_organisation.id)
+    assert len(response['data']['organizations']) == 1
+    assert response['data']['organizations'][0] == str(sample_organization.id)
 
 
-def test_add_user_to_organisation_returns_404_if_user_does_not_exist(admin_request, sample_organisation):
+def test_add_user_to_organization_returns_404_if_user_does_not_exist(admin_request, sample_organization):
     admin_request.post(
-        'organisation.add_user_to_organisation',
-        organisation_id=str(sample_organisation.id),
+        'organization.add_user_to_organization',
+        organization_id=str(sample_organization.id),
         user_id=str(uuid.uuid4()),
         _expected_status=404
     )
 
 
-def test_remove_user_from_organisation(admin_request, sample_organisation, sample_user):
-    dao_add_user_to_organisation(organisation_id=sample_organisation.id, user_id=sample_user.id)
+def test_remove_user_from_organization(admin_request, sample_organization, sample_user):
+    dao_add_user_to_organization(organization_id=sample_organization.id, user_id=sample_user.id)
 
     admin_request.delete(
-        'organisation.remove_user_from_organisation',
-        organisation_id=sample_organisation.id,
+        'organization.remove_user_from_organization',
+        organization_id=sample_organization.id,
         user_id=sample_user.id
     )
 
-    assert sample_organisation.users == []
+    assert sample_organization.users == []
 
 
-def test_remove_user_from_organisation_when_user_is_not_an_org_member(admin_request, sample_organisation, sample_user):
+def test_remove_user_from_organization_when_user_is_not_an_org_member(admin_request, sample_organization, sample_user):
     resp = admin_request.delete(
-        'organisation.remove_user_from_organisation',
-        organisation_id=sample_organisation.id,
+        'organization.remove_user_from_organization',
+        organization_id=sample_organization.id,
         user_id=sample_user.id,
         _expected_status=404
     )
@@ -773,15 +795,15 @@ def test_remove_user_from_organisation_when_user_is_not_an_org_member(admin_requ
     }
 
 
-def test_get_organisation_users_returns_users_for_organisation(admin_request, sample_organisation):
+def test_get_organization_users_returns_users_for_organization(admin_request, sample_organization):
     first = create_user(email='first@invited.com')
     second = create_user(email='another@invited.com')
-    dao_add_user_to_organisation(organisation_id=sample_organisation.id, user_id=first.id)
-    dao_add_user_to_organisation(organisation_id=sample_organisation.id, user_id=second.id)
+    dao_add_user_to_organization(organization_id=sample_organization.id, user_id=first.id)
+    dao_add_user_to_organization(organization_id=sample_organization.id, user_id=second.id)
 
     response = admin_request.get(
-        'organisation.get_organisation_users',
-        organisation_id=sample_organisation.id,
+        'organization.get_organization_users',
+        organization_id=sample_organization.id,
         _expected_status=200
     )
 
@@ -789,18 +811,18 @@ def test_get_organisation_users_returns_users_for_organisation(admin_request, sa
     assert response['data'][0]['id'] == str(first.id)
 
 
-@freeze_time('2020-02-24 13:30')
-def test_get_organisation_services_usage(admin_request, notify_db_session):
-    org = create_organisation(name='Organisation without live services')
+@freeze_time('2019-12-24 13:30')
+def test_get_organization_services_usage(admin_request, notify_db_session):
+    org = create_organization(name='Organization without live services')
     service = create_service()
     template = create_template(service=service)
-    dao_add_service_to_organisation(service=service, organisation_id=org.id)
+    dao_add_service_to_organization(service=service, organization_id=org.id)
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019)
     create_ft_billing(local_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
                       notifications_sent=19)
     response = admin_request.get(
-        'organisation.get_organisation_services_usage',
-        organisation_id=org.id,
+        'organization.get_organization_services_usage',
+        organization_id=org.id,
         **{"year": 2019}
     )
     assert len(response) == 1
@@ -817,19 +839,19 @@ def test_get_organisation_services_usage(admin_request, notify_db_session):
 
 
 @freeze_time('2020-02-24 13:30')
-def test_get_organisation_services_usage_sort_active_first(admin_request, notify_db_session):
-    org = create_organisation(name='Organisation without live services')
+def test_get_organization_services_usage_sort_active_first(admin_request, notify_db_session):
+    org = create_organization(name='Organization without live services')
     service = create_service(service_name='live service')
     archived_service = create_service(service_name='archived_service')
     template = create_template(service=service)
-    dao_add_service_to_organisation(service=service, organisation_id=org.id)
-    dao_add_service_to_organisation(service=archived_service, organisation_id=org.id)
+    dao_add_service_to_organization(service=service, organization_id=org.id)
+    dao_add_service_to_organization(service=archived_service, organization_id=org.id)
     create_annual_billing(service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019)
     create_ft_billing(local_date=datetime.utcnow().date(), template=template, billable_unit=19, rate=0.060,
                       notifications_sent=19)
     response = admin_request.get(
-        'organisation.get_organisation_services_usage',
-        organisation_id=org.id,
+        'organization.get_organization_services_usage',
+        organization_id=org.id,
         **{"year": 2019}
     )
     assert len(response) == 1
@@ -845,8 +867,8 @@ def test_get_organisation_services_usage_sort_active_first(admin_request, notify
 
     dao_archive_service(service_id=archived_service.id)
     response_after_archive = admin_request.get(
-        'organisation.get_organisation_services_usage',
-        organisation_id=org.id,
+        'organization.get_organization_services_usage',
+        organization_id=org.id,
         **{"year": 2019}
     )
     first_service = response_after_archive['services'][0]
@@ -859,20 +881,20 @@ def test_get_organisation_services_usage_sort_active_first(admin_request, notify
     assert last_service['active'] is False
 
 
-def test_get_organisation_services_usage_returns_400_if_year_is_invalid(admin_request):
+def test_get_organization_services_usage_returns_400_if_year_is_invalid(admin_request):
     response = admin_request.get(
-        'organisation.get_organisation_services_usage',
-        organisation_id=uuid.uuid4(),
+        'organization.get_organization_services_usage',
+        organization_id=uuid.uuid4(),
         **{"year": 'not-a-valid-year'},
         _expected_status=400
     )
     assert response['message'] == 'No valid year provided'
 
 
-def test_get_organisation_services_usage_returns_400_if_year_is_empty(admin_request):
+def test_get_organization_services_usage_returns_400_if_year_is_empty(admin_request):
     response = admin_request.get(
-        'organisation.get_organisation_services_usage',
-        organisation_id=uuid.uuid4(),
+        'organization.get_organization_services_usage',
+        organization_id=uuid.uuid4(),
         _expected_status=400
     )
     assert response['message'] == 'No valid year provided'

@@ -35,7 +35,7 @@ from app.models import (
 )
 from app.utils import (
     escape_special_characters,
-    get_local_midnight_in_utc,
+    get_midnight_in_utc,
     midnight_n_days_ago,
 )
 
@@ -95,7 +95,7 @@ def _update_notification_status(notification, status, provider_response=None):
 
 
 @autocommit
-def update_notification_status_by_id(notification_id, status, sent_by=None):
+def update_notification_status_by_id(notification_id, status, sent_by=None, provider_response=None):
     notification = Notification.query.with_for_update().filter(Notification.id == notification_id).first()
 
     if not notification:
@@ -121,6 +121,8 @@ def update_notification_status_by_id(notification_id, status, sent_by=None):
         and not country_records_delivery(notification.phone_prefix)
     ):
         return None
+    if provider_response:
+        notification.provider_response = provider_response
     if not notification.sent_by and sent_by:
         notification.sent_by = sent_by
     return _update_notification_status(
@@ -257,8 +259,8 @@ def _filter_query(query, filter_dict=None):
 
     # filter by status
     statuses = multidict.getlist('status')
+
     if statuses:
-        statuses = Notification.substitute_status(statuses)
         query = query.filter(Notification.status.in_(statuses))
 
     # filter by template
@@ -267,6 +269,30 @@ def _filter_query(query, filter_dict=None):
         query = query.filter(Notification.notification_type.in_(template_types))
 
     return query
+
+
+@autocommit
+def sanitize_successful_notification_by_id(
+    notification_id
+):
+    # TODO what to do for international?
+    # phone_prefix = '1'
+    # Notification.query.filter(
+    #     Notification.id.in_([notification_id]),
+    # ).update(
+    #     {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'}
+    # )
+    # db.session.commit()
+
+    update_query = """
+    update notifications set notification_status='delivered', "to"='1', normalised_to='1'
+    where id=:notification_id
+    """
+    input_params = {
+        "notification_id": notification_id
+    }
+
+    db.session.execute(update_query, input_params)
 
 
 @autocommit
@@ -579,8 +605,8 @@ def get_service_ids_with_notifications_before(notification_type, timestamp):
 
 
 def get_service_ids_with_notifications_on_date(notification_type, date):
-    start_date = get_local_midnight_in_utc(date)
-    end_date = get_local_midnight_in_utc(date + timedelta(days=1))
+    start_date = get_midnight_in_utc(date)
+    end_date = get_midnight_in_utc(date + timedelta(days=1))
 
     notification_table_query = db.session.query(
         Notification.service_id.label('service_id')

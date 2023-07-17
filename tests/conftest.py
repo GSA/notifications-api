@@ -128,7 +128,7 @@ def notify_db_session(_notify_db, sms_providers):
                             "template_process_type",
                             "notifications_all_time_view",
                             "notification_status_types",
-                            "organisation_types",
+                            "organization_types",
                             "service_permission_types",
                             "auth_type",
                             "invite_status_type",

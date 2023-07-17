@@ -1,33 +1,33 @@
-from app.models import INVITED_USER_STATUS_TYPES, ORGANISATION_TYPES
+from app.models import INVITED_USER_STATUS_TYPES, ORGANIZATION_TYPES
 from app.schema_validation.definitions import uuid
 
-post_create_organisation_schema = {
+post_create_organization_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST organisation schema",
+    "description": "POST organization schema",
     "type": "object",
     "properties": {
         "name": {"type": "string"},
         "active": {"type": ["boolean", "null"]},
-        "organisation_type": {"enum": ORGANISATION_TYPES},
+        "organization_type": {"enum": ORGANIZATION_TYPES},
     },
-    "required": ["name", "organisation_type"]
+    "required": ["name", "organization_type"]
 }
 
-post_update_organisation_schema = {
+post_update_organization_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST organisation schema",
+    "description": "POST organization schema",
     "type": "object",
     "properties": {
         "name": {"type": ["string", "null"]},
         "active": {"type": ["boolean", "null"]},
-        "organisation_type": {"enum": ORGANISATION_TYPES},
+        "organization_type": {"enum": ORGANIZATION_TYPES},
     },
     "required": []
 }
 
-post_link_service_to_organisation_schema = {
+post_link_service_to_organization_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST link service to organisation schema",
+    "description": "POST link service to organization schema",
     "type": "object",
     "properties": {
         "service_id": uuid
@@ -38,7 +38,7 @@ post_link_service_to_organisation_schema = {
 
 post_create_invited_org_user_status_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST create organisation invite schema",
+    "description": "POST create organization invite schema",
     "type": "object",
     "properties": {
         "email_address": {"type": "string", "format": "email_address"},
@@ -51,7 +51,7 @@ post_create_invited_org_user_status_schema = {
 
 post_update_invited_org_user_status_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "POST update organisation invite schema",
+    "description": "POST update organization invite schema",
     "type": "object",
     "properties": {
         "status": {"enum": INVITED_USER_STATUS_TYPES}

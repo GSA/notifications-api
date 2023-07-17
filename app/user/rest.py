@@ -560,8 +560,8 @@ def update_password(user_id):
     return jsonify(data=user.serialize()), 200
 
 
-@user_blueprint.route('/<uuid:user_id>/organisations-and-services', methods=['GET'])
-def get_organisations_and_services_for_user(user_id):
+@user_blueprint.route('/<uuid:user_id>/organizations-and-services', methods=['GET'])
+def get_organizations_and_services_for_user(user_id):
     user = get_user_and_accounts(user_id)
     data = get_orgs_and_services(user)
     return jsonify(data)
@@ -599,20 +599,20 @@ def _create_2fa_url(user, secret_code, next_redirect, email_auth_link_host):
 
 def get_orgs_and_services(user):
     return {
-        'organisations': [
+        'organizations': [
             {
                 'name': org.name,
                 'id': org.id,
                 'count_of_live_services': len(org.live_services),
             }
-            for org in user.organisations if org.active
+            for org in user.organizations if org.active
         ],
         'services': [
             {
                 'id': service.id,
                 'name': service.name,
                 'restricted': service.restricted,
-                'organisation': service.organisation.id if service.organisation else None,
+                'organization': service.organization.id if service.organization else None,
             }
             for service in user.services if service.active
         ]

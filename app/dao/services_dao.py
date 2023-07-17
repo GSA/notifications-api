@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast
@@ -8,8 +8,8 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.date_util import get_current_financial_year
-from app.dao.organisation_dao import dao_get_organisation_by_email_address
+from app.dao.date_util import get_current_calendar_year
+from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
@@ -27,7 +27,7 @@ from app.models import (
     Job,
     Notification,
     NotificationHistory,
-    Organisation,
+    Organization,
     Permission,
     Service,
     ServiceEmailReplyTo,
@@ -42,7 +42,7 @@ from app.models import (
 from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
-    get_local_midnight_in_utc,
+    get_midnight_in_utc,
 )
 
 DEFAULT_SERVICE_PERMISSIONS = [
@@ -79,7 +79,7 @@ def dao_count_live_services():
 
 
 def dao_fetch_live_services_data():
-    year_start_date, year_end_date = get_current_financial_year()
+    year_start_date, year_end_date = get_current_calendar_year()
 
     most_recent_annual_billing = db.session.query(
         AnnualBilling.service_id,
@@ -96,8 +96,8 @@ def dao_fetch_live_services_data():
     data = db.session.query(
         Service.id.label('service_id'),
         Service.name.label("service_name"),
-        Organisation.name.label("organisation_name"),
-        Organisation.organisation_type.label('organisation_type'),
+        Organization.name.label("organization_name"),
+        Organization.organization_type.label('organization_type'),
         Service.consent_to_research.label('consent_to_research'),
         User.name.label('contact_name'),
         User.email_address.label('contact_email'),
@@ -121,7 +121,7 @@ def dao_fetch_live_services_data():
             AnnualBilling.financial_year_start == most_recent_annual_billing.c.year
         )
     ).outerjoin(
-        Service.organisation
+        Service.organization
     ).outerjoin(
         this_year_ft_billing, Service.id == this_year_ft_billing.c.service_id
     ).outerjoin(
@@ -132,8 +132,8 @@ def dao_fetch_live_services_data():
         Service.restricted.is_(False),
     ).group_by(
         Service.id,
-        Organisation.name,
-        Organisation.organisation_type,
+        Organization.name,
+        Organization.organization_type,
         Service.name,
         Service.consent_to_research,
         Service.count_as_live,
@@ -278,7 +278,7 @@ def dao_create_service(
     if service_permissions is None:
         service_permissions = DEFAULT_SERVICE_PERMISSIONS
 
-    organisation = dao_get_organisation_by_email_address(user.email_address)
+    organization = dao_get_organization_by_email_address(user.email_address)
 
     from app.dao.permissions_dao import permission_dao
     service.users.append(user)
@@ -294,12 +294,12 @@ def dao_create_service(
     # do we just add the default - or will we get a value from FE?
     insert_service_sms_sender(service, current_app.config['FROM_NUMBER'])
 
-    if organisation:
-        service.organisation_id = organisation.id
-        service.organisation_type = organisation.organisation_type
+    if organization:
+        service.organization_id = organization.id
+        service.organization_type = organization.organization_type
 
-        if organisation.email_branding:
-            service.email_branding = organisation.email_branding
+        if organization.email_branding:
+            service.email_branding = organization.email_branding
 
     service.count_as_live = not user.platform_admin
 
@@ -376,7 +376,7 @@ def delete_service_and_all_associated_db_objects(service):
     db.session.commit()
     users = [x for x in service.users]
     for user in users:
-        user.organisations = []
+        user.organizations = []
         service.users.remove(user)
     _delete_commit(Service.get_history_model().query.filter_by(id=service.id))
     db.session.delete(service)
@@ -387,9 +387,8 @@ def delete_service_and_all_associated_db_objects(service):
 
 
 def dao_fetch_todays_stats_for_service(service_id):
-    today = date.today()
-    start_date = get_local_midnight_in_utc(today)
-
+    today = datetime.utcnow().date()
+    start_date = get_midnight_in_utc(today)
     return db.session.query(
         Notification.notification_type,
         Notification.status,
@@ -405,9 +404,9 @@ def dao_fetch_todays_stats_for_service(service_id):
 
 
 def dao_fetch_todays_stats_for_all_services(include_from_test_key=True, only_active=True):
-    today = date.today()
-    start_date = get_local_midnight_in_utc(today)
-    end_date = get_local_midnight_in_utc(today + timedelta(days=1))
+    today = datetime.utcnow().date()
+    start_date = get_midnight_in_utc(today)
+    end_date = get_midnight_in_utc(today + timedelta(days=1))
 
     subquery = db.session.query(
         Notification.notification_type,
@@ -554,20 +553,20 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
     return query.all()
 
 
-def get_live_services_with_organisation():
+def get_live_services_with_organization():
     query = db.session.query(
         Service.id.label("service_id"),
         Service.name.label("service_name"),
-        Organisation.id.label("organisation_id"),
-        Organisation.name.label("organisation_name")
+        Organization.id.label("organization_id"),
+        Organization.name.label("organization_name")
     ).outerjoin(
-        Service.organisation
+        Service.organization
     ).filter(
         Service.count_as_live.is_(True),
         Service.active.is_(True),
         Service.restricted.is_(False)
     ).order_by(
-        Organisation.name,
+        Organization.name,
         Service.name
     )
 

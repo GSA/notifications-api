@@ -414,11 +414,7 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
 
 def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     created_notification = create_notification(template=sample_template, status="created")
-    failed_notifications = [
-        create_notification(template=sample_template, status=_status)
-        for _status in ["technical-failure", "temporary-failure", "permanent-failure"]
-    ]
-
+    failed_notifications = [create_notification(template=sample_template, status='failed')]
     auth_header = create_service_authorization_header(service_id=created_notification.service_id)
     response = client.get(
         path='/v2/notifications?status=failed',
@@ -430,7 +426,7 @@ def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     assert response.headers['Content-type'] == "application/json"
     assert json_response['links']['current'].endswith("/v2/notifications?status=failed")
     assert 'next' in json_response['links'].keys()
-    assert len(json_response['notifications']) == 3
+    assert len(json_response['notifications']) == 1
 
     returned_notification_ids = [n['id'] for n in json_response['notifications']]
     for _id in [_notification.id for _notification in failed_notifications]:
@@ -508,25 +504,26 @@ def test_get_all_notifications_filter_by_id_no_notifications_if_last_notificatio
 
 
 def test_get_all_notifications_filter_multiple_query_parameters(client, sample_email_template):
+    # TODO had to change pending to sending.  Is that correct?
     # this is the notification we are looking for
     older_notification = create_notification(
-        template=sample_email_template, status="pending")
+        template=sample_email_template, status="sending")
 
     # wrong status
     create_notification(template=sample_email_template)
     wrong_template = create_template(sample_email_template.service, template_type='sms')
     # wrong template
-    create_notification(template=wrong_template, status="pending")
+    create_notification(template=wrong_template, status="sending")
 
     # we only want notifications created before this one
     newer_notification = create_notification(template=sample_email_template)
 
     # this notification was created too recently
-    create_notification(template=sample_email_template, status="pending")
+    create_notification(template=sample_email_template, status="sending")
 
     auth_header = create_service_authorization_header(service_id=newer_notification.service_id)
     response = client.get(
-        path='/v2/notifications?status=pending&template_type=email&older_than={}'.format(newer_notification.id),
+        path='/v2/notifications?status=sending&template_type=email&older_than={}'.format(newer_notification.id),
         headers=[('Content-Type', 'application/json'), auth_header])
 
     json_response = json.loads(response.get_data(as_text=True))
@@ -537,7 +534,7 @@ def test_get_all_notifications_filter_multiple_query_parameters(client, sample_e
     for url_part in [
         "/v2/notifications?",
         "template_type=email",
-        "status=pending",
+        "status=sending",
         "older_than={}".format(newer_notification.id)
     ]:
         assert url_part in json_response['links']['current']

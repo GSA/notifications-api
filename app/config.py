@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from os import getenv, path
 
+import notifications_utils
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
@@ -13,6 +14,7 @@ class QueueNames(object):
     PRIORITY = 'priority-tasks'
     DATABASE = 'database-tasks'
     SEND_SMS = 'send-sms-tasks'
+    CHECK_SMS = 'check-sms_tasks'
     SEND_EMAIL = 'send-email-tasks'
     RESEARCH_MODE = 'research-mode-tasks'
     REPORTING = 'reporting-tasks'
@@ -33,6 +35,7 @@ class QueueNames(object):
             QueueNames.PERIODIC,
             QueueNames.DATABASE,
             QueueNames.SEND_SMS,
+            QueueNames.CHECK_SMS,
             QueueNames.SEND_EMAIL,
             QueueNames.RESEARCH_MODE,
             QueueNames.REPORTING,
@@ -141,7 +144,7 @@ class Config(object):
     ALREADY_REGISTERED_EMAIL_TEMPLATE_ID = '0880fbb1-a0c6-46f0-9a8e-36c986381ceb'
     CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID = 'eb4d9930-87ab-4aef-9bce-786762687884'
     SERVICE_NOW_LIVE_TEMPLATE_ID = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
-    ORGANISATION_INVITATION_EMAIL_TEMPLATE_ID = '203566f0-d835-47c5-aa06-932439c86573'
+    ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID = '203566f0-d835-47c5-aa06-932439c86573'
     TEAM_MEMBER_EDIT_EMAIL_TEMPLATE_ID = 'c73f1d71-4049-46d5-a647-d013bdeca3f0'
     TEAM_MEMBER_EDIT_MOBILE_TEMPLATE_ID = '8a31520f-4751-4789-8ea1-fe54496725eb'
     REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID = 'a42f1d17-9404-46d5-a647-d013bdfca3e1'
@@ -159,7 +162,7 @@ class Config(object):
         'broker_transport_options': {
             'visibility_timeout': 310,
         },
-        'timezone': getenv("TIMEZONE", 'America/New_York'),
+        'timezone': getenv("TIMEZONE", 'UTC'),
         'imports': [
             'app.celery.tasks',
             'app.celery.scheduled_tasks',
@@ -210,42 +213,47 @@ class Config(object):
             # app/celery/nightly_tasks.py
             'timeout-sending-notifications': {
                 'task': 'timeout-sending-notifications',
-                'schedule': crontab(hour=0, minute=5),
+                'schedule': crontab(hour=4, minute=5),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'create-nightly-billing': {
                 'task': 'create-nightly-billing',
-                'schedule': crontab(hour=0, minute=15),
+                'schedule': crontab(hour=4, minute=15),
                 'options': {'queue': QueueNames.REPORTING}
             },
             'create-nightly-notification-status': {
                 'task': 'create-nightly-notification-status',
-                'schedule': crontab(hour=0, minute=30),  # after 'timeout-sending-notifications'
+                'schedule': crontab(hour=4, minute=30),  # after 'timeout-sending-notifications'
                 'options': {'queue': QueueNames.REPORTING}
             },
             'delete-notifications-older-than-retention': {
                 'task': 'delete-notifications-older-than-retention',
-                'schedule': crontab(hour=3, minute=0),  # after 'create-nightly-notification-status'
+                'schedule': crontab(hour=7, minute=0),  # after 'create-nightly-notification-status'
                 'options': {'queue': QueueNames.REPORTING}
             },
             'delete-inbound-sms': {
                 'task': 'delete-inbound-sms',
-                'schedule': crontab(hour=1, minute=40),
+                'schedule': crontab(hour=5, minute=40),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'save-daily-notification-processing-time': {
                 'task': 'save-daily-notification-processing-time',
-                'schedule': crontab(hour=2, minute=0),
+                'schedule': crontab(hour=6, minute=0),
+                'options': {'queue': QueueNames.PERIODIC}
+            },
+            'cleanup-unfinished-jobs': {
+                'task': 'cleanup-unfinished-jobs',
+                'schedule': crontab(hour=4, minute=5),
                 'options': {'queue': QueueNames.PERIODIC}
             },
             'remove_sms_email_jobs': {
                 'task': 'remove_sms_email_jobs',
-                'schedule': crontab(hour=4, minute=0),
+                'schedule': crontab(hour=8, minute=0),
                 'options': {'queue': QueueNames.PERIODIC},
             },
             'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers': {
                 'task': 'check-for-services-with-high-failure-rates-or-sending-to-tv-numbers',
-                'schedule': crontab(day_of_week='mon-fri', hour=10, minute=30),
+                'schedule': crontab(day_of_week='mon-fri', hour=14, minute=30),
                 'options': {'queue': QueueNames.PERIODIC}
             },
         }
@@ -266,7 +274,7 @@ class Config(object):
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
-    DAILY_MESSAGE_LIMIT = 5000
+    DAILY_MESSAGE_LIMIT = notifications_utils.DAILY_MESSAGE_LIMIT
 
     HIGH_VOLUME_SERVICE = json.loads(getenv('HIGH_VOLUME_SERVICE', '[]'))
 

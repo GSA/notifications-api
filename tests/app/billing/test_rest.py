@@ -5,7 +5,7 @@ from freezegun import freeze_time
 
 from app.billing.rest import update_free_sms_fragment_limit_data
 from app.dao.annual_billing_dao import dao_get_free_sms_fragment_limit_for_year
-from app.dao.date_util import get_current_financial_year_start_year
+from app.dao.date_util import get_current_calendar_year_start_year
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -32,7 +32,7 @@ def test_create_update_free_sms_fragment_limit_invalid_schema(admin_request, sam
 
 
 def test_create_free_sms_fragment_limit_current_year_updates_future_years(admin_request, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     future_billing = create_annual_billing(sample_service.id, 1, current_year + 1)
 
     admin_request.post(
@@ -54,7 +54,7 @@ def test_create_or_update_free_sms_fragment_limit_past_year_doenst_update_other_
     sample_service,
     update_existing
 ):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     create_annual_billing(sample_service.id, 1, current_year)
     if update_existing:
         create_annual_billing(sample_service.id, 1, current_year - 1)
@@ -71,7 +71,7 @@ def test_create_or_update_free_sms_fragment_limit_past_year_doenst_update_other_
 
 
 def test_create_free_sms_fragment_limit_updates_existing_year(admin_request, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     annual_billing = create_annual_billing(sample_service.id, 1, current_year)
 
     admin_request.post(
@@ -108,11 +108,11 @@ def test_get_free_sms_fragment_limit_current_year_creates_new_row_if_annual_bill
     )
 
     assert json_response['financial_year_start'] == 2021
-    assert json_response['free_sms_fragment_limit'] == 150000  # based on other organisation type
+    assert json_response['free_sms_fragment_limit'] == 150000  # based on other organization type
 
 
 def test_update_free_sms_fragment_limit_data(client, sample_service):
-    current_year = get_current_financial_year_start_year()
+    current_year = get_current_calendar_year_start_year()
     create_annual_billing(sample_service.id, free_sms_fragment_limit=250000, financial_year_start=current_year - 1)
 
     update_free_sms_fragment_limit_data(sample_service.id, 9999, current_year)
@@ -128,7 +128,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
 
-    for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
+    for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
         create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
 
@@ -145,7 +145,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
 
     sms_row = next(x for x in json_response if x['notification_type'] == 'sms')
 
-    assert sms_row["month"] == "April"
+    assert sms_row["month"] == "January"
     assert sms_row["notification_type"] == "sms"
     assert sms_row["chargeable_units"] == 1
     assert sms_row["notifications_sent"] == 1
@@ -185,7 +185,7 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(admin_request, notify_
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
 
-    for dt in (date(2016, 4, 28), date(2016, 11, 10), date(2017, 2, 26)):
+    for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
         create_ft_billing(local_date=dt, template=email_template, billable_unit=0, rate=0)
 
