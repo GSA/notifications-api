@@ -7,6 +7,8 @@ Create Date: 2016-05-05 09:14:29.328841
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0011_ad_provider_details'
 down_revision = '0010_events_table'
 
@@ -34,17 +36,30 @@ def upgrade():
     op.create_index(op.f('ix_provider_statistics_provider_id'), 'provider_statistics', ['provider_id'], unique=False)
     op.create_foreign_key('provider_stats_to_provider_fk', 'provider_statistics', 'provider_details', ['provider_id'], ['id'])
 
-    op.execute(
-        "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'MMG', 'mmg', 10, 'sms', true)".format(str(uuid.uuid4()))
+    conn = op.get_bind()
+    input_params = {
+        "id": uuid.uuid4()
+    }
+    conn.execute(
+        text("INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values (:id, 'MMG', 'mmg', 10, 'sms', true)"), input_params
     )
-    op.execute(
-        "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'Firetext', 'firetext', 20, 'sms', true)".format(str(uuid.uuid4()))
+    input_params = {
+        "id": uuid.uuid4()
+    }
+    conn.execute(
+        text("INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values (:id, 'Firetext', 'firetext', 20, 'sms', true)"), input_params
     )
-    op.execute(
-        "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'AWS SES', 'ses', 10, 'email', true)".format(str(uuid.uuid4()))
+    input_params = {
+        "id": uuid.uuid4()
+    }
+    conn.execute(
+        text("INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values (:id, 'AWS SES', 'ses', 10, 'email', true)"), input_params
     )
-    op.execute(
-        "INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values ('{}', 'AWS SNS', 'sns', 10, 'sms', true)".format(str(uuid.uuid4()))
+    input_params = {
+        "id": uuid.uuid4()
+    }
+    conn.execute(
+        text("INSERT INTO provider_details (id, display_name, identifier, priority, notification_type, active) values (:id, 'AWS SNS', 'sns', 10, 'sms', true)"), input_params
     )
     op.execute(
         "UPDATE provider_rates set provider_id = (select id from provider_details where identifier = 'mmg') where provider = 'mmg'"
@@ -70,6 +85,7 @@ def upgrade():
     op.execute(
         "UPDATE provider_statistics set provider_id = (select id from provider_details where identifier = 'sns') where provider = 'sns'"
     )
+
 
 def downgrade():
 
