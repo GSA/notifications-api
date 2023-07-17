@@ -7,6 +7,8 @@ Create Date: 2016-10-25 17:37:27.660723
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0283_platform_admin_not_live'
 down_revision = '0282_add_count_as_live'
 
@@ -18,7 +20,7 @@ STATEMENT = """
     UPDATE
         services
     SET
-        count_as_live = {count_as_live}
+        count_as_live = :count_as_live
     FROM
         users
     WHERE
@@ -29,7 +31,16 @@ STATEMENT = """
 
 
 def upgrade():
-    op.execute(STATEMENT.format(count_as_live='false'))
+    conn = op.get_bind()
+    input_params = {
+        "count_as_live": "false"
+    }
+    conn.execute(text(STATEMENT), input_params)
+
 
 def downgrade():
-    op.execute(STATEMENT.format(count_as_live='true'))
+    conn = op.get_bind()
+    input_params = {
+        "count_as_live": "true"
+    }
+    conn.execute(text(STATEMENT), input_params)

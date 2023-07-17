@@ -17,7 +17,7 @@ def upgrade():
         INSERT INTO
             service_permissions (service_id, permission, created_at)
         SELECT
-            id, '{permission}', now()
+            id, 'edit_folders', now()
         FROM
             services
         WHERE
@@ -27,11 +27,9 @@ def upgrade():
                     service_permissions
                 WHERE
                     service_id = services.id and
-                    permission = '{permission}'
+                    permission = 'edit_folders'
             )
-    """.format(
-        permission='edit_folders'
-    ))
+    """)
 
 
 def downgrade():

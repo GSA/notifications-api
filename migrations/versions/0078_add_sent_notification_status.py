@@ -33,6 +33,7 @@ new_type = sa.Enum(*new_options, name=enum_name)
 
 alter_str = 'ALTER TABLE {table} ALTER COLUMN status TYPE {enum} USING status::text::notify_status_type '
 
+
 def upgrade():
     op.execute('ALTER TYPE {enum} RENAME TO {tmp_name}'.format(enum=enum_name, tmp_name=tmp_name))
 

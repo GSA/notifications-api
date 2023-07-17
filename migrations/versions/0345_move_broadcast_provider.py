@@ -7,6 +7,7 @@ Create Date: 2021-02-09 09:19:07.957980
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
 revision = '0345_move_broadcast_provider'
@@ -23,14 +24,17 @@ def upgrade():
         """
     insert_sql = """
         insert into service_broadcast_settings(service_id, channel, provider, created_at, updated_at)
-        values('{}', 'test', '{}', now(), null)
+        values(:service_id, 'test', :provider, now(), null)
     """
     conn = op.get_bind()
     results = conn.execute(sql)
     restrictions = results.fetchall()
     for x in restrictions:
-        f = insert_sql.format(x.service_id, x.provider)
-        conn.execute(f)
+        input_params = {
+            "service_id": x.service_id,
+            "provider": x.provider
+        }
+        conn.execute(text(insert_sql), input_params)
 
 
 def downgrade():
