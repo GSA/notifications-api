@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0248_enable_choose_postage
-Revises: 0247_another_letter_org
+Revises: 0246_notifications_index
 Create Date: 2018-12-14 12:09:31.375634
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '0248_enable_choose_postage'
-down_revision = '0247_another_letter_org'
+down_revision = '0246_notifications_index'
 
 
 def upgrade():

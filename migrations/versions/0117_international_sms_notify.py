@@ -1,7 +1,7 @@
 """empty message
 
 Revision ID: 0117_international_sms_notify
-Revises: 0116_another_letter_org
+Revises: 0115_add_inbound_numbers
 Create Date: 2017-08-29 14:09:41.042061
 
 """
@@ -10,7 +10,7 @@ Create Date: 2017-08-29 14:09:41.042061
 from sqlalchemy import text
 
 revision = '0117_international_sms_notify'
-down_revision = '0116_another_letter_org'
+down_revision = '0115_add_inbound_numbers'
 
 from alembic import op
 from datetime import datetime

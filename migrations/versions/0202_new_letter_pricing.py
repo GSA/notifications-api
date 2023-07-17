@@ -1,13 +1,13 @@
 """empty message
 
 Revision ID: 0202_new_letter_pricing
-Revises: 0201_another_letter_org
+Revises: 0198_add_caseworking_permission
 Create Date: 2017-07-09 12:44:16.815039
 
 """
 
 revision = '0202_new_letter_pricing'
-down_revision = '0201_another_letter_org'
+down_revision = '0198_add_caseworking_permission'
 
 import uuid
 from datetime import datetime

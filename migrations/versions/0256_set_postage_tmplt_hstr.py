@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0256_set_postage_tmplt_hstr
-Revises: 0255_another_letter_org
+Revises: 0254_folders_for_all
 Create Date: 2019-02-05 14:51:30.808067
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '0256_set_postage_tmplt_hstr'
-down_revision = '0255_another_letter_org'
+down_revision = '0254_folders_for_all'
 
 
 def upgrade():
