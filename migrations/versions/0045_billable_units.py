@@ -7,6 +7,8 @@ Create Date: 2016-08-02 16:36:42.455838
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0045_billable_units'
 down_revision = '0044_jobs_to_notification_hist'
 
@@ -87,15 +89,26 @@ def downgrade():
     # caveats:
     # only approximates character counts - billable * 153 to get at least a decent ballpark
     # research mode messages assumed to be one message length
-    update_statement = '''
-        UPDATE {}
+    update_statement_n = '''
+        UPDATE notifications
         SET content_char_count = GREATEST(billable_units, 1) * 150
-        WHERE service_id in ({})
+        WHERE service_id in :service_ids
+        AND notification_type = 'sms'
+    '''
+
+    update_statement_nh = '''
+        UPDATE notification_history
+        SET content_char_count = GREATEST(billable_units, 1) * 150
+        WHERE service_id in :service_ids
         AND notification_type = 'sms'
     '''
 
     conn = op.get_bind()
-    conn.execute(update_statement.format('notifications', service_ids))
-    conn.execute(update_statement.format('notification_history', service_ids))
+    input_params = {
+        "service_ids": service_ids
+    }
+    conn.execute(text(update_statement_n), input_params)
+    conn.execute(text(update_statement_nh), input_params)
+
     op.drop_column('notifications', 'billable_units')
     op.drop_column('notification_history', 'billable_units')
