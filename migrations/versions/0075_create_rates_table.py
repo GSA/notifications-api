@@ -1,7 +1,7 @@
 """empty message
 
 Revision ID: 0075_create_rates_table
-Revises: 0074_update_sms_rate
+Revises: 0073_add_international_sms_flag
 Create Date: 2017-04-24 15:12:18.907629
 
 """
@@ -12,7 +12,7 @@ import uuid
 from sqlalchemy import text
 
 revision = '0075_create_rates_table'
-down_revision = '0074_update_sms_rate'
+down_revision = '0073_add_international_sms_flag'
 
 from alembic import op
 import sqlalchemy as sa
