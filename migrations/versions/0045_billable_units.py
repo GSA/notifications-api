@@ -7,7 +7,7 @@ Create Date: 2016-08-02 16:36:42.455838
 """
 
 # revision identifiers, used by Alembic.
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 
 revision = '0045_billable_units'
 down_revision = '0044_jobs_to_notification_hist'
@@ -38,11 +38,11 @@ def upgrade():
         SELECT id FROM services_history WHERE id not in (select id from services_history where research_mode)
     ''')
     # set to 'null' if there are no billable services so we don't get a syntax error in the update statement
-    service_ids = ','.join("'{}'".format(service.id) for service in billable_services) or 'null'
+    service_ids = ','.join(f"{service.id}" for service in billable_services) or 'null'
 
 
-    update_statement = '''
-        UPDATE {}
+    update_statement_n = '''
+        UPDATE notifications
         SET billable_units = (
             CASE
                 WHEN content_char_count <= 160 THEN 1
@@ -50,13 +50,29 @@ def upgrade():
             END
         )
         WHERE content_char_count is not null
-        AND service_id in ({})
+        AND service_id in (:service_ids)
+        AND notification_type = 'sms'
+    '''
+
+    update_statement_nh = '''
+        UPDATE notification_history
+        SET billable_units = (
+            CASE
+                WHEN content_char_count <= 160 THEN 1
+                ELSE ceil(content_char_count::float / 153::float)
+            END
+        )
+        WHERE content_char_count is not null
+        AND service_id in (:service_ids)
         AND notification_type = 'sms'
     '''
 
     conn = op.get_bind()
-    conn.execute(update_statement.format('notifications', service_ids))
-    conn.execute(update_statement.format('notification_history', service_ids))
+
+    query = text(update_statement_n).bindparams(bindparam("service_ids", expanding=False))
+    conn.execute(query, service_ids=service_ids)
+    query = text(update_statement_nh).bindparams(bindparam("service_ids", expanding=False))
+    conn.execute(query, service_ids=service_ids)
     op.drop_column('notifications', 'content_char_count')
     op.drop_column('notification_history', 'content_char_count')
 
@@ -84,7 +100,7 @@ def downgrade():
         SELECT id FROM services_history WHERE id not in (select id from services_history where research_mode)
     ''')
     # set to 'null' if there are no billable services so we don't get a syntax error in the update statement
-    service_ids = ','.join("'{}'".format(service.id) for service in billable_services) or 'null'
+    service_ids = ','.join(f"{service.id}" for service in billable_services) or 'null'
 
     # caveats:
     # only approximates character counts - billable * 153 to get at least a decent ballpark
@@ -92,23 +108,22 @@ def downgrade():
     update_statement_n = '''
         UPDATE notifications
         SET content_char_count = GREATEST(billable_units, 1) * 150
-        WHERE service_id in :service_ids
+        WHERE service_id in (:service_ids)
         AND notification_type = 'sms'
     '''
 
     update_statement_nh = '''
         UPDATE notification_history
         SET content_char_count = GREATEST(billable_units, 1) * 150
-        WHERE service_id in :service_ids
+        WHERE service_id in (:service_ids)
         AND notification_type = 'sms'
     '''
 
     conn = op.get_bind()
-    input_params = {
-        "service_ids": service_ids
-    }
-    conn.execute(text(update_statement_n), input_params)
-    conn.execute(text(update_statement_nh), input_params)
+    query = text(update_statement_n).bindparams(bindparam("service_ids", expanding=False))
+    conn.execute(query, service_ids=service_ids)
+    query = text(update_statement_nh).bindparams(bindparam("service_ids", expanding=False))
+    conn.execute(query, service_ids=service_ids)
 
     op.drop_column('notifications', 'billable_units')
     op.drop_column('notification_history', 'billable_units')
