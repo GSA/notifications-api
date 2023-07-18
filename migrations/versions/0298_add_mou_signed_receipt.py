@@ -7,7 +7,7 @@ Create Date: 2019-05-22 16:58:52.929661
 """
 from alembic import op
 from flask import current_app
-
+from sqlalchemy import text
 
 revision = '0298_add_mou_signed_receipt'
 down_revision = '0297_template_redacted_fix'
@@ -102,45 +102,66 @@ templates = [
 
 
 def upgrade():
-    insert = """
-        INSERT INTO {} (id, name, template_type, created_at, content, archived, service_id, subject,
+    insert_t = """
+        INSERT INTO templates (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES ('{}', '{}', '{}', current_timestamp, '{}', False, '{}', '{}', '{}', 1, '{}', false)
+        VALUES (:template_id, :template_name, :template_type, current_timestamp, 
+        :content, False, :notify_service_id, :subject, :user_id, 1, :process_type, false)
     """
+    insert_th = """
+            INSERT INTO templates_history (id, name, template_type, created_at, content, archived, service_id, subject,
+            created_by_id, version, process_type, hidden)
+        VALUES (:template_id, :template_name, :template_type, current_timestamp, 
+        :content, False, :notify_service_id, :subject, :user_id, 1, :process_type, false)
+        
+        """
 
     for template in templates:
-        for table_name in 'templates', 'templates_history':
-            op.execute(
-                insert.format(
-                    table_name,
-                    template['id'],
-                    template['name'],
-                    template['type'],
-                    '\n'.join(template['content_lines']),
-                    current_app.config['NOTIFY_SERVICE_ID'],
-                    template.get('subject'),
-                    current_app.config['NOTIFY_USER_ID'],
-                    'normal'
-                )
-            )
+        input_params = {
+            "template_id": template['id'],
+            "template_name": template['name'],
+            "template_type": template['type'],
+            "content": '\n'.join(template['content_lines']),
+            "notify_service_id": current_app.config['NOTIFY_SERVICE_ID'],
+            "subject": template.get('subject'),
+            "user_id": current_app.config['NOTIFY_USER_ID'],
+            "process_type": 'normal'
+        }
+        conn = op.get_bind()
 
-        op.execute(
-            """
+        conn.execute(
+            text(insert_t), input_params
+        )
+
+        conn.execute(
+            text(insert_th), input_params
+        )
+
+        input_params = {
+            "template_id": template['id'],
+            "user_id": current_app.config['NOTIFY_USER_ID']
+        }
+        conn.execute(
+            text("""
             INSERT INTO template_redacted
             (
                 template_id,
                 redact_personalisation,
                 updated_at,
                 updated_by_id
-            ) VALUES ( '{}', false, current_timestamp, '{}' )
-            """.format(template['id'], current_app.config['NOTIFY_USER_ID'])
+            ) VALUES ( :template_id, false, current_timestamp, :user_id )
+            """), input_params
         )
 
 
 def downgrade():
+    conn = op.get_bind()
     for template in templates:
-        op.execute("DELETE FROM notifications WHERE template_id = '{}'".format(template['id']))
-        op.execute("DELETE FROM notification_history WHERE template_id = '{}'".format(template['id']))
-        op.execute("DELETE FROM template_redacted WHERE template_id = '{}'".format(template['id']))
-        op.execute("DELETE FROM templates WHERE id = '{}'".format(template['id']))
-        op.execute("DELETE FROM templates_history WHERE id = '{}'".format(template['id']))
+        input_params = {
+            "template_id": template['id']
+        }
+        conn.execute(text("DELETE FROM notifications WHERE template_id = :template_id"), input_params)
+        conn.execute(text("DELETE FROM notification_history WHERE template_id = :template_id"), input_params)
+        conn.execute(text("DELETE FROM template_redacted WHERE template_id = :template_id"), input_params)
+        conn.execute(text("DELETE FROM templates WHERE id = :template_id"), input_params)
+        conn.execute(text("DELETE FROM templates_history WHERE id = :template_id"), input_params)
