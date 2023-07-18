@@ -9,6 +9,7 @@ Create Date: 2016-10-11 09:24:45.669018
 # revision identifiers, used by Alembic.
 from datetime import datetime
 from alembic import op
+from sqlalchemy import text
 
 revision = '0057_change_email_template'
 down_revision = '0056_minor_updates'
@@ -22,11 +23,13 @@ def upgrade():
     template_history_insert = """INSERT INTO templates_history (id, name, template_type, created_at,
                                                                 content, archived, service_id,
                                                                 subject, created_by_id, version)
-                                 VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1)
+                                 VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, 
+                                 :service_id, :subject, :user_id, 1)
                               """
     template_insert = """INSERT INTO templates (id, name, template_type, created_at,
                                                 content, archived, service_id, subject, created_by_id, version)
-                                 VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1)
+                                 VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, 
+                                 :service_id, :subject, :user_id, 1)
                               """
     template_content = \
         """Hi ((name)),\n\nClick this link to confirm your new email address:
@@ -35,33 +38,27 @@ def upgrade():
         \n\n((feedback_url))"""
 
     template_name = 'Confirm new email address'
-    op.execute(template_history_insert.format(template_id,
-                                              template_name,
-                                              'email',
-                                              datetime.utcnow(), template_content,
-                                              service_id,
-                                              template_name, user_id))
-    op.execute(template_insert.format(template_id,
-                                      template_name,
-                                      'email',
-                                      datetime.utcnow(),
-                                      template_content,
-                                      service_id,
-                                      template_name, user_id))
-
-# If you are copying this migration, please remember about an insert to TemplateRedacted,
-# which was not originally included here either by mistake or because it was before TemplateRedacted existed
-    # op.execute(
-    #     """
-    #         INSERT INTO template_redacted (template_id, redact_personalisation, updated_at, updated_by_id)
-    #         VALUES ('{}', '{}', '{}', '{}')
-    #         ;
-    #     """.format(template_id, False, datetime.utcnow(), user_id)
-    # )
+    input_params = {
+        "template_id": template_id,
+        "template_name": template_name,
+        "template_type": 'email',
+        "time_now": datetime.utcnow(),
+        "content": template_content,
+        "service_id": service_id,
+        "subject": template_name,
+        "user_id": user_id
+    }
+    conn = op.get_bind()
+    conn.execute(text(template_history_insert), input_params)
+    conn.execute(text(template_insert), input_params)
 
 
 def downgrade():
-    op.execute("DELETE FROM notifications WHERE template_id = '{}'".format(template_id))
-    op.execute("DELETE FROM notification_history WHERE template_id = '{}'".format(template_id))
-    op.execute("delete from templates_history where id = '{}'".format(template_id))
-    op.execute("delete from templates where id = '{}'".format(template_id))
+    input_params = {
+        "template_id": template_id
+    }
+    conn = op.get_bind()
+    conn.execute(text("DELETE FROM notifications WHERE template_id = :template_id"), input_params)
+    conn.execute(text("DELETE FROM notification_history WHERE template_id = :template_id"), input_params)
+    conn.execute(text("delete from templates_history where id = :template_id"), input_params)
+    conn.execute(text("delete from templates where id = :template_id"), input_params)
