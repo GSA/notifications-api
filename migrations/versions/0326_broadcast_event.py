@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0326_broadcast_event
-Revises: 0325_int_letter_rates_fix
+Revises: 0323_broadcast_message
 Create Date: 2020-07-24 12:40:35.809523
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0326_broadcast_event'
-down_revision = '0325_int_letter_rates_fix'
+down_revision = '0323_broadcast_message'
 
 
 def upgrade():

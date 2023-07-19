@@ -1,14 +1,14 @@
 """empty message
 
 Revision ID: 0042_notification_history
-Revises: 0041_email_template
+Revises: 0039_fix_notifications
 Create Date: 2016-07-07 13:15:35.503107
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0042_notification_history'
-down_revision = '0041_email_template'
+down_revision = '0039_fix_notifications'
 
 from alembic import op
 import sqlalchemy as sa

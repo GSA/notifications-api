@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0372_remove_provider_rates
-Revises: 0371_fix_apr_2022_sms_rate
+Revises: 0364_drop_old_column
 Create Date: 2022-04-26 09:39:45.260951
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0372_remove_provider_rates'
-down_revision = '0371_fix_apr_2022_sms_rate'
+down_revision = '0364_drop_old_column'
 
 
 def upgrade():

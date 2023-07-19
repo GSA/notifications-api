@@ -1,13 +1,13 @@
 """empty message
 
 Revision ID: 0218_another_letter_org
-Revises: 0217_default_email_branding
+Revises: 0216_remove_colours
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0218_another_letter_org'
-down_revision = '0217_default_email_branding'
+down_revision = '0216_remove_colours'
 
 from alembic import op
 

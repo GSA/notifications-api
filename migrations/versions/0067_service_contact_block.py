@@ -1,14 +1,14 @@
 """empty message
 
 Revision ID: 0067_service_contact_block
-Revises: 0066_add_dvla_provider
+Revises: 0065_users_current_session_id
 Create Date: 2017-02-28 11:23:40.299110
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0067_service_contact_block'
-down_revision = '0066_add_dvla_provider'
+down_revision = '0065_users_current_session_id'
 
 from alembic import op
 import sqlalchemy as sa

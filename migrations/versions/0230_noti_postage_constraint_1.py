@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0230_noti_postage_constraint_1
-Revises: 0229_new_letter_rates
+Revises: 0228_notification_postage
 Create Date: 2018-09-19 11:42:52.229430
 
 """
@@ -9,7 +9,7 @@ from alembic import op
 
 
 revision = '0230_noti_postage_constraint_1'
-down_revision = '0229_new_letter_rates'
+down_revision = '0228_notification_postage'
 
 
 def upgrade():
