@@ -1,6 +1,6 @@
 """
 
-Revision ID: 0385_remove postage_.py
+Revision ID: 0385_remove postage_
 Revises: 0384_remove_letter_branding_
 Create Date: 2023-02-10 12:20:39.411493
 
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0385_remove postage_.py'
+revision = '0385_remove_postage_'
 down_revision = '0384_remove_letter_branding_'
 
 

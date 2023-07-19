@@ -1,16 +1,18 @@
 """
 
-Revision ID: 0390_drop_dvla_provider.py
-Revises: 0389_no_more_letters.py
+Revision ID: 0390_drop_dvla_provider
+Revises: 0389_no_more_letters
 Create Date: 2023-02-28 14:25:50.751952
 
 """
+import uuid
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0390_drop_dvla_provider.py'
-down_revision = '0389_no_more_letters.py'
+revision = '0390_drop_dvla_provider'
+down_revision = '0389_no_more_letters'
 
 
 def upgrade():
