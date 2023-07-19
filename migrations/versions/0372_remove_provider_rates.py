@@ -15,16 +15,18 @@ down_revision = '0364_drop_old_column'
 
 
 def upgrade():
-    op.drop_table('provider_rates')
+    pass
+    # op.drop_table('provider_rates')
 
 
 def downgrade():
-    op.create_table(
-        'provider_rates',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('valid_from', sa.DateTime(), nullable=False),
-        sa.Column('provider_id', postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column('rate', sa.Numeric(), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['provider_id'], ['provider_details.id'], ),
-    )
+    pass
+    # op.create_table(
+    #     'provider_rates',
+    #     sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
+    #     sa.Column('valid_from', sa.DateTime(), nullable=False),
+    #     sa.Column('provider_id', postgresql.UUID(as_uuid=True), nullable=True),
+    #     sa.Column('rate', sa.Numeric(), nullable=False),
+    #     sa.PrimaryKeyConstraint('id'),
+    #     sa.ForeignKeyConstraint(['provider_id'], ['provider_details.id'], ),
+    # )
