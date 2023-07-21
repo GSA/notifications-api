@@ -45,7 +45,7 @@ gunicorn = {version = "==20.1.0", extras = ["eventlet"], ref = "1299ea9e967a61ae
 iso8601 = "==1.0.2"
 itsdangerous = "==2.1.2"
 jsonschema = {version = "==4.17.3", extras = ["format"]}
-lxml = "==4.9.1"
+lxml = "==4.9.3"
 marshmallow = "==3.19.0"
 marshmallow-sqlalchemy = "==0.29.0"
 notifications-python-client = "==6.3.0"
