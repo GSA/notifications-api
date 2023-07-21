@@ -745,7 +745,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
     save_model_api_key(api_key)
     auth_header = create_jwt_token(secret=api_key.secret, client_id=str(api_key.service_id))
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(expected_exception=Exception) as e:
         client.post(
             path='/notifications/{}'.format(template_type),
             data=json.dumps(data),
