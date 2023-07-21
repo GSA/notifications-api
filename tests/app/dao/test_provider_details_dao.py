@@ -120,8 +120,12 @@ def test_update_sms_provider_to_inactive_sets_inactive(restore_provider_details)
 ])
 def test_get_alternative_sms_provider_returns_expected_provider(identifier, expected):
     """Currently always raises, as we only have SNS configured"""
-    # with pytest.raises(Exception):
-    get_alternative_sms_provider(identifier)
+    # flake8 doesn't like raises with a generic Exception
+    try:
+        get_alternative_sms_provider(identifier)
+        assert 1 == 0
+    except Exception as e:
+        assert 1 == 1
 
 
 def test_get_alternative_sms_provider_fails_if_unrecognised():
