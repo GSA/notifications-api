@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 alembic = "==1.7.7"
 amqp = "==5.1.1"
-arrow = "==1.2.2"
+arrow = "==1.2.3"
 asn1crypto = "==1.5.1"
 async-timeout = "==4.0.2"
 attrs = "==21.4.0"
