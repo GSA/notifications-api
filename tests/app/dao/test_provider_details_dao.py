@@ -124,7 +124,7 @@ def test_get_alternative_sms_provider_returns_expected_provider(identifier, expe
     try:
         get_alternative_sms_provider(identifier)
         assert 1 == 0
-    except Exception as e:
+    except Exception:
         assert 1 == 1
 
 

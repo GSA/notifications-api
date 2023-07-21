@@ -18,7 +18,7 @@ def test_check_sms_no_event_error_condition(notify_api, mocker):
         try:
             aws_cloudwatch_client.check_sms(message_id, notification_id)
             assert 1 == 0
-        except Exception as e:
+        except Exception:
             assert 1 == 1
 
 

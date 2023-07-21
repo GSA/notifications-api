@@ -127,11 +127,11 @@ def test_add_reply_to_email_address_ensure_there_is_not_more_than_one_default(sa
     create_reply_to_email(service=sample_service, email_address='second@email.com', is_default=True)
 
     try:
-    # flake8 doesn't like raise with a generic Exception
+        # flake8 doesn't like raise with a generic Exception
         add_reply_to_email_address_for_service(
             service_id=sample_service.id, email_address='third_email@address.com', is_default=False)
         assert 1 == 0
-    except Exception as e:
+    except Exception:
         assert 1 == 1
 
 
