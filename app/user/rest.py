@@ -30,6 +30,7 @@ from app.dao.users_dao import (
     get_user_by_email,
     get_user_by_id,
     get_user_code,
+    get_users,
     get_users_by_partial_email,
     increment_failed_login_count,
     reset_failed_login_count,
@@ -513,6 +514,13 @@ def find_users_by_email():
 
     fetched_users = get_users_by_partial_email(email['email'])
     result = [user.serialize_for_users_list() for user in fetched_users]
+    return jsonify(data=result), 200
+
+
+@user_blueprint.route('/get-all-users', methods=['GET'])
+def get_all_users():
+    users = get_users()
+    result = [user.serialize_for_users_list() for user in users]
     return jsonify(data=result), 200
 
 
