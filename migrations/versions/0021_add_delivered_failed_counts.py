@@ -23,7 +23,6 @@ def upgrade():
     conn = op.get_bind()
     results = conn.execute("select distinct job_id from notifications")
     res = results.fetchall()
-    conn = op.get_bind()
     for x in res:
         if x.job_id:
             input_params = {
