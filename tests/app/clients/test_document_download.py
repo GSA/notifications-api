@@ -49,7 +49,7 @@ def test_should_raise_400s_as_DocumentDownloadErrors(document_download):
 
 
 def test_should_raise_non_400_statuses_as_exceptions(document_download):
-    with pytest.raises(Exception) as excinfo, requests_mock.Mocker() as request_mock:
+    with pytest.raises(expected_exception=Exception) as excinfo, requests_mock.Mocker() as request_mock:
         request_mock.post(
             'https://document-download/services/service-id/documents',
             json={'error': 'Auth Error Of Some Kind'},
@@ -63,7 +63,7 @@ def test_should_raise_non_400_statuses_as_exceptions(document_download):
 
 
 def test_should_raise_exceptions_without_http_response_bodies_as_exceptions(document_download):
-    with pytest.raises(Exception) as excinfo, requests_mock.Mocker() as request_mock:
+    with pytest.raises(expected_exception=Exception) as excinfo, requests_mock.Mocker() as request_mock:
         request_mock.post(
             'https://document-download/services/service-id/documents',
             exc=requests.exceptions.ConnectTimeout
