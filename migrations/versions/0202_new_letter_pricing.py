@@ -1,13 +1,14 @@
 """empty message
 
 Revision ID: 0202_new_letter_pricing
-Revises: 0201_another_letter_org
+Revises: 0198_add_caseworking_permission
 Create Date: 2017-07-09 12:44:16.815039
 
 """
+from sqlalchemy import text
 
 revision = '0202_new_letter_pricing'
-down_revision = '0201_another_letter_org'
+down_revision = '0198_add_caseworking_permission'
 
 import uuid
 from datetime import datetime
@@ -27,10 +28,18 @@ NEW_RATES = [
 def upgrade():
     conn = op.get_bind()
     for id, start_date, sheet_count, rate, crown, post_class in NEW_RATES:
-        conn.execute("""
+        input_params = {
+            "id": id,
+            "start_date": start_date,
+            "sheet_count": sheet_count,
+            "rate": rate,
+            "crown": crown,
+            "post_class": post_class
+        }
+        conn.execute(text("""
             INSERT INTO letter_rates (id, start_date, sheet_count, rate, crown, post_class)
-                VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
-        """.format(id, start_date, sheet_count, rate, crown, post_class))
+                VALUES (:id, :start_date, :sheet_count, :rate, :crown, :post_class)
+        """), input_params)
 
 
 def downgrade():

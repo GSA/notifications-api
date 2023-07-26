@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0245_archived_flag_jobs
-Revises: 0244_another_letter_org
+Revises: 0242_template_folders
 Create Date: 2018-11-22 16:32:01.105803
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '0245_archived_flag_jobs'
-down_revision = '0244_another_letter_org'
+down_revision = '0242_template_folders'
 
 
 def upgrade():

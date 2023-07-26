@@ -19,7 +19,10 @@ down_revision = '0366_letter_rates_2022'
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute(
+    input_params = {
+        "id": uuid.uuid4()
+    }
+    conn.execute(text(
         """
         INSERT INTO provider_details (
             id,
@@ -32,7 +35,7 @@ def upgrade():
             created_by_id
         )
         VALUES (
-            '{}',
+            :id,
             'Reach',
             'reach',
             0,
@@ -41,9 +44,7 @@ def upgrade():
             1,
             null
         )
-        """.format(
-            str(uuid.uuid4()),
-        )
+        """), input_params
     )
 
 

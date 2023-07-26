@@ -18,13 +18,13 @@ def upgrade():
     op.get_bind()
     op.execute("""
         update templates
-        set process_type = '{}'
+        set process_type = 'normal'
         where templates.id in (
             select templates.id from templates
             join templates_history on templates.id=templates_history.id
             where templates_history.name = 'Example text message template'
         )
-    """.format(NORMAL))
+    """)
 
 
 def downgrade():

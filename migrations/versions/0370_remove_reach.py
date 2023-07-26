@@ -24,7 +24,11 @@ def upgrade():
 
 def downgrade():
     conn = op.get_bind()
+    input_params = {
+        "id": str(uuid.uuid4()),
+    }
     conn.execute(
+        text(
         """
         INSERT INTO provider_details (
             id,
@@ -37,7 +41,7 @@ def downgrade():
             created_by_id
         )
         VALUES (
-            '{}',
+            :id,
             'Reach',
             'reach',
             0,
@@ -46,7 +50,4 @@ def downgrade():
             1,
             null
         )
-        """.format(
-            str(uuid.uuid4()),
-        )
-    )
+        """), input_params)

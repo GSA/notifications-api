@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0151_refactor_letter_rates
-Revises: 0150_another_letter_org
+Revises: 0149_add_crown_to_services
 Create Date: 2017-12-05 10:24:41.232128
 
 """
@@ -10,10 +10,11 @@ from datetime import datetime
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
 revision = '0151_refactor_letter_rates'
-down_revision = '0150_another_letter_org'
+down_revision = '0149_add_crown_to_services'
 
 
 def upgrade():
@@ -31,25 +32,39 @@ def upgrade():
                     )
 
     start_date = datetime(2016, 3, 31, 23, 00, 00)
-    op.execute("insert into letter_rates values('{}', '{}', null, 1, 0.30, True, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
-    op.execute("insert into letter_rates values('{}', '{}', null, 2, 0.33, True, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
-    op.execute("insert into letter_rates values('{}', '{}', null, 3, 0.36, True, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
 
-    op.execute("insert into letter_rates values('{}', '{}', null, 1, 0.33, False, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
-    op.execute("insert into letter_rates values('{}', '{}', null, 2, 0.39, False, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
-    op.execute("insert into letter_rates values('{}', '{}', null, 3, 0.45, False, 'second')".format(
-        str(uuid.uuid4()), start_date)
-    )
+    conn = op.get_bind()
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 1, 0.30, True, 'second')"), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 2, 0.33, True, 'second')"), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 3, 0.36, True, 'second')"), input_params)
+
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 1, 0.33, False, 'second')"), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 2, 0.39, False, 'second')"), input_params)
+    input_params = {
+        "id": uuid.uuid4(),
+        "start_date": start_date
+    }
+    conn.execute(text("insert into letter_rates values(:id, :start_date, null, 3, 0.45, False, 'second')"), input_params)
 
 
 def downgrade():

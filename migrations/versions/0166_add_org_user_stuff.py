@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0166_add_org_user_stuff
-Revises: 0165_another_letter_org
+Revises: 0164_add_organisation_to_service
 Create Date: 2018-02-14 17:25:11.747996
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0166_add_org_user_stuff'
-down_revision = '0165_another_letter_org'
+down_revision = '0164_add_organisation_to_service'
 
 
 def upgrade():

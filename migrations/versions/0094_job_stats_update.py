@@ -1,7 +1,7 @@
 """empty message
 
 Revision ID: 0094_job_stats_update
-Revises: 0093_data_gov_uk
+Revises: 0092_add_inbound_provider
 Create Date: 2017-06-06 14:37:30.051647
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '0094_job_stats_update'
-down_revision = '0093_data_gov_uk'
+down_revision = '0092_add_inbound_provider'
 
 
 def upgrade():

@@ -21,8 +21,8 @@ def upgrade():
             organisation_types
             (name, is_crown, annual_free_sms_fragment_limit)
         VALUES
-            ('{}', false, 25000)
-    """.format(GP_ORG_TYPE_NAME))
+            ('nhs_gp', false, 25000)
+    """)
 
 
 def downgrade():
@@ -32,11 +32,11 @@ def downgrade():
         SET
             organisation_type = 'nhs_local'
         WHERE
-            organisation_type = '{}'
-    """.format(GP_ORG_TYPE_NAME))
+            organisation_type = 'nhs_gp'
+    """)
     op.execute("""
         DELETE FROM
             organisation_types
         WHERE
-            name = '{}'
-    """.format(GP_ORG_TYPE_NAME))
+            name = 'nhs_gp'
+    """)
