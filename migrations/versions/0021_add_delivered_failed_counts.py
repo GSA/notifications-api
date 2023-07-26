@@ -7,6 +7,8 @@ Create Date: 2016-05-23 15:05:25.109346
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0021_add_delivered_failed_counts'
 down_revision = '0020_template_history_fix'
 
@@ -21,19 +23,21 @@ def upgrade():
     conn = op.get_bind()
     results = conn.execute("select distinct job_id from notifications")
     res = results.fetchall()
-
     for x in res:
         if x.job_id:
-            op.execute("update jobs set notifications_delivered = ("
-                       "select count(status) from notifications where status = 'delivered' and job_id = '{}' "
+            input_params = {
+                "job_id": x.job_id
+            }
+            conn.execute(text("update jobs set notifications_delivered = ("
+                       "select count(status) from notifications where status = 'delivered' and job_id = :job_id "
                        "group by job_id)"
-                       "where jobs.id = '{}'".format(x.job_id, x.job_id))
+                       "where jobs.id = :job_id"), input_params)
 
-            op.execute("update jobs set notifications_failed = ("
+            conn.execute(text("update jobs set notifications_failed = ("
                        "select count(status) from notifications "
                        "where status in ('failed','technical-failure', 'temporary-failure', 'permanent-failure') "
-                       "and job_id = '{}' group by job_id)"
-                       "where jobs.id = '{}'".format(x.job_id, x.job_id))
+                       "and job_id = :job_id group by job_id)"
+                       "where jobs.id = :job_id"), input_params)
     op.execute("update jobs set notifications_delivered = 0 where notifications_delivered is null")
     op.execute("update jobs set notifications_failed = 0 where notifications_failed is null")
     op.alter_column('jobs', 'notifications_delivered', nullable=False)

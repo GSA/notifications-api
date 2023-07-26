@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0252_letter_branding_table
-Revises: 0251_another_letter_org
+Revises: 0250_drop_stats_template_table
 Create Date: 2019-01-17 15:45:33.242955
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0252_letter_branding_table'
-down_revision = '0251_another_letter_org'
+down_revision = '0250_drop_stats_template_table'
 
 
 def upgrade():

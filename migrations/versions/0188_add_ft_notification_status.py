@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0188_add_ft_notification_status
-Revises: 0187_another_letter_org
+Revises: 0186_rename_is_active_columns
 Create Date: 2018-05-03 10:10:41.824981
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0188_add_ft_notification_status'
-down_revision = '0187_another_letter_org'
+down_revision = '0186_rename_is_active_columns'
 
 
 def upgrade():

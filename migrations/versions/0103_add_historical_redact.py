@@ -7,6 +7,8 @@ Create Date: 2017-06-29 12:44:16.815039
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0103_add_historical_redact'
 down_revision = 'db6d9d9f06bc'
 
@@ -15,8 +17,14 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from flask import current_app
 
+
 def upgrade():
-    op.execute(
+    conn = op.get_bind()
+    input_params = {
+        "notify_user_id": current_app.config['NOTIFY_USER_ID']
+    }
+    conn.execute(
+        text(
         """
         INSERT INTO template_redacted
         (
@@ -29,12 +37,12 @@ def upgrade():
             templates.id,
             false,
             now(),
-            '{notify_user}'
+            :notify_user_id
         FROM
             templates
         LEFT JOIN template_redacted on template_redacted.template_id = templates.id
         WHERE template_redacted.template_id IS NULL
-        """.format(notify_user=current_app.config['NOTIFY_USER_ID'])
+        """), input_params
     )
 
 

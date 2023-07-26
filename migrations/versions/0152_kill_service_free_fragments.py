@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0152_kill_service_free_fragments
-Revises: 0150_another_letter_org
+Revises: 0149_add_crown_to_services
 Create Date: 2017-12-01 16:49:51.178455
 
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = '0152_kill_service_free_fragments'
-down_revision = '0150_another_letter_org'
+down_revision = '0149_add_crown_to_services'
 
 
 def upgrade():

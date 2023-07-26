@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0250_drop_stats_template_table
-Revises: 0249_another_letter_org
+Revises: 0248_enable_choose_postage
 Create Date: 2019-01-15 16:47:08.049369
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0250_drop_stats_template_table'
-down_revision = '0249_another_letter_org'
+down_revision = '0248_enable_choose_postage'
 
 
 def upgrade():

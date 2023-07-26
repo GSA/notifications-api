@@ -33,28 +33,28 @@ new_type = sa.Enum(*new_options, name=enum_name)
 
 alter_str = 'ALTER TABLE {table} ALTER COLUMN status TYPE {enum} USING status::text::notify_status_type '
 
+
 def upgrade():
-    op.execute('ALTER TYPE {enum} RENAME TO {tmp_name}'.format(enum=enum_name, tmp_name=tmp_name))
+    op.execute('ALTER TYPE notify_status_type RENAME TO tmp_notify_status_type')
 
     new_type.create(op.get_bind())
-    op.execute(alter_str.format(table='notifications', enum=enum_name))
-    op.execute(alter_str.format(table='notification_history', enum=enum_name))
+    op.execute('ALTER TABLE notifications ALTER COLUMN status TYPE notify_status_type USING status::text::notify_status_type')
+    op.execute(
+        'ALTER TABLE notification_history ALTER COLUMN status TYPE notify_status_type USING status::text::notify_status_type')
 
-    op.execute('DROP TYPE ' + tmp_name)
+    op.execute('DROP TYPE tmp_notify_status_type')
 
 
 def downgrade():
-    op.execute('ALTER TYPE {enum} RENAME TO {tmp_name}'.format(enum=enum_name, tmp_name=tmp_name))
+    op.execute('ALTER TYPE notify_status_type RENAME TO tmp_notify_status_type')
 
-    # Convert 'sent' template into 'sending'
-    update_str = "UPDATE {table} SET status='sending' where status='sent'"
-
-    op.execute(update_str.format(table='notifications'))
-    op.execute(update_str.format(table='notification_history'))
+    op.execute("UPDATE notifications SET status='sending' where status='sent'")
+    op.execute("UPDATE notification_history SET status='sending' where status='sent'")
 
     old_type.create(op.get_bind())
 
-    op.execute(alter_str.format(table='notifications', enum=enum_name))
-    op.execute(alter_str.format(table='notification_history', enum=enum_name))
+    op.execute('ALTER TABLE notifications ALTER COLUMN status TYPE notify_status_type USING status::text::notify_status_type')
+    op.execute(
+        'ALTER TABLE notification_history ALTER COLUMN status TYPE notify_status_type USING status::text::notify_status_type')
 
-    op.execute('DROP TYPE ' + tmp_name)
+    op.execute('DROP TYPE tmp_notify_status_type')
