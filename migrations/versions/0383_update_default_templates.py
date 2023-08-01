@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0383_update_default_templates.py
-Revises: 0382_remove_old_providers
+Revises: 0381_encrypted_column_types
 Create Date: 2023-01-10 11:42:25.633265
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 from flask import current_app
 
 revision = '0383_update_default_templates.py'
-down_revision = '0382_remove_old_providers'
+down_revision = '0381_encrypted_column_types'
 
 
 def upgrade():

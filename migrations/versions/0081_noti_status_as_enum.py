@@ -1,14 +1,14 @@
 """empty message
 
 Revision ID: 0081_noti_status_as_enum
-Revises: 0080_fix_rate_start_date
+Revises: 0078_sent_notification_status
 Create Date: 2017-05-02 14:50:04.070874
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0081_noti_status_as_enum'
-down_revision = '0080_fix_rate_start_date'
+down_revision = '0078_sent_notification_status'
 
 from alembic import op
 import sqlalchemy as sa

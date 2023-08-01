@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0391_update_sms_numbers
-Revises: 0390_drop_dvla_provider.py
+Revises: 0390_drop_dvla_provider
 Create Date: 2023-03-01 12:36:38.226954
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy import text
 
 revision = '0391_update_sms_numbers'
-down_revision = '0390_drop_dvla_provider.py'
+down_revision = '0390_drop_dvla_provider'
 OLD_SMS_NUMBER = "18446120782"
 NEW_SMS_NUMBER = current_app.config['NOTIFY_INTERNATIONAL_SMS_SENDER'].strip('+')
 

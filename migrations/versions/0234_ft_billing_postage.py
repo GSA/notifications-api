@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0234_ft_billing_postage
-Revises: 0233_updated_first_class_dates
+Revises: 0232_noti_postage_constraint_3
 Create Date: 2018-09-28 14:43:26.100884
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '0234_ft_billing_postage'
-down_revision = '0233_updated_first_class_dates'
+down_revision = '0232_noti_postage_constraint_3'
 
 
 def upgrade():
