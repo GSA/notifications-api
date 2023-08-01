@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0226_service_postage
-Revises: 0225_another_letter_org
+Revises: 0224_returned_letter_status
 Create Date: 2018-09-13 16:23:59.168877
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '0226_service_postage'
-down_revision = '0225_another_letter_org'
+down_revision = '0224_returned_letter_status'
 
 
 def upgrade():

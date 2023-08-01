@@ -1,14 +1,14 @@
 """empty message
 
 Revision ID: 0048_job_scheduled_time
-Revises: 0047_ukvi_spelling
+Revises: 0046_organisations_and_branding
 Create Date: 2016-08-24 13:21:51.744526
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0048_job_scheduled_time'
-down_revision = '0047_ukvi_spelling'
+down_revision = '0046_organisations_and_branding'
 
 from alembic import op
 import sqlalchemy as sa

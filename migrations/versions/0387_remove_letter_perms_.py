@@ -1,7 +1,7 @@
 """
 
-Revision ID: 0387_remove_letter_perms_.py
-Revises: 0386_remove_letter_rates_.py
+Revision ID: 0387_remove_letter_perms_
+Revises: 0385_remove_postage_
 Create Date: 2023-02-17 11:56:00.993409
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0387_remove_letter_perms_.py'
-down_revision = '0386_remove_letter_rates_.py'
+revision = '0387_remove_letter_perms_'
+down_revision = '0385_remove_postage_'
 
 
 def upgrade():

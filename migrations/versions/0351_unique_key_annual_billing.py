@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0351_unique_key_annual_billing
-Revises: 0350_update_rates
+Revises: 0349_add_ft_processing_time
 Create Date: 2021-04-12 09:02:45.098875
 
 """
@@ -10,7 +10,7 @@ import os
 from alembic import op
 
 revision = '0351_unique_key_annual_billing'
-down_revision = '0350_update_rates'
+down_revision = '0349_add_ft_processing_time'
 
 environment = os.environ['NOTIFY_ENVIRONMENT']
 

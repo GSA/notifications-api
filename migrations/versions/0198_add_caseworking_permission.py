@@ -7,6 +7,8 @@ Create Date: 2018-02-21 12:05:00
 """
 
 # revision identifiers, used by Alembic.
+from sqlalchemy import text
+
 revision = '0198_add_caseworking_permission'
 down_revision = '0197_service_contact_link'
 
@@ -16,11 +18,17 @@ PERMISSION_NAME = "caseworking"
 
 
 def upgrade():
-    op.get_bind()
-    op.execute("insert into service_permission_types values('{}')".format(PERMISSION_NAME))
+    conn = op.get_bind()
+    input_params = {
+        "permission_name": PERMISSION_NAME
+    }
+    conn.execute(text("insert into service_permission_types values(:permission_name)"), input_params)
 
 
 def downgrade():
-    op.get_bind()
-    op.execute("delete from service_permissions where permission = '{}'".format(PERMISSION_NAME))
-    op.execute("delete from service_permission_types where name = '{}'".format(PERMISSION_NAME))
+    conn = op.get_bind()
+    input_params = {
+        "permission_name": PERMISSION_NAME
+    }
+    conn.execute(text("delete from service_permissions where permission = :permission_name"), input_params)
+    conn.execute(text("delete from service_permission_types where name = :permission_name"), input_params)

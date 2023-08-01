@@ -5,6 +5,7 @@ Revises: 0374_fix_reg_template_history
 Create Date: 2022-08-29 11:04:15.888017
 
 """
+from sqlalchemy import text
 
 revision = '0375_fix_service_name'
 down_revision = '0374_fix_reg_template_history'
@@ -14,19 +15,23 @@ from flask import current_app
 
 service_id = current_app.config['NOTIFY_SERVICE_ID']
 
+
 def upgrade():
-    op.get_bind()
+    conn = op.get_bind()
     
     # modify name of default service user in services
-    table_name = 'services'
-    col = 'name'
-    val = 'US Notify'
-    select_by_col = 'id'
-    select_by_val = service_id
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # table_name = 'services'
+    # col = 'name'
+    # val = 'US Notify'
+    # select_by_col = 'id'
+    # select_by_val = service_id
+    input_params = {
+        "service_id": service_id
+    }
+    conn.execute(text("update services set name='US Notify' where id =:service_id"), input_params)
     
-    table_name = 'services_history'
-    op.execute(f"update {table_name} set {col}='{val}' where {select_by_col} = '{select_by_val}'")
+    # table_name = 'services_history'
+    conn.execute(text("update services_history set name='US Notify' where id =:service_id"), input_params)
     
 
 def downgrade():
