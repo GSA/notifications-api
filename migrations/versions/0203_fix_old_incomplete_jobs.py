@@ -1,14 +1,14 @@
 """empty message
 
 Revision ID: 0203_fix_old_incomplete_jobs
-Revises: 0202_new_letter_pricing
+Revises: 0198_add_caseworking_permission
 Create Date: 2017-06-29 12:44:16.815039
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0203_fix_old_incomplete_jobs'
-down_revision = '0202_new_letter_pricing'
+down_revision = '0198_add_caseworking_permission'
 
 from alembic import op
 

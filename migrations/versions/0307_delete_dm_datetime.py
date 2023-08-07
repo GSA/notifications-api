@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0307_delete_dm_datetime
-Revises: 0306_letter_rates_price_rise
+Revises: 0304_remove_org_to_service
 Create Date: 2019-10-08 10:57:54.824807
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0307_delete_dm_datetime'
-down_revision = '0306_letter_rates_price_rise'
+down_revision = '0304_remove_org_to_service'
 
 
 def upgrade():

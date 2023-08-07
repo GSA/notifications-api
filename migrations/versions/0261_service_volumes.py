@@ -15,8 +15,7 @@ down_revision = '0260_remove_dvla_organisation'
 
 
 TABLES = ['services', 'services_history']
-CHANNELS = ['volume_{}'.format(channel) for channel in ('email', 'letter', 'sms')]
-
+CHANNELS = ['volume_email', 'volume_letter', 'volume_sms']
 
 def upgrade():
     for table in TABLES:

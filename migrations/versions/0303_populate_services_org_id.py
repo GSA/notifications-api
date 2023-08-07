@@ -56,4 +56,4 @@ def downgrade():
             """
             conn.execute(text(insert_sql), service_id=str(x.id), organisation_id=str(x.organisation_id))
         else:
-            raise Exception("should only have 1 row. Service_id {},  orgid: {}".format(x.id, x.organisation_id))
+            raise Exception(f"should only have 1 row. Service_id {x.id},  orgid: {x.organisation_id}")

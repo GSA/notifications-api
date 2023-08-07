@@ -7,6 +7,7 @@ Create Date: 2021-02-18 15:25:30.667098
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
 revision = '0348_migrate_broadcast_settings'
@@ -34,13 +35,22 @@ def upgrade():
 
   services = conn.execute(find_services_sql)
   for service in services:
-      setting = conn.execute(f"SELECT service_id, channel, provider FROM service_broadcast_settings WHERE service_id = '{service.id}';").first()
+      input_params = {"service_id": service.id}
+      setting = conn.execute(
+          text("SELECT service_id, channel, provider FROM service_broadcast_settings WHERE service_id=:service_id;"),
+          input_params).first()
       if setting:
         print(f"Service {service.id} already has service_broadcast_settings. No action required")
       else:
         channel = "severe" if service.restricted else "test"
         print(f"Service {service.id} does not have service_broadcast_settings. Will insert one with channel {channel}")
-        conn.execute(f"INSERT INTO service_broadcast_settings (service_id, channel, created_at) VALUES ('{service.id}', '{channel}', now());")
+        input_params = {
+            "service_id": service.id,
+            "channel": channel
+        }
+        conn.execute(text("INSERT INTO service_broadcast_settings (service_id, channel, created_at) "
+                          "VALUES (:service_id, :channel, now());"),
+                     input_params)
 
 
 def downgrade():

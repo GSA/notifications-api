@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0242_template_folders
-Revises: 0241_another_letter_org
+Revises: 0240_dvla_org_non_nullable
 Create Date: 2018-10-26 16:00:40.173840
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0242_template_folders'
-down_revision = '0241_another_letter_org'
+down_revision = '0240_dvla_org_non_nullable'
 
 
 def upgrade():

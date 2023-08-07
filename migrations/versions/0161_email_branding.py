@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0161_email_branding
-Revises: 0160_another_letter_org
+Revises: 0159_add_historical_redact
 Create Date: 2018-01-30 15:35:12.016574
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '0161_email_branding'
-down_revision = '0160_another_letter_org'
+down_revision = '0159_add_historical_redact'
 
 
 def upgrade():

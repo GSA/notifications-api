@@ -6,7 +6,7 @@ Create Date: 2019-05-13 10:44:51.867661
 
 """
 from alembic import op
-
+from sqlalchemy import text
 
 revision = '0289_precompiled_for_all'
 down_revision = '0288_add_go_live_user'
@@ -18,12 +18,16 @@ def upgrade():
 
 
 def downgrade():
+    conn = op.get_bind()
     op.execute("INSERT INTO service_permission_types values('precompiled_letter')")
-    op.execute("""
+    input_params = {
+        "permission": "precompiled_letter"
+    }
+    conn.execute(text("""
            INSERT INTO
                service_permissions (service_id, permission, created_at)
            SELECT
-               id, '{permission}', now()
+               id, :permission, now()
            FROM
                services
            WHERE
@@ -33,8 +37,7 @@ def downgrade():
                        service_permissions
                    WHERE
                        service_id = services.id and
-                       permission = '{permission}'
+                       permission = :permission
                )
-       """.format(
-        permission='precompiled_letter'
-    ))
+       """), input_params
+    )
