@@ -24,6 +24,16 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 run-procfile:
 	pipenv run honcho start -f Procfile.dev
 
+.PHONY: avg-complexity
+avg-complexity:
+	echo "*** Shows average complexity in radon of all code ***"
+	pipenv run radon cc ./app -a -na
+
+.PHONY: too-complex
+too-complex:
+	echo "*** Shows code that got a rating of D or F in radon ***"
+	pipenv run radon cc ./app -a -nd
+
 .PHONY: run-flask
 run-flask: ## Run flask
 	pipenv run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
