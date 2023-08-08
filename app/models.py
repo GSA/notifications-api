@@ -1977,3 +1977,33 @@ class WebauthnCredential(db.Model):
             'created_at': self.created_at.strftime(DATETIME_FORMAT),
             'updated_at': get_dt_string_or_none(self.updated_at),
         }
+
+
+class Agreement(db.Model):
+    __tablename__ = "agreements"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False)
+    type = db.Column(db.String(3), nullable=False, unique=True, index=True)
+    partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    status = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    start_time = db.Column(db.DateTime, nullable=True)
+    end_time = db.Column(db.DateTime, nullable=True)
+    url = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    budget_amount = db.Column(db.Float, nullable=True)
+    organization_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey('organization.id'),
+        nullable=True,
+    )
+
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "type": self.type,
+            "partner_name": self.partner_name,
+            "status": self.status,
+            "start_time": self.start_time.strftime(DATETIME_FORMAT),
+            "end_time": self.end_time.strftime(DATETIME_FORMAT),
+            "budget_amount": self.budget_amount,
+            "organization_id": self.organization_id
+
+        }
