@@ -61,6 +61,7 @@ gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8a
 packaging = "==23.1"
 notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
 newrelic = "*"
+vulture = "==2.7"
 
 [dev-packages]
 exceptiongroup = "==1.1.2"
