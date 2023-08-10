@@ -5,6 +5,7 @@ import botocore
 import phonenumbers
 from boto3 import client
 
+from app.clients import AWS_CLIENT_CONFIG
 from app.clients.sms import SmsClient
 from app.cloudfoundry_config import cloud_config
 
@@ -19,7 +20,8 @@ class AwsSnsClient(SmsClient):
             "sns",
             region_name=cloud_config.sns_region,
             aws_access_key_id=cloud_config.sns_access_key,
-            aws_secret_access_key=cloud_config.sns_secret_key
+            aws_secret_access_key=cloud_config.sns_secret_key,
+            config=AWS_CLIENT_CONFIG
         )
         super(SmsClient, self).__init__(*args, **kwargs)
         self.current_app = current_app

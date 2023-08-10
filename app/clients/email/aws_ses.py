@@ -4,7 +4,11 @@ import botocore
 from boto3 import client
 from flask import current_app
 
-from app.clients import STATISTICS_DELIVERED, STATISTICS_FAILURE
+from app.clients import (
+    AWS_CLIENT_CONFIG,
+    STATISTICS_DELIVERED,
+    STATISTICS_FAILURE,
+)
 from app.clients.email import (
     EmailClient,
     EmailClientException,
@@ -62,7 +66,8 @@ class AwsSesClient(EmailClient):
             'ses',
             region_name=cloud_config.ses_region,
             aws_access_key_id=cloud_config.ses_access_key,
-            aws_secret_access_key=cloud_config.ses_secret_key
+            aws_secret_access_key=cloud_config.ses_secret_key,
+            config=AWS_CLIENT_CONFIG
         )
         super(AwsSesClient, self).__init__(*args, **kwargs)
 

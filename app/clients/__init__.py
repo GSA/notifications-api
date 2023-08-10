@@ -1,3 +1,19 @@
+from botocore.config import Config
+
+AWS_CLIENT_CONFIG = Config(
+    # This config is required to enable S3 to connect to FIPS-enabled
+    # endpoints.  See https://aws.amazon.com/compliance/fips/ for more
+    # information.
+    s3={
+        'addressing_style': 'virtual',
+    },
+    use_fips_endpoint=True
+)
+STATISTICS_REQUESTED = 'requested'
+STATISTICS_DELIVERED = 'delivered'
+STATISTICS_FAILURE = 'failure'
+
+
 class ClientException(Exception):
     '''
     Base Exceptions for sending notifications that fail
@@ -10,11 +26,6 @@ class Client(object):
     Base client for sending notifications.
     '''
     pass
-
-
-STATISTICS_REQUESTED = 'requested'
-STATISTICS_DELIVERED = 'delivered'
-STATISTICS_FAILURE = 'failure'
 
 
 class NotificationProviderClients(object):
