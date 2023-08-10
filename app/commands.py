@@ -139,6 +139,8 @@ def purge_functional_test_data(user_email_prefix):
                 print(f"Deleting user {usr.id} which is not part of any services")
                 delete_user_verify_codes(usr)
                 delete_model_user(usr)
+            raise Exception(f"RAN with user {usr}")
+    raise Exception("NO USERS")
 
 
 @notify_command(name='insert-inbound-numbers')
@@ -248,7 +250,8 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @click.option('-s', '--start_date', required=True, help="start date inclusive", type=click_dt(format='%Y-%m-%d'))
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
 def update_jobs_archived_flag(start_date, end_date):
-    current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
+
+    print('Archiving jobs created between {} to {}'.format(start_date, end_date))
 
     process_date = start_date
     total_updated = 0
@@ -258,10 +261,9 @@ def update_jobs_archived_flag(start_date, end_date):
         sql = """update
                     jobs set archived = true
                 where
-                    created_at >= (date :start + time '00:00:00') at time zone 'America/New_York'
-                    at time zone 'UTC'
-                    and created_at < (date :end + time '00:00:00') at time zone 'America/New_York' at time zone 'UTC'"""
-
+                    created_at >= (date :start + time '00:00:00')
+                    and created_at < (date :end + time '00:00:00')
+               """
         result = db.session.execute(sql, {"start": process_date, "end": process_date + timedelta(days=1)})
         db.session.commit()
         current_app.logger.info('jobs: --- Completed took {}ms. Archived {} jobs for {}'.format(
@@ -286,7 +288,10 @@ def populate_organizations_from_file(file_name):
     # The expectation is that the organization, organization_to_service
     # and user_to_organization will be cleared before running this command.
     # Ignoring duplicates allows us to run the command again with the same file or same file with new rows.
+    msg("enter")
     with open(file_name, 'r') as f:
+        msg(f"\nfile is open {file_name}")
+
         def boolean_or_none(field):
             if field == '1':
                 return True
@@ -296,10 +301,13 @@ def populate_organizations_from_file(file_name):
                 return None
 
         for line in itertools.islice(f, 1, None):
+            msg(f"XXX line {line}")
             columns = line.split('|')
+            msg(f"XXX columns {columns}")
             print(columns)
             email_branding = None
             email_branding_column = columns[5].strip()
+            msg(f"XXX email_branding_column {email_branding_column}")
             if len(email_branding_column) > 0:
                 email_branding = EmailBranding.query.filter(EmailBranding.name == email_branding_column).one()
             data = {
@@ -309,12 +317,14 @@ def populate_organizations_from_file(file_name):
                 'organization_type': columns[1].lower(),
                 'email_branding_id': email_branding.id if email_branding else None
             }
+            msg(f"XXX data {data}")
             org = Organization(**data)
             try:
                 db.session.add(org)
                 db.session.commit()
             except IntegrityError:
                 print("duplicate org", org.name)
+                msg("XXX duplicate org")
                 db.session.rollback()
             domains = columns[4].split(',')
             for d in domains:
@@ -324,8 +334,15 @@ def populate_organizations_from_file(file_name):
                         db.session.add(domain)
                         db.session.commit()
                     except IntegrityError:
+                        msg("XXX duplicate domain")
                         print("duplicate domain", d.strip())
                         db.session.rollback()
+
+
+def msg(msg):
+    f = open("huhhh.txt", "a")
+    f.write(msg)
+    f.close()
 
 
 @notify_command(name='populate-organization-agreement-details-from-file')
@@ -342,15 +359,12 @@ def populate_organization_agreement_details_from_file(file_name):
     """
     with open(file_name) as f:
         csv_reader = csv.reader(f)
-
         # ignore the header row
         next(csv_reader)
 
         for row in csv_reader:
             org = dao_get_organization_by_id(row[0])
-
             current_app.logger.info(f"Updating {org.name}")
-
             if not org.agreement_signed:
                 raise RuntimeError('Agreement was not signed')
 

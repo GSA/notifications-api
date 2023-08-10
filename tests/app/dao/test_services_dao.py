@@ -28,6 +28,7 @@ from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_live_services_data,
     dao_fetch_service_by_id,
+    dao_fetch_service_by_id_with_api_keys,
     dao_fetch_service_by_inbound_number,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
@@ -131,6 +132,39 @@ def test_create_service_with_organization(notify_db_session):
     assert service_db.organization_type == 'state'
     assert service.organization_id == organization.id
     assert service.organization == organization
+
+
+def test_fetch_service_by_id_with_api_keys(notify_db_session):
+    user = create_user(email='local.authority@local-authority.gov.uk')
+    organization = create_organization(
+        name='Some local authority', organization_type='state', domains=['local-authority.gov.uk'])
+    assert Service.query.count() == 0
+    service = Service(name="service_name",
+                      email_from="email_from",
+                      message_limit=1000,
+                      restricted=False,
+                      organization_type='federal',
+                      created_by=user)
+    dao_create_service(service, user)
+    assert Service.query.count() == 1
+    service_db = Service.query.one()
+    organization = Organization.query.get(organization.id)
+    assert service_db.name == "service_name"
+    assert service_db.id == service.id
+    assert service_db.email_from == 'email_from'
+    assert service_db.research_mode is False
+    assert service_db.prefix_sms is True
+    assert service.active is True
+    assert user in service_db.users
+    assert service_db.organization_type == 'state'
+    assert service.organization_id == organization.id
+    assert service.organization == organization
+
+    service = dao_fetch_service_by_id_with_api_keys(service.id, False)
+    assert service is not None
+    assert service.api_keys is not None
+    service = dao_fetch_service_by_id_with_api_keys(service.id, True)
+    assert service is not None
 
 
 def test_cannot_create_two_services_with_same_name(notify_db_session):
