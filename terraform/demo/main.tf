@@ -42,7 +42,6 @@ module "egress-space" {
   cf_restricted_space_name = local.cf_space_name
   deployers = [
     var.cf_user,
-    "ryan.ahearn@gsa.gov",
     "steven.reilly@gsa.gov"
   ]
 }
