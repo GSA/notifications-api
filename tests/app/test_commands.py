@@ -25,12 +25,6 @@ from tests.app.db import (
 def test_purge_functional_test_data(notify_db_session, notify_api, test_e_address, expected_users):
 
     user_count = User.query.count()
-    if user_count > 0:
-        users = User.query.all()
-        for user in users:
-            notify_db_session.delete(user)
-        notify_db_session.commit()
-    user_count = User.query.count()
     assert user_count == 0
 
     notify_api.test_cli_runner().invoke(
