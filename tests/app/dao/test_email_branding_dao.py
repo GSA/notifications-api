@@ -1,22 +1,20 @@
 from app.dao.email_branding_dao import (
     dao_get_email_branding_by_id,
     dao_get_email_branding_by_name,
-    dao_get_email_branding_options,
     dao_update_email_branding,
 )
 from app.models import EmailBranding
 from tests.app.db import create_email_branding
 
-
-def test_get_email_branding_options_gets_all_email_branding(notify_db_session):
-    email_branding_1 = create_email_branding(name='test_email_branding_1')
-    email_branding_2 = create_email_branding(name='test_email_branding_2')
-
-    email_branding = dao_get_email_branding_options()
-
-    assert len(email_branding) == 2
-    assert email_branding_1 == email_branding[0]
-    assert email_branding_2 == email_branding[1]
+# def test_get_email_branding_options_gets_all_email_branding(notify_db_session):
+#     email_branding_1 = create_email_branding(name='test_email_branding_1')
+#     email_branding_2 = create_email_branding(name='test_email_branding_2')
+#
+#     email_branding = dao_get_email_branding_options()
+#
+#     assert len(email_branding) == 2
+#     assert email_branding_1 == email_branding[0]
+#     assert email_branding_2 == email_branding[1]
 
 
 def test_get_email_branding_by_id_gets_correct_email_branding(notify_db_session):

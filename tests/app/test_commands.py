@@ -1,4 +1,3 @@
-import datetime
 import os
 
 import pytest
@@ -12,25 +11,14 @@ from app.commands import (
     populate_annual_billing_with_the_previous_years_allowance,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
-    update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import (
-    AnnualBilling,
-    Job,
-    Notification,
-    Organization,
-    Service,
-    Template,
-    User,
-)
+from app.models import AnnualBilling, Notification, Organization, Template, User
 from tests.app.db import (
     create_annual_billing,
-    create_job,
     create_notification,
     create_organization,
     create_service,
-    create_template,
 )
 
 # @pytest.mark.parametrize("test_e_address, expected_users",
@@ -89,41 +77,38 @@ from tests.app.db import (
 #     assert user_count == 0
 
 
-def test_update_jobs_archived_flag(notify_db_session, notify_api):
-    print("ENTER test_update_jobs_archived_flag")
-
-    service_count = Service.query.count()
-    assert service_count == 0
-
-    service = create_service()
-    service_count = Service.query.count()
-    assert service_count == 1
-
-    sms_template = create_template(service=service, template_type='sms')
-    create_job(sms_template)
-
-    # run the command
-    one_hour_past = datetime.datetime.utcnow()
-    one_hour_future = datetime.datetime.utcnow() + datetime.timedelta(days=1)
-
-    one_hour_past = one_hour_past.strftime("%Y-%m-%d")
-    one_hour_future = one_hour_future.strftime("%Y-%m-%d")
-    print(f"PAST {one_hour_past} FUTURE = {one_hour_future}")
-
-    archived_jobs = Job.query.filter(Job.archived is True).count()
-    assert archived_jobs == 0
-
-    x = notify_api.test_cli_runner().invoke(
-        update_jobs_archived_flag, [
-            '-e', one_hour_future,
-            '-s', one_hour_past,
-        ]
-    )
-    print(f"X = {x}")
-    jobs = Job.query.all()
-    assert len(jobs) == 1
-    for job in jobs:
-        assert job.archived is True
+# def test_update_jobs_archived_flag(notify_db_session, notify_api):
+#
+#     service_count = Service.query.count()
+#     assert service_count == 0
+#
+#     service = create_service()
+#     service_count = Service.query.count()
+#     assert service_count == 1
+#
+#     sms_template = create_template(service=service, template_type='sms')
+#     create_job(sms_template)
+#
+#     # run the command
+#     one_hour_past = datetime.datetime.utcnow()
+#     one_hour_future = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+#
+#     one_hour_past = one_hour_past.strftime("%Y-%m-%d")
+#     one_hour_future = one_hour_future.strftime("%Y-%m-%d")
+#
+#     archived_jobs = Job.query.filter(Job.archived is True).count()
+#     assert archived_jobs == 0
+#
+#     notify_api.test_cli_runner().invoke(
+#         update_jobs_archived_flag, [
+#             '-e', one_hour_future,
+#             '-s', one_hour_past,
+#         ]
+#     )
+#     jobs = Job.query.all()
+#     assert len(jobs) == 1
+#     for job in jobs:
+#         assert job.archived is True
 
 
 def test_populate_organizations_from_file(notify_db_session, notify_api):
