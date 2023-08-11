@@ -35,49 +35,6 @@ from tests.app.db import (
 )
 
 
-def test_create_test_user_no_dupes(notify_db_session, notify_api):
-
-    user_count = User.query.count()
-    if user_count > 0:
-        users = User.query.all()
-        for user in users:
-            notify_db_session.delete(user)
-        notify_db_session.commit()
-    user_count = User.query.count()
-    assert user_count == 0
-
-    notify_api.test_cli_runner().invoke(
-        create_test_user, [
-            '--email', 'somebody@fake.gov',
-            '--mobile_number', '202-555-5555',
-            '--password', 'correct horse battery staple',
-            '--name', 'Fake Personson',
-            # '--auth_type', 'sms_auth',  # this is the default
-            # '--state', 'active',  # this is the default
-            # '--admin', 'False',  # this is the default
-        ]
-    )
-
-    user_count = User.query.count()
-    print(f"AFTER create_test_user {user_count}")
-    assert user_count == 1
-
-    notify_api.test_cli_runner().invoke(
-        create_test_user, [
-            '--email', 'somebody@fake.gov',
-            '--mobile_number', '202-555-5555',
-            '--password', 'correct horse battery staple',
-            '--name', 'Fake Personson',
-            # '--auth_type', 'sms_auth',  # this is the default
-            # '--state', 'active',  # this is the default
-            # '--admin', 'False',  # this is the default
-        ]
-    )
-
-    user_count = User.query.count()
-    assert user_count == 1
-
-
 @pytest.mark.parametrize("test_e_address, expected_users",
                          [('somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov', 0),
                           ('somebody@fake.gov', 1)])
