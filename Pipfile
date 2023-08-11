@@ -23,7 +23,7 @@ celery = {version = "==5.2.7", extras = ["redis"]}
 certifi = ">=2022.12.7"
 cffi = "==1.15.0"
 charset-normalizer = "==2.0.12"
-click = "==8.1.3"
+click = "==8.1.6"
 click-datetime = "==0.2"
 click-didyoumean = "==0.3.0"
 click-plugins = "==1.1.1"
