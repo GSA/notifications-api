@@ -18,18 +18,13 @@ from tests.app.db import (
 )
 
 
-@pytest.mark.parametrize("test_e_address, expected_users",
-                         [('somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov', 0),
-                          # ('somebody@fake.gov', 1)
-                          ])
-def test_purge_functional_test_data(notify_db_session, notify_api, test_e_address, expected_users):
+def test_purge_functional_test_data(notify_db_session, notify_api):
 
-    user_count = User.query.count()
-    assert user_count == 0
+    orig_user_count = User.query.count()
 
     notify_api.test_cli_runner().invoke(
         create_test_user, [
-            '--email', test_e_address,
+            '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
             '--mobile_number', '202-555-5555',
             '--password', 'correct horse battery staple',
             '--name', 'Fake Humanson',
@@ -37,11 +32,11 @@ def test_purge_functional_test_data(notify_db_session, notify_api, test_e_addres
     )
 
     user_count = User.query.count()
-    assert user_count == 1
+    assert user_count == orig_user_count + 1
     notify_api.test_cli_runner().invoke(purge_functional_test_data, ['-u', 'somebody'])
     # if the email address has a uuid, it is test data so it should be purged and there should be
     # zero users.  Otherwise, it is real data so there should be one user.
-    # assert User.query.count() == expected_users
+    assert User.query.count() == orig_user_count
 
 
 # def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
