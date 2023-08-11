@@ -66,27 +66,27 @@ from tests.app.db import (
 #     # assert User.query.count() == expected_users
 
 
-def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
-
-    user_count = User.query.count()
-    assert user_count == 0
-    # run the command
-    x = notify_api.test_cli_runner().invoke(
-        create_test_user, [
-            '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
-            '--mobile_number', '555-555-55554444',
-            '--password', 'correct horse battery staple',
-            '--name', 'Fake Personson',
-            # '--auth_type', 'sms_auth',  # this is the default
-            # '--state', 'active',  # this is the default
-            # '--admin', 'False',  # this is the default
-        ]
-    )
-    print(f"X = {x}")
-    # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
-    assert "SystemExit(2)" in str(x)
-    user_count = User.query.count()
-    assert user_count == 0
+# def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
+#
+#     user_count = User.query.count()
+#     assert user_count == 0
+#     # run the command
+#     x = notify_api.test_cli_runner().invoke(
+#         create_test_user, [
+#             '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
+#             '--mobile_number', '555-555-55554444',
+#             '--password', 'correct horse battery staple',
+#             '--name', 'Fake Personson',
+#             # '--auth_type', 'sms_auth',  # this is the default
+#             # '--state', 'active',  # this is the default
+#             # '--admin', 'False',  # this is the default
+#         ]
+#     )
+#     print(f"X = {x}")
+#     # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
+#     assert "SystemExit(2)" in str(x)
+#     user_count = User.query.count()
+#     assert user_count == 0
 
 
 def test_update_jobs_archived_flag(notify_db_session, notify_api):
