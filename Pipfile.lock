@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b49ee694f2ed2ec40d04643b4ac6f7a63dd0bb188ab00cb4aae1122b5bcb71fb"
+            "sha256": "714f1854ff08581970d0138ae59af32f2a6202efa976ded0338b3f637613efe5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -516,11 +516,11 @@
         },
         "iso8601": {
             "hashes": [
-                "sha256:27f503220e6845d9db954fb212b95b0362d8b7e6c1b2326a87061c3de93594b1",
-                "sha256:d7bc01b1c2a43b259570bb307f057abc578786ea734ba2b87b836c5efc5bd443"
+                "sha256:739960d37c74c77bd9bd546a76562ccb581fe3d4820ff5c3141eb49c839fda8f",
+                "sha256:ebe10061b932edb8a8e33cc635d661926c59b9c3bed7a4f4edca8c62d400af10"
             ],
             "index": "pypi",
-            "version": "==1.0.2"
+            "version": "==2.0.0"
         },
         "isoduration": {
             "hashes": [
@@ -795,7 +795,7 @@
         "notifications-utils": {
             "editable": true,
             "git": "https://github.com/GSA/notifications-utils.git",
-            "ref": "86ebeec8985cc94ac9e402e1305fbd28c02b02d6"
+            "ref": "69ca3ffc963d32b0253b6537977ee235f5b31935"
         },
         "numpy": {
             "hashes": [
@@ -961,14 +961,6 @@
             "index": "pypi",
             "version": "==2.8.0"
         },
-        "pypdf2": {
-            "hashes": [
-                "sha256:a74408f69ba6271f71b9352ef4ed03dc53a31aa404d29b5d31f53bfecfee1440",
-                "sha256:d16e4205cfee272fbdc0568b68d82be796540b1537508cef59388f839c191928"
-            ],
-            "markers": "python_version >= '3.6'",
-            "version": "==3.0.1"
-        },
         "pyrsistent": {
             "hashes": [
                 "sha256:016ad1afadf318eb7911baa24b049909f7f3bb2c5b1ed7b6a8f21db21ea3faa8",
@@ -1114,7 +1106,7 @@
                 "sha256:78f9a9bf4e7be0c5ded4583326e7461e3a3c5aae24073648b4bdfa797d78c9d2",
                 "sha256:9d689e6ca1b3038bc82bf8d23e944b6b6037bc02301a574935b2dd946e0353b9"
             ],
-            "markers": "python_version < '4.0' and python_full_version >= '3.5.0'",
+            "markers": "python_full_version >= '3.5.0' and python_full_version < '4.0.0'",
             "version": "==4.7.2"
         },
         "s3transfer": {
