@@ -52,7 +52,7 @@ def test_purge_functional_test_data(notify_db_session, notify_api, test_e_addres
             '--email', test_e_address,
             '--mobile_number', '202-555-5555',
             '--password', 'correct horse battery staple',
-            '--name', 'Fake Personson',
+            '--name', 'Fake Humanson',
             # '--auth_type', 'sms_auth',  # this is the default
             # '--state', 'active',  # this is the default
             # '--admin', 'False',  # this is the default
