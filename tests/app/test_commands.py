@@ -6,6 +6,7 @@ import pytest
 from app.commands import (
     _update_template,
     create_test_user,
+    fix_billable_units,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
@@ -15,25 +16,84 @@ from app.commands import (
     update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import AnnualBilling, Job, Organization, Service, Template, User
+from app.models import (
+    AnnualBilling,
+    Job,
+    Notification,
+    Organization,
+    Service,
+    Template,
+    User,
+)
 from tests.app.db import (
     create_annual_billing,
     create_job,
+    create_notification,
     create_organization,
     create_service,
     create_template,
 )
 
 
-def test_purge_functional_test_data(notify_db_session, notify_api):
-    print("ENTER test_purge_functional_test_data")
+def test_create_test_user_no_dupes(notify_db_session, notify_api):
 
     user_count = User.query.count()
-    print(f"INITIAL user count {user_count}")
-    # run the command
+    if user_count > 0:
+        users = User.query.all()
+        for user in users:
+            notify_db_session.delete(user)
+        notify_db_session.commit()
+    user_count = User.query.count()
+    assert user_count == 0
+
     notify_api.test_cli_runner().invoke(
         create_test_user, [
-            '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
+            '--email', 'somebody@fake.gov',
+            '--mobile_number', '202-555-5555',
+            '--password', 'correct horse battery staple',
+            '--name', 'Fake Personson',
+            # '--auth_type', 'sms_auth',  # this is the default
+            # '--state', 'active',  # this is the default
+            # '--admin', 'False',  # this is the default
+        ]
+    )
+
+    user_count = User.query.count()
+    print(f"AFTER create_test_user {user_count}")
+    assert user_count == 1
+
+    notify_api.test_cli_runner().invoke(
+        create_test_user, [
+            '--email', 'somebody@fake.gov',
+            '--mobile_number', '202-555-5555',
+            '--password', 'correct horse battery staple',
+            '--name', 'Fake Personson',
+            # '--auth_type', 'sms_auth',  # this is the default
+            # '--state', 'active',  # this is the default
+            # '--admin', 'False',  # this is the default
+        ]
+    )
+
+    user_count = User.query.count()
+    assert user_count == 1
+
+
+@pytest.mark.parametrize("test_e_address, expected_users",
+                         [('somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov', 0),
+                          ('somebody@fake.gov', 1)])
+def test_purge_functional_test_data(notify_db_session, notify_api, test_e_address, expected_users):
+
+    user_count = User.query.count()
+    if user_count > 0:
+        users = User.query.all()
+        for user in users:
+            notify_db_session.delete(user)
+        notify_db_session.commit()
+    user_count = User.query.count()
+    assert user_count == 0
+    notify_api.test_cli_runner().invoke(
+        create_test_user, [
+            '--email', test_e_address,
             '--mobile_number', '202-555-5555',
             '--password', 'correct horse battery staple',
             '--name', 'Fake Personson',
@@ -55,8 +115,9 @@ def test_purge_functional_test_data(notify_db_session, notify_api):
     print("INVOKING purge_functional_test_data")
     notify_api.test_cli_runner().invoke(purge_functional_test_data, ['-u', 'somebody'])
     print("IT WAS INVOKED")
-    # there should be one more user
-    assert User.query.count() == 0
+    # if the email address has a uuid, it is test data so it should be purged and there should be
+    # zero users.  Otherwise, it is real data so there should be one user.
+    assert User.query.count() == expected_users
 
 
 def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
@@ -268,6 +329,20 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
+
+
+def test_fix_billable_units(notify_db_session, notify_api, sample_template):
+
+    create_notification(template=sample_template)
+    notification = Notification.query.one()
+    assert notification.billable_units == 1
+
+    notify_api.test_cli_runner().invoke(
+        fix_billable_units, []
+    )
+
+    notification = Notification.query.one()
+    assert notification.billable_units == 1
 
 
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(

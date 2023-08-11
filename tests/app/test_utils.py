@@ -1,12 +1,17 @@
+import uuid
 from datetime import date, datetime
 
 import pytest
 from freezegun import freeze_time
 
+from app.models import UPLOAD_DOCUMENT
 from app.utils import (
     format_sequential_number,
     get_midnight_for_day_before,
     get_midnight_in_utc,
+    get_public_notify_type_text,
+    get_reference_from_personalisation,
+    get_uuid_string_or_none,
     midnight_n_days_ago,
 )
 
@@ -56,3 +61,23 @@ def test_midnight_n_days_ago(current_time, arg, expected_datetime):
 
 def test_format_sequential_number():
     assert format_sequential_number(123) == '0000007b'
+
+
+@pytest.mark.parametrize('personalisation, expected_response', [
+    ({"nothing": "interesting"}, None),
+    ({"reference": "something"}, "something"),
+    (None, None)
+])
+def test_get_reference_from_personalisation(personalisation, expected_response):
+    assert get_reference_from_personalisation(personalisation) == expected_response
+
+
+def test_get_uuid_string_or_none():
+    my_uuid = uuid.uuid4()
+    assert str(my_uuid) == get_uuid_string_or_none(my_uuid)
+
+    assert get_uuid_string_or_none(None) is None
+
+
+def test_get_public_notify_type_text():
+    assert get_public_notify_type_text(UPLOAD_DOCUMENT) == 'document'

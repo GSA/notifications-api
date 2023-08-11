@@ -288,9 +288,7 @@ def populate_organizations_from_file(file_name):
     # The expectation is that the organization, organization_to_service
     # and user_to_organization will be cleared before running this command.
     # Ignoring duplicates allows us to run the command again with the same file or same file with new rows.
-    msg("enter")
     with open(file_name, 'r') as f:
-        msg(f"\nfile is open {file_name}")
 
         def boolean_or_none(field):
             if field == '1':
@@ -301,13 +299,10 @@ def populate_organizations_from_file(file_name):
                 return None
 
         for line in itertools.islice(f, 1, None):
-            msg(f"XXX line {line}")
             columns = line.split('|')
-            msg(f"XXX columns {columns}")
             print(columns)
             email_branding = None
             email_branding_column = columns[5].strip()
-            msg(f"XXX email_branding_column {email_branding_column}")
             if len(email_branding_column) > 0:
                 email_branding = EmailBranding.query.filter(EmailBranding.name == email_branding_column).one()
             data = {
@@ -317,14 +312,12 @@ def populate_organizations_from_file(file_name):
                 'organization_type': columns[1].lower(),
                 'email_branding_id': email_branding.id if email_branding else None
             }
-            msg(f"XXX data {data}")
             org = Organization(**data)
             try:
                 db.session.add(org)
                 db.session.commit()
             except IntegrityError:
                 print("duplicate org", org.name)
-                msg("XXX duplicate org")
                 db.session.rollback()
             domains = columns[4].split(',')
             for d in domains:
@@ -334,15 +327,8 @@ def populate_organizations_from_file(file_name):
                         db.session.add(domain)
                         db.session.commit()
                     except IntegrityError:
-                        msg("XXX duplicate domain")
                         print("duplicate domain", d.strip())
                         db.session.rollback()
-
-
-def msg(msg):
-    f = open("huhhh.txt", "a")
-    f.write(msg)
-    f.close()
 
 
 @notify_command(name='populate-organization-agreement-details-from-file')

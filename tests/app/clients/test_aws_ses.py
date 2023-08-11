@@ -1,9 +1,11 @@
+import json
+from unittest import mock
 from unittest.mock import ANY, Mock
 
 import botocore
 import pytest
 
-from app import aws_ses_client
+from app import AwsSesStubClient, aws_ses_client
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import (
     AwsSesClientException,
@@ -176,3 +178,27 @@ def test_send_email_raises_other_errs_as_AwsSesClientException(mocker):
         )
 
     assert 'some error message from amazon' in str(excinfo.value)
+
+
+@mock.patch('app.clients.email.aws_ses_stub.request')
+def test_send_email_stub(mock_request):
+    mock_request.return_value = FakeResponse()
+    stub = AwsSesStubClient()
+    stub.init_app("fake")
+    answer = stub.send_email(
+                   'fake@fake.gov',
+                   'recipient@wherever.com',
+                   'TestTest',
+                   'TestBody')
+    print(answer)
+    assert answer == 'SomeId'
+
+
+class FakeResponse:
+    def __init__(self):
+
+        t = {"MessageId": "SomeId"}
+        self.text = json.dumps(t)
+
+    def raise_for_status(self):
+        print("raised for status")

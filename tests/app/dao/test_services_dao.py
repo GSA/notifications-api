@@ -310,6 +310,31 @@ def test_should_remove_user_from_service(notify_db_session):
     assert new_user not in Service.query.first().users
 
 
+def test_should_remove_user_from_service_exception(notify_db_session):
+    user = create_user()
+    service = Service(name="service_name",
+                      email_from="email_from",
+                      message_limit=1000,
+                      restricted=False,
+                      created_by=user)
+    dao_create_service(service, user)
+    new_user = User(
+        name='Test User',
+        email_address='new_user@digital.cabinet-office.gov.uk',
+        password='password',
+        mobile_number='+12028675309'
+    )
+    save_model_user(new_user, validated_email_access=True)
+    wrong_user = User(
+        name='Wrong User',
+        email_address='wrong_user@digital.cabinet-office.gov.uk',
+        password='password',
+        mobile_number='+12028675309'
+    )
+    with pytest.raises(expected_exception=Exception):
+        dao_remove_user_from_service(service, wrong_user)
+
+
 def test_removing_a_user_from_a_service_deletes_their_permissions(sample_user, sample_service):
     assert len(Permission.query.all()) == 7
 

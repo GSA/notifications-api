@@ -271,7 +271,6 @@ def test_sns_inbound_sms_auth(notify_db_session, notify_api, client, mocker, aut
         assert response.status_code == status_code
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sms_object_works_with_alphanumeric_sender(sample_service_full_permissions):
     data = {
         'Message': 'hello',
