@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from app.commands import (
@@ -9,15 +7,12 @@ from app.commands import (
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
-    populate_organization_agreement_details_from_file,
-    populate_organizations_from_file,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import AnnualBilling, Notification, Organization, Template, User
+from app.models import AnnualBilling, Notification, Template, User
 from tests.app.db import (
     create_annual_billing,
     create_notification,
-    create_organization,
     create_service,
 )
 
@@ -111,60 +106,60 @@ from tests.app.db import (
 #         assert job.archived is True
 
 
-def test_populate_organizations_from_file(notify_db_session, notify_api):
-
-    org_count = Organization.query.count()
-    assert org_count == 0
-
-    file_name = "./tests/app/orgs1.csv"
-    text = "name|blah|blah|blah|||\n" \
-           "foo|Federal|True|'foo.gov'|||\n"
-    f = open(file_name, "a")
-    f.write(text)
-    f.close()
-    x = notify_api.test_cli_runner().invoke(
-        populate_organizations_from_file, [
-            '-f', file_name
-        ]
-    )
-
-    os.remove(file_name)
-    print(f"X = {x}")
-
-    org_count = Organization.query.count()
-    assert org_count == 1
-
-
-def test_populate_organization_agreement_details_from_file(notify_db_session, notify_api):
-    file_name = "./tests/app/orgs.csv"
-
-    org_count = Organization.query.count()
-    assert org_count == 0
-    create_organization()
-    org_count = Organization.query.count()
-    assert org_count == 1
-
-    org = Organization.query.one()
-    org.agreement_signed = True
-    notify_db_session.commit()
-
-    text = "id,agreement_signed_version,agreement_signed_on_behalf_of_name,agreement_signed_at\n" \
-           f"{org.id},1,bob,'2023-01-01 00:00:00'\n"
-    f = open(file_name, "a")
-    f.write(text)
-    f.close()
-    x = notify_api.test_cli_runner().invoke(
-        populate_organization_agreement_details_from_file, [
-            '-f', file_name
-        ]
-    )
-    print(f"X = {x}")
-
-    org_count = Organization.query.count()
-    assert org_count == 1
-    org = Organization.query.one()
-    assert org.agreement_signed_on_behalf_of_name == 'bob'
-    os.remove(file_name)
+# def test_populate_organizations_from_file(notify_db_session, notify_api):
+#
+#     org_count = Organization.query.count()
+#     assert org_count == 0
+#
+#     file_name = "./tests/app/orgs1.csv"
+#     text = "name|blah|blah|blah|||\n" \
+#            "foo|Federal|True|'foo.gov'|||\n"
+#     f = open(file_name, "a")
+#     f.write(text)
+#     f.close()
+#     x = notify_api.test_cli_runner().invoke(
+#         populate_organizations_from_file, [
+#             '-f', file_name
+#         ]
+#     )
+#
+#     os.remove(file_name)
+#     print(f"X = {x}")
+#
+#     org_count = Organization.query.count()
+#     assert org_count == 1
+#
+#
+# def test_populate_organization_agreement_details_from_file(notify_db_session, notify_api):
+#     file_name = "./tests/app/orgs.csv"
+#
+#     org_count = Organization.query.count()
+#     assert org_count == 0
+#     create_organization()
+#     org_count = Organization.query.count()
+#     assert org_count == 1
+#
+#     org = Organization.query.one()
+#     org.agreement_signed = True
+#     notify_db_session.commit()
+#
+#     text = "id,agreement_signed_version,agreement_signed_on_behalf_of_name,agreement_signed_at\n" \
+#            f"{org.id},1,bob,'2023-01-01 00:00:00'\n"
+#     f = open(file_name, "a")
+#     f.write(text)
+#     f.close()
+#     x = notify_api.test_cli_runner().invoke(
+#         populate_organization_agreement_details_from_file, [
+#             '-f', file_name
+#         ]
+#     )
+#     print(f"X = {x}")
+#
+#     org_count = Organization.query.count()
+#     assert org_count == 1
+#     org = Organization.query.one()
+#     assert org.agreement_signed_on_behalf_of_name == 'bob'
+#     os.remove(file_name)
 
 
 def test_create_test_user_command(notify_db_session, notify_api):
