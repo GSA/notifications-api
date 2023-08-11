@@ -12,7 +12,6 @@ from app.commands import (
     populate_annual_billing_with_the_previous_years_allowance,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
-    purge_functional_test_data,
     update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
