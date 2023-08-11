@@ -42,7 +42,7 @@ flask-migrate = "==4.0.1"
 flask-redis = "==0.4.0"
 flask-sqlalchemy = {version = "==2.5.1", ref = "aa7a61a5357cf6f5dcc135d98c781192457aa6fa", git = "https://github.com/pallets-eco/flask-sqlalchemy.git"}
 gunicorn = {version = "==20.1.0", extras = ["eventlet"], ref = "1299ea9e967a61ae2edebe191082fd169b864c64", git = "https://github.com/benoitc/gunicorn.git"}
-iso8601 = "==1.0.2"
+iso8601 = "==2.0.0"
 itsdangerous = "==2.1.2"
 jsonschema = {version = "==4.17.3", extras = ["format"]}
 lxml = "==4.9.3"
