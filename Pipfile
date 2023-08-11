@@ -56,7 +56,7 @@ python-dotenv = "==1.0.0"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
 # gds metrics packages
-prometheus-client = "==0.14.1"
+prometheus-client = "==0.17.1"
 gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
 packaging = "==23.1"
 notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
