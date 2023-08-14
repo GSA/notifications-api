@@ -54,7 +54,7 @@ psycopg2-binary = "==2.9.3"
 pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 radon = "==6.0.1"
-sqlalchemy = "==1.4.40"
+sqlalchemy = "==2.0.19"
 werkzeug = "~=2.3"
 # gds metrics packages
 prometheus-client = "==0.17.1"
