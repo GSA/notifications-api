@@ -1,4 +1,5 @@
 import datetime
+import os
 
 import pytest
 
@@ -9,11 +10,19 @@ from app.commands import (
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
+    populate_organizations_from_file,
     purge_functional_test_data,
     update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
-from app.models import AnnualBilling, Job, Notification, Template, User
+from app.models import (
+    AnnualBilling,
+    Job,
+    Notification,
+    Organization,
+    Template,
+    User,
+)
 from tests.app.db import (
     create_annual_billing,
     create_job,
@@ -44,27 +53,23 @@ def test_purge_functional_test_data(notify_db_session, notify_api):
     assert User.query.count() == orig_user_count
 
 
-# def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
-#
-#     user_count = User.query.count()
-#     assert user_count == 0
-#     # run the command
-#     x = notify_api.test_cli_runner().invoke(
-#         create_test_user, [
-#             '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
-#             '--mobile_number', '555-555-55554444',
-#             '--password', 'correct horse battery staple',
-#             '--name', 'Fake Personson',
-#             # '--auth_type', 'sms_auth',  # this is the default
-#             # '--state', 'active',  # this is the default
-#             # '--admin', 'False',  # this is the default
-#         ]
-#     )
-#     print(f"X = {x}")
-#     # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
-#     assert "SystemExit(2)" in str(x)
-#     user_count = User.query.count()
-#     assert user_count == 0
+def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
+
+    user_count = User.query.count()
+    assert user_count == 0
+    # run the command
+    x = notify_api.test_cli_runner().invoke(
+        create_test_user, [
+            '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
+            '--mobile_number', '555-555-55554444',
+            '--password', 'correct horse battery staple',
+            '--name', 'Fake Personson',
+        ]
+    )
+    # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
+    assert "SystemExit(2)" in str(x)
+    user_count = User.query.count()
+    assert user_count == 0
 
 
 def test_update_jobs_archived_flag(notify_db_session, notify_api):
@@ -95,30 +100,30 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
         assert job.archived is True
 
 
-# def test_populate_organizations_from_file(notify_db_session, notify_api):
-#
-#     org_count = Organization.query.count()
-#     assert org_count == 0
-#
-#     file_name = "./tests/app/orgs1.csv"
-#     text = "name|blah|blah|blah|||\n" \
-#            "foo|Federal|True|'foo.gov'|||\n"
-#     f = open(file_name, "a")
-#     f.write(text)
-#     f.close()
-#     x = notify_api.test_cli_runner().invoke(
-#         populate_organizations_from_file, [
-#             '-f', file_name
-#         ]
-#     )
-#
-#     os.remove(file_name)
-#     print(f"X = {x}")
-#
-#     org_count = Organization.query.count()
-#     assert org_count == 1
-#
-#
+def test_populate_organizations_from_file(notify_db_session, notify_api):
+    print(f"OS CWD= {os.getcwd()}")
+    org_count = Organization.query.count()
+    assert org_count == 0
+
+    file_name = "./tests/app/orgs1.csv"
+    text = "name|blah|blah|blah|||\n" \
+           "foo|Federal|True|'foo.gov'|||\n"
+    f = open(file_name, "a")
+    f.write(text)
+    f.close()
+    x = notify_api.test_cli_runner().invoke(
+        populate_organizations_from_file, [
+            '-f', file_name
+        ]
+    )
+
+    os.remove(file_name)
+    print(f"X = {x}")
+
+    org_count = Organization.query.count()
+    assert org_count == 1
+
+
 # def test_populate_organization_agreement_details_from_file(notify_db_session, notify_api):
 #     file_name = "./tests/app/orgs.csv"
 #
