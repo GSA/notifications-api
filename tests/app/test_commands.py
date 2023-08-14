@@ -17,6 +17,9 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.models import (
+    KEY_TYPE_NORMAL,
+    NOTIFICATION_DELIVERED,
+    SMS_TYPE,
     AnnualBilling,
     Job,
     Notification,
@@ -108,7 +111,7 @@ def test_populate_organizations_from_file(notify_db_session, notify_api):
 
     file_name = "./tests/app/orgs1.csv"
     text = "name|blah|blah|blah|||\n" \
-           "foo|Federal|True|'foo.gov'|||\n"
+           "foo|Federal|True|'foo.gov'|'foo.gov'||\n"
     f = open(file_name, "a")
     f.write(text)
     f.close()
@@ -253,7 +256,13 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 
     create_notification(template=sample_template)
     notification = Notification.query.one()
-    assert notification.billable_units == 1
+    notification.billable_units = 0
+    notification.notification_type = SMS_TYPE
+    notification.status = NOTIFICATION_DELIVERED
+    notification.sent_at = None
+    notification.key_type = KEY_TYPE_NORMAL
+
+    notify_db_session.commit()
 
     notify_api.test_cli_runner().invoke(
         fix_billable_units, []
