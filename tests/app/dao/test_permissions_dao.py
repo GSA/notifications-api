@@ -1,3 +1,4 @@
+from app.dao import DAOClass
 from app.dao.permissions_dao import permission_dao
 from tests.app.db import create_service
 
@@ -22,3 +23,17 @@ def test_get_permissions_by_user_id_returns_only_active_service(sample_user):
     assert len(permissions) == 7
     assert active_service in [i.service for i in permissions]
     assert inactive_service not in [i.service for i in permissions]
+
+
+def test_dao_class(sample_user):
+    create_service(user=sample_user, service_name="Active service")
+    create_service(user=sample_user, service_name="Inactive service", active=False)
+
+    permissions_orig = permission_dao.get_permissions_by_user_id(user_id=sample_user.id)
+    assert len(permissions_orig) == 7
+    dao = DAOClass()
+
+    for permission in permissions_orig:
+        dao.delete_instance(permission, True)
+    permissions = permission_dao.get_permissions_by_user_id(user_id=sample_user.id)
+    assert len(permissions) == 0

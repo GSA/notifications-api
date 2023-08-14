@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime
 from unittest import mock
@@ -45,6 +46,14 @@ def test_get_user_list(admin_request, sample_service):
     assert sample_user.email_address == fetched['email_address']
     assert sample_user.state == fetched['state']
     assert sorted(expected_permissions) == sorted(fetched['permissions'][str(sample_service.id)])
+
+
+def test_get_all_users(admin_request):
+    create_user()
+    json_resp = admin_request.get('user.get_all_users')
+    json_resp_str = json.dumps(json_resp)
+    assert 'Test User' in json_resp_str
+    assert '+12028675309' in json_resp_str
 
 
 def test_get_user(admin_request, sample_service, sample_organization):

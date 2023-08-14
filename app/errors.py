@@ -45,6 +45,7 @@ class InvalidRequest(Exception):
         return str(self.to_dict())
 
 
+# TODO maintainability what is this for?  How to unit test it?
 def register_errors(blueprint):
     @blueprint.errorhandler(InvalidEmailError)
     def invalid_format(error):

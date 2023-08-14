@@ -12,6 +12,7 @@ from app.dao.service_user_dao import (
     dao_update_service_user,
 )
 from app.dao.users_dao import (
+    _remove_values_for_keys_if_present,
     count_user_verify_codes,
     create_secret_code,
     dao_archive_user,
@@ -294,3 +295,16 @@ def test_user_cannot_be_archived_if_the_other_service_members_do_not_have_the_ma
 
     assert len(sample_service.users) == 3
     assert not user_can_be_archived(active_user)
+
+
+def test_remove_values_for_keys_if_present():
+    keys = {'a', 'b', 'c'}
+    my_dict = {
+        'a': 1,
+        'b': 2,
+        'c': 3,
+        'd': 4,
+    }
+    _remove_values_for_keys_if_present(my_dict, keys)
+
+    assert my_dict == {'d': 4}
