@@ -47,6 +47,11 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		--loglevel=INFO \
 		--concurrency=4
 
+
+.PHONY: dead-code
+dead-code:
+	pipenv run vulture ./app --min-confidence=100
+
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
 	pipenv run celery \

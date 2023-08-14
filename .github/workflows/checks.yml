@@ -46,6 +46,8 @@ jobs:
       run: pipenv run flake8 .
     - name: Check imports alphabetized
       run: pipenv run isort --check-only ./app ./tests
+    - name: Check for dead code
+      run: make dead-code
     - name: Run tests with coverage
       run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest -n4 --maxfail=10
       env:

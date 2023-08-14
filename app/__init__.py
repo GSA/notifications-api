@@ -357,17 +357,17 @@ def setup_sqlalchemy_events(app):
     # need this or db.engine isn't accessible
     with app.app_context():
         @event.listens_for(db.engine, 'connect')
-        def connect(dbapi_connection, connection_record):
+        def connect(dbapi_connection, connection_record): # noqa
             # connection first opened with db
             TOTAL_DB_CONNECTIONS.inc()
 
         @event.listens_for(db.engine, 'close')
-        def close(dbapi_connection, connection_record):
+        def close(dbapi_connection, connection_record): # noqa
             # connection closed (probably only happens with overflow connections)
             TOTAL_DB_CONNECTIONS.dec()
 
         @event.listens_for(db.engine, 'checkout')
-        def checkout(dbapi_connection, connection_record, connection_proxy):
+        def checkout(dbapi_connection, connection_record, connection_proxy): # noqa
             try:
                 # connection given to a web worker
                 TOTAL_CHECKED_OUT_DB_CONNECTIONS.inc()
@@ -405,7 +405,7 @@ def setup_sqlalchemy_events(app):
                 current_app.logger.exception("Exception caught for checkout event.")
 
         @event.listens_for(db.engine, 'checkin')
-        def checkin(dbapi_connection, connection_record):
+        def checkin(dbapi_connection, connection_record): # noqa
             try:
                 # connection returned by a web worker
                 TOTAL_CHECKED_OUT_DB_CONNECTIONS.dec()

@@ -572,8 +572,9 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
             print(f'update service {service.id} with default')
             set_default_free_allowance_for_service(service, year)
 
-
-def validate_mobile(ctx, param, value):
+# We use noqa to protect this method from the vulture dead code check.  Otherwise, the params ctx and param
+# will trigger vulture and cause a build failure.
+def validate_mobile(ctx, param, value): # noqa
     if (len(''.join(i for i in value if i.isdigit())) != 10):
         raise click.BadParameter("mobile number must have 10 digits")
     else:
