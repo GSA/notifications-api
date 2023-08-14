@@ -21,7 +21,7 @@ botocore = "==1.31.15"
 cachetools = "==5.1.0"
 celery = {version = "==5.2.7", extras = ["redis"]}
 certifi = ">=2022.12.7"
-cffi = "==1.15.0"
+cffi = "==1.15.1"
 charset-normalizer = "==2.0.12"
 click = "==8.1.6"
 click-datetime = "==0.2"
