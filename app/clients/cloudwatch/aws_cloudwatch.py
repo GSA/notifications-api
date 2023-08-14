@@ -4,7 +4,7 @@ import time
 
 from boto3 import client
 
-from app.clients import Client
+from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
 
 
@@ -18,7 +18,8 @@ class AwsCloudwatchClient(Client):
             "logs",
             region_name=cloud_config.sns_region,
             aws_access_key_id=cloud_config.sns_access_key,
-            aws_secret_access_key=cloud_config.sns_secret_key
+            aws_secret_access_key=cloud_config.sns_secret_key,
+            config=AWS_CLIENT_CONFIG
         )
         super(Client, self).__init__(*args, **kwargs)
         self.current_app = current_app

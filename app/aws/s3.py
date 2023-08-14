@@ -2,6 +2,8 @@ import botocore
 from boto3 import Session
 from flask import current_app
 
+from app.clients import AWS_CLIENT_CONFIG
+
 FILE_LOCATION_STRUCTURE = 'service-{}-notify/{}.csv'
 
 
@@ -15,8 +17,12 @@ def get_s3_file(
 def get_s3_object(
     bucket_name, file_location, access_key, secret_key, region
 ):
-    session = Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
-    s3 = session.resource('s3')
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region
+    )
+    s3 = session.resource('s3', config=AWS_CLIENT_CONFIG)
     return s3.Object(bucket_name, file_location)
 
 
