@@ -10,6 +10,7 @@ from app.commands import (
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
+    populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
     purge_functional_test_data,
     update_jobs_archived_flag,
@@ -27,6 +28,7 @@ from tests.app.db import (
     create_annual_billing,
     create_job,
     create_notification,
+    create_organization,
     create_service,
     create_template,
 )
@@ -101,7 +103,6 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
 
 
 def test_populate_organizations_from_file(notify_db_session, notify_api):
-    print(f"OS CWD= {os.getcwd()}")
     org_count = Organization.query.count()
     assert org_count == 0
 
@@ -124,42 +125,42 @@ def test_populate_organizations_from_file(notify_db_session, notify_api):
     assert org_count == 1
 
 
-# def test_populate_organization_agreement_details_from_file(notify_db_session, notify_api):
-#     file_name = "./tests/app/orgs.csv"
-#
-#     org_count = Organization.query.count()
-#     assert org_count == 0
-#     create_organization()
-#     org_count = Organization.query.count()
-#     assert org_count == 1
-#
-#     org = Organization.query.one()
-#     org.agreement_signed = True
-#     notify_db_session.commit()
-#
-#     text = "id,agreement_signed_version,agreement_signed_on_behalf_of_name,agreement_signed_at\n" \
-#            f"{org.id},1,bob,'2023-01-01 00:00:00'\n"
-#     f = open(file_name, "a")
-#     f.write(text)
-#     f.close()
-#     x = notify_api.test_cli_runner().invoke(
-#         populate_organization_agreement_details_from_file, [
-#             '-f', file_name
-#         ]
-#     )
-#     print(f"X = {x}")
-#
-#     org_count = Organization.query.count()
-#     assert org_count == 1
-#     org = Organization.query.one()
-#     assert org.agreement_signed_on_behalf_of_name == 'bob'
-#     os.remove(file_name)
+def test_populate_organization_agreement_details_from_file(notify_db_session, notify_api):
+    file_name = "./tests/app/orgs.csv"
+
+    org_count = Organization.query.count()
+    assert org_count == 0
+    create_organization()
+    org_count = Organization.query.count()
+    assert org_count == 1
+
+    org = Organization.query.one()
+    org.agreement_signed = True
+    notify_db_session.commit()
+
+    text = "id,agreement_signed_version,agreement_signed_on_behalf_of_name,agreement_signed_at\n" \
+           f"{org.id},1,bob,'2023-01-01 00:00:00'\n"
+    f = open(file_name, "a")
+    f.write(text)
+    f.close()
+    x = notify_api.test_cli_runner().invoke(
+        populate_organization_agreement_details_from_file, [
+            '-f', file_name
+        ]
+    )
+    print(f"X = {x}")
+
+    org_count = Organization.query.count()
+    assert org_count == 1
+    org = Organization.query.one()
+    assert org.agreement_signed_on_behalf_of_name == 'bob'
+    os.remove(file_name)
 
 
 def test_create_test_user_command(notify_db_session, notify_api):
 
     # number of users before adding ours
-    # user_count = User.query.count()
+    user_count = User.query.count()
 
     # run the command
     notify_api.test_cli_runner().invoke(
@@ -168,14 +169,11 @@ def test_create_test_user_command(notify_db_session, notify_api):
             '--mobile_number', '202-555-5555',
             '--password', 'correct horse battery staple',
             '--name', 'Fake Personson',
-            # '--auth_type', 'sms_auth',  # this is the default
-            # '--state', 'active',  # this is the default
-            # '--admin', 'False',  # this is the default
         ]
     )
 
     # there should be one more user
-    # assert User.query.count() == user_count + 1
+    assert User.query.count() == user_count + 1
 
     # that user should be the one we added
     user = User.query.filter_by(
