@@ -1,6 +1,6 @@
 logs.us-gov-west-1.amazonaws.com
-monitoring.us-west-2.amazonaws.com
-email.us-gov-west-1.amazonaws.com
+monitoring-fips.us-west-2.amazonaws.com
+monitoring.us-gov-west-1.amazonaws.com
 email-fips.us-gov-west-1.amazonaws.com
 s3-fips.us-gov-east-1.amazonaws.com
 s3-fips.us-gov-west-1.amazonaws.com
