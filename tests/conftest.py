@@ -8,7 +8,6 @@ from alembic.config import Config
 from flask import Flask
 
 from app import create_app
-from app.config import configs
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
@@ -95,9 +94,10 @@ def _notify_db(notify_api):
     `notify_db_session` fixture which also cleans up any data you've got left over after your test run.
     """
 
-    # create a database for this worker thread -
+    # Create a database for this worker thread; note that the
+    # SQLALCHEMY_DATABASE_URI config variable was already reset with the
+    # worker ID in the notify_app fixture method.
     from flask import current_app
-    #current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(worker_id)
     create_test_db(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
