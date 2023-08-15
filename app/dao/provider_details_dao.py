@@ -74,59 +74,6 @@ def _get_sms_providers_for_update(time_threshold):
     return q
 
 
-@autocommit
-def dao_reduce_sms_provider_priority(identifier, *, time_threshold):
-    """
-    Will reduce a chosen sms provider's priority, and increase the other provider's priority by 10 points each.
-    If either provider has been updated in the last `time_threshold`, then it won't take any action.
-    """
-    # amount_to_reduce_by = 10
-    providers_list = _get_sms_providers_for_update(time_threshold)
-
-    if len(providers_list) < 2:
-        current_app.logger.info("Not adjusting providers, number of active providers is less than 2.")
-        return
-
-    # TODO right now we only have one provider.  Remove this?
-    # providers = {provider.identifier: provider for provider in providers_list}
-    # other_identifier = get_alternative_sms_provider(identifier)
-    #
-    # reduced_provider = providers[identifier]
-    # increased_provider = providers[other_identifier]
-    #
-    # # always keep values between 0 and 100
-    # reduced_provider_priority = max(0, reduced_provider.priority - amount_to_reduce_by)
-    # increased_provider_priority = min(100, increased_provider.priority + amount_to_reduce_by)
-    #
-    # _adjust_provider_priority(reduced_provider, reduced_provider_priority)
-    # _adjust_provider_priority(increased_provider, increased_provider_priority)
-
-
-@autocommit
-def dao_adjust_provider_priority_back_to_resting_points():
-    """
-    Provided that neither SMS provider has been modified in the last hour, move both providers by 10 percentage points
-    each towards their defined resting points (set in SMS_PROVIDER_RESTING_POINTS in config.py).
-    """
-    # TODO we only have one provider.  Remove?
-    # amount_to_reduce_by = 10
-    # time_threshold = timedelta(hours=1)
-    #
-    # providers = _get_sms_providers_for_update(time_threshold)
-    #
-    # for provider in providers:
-    #     target = current_app.config['SMS_PROVIDER_RESTING_POINTS'][provider.identifier]
-    #     current = provider.priority
-    #
-    #     if current != target:
-    #         if current > target:
-    #             new_priority = max(target, provider.priority - amount_to_reduce_by)
-    #         else:
-    #             new_priority = min(target, provider.priority + amount_to_reduce_by)
-    #
-    #         _adjust_provider_priority(provider, new_priority)
-
-
 def get_provider_details_by_notification_type(notification_type, supports_international=False):
 
     filters = [ProviderDetails.notification_type == notification_type]

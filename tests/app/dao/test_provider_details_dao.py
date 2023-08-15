@@ -8,9 +8,7 @@ from app import notification_provider_clients
 from app.dao.provider_details_dao import (
     _adjust_provider_priority,
     _get_sms_providers_for_update,
-    dao_adjust_provider_priority_back_to_resting_points,
     dao_get_provider_stats,
-    dao_reduce_sms_provider_priority,
     dao_update_provider_details,
     get_alternative_sms_provider,
     get_provider_details_by_identifier,
@@ -194,57 +192,6 @@ def test_get_sms_providers_for_update_returns_nothing_if_recent_updates(restore_
     resp = _get_sms_providers_for_update(timedelta(hours=1))
 
     assert not resp
-
-
-def test_reduce_sms_provider_priority_does_nothing_if_providers_have_recently_changed(
-    mocker,
-    restore_provider_details,
-):
-    mock_get_providers = mocker.patch('app.dao.provider_details_dao._get_sms_providers_for_update', return_value=[])
-    mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
-
-    dao_reduce_sms_provider_priority('sns', time_threshold=timedelta(minutes=5))
-
-    mock_get_providers.assert_called_once_with(timedelta(minutes=5))
-    assert mock_adjust.called is False
-
-
-def test_reduce_sms_provider_priority_does_nothing_if_there_is_only_one_active_provider(
-    mocker,
-    restore_provider_details,
-):
-    mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
-
-    dao_reduce_sms_provider_priority('sns', time_threshold=timedelta(minutes=5))
-
-    assert mock_adjust.called is False
-
-
-def test_adjust_provider_priority_back_to_resting_points_does_nothing_if_theyre_already_at_right_values(
-    restore_provider_details,
-    mocker,
-):
-    sns = get_provider_details_by_identifier('sns')
-    sns.priority = 100
-
-    mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
-    mocker.patch('app.dao.provider_details_dao._get_sms_providers_for_update', return_value=[sns])
-
-    dao_adjust_provider_priority_back_to_resting_points()
-
-    assert mock_adjust.called is False
-
-
-def test_adjust_provider_priority_back_to_resting_points_does_nothing_if_no_providers_to_update(
-    restore_provider_details,
-    mocker,
-):
-    mock_adjust = mocker.patch('app.dao.provider_details_dao._adjust_provider_priority')
-    mocker.patch('app.dao.provider_details_dao._get_sms_providers_for_update', return_value=[])
-
-    dao_adjust_provider_priority_back_to_resting_points()
-
-    assert mock_adjust.called is False
 
 
 @freeze_time('2018-06-28 12:00')

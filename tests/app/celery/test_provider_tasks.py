@@ -42,24 +42,6 @@ def test_should_add_to_retry_queue_if_notification_not_found_in_deliver_sms_task
     app.celery.provider_tasks.deliver_sms.retry.assert_called_with(queue="retry-tasks", countdown=0)
 
 
-def test_send_sms_should_not_switch_providers_on_non_provider_failure(
-    sample_notification,
-    mocker
-):
-    mocker.patch(
-        'app.delivery.send_to_providers.send_sms_to_provider',
-        side_effect=Exception("Non Provider Exception")
-    )
-    mock_dao_reduce_sms_provider_priority = mocker.patch(
-        'app.delivery.send_to_providers.dao_reduce_sms_provider_priority'
-    )
-    mocker.patch('app.celery.provider_tasks.deliver_sms.retry')
-
-    deliver_sms(sample_notification.id)
-
-    assert mock_dao_reduce_sms_provider_priority.called is False
-
-
 def test_should_retry_and_log_warning_if_SmsClientResponseException_for_deliver_sms_task(sample_notification, mocker):
     mocker.patch(
         'app.delivery.send_to_providers.send_sms_to_provider',

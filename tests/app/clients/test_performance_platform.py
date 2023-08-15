@@ -60,10 +60,6 @@ def test_should_raise_for_status(perf_client):
         perf_client.send_stats_to_performance_platform({'dataType': 'foo'})
 
 
-def generate_payload_id(payload, param):
-    pass
-
-
 def test_generate_payload_id():
     payload = {'_timestamp': '2023-01-01 00:00:00', 'service': 'my_service', 'group_name': 'group_name',
                'dataType': 'dataType', 'period': 'period'}

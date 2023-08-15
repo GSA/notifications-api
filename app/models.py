@@ -679,10 +679,7 @@ class ServiceInboundApi(db.Model, Versioned):
 
     @property
     def bearer_token(self):
-        # Column is non-nullable
-        # if self._bearer_token:
         return encryption.decrypt(self._bearer_token)
-        # return None
 
     @bearer_token.setter
     def bearer_token(self, bearer_token):
@@ -719,10 +716,7 @@ class ServiceCallbackApi(db.Model, Versioned):
 
     @property
     def bearer_token(self):
-        # There is a non-null constraint on this column
-        # if self._bearer_token:
         return encryption.decrypt(self._bearer_token)
-        # return None
 
     @bearer_token.setter
     def bearer_token(self, bearer_token):
@@ -777,10 +771,7 @@ class ApiKey(db.Model, Versioned):
 
     @property
     def secret(self):
-        # Column is non-nullable
-        # if self._secret:
         return encryption.decrypt(self._secret)
-        # return None
 
     @secret.setter
     def secret(self, secret):

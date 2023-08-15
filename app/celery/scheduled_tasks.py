@@ -28,9 +28,6 @@ from app.dao.jobs_dao import (
     find_missing_row_for_job,
 )
 from app.dao.notifications_dao import notifications_not_yet_sent
-from app.dao.provider_details_dao import (
-    dao_adjust_provider_priority_back_to_resting_points,
-)
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
@@ -83,11 +80,6 @@ def delete_invitations():
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise
-
-
-@notify_celery.task(name='tend-providers-back-to-middle')
-def tend_providers_back_to_middle():
-    dao_adjust_provider_priority_back_to_resting_points()
 
 
 @notify_celery.task(name='check-job-status')

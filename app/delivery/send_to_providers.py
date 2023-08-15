@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib import parse
 
 from cachetools import TTLCache, cached
@@ -18,7 +18,6 @@ from app.celery.research_mode_tasks import (
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import (
-    dao_reduce_sms_provider_priority,
     get_provider_details_by_notification_type,
 )
 from app.exceptions import NotificationTechnicalFailureException
@@ -82,7 +81,6 @@ def send_sms_to_provider(notification):
             except Exception as e:
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
-                dao_reduce_sms_provider_priority(provider.name, time_threshold=timedelta(minutes=1))
                 raise e
             else:
                 notification.billable_units = template.fragment_count

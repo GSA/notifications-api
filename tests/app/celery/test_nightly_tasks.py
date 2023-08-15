@@ -325,10 +325,6 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     ])
 
 
-def delete_notifications_by_service_and_type(id, param, param1):
-    pass
-
-
 def test_cleanup_unfinished_jobs(mocker):
     mock_s3 = mocker.patch('app.celery.nightly_tasks.remove_csv_object')
     mock_dao_archive = mocker.patch('app.celery.nightly_tasks.dao_archive_job')
