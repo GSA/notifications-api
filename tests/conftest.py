@@ -7,13 +7,30 @@ from alembic.command import upgrade
 from alembic.config import Config
 from flask import Flask
 
-from app import create_app, db
+from app import create_app
+from app.config import configs
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
 @pytest.fixture(scope='session')
-def notify_app():
+def notify_app(worker_id):
     app = Flask('test')
+
+    # Override the SQLALCHEMY_DATABASE_URI config before the app is
+    # initialized to account for Flask-SQLAlchemy 3.0.x changes.
+    # What is ultimately happening is the create_engine call made with
+    # SQLAlchemy itself is now only happening at the time of calling
+    # init_app with Flask instead of at the time it is first accessed,
+    # which the _notify_db fixture method was relying on.
+
+    # See the following for more information:
+    # https://github.com/pallets-eco/flask-sqlalchemy/pull/1087
+    # https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/api/#module-flask_sqlalchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = '{}_{}'.format(
+        os.getenv('SQLALCHEMY_DATABASE_TEST_URI', '').replace('postgres://', 'postgresql://'),
+        worker_id
+    )
+
     create_app(app)
     return app
 
@@ -72,16 +89,15 @@ def create_test_db(database_uri):
 
 
 @pytest.fixture(scope='session')
-def _notify_db(notify_api, worker_id):
+def _notify_db(notify_api):
     """
     Manages the connection to the database. Generally this shouldn't be used, instead you should use the
     `notify_db_session` fixture which also cleans up any data you've got left over after your test run.
     """
-    assert 'test_notification_api' in db.engine.url.database, 'dont run tests against main db'
 
     # create a database for this worker thread -
     from flask import current_app
-    current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(worker_id)
+    #current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(worker_id)
     create_test_db(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -92,10 +108,19 @@ def _notify_db(notify_api, worker_id):
     with notify_api.app_context():
         upgrade(config, 'head')
 
+    # Retrieve the DB object from the initialized app.
+    db = notify_api.extensions['sqlalchemy']
+
+    # Check the DB name.
+    assert 'test_notification_api' in db.engine.url.database, 'dont run tests against main db'
+
+    # Modify the URL to point to the correct test database.
+    db.engine.url = current_app.config['SQLALCHEMY_DATABASE_URI']
+
     yield db
 
     db.session.remove()
-    db.get_engine(notify_api).dispose()
+    db.engine.dispose()
 
 
 @pytest.fixture(scope='function')
