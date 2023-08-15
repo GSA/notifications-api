@@ -88,16 +88,18 @@ def create_test_db(database_uri):
 
 
 @pytest.fixture(scope='session')
-def _notify_db(notify_api):
+def _notify_db(notify_api, worker_id):
     """
     Manages the connection to the database. Generally this shouldn't be used, instead you should use the
     `notify_db_session` fixture which also cleans up any data you've got left over after your test run.
     """
 
-    # Create a database for this worker thread; note that the
-    # SQLALCHEMY_DATABASE_URI config variable was already reset with the
-    # worker ID in the notify_app fixture method.
+    # Create a database for this worker thread; note that we still have
+    # to reset it here to point to the correct database.
     from flask import current_app
+    current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(
+        worker_id
+    )
     create_test_db(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
