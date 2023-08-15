@@ -63,7 +63,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
     user_count = User.query.count()
     assert user_count == 0
     # run the command
-    x = notify_api.test_cli_runner().invoke(
+    command_response = notify_api.test_cli_runner().invoke(
         create_test_user, [
             '--email', 'somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov',
             '--mobile_number', '555-555-55554444',
@@ -72,7 +72,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
         ]
     )
     # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
-    assert "SystemExit(2)" in str(x)
+    assert "SystemExit(2)" in str(command_response)
     user_count = User.query.count()
     assert user_count == 0
 
@@ -115,14 +115,14 @@ def test_populate_organizations_from_file(notify_db_session, notify_api):
     f = open(file_name, "a")
     f.write(text)
     f.close()
-    x = notify_api.test_cli_runner().invoke(
+    command_response = notify_api.test_cli_runner().invoke(
         populate_organizations_from_file, [
             '-f', file_name
         ]
     )
 
     os.remove(file_name)
-    print(f"X = {x}")
+    print(f"command_response = {command_response}")
 
     org_count = Organization.query.count()
     assert org_count == 1
@@ -146,12 +146,12 @@ def test_populate_organization_agreement_details_from_file(notify_db_session, no
     f = open(file_name, "a")
     f.write(text)
     f.close()
-    x = notify_api.test_cli_runner().invoke(
+    command_response = notify_api.test_cli_runner().invoke(
         populate_organization_agreement_details_from_file, [
             '-f', file_name
         ]
     )
-    print(f"X = {x}")
+    print(f"command_response = {command_response}")
 
     org_count = Organization.query.count()
     assert org_count == 1

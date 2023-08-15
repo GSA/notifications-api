@@ -139,8 +139,6 @@ def purge_functional_test_data(user_email_prefix):
                 print(f"Deleting user {usr.id} which is not part of any services")
                 delete_user_verify_codes(usr)
                 delete_model_user(usr)
-            raise Exception(f"RAN with user {usr}")
-    raise Exception("NO USERS")
 
 
 @notify_command(name='insert-inbound-numbers')
@@ -256,7 +254,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
 def update_jobs_archived_flag(start_date, end_date):
 
-    print('Archiving jobs created between {} to {}'.format(start_date, end_date))
+    current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
 
     process_date = start_date
     total_updated = 0

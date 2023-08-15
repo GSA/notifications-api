@@ -106,7 +106,7 @@ class UserSchema(BaseSchema):
     permissions = fields.Method("user_permissions", dump_only=True)
     password_changed_at = field_for(models.User, 'password_changed_at', format=DATETIME_FORMAT_NO_TIMEZONE)
     created_at = field_for(models.User, 'created_at', format=DATETIME_FORMAT_NO_TIMEZONE)
-    updated_atx = FlexibleDateTime()
+    updated_at = FlexibleDateTime()
     logged_in_at = FlexibleDateTime()
     auth_type = field_for(models.User, 'auth_type')
     password = fields.String(required=True, load_only=True)
