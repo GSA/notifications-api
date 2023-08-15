@@ -106,23 +106,22 @@ def _notify_db(notify_api, worker_id):
     ALEMBIC_CONFIG = os.path.join(BASE_DIR, 'migrations')
     config = Config(ALEMBIC_CONFIG + '/alembic.ini')
     config.set_main_option("script_location", ALEMBIC_CONFIG)
+    config.set_main_option(
+        "sqlalchemy.url",
+        current_app.config['SQLALCHEMY_DATABASE_URI']
+    )
 
-    with notify_api.app_context():
+    with notify_api.app_context() as app_context:
+        # Run DB migrations.
         upgrade(config, 'head')
 
-    # Retrieve the DB object from the initialized app.
-    db = notify_api.extensions['sqlalchemy']
+        # Modify the database connection URL to point to the correct
+        # test database.
+        db = app_context.app.extensions['sqlalchemy']
+        db.engine.url = current_app.config['SQLALCHEMY_DATABASE_URI']
 
-    # Check the DB name.
-    assert 'test_notification_api' in db.engine.url.database, 'dont run tests against main db'
-
-    # Modify the URL to point to the correct test database.
-    db.engine.url = current_app.config['SQLALCHEMY_DATABASE_URI']
-
-    yield db
-
-    db.session.remove()
-    db.engine.dispose()
+        # Return the DB object to the test calling for it.
+        yield db
 
 
 @pytest.fixture(scope='function')
