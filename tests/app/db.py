@@ -710,7 +710,7 @@ def create_service_guest_list(service, email_address=None, mobile_number=None):
     elif mobile_number:
         guest_list_user = ServiceGuestList.from_string(service.id, MOBILE_TYPE, mobile_number)
     else:
-        guest_list_user = ServiceGuestList.from_string(service.id, EMAIL_TYPE, 'guest_list_user@digital.gov.uk')
+        guest_list_user = ServiceGuestList.from_string(service.id, EMAIL_TYPE, 'guest_list_user@digital.fake.gov')
 
     db.session.add(guest_list_user)
     db.session.commit()
@@ -820,7 +820,7 @@ def create_invited_user(service=None,
     if service is None:
         service = create_service()
     if to_email_address is None:
-        to_email_address = 'invited_user@digital.gov.uk'
+        to_email_address = 'invited_user@digital.fake.gov'
 
     from_user = service.users[0]
 

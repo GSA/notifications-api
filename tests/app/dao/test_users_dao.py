@@ -43,7 +43,7 @@ from tests.app.db import (
     ('+1-800-555-5555', '+18005555555'),
 ])
 def test_create_user(notify_db_session, phone_number, expected_phone_number):
-    email = 'notify@digital.cabinet-office.gov.uk'
+    email = 'notify@digital.fake.gov'
     data = {
         'name': 'Test User',
         'email_address': email,
@@ -227,7 +227,7 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     assert sample_user.services == []
     assert sample_user.organizations == []
     assert sample_user.auth_type == EMAIL_AUTH_TYPE
-    assert sample_user.email_address == '_archived_2018-07-07_notify@digital.cabinet-office.gov.uk'
+    assert sample_user.email_address == '_archived_2018-07-07_notify@digital.fake.gov'
     assert sample_user.mobile_number is None
     assert sample_user.current_session_id == uuid.UUID('00000000-0000-0000-0000-000000000000')
     assert sample_user.state == 'inactive'

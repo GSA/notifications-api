@@ -176,14 +176,14 @@ def service_factory(sample_user):
 @pytest.fixture(scope='function')
 def sample_user(notify_db_session):
     return create_user(
-        email='notify@digital.cabinet-office.gov.uk'
+        email='notify@digital.fake.gov'
     )
 
 
 @pytest.fixture(scope='function')
 def notify_user(notify_db_session):
     return create_user(
-        email="notify-service-user@digital.cabinet-office.gov.uk",
+        email="notify-service-user@digital.fake.gov",
         id_=current_app.config['NOTIFY_USER_ID']
     )
 
@@ -517,7 +517,7 @@ def sample_notification_history(notify_db_session, sample_template):
 @pytest.fixture(scope='function')
 def sample_invited_user(notify_db_session):
     service = create_service(check_if_service_exists=True)
-    to_email_address = 'invited_user@digital.gov.uk'
+    to_email_address = 'invited_user@digital.fake.gov'
 
     from_user = service.users[0]
 
@@ -796,7 +796,7 @@ def notify_service(notify_db_session, sample_user):
 @pytest.fixture(scope='function')
 def sample_service_guest_list(notify_db_session):
     service = create_service(check_if_service_exists=True)
-    guest_list_user = ServiceGuestList.from_string(service.id, EMAIL_TYPE, 'guest_list_user@digital.gov.uk')
+    guest_list_user = ServiceGuestList.from_string(service.id, EMAIL_TYPE, 'guest_list_user@digital.fake.gov')
 
     notify_db_session.add(guest_list_user)
     notify_db_session.commit()

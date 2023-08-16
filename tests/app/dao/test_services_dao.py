@@ -230,7 +230,7 @@ def test_should_add_user_to_service(notify_db_session):
     assert user in Service.query.first().users
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -299,7 +299,7 @@ def test_should_remove_user_from_service(notify_db_session):
     dao_create_service(service, user)
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -320,14 +320,14 @@ def test_should_remove_user_from_service_exception(notify_db_session):
     dao_create_service(service, user)
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
     save_model_user(new_user, validated_email_access=True)
     wrong_user = User(
         name='Wrong User',
-        email_address='wrong_user@digital.cabinet-office.gov.uk',
+        email_address='wrong_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -425,7 +425,7 @@ def test_get_all_user_services_only_returns_services_user_has_access_to(notify_d
     service_3 = create_service(service_name='service 3', user=user, email_from='service.3')
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -479,7 +479,7 @@ def test_dao_fetch_live_services_data(sample_user):
     assert results == [
         {'service_id': mock.ANY, 'service_name': 'Sample service', 'organization_name': 'test_org_1',
             'organization_type': 'federal', 'consent_to_research': None, 'contact_name': 'Test User',
-            'contact_email': 'notify@digital.cabinet-office.gov.uk', 'contact_mobile': '+12028675309',
+            'contact_email': 'notify@digital.fake.gov', 'contact_mobile': '+12028675309',
             'live_date': datetime(2014, 4, 20, 10, 0), 'sms_volume_intent': None, 'email_volume_intent': None,
             'sms_totals': 2, 'email_totals': 1, 'free_sms_fragment_limit': 100},
         {'service_id': mock.ANY, 'service_name': 'third', 'organization_name': None, 'consent_to_research': None,
@@ -487,7 +487,7 @@ def test_dao_fetch_live_services_data(sample_user):
             'contact_mobile': None, 'live_date': datetime(2016, 4, 20, 10, 0), 'sms_volume_intent': None,
             'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0, 'free_sms_fragment_limit': 200},
         {'service_id': mock.ANY, 'service_name': 'second', 'organization_name': None, 'consent_to_research': None,
-            'contact_name': 'Test User', 'contact_email': 'notify@digital.cabinet-office.gov.uk',
+            'contact_name': 'Test User', 'contact_email': 'notify@digital.fake.gov',
             'contact_mobile': '+12028675309', 'live_date': datetime(2017, 4, 20, 10, 0), 'sms_volume_intent': None,
             'organization_type': None, 'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0,
             'free_sms_fragment_limit': 300}
@@ -714,7 +714,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
 
     other_user = User(
         name='Other Test User',
-        email_address='other_user@digital.cabinet-office.gov.uk',
+        email_address='other_user@digital.fake.gov',
         password='password',
         mobile_number='+12028672000'
     )

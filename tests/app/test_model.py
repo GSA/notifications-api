@@ -338,7 +338,7 @@ def test_repr():
         assert "has service permission" in sp.__repr__()
 
     sgl = create_service_guest_list(service)
-    assert sgl.__repr__() == 'Recipient guest_list_user@digital.gov.uk of type: email'
+    assert sgl.__repr__() == 'Recipient guest_list_user@digital.fake.gov of type: email'
 
 
 def test_verify_code():
@@ -349,7 +349,7 @@ def test_verify_code():
 
 def test_notification_get_created_by_email_address(sample_notification, sample_user):
     sample_notification.created_by_id = sample_user.id
-    assert sample_notification.get_created_by_email_address() == 'notify@digital.cabinet-office.gov.uk'
+    assert sample_notification.get_created_by_email_address() == 'notify@digital.fake.gov'
 
 
 def test_notification_history_from_original(sample_notification):

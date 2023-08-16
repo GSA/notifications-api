@@ -192,7 +192,7 @@ def test_get_live_services_data(sample_user, admin_request):
     assert response == [
         {
             'consent_to_research': None,
-            'contact_email': 'notify@digital.cabinet-office.gov.uk',
+            'contact_email': 'notify@digital.fake.gov',
             'contact_mobile': '+12028675309',
             'contact_name': 'Test User',
             'email_totals': 1,
@@ -208,7 +208,7 @@ def test_get_live_services_data(sample_user, admin_request):
         },
         {
             'consent_to_research': None,
-            'contact_email': 'notify@digital.cabinet-office.gov.uk',
+            'contact_email': 'notify@digital.fake.gov',
             'contact_mobile': '+12028675309',
             'contact_name': 'Test User',
             'email_totals': 0,
@@ -417,7 +417,7 @@ def test_create_service_with_domain_sets_organization(
     create_domain('test.gov.uk', org.id)
 
     another_org = create_organization(name='Another')
-    create_domain('cabinet-office.gov.uk', another_org.id)
+    create_domain('fake.gov', another_org.id)
     create_domain('cabinetoffice.gov.uk', another_org.id)
 
     sample_user.email_address = 'test@{}'.format(domain)
@@ -1193,7 +1193,7 @@ def test_add_existing_user_to_another_service_with_all_permissions(
             # add new user to service
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1255,7 +1255,7 @@ def test_add_existing_user_to_another_service_with_send_permissions(notify_api,
             # they must exist in db first
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1301,7 +1301,7 @@ def test_add_existing_user_to_another_service_with_manage_permissions(notify_api
             # they must exist in db first
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1347,7 +1347,7 @@ def test_add_existing_user_to_another_service_with_folder_permissions(notify_api
             # they must exist in db first
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1387,7 +1387,7 @@ def test_add_existing_user_to_another_service_with_manage_api_keys(notify_api,
             # they must exist in db first
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1425,7 +1425,7 @@ def test_add_existing_user_to_non_existing_service_returns404(notify_api,
         with notify_api.test_client() as client:
             user_to_add = User(
                 name='Invited User',
-                email_address='invited@digital.cabinet-office.gov.uk',
+                email_address='invited@digital.fake.gov',
                 password='password',
                 mobile_number='+4477123456'
             )
@@ -1497,7 +1497,7 @@ def test_add_unknown_user_to_service_returns404(notify_api, notify_db_session, s
 def test_remove_user_from_service(
     client, sample_user_service_permission
 ):
-    second_user = create_user(email="new@digital.cabinet-office.gov.uk")
+    second_user = create_user(email="new@digital.fake.gov")
     service = sample_user_service_permission.service
 
     # Simulates successfully adding a user to the service
@@ -1521,7 +1521,7 @@ def test_remove_user_from_service(
 def test_remove_non_existant_user_from_service(
     client, sample_user_service_permission
 ):
-    second_user = create_user(email="new@digital.cabinet-office.gov.uk")
+    second_user = create_user(email="new@digital.fake.gov")
     endpoint = url_for(
         'service.remove_user_from_service',
         service_id=str(sample_user_service_permission.service.id),
