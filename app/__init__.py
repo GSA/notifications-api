@@ -336,6 +336,7 @@ def create_random_identifier():
     return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
 
 
+# TODO maintainability what is the purpose of this?  Debugging?
 def setup_sqlalchemy_events(app):
 
     TOTAL_DB_CONNECTIONS = Gauge(

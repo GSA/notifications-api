@@ -9,6 +9,11 @@ from app.models import EMAIL_TYPE, SMS_TYPE
 from app.notifications.process_notifications import (
     create_content_for_notification,
 )
+from app.notifications.sns_cert_validator import (
+    VALID_SNS_TOPICS,
+    get_string_to_sign,
+    validate_sns_cert,
+)
 from app.notifications.validators import (
     check_application_over_retention_limit,
     check_if_service_can_send_files_by_email,
@@ -535,3 +540,34 @@ def test_check_if_service_can_send_files_by_email_passes_if_contact_link_set(sam
         service_contact_link=sample_service.contact_link,
         service_id=sample_service.id
     )
+
+
+def test_get_string_to_sign():
+    VALID_SNS_TOPICS.append("arn:aws:sns:us-west-2:009969138378:connector-svc-test")
+    sns_payload = {
+        "Type": "Notification",
+        "MessageId": "ccccccccc-cccc-cccc-cccc-ccccccccccccc",
+        "TopicArn": "arn:aws:sns:us-west-2:009969138378:connector-svc-test",
+        "Message":  "{\"AbsoluteTime\":\"2021-09-08T13:28:24.656Z\",\"Content\":\"help\",\"ContentType\":\"text/plain\",\"Id\":\"333333333-be0d-4a44-889d-d2a86fc06f0c\",\"Type\":\"MESSAGE\",\"ParticipantId\":\"bbbbbbbb-c562-4d95-b76c-dcbca8b4b5f7\",\"DisplayName\":\"Jane\",\"ParticipantRole\":\"CUSTOMER\",\"InitialContactId\":\"33333333-abc5-46db-9ad5-d772559ab556\",\"ContactId\":\"33333333-abc5-46db-9ad5-d772559ab556\"}",  # noqa
+        "Timestamp": "2021-09-08T13:28:24.860Z",
+        "SignatureVersion": "1",
+        "Signature": "examplegggggg/1tEBYdiVDgJgBoJUniUFcArLFGfg5JCvpOr/v6LPCHiD7A0BWy8+ZOnGTmOjBMn80U9jSzYhKbHDbQHaNYTo9sRyQA31JtHHiIseQeMfTDpcaAXqfs8hdIXq4XZaJYqDFqosfbvh56VPh5QgmeHTltTc7eOZBUwnt/177eOTLTt2yB0ItMV3NAYuE1Tdxya1lLYZQUIMxETTVcRAZkDIu8TbRZC9a00q2RQVjXhDaU3k+tL+kk85syW/2ryjjkDYoUb+dyRGkqMy4aKA22UpfidOtdAZ/GGtXaXSKBqazZTEUuSEzt0duLtFntQiYJanU05gtDig==", # noqa
+        "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-11111111111111111111111111111111.pem", # noqa
+        "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-west-2:000000000000:connector-svc-test:22222222-aaaa-bbbb-cccc-333333333333", # noqa
+        "MessageAttributes": {
+            "InitialContactId": {"Type": "String", "Value": "33333333-abc5-46db-9ad5-d772559ab556"},
+            "MessageVisibility": {"Type": "String", "Value": "ALL"},
+            "Type": {"Type": "String", "Value": "MESSAGE"},
+            "AccountId": {"Type": "String", "Value": "999999999999"},
+            "ContentType": {"Type": "String", "Value": "text/plain"},
+            "InstanceId": {"Type": "String", "Value": "dddddddd-b64e-40c5-921b-109fd92499ae"},
+            "ContactId": {"Type": "String", "Value": "33333333-abc5-46db-9ad5-d772559ab556"},
+            "ParticipantRole": {"Type": "String", "Value": "CUSTOMER"}
+        }
+    }
+    str = get_string_to_sign(sns_payload)
+    assert str == b'Message\n{"AbsoluteTime":"2021-09-08T13:28:24.656Z","Content":"help","ContentType":"text/plain","Id":"333333333-be0d-4a44-889d-d2a86fc06f0c","Type":"MESSAGE","ParticipantId":"bbbbbbbb-c562-4d95-b76c-dcbca8b4b5f7","DisplayName":"Jane","ParticipantRole":"CUSTOMER","InitialContactId":"33333333-abc5-46db-9ad5-d772559ab556","ContactId":"33333333-abc5-46db-9ad5-d772559ab556"}\nMessageId\nccccccccc-cccc-cccc-cccc-ccccccccccccc\nTimestamp\n2021-09-08T13:28:24.860Z\nTopicArn\narn:aws:sns:us-west-2:009969138378:connector-svc-test\nType\nNotification\n' # noqa
+
+    # This is a test payload with no valid cert, so it should raise a ValueError
+    with pytest.raises(ValueError):
+        validate_sns_cert(sns_payload)

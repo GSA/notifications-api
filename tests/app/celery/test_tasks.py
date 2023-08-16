@@ -449,7 +449,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(notify_db_sessio
 
 def test_save_email_should_save_default_email_reply_to_text_on_notification(notify_db_session, mocker):
     service = create_service()
-    create_reply_to_email(service=service, email_address='reply_to@digital.gov.uk', is_default=True)
+    create_reply_to_email(service=service, email_address='reply_to@digital.fake.gov', is_default=True)
     template = create_template(service=service, template_type='email', subject='Hello')
 
     notification = _notification_json(template, to="test@example.com")
@@ -463,7 +463,7 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(noti
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.reply_to_text == 'reply_to@digital.gov.uk'
+    assert persisted_notification.reply_to_text == 'reply_to@digital.fake.gov'
 
 
 def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(notify_db_session, mocker):

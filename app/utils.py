@@ -105,12 +105,6 @@ def escape_special_characters(string):
     return string
 
 
-def email_address_is_nhs(email_address):
-    return email_address.lower().endswith((
-        '@nhs.uk', '@nhs.net', '.nhs.uk', '.nhs.net',
-    ))
-
-
 def get_archived_db_column_value(column):
     date = datetime.utcnow().strftime("%Y-%m-%d")
     return f'_archived_{date}_{column}'

@@ -145,6 +145,8 @@ def purge_functional_test_data(user_email_prefix):
 @click.option('-f', '--file_name', required=True,
               help="""Full path of the file to upload, file is a contains inbound numbers, one number per line.""")
 def insert_inbound_numbers_from_file(file_name):
+    # TODO maintainability what is the purpose of this command?  Who would use it and why?
+
     print("Inserting inbound numbers from {}".format(file_name))
     with open(file_name) as file:
         sql = "insert into inbound_numbers values('{}', '{}', 'sns', null, True, now(), null);"
@@ -166,6 +168,9 @@ def setup_commands(application):
 @click.option('-d', '--day', help="The date to recalculate, as YYYY-MM-DD", required=True,
               type=click_dt(format='%Y-%m-%d'))
 def rebuild_ft_billing_for_day(service_id, day):
+
+    # TODO maintainability what is the purpose of this command?  Who would use it and why?
+
     """
     Rebuild the data in ft_billing for the given service_id and date
     """
@@ -248,6 +253,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 @click.option('-s', '--start_date', required=True, help="start date inclusive", type=click_dt(format='%Y-%m-%d'))
 @click.option('-e', '--end_date', required=True, help="end date inclusive", type=click_dt(format='%Y-%m-%d'))
 def update_jobs_archived_flag(start_date, end_date):
+
     current_app.logger.info('Archiving jobs created between {} to {}'.format(start_date, end_date))
 
     process_date = start_date
@@ -258,10 +264,9 @@ def update_jobs_archived_flag(start_date, end_date):
         sql = """update
                     jobs set archived = true
                 where
-                    created_at >= (date :start + time '00:00:00') at time zone 'America/New_York'
-                    at time zone 'UTC'
-                    and created_at < (date :end + time '00:00:00') at time zone 'America/New_York' at time zone 'UTC'"""
-
+                    created_at >= (date :start + time '00:00:00')
+                    and created_at < (date :end + time '00:00:00')
+               """
         result = db.session.execute(sql, {"start": process_date, "end": process_date + timedelta(days=1)})
         db.session.commit()
         current_app.logger.info('jobs: --- Completed took {}ms. Archived {} jobs for {}'.format(
@@ -287,6 +292,7 @@ def populate_organizations_from_file(file_name):
     # and user_to_organization will be cleared before running this command.
     # Ignoring duplicates allows us to run the command again with the same file or same file with new rows.
     with open(file_name, 'r') as f:
+
         def boolean_or_none(field):
             if field == '1':
                 return True
@@ -342,15 +348,12 @@ def populate_organization_agreement_details_from_file(file_name):
     """
     with open(file_name) as f:
         csv_reader = csv.reader(f)
-
         # ignore the header row
         next(csv_reader)
 
         for row in csv_reader:
             org = dao_get_organization_by_id(row[0])
-
             current_app.logger.info(f"Updating {org.name}")
-
             if not org.agreement_signed:
                 raise RuntimeError('Agreement was not signed')
 
@@ -385,6 +388,8 @@ def populate_service_volume_intentions(file_name):
     # [0] service_id
     # [1] SMS:: volume intentions for service
     # [2] Email:: volume intentions for service
+
+    # TODO maintainability what is the purpose of this command? Who would use it and why?
 
     with open(file_name, 'r') as f:
         for line in itertools.islice(f, 1, None):

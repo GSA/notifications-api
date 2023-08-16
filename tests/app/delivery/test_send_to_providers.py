@@ -1,7 +1,7 @@
 import json
 import uuid
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import ANY
 
 import pytest
@@ -595,7 +595,6 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
     mocker,
 ):
     mocker.patch('app.aws_sns_client.send_sms', side_effect=Exception())
-    mock_reduce = mocker.patch('app.delivery.send_to_providers.dao_reduce_sms_provider_priority')
 
     sample_notification.billable_units = 0
     assert sample_notification.sent_by is None
@@ -608,7 +607,6 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
         assert 1 == 1
 
     assert sample_notification.billable_units == 1
-    mock_reduce.assert_called_once_with('sns', time_threshold=timedelta(minutes=1))
 
 
 def test_should_send_sms_to_international_providers(

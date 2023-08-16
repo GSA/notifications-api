@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime
 from unittest import mock
@@ -45,6 +46,14 @@ def test_get_user_list(admin_request, sample_service):
     assert sample_user.email_address == fetched['email_address']
     assert sample_user.state == fetched['state']
     assert sorted(expected_permissions) == sorted(fetched['permissions'][str(sample_service.id)])
+
+
+def test_get_all_users(admin_request):
+    create_user()
+    json_resp = admin_request.get('user.get_all_users')
+    json_resp_str = json.dumps(json_resp)
+    assert 'Test User' in json_resp_str
+    assert '+12028675309' in json_resp_str
 
 
 def test_get_user(admin_request, sample_service, sample_organization):
@@ -104,7 +113,7 @@ def test_post_user(admin_request, notify_db_session):
     User.query.delete()
     data = {
         "name": "Test User",
-        "email_address": "user@digital.cabinet-office.gov.uk",
+        "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
@@ -115,7 +124,7 @@ def test_post_user(admin_request, notify_db_session):
     }
     json_resp = admin_request.post('user.create_user', _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address='user@digital.cabinet-office.gov.uk').first()
+    user = User.query.filter_by(email_address='user@digital.fake.gov').first()
     assert user.check_password("password")
     assert json_resp['data']['email_address'] == user.email_address
     assert json_resp['data']['id'] == str(user.id)
@@ -126,7 +135,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
     User.query.delete()
     data = {
         "name": "Test User",
-        "email_address": "user@digital.cabinet-office.gov.uk",
+        "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": "+12028675309",
         "permissions": {},
@@ -134,7 +143,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     json_resp = admin_request.post('user.create_user', _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address='user@digital.cabinet-office.gov.uk').first()
+    user = User.query.filter_by(email_address='user@digital.fake.gov').first()
     assert json_resp['data']['id'] == str(user.id)
     assert user.auth_type == SMS_AUTH_TYPE
 
@@ -166,7 +175,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
     User.query.delete()
     data = {
         "name": "Test User",
-        "email_address": "user@digital.cabinet-office.gov.uk",
+        "email_address": "user@digital.fake.gov",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
         "state": "active",
@@ -181,7 +190,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
 def test_can_create_user_with_email_auth_and_no_mobile(admin_request, notify_db_session):
     data = {
         'name': 'Test User',
-        'email_address': 'user@digital.cabinet-office.gov.uk',
+        'email_address': 'user@digital.fake.gov',
         'password': 'password',
         'mobile_number': None,
         'auth_type': EMAIL_AUTH_TYPE
@@ -196,7 +205,7 @@ def test_can_create_user_with_email_auth_and_no_mobile(admin_request, notify_db_
 def test_cannot_create_user_with_sms_auth_and_no_mobile(admin_request, notify_db_session):
     data = {
         'name': 'Test User',
-        'email_address': 'user@digital.cabinet-office.gov.uk',
+        'email_address': 'user@digital.fake.gov',
         'password': 'password',
         'mobile_number': None,
         'auth_type': SMS_AUTH_TYPE
@@ -263,7 +272,7 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
         api_key_id=None, key_type='normal', notification_type='sms',
         personalisation={
             'name': 'Test User', 'servicemanagername': 'Service Manago',
-            'email address': 'notify@digital.cabinet-office.gov.uk'
+            'email address': 'notify@digital.fake.gov'
         },
         recipient='+4407700900460', reply_to_text='testing', service=mock.ANY,
         template_id=uuid.UUID('8a31520f-4751-4789-8ea1-fe54496725eb'), template_version=1
@@ -273,7 +282,7 @@ def test_post_user_attribute_with_updated_by(
     admin_request, mocker, sample_user, user_attribute,
     user_value, arguments, team_member_email_edit_template, team_member_mobile_edit_template
 ):
-    updater = create_user(name="Service Manago", email="notify_manago@digital.cabinet-office.gov.uk")
+    updater = create_user(name="Service Manago", email="notify_manago@digital.fake.gov")
     assert getattr(sample_user, user_attribute) != user_value
     update_dict = {
         user_attribute: user_value,
@@ -368,7 +377,7 @@ def test_get_user_by_email(admin_request, sample_service):
 def test_get_user_by_email_not_found_returns_404(admin_request, sample_user):
     json_resp = admin_request.get(
         'user.get_by_email',
-        email='no_user@digital.gov.uk',
+        email='no_user@digital.fake.gov',
         _expected_status=404
     )
     assert json_resp['result'] == 'error'
@@ -618,12 +627,12 @@ def test_send_user_reset_password_should_send_reset_password_link(admin_request,
 
 @pytest.mark.parametrize('data, expected_url', (
     ({
-        'email': 'notify@digital.cabinet-office.gov.uk',
+        'email': 'notify@digital.fake.gov',
     }, (
         'http://localhost:6012/new-password/'
     )),
     ({
-        'email': 'notify@digital.cabinet-office.gov.uk',
+        'email': 'notify@digital.fake.gov',
         'admin_base_url': 'https://different.example.com',
     }, (
         'https://different.example.com/new-password/'

@@ -2,6 +2,8 @@ import pytest
 from flask import url_for
 from sqlalchemy.exc import DataError
 
+from app.v2.errors import ValidationError
+
 
 @pytest.fixture(scope='function')
 def app_for_test():
@@ -97,6 +99,9 @@ def test_validation_error(app_for_test):
                     'message': "phone_number is a required property"} in error['errors']
             assert {'error': 'ValidationError',
                     'message': "template_id is not a valid UUID"} in error['errors']
+            ve = ValidationError("phone_number is a required property")
+            assert ve.message == "Your notification has failed validation"
+            assert ve.status_code == 400
 
 
 def test_data_errors(app_for_test):

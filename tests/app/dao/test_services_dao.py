@@ -28,6 +28,7 @@ from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_live_services_data,
     dao_fetch_service_by_id,
+    dao_fetch_service_by_id_with_api_keys,
     dao_fetch_service_by_inbound_number,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
@@ -133,6 +134,39 @@ def test_create_service_with_organization(notify_db_session):
     assert service.organization == organization
 
 
+def test_fetch_service_by_id_with_api_keys(notify_db_session):
+    user = create_user(email='local.authority@local-authority.gov.uk')
+    organization = create_organization(
+        name='Some local authority', organization_type='state', domains=['local-authority.gov.uk'])
+    assert Service.query.count() == 0
+    service = Service(name="service_name",
+                      email_from="email_from",
+                      message_limit=1000,
+                      restricted=False,
+                      organization_type='federal',
+                      created_by=user)
+    dao_create_service(service, user)
+    assert Service.query.count() == 1
+    service_db = Service.query.one()
+    organization = Organization.query.get(organization.id)
+    assert service_db.name == "service_name"
+    assert service_db.id == service.id
+    assert service_db.email_from == 'email_from'
+    assert service_db.research_mode is False
+    assert service_db.prefix_sms is True
+    assert service.active is True
+    assert user in service_db.users
+    assert service_db.organization_type == 'state'
+    assert service.organization_id == organization.id
+    assert service.organization == organization
+
+    service = dao_fetch_service_by_id_with_api_keys(service.id, False)
+    assert service is not None
+    assert service.api_keys is not None
+    service = dao_fetch_service_by_id_with_api_keys(service.id, True)
+    assert service is not None
+
+
 def test_cannot_create_two_services_with_same_name(notify_db_session):
     user = create_user()
     assert Service.query.count() == 0
@@ -196,7 +230,7 @@ def test_should_add_user_to_service(notify_db_session):
     assert user in Service.query.first().users
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -265,7 +299,7 @@ def test_should_remove_user_from_service(notify_db_session):
     dao_create_service(service, user)
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -274,6 +308,31 @@ def test_should_remove_user_from_service(notify_db_session):
     assert new_user in Service.query.first().users
     dao_remove_user_from_service(service, new_user)
     assert new_user not in Service.query.first().users
+
+
+def test_should_remove_user_from_service_exception(notify_db_session):
+    user = create_user()
+    service = Service(name="service_name",
+                      email_from="email_from",
+                      message_limit=1000,
+                      restricted=False,
+                      created_by=user)
+    dao_create_service(service, user)
+    new_user = User(
+        name='Test User',
+        email_address='new_user@digital.fake.gov',
+        password='password',
+        mobile_number='+12028675309'
+    )
+    save_model_user(new_user, validated_email_access=True)
+    wrong_user = User(
+        name='Wrong User',
+        email_address='wrong_user@digital.fake.gov',
+        password='password',
+        mobile_number='+12028675309'
+    )
+    with pytest.raises(expected_exception=Exception):
+        dao_remove_user_from_service(service, wrong_user)
 
 
 def test_removing_a_user_from_a_service_deletes_their_permissions(sample_user, sample_service):
@@ -366,7 +425,7 @@ def test_get_all_user_services_only_returns_services_user_has_access_to(notify_d
     service_3 = create_service(service_name='service 3', user=user, email_from='service.3')
     new_user = User(
         name='Test User',
-        email_address='new_user@digital.cabinet-office.gov.uk',
+        email_address='new_user@digital.fake.gov',
         password='password',
         mobile_number='+12028675309'
     )
@@ -420,7 +479,7 @@ def test_dao_fetch_live_services_data(sample_user):
     assert results == [
         {'service_id': mock.ANY, 'service_name': 'Sample service', 'organization_name': 'test_org_1',
             'organization_type': 'federal', 'consent_to_research': None, 'contact_name': 'Test User',
-            'contact_email': 'notify@digital.cabinet-office.gov.uk', 'contact_mobile': '+12028675309',
+            'contact_email': 'notify@digital.fake.gov', 'contact_mobile': '+12028675309',
             'live_date': datetime(2014, 4, 20, 10, 0), 'sms_volume_intent': None, 'email_volume_intent': None,
             'sms_totals': 2, 'email_totals': 1, 'free_sms_fragment_limit': 100},
         {'service_id': mock.ANY, 'service_name': 'third', 'organization_name': None, 'consent_to_research': None,
@@ -428,7 +487,7 @@ def test_dao_fetch_live_services_data(sample_user):
             'contact_mobile': None, 'live_date': datetime(2016, 4, 20, 10, 0), 'sms_volume_intent': None,
             'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0, 'free_sms_fragment_limit': 200},
         {'service_id': mock.ANY, 'service_name': 'second', 'organization_name': None, 'consent_to_research': None,
-            'contact_name': 'Test User', 'contact_email': 'notify@digital.cabinet-office.gov.uk',
+            'contact_name': 'Test User', 'contact_email': 'notify@digital.fake.gov',
             'contact_mobile': '+12028675309', 'live_date': datetime(2017, 4, 20, 10, 0), 'sms_volume_intent': None,
             'organization_type': None, 'email_volume_intent': None, 'sms_totals': 0, 'email_totals': 0,
             'free_sms_fragment_limit': 300}
@@ -655,7 +714,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(not
 
     other_user = User(
         name='Other Test User',
-        email_address='other_user@digital.cabinet-office.gov.uk',
+        email_address='other_user@digital.fake.gov',
         password='password',
         mobile_number='+12028672000'
     )

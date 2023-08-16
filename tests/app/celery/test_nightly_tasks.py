@@ -3,6 +3,7 @@ from unittest.mock import ANY, call
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.celery import nightly_tasks
 from app.celery.nightly_tasks import (
@@ -146,6 +147,14 @@ def test_delete_inbound_sms_calls_child_task(notify_api, mocker):
     mocker.patch('app.celery.nightly_tasks.delete_inbound_sms_older_than_retention')
     delete_inbound_sms()
     assert nightly_tasks.delete_inbound_sms_older_than_retention.call_count == 1
+
+
+def test_delete_inbound_sms_calls_child_task_db_error(notify_api, mocker):
+    mock_delete = mocker.patch('app.celery.nightly_tasks.delete_inbound_sms_older_than_retention')
+    mock_delete.side_effect = SQLAlchemyError
+
+    with pytest.raises(expected_exception=SQLAlchemyError):
+        delete_inbound_sms()
 
 
 @freeze_time('2021-01-18T02:00')

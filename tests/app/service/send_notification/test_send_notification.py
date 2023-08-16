@@ -925,7 +925,7 @@ def test_should_send_notification_to_guest_list_recipient(
 
 @pytest.mark.parametrize(
     'notification_type, template_type, to', [
-        (EMAIL_TYPE, SMS_TYPE, 'notify@digital.cabinet-office.gov.uk'),
+        (EMAIL_TYPE, SMS_TYPE, 'notify@digital.fake.gov'),
         (SMS_TYPE, EMAIL_TYPE, '+12028675309')
     ])
 def test_should_error_if_notification_type_does_not_match_template_type(
@@ -1177,7 +1177,7 @@ def test_should_not_allow_email_notifications_if_service_permission_not_set(
     mocked = mocker.patch('app.celery.provider_tasks.deliver_email.apply_async')
 
     data = {
-        'to': 'notify@digital.cabinet-office.gov.uk',
+        'to': 'notify@digital.fake.gov',
         'template': str(sample_template_without_email_permission.id)
     }
 

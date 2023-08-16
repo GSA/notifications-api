@@ -49,7 +49,7 @@ jobs:
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest -n4 --maxfail=10
+      run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
     - name: Check coverage threshold

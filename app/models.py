@@ -679,9 +679,7 @@ class ServiceInboundApi(db.Model, Versioned):
 
     @property
     def bearer_token(self):
-        if self._bearer_token:
-            return encryption.decrypt(self._bearer_token)
-        return None
+        return encryption.decrypt(self._bearer_token)
 
     @bearer_token.setter
     def bearer_token(self, bearer_token):
@@ -718,9 +716,7 @@ class ServiceCallbackApi(db.Model, Versioned):
 
     @property
     def bearer_token(self):
-        if self._bearer_token:
-            return encryption.decrypt(self._bearer_token)
-        return None
+        return encryption.decrypt(self._bearer_token)
 
     @bearer_token.setter
     def bearer_token(self, bearer_token):
@@ -775,9 +771,7 @@ class ApiKey(db.Model, Versioned):
 
     @property
     def secret(self):
-        if self._secret:
-            return encryption.decrypt(self._secret)
-        return None
+        return encryption.decrypt(self._secret)
 
     @secret.setter
     def secret(self, secret):

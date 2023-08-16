@@ -1,5 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
+from unittest import mock
 
 import pytest
 from flask import json
@@ -7,6 +8,7 @@ from flask import json
 from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
 from app.notifications.receive_notifications import (
     create_inbound_sms_object,
+    fetch_potential_service,
     has_inbound_sms_permissions,
     unescape_string,
 )
@@ -271,7 +273,6 @@ def test_sns_inbound_sms_auth(notify_db_session, notify_api, client, mocker, aut
         assert response.status_code == status_code
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sms_object_works_with_alphanumeric_sender(sample_service_full_permissions):
     data = {
         'Message': 'hello',
@@ -291,3 +292,15 @@ def test_create_inbound_sms_object_works_with_alphanumeric_sender(sample_service
     )
 
     assert inbound_sms.user_number == 'ALPHANUM3R1C'
+
+
+@mock.patch('app.notifications.receive_notifications.dao_fetch_service_by_inbound_number')
+def test_fetch_potential_service_cant_find_it(mock_dao):
+    mock_dao.return_value = None
+    found_service = fetch_potential_service(234, 'sns')
+    assert found_service is False
+
+    # Permissions will not be set so it will still return false
+    mock_dao.return_value = create_service()
+    found_service = fetch_potential_service(234, 'sns')
+    assert found_service is False

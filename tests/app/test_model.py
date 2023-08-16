@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
@@ -12,14 +14,24 @@ from app.models import (
     NOTIFICATION_STATUS_TYPES_FAILED,
     NOTIFICATION_TECHNICAL_FAILURE,
     SMS_TYPE,
+    Agreement,
+    AnnualBilling,
     Notification,
+    NotificationHistory,
+    Service,
     ServiceGuestList,
+    ServicePermission,
+    User,
+    VerifyCode,
+    filter_null_value_fields,
 )
 from tests.app.db import (
     create_inbound_number,
     create_notification,
+    create_rate,
     create_reply_to_email,
     create_service,
+    create_service_guest_list,
     create_template,
     create_template_folder,
 )
@@ -278,3 +290,94 @@ def test_user_can_use_webauthn_if_they_login_with_it(sample_user, auth_type, can
 
 def test_user_can_use_webauthn_if_in_notify_team(notify_service):
     assert notify_service.users[0].can_use_webauthn
+
+
+@pytest.mark.parametrize(('obj', 'return_val'), [
+    ({'a': None}, {}),
+    ({'b': 123}, {'b': 123}),
+    ({'c': None, 'd': 456}, {'d': 456}),
+    ({}, {})
+])
+def test_filter_null_value_fields(obj, return_val):
+    assert return_val == filter_null_value_fields(obj)
+
+
+def test_user_validate_mobile_number():
+    user = User()
+    with pytest.raises(ValueError):
+        user.validate_mobile_number('somekey', 'abcde')
+
+
+def test_user_password():
+    user = User()
+    with pytest.raises(AttributeError):
+        user.password()
+
+
+def test_annual_billing_serialize():
+    now = datetime.utcnow()
+    ab = AnnualBilling()
+    service = Service()
+    ab.service = service
+    ab.created_at = now
+    serialized = ab.serialize()
+    print(serialized)
+    expected_keys = ['id', 'free_sms_fragment_limit', 'service_id', 'financial_year_start',
+                     'created_at', 'updated_at', 'service']
+    for key in expected_keys:
+        assert key in serialized
+        serialized.pop(key)
+    assert serialized == {}
+
+
+def test_repr():
+
+    service = create_service()
+    sps = ServicePermission.query.all()
+    for sp in sps:
+        assert "has service permission" in sp.__repr__()
+
+    sgl = create_service_guest_list(service)
+    assert sgl.__repr__() == 'Recipient guest_list_user@digital.fake.gov of type: email'
+
+
+def test_verify_code():
+    vc = VerifyCode()
+    with pytest.raises(AttributeError):
+        vc.code()
+
+
+def test_notification_get_created_by_email_address(sample_notification, sample_user):
+    sample_notification.created_by_id = sample_user.id
+    assert sample_notification.get_created_by_email_address() == 'notify@digital.fake.gov'
+
+
+def test_notification_history_from_original(sample_notification):
+    history = NotificationHistory.from_original(sample_notification)
+    assert type(history) == NotificationHistory
+
+
+def test_rate_str():
+    rate = create_rate('2023-01-01 00:00:00', 1.5, 'sms')
+
+    assert rate.__str__() == '1.5 sms 2023-01-01 00:00:00'
+
+
+def test_agreement_serialize():
+    agree = Agreement()
+    agree.id = 'abc'
+
+    now = datetime.utcnow()
+    agree.start_time = now
+    agree.end_time = now
+    serialize = agree.serialize()
+    serialize.pop('start_time')
+    serialize.pop('end_time')
+    assert serialize == {
+        'id': 'abc',
+        'type': None,
+        'partner_name': None,
+        'status': None,
+        'budget_amount': None,
+        'organization_id': None
+    }
