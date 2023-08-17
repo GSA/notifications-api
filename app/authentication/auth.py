@@ -1,7 +1,6 @@
 import uuid
 
 from flask import current_app, g, request
-from gds_metrics import Histogram
 from notifications_python_client.authentication import (
     decode_jwt_token,
     get_token_issuer,
@@ -23,11 +22,6 @@ from app.serialised_models import SerialisedService
 TOKEN_MESSAGE_ONE = "Invalid token: make sure your API token matches the example "  # nosec B105
 TOKEN_MESSAGE_TWO = "at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header"  # nosec B105
 GENERAL_TOKEN_ERROR_MESSAGE = TOKEN_MESSAGE_ONE + TOKEN_MESSAGE_TWO
-
-AUTH_DB_CONNECTION_DURATION_SECONDS = Histogram(
-    'auth_db_connection_duration_seconds',
-    'Time taken to get DB connection and fetch service from database',
-)
 
 
 class AuthError(Exception):
@@ -102,8 +96,7 @@ def requires_auth():
         raise AuthError("Invalid token: service id is not the right data type", 403)
 
     try:
-        with AUTH_DB_CONNECTION_DURATION_SECONDS.time():
-            service = SerialisedService.from_id(service_id)
+        service = SerialisedService.from_id(service_id)
     except NoResultFound:
         raise AuthError("Invalid token: service not found", 403)
 

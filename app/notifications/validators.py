@@ -1,5 +1,4 @@
 from flask import current_app
-from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     daily_total_cache_key,
@@ -31,21 +30,15 @@ from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 
-REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
-    'redis_exceeded_rate_limit_duration_seconds',
-    'Time taken to check rate limit',
-)
-
 
 def check_service_over_api_rate_limit(service, api_key):
     if current_app.config['API_RATE_LIMIT_ENABLED'] and current_app.config['REDIS_ENABLED']:
         cache_key = rate_limit_cache_key(service.id, api_key.key_type)
         rate_limit = service.rate_limit
         interval = 60
-        with REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS.time():
-            if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
-                current_app.logger.info("service {} has been rate limited for throughput".format(service.id))
-                raise RateLimitError(rate_limit, interval, api_key.key_type)
+        if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
+            current_app.logger.info("service {} has been rate limited for throughput".format(service.id))
+            raise RateLimitError(rate_limit, interval, api_key.key_type)
 
 
 def check_application_over_retention_limit(key_type, service):

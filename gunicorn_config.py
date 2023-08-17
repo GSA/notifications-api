@@ -5,7 +5,6 @@ import gunicorn
 import eventlet
 import socket
 
-from gds_metrics.gunicorn import child_exit  # noqa
 
 workers = 4
 worker_class = "eventlet"
