@@ -8,7 +8,6 @@ from alembic.config import Config
 from flask import Flask
 
 from app import create_app
-from app.config import configs
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
@@ -97,7 +96,8 @@ def _notify_db(notify_api):
 
     # create a database for this worker thread -
     from flask import current_app
-    #current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(worker_id)
+
+    # current_app.config['SQLALCHEMY_DATABASE_URI'] += '_{}'.format(worker_id)
     create_test_db(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
