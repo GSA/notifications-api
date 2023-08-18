@@ -61,6 +61,7 @@ vulture = "==2.8"
 packaging = "==23.1"
 notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
 newrelic = "*"
+pyotp = "~=2.8.0"
 
 [dev-packages]
 exceptiongroup = "==1.1.2"
