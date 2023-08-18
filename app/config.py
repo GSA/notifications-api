@@ -195,11 +195,6 @@ class Config(object):
                 'schedule': crontab(),
                 'options': {'queue': QueueNames.PERIODIC}
             },
-            'tend-providers-back-to-middle': {
-                'task': 'tend-providers-back-to-middle',
-                'schedule': crontab(minute='*/5'),
-                'options': {'queue': QueueNames.PERIODIC}
-            },
             'check-for-missing-rows-in-completed-jobs': {
                 'task': 'check-for-missing-rows-in-completed-jobs',
                 'schedule': crontab(minute='*/10'),
