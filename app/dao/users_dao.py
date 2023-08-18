@@ -14,7 +14,6 @@ from app.errors import InvalidRequest
 from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
-
 MFA_TOTP_DEFAULT_LENGTH = int(os.getenv('MFA_TOTP_LENGTH', 6))
 
 

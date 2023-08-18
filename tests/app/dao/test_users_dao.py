@@ -1,5 +1,5 @@
-import uuid
 import time
+import uuid
 from datetime import datetime, timedelta
 
 import pytest
