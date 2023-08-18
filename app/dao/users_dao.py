@@ -1,7 +1,8 @@
+import os
 import uuid
 from datetime import datetime, timedelta
-from secrets import randbelow
 
+import pyotp
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
@@ -14,14 +15,17 @@ from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
 
+MFA_TOTP_DEFAULT_LENGTH = int(os.getenv('MFA_TOTP_LENGTH', 6))
+
+
 def _remove_values_for_keys_if_present(dict, keys):
     for key in keys:
         dict.pop(key, None)
 
 
-def create_secret_code(length=6):
-    random_number = randbelow(10 ** length)
-    return "{:0{length}d}".format(random_number, length=length)
+def create_secret_code(length=MFA_TOTP_DEFAULT_LENGTH):
+    totp = pyotp.TOTP(os.getenv('MFA_TOTP_SECRET'), digits=length)
+    return totp.now()
 
 
 def save_user_attribute(usr, update_dict=None):
