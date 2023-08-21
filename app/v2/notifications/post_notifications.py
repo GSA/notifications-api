@@ -4,7 +4,6 @@ from datetime import datetime
 
 import botocore
 from flask import abort, current_app, jsonify, request
-from gds_metrics import Histogram
 from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app import (
@@ -53,23 +52,17 @@ from app.v2.notifications.notification_schemas import (
 )
 from app.v2.utils import get_valid_json
 
-POST_NOTIFICATION_JSON_PARSE_DURATION_SECONDS = Histogram(
-    'post_notification_json_parse_duration_seconds',
-    'Time taken to parse and validate post request json',
-)
-
 
 @v2_notification_blueprint.route('/<notification_type>', methods=['POST'])
 def post_notification(notification_type):
-    with POST_NOTIFICATION_JSON_PARSE_DURATION_SECONDS.time():
-        request_json = get_valid_json()
+    request_json = get_valid_json()
 
-        if notification_type == EMAIL_TYPE:
-            form = validate(request_json, post_email_request)
-        elif notification_type == SMS_TYPE:
-            form = validate(request_json, post_sms_request)
-        else:
-            abort(404)
+    if notification_type == EMAIL_TYPE:
+        form = validate(request_json, post_email_request)
+    elif notification_type == SMS_TYPE:
+        form = validate(request_json, post_sms_request)
+    else:
+        abort(404)
 
     check_service_has_permission(notification_type, authenticated_service.permissions)
 

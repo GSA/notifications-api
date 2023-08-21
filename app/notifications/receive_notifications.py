@@ -1,5 +1,4 @@
 from flask import Blueprint, current_app, json, jsonify, request
-from gds_metrics.metrics import Counter
 from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app.celery import tasks
@@ -12,13 +11,6 @@ from app.notifications.sns_handlers import sns_notification_handler
 
 receive_notifications_blueprint = Blueprint('receive_notifications', __name__)
 register_errors(receive_notifications_blueprint)
-
-
-INBOUND_SMS_COUNTER = Counter(
-    'inbound_sms',
-    'Total number of inbound SMS received',
-    ['provider']
-)
 
 
 @receive_notifications_blueprint.route('/notifications/sms/receive/sns', methods=['POST'])
@@ -63,8 +55,6 @@ def receive_sns_sms():
             return jsonify(
                 result="success", message="SMS-SNS callback succeeded"
             ), 200
-
-        INBOUND_SMS_COUNTER.labels("sns").inc()
 
         content = message.get("messageBody")
         from_number = message.get('originationNumber')
