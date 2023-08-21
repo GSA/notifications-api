@@ -52,6 +52,9 @@ jobs:
       run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+        MFA_TOTP_INTERVAL: ${{ MFA_TOTP_INTERVAL }}
+        MFA_TOTP_LENGTH: ${{ MFA_TOTP_LENGTH }}
+        MFA_TOTP_SECRET ${{ MFA_TOTP_SECRET }}
     - name: Check coverage threshold
       run: pipenv run coverage report --fail-under=50
 
