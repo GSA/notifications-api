@@ -124,7 +124,7 @@ def process_row(row, template, job, service, sender_id=None):
             encrypted,
         ),
         task_kwargs,
-        queue=QueueNames.DATABASE if not service.research_mode else QueueNames.RESEARCH_MODE
+        queue=QueueNames.DATABASE
     )
     return notification_id
 
@@ -173,7 +173,7 @@ def save_sms(self,
 
         provider_tasks.deliver_sms.apply_async(
             [str(saved_notification.id)],
-            queue=QueueNames.SEND_SMS if not service.research_mode else QueueNames.RESEARCH_MODE
+            queue=QueueNames.SEND_SMS
         )
 
         current_app.logger.debug(
@@ -230,7 +230,7 @@ def save_email(self,
 
         provider_tasks.deliver_email.apply_async(
             [str(saved_notification.id)],
-            queue=QueueNames.SEND_EMAIL if not service.research_mode else QueueNames.RESEARCH_MODE
+            queue=QueueNames.SEND_EMAIL
         )
 
         current_app.logger.debug("Email {} created at {}".format(saved_notification.id, saved_notification.created_at))
@@ -274,7 +274,6 @@ def save_api_email_or_sms(self, encrypted_notification):
             document_download_count=notification['document_download_count']
         )
 
-        q = q if not service.research_mode else QueueNames.RESEARCH_MODE
         provider_task.apply_async(
             [notification['id']],
             queue=q

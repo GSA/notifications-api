@@ -191,10 +191,8 @@ def process_sms_or_email_notification(
     if not simulated:
         queue_name = QueueNames.PRIORITY if template_process_type == PRIORITY else None
         send_notification_to_queue_detached(
-            key_type=api_user.key_type,
             notification_type=notification_type,
             notification_id=notification_id,
-            research_mode=service.research_mode,  # research_mode is deprecated
             queue=queue_name
         )
     else:

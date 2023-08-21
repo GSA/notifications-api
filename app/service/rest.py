@@ -692,7 +692,7 @@ def verify_reply_to_email_address(service_id):
         reply_to_text=notify_service.get_default_reply_to_email_address()
     )
 
-    send_notification_to_queue(saved_notification, False, queue=QueueNames.NOTIFY)
+    send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data={"id": saved_notification.id}), 201
 
