@@ -114,17 +114,8 @@ class AwsSesClient(EmailClient):
                 ReplyToAddresses=[punycode_encode_email(addr) for addr in reply_to_addresses]
             )
         except botocore.exceptions.ClientError as e:
+            _do_fancy_exception_handling(e)
 
-            # http://docs.aws.amazon.com/ses/latest/DeveloperGuide/api-error-codes.html
-            if e.response['Error']['Code'] == 'InvalidParameterValue':
-                raise EmailClientNonRetryableException(e.response['Error']['Message'])
-            elif (
-                e.response['Error']['Code'] == 'Throttling'
-                and e.response['Error']['Message'] == 'Maximum sending rate exceeded.'
-            ):
-                raise AwsSesClientThrottlingSendRateException(str(e))
-            else:
-                raise AwsSesClientException(str(e))
         except Exception as e:
             raise AwsSesClientException(str(e))
         else:
@@ -137,3 +128,16 @@ def punycode_encode_email(email_address):
     # only the hostname should ever be punycode encoded.
     local, hostname = email_address.split('@')
     return '{}@{}'.format(local, hostname.encode('idna').decode('utf-8'))
+
+
+def _do_fancy_exception_handling(e):
+    # http://docs.aws.amazon.com/ses/latest/DeveloperGuide/api-error-codes.html
+    if e.response['Error']['Code'] == 'InvalidParameterValue':
+        raise EmailClientNonRetryableException(e.response['Error']['Message'])
+    elif (
+            e.response['Error']['Code'] == 'Throttling'
+            and e.response['Error']['Message'] == 'Maximum sending rate exceeded.'
+    ):
+        raise AwsSesClientThrottlingSendRateException(str(e))
+    else:
+        raise AwsSesClientException(str(e))
