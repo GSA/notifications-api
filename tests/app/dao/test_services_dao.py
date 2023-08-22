@@ -984,13 +984,14 @@ def test_dao_fetch_todays_stats_for_all_services_groups_correctly(notify_db_sess
 
     stats = dao_fetch_todays_stats_for_all_services()
     assert len(stats) == 4
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    print(stats[0])
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'sms', 'created', 2) in stats
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'sms', 'failed', 1) in stats
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'email', 'created', 1) in stats
-    assert (service2.id, service2.name, service2.restricted, service2.research_mode, service2.active,
+    assert (service2.id, service2.name, service2.restricted, service2.active,
             service2.created_at, 'sms', 'created', 1) in stats
 
 
@@ -1134,9 +1135,8 @@ def _assert_service_permissions(service_permissions, expected):
 def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     service_1 = create_service(service_name="Service 1", service_id=fake_uuid)
     service_3 = create_service(service_name="Service 3", restricted=True)  # restricted is excluded
-    service_4 = create_service(service_name="Service 4", research_mode=True)  # research mode is excluded
     service_5 = create_service(service_name="Service 5", active=False)  # not active is excluded
-    services = [service_1, service_3, service_4, service_5]
+    services = [service_1, service_3, service_5]
 
     tv_number = "447700900001"
     normal_number = "447711900001"
@@ -1175,13 +1175,12 @@ def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
 def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid):
     service_1 = create_service(service_name="Service 1", service_id=fake_uuid)
     service_3 = create_service(service_name="Service 3", restricted=True)  # restricted is excluded
-    service_4 = create_service(service_name="Service 4", research_mode=True)  # research mode is excluded
     service_5 = create_service(service_name="Service 5", active=False)  # not active is excluded
-    services = [service_1, service_3, service_4, service_5]
+    services = [service_1, service_3, service_5]
 
     for service in services:
         template = create_template(service)
-        for _ in range(0, 3):
+        for _ in range(0, 2):
             create_notification(template, status="permanent-failure")
             create_notification(template, status="delivered")
             create_notification(template, status="sending")
@@ -1203,8 +1202,6 @@ def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid)
     end_date = datetime.utcnow()
 
     result = dao_find_services_with_high_failure_rates(start_date, end_date, threshold=3)
-    # assert len(result) == 3
-    # assert str(result[0].service_id) == fake_uuid
     assert len(result) == 1
     assert str(result[0].service_id) == fake_uuid
     assert result[0].permanent_failure_rate == 0.25

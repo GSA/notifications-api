@@ -539,7 +539,6 @@ def get_detailed_services(start_date, end_date, only_active=False, include_from_
             'id': str(rows[0].service_id),
             'name': rows[0].name,
             'notification_type': rows[0].notification_type,
-            'research_mode': rows[0].research_mode,
             'restricted': rows[0].restricted,
             'active': rows[0].active,
             'created_at': rows[0].created_at,

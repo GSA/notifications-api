@@ -62,7 +62,6 @@ def _notify_db(notify_api):
             'sqlalchemy.url',
             app_context.app.config['SQLALCHEMY_DATABASE_URI']
         )
-
         # Run migrations on the test database.
         upgrade(config, 'head')
 

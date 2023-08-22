@@ -16,7 +16,6 @@ class QueueNames(object):
     SEND_SMS = 'send-sms-tasks'
     CHECK_SMS = 'check-sms_tasks'
     SEND_EMAIL = 'send-email-tasks'
-    RESEARCH_MODE = 'research-mode-tasks'
     REPORTING = 'reporting-tasks'
     JOBS = 'job-tasks'
     RETRY = 'retry-tasks'
@@ -37,7 +36,6 @@ class QueueNames(object):
             QueueNames.SEND_SMS,
             QueueNames.CHECK_SMS,
             QueueNames.SEND_EMAIL,
-            QueueNames.RESEARCH_MODE,
             QueueNames.REPORTING,
             QueueNames.JOBS,
             QueueNames.RETRY,

@@ -10,11 +10,7 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients
-from app.celery.research_mode_tasks import (
-    send_email_response,
-    send_sms_response,
-)
+from app import db, notification_provider_clients
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import (
@@ -25,7 +21,6 @@ from app.models import (
     BRANDING_BOTH,
     BRANDING_ORG_BANNER,
     EMAIL_TYPE,
-    KEY_TYPE_TEST,
     NOTIFICATION_SENDING,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     NOTIFICATION_TECHNICAL_FAILURE,
@@ -57,34 +52,29 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
-            update_notification_to_sending(notification, provider)
-            send_sms_response(provider.name, str(notification.id))
-
+        try:
+            # End DB session here so that we don't have a connection stuck open waiting on the call
+            # to one of the SMS providers
+            # We don't want to tie our DB connections being open to the performance of our SMS
+            # providers as a slow down of our providers can cause us to run out of DB connections
+            # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
+            # closing the session (as otherwise it would be reopened immediately)
+            send_sms_kwargs = {
+                'to': notification.normalised_to,
+                'content': str(template),
+                'reference': str(notification.id),
+                'sender': notification.reply_to_text,
+                'international': notification.international,
+            }
+            db.session.close()  # no commit needed as no changes to objects have been made above
+            message_id = provider.send_sms(**send_sms_kwargs)
+        except Exception as e:
+            notification.billable_units = template.fragment_count
+            dao_update_notification(notification)
+            raise e
         else:
-            try:
-                # End DB session here so that we don't have a connection stuck open waiting on the call
-                # to one of the SMS providers
-                # We don't want to tie our DB connections being open to the performance of our SMS
-                # providers as a slow down of our providers can cause us to run out of DB connections
-                # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
-                # closing the session (as otherwise it would be reopened immediately)
-                send_sms_kwargs = {
-                    'to': notification.normalised_to,
-                    'content': str(template),
-                    'reference': str(notification.id),
-                    'sender': notification.reply_to_text,
-                    'international': notification.international,
-                }
-                db.session.close()  # no commit needed as no changes to objects have been made above
-                message_id = provider.send_sms(**send_sms_kwargs)
-            except Exception as e:
-                notification.billable_units = template.fragment_count
-                dao_update_notification(notification)
-                raise e
-            else:
-                notification.billable_units = template.fragment_count
-                update_notification_to_sending(notification, provider)
+            notification.billable_units = template.fragment_count
+            update_notification_to_sending(notification, provider)
     return message_id
 
 
@@ -110,24 +100,20 @@ def send_email_to_provider(notification):
             template_dict,
             values=notification.personalisation
         )
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
-            notification.reference = str(create_uuid())
-            update_notification_to_sending(notification, provider)
-            send_email_response(notification.reference, notification.to)
-        else:
-            from_address = '"{}" <{}@{}>'.format(service.name, service.email_from,
-                                                 current_app.config['NOTIFY_EMAIL_DOMAIN'])
 
-            reference = provider.send_email(
-                from_address,
-                notification.normalised_to,
-                plain_text_email.subject,
-                body=str(plain_text_email),
-                html_body=str(html_email),
-                reply_to_address=notification.reply_to_text
-            )
-            notification.reference = reference
-            update_notification_to_sending(notification, provider)
+        from_address = '"{}" <{}@{}>'.format(service.name, service.email_from,
+                                             current_app.config['NOTIFY_EMAIL_DOMAIN'])
+
+        reference = provider.send_email(
+            from_address,
+            notification.normalised_to,
+            plain_text_email.subject,
+            body=str(plain_text_email),
+            html_body=str(html_email),
+            reply_to_address=notification.reply_to_text
+        )
+        notification.reference = reference
+        update_notification_to_sending(notification, provider)
 
 
 def update_notification_to_sending(notification, provider):
