@@ -11,15 +11,16 @@ from notifications_utils.template import BroadcastMessageTemplate
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 
-revision = '0336_broadcast_msg_content_2'
-down_revision = '0335_broadcast_msg_content'
+revision = "0336_broadcast_msg_content_2"
+down_revision = "0335_broadcast_msg_content"
 
 
 def upgrade():
-
     conn = op.get_bind()
 
-    results = conn.execute(sa.text("""
+    results = conn.execute(
+        sa.text(
+            """
         UPDATE
             broadcast_message
         SET
@@ -31,8 +32,10 @@ def upgrade():
             broadcast_message.template_id = templates_history.id and
             broadcast_message.template_version = templates_history.version
         ;
-    """))
+    """
+        )
+    )
 
 
 def downgrade():
-    op.alter_column('broadcast_message', 'content', nullable=True)
+    op.alter_column("broadcast_message", "content", nullable=True)

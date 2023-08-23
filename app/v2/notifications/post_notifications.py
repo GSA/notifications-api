@@ -53,7 +53,7 @@ from app.v2.notifications.notification_schemas import (
 from app.v2.utils import get_valid_json
 
 
-@v2_notification_blueprint.route('/<notification_type>', methods=['POST'])
+@v2_notification_blueprint.route("/<notification_type>", methods=["POST"])
 def post_notification(notification_type):
     request_json = get_valid_json()
 
@@ -69,11 +69,11 @@ def post_notification(notification_type):
     check_rate_limiting(authenticated_service, api_user)
 
     template, template_with_content = validate_template(
-        form['template_id'],
-        form.get('personalisation', {}),
+        form["template_id"],
+        form.get("personalisation", {}),
         authenticated_service,
         notification_type,
-        check_char_count=False
+        check_char_count=False,
     )
 
     reply_to = get_reply_to_text(notification_type, form, template)
@@ -85,7 +85,7 @@ def post_notification(notification_type):
         template_with_content=template_with_content,
         template_process_type=template.process_type,
         service=authenticated_service,
-        reply_to_text=reply_to
+        reply_to_text=reply_to,
     )
 
     return jsonify(notification), 201
@@ -102,20 +102,24 @@ def process_sms_or_email_notification(
     reply_to_text=None,
 ):
     notification_id = uuid.uuid4()
-    form_send_to = form['email_address'] if notification_type == EMAIL_TYPE else form['phone_number']
+    form_send_to = (
+        form["email_address"]
+        if notification_type == EMAIL_TYPE
+        else form["phone_number"]
+    )
 
-    send_to = validate_and_format_recipient(send_to=form_send_to,
-                                            key_type=api_user.key_type,
-                                            service=service,
-                                            notification_type=notification_type)
+    send_to = validate_and_format_recipient(
+        send_to=form_send_to,
+        key_type=api_user.key_type,
+        service=service,
+        notification_type=notification_type,
+    )
 
     # Do not persist or send notification to the queue if it is a simulated recipient
     simulated = simulated_recipient(send_to, notification_type)
 
     personalisation, document_download_count = process_document_uploads(
-        form.get('personalisation'),
-        service,
-        simulated=simulated
+        form.get("personalisation"), service, simulated=simulated
     )
     if document_download_count:
         # We changed personalisation which means we need to update the content
@@ -126,18 +130,20 @@ def process_sms_or_email_notification(
 
     resp = create_response_for_post_notification(
         notification_id=notification_id,
-        client_reference=form.get('reference', None),
+        client_reference=form.get("reference", None),
         template_id=template.id,
         template_version=template.version,
         service_id=service.id,
         notification_type=notification_type,
         reply_to=reply_to_text,
-        template_with_content=template_with_content
+        template_with_content=template_with_content,
     )
 
-    if service.high_volume \
-        and api_user.key_type == KEY_TYPE_NORMAL \
-            and notification_type in [EMAIL_TYPE, SMS_TYPE]:
+    if (
+        service.high_volume
+        and api_user.key_type == KEY_TYPE_NORMAL
+        and notification_type in [EMAIL_TYPE, SMS_TYPE]
+    ):
         # Put service with high volumes of notifications onto a queue
         # To take the pressure off the db for API requests put the notification for our high volume service onto a queue
         # the task will then save the notification, then call send_notification_to_queue.
@@ -153,7 +159,7 @@ def process_sms_or_email_notification(
                 service_id=service.id,
                 personalisation=personalisation,
                 document_download_count=document_download_count,
-                reply_to_text=reply_to_text
+                reply_to_text=reply_to_text,
             )
             return resp
         except (botocore.exceptions.ClientError, botocore.parsers.ResponseParserError):
@@ -162,7 +168,7 @@ def process_sms_or_email_notification(
             # the exception we get here isn't handled correctly by botocore - we get a ResponseParserError instead.
             # Hopefully this is no longer an issue with Redis as celery's backing store
             current_app.logger.info(
-                f'Notification {notification_id} failed to save to high volume queue. Using normal flow instead'
+                f"Notification {notification_id} failed to save to high volume queue. Using normal flow instead"
             )
 
     persist_notification(
@@ -175,10 +181,10 @@ def process_sms_or_email_notification(
         notification_type=notification_type,
         api_key_id=api_user.id,
         key_type=api_user.key_type,
-        client_reference=form.get('reference', None),
+        client_reference=form.get("reference", None),
         simulated=simulated,
         reply_to_text=reply_to_text,
-        document_download_count=document_download_count
+        document_download_count=document_download_count,
     )
 
     if not simulated:
@@ -188,10 +194,12 @@ def process_sms_or_email_notification(
             notification_type=notification_type,
             notification_id=notification_id,
             research_mode=service.research_mode,  # research_mode is deprecated
-            queue=queue_name
+            queue=queue_name,
         )
     else:
-        current_app.logger.debug("POST simulated notification for id: {}".format(notification_id))
+        current_app.logger.debug(
+            "POST simulated notification for id: {}".format(notification_id)
+        )
 
     return resp
 
@@ -206,27 +214,27 @@ def save_email_or_sms_to_queue(
     service_id,
     personalisation,
     document_download_count,
-    reply_to_text=None
+    reply_to_text=None,
 ):
     data = {
         "id": notification_id,
         "template_id": str(template.id),
         "template_version": template.version,
-        "to": form['email_address'] if notification_type == EMAIL_TYPE else form['phone_number'],
+        "to": form["email_address"]
+        if notification_type == EMAIL_TYPE
+        else form["phone_number"],
         "service_id": str(service_id),
         "personalisation": personalisation,
         "notification_type": notification_type,
         "api_key_id": str(api_key.id),
         "key_type": api_key.key_type,
-        "client_reference": form.get('reference', None),
+        "client_reference": form.get("reference", None),
         "reply_to_text": reply_to_text,
         "document_download_count": document_download_count,
         "status": NOTIFICATION_CREATED,
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
-    encrypted = encryption.encrypt(
-        data
-    )
+    encrypted = encryption.encrypt(data)
 
     if notification_type == EMAIL_TYPE:
         save_api_email.apply_async([encrypted], queue=QueueNames.SAVE_API_EMAIL)
@@ -241,7 +249,11 @@ def process_document_uploads(personalisation_data, service, simulated=False):
     Returns modified personalisation dict and a count of document uploads. If there are no document uploads, returns
     a count of `None` rather than `0`.
     """
-    file_keys = [k for k, v in (personalisation_data or {}).items() if isinstance(v, dict) and 'file' in v]
+    file_keys = [
+        k
+        for k, v in (personalisation_data or {}).items()
+        if isinstance(v, dict) and "file" in v
+    ]
     if not file_keys:
         return personalisation_data, None
 
@@ -249,16 +261,20 @@ def process_document_uploads(personalisation_data, service, simulated=False):
 
     check_if_service_can_send_files_by_email(
         service_contact_link=authenticated_service.contact_link,
-        service_id=authenticated_service.id
+        service_id=authenticated_service.id,
     )
 
     for key in file_keys:
         if simulated:
-            personalisation_data[key] = document_download_client.get_upload_url(service.id) + '/test-document'
+            personalisation_data[key] = (
+                document_download_client.get_upload_url(service.id) + "/test-document"
+            )
         else:
             try:
                 personalisation_data[key] = document_download_client.upload_document(
-                    service.id, personalisation_data[key]['file'], personalisation_data[key].get('is_csv')
+                    service.id,
+                    personalisation_data[key]["file"],
+                    personalisation_data[key].get("is_csv"),
                 )
             except DocumentDownloadError as e:
                 raise BadRequestError(message=e.message, status_code=e.status_code)
@@ -270,9 +286,14 @@ def get_reply_to_text(notification_type, form, template):
     reply_to = None
     if notification_type == EMAIL_TYPE:
         service_email_reply_to_id = form.get("email_reply_to_id", None)
-        reply_to = check_service_email_reply_to_id(
-            str(authenticated_service.id), service_email_reply_to_id, notification_type
-        ) or template.reply_to_text
+        reply_to = (
+            check_service_email_reply_to_id(
+                str(authenticated_service.id),
+                service_email_reply_to_id,
+                notification_type,
+            )
+            or template.reply_to_text
+        )
 
     elif notification_type == SMS_TYPE:
         service_sms_sender_id = form.get("sms_sender_id", None)
@@ -295,7 +316,7 @@ def create_response_for_post_notification(
     service_id,
     notification_type,
     reply_to,
-    template_with_content
+    template_with_content,
 ):
     if notification_type == SMS_TYPE:
         create_resp_partial = functools.partial(
@@ -306,10 +327,17 @@ def create_response_for_post_notification(
         create_resp_partial = functools.partial(
             create_post_email_response_from_notification,
             subject=template_with_content.subject,
-            email_from='{}@{}'.format(authenticated_service.email_from, current_app.config['NOTIFY_EMAIL_DOMAIN']),
+            email_from="{}@{}".format(
+                authenticated_service.email_from,
+                current_app.config["NOTIFY_EMAIL_DOMAIN"],
+            ),
         )
     resp = create_resp_partial(
-        notification_id, client_reference, template_id, template_version, service_id,
+        notification_id,
+        client_reference,
+        template_id,
+        template_version,
+        service_id,
         url_root=request.url_root,
         content=template_with_content.content_with_placeholders_filled_in,
     )

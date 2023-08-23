@@ -9,13 +9,20 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0280_invited_user_folder_perms'
-down_revision = '0279_remove_fk_to_users'
+revision = "0280_invited_user_folder_perms"
+down_revision = "0279_remove_fk_to_users"
 
 
 def upgrade():
-    op.add_column('invited_users', sa.Column('folder_permissions', postgresql.JSONB(none_as_null=True, astext_type=sa.Text()), nullable=True))
+    op.add_column(
+        "invited_users",
+        sa.Column(
+            "folder_permissions",
+            postgresql.JSONB(none_as_null=True, astext_type=sa.Text()),
+            nullable=True,
+        ),
+    )
 
 
 def downgrade():
-    op.drop_column('invited_users', 'folder_permissions')
+    op.drop_column("invited_users", "folder_permissions")

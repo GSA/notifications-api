@@ -8,15 +8,29 @@ Create Date: 2021-05-10 15:06:40.046786
 from alembic import op
 import sqlalchemy as sa
 
-revision = '0353_broadcast_provider_not_null'
-down_revision = '0352_broadcast_provider_types'
+revision = "0353_broadcast_provider_not_null"
+down_revision = "0352_broadcast_provider_types"
 
 
 def upgrade():
-    op.execute("UPDATE service_broadcast_settings SET provider = 'all' WHERE provider is null")
-    op.alter_column('service_broadcast_settings', 'provider', existing_type=sa.VARCHAR(), nullable=False)
+    op.execute(
+        "UPDATE service_broadcast_settings SET provider = 'all' WHERE provider is null"
+    )
+    op.alter_column(
+        "service_broadcast_settings",
+        "provider",
+        existing_type=sa.VARCHAR(),
+        nullable=False,
+    )
 
 
 def downgrade():
-    op.alter_column('service_broadcast_settings', 'provider', existing_type=sa.VARCHAR(), nullable=True)
-    op.execute("UPDATE service_broadcast_settings SET provider = null WHERE provider = 'all'")
+    op.alter_column(
+        "service_broadcast_settings",
+        "provider",
+        existing_type=sa.VARCHAR(),
+        nullable=True,
+    )
+    op.execute(
+        "UPDATE service_broadcast_settings SET provider = null WHERE provider = 'all'"
+    )

@@ -34,17 +34,17 @@ def create_content_for_notification(template, personalisation):
     if template.template_type == EMAIL_TYPE:
         template_object = PlainTextEmailTemplate(
             {
-                'content': template.content,
-                'subject': template.subject,
-                'template_type': template.template_type,
+                "content": template.content,
+                "subject": template.subject,
+                "template_type": template.template_type,
             },
             personalisation,
         )
     if template.template_type == SMS_TYPE:
         template_object = SMSMessageTemplate(
             {
-                'content': template.content,
-                'template_type': template.template_type,
+                "content": template.content,
+                "template_type": template.template_type,
             },
             personalisation,
         )
@@ -56,8 +56,10 @@ def create_content_for_notification(template, personalisation):
 
 def check_placeholders(template_object):
     if template_object.missing_data:
-        message = 'Missing personalisation: {}'.format(", ".join(template_object.missing_data))
-        raise BadRequestError(fields=[{'template': message}], message=message)
+        message = "Missing personalisation: {}".format(
+            ", ".join(template_object.missing_data)
+        )
+        raise BadRequestError(fields=[{"template": message}], message=message)
 
 
 def persist_notification(
@@ -84,13 +86,15 @@ def persist_notification(
     document_download_count=None,
     updated_at=None
 ):
-    current_app.logger.info('Persisting notification')
+    current_app.logger.info("Persisting notification")
 
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
 
-    current_app.logger.info('Persisting notification with id {}'.format(notification_id))
+    current_app.logger.info(
+        "Persisting notification with id {}".format(notification_id)
+    )
 
     notification = Notification(
         id=notification_id,
@@ -112,37 +116,49 @@ def persist_notification(
         reply_to_text=reply_to_text,
         billable_units=billable_units,
         document_download_count=document_download_count,
-        updated_at=updated_at
+        updated_at=updated_at,
     )
 
     if notification_type == SMS_TYPE:
-        formatted_recipient = validate_and_format_phone_number(recipient, international=True)
+        formatted_recipient = validate_and_format_phone_number(
+            recipient, international=True
+        )
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient
         notification.international = recipient_info.international
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == EMAIL_TYPE:
-        current_app.logger.info('Persisting notification with type: {}'.format(EMAIL_TYPE))
+        current_app.logger.info(
+            "Persisting notification with type: {}".format(EMAIL_TYPE)
+        )
         notification.normalised_to = format_email_address(notification.to)
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
-        current_app.logger.info('Firing dao_create_notification')
+        current_app.logger.info("Firing dao_create_notification")
         dao_create_notification(notification)
-        if key_type != KEY_TYPE_TEST and current_app.config['REDIS_ENABLED']:
-            current_app.logger.info('Redis enabled, querying cache key for service id: {}'.format(service.id))
+        if key_type != KEY_TYPE_TEST and current_app.config["REDIS_ENABLED"]:
+            current_app.logger.info(
+                "Redis enabled, querying cache key for service id: {}".format(
+                    service.id
+                )
+            )
             total_key = redis.daily_total_cache_key()
             if redis_store.get(total_key) is None:
-                current_app.logger.info('Redis daily total cache key does not exist')
+                current_app.logger.info("Redis daily total cache key does not exist")
                 redis_store.set(total_key, 1, ex=86400)
-                current_app.logger.info('Set redis daily total cache key to 1')
+                current_app.logger.info("Set redis daily total cache key to 1")
             else:
-                current_app.logger.info('Redis total limit cache key does exist')
+                current_app.logger.info("Redis total limit cache key does exist")
                 redis_store.incr(total_key)
-                current_app.logger.info('Redis total limit cache key has been incremented')
+                current_app.logger.info(
+                    "Redis total limit cache key has been incremented"
+                )
         current_app.logger.info(
-            "{} {} created at {}".format(notification_type, notification_id, notification_created_at)
+            "{} {} created at {}".format(
+                notification_type, notification_id, notification_created_at
+            )
         )
     return notification
 
@@ -169,22 +185,28 @@ def send_notification_to_queue_detached(
         raise
 
     current_app.logger.debug(
-        "{} {} sent to the {} queue for delivery".format(notification_type,
-                                                         notification_id,
-                                                         queue))
+        "{} {} sent to the {} queue for delivery".format(
+            notification_type, notification_id, queue
+        )
+    )
 
 
 def send_notification_to_queue(notification, research_mode, queue=None):
     send_notification_to_queue_detached(
-        notification.key_type, notification.notification_type, notification.id, research_mode, queue
+        notification.key_type,
+        notification.notification_type,
+        notification.id,
+        research_mode,
+        queue,
     )
 
 
 def simulated_recipient(to_address, notification_type):
     if notification_type == SMS_TYPE:
         formatted_simulated_numbers = [
-            validate_and_format_phone_number(number) for number in current_app.config['SIMULATED_SMS_NUMBERS']
+            validate_and_format_phone_number(number)
+            for number in current_app.config["SIMULATED_SMS_NUMBERS"]
         ]
         return to_address in formatted_simulated_numbers
     else:
-        return to_address in current_app.config['SIMULATED_EMAIL_ADDRESSES']
+        return to_address in current_app.config["SIMULATED_EMAIL_ADDRESSES"]

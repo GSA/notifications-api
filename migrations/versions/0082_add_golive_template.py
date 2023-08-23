@@ -15,10 +15,10 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import text
 
-revision = '0082_add_go_live_template'
-down_revision = '0081_noti_status_as_enum'
+revision = "0082_add_go_live_template"
+down_revision = "0081_noti_status_as_enum"
 
-template_id = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
+template_id = "618185c6-3636-49cd-b7d2-6f6f5eb3bdde"
 
 
 def upgrade():
@@ -84,35 +84,33 @@ GOV.UK Notify team
 """
 
     template_name = "Automated \"You''re now live\" message"
-    template_subject = '((service name)) is now live on GOV.UK Notify'
+    template_subject = "((service name)) is now live on GOV.UK Notify"
 
     input_params = {
-        'template_id': template_id,
-        'template_name': template_name,
-        'template_type': 'email',
-        'time_now': datetime.utcnow(),
-        'content': template_content,
-        'notify_service_id': current_app.config['NOTIFY_SERVICE_ID'],
-        'subject': template_subject,
-        'user_id': current_app.config['NOTIFY_USER_ID'],
-        'process_type': 'normal'
+        "template_id": template_id,
+        "template_name": template_name,
+        "template_type": "email",
+        "time_now": datetime.utcnow(),
+        "content": template_content,
+        "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
+        "subject": template_subject,
+        "user_id": current_app.config["NOTIFY_USER_ID"],
+        "process_type": "normal",
     }
     conn = op.get_bind()
-    conn.execute(
-        text(template_history_insert), input_params
-    )
+    conn.execute(text(template_history_insert), input_params)
 
-    conn.execute(
-        text(template_insert), input_params
-    )
+    conn.execute(text(template_insert), input_params)
 
 
 def downgrade():
-    input_params = {
-        "template_id": template_id
-    }
+    input_params = {"template_id": template_id}
     conn = op.get_bind()
-    conn.execute(text("DELETE FROM notifications WHERE template_id = '{}'"), input_params)
-    conn.execute(text("DELETE FROM notification_history WHERE template_id = '{}'"), input_params)
+    conn.execute(
+        text("DELETE FROM notifications WHERE template_id = '{}'"), input_params
+    )
+    conn.execute(
+        text("DELETE FROM notification_history WHERE template_id = '{}'"), input_params
+    )
     conn.execute(text("DELETE FROM templates_history WHERE id = '{}'"), input_params)
     conn.execute(text("DELETE FROM templates WHERE id = '{}'"), input_params)

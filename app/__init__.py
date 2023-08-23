@@ -39,10 +39,10 @@ class SQLAlchemy(_SQLAlchemy):
 
     def apply_driver_hacks(self, app, info, options):
         sa_url, options = super().apply_driver_hacks(app, info, options)
-        if 'connect_args' not in options:
-            options['connect_args'] = {}
-        options['connect_args']["options"] = "-c statement_timeout={}".format(
-            int(app.config['SQLALCHEMY_STATEMENT_TIMEOUT']) * 1000
+        if "connect_args" not in options:
+            options["connect_args"] = {}
+        options["connect_args"]["options"] = "-c statement_timeout={}".format(
+            int(app.config["SQLALCHEMY_STATEMENT_TIMEOUT"]) * 1000
         )
         return (sa_url, options)
 
@@ -70,11 +70,11 @@ authenticated_service = LocalProxy(lambda: g.authenticated_service)
 def create_app(application):
     from app.config import configs
 
-    notify_environment = os.environ['NOTIFY_ENVIRONMENT']
+    notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
 
     application.config.from_object(configs[notify_environment])
 
-    application.config['NOTIFY_APP_NAME'] = application.name
+    application.config["NOTIFY_APP_NAME"] = application.name
     init_app(application)
 
     request_helper.init_app(application)
@@ -86,15 +86,16 @@ def create_app(application):
     aws_sns_client.init_app(application)
 
     aws_ses_client.init_app()
-    aws_ses_stub_client.init_app(
-        stub_url=application.config['SES_STUB_URL']
-    )
+    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
-    email_clients = [aws_ses_stub_client] if application.config['SES_STUB_URL'] else [aws_ses_client]
+    email_clients = (
+        [aws_ses_stub_client]
+        if application.config["SES_STUB_URL"]
+        else [aws_ses_client]
+    )
     notification_provider_clients.init_app(
-        sms_clients=[aws_sns_client],
-        email_clients=email_clients
+        sms_clients=[aws_sns_client], email_clients=email_clients
     )
 
     notify_celery.init_app(application)
@@ -107,6 +108,7 @@ def create_app(application):
 
     # avoid circular imports by importing this file later
     from app.commands import setup_commands
+
     setup_commands(application)
 
     # set up sqlalchemy events
@@ -159,10 +161,10 @@ def register_blueprint(application):
     from app.webauthn.rest import webauthn_blueprint
 
     service_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(service_blueprint, url_prefix='/service')
+    application.register_blueprint(service_blueprint, url_prefix="/service")
 
     user_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(user_blueprint, url_prefix='/user')
+    application.register_blueprint(user_blueprint, url_prefix="/user")
 
     webauthn_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(webauthn_blueprint)
@@ -209,10 +211,14 @@ def register_blueprint(application):
     application.register_blueprint(events_blueprint)
 
     provider_details_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(provider_details_blueprint, url_prefix='/provider-details')
+    application.register_blueprint(
+        provider_details_blueprint, url_prefix="/provider-details"
+    )
 
     email_branding_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(email_branding_blueprint, url_prefix='/email-branding')
+    application.register_blueprint(
+        email_branding_blueprint, url_prefix="/email-branding"
+    )
 
     billing_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(billing_blueprint)
@@ -221,7 +227,7 @@ def register_blueprint(application):
     application.register_blueprint(service_callback_blueprint)
 
     organization_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(organization_blueprint, url_prefix='/organizations')
+    application.register_blueprint(organization_blueprint, url_prefix="/organizations")
 
     complaint_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(complaint_blueprint)
@@ -230,7 +236,9 @@ def register_blueprint(application):
     application.register_blueprint(performance_dashboard_blueprint)
 
     platform_stats_blueprint.before_request(requires_admin_auth)
-    application.register_blueprint(platform_stats_blueprint, url_prefix='/platform-stats')
+    application.register_blueprint(
+        platform_stats_blueprint, url_prefix="/platform-stats"
+    )
 
     template_folder_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(template_folder_blueprint)
@@ -268,29 +276,24 @@ def register_v2_blueprints(application):
 
 
 def init_app(app):
-
     @app.before_request
     def record_request_details():
-
         g.start = monotonic()
         g.endpoint = request.endpoint
 
     @app.after_request
     def after_request(response):
-
-        response.headers.add('X-Content-Type-Options', 'nosniff')
+        response.headers.add("X-Content-Type-Options", "nosniff")
         return response
 
     @app.errorhandler(Exception)
     def exception(error):
         app.logger.exception(error)
         # error.code is set for our exception types.
-        msg = getattr(error, 'message', str(error))
-        code = getattr(error, 'code', 500)
+        msg = getattr(error, "message", str(error))
+        code = getattr(error, "code", 500)
         response = make_response(
-            jsonify(result='error', message=msg),
-            code,
-            error.get_headers()
+            jsonify(result="error", message=msg), code, error.get_headers()
         )
         response.content_type = "application/json"
         return response
@@ -298,22 +301,18 @@ def init_app(app):
     @app.errorhandler(WerkzeugHTTPException)
     def werkzeug_exception(e):
         response = make_response(
-            jsonify(result='error', message=e.description),
-            e.code,
-            e.get_headers()
+            jsonify(result="error", message=e.description), e.code, e.get_headers()
         )
-        response.content_type = 'application/json'
+        response.content_type = "application/json"
         return response
 
     @app.errorhandler(404)
     def page_not_found(e):
         msg = e.description or "Not found"
         response = make_response(
-            jsonify(result='error', message=msg),
-            404,
-            e.get_headers()
+            jsonify(result="error", message=msg), 404, e.get_headers()
         )
-        response.content_type = 'application/json'
+        response.content_type = "application/json"
         return response
 
 
@@ -322,28 +321,29 @@ def create_uuid():
 
 
 def create_random_identifier():
-    return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+    return "".join(
+        secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16)
+    )
 
 
 # TODO maintainability what is the purpose of this?  Debugging?
 def setup_sqlalchemy_events(app):
-
     # need this or db.engine isn't accessible
     with app.app_context():
-        @event.listens_for(db.engine, 'connect')
-        def connect(dbapi_connection, connection_record): # noqa
+
+        @event.listens_for(db.engine, "connect")
+        def connect(dbapi_connection, connection_record):  # noqa
             pass
 
-        @event.listens_for(db.engine, 'close')
-        def close(dbapi_connection, connection_record): # noqa
+        @event.listens_for(db.engine, "close")
+        def close(dbapi_connection, connection_record):  # noqa
             pass
 
-        @event.listens_for(db.engine, 'checkout')
-        def checkout(dbapi_connection, connection_record, connection_proxy): # noqa
+        @event.listens_for(db.engine, "checkout")
+        def checkout(dbapi_connection, connection_record, connection_proxy):  # noqa
             try:
-
                 # this will overwrite any previous checkout_at timestamp
-                connection_record.info['checkout_at'] = time.monotonic()
+                connection_record.info["checkout_at"] = time.monotonic()
 
                 # checkin runs after the request is already torn down, therefore we add the request_data onto the
                 # connection_record as otherwise it won't have that information when checkin actually runs.
@@ -351,29 +351,33 @@ def setup_sqlalchemy_events(app):
 
                 # web requests
                 if has_request_context():
-                    connection_record.info['request_data'] = {
-                        'method': request.method,
-                        'host': request.host,
-                        'url_rule': request.url_rule.rule if request.url_rule else 'No endpoint'
+                    connection_record.info["request_data"] = {
+                        "method": request.method,
+                        "host": request.host,
+                        "url_rule": request.url_rule.rule
+                        if request.url_rule
+                        else "No endpoint",
                     }
                 # celery apps
                 elif current_task:
-                    connection_record.info['request_data'] = {
-                        'method': 'celery',
-                        'host': current_app.config['NOTIFY_APP_NAME'],  # worker name
-                        'url_rule': current_task.name,  # task name
+                    connection_record.info["request_data"] = {
+                        "method": "celery",
+                        "host": current_app.config["NOTIFY_APP_NAME"],  # worker name
+                        "url_rule": current_task.name,  # task name
                     }
                 # anything else. migrations possibly, or flask cli commands.
                 else:
-                    current_app.logger.warning('Checked out sqlalchemy connection from outside of request/task')
-                    connection_record.info['request_data'] = {
-                        'method': 'unknown',
-                        'host': 'unknown',
-                        'url_rule': 'unknown',
+                    current_app.logger.warning(
+                        "Checked out sqlalchemy connection from outside of request/task"
+                    )
+                    connection_record.info["request_data"] = {
+                        "method": "unknown",
+                        "host": "unknown",
+                        "url_rule": "unknown",
                     }
             except Exception:
                 current_app.logger.exception("Exception caught for checkout event.")
 
-        @event.listens_for(db.engine, 'checkin')
-        def checkin(dbapi_connection, connection_record): # noqa
+        @event.listens_for(db.engine, "checkin")
+        def checkin(dbapi_connection, connection_record):  # noqa
             pass

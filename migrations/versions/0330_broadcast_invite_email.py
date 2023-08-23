@@ -12,15 +12,17 @@ from datetime import datetime
 from alembic import op
 from sqlalchemy import text
 
-revision = '0330_broadcast_invite_email'
-down_revision = '0329_purge_broadcast_data'
+revision = "0330_broadcast_invite_email"
+down_revision = "0329_purge_broadcast_data"
 
-user_id = '6af522d0-2915-4e52-83a3-3690455a5fe6'
-service_id = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
-template_id = '46152f7c-6901-41d5-8590-a5624d0d4359'
+user_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+template_id = "46152f7c-6901-41d5-8590-a5624d0d4359"
 
-broadcast_invitation_template_name = 'Notify broadcast invitation email'
-broadcast_invitation_subject = "((user_name)) has invited you to join ((service_name)) on GOV.UK Notify"
+broadcast_invitation_template_name = "Notify broadcast invitation email"
+broadcast_invitation_subject = (
+    "((user_name)) has invited you to join ((service_name)) on GOV.UK Notify"
+)
 broadcast_invitation_content = """((user_name)) has invited you to join ((service_name)) on GOV.UK Notify.
 
 In an emergency, use Notify to broadcast an alert, warning the public about an imminent risk to life.
@@ -62,8 +64,7 @@ def upgrade():
         "content": broadcast_invitation_content,
         "service_id": service_id,
         "subject": broadcast_invitation_subject,
-        "user_id": user_id
-
+        "user_id": user_id,
     }
     conn.execute(text(insert_query_t), input_params)
     conn.execute(text(insert_query_th), input_params)
@@ -71,8 +72,8 @@ def upgrade():
 
 def downgrade():
     conn = op.get_bind()
-    input_params = {
-        "template_id": template_id
-    }
+    input_params = {"template_id": template_id}
     conn.execute(text("delete from templates where id = :template_id"), input_params)
-    conn.execute(text("delete from templates_history where id = :template_id"), input_params)
+    conn.execute(
+        text("delete from templates_history where id = :template_id"), input_params
+    )

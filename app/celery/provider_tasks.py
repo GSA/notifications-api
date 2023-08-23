@@ -23,7 +23,12 @@ from app.models import (
 )
 
 
-@notify_celery.task(bind=True, name="check_sms_delivery_receipt", max_retries=48, default_retry_delay=300)
+@notify_celery.task(
+    bind=True,
+    name="check_sms_delivery_receipt",
+    max_retries=48,
+    default_retry_delay=300,
+)
 def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     """
     This is called after deliver_sms to check the status of the message. This uses the same number of
@@ -34,27 +39,39 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     failure appears in the cloudwatch logs, so this should keep retrying until the log appears, or until
     we run out of retries.
     """
-    status, provider_response = aws_cloudwatch_client.check_sms(message_id, notification_id, sent_at)
-    if status == 'success':
+    status, provider_response = aws_cloudwatch_client.check_sms(
+        message_id, notification_id, sent_at
+    )
+    if status == "success":
         status = NOTIFICATION_DELIVERED
-    elif status == 'failure':
+    elif status == "failure":
         status = NOTIFICATION_FAILED
     # if status is not success or failure the client raised an exception and this method will retry
 
     if status == NOTIFICATION_DELIVERED:
         sanitize_successful_notification_by_id(notification_id)
-        current_app.logger.info(f"Sanitized notification {notification_id} that was successfully delivered")
+        current_app.logger.info(
+            f"Sanitized notification {notification_id} that was successfully delivered"
+        )
     else:
-        update_notification_status_by_id(notification_id, status, provider_response=provider_response)
-        current_app.logger.info(f"Updated notification {notification_id} with response '{provider_response}'")
+        update_notification_status_by_id(
+            notification_id, status, provider_response=provider_response
+        )
+        current_app.logger.info(
+            f"Updated notification {notification_id} with response '{provider_response}'"
+        )
 
 
-@notify_celery.task(bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300)
+@notify_celery.task(
+    bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300
+)
 def deliver_sms(self, notification_id):
     try:
         # Get the time we are doing the sending, to minimize the time period we need to check over for receipt
         now = round(time() * 1000)
-        current_app.logger.info("Start sending SMS for notification id: {}".format(notification_id))
+        current_app.logger.info(
+            "Start sending SMS for notification id: {}".format(notification_id)
+        )
         notification = notifications_dao.get_notification_by_id(notification_id)
         if not notification:
             raise NoResultFound()
@@ -63,15 +80,13 @@ def deliver_sms(self, notification_id):
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
         my_eta = datetime.utcnow() + timedelta(seconds=300)
         check_sms_delivery_receipt.apply_async(
-            [message_id, notification_id, now],
-            eta=my_eta,
-            queue=QueueNames.CHECK_SMS
+            [message_id, notification_id, now], eta=my_eta, queue=QueueNames.CHECK_SMS
         )
     except Exception as e:
         if isinstance(e, SmsClientResponseException):
             current_app.logger.warning(
                 "SMS notification delivery for id: {} failed".format(notification_id),
-                exc_info=True
+                exc_info=True,
             )
         else:
             current_app.logger.exception(
@@ -84,16 +99,26 @@ def deliver_sms(self, notification_id):
             else:
                 self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
-            message = "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. " \
-                      "Notification has been updated to technical-failure".format(notification_id)
-            update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
+            message = (
+                "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. "
+                "Notification has been updated to technical-failure".format(
+                    notification_id
+                )
+            )
+            update_notification_status_by_id(
+                notification_id, NOTIFICATION_TECHNICAL_FAILURE
+            )
             raise NotificationTechnicalFailureException(message)
 
 
-@notify_celery.task(bind=True, name="deliver_email", max_retries=48, default_retry_delay=300)
+@notify_celery.task(
+    bind=True, name="deliver_email", max_retries=48, default_retry_delay=300
+)
 def deliver_email(self, notification_id):
     try:
-        current_app.logger.info("Start sending email for notification id: {}".format(notification_id))
+        current_app.logger.info(
+            "Start sending email for notification id: {}".format(notification_id)
+        )
         notification = notifications_dao.get_notification_by_id(notification_id)
         if not notification:
             raise NoResultFound()
@@ -102,7 +127,7 @@ def deliver_email(self, notification_id):
         current_app.logger.exception(
             f"Email notification {notification_id} failed: {e}"
         )
-        update_notification_status_by_id(notification_id, 'technical-failure')
+        update_notification_status_by_id(notification_id, "technical-failure")
     except Exception as e:
         try:
             if isinstance(e, AwsSesClientThrottlingSendRateException):
@@ -116,8 +141,14 @@ def deliver_email(self, notification_id):
 
             self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
-            message = "RETRY FAILED: Max retries reached. " \
-                      "The task send_email_to_provider failed for notification {}. " \
-                      "Notification has been updated to technical-failure".format(notification_id)
-            update_notification_status_by_id(notification_id, NOTIFICATION_TECHNICAL_FAILURE)
+            message = (
+                "RETRY FAILED: Max retries reached. "
+                "The task send_email_to_provider failed for notification {}. "
+                "Notification has been updated to technical-failure".format(
+                    notification_id
+                )
+            )
+            update_notification_status_by_id(
+                notification_id, NOTIFICATION_TECHNICAL_FAILURE
+            )
             raise NotificationTechnicalFailureException(message)

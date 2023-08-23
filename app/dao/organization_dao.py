@@ -12,23 +12,26 @@ def dao_get_organizations():
 
 
 def dao_count_organizations_with_live_services():
-    return db.session.query(Organization.id).join(Organization.services).filter(
-        Service.active.is_(True),
-        Service.restricted.is_(False),
-        Service.count_as_live.is_(True),
-    ).distinct().count()
+    return (
+        db.session.query(Organization.id)
+        .join(Organization.services)
+        .filter(
+            Service.active.is_(True),
+            Service.restricted.is_(False),
+            Service.count_as_live.is_(True),
+        )
+        .distinct()
+        .count()
+    )
 
 
 def dao_get_organization_services(organization_id):
-    return Organization.query.filter_by(
-        id=organization_id
-    ).one().services
+    return Organization.query.filter_by(id=organization_id).one().services
 
 
 def dao_get_organization_live_services(organization_id):
     return Service.query.filter_by(
-        organization_id=organization_id,
-        restricted=False
+        organization_id=organization_id, restricted=False
     ).all()
 
 
@@ -37,22 +40,21 @@ def dao_get_organization_by_id(organization_id):
 
 
 def dao_get_organization_by_email_address(email_address):
-
-    email_address = email_address.lower().replace('.gsi.gov.uk', '.gov.uk')
+    email_address = email_address.lower().replace(".gsi.gov.uk", ".gov.uk")
 
     for domain in Domain.query.order_by(func.char_length(Domain.domain).desc()).all():
-
-        if (
-            email_address.endswith("@{}".format(domain.domain)) or
-            email_address.endswith(".{}".format(domain.domain))
-        ):
+        if email_address.endswith(
+            "@{}".format(domain.domain)
+        ) or email_address.endswith(".{}".format(domain.domain)):
             return Organization.query.filter_by(id=domain.organization_id).one()
 
     return None
 
 
 def dao_get_organization_by_service_id(service_id):
-    return Organization.query.join(Organization.services).filter_by(id=service_id).first()
+    return (
+        Organization.query.join(Organization.services).filter_by(id=service_id).first()
+    )
 
 
 @autocommit
@@ -62,24 +64,26 @@ def dao_create_organization(organization):
 
 @autocommit
 def dao_update_organization(organization_id, **kwargs):
-    domains = kwargs.pop('domains', None)
-    num_updated = Organization.query.filter_by(id=organization_id).update(
-        kwargs
-    )
+    domains = kwargs.pop("domains", None)
+    num_updated = Organization.query.filter_by(id=organization_id).update(kwargs)
 
     if isinstance(domains, list):
         Domain.query.filter_by(organization_id=organization_id).delete()
-        db.session.bulk_save_objects([
-            Domain(domain=domain.lower(), organization_id=organization_id)
-            for domain in domains
-        ])
+        db.session.bulk_save_objects(
+            [
+                Domain(domain=domain.lower(), organization_id=organization_id)
+                for domain in domains
+            ]
+        )
 
     organization = Organization.query.get(organization_id)
-    if 'organization_type' in kwargs:
-        _update_organization_services(organization, 'organization_type', only_where_none=False)
+    if "organization_type" in kwargs:
+        _update_organization_services(
+            organization, "organization_type", only_where_none=False
+        )
 
-    if 'email_branding_id' in kwargs:
-        _update_organization_services(organization, 'email_branding')
+    if "email_branding_id" in kwargs:
+        _update_organization_services(organization, "email_branding")
 
     return num_updated
 
@@ -97,9 +101,7 @@ def _update_organization_services(organization, attribute, only_where_none=True)
 @autocommit
 @version_class(Service)
 def dao_add_service_to_organization(service, organization_id):
-    organization = Organization.query.filter_by(
-        id=organization_id
-    ).one()
+    organization = Organization.query.filter_by(id=organization_id).one()
 
     service.organization_id = organization_id
     service.organization_type = organization.organization_type
@@ -108,14 +110,13 @@ def dao_add_service_to_organization(service, organization_id):
 
 
 def dao_get_users_for_organization(organization_id):
-    return db.session.query(
-        User
-    ).join(
-        User.organizations
-    ).filter(
-        Organization.id == organization_id,
-        User.state == 'active'
-    ).order_by(User.created_at).all()
+    return (
+        db.session.query(User)
+        .join(User.organizations)
+        .filter(Organization.id == organization_id, User.state == "active")
+        .order_by(User.created_at)
+        .all()
+    )
 
 
 @autocommit

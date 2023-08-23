@@ -24,7 +24,7 @@ def test_get_email_branding_by_name_gets_correct_email_branding(notify_db_sessio
 
 
 def test_update_email_branding(notify_db_session):
-    updated_name = 'new name'
+    updated_name = "new name"
     create_email_branding()
 
     email_branding = EmailBranding.query.all()
@@ -43,4 +43,4 @@ def test_update_email_branding(notify_db_session):
 def test_email_branding_has_no_domain(notify_db_session):
     create_email_branding()
     email_branding = EmailBranding.query.all()
-    assert not hasattr(email_branding, 'domain')
+    assert not hasattr(email_branding, "domain")

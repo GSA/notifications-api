@@ -28,8 +28,7 @@ def create_nightly_billing(day_start=None):
         process_day = (day_start - timedelta(days=i)).isoformat()
 
         create_nightly_billing_for_day.apply_async(
-            kwargs={'process_day': process_day},
-            queue=QueueNames.REPORTING
+            kwargs={"process_day": process_day}, queue=QueueNames.REPORTING
         )
         current_app.logger.info(
             f"create-nightly-billing task: create-nightly-billing-for-day task created for {process_day}"
@@ -40,7 +39,7 @@ def create_nightly_billing(day_start=None):
 def create_nightly_billing_for_day(process_day):
     process_day = datetime.strptime(process_day, "%Y-%m-%d").date()
     current_app.logger.info(
-        f'create-nightly-billing-for-day task for {process_day}: started'
+        f"create-nightly-billing-for-day task for {process_day}: started"
     )
 
     start = datetime.utcnow()
@@ -48,7 +47,7 @@ def create_nightly_billing_for_day(process_day):
     end = datetime.utcnow()
 
     current_app.logger.info(
-        f'create-nightly-billing-for-day task for {process_day}: data fetched in {(end - start).seconds} seconds'
+        f"create-nightly-billing-for-day task for {process_day}: data fetched in {(end - start).seconds} seconds"
     )
 
     for data in transit_data:
@@ -97,28 +96,30 @@ def create_nightly_notification_status():
             for service_id in relevant_service_ids:
                 create_nightly_notification_status_for_service_and_day.apply_async(
                     kwargs={
-                        'process_day': process_day.isoformat(),
-                        'notification_type': notification_type,
-                        'service_id': service_id,
+                        "process_day": process_day.isoformat(),
+                        "notification_type": notification_type,
+                        "service_id": service_id,
                     },
-                    queue=QueueNames.REPORTING
+                    queue=QueueNames.REPORTING,
                 )
 
 
 @notify_celery.task(name="create-nightly-notification-status-for-service-and-day")
-def create_nightly_notification_status_for_service_and_day(process_day, service_id, notification_type):
+def create_nightly_notification_status_for_service_and_day(
+    process_day, service_id, notification_type
+):
     process_day = datetime.strptime(process_day, "%Y-%m-%d").date()
 
     start = datetime.utcnow()
     update_fact_notification_status(
         process_day=process_day,
         notification_type=notification_type,
-        service_id=service_id
+        service_id=service_id,
     )
 
     end = datetime.utcnow()
     current_app.logger.info(
-        f'create-nightly-notification-status-for-service-and-day task update '
-        f'for {service_id}, {notification_type} for {process_day}: '
-        f'updated in {(end - start).seconds} seconds'
+        f"create-nightly-notification-status-for-service-and-day task update "
+        f"for {service_id}, {notification_type} for {process_day}: "
+        f"updated in {(end - start).seconds} seconds"
     )

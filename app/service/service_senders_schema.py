@@ -7,9 +7,9 @@ add_service_email_reply_to_request = {
     "title": "Add new email reply to address for service",
     "properties": {
         "email_address": {"type": "string", "format": "email_address"},
-        "is_default": {"type": "boolean"}
+        "is_default": {"type": "boolean"},
     },
-    "required": ["email_address", "is_default"]
+    "required": ["email_address", "is_default"],
 }
 
 
@@ -21,7 +21,7 @@ add_service_sms_sender_request = {
     "properties": {
         "sms_sender": {"type": "string"},
         "is_default": {"type": "boolean"},
-        "inbound_number_id": uuid
+        "inbound_number_id": uuid,
     },
-    "required": ["sms_sender", "is_default"]
+    "required": ["sms_sender", "is_default"],
 }

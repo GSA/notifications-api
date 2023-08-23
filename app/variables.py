@@ -1,5 +1,5 @@
 # S3 tags
 class Retention:
-    KEY = 'retention'
+    KEY = "retention"
 
-    ONE_WEEK = 'ONE_WEEK'
+    ONE_WEEK = "ONE_WEEK"

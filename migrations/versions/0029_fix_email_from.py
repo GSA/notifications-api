@@ -9,22 +9,28 @@ Create Date: 2016-06-13 15:15:34.035984
 # revision identifiers, used by Alembic.
 from sqlalchemy import text
 
-revision = '0029_fix_email_from'
-down_revision = '0028_fix_reg_template_history'
+revision = "0029_fix_email_from"
+down_revision = "0028_fix_reg_template_history"
 
 from alembic import op
 import sqlalchemy as sa
 
-service_id = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
+service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
 
 
 def upgrade():
     conn = op.get_bind()
-    input_params = {
-        "service_id": service_id
-    }
-    conn.execute(text("update services set email_from = 'testsender' where id = :service_id"), input_params)
-    conn.execute(text("update services_history set email_from = 'testsender' where id = :service_id"), input_params)
+    input_params = {"service_id": service_id}
+    conn.execute(
+        text("update services set email_from = 'testsender' where id = :service_id"),
+        input_params,
+    )
+    conn.execute(
+        text(
+            "update services_history set email_from = 'testsender' where id = :service_id"
+        ),
+        input_params,
+    )
 
 
 def downgrade():

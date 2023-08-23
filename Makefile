@@ -73,6 +73,7 @@ generate-version-file: ## Generates the app version file
 .PHONY: test
 test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
+	pipenv run black .
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
 	pipenv run coverage run -m pytest -vv --maxfail=10

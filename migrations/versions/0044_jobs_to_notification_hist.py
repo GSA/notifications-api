@@ -7,8 +7,8 @@ Create Date: 2016-07-15 13:28:41.441009
 """
 
 # revision identifiers, used by Alembic.
-revision = '0044_jobs_to_notification_hist'
-down_revision = '0043_notification_indexes'
+revision = "0044_jobs_to_notification_hist"
+down_revision = "0043_notification_indexes"
 
 from alembic import op
 
