@@ -48,19 +48,6 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
     polymorphic_on = None
     super_fks = []
 
-    def _col_copy(col):
-        orig = col
-        col = col.copy()
-        orig.info['history_copy'] = col
-        col.unique = False
-
-        # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
-        # if it's not nullable, however, the default may be relied upon to correctly set values within the database,
-        # so we should preserve it
-        if col.nullable:
-            col.default = col.server_default = None
-        return col
-
     properties = util.OrderedDict()
     if not super_mapper or \
             local_mapper.local_table is not super_mapper.local_table:
@@ -71,15 +58,7 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
                 continue
 
             col = _col_copy(column)
-
-            if super_mapper and \
-                    col_references_table(column, super_mapper.local_table):
-                super_fks.append(
-                    (
-                        col.key,
-                        list(super_history_mapper.local_table.primary_key)[0]
-                    )
-                )
+            _add_primary_keys_to_super_fks(super_mapper, column, super_fks, super_history_mapper, col)
 
             cols.append(col)
 
@@ -93,12 +72,7 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
                 properties[orig_prop.key] = tuple(
                     col.info['history_copy'] for col in orig_prop.columns)
 
-        if super_mapper:
-            super_fks.append(
-                (
-                    'version', super_history_mapper.local_table.c.version
-                )
-            )
+        _add_version_to_super_fks(super_fks, super_mapper, super_history_mapper)
 
         # "version" stores the integer version id.  This column is
         # required.
@@ -107,8 +81,7 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
                 'version', Integer, primary_key=True,
                 autoincrement=False, info=version_meta))
 
-        if super_fks:
-            cols.append(ForeignKeyConstraint(*zip(*super_fks)))
+        _handle_super_fks(super_fks, cols)
 
         table = Table(
             local_mapper.local_table.name + '_history',
@@ -117,25 +90,9 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
             schema=local_mapper.local_table.schema
         )
     else:
-        # single table inheritance.  take any additional columns that may have
-        # been added and add them to the history table.
-        for column in local_mapper.local_table.c:
-            if column.key not in super_history_mapper.local_table.c:
-                col = _col_copy(column)
-                super_history_mapper.local_table.append_column(col)
-        table = None
+        table = _handle_single_table_inheritance(local_mapper, super_history_mapper)
 
-    if super_history_mapper:
-        bases = (super_history_mapper.class_,)
-
-        if table is not None:
-            properties['changed'] = (
-                (table.c.changed, ) +
-                tuple(super_history_mapper.attrs.changed.columns)
-            )
-
-    else:
-        bases = local_mapper.base_mapper.class_.__bases__
+    bases = _get_bases_for_versioned_class(super_history_mapper, table, properties, local_mapper)
     versioned_cls = type.__new__(type, "%sHistory" % cls.__name__, bases, {})
 
     m = mapper(
@@ -147,13 +104,80 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
         properties=properties
     )
     cls.__history_mapper__ = m
+    _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper)
 
+
+def _add_primary_keys_to_super_fks(super_mapper, column, super_fks, super_history_mapper, col):
+    if super_mapper and \
+            col_references_table(column, super_mapper.local_table):
+        super_fks.append(
+            (
+                col.key,
+                list(super_history_mapper.local_table.primary_key)[0]
+            )
+        )
+
+
+def _add_version_to_super_fks(super_fks, super_mapper, super_history_mapper):
+    if super_mapper:
+        super_fks.append(
+            (
+                'version', super_history_mapper.local_table.c.version
+            )
+        )
+
+
+def _handle_super_fks(super_fks, cols):
+    if super_fks:
+        cols.append(ForeignKeyConstraint(*zip(*super_fks)))
+
+
+def _handle_single_table_inheritance(local_mapper, super_history_mapper):
+    # single table inheritance.  take any additional columns that may have
+    # been added and add them to the history table.
+    for column in local_mapper.local_table.c:
+        if column.key not in super_history_mapper.local_table.c:
+            col = _col_copy(column)
+            super_history_mapper.local_table.append_column(col)
+    return None
+
+
+def _get_bases_for_versioned_class(super_history_mapper, table, properties, local_mapper):
+    if super_history_mapper:
+        bases = (super_history_mapper.class_,)
+
+        if table is not None:
+            properties['changed'] = (
+                    (table.c.changed,) +
+                    tuple(super_history_mapper.attrs.changed.columns)
+            )
+
+    else:
+        bases = local_mapper.base_mapper.class_.__bases__
+    return bases
+
+
+def _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper):
     if not super_history_mapper:
         local_mapper.local_table.append_column(
             Column('version', Integer, default=1, nullable=False)
         )
         local_mapper.add_property(
             "version", local_mapper.local_table.c.version)
+
+
+def _col_copy(col):
+    orig = col
+    col = col.copy()
+    orig.info['history_copy'] = col
+    col.unique = False
+
+    # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
+    # if it's not nullable, however, the default may be relied upon to correctly set values within the database,
+    # so we should preserve it
+    if col.nullable:
+        col.default = col.server_default = None
+    return col
 
 
 class Versioned(object):

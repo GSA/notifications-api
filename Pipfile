@@ -18,7 +18,7 @@ bleach = "==4.1.0"
 blinker = "~=1.4"
 boto3 = "==1.28.15"
 botocore = "==1.31.15"
-cachetools = "==5.1.0"
+cachetools = "==5.3.1"
 celery = {version = "==5.2.7", extras = ["redis"]}
 certifi = ">=2022.12.7"
 cffi = "==1.15.1"
@@ -56,13 +56,11 @@ python-dotenv = "==1.0.0"
 radon = "==6.0.1"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
-# gds metrics packages
-prometheus-client = "==0.17.1"
-gds-metrics = {version = "==0.2.4", ref = "6f1840a57b6fb1ee40b7e84f2f18ec229de8aa72", git = "https://github.com/alphagov/gds_metrics_python.git"}
+vulture = "==2.8"
+
 packaging = "==23.1"
 notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
 newrelic = "*"
-vulture = "==2.8"
 
 [dev-packages]
 exceptiongroup = "==1.1.2"

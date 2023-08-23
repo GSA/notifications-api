@@ -17,8 +17,6 @@ from flask import (
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
-from gds_metrics import GDSMetrics
-from gds_metrics.metrics import Gauge, Histogram
 from notifications_utils import logging, request_helper
 from notifications_utils.celery import NotifyCelery
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -61,17 +59,12 @@ encryption = Encryption()
 zendesk_client = ZendeskClient()
 redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
-metrics = GDSMetrics()
+
 
 notification_provider_clients = NotificationProviderClients()
 
 api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
-
-CONCURRENT_REQUESTS = Gauge(
-    'concurrent_web_request_count',
-    'How many concurrent requests are currently being served',
-)
 
 
 def create_app(application):
@@ -84,8 +77,6 @@ def create_app(application):
     application.config['NOTIFY_APP_NAME'] = application.name
     init_app(application)
 
-    # Metrics intentionally high up to give the most accurate timing and reliability that the metric is recorded
-    metrics.init_app(application)
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
@@ -280,14 +271,12 @@ def init_app(app):
 
     @app.before_request
     def record_request_details():
-        CONCURRENT_REQUESTS.inc()
 
         g.start = monotonic()
         g.endpoint = request.endpoint
 
     @app.after_request
     def after_request(response):
-        CONCURRENT_REQUESTS.dec()
 
         response.headers.add('X-Content-Type-Options', 'nosniff')
         return response
@@ -339,39 +328,19 @@ def create_random_identifier():
 # TODO maintainability what is the purpose of this?  Debugging?
 def setup_sqlalchemy_events(app):
 
-    TOTAL_DB_CONNECTIONS = Gauge(
-        'db_connection_total_connected',
-        'How many db connections are currently held (potentially idle) by the server',
-    )
-
-    TOTAL_CHECKED_OUT_DB_CONNECTIONS = Gauge(
-        'db_connection_total_checked_out',
-        'How many db connections are currently checked out by web requests',
-    )
-
-    DB_CONNECTION_OPEN_DURATION_SECONDS = Histogram(
-        'db_connection_open_duration_seconds',
-        'How long db connections are held open for in seconds',
-        ['method', 'host', 'path']
-    )
-
     # need this or db.engine isn't accessible
     with app.app_context():
         @event.listens_for(db.engine, 'connect')
         def connect(dbapi_connection, connection_record): # noqa
-            # connection first opened with db
-            TOTAL_DB_CONNECTIONS.inc()
+            pass
 
         @event.listens_for(db.engine, 'close')
         def close(dbapi_connection, connection_record): # noqa
-            # connection closed (probably only happens with overflow connections)
-            TOTAL_DB_CONNECTIONS.dec()
+            pass
 
         @event.listens_for(db.engine, 'checkout')
         def checkout(dbapi_connection, connection_record, connection_proxy): # noqa
             try:
-                # connection given to a web worker
-                TOTAL_CHECKED_OUT_DB_CONNECTIONS.inc()
 
                 # this will overwrite any previous checkout_at timestamp
                 connection_record.info['checkout_at'] = time.monotonic()
@@ -407,17 +376,4 @@ def setup_sqlalchemy_events(app):
 
         @event.listens_for(db.engine, 'checkin')
         def checkin(dbapi_connection, connection_record): # noqa
-            try:
-                # connection returned by a web worker
-                TOTAL_CHECKED_OUT_DB_CONNECTIONS.dec()
-
-                # duration that connection was held by a single web request
-                duration = time.monotonic() - connection_record.info['checkout_at']
-
-                DB_CONNECTION_OPEN_DURATION_SECONDS.labels(
-                    connection_record.info['request_data']['method'],
-                    connection_record.info['request_data']['host'],
-                    connection_record.info['request_data']['url_rule']
-                ).observe(duration)
-            except Exception:
-                current_app.logger.exception("Exception caught for checkin event.")
+            pass
