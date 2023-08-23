@@ -15,6 +15,11 @@ bootstrap: ## Set up everything to run the app
 	pipenv install --dev
 	createdb notification_api || true
 	(pipenv run flask db upgrade) || true
+	# uncomment if you need to recreate your test db
+    # make sure your test db name here matches what is in .env
+    # createdb test_notification_api_master || true
+	# (pipenv run flask db upgrade) || true
+
 
 .PHONY: bootstrap-with-docker
 bootstrap-with-docker: ## Build the image to run the app in Docker

@@ -99,7 +99,6 @@ def test_create_service(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
@@ -125,7 +124,6 @@ def test_create_service_with_organization(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
@@ -152,7 +150,6 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
