@@ -1,4 +1,3 @@
-import random
 from datetime import datetime
 from urllib import parse
 
@@ -164,13 +163,8 @@ def provider_to_use(notification_type, international=True):
         )
         raise Exception("No active {} providers".format(notification_type))
 
-    if len(active_providers) == 1:
-        chosen_provider = active_providers[0]
-    else:
-        weights = [p.priority for p in active_providers]
-        chosen_provider = random.choices(active_providers, weights=weights)[
-            0
-        ]  # nosec B311 - not sec/crypto related
+    # we only have sns
+    chosen_provider = active_providers[0]
 
     return notification_provider_clients.get_client_by_name_and_type(
         chosen_provider.identifier, notification_type
