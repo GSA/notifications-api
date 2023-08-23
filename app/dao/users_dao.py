@@ -14,7 +14,7 @@ from app.errors import InvalidRequest
 from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
-MFA_TOTP_DEFAULT_LENGTH = int(os.getenv('MFA_TOTP_LENGTH', 6))
+MFA_TOTP_LENGTH = int(os.getenv('MFA_TOTP_LENGTH', 6))
 
 
 def _remove_values_for_keys_if_present(dict, keys):
@@ -22,7 +22,7 @@ def _remove_values_for_keys_if_present(dict, keys):
         dict.pop(key, None)
 
 
-def create_secret_code(length=MFA_TOTP_DEFAULT_LENGTH):
+def create_secret_code(length=MFA_TOTP_LENGTH):
     totp = pyotp.TOTP(os.getenv('MFA_TOTP_SECRET'), digits=length)
     return totp.now()
 
