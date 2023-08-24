@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d9576584ac0b1a93b2a8f5ca364011fc9e078d8a64687d324df2d0634dcc07dc"
+            "sha256": "b6498f56dee45b4cc5b774ee919bd544fed022ddacb5ec276ba2a7e180bd0d78"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -500,7 +500,7 @@
                 "sha256:f82d4d717d8ef19188687aa32b8363e96062911e63ba22a0cff7802a8e58e5f1",
                 "sha256:fc3a569657468b6f3fb60587e48356fe512c1754ca05a564f11366ac9e306526"
             ],
-            "markers": "python_version >= '3' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
             "version": "==2.0.2"
         },
         "gunicorn": {
@@ -1071,7 +1071,7 @@
                 "sha256:06570d0b2d84d46c21defc550afbaada381af82f5b83e5b3777600e05d8e2ed0",
                 "sha256:5cea6c0d335c9a7332a460ed8729ceabb4d0c489c7285b0a86dbbf8a017bd120"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==5.0.0"
         },
         "referencing": {
@@ -1212,7 +1212,7 @@
                 "sha256:78f9a9bf4e7be0c5ded4583326e7461e3a3c5aae24073648b4bdfa797d78c9d2",
                 "sha256:9d689e6ca1b3038bc82bf8d23e944b6b6037bc02301a574935b2dd946e0353b9"
             ],
-            "markers": "python_full_version >= '3.5.0' and python_full_version < '4.0.0'",
+            "markers": "python_version >= '3.5' and python_version < '4'",
             "version": "==4.7.2"
         },
         "s3transfer": {
@@ -2135,11 +2135,11 @@
         },
         "moto": {
             "hashes": [
-                "sha256:545afeb4df94dfa730e2d7e87366dc26b4a33c2891f462cbb049f040c80ed1ec",
-                "sha256:7d3bd748a34641715ba469c761f72fb8ec18f349987c98f5a0f9be85a07a9911"
+                "sha256:00fbae396fc48c3596e47b4e3267c1a41ca01c968de023beb68e774c63910b58",
+                "sha256:e4835912f05627b6a53b938562b717122230fb038d023819133f8526f60ed0a7"
             ],
             "index": "pypi",
-            "version": "==4.1.14"
+            "version": "==4.2.0"
         },
         "msgpack": {
             "hashes": [
