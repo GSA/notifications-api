@@ -41,7 +41,8 @@ flask-marshmallow = "==0.14.0"
 flask-migrate = "==4.0.4"
 flask-redis = "==0.4.0"
 flask-sqlalchemy = "==3.0.5"
-gunicorn = {version = "==20.1.0", extras = ["eventlet"], ref = "1299ea9e967a61ae2edebe191082fd169b864c64", git = "https://github.com/benoitc/gunicorn.git"}
+gunicorn = "==21.2.0"
+# gunicorn = {version = "==20.1.0", extras = ["eventlet"], ref = "1299ea9e967a61ae2edebe191082fd169b864c64", git = "https://github.com/benoitc/gunicorn.git"}
 iso8601 = "==2.0.0"
 itsdangerous = "==2.1.2"
 jsonschema = {version = "==4.17.3", extras = ["format"]}
