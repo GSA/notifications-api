@@ -11,10 +11,7 @@ from notifications_utils.template import (
 )
 
 from app import create_uuid, db, notification_provider_clients
-from app.celery.research_mode_tasks import (
-    send_email_response,
-    send_sms_response,
-)
+from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import (
@@ -57,7 +54,7 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KEY_TYPE_TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id))
 
@@ -110,7 +107,7 @@ def send_email_to_provider(notification):
             template_dict,
             values=notification.personalisation
         )
-        if service.research_mode or notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
             send_email_response(notification.reference, notification.to)

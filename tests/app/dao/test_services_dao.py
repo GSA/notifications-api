@@ -99,7 +99,6 @@ def test_create_service(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
@@ -125,7 +124,6 @@ def test_create_service_with_organization(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
@@ -152,7 +150,6 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == 'email_from'
-    assert service_db.research_mode is False
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
@@ -984,13 +981,13 @@ def test_dao_fetch_todays_stats_for_all_services_groups_correctly(notify_db_sess
 
     stats = dao_fetch_todays_stats_for_all_services()
     assert len(stats) == 4
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'sms', 'created', 2) in stats
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'sms', 'failed', 1) in stats
-    assert (service1.id, service1.name, service1.restricted, service1.research_mode, service1.active,
+    assert (service1.id, service1.name, service1.restricted, service1.active,
             service1.created_at, 'email', 'created', 1) in stats
-    assert (service2.id, service2.name, service2.restricted, service2.research_mode, service2.active,
+    assert (service2.id, service2.name, service2.restricted, service2.active,
             service2.created_at, 'sms', 'created', 1) in stats
 
 
@@ -1134,7 +1131,7 @@ def _assert_service_permissions(service_permissions, expected):
 def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     service_1 = create_service(service_name="Service 1", service_id=fake_uuid)
     service_3 = create_service(service_name="Service 3", restricted=True)  # restricted is excluded
-    service_4 = create_service(service_name="Service 4", research_mode=True)  # research mode is excluded
+    service_4 = create_service(service_name="Service 4")
     service_5 = create_service(service_name="Service 5", active=False)  # not active is excluded
     services = [service_1, service_3, service_4, service_5]
 
@@ -1168,16 +1165,15 @@ def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     end_date = datetime.utcnow()
 
     result = dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=4)
-    assert len(result) == 1
+    assert len(result) == 2
     assert str(result[0].service_id) == fake_uuid
 
 
 def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid):
     service_1 = create_service(service_name="Service 1", service_id=fake_uuid)
     service_3 = create_service(service_name="Service 3", restricted=True)  # restricted is excluded
-    service_4 = create_service(service_name="Service 4", research_mode=True)  # research mode is excluded
     service_5 = create_service(service_name="Service 5", active=False)  # not active is excluded
-    services = [service_1, service_3, service_4, service_5]
+    services = [service_1, service_3, service_5]
 
     for service in services:
         template = create_template(service)
@@ -1203,8 +1199,7 @@ def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid)
     end_date = datetime.utcnow()
 
     result = dao_find_services_with_high_failure_rates(start_date, end_date, threshold=3)
-    # assert len(result) == 3
-    # assert str(result[0].service_id) == fake_uuid
+    print(result)
     assert len(result) == 1
     assert str(result[0].service_id) == fake_uuid
     assert result[0].permanent_failure_rate == 0.25

@@ -60,7 +60,6 @@ def test_send_one_off_notification_calls_celery_correctly(persist_mock, celery_m
 
     celery_mock.assert_called_once_with(
         notification=persist_mock.return_value,
-        research_mode=False,
         queue=None
     )
 
@@ -161,21 +160,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
         reference=None,
         client_reference=None
     )
-
-
-def test_send_one_off_notification_honors_research_mode(notify_db_session, persist_mock, celery_mock):
-    service = create_service(research_mode=True)
-    template = create_template(service=service)
-
-    post_data = {
-        'template_id': str(template.id),
-        'to': '202-867-5309',
-        'created_by': str(service.created_by_id)
-    }
-
-    send_one_off_notification(service.id, post_data)
-
-    assert celery_mock.call_args[1]['research_mode'] is True
 
 
 def test_send_one_off_notification_honors_priority(notify_db_session, persist_mock, celery_mock):
@@ -282,7 +266,6 @@ def test_send_one_off_notification_should_add_email_reply_to_text_for_notificati
     notification = Notification.query.get(notification_id['id'])
     celery_mock.assert_called_once_with(
         notification=notification,
-        research_mode=False,
         queue=None
     )
     assert notification.reply_to_text == reply_to_email.email_address
@@ -307,7 +290,6 @@ def test_send_one_off_sms_notification_should_use_sms_sender_reply_to_text(sampl
     notification = Notification.query.get(notification_id['id'])
     celery_mock.assert_called_once_with(
         notification=notification,
-        research_mode=False,
         queue=None
     )
 
@@ -333,7 +315,6 @@ def test_send_one_off_sms_notification_should_use_default_service_reply_to_text(
     notification = Notification.query.get(notification_id['id'])
     celery_mock.assert_called_once_with(
         notification=notification,
-        research_mode=False,
         queue=None
     )
 

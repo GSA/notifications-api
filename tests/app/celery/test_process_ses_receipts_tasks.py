@@ -10,7 +10,7 @@ from app.celery.process_ses_receipts_tasks import (
     remove_emails_from_bounce,
     remove_emails_from_complaint,
 )
-from app.celery.research_mode_tasks import (
+from app.celery.test_key_tasks import (
     ses_hard_bounce_callback,
     ses_notification_callback,
     ses_soft_bounce_callback,

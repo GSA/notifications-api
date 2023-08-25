@@ -147,7 +147,7 @@ def replay_created_notifications():
                                     "status was created.".format(len(notifications_to_resend), notification_type))
 
         for n in notifications_to_resend:
-            send_notification_to_queue(notification=n, research_mode=n.service.research_mode)
+            send_notification_to_queue(notification=n)
 
 
 @notify_celery.task(name='check-for-missing-rows-in-completed-jobs')
