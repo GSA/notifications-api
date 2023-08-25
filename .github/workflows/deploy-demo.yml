@@ -58,7 +58,7 @@ jobs:
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
         cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-        cf_org: gsa-tts-benefits-studio-prototyping
+        cf_org: gsa-tts-benefits-studio
         cf_space: notify-demo
         push_arguments: >-
           --vars-file deploy-config/demo.yml
