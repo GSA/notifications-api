@@ -44,7 +44,7 @@ flask-sqlalchemy = "==3.0.5"
 gunicorn = {version = "==21.2.0", extras = ["eventlet"]}
 iso8601 = "==2.0.0"
 itsdangerous = "==2.1.2"
-jsonschema = {version = "==4.17.3", extras = ["format"]}
+jsonschema = {version = "==4.19.0", extras = ["format"]}
 lxml = "==4.9.3"
 marshmallow = "==3.20.1"
 marshmallow-sqlalchemy = "==0.29.0"
@@ -67,7 +67,7 @@ exceptiongroup = "==1.1.2"
 flake8 = "==4.0.1"
 flake8-bugbear = "==23.3.12"
 isort = "==5.10.1"
-moto = "==4.1.14"
+moto = "==4.2.0"
 pytest = "==7.4.0"
 pytest-env = "==0.6.2"
 pytest-mock = "==3.11.1"
