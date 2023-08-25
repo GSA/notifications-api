@@ -4,11 +4,7 @@ import botocore
 from boto3 import client
 from flask import current_app
 
-from app.clients import (
-    AWS_CLIENT_CONFIG,
-    STATISTICS_DELIVERED,
-    STATISTICS_FAILURE,
-)
+from app.clients import AWS_CLIENT_CONFIG, STATISTICS_DELIVERED, STATISTICS_FAILURE
 from app.clients.email import (
     EmailClient,
     EmailClientException,

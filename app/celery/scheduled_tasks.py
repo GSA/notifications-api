@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.clients.zendesk.zendesk_client import (
-    NotifySupportTicket,
-)
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,9 +16,7 @@ from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
 )
-from app.dao.invited_user_dao import (
-    delete_invitations_created_more_than_two_days_ago,
-)
+from app.dao.invited_user_dao import delete_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
     dao_update_job,

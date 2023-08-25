@@ -1,8 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
 
-from app.dao.fact_notification_status_dao import (
-    fetch_notification_statuses_for_job,
-)
+from app.dao.fact_notification_status_dao import fetch_notification_statuses_for_job
 from app.dao.jobs_dao import dao_get_notification_outcomes_for_job
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
 from app.errors import register_errors

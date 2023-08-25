@@ -4,9 +4,7 @@ from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.dao.template_folder_dao import (
-    dao_get_template_folder_by_id_and_service_id,
-)
+from app.dao.template_folder_dao import dao_get_template_folder_by_id_and_service_id
 from app.dao.templates_dao import (
     dao_create_template,
     dao_get_all_templates_for_service,

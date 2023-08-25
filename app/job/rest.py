@@ -5,9 +5,7 @@ from flask import Blueprint, current_app, jsonify, request
 from app.aws.s3 import get_job_metadata_from_s3
 from app.celery.tasks import process_job
 from app.config import QueueNames
-from app.dao.fact_notification_status_dao import (
-    fetch_notification_statuses_for_job,
-)
+from app.dao.fact_notification_status_dao import fetch_notification_statuses_for_job
 from app.dao.jobs_dao import (
     dao_create_job,
     dao_get_future_scheduled_job_by_id_and_service_id,
@@ -24,11 +22,7 @@ from app.dao.notifications_dao import (
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    JOB_STATUS_CANCELLED,
-    JOB_STATUS_PENDING,
-    JOB_STATUS_SCHEDULED,
-)
+from app.models import JOB_STATUS_CANCELLED, JOB_STATUS_PENDING, JOB_STATUS_SCHEDULED
 from app.schemas import (
     job_schema,
     notification_with_template_schema,

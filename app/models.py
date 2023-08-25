@@ -3,9 +3,7 @@ import itertools
 import uuid
 
 from flask import current_app, url_for
-from notifications_utils.clients.encryption.encryption_client import (
-    EncryptionError,
-)
+from notifications_utils.clients.encryption.encryption_client import EncryptionError
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -13,10 +11,7 @@ from notifications_utils.recipients import (
     validate_email_address,
     validate_phone_number,
 )
-from notifications_utils.template import (
-    PlainTextEmailTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy

@@ -6,10 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case, literal
 
 from app import db
-from app.dao.date_util import (
-    get_calendar_year_dates,
-    get_calendar_year_for_datetime,
-)
+from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
 from app.dao.organization_dao import dao_get_organization_live_services
 from app.models import (
     EMAIL_TYPE,

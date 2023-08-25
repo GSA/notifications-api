@@ -2,9 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
-from app.dao.fact_notification_status_dao import (
-    get_total_notifications_for_date_range,
-)
+from app.dao.fact_notification_status_dao import get_total_notifications_for_date_range
 from app.dao.fact_processing_time_dao import (
     get_processing_time_percentage_for_date_range,
 )

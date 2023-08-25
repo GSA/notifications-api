@@ -4,9 +4,7 @@ from unittest import mock
 from unittest.mock import ANY, call
 
 import pytest
-from notifications_utils.clients.zendesk.zendesk_client import (
-    NotifySupportTicket,
-)
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (

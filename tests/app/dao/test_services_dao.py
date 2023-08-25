@@ -16,10 +16,7 @@ from app.dao.inbound_numbers_dao import (
 )
 from app.dao.organization_dao import dao_add_service_to_organization
 from app.dao.service_permissions_dao import dao_remove_service_permission
-from app.dao.service_user_dao import (
-    dao_get_service_user,
-    dao_update_service_user,
-)
+from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.dao.services_dao import (
     dao_add_user_to_service,
     dao_create_service,

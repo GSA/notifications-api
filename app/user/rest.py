@@ -4,22 +4,14 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from notifications_utils.recipients import (
-    is_us_phone_number,
-    use_numeric_sender,
-)
+from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
-from app.dao.service_user_dao import (
-    dao_get_service_user,
-    dao_update_service_user,
-)
+from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.dao.template_folder_dao import (
-    dao_get_template_folder_by_id_and_service_id,
-)
+from app.dao.template_folder_dao import dao_get_template_folder_by_id_and_service_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import (
     count_user_verify_codes,
@@ -40,13 +32,7 @@ from app.dao.users_dao import (
     use_user_code,
 )
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    SMS_TYPE,
-    Permission,
-    Service,
-)
+from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, SMS_TYPE, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

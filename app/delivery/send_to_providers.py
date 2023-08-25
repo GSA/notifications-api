@@ -10,15 +10,10 @@ from notifications_utils.template import (
 )
 
 from app import create_uuid, db, notification_provider_clients
-from app.celery.research_mode_tasks import (
-    send_email_response,
-    send_sms_response,
-)
+from app.celery.research_mode_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
-from app.dao.provider_details_dao import (
-    get_provider_details_by_notification_type,
-)
+from app.dao.provider_details_dao import get_provider_details_by_notification_type
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,

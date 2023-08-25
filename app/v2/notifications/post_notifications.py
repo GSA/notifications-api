@@ -6,12 +6,7 @@ import botocore
 from flask import abort, current_app, jsonify, request
 from notifications_utils.recipients import try_validate_and_format_phone_number
 
-from app import (
-    api_user,
-    authenticated_service,
-    document_download_client,
-    encryption,
-)
+from app import api_user, authenticated_service, document_download_client, encryption
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames

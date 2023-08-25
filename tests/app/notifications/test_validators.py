@@ -6,9 +6,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 import app
 from app.dao import templates_dao
 from app.models import EMAIL_TYPE, SMS_TYPE
-from app.notifications.process_notifications import (
-    create_content_for_notification,
-)
+from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
     get_string_to_sign,
