@@ -150,6 +150,7 @@ def persist_notification(
 def send_notification_to_queue_detached(
     notification_type, notification_id, queue=None
 ):
+
     if notification_type == SMS_TYPE:
         if not queue:
             queue = QueueNames.SEND_SMS

@@ -39,6 +39,15 @@ def receive_sns_sms():
         raise InvalidRequest(f"SMS-SNS callback failed with error: {e}", 400)
 
     message = json.loads(post_data.get("Message"))
+
+    handle_inbound_message(message, post_data)
+
+    return jsonify(
+        result="success", message="SMS-SNS callback succeeded"
+    ), 200
+
+
+def handle_inbound_message(message, post_data):
     # TODO wrap this up
     if "inboundMessageId" in message:
         # TODO use standard formatting we use for all US numbers
@@ -56,27 +65,28 @@ def receive_sns_sms():
                 result="success", message="SMS-SNS callback succeeded"
             ), 200
 
-        content = message.get("messageBody")
-        from_number = message.get('originationNumber')
-        provider_ref = message.get('inboundMessageId')
-        date_received = post_data.get('Timestamp')
-        provider_name = "sns"
-
-        inbound = create_inbound_sms_object(service,
-                                            content=content,
-                                            from_number=from_number,
-                                            provider_ref=provider_ref,
-                                            date_received=date_received,
-                                            provider_name=provider_name)
+        inbound = _create_inbound_sms_object(service, message, post_data)
 
         tasks.send_inbound_sms_to_service.apply_async([str(inbound.id), str(service.id)], queue=QueueNames.NOTIFY)
 
         current_app.logger.debug(
             '{} received inbound SMS with reference {} from SNS'.format(service.id, inbound.provider_reference))
 
-    return jsonify(
-        result="success", message="SMS-SNS callback succeeded"
-    ), 200
+
+def _create_inbound_sms_object(service, message, post_data):
+    content = message.get("messageBody")
+    from_number = message.get('originationNumber')
+    provider_ref = message.get('inboundMessageId')
+    date_received = post_data.get('Timestamp')
+    provider_name = "sns"
+
+    inbound = create_inbound_sms_object(service,
+                                        content=content,
+                                        from_number=from_number,
+                                        provider_ref=provider_ref,
+                                        date_received=date_received,
+                                        provider_name=provider_name)
+    return inbound
 
 
 def unescape_string(string):

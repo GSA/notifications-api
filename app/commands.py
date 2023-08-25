@@ -63,6 +63,7 @@ from app.models import (
     TemplateHistory,
     User,
 )
+from app.service_invite.rest import create_invited_user
 from app.utils import get_midnight_in_utc
 
 
@@ -221,7 +222,6 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
     #  platform_admin
     #  view_activity
     # "send_texts,send_emails,view_activity"
-    from app.service_invite.rest import create_invited_user
     file = open(file_name)
     for email_address in file:
         data = {
@@ -242,8 +242,8 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                 response = create_invited_user(service_id)
                 if response[1] != 201:
                     print("*** ERROR occurred for email address: {}".format(email_address.strip()))
-                print(response[0].get_data(as_text=True))
-            except Exception as e:
+                # print(response[0].get_data(as_text=True))
+            except ValueError as e:
                 print("*** ERROR occurred for email address: {}. \n{}".format(email_address.strip(), e))
 
     file.close()
@@ -390,7 +390,6 @@ def populate_service_volume_intentions(file_name):
     # [2] Email:: volume intentions for service
 
     # TODO maintainability what is the purpose of this command? Who would use it and why?
-
     with open(file_name, 'r') as f:
         for line in itertools.islice(f, 1, None):
             columns = line.split(',')
@@ -409,6 +408,7 @@ def populate_go_live(file_name):
     # 6- Contact detail, 7-MOU, 8- LIVE date, 9- SMS, 10 - Email, 11 - Letters, 12 -CRM, 13 - Blue badge
     import csv
     print("Populate go live user and date")
+
     with open(file_name, 'r') as f:
         rows = csv.reader(
             f,

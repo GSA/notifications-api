@@ -7,8 +7,10 @@ from flask import json
 
 from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
 from app.notifications.receive_notifications import (
+    _create_inbound_sms_object,
     create_inbound_sms_object,
     fetch_potential_service,
+    handle_inbound_message,
     has_inbound_sms_permissions,
     unescape_string,
 )
@@ -162,13 +164,12 @@ def test_unescape_string(raw, expected):
     assert unescape_string(raw) == expected
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sns_sms_object(sample_service_full_permissions):
     data = {
-        'Message': 'hello+there+%F0%9F%93%A9',
+        'Message': 'hello there 📩',
         'Number': sample_service_full_permissions.get_inbound_number(),
-        'MSISDN': '07700 900 001',
-        'DateRecieved': '2017-01-02+03%3A04%3A05',
+        'MSISDN': '447700900001',
+        'DateRecieved': '2017-01-02 03:04:05',
         'ID': 'bar',
     }
 
@@ -185,7 +186,45 @@ def test_create_inbound_sns_sms_object(sample_service_full_permissions):
     assert inbound_sms.provider == 'sns'
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
+def test__create_inbound_sns_sms_object(sample_service_full_permissions):
+
+    message = {"messageBody": 'hello there 📩',
+               "originationNumber": "447700900001",
+               "inboundMessageId": "bar"}
+
+    post_data = {"Timestamp": '2017-01-02 03:04:05'}
+
+    inbound_sms = _create_inbound_sms_object(sample_service_full_permissions,
+                                             message,
+                                             post_data)
+
+    assert inbound_sms.service_id == sample_service_full_permissions.id
+    assert inbound_sms.notify_number == sample_service_full_permissions.get_inbound_number()
+    assert inbound_sms.user_number == '447700900001'
+    assert inbound_sms.provider_date == datetime(2017, 1, 2, 3, 4, 5)
+    assert inbound_sms.provider_reference == 'bar'
+    assert inbound_sms._content != 'hello there 📩'
+    assert inbound_sms.content == 'hello there 📩'
+    assert inbound_sms.provider == 'sns'
+
+
+def test_handle_inbound_message(mocker):
+
+    mock_fetch = mocker.patch("app.notifications.receive_notifications.fetch_potential_service")
+    mock_fetch.return_value = None
+
+    message = {"messageBody": 'hello there 📩',
+               "originationNumber": "447700900001",
+               "destinationNumber": "+15555555555",
+               "inboundMessageId": "bar"}
+
+    post_data = {"Timestamp": '2017-01-02 03:04:05'}
+
+    result = str(handle_inbound_message(message, post_data))
+    assert "200 OK" in result
+
+
+@pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
 def test_create_inbound_sns_sms_object_uses_inbound_number_if_set(sample_service_full_permissions):
     sample_service_full_permissions.sms_sender = 'foo'
     inbound_number = sample_service_full_permissions.get_inbound_number()
@@ -211,7 +250,7 @@ def test_create_inbound_sns_sms_object_uses_inbound_number_if_set(sample_service
     assert inbound_sms.notify_number == inbound_number
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
+@pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
 @pytest.mark.parametrize('notify_number', ['foo', 'baz'], ids=['two_matching_services', 'no_matching_services'])
 def test_receive_notification_error_if_not_single_matching_service(client, notify_db_session, notify_number):
     create_service_with_inbound_number(
@@ -240,7 +279,7 @@ def test_receive_notification_error_if_not_single_matching_service(client, notif
     assert InboundSms.query.count() == 0
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
+@pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
 @pytest.mark.parametrize("auth, keys, status_code", [
     ["testkey", ["testkey"], 200],
     ["", ["testkey"], 401],

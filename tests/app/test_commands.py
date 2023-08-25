@@ -1,17 +1,21 @@
 import datetime
 import os
+import uuid
 
 import pytest
 
 from app.commands import (
     _update_template,
+    bulk_invite_user_to_service,
     create_test_user,
     fix_billable_units,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
+    populate_go_live,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
+    populate_service_volume_intentions,
     purge_functional_test_data,
     update_jobs_archived_flag,
 )
@@ -196,6 +200,48 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
     inbound_numbers = dao_get_available_inbound_numbers()
     assert len(inbound_numbers) == 3
     assert set(x.number for x in inbound_numbers) == {'07700900373', '07700900473', '07700900375'}
+
+
+def test_populate_go_live(notify_db_session, notify_api, tmpdir, mocker, sample_service):
+    mock_dao = mocker.patch('app.commands.dao_fetch_service_by_id')
+    mock_dao.return_value = sample_service
+    mock_update_service = mocker.patch('app.commands.dao_update_service')
+    live_file = tmpdir.join("golive.txt")
+
+    live_file.write("something,something,service_id,something,something,something,email,something,start_date\n"
+                    ",,123,,,,,,05/05/2023\n")
+
+    result = notify_api.test_cli_runner().invoke(populate_go_live, ['-f', live_file])
+    assert "okay" in str(result)
+    mock_update_service.assert_called_once()
+
+
+def test_populate_service_volume_intentions(notify_db_session, notify_api, tmpdir, mocker, sample_service):
+    mock_dao = mocker.patch('app.commands.dao_fetch_service_by_id')
+    mock_dao.return_value = sample_service
+    mock_update_service = mocker.patch('app.commands.dao_update_service')
+    live_file = tmpdir.join("servicevolume.txt")
+
+    live_file.write("service_id,SMS,Email\n2,2,2\n")
+
+    result = notify_api.test_cli_runner().invoke(populate_service_volume_intentions, ['-f', live_file])
+    assert "okay" in str(result)
+    mock_update_service.assert_called_once()
+
+
+def test_bulk_invite_user_to_service(notify_db_session, notify_api, tmpdir, mocker, sample_service):
+    mock_dao = mocker.patch('app.commands.create_invited_user')
+    mock_dao.return_value = ["success", 201]
+    live_file = tmpdir.join("bulkinvite.txt")
+
+    live_file.write("a@x.x\nb@x.x\nc@x.x\n")
+    result = notify_api.test_cli_runner().invoke(bulk_invite_user_to_service, [
+        '-f', live_file,
+        '-s', uuid.uuid4(),
+        '-u', uuid.uuid4(),
+        '-p', 'sms'])
+    assert "okay" in str(result)
+    assert mock_dao.call_count == 3
 
 
 @pytest.mark.parametrize("organization_type, expected_allowance",
