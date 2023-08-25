@@ -2,7 +2,7 @@ from subprocess import check_output
 
 from cloudfoundry_client.client import CloudFoundryClient
 
-ORG_NAME = "gsa-tts-benefits-studio-prototyping"
+ORG_NAME = "gsa-tts-benefits-studio"
 
 
 client = CloudFoundryClient.build_from_cf_config()

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-org="gsa-tts-benefits-studio-prototyping"
+org="gsa-tts-benefits-studio"
 
 usage="
 $0: Destroy a Service User Account in a given space

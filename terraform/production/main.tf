@@ -1,5 +1,5 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio-prototyping"
+  cf_org_name      = "gsa-tts-benefits-studio"
   cf_space_name    = "notify-production"
   env              = "production"
   app_name         = "notify-api"
@@ -75,7 +75,7 @@ module "sns_sms" {
 # TODO: decide on public API domain name
 # 1) the app has first been deployed
 # 2) the route has been manually created by an OrgManager:
-#     `cf create-domain gsa-tts-benefits-studio-prototyping api.notify.gov`
+#     `cf create-domain gsa-tts-benefits-studio api.notify.gov`
 ###########################################################################
 # module "domain" {
 #   source = "github.com/18f/terraform-cloudgov//domain?ref=v0.2.0"

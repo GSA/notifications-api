@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-org="gsa-tts-benefits-studio-prototyping"
+org="gsa-tts-benefits-studio"
 
 usage="
 $0: Set egress rules for given space
