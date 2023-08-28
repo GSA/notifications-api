@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from flask import json
 
-from app.celery.research_mode_tasks import (
+from app.celery.test_key_tasks import (
     HTTPError,
     send_email_response,
     send_sms_response,
@@ -23,7 +23,7 @@ dvla_response_file_matcher = Matcher(
 
 def test_make_sns_callback(notify_api, rmock, mocker):
     endpoint = "http://localhost:6011/notifications/sms/sns"
-    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    get_notification_by_id = mocker.patch('app.celery.test_key_tasks.get_notification_by_id')
     n = Notification()
     n.id = 1234
     n.status = NOTIFICATION_DELIVERED
@@ -42,7 +42,7 @@ def test_make_sns_callback(notify_api, rmock, mocker):
 
 def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
     endpoint = "http://localhost:6011/notifications/sms/sns"
-    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    get_notification_by_id = mocker.patch('app.celery.test_key_tasks.get_notification_by_id')
     n = Notification()
     n.id = 1234
     n.status = NOTIFICATION_FAILED
@@ -66,17 +66,17 @@ def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
 
 
 def test_make_ses_callback(notify_api, mocker):
-    mock_task = mocker.patch('app.celery.research_mode_tasks.process_ses_results')
+    mock_task = mocker.patch('app.celery.test_key_tasks.process_ses_results')
     some_ref = str(uuid.uuid4())
 
     send_email_response(reference=some_ref, to="test@test.com")
 
-    mock_task.apply_async.assert_called_once_with(ANY, queue=QueueNames.RESEARCH_MODE)
+    mock_task.apply_async.assert_called_once_with(ANY, queue=QueueNames.SEND_EMAIL)
     assert mock_task.apply_async.call_args[0][0][0] == ses_notification_callback(some_ref)
 
 
 def test_delivered_sns_callback(mocker):
-    get_notification_by_id = mocker.patch('app.celery.research_mode_tasks.get_notification_by_id')
+    get_notification_by_id = mocker.patch('app.celery.test_key_tasks.get_notification_by_id')
     n = Notification()
     n.id = 1234
     n.status = NOTIFICATION_DELIVERED

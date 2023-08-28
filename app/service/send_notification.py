@@ -81,7 +81,6 @@ def send_one_off_notification(service_id, post_data):
 
     send_notification_to_queue(
         notification=notification,
-        research_mode=service.research_mode,
         queue=queue_name,
     )
 

@@ -602,7 +602,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         headers=[('Content-Type', 'application/json'), ('Authorization', 'Bearer {}'.format(auth_header))]
     )
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue='research-mode-tasks'
+        [fake_uuid], queue='send-sms-tasks'
     )
     assert response.status_code == 201
 
@@ -637,7 +637,7 @@ def test_should_send_email_to_anyone_with_test_key(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue='research-mode-tasks'
+        [fake_uuid], queue='send-email-tasks'
     )
     assert response.status_code == 201
 

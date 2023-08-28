@@ -255,23 +255,16 @@ def test_persist_notification_sets_daily_limit_cache_if_one_does_not_exists(
 
 
 @pytest.mark.parametrize((
-    'research_mode, requested_queue, notification_type, key_type, expected_queue, expected_task'
+    'requested_queue, notification_type, key_type, expected_queue, expected_task'
 ), [
-    (True, None, 'sms', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_sms'),
-    (True, None, 'email', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_email'),
-    (True, None, 'email', 'team', 'research-mode-tasks', 'provider_tasks.deliver_email'),
-    (False, None, 'sms', 'normal', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
-    (False, None, 'email', 'normal', 'send-email-tasks', 'provider_tasks.deliver_email'),
-    (False, None, 'sms', 'team', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
-    (False, None, 'sms', 'test', 'research-mode-tasks', 'provider_tasks.deliver_sms'),
-    (True, 'notify-internal-tasks', 'email', 'normal', 'research-mode-tasks', 'provider_tasks.deliver_email'),
-    (False, 'notify-internal-tasks', 'sms', 'normal', 'notify-internal-tasks', 'provider_tasks.deliver_sms'),
-    (False, 'notify-internal-tasks', 'email', 'normal', 'notify-internal-tasks', 'provider_tasks.deliver_email'),
-    (False, 'notify-internal-tasks', 'sms', 'test', 'research-mode-tasks', 'provider_tasks.deliver_sms'),
+    (None, 'sms', 'normal', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
+    (None, 'email', 'normal', 'send-email-tasks', 'provider_tasks.deliver_email'),
+    (None, 'sms', 'team', 'send-sms-tasks', 'provider_tasks.deliver_sms'),
+    ('notify-internal-tasks', 'sms', 'normal', 'notify-internal-tasks', 'provider_tasks.deliver_sms'),
+    ('notify-internal-tasks', 'email', 'normal', 'notify-internal-tasks', 'provider_tasks.deliver_email'),
 ])
 def test_send_notification_to_queue(
     notify_db_session,
-    research_mode,
     requested_queue,
     notification_type,
     key_type,
@@ -288,7 +281,7 @@ def test_send_notification_to_queue(
         created_at=datetime.datetime(2016, 11, 11, 16, 8, 18),
     )
 
-    send_notification_to_queue(notification=notification, research_mode=research_mode, queue=requested_queue)
+    send_notification_to_queue(notification=notification, queue=requested_queue)
 
     mocked.assert_called_once_with([str(notification.id)], queue=expected_queue)
 
