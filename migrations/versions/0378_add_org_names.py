@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0378_add_org_names'
-down_revision = '0377_add_inbound_sms_number'
+revision = "0378_add_org_names"
+down_revision = "0377_add_inbound_sms_number"
 
 
 def upgrade():
@@ -18,11 +18,13 @@ def upgrade():
     op.get_bind()
 
     # bluntly swap out data
-    op.execute("INSERT INTO organisation_types VALUES ('state','f','250000'),('federal','f','250000');")
+    op.execute(
+        "INSERT INTO organisation_types VALUES ('state','f','250000'),('federal','f','250000');"
+    )
     op.execute("UPDATE services SET organisation_type = 'federal';")
     op.execute("UPDATE organisation SET organisation_type = 'federal';")
     op.execute("UPDATE services_history SET organisation_type = 'federal';")
-    
+
     # remove uk values
     service_delete = """DELETE FROM organisation_types WHERE name IN 
                     ('central','local','nhs','nhs_central','nhs_local','emergency_service','school_or_college','nhs_gp')

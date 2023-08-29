@@ -8,12 +8,13 @@ Create Date: 2019-05-13 10:44:51.867661
 from alembic import op
 
 
-revision = '0317_uploads_for_all'
-down_revision = '0316_int_letters_permission'
+revision = "0317_uploads_for_all"
+down_revision = "0316_int_letters_permission"
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO
             service_permissions (service_id, permission, created_at)
         SELECT
@@ -29,7 +30,8 @@ def upgrade():
                     service_id = services.id and
                     permission = 'upload_letters'
            )
-    """)
+    """
+    )
 
 
 def downgrade():

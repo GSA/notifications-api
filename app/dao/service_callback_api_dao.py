@@ -19,7 +19,9 @@ def save_service_callback_api(service_callback_api):
 
 @autocommit
 @version_class(ServiceCallbackApi)
-def reset_service_callback_api(service_callback_api, updated_by_id, url=None, bearer_token=None):
+def reset_service_callback_api(
+    service_callback_api, updated_by_id, url=None, bearer_token=None
+):
     if url:
         service_callback_api.url = url
     if bearer_token:
@@ -31,20 +33,20 @@ def reset_service_callback_api(service_callback_api, updated_by_id, url=None, be
 
 
 def get_service_callback_api(service_callback_api_id, service_id):
-    return ServiceCallbackApi.query.filter_by(id=service_callback_api_id, service_id=service_id).first()
+    return ServiceCallbackApi.query.filter_by(
+        id=service_callback_api_id, service_id=service_id
+    ).first()
 
 
 def get_service_delivery_status_callback_api_for_service(service_id):
     return ServiceCallbackApi.query.filter_by(
-        service_id=service_id,
-        callback_type=DELIVERY_STATUS_CALLBACK_TYPE
+        service_id=service_id, callback_type=DELIVERY_STATUS_CALLBACK_TYPE
     ).first()
 
 
 def get_service_complaint_callback_api_for_service(service_id):
     return ServiceCallbackApi.query.filter_by(
-        service_id=service_id,
-        callback_type=COMPLAINT_CALLBACK_TYPE
+        service_id=service_id, callback_type=COMPLAINT_CALLBACK_TYPE
     ).first()
 
 

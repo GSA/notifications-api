@@ -19,7 +19,7 @@ def test_save_service_inbound_api(sample_service):
         service_id=sample_service.id,
         url="https://some_service/inbound_messages",
         bearer_token="some_unique_string",
-        updated_by_id=sample_service.users[0].id
+        updated_by_id=sample_service.users[0].id,
     )
 
     save_service_inbound_api(service_inbound_api)
@@ -35,7 +35,9 @@ def test_save_service_inbound_api(sample_service):
     assert inbound_api._bearer_token != "some_unique_string"
     assert inbound_api.updated_at is None
 
-    versioned = ServiceInboundApi.get_history_model().query.filter_by(id=inbound_api.id).one()
+    versioned = (
+        ServiceInboundApi.get_history_model().query.filter_by(id=inbound_api.id).one()
+    )
     assert versioned.id == inbound_api.id
     assert versioned.service_id == sample_service.id
     assert versioned.updated_by_id == sample_service.users[0].id
@@ -50,7 +52,7 @@ def test_save_service_inbound_api_fails_if_service_does_not_exist(notify_db_sess
         service_id=uuid.uuid4(),
         url="https://some_service/inbound_messages",
         bearer_token="some_unique_string",
-        updated_by_id=uuid.uuid4()
+        updated_by_id=uuid.uuid4(),
     )
 
     with pytest.raises(SQLAlchemyError):
@@ -62,7 +64,7 @@ def test_update_service_inbound_api(sample_service):
         service_id=sample_service.id,
         url="https://some_service/inbound_messages",
         bearer_token="some_unique_string",
-        updated_by_id=sample_service.users[0].id
+        updated_by_id=sample_service.users[0].id,
     )
 
     save_service_inbound_api(service_inbound_api)
@@ -70,8 +72,11 @@ def test_update_service_inbound_api(sample_service):
     assert len(results) == 1
     saved_inbound_api = results[0]
 
-    reset_service_inbound_api(saved_inbound_api, updated_by_id=sample_service.users[0].id,
-                              url="https://some_service/changed_url")
+    reset_service_inbound_api(
+        saved_inbound_api,
+        updated_by_id=sample_service.users[0].id,
+        url="https://some_service/changed_url",
+    )
     updated_results = ServiceInboundApi.query.all()
     assert len(updated_results) == 1
     updated = updated_results[0]
@@ -83,7 +88,11 @@ def test_update_service_inbound_api(sample_service):
     assert updated._bearer_token != "some_unique_string"
     assert updated.updated_at is not None
 
-    versioned_results = ServiceInboundApi.get_history_model().query.filter_by(id=saved_inbound_api.id).all()
+    versioned_results = (
+        ServiceInboundApi.get_history_model()
+        .query.filter_by(id=saved_inbound_api.id)
+        .all()
+    )
     assert len(versioned_results) == 2
     for x in versioned_results:
         if x.version == 1:
@@ -105,7 +114,7 @@ def test_get_service_inbound_api(sample_service):
         service_id=sample_service.id,
         url="https://some_service/inbound_messages",
         bearer_token="some_unique_string",
-        updated_by_id=sample_service.users[0].id
+        updated_by_id=sample_service.users[0].id,
     )
     save_service_inbound_api(service_inbound_api)
 

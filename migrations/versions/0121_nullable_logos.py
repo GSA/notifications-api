@@ -9,15 +9,13 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0121_nullable_logos'
-down_revision = '0120_add_org_banner_branding'
+revision = "0121_nullable_logos"
+down_revision = "0120_add_org_banner_branding"
 
 
 def upgrade():
     op.alter_column(
-        'organisation', 'logo',
-        existing_type=sa.VARCHAR(length=255),
-        nullable=True
+        "organisation", "logo", existing_type=sa.VARCHAR(length=255), nullable=True
     )
 
 

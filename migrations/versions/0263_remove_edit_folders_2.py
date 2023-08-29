@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0263_remove_edit_folders_2'
-down_revision = '0262_remove_edit_folders'
+revision = "0263_remove_edit_folders_2"
+down_revision = "0262_remove_edit_folders"
 
 
 def upgrade():

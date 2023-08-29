@@ -9,12 +9,14 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0207_set_callback_history_type'
-down_revision = '0206_assign_callback_type'
+revision = "0207_set_callback_history_type"
+down_revision = "0206_assign_callback_type"
 
 
 def upgrade():
-    op.execute("update service_callback_api_history set callback_type = 'delivery_status' where callback_type is null")
+    op.execute(
+        "update service_callback_api_history set callback_type = 'delivery_status' where callback_type is null"
+    )
 
 
 def downgrade():

@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0395_remove_intl_letters_perm'
-down_revision = '0394_remove_contact_list'
+revision = "0395_remove_intl_letters_perm"
+down_revision = "0394_remove_contact_list"
 
 
 def upgrade():

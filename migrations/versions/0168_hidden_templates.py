@@ -9,15 +9,15 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0168_hidden_templates'
-down_revision = '0167_add_precomp_letter_svc_perm'
+revision = "0168_hidden_templates"
+down_revision = "0167_add_precomp_letter_svc_perm"
 
 
 def upgrade():
-    op.add_column('templates', sa.Column('hidden', sa.Boolean(), nullable=True))
-    op.add_column('templates_history', sa.Column('hidden', sa.Boolean(), nullable=True))
+    op.add_column("templates", sa.Column("hidden", sa.Boolean(), nullable=True))
+    op.add_column("templates_history", sa.Column("hidden", sa.Boolean(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('templates_history', 'hidden')
-    op.drop_column('templates', 'hidden')
+    op.drop_column("templates_history", "hidden")
+    op.drop_column("templates", "hidden")

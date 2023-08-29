@@ -14,8 +14,8 @@ from sqlalchemy import text
 from app.dao.date_util import get_current_calendar_year_start_year
 
 
-revision = '0139_migrate_sms_allowance_data'
-down_revision = '0138_sms_sender_nullable'
+revision = "0139_migrate_sms_allowance_data"
+down_revision = "0138_sms_sender_nullable"
 
 
 def upgrade():
@@ -26,9 +26,7 @@ def upgrade():
     update_service_table = """
         UPDATE services SET free_sms_fragment_limit = :default_limit where free_sms_fragment_limit is null
     """
-    input_params = {
-        "default_limit": default_limit
-    }
+    input_params = {"default_limit": default_limit}
     conn = op.get_bind()
     conn.execute(text(update_service_table), input_params)
 
@@ -36,7 +34,7 @@ def upgrade():
     input_params = {
         "current_year": current_year,
         "default_limit": default_limit,
-        "time_now": datetime.utcnow()
+        "time_now": datetime.utcnow(),
     }
     insert_row_if_not_exist = """
         INSERT INTO annual_billing 
@@ -58,4 +56,4 @@ def upgrade():
 
 def downgrade():
     # There is no schema change. Only data migration and filling in gaps.
-    print('There is no action for downgrading to the previous version.')
+    print("There is no action for downgrading to the previous version.")

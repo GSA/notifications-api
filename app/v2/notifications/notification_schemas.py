@@ -9,9 +9,9 @@ template = {
     "properties": {
         "id": uuid,
         "version": {"type": "integer"},
-        "uri": {"type": "string", "format": "uri"}
+        "uri": {"type": "string", "format": "uri"},
     },
-    "required": ["id", "version", "uri"]
+    "required": ["id", "version", "uri"],
 }
 
 notification_by_id = {
@@ -19,10 +19,8 @@ notification_by_id = {
     "description": "GET notification response schema",
     "type": "object",
     "title": "response v2/notification",
-    "properties": {
-        "notification_id": uuid
-    },
-    "required": ["notification_id"]
+    "properties": {"notification_id": uuid},
+    "required": ["notification_id"],
 }
 
 
@@ -51,14 +49,29 @@ get_notification_response = {
         "created_at": {"type": "string"},
         "sent_at": {"type": ["string", "null"]},
         "completed_at": {"type": ["string", "null"]},
-        "scheduled_for": {"type": ["string", "null"]}
+        "scheduled_for": {"type": ["string", "null"]},
     },
     "required": [
         # technically, all keys are required since we always have all of them
-        "id", "reference", "email_address", "phone_number",
-        "line_1", "line_2", "line_3", "line_4", "line_5", "line_6", "postcode",
-        "type", "status", "template", "body", "created_at", "sent_at", "completed_at"
-    ]
+        "id",
+        "reference",
+        "email_address",
+        "phone_number",
+        "line_1",
+        "line_2",
+        "line_3",
+        "line_4",
+        "line_5",
+        "line_6",
+        "postcode",
+        "type",
+        "status",
+        "template",
+        "body",
+        "created_at",
+        "sent_at",
+        "completed_at",
+    ],
 }
 
 get_notifications_request = {
@@ -67,20 +80,10 @@ get_notifications_request = {
     "type": "object",
     "properties": {
         "reference": {"type": "string"},
-        "status": {
-            "type": "array",
-            "items": {
-                "enum": NOTIFICATION_STATUS_TYPES
-            }
-        },
-        "template_type": {
-            "type": "array",
-            "items": {
-                "enum": NOTIFICATION_TYPES
-            }
-        },
+        "status": {"type": "array", "items": {"enum": NOTIFICATION_STATUS_TYPES}},
+        "template_type": {"type": "array", "items": {"enum": NOTIFICATION_TYPES}},
         "include_jobs": {"enum": ["true", "True"]},
-        "older_than": uuid
+        "older_than": uuid,
     },
     "additionalProperties": False,
 }
@@ -92,31 +95,18 @@ get_notifications_response = {
     "properties": {
         "notifications": {
             "type": "array",
-            "items": {
-                "type": "object",
-                "$ref": "#/definitions/notification"
-            }
+            "items": {"type": "object", "$ref": "#/definitions/notification"},
         },
         "links": {
             "type": "object",
-            "properties": {
-                "current": {
-                    "type": "string"
-                },
-                "next": {
-                    "type": "string"
-                }
-            },
+            "properties": {"current": {"type": "string"}, "next": {"type": "string"}},
             "additionalProperties": False,
-            "required": ["current"]
-        }
+            "required": ["current"],
+        },
     },
     "additionalProperties": False,
     "required": ["notifications", "links"],
-    "definitions": {
-        "notification": get_notification_response
-    },
-
+    "definitions": {"notification": get_notification_response},
 }
 
 post_sms_request = {
@@ -129,11 +119,14 @@ post_sms_request = {
         "phone_number": {"type": "string", "format": "phone_number"},
         "template_id": uuid,
         "personalisation": personalisation,
-        "scheduled_for": {"type": ["string", "null"], "format": "datetime_within_next_day"},
-        "sms_sender_id": uuid
+        "scheduled_for": {
+            "type": ["string", "null"],
+            "format": "datetime_within_next_day",
+        },
+        "sms_sender_id": uuid,
     },
     "required": ["phone_number", "template_id"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 sms_content = {
@@ -141,11 +134,8 @@ sms_content = {
     "description": "content schema for SMS notification response schema",
     "type": "object",
     "title": "notification content",
-    "properties": {
-        "body": {"type": "string"},
-        "from_number": {"type": "string"}
-    },
-    "required": ["body", "from_number"]
+    "properties": {"body": {"type": "string"}, "from_number": {"type": "string"}},
+    "required": ["body", "from_number"],
 }
 
 post_sms_response = {
@@ -159,9 +149,9 @@ post_sms_response = {
         "content": sms_content,
         "uri": {"type": "string", "format": "uri"},
         "template": template,
-        "scheduled_for": {"type": ["string", "null"]}
+        "scheduled_for": {"type": ["string", "null"]},
     },
-    "required": ["id", "content", "uri", "template"]
+    "required": ["id", "content", "uri", "template"],
 }
 
 
@@ -175,11 +165,14 @@ post_email_request = {
         "email_address": {"type": "string", "format": "email_address"},
         "template_id": uuid,
         "personalisation": personalisation,
-        "scheduled_for": {"type": ["string", "null"], "format": "datetime_within_next_day"},
-        "email_reply_to_id": uuid
+        "scheduled_for": {
+            "type": ["string", "null"],
+            "format": "datetime_within_next_day",
+        },
+        "email_reply_to_id": uuid,
     },
     "required": ["email_address", "template_id"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 email_content = {
@@ -190,9 +183,9 @@ email_content = {
     "properties": {
         "from_email": {"type": "string", "format": "email_address"},
         "body": {"type": "string"},
-        "subject": {"type": "string"}
+        "subject": {"type": "string"},
     },
-    "required": ["body", "from_email", "subject"]
+    "required": ["body", "from_email", "subject"],
 }
 
 post_email_response = {
@@ -206,7 +199,7 @@ post_email_response = {
         "content": email_content,
         "uri": {"type": "string", "format": "uri"},
         "template": template,
-        "scheduled_for": {"type": ["string", "null"]}
+        "scheduled_for": {"type": ["string", "null"]},
     },
-    "required": ["id", "content", "uri", "template"]
+    "required": ["id", "content", "uri", "template"],
 }
