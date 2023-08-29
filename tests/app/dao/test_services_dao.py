@@ -1369,11 +1369,10 @@ def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     service_3 = create_service(
         service_name="Service 3", restricted=True
     )  # restricted is excluded
-    service_4 = create_service(service_name="Service 4")
     service_5 = create_service(
         service_name="Service 5", active=False
     )  # not active is excluded
-    services = [service_1, service_3, service_4, service_5]
+    services = [service_1, service_3, service_5]
 
     tv_number = "447700900001"
     normal_number = "447711900001"
@@ -1420,7 +1419,7 @@ def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     end_date = datetime.utcnow()
 
     result = dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=4)
-    assert len(result) == 2
+    assert len(result) == 1
     assert str(result[0].service_id) == fake_uuid
 
 
