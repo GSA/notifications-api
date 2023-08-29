@@ -2,10 +2,7 @@ import pytest
 import requests
 import requests_mock
 
-from app.clients.document_download import (
-    DocumentDownloadClient,
-    DocumentDownloadError,
-)
+from app.clients.document_download import DocumentDownloadClient, DocumentDownloadError
 
 
 @pytest.fixture(scope="function")

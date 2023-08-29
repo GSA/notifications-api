@@ -6,9 +6,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.recipients import InvalidPhoneError
 
 from app.config import QueueNames
-from app.dao.service_guest_list_dao import (
-    dao_add_and_commit_guest_list_contacts,
-)
+from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_NORMAL,

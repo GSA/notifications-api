@@ -192,10 +192,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     expected_template_id = sample_template.id
 
     # Change the template
-    from app.dao.templates_dao import (
-        dao_get_template_by_id,
-        dao_update_template,
-    )
+    from app.dao.templates_dao import dao_get_template_by_id, dao_update_template
 
     sample_template.content = (
         sample_template.content + " another version of the template"

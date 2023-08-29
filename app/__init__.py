@@ -6,14 +6,7 @@ import uuid
 from time import monotonic
 
 from celery import current_task
-from flask import (
-    current_app,
-    g,
-    has_request_context,
-    jsonify,
-    make_response,
-    request,
-)
+from flask import current_app, g, has_request_context, jsonify, make_response, request
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
@@ -131,25 +124,17 @@ def register_blueprint(application):
     from app.inbound_number.rest import inbound_number_blueprint
     from app.inbound_sms.rest import inbound_sms as inbound_sms_blueprint
     from app.job.rest import job_blueprint
-    from app.notifications.notifications_ses_callback import (
-        ses_callback_blueprint,
-    )
-    from app.notifications.receive_notifications import (
-        receive_notifications_blueprint,
-    )
+    from app.notifications.notifications_ses_callback import ses_callback_blueprint
+    from app.notifications.receive_notifications import receive_notifications_blueprint
     from app.notifications.rest import notifications as notifications_blueprint
     from app.organization.invite_rest import organization_invite_blueprint
     from app.organization.rest import organization_blueprint
     from app.performance_dashboard.rest import performance_dashboard_blueprint
     from app.platform_stats.rest import platform_stats_blueprint
-    from app.provider_details.rest import (
-        provider_details as provider_details_blueprint,
-    )
+    from app.provider_details.rest import provider_details as provider_details_blueprint
     from app.service.callback_rest import service_callback_blueprint
     from app.service.rest import service_blueprint
-    from app.service_invite.rest import (
-        service_invite as service_invite_blueprint,
-    )
+    from app.service_invite.rest import service_invite as service_invite_blueprint
     from app.status.healthcheck import status as status_blueprint
     from app.template.rest import template_blueprint
     from app.template_folder.rest import template_folder_blueprint

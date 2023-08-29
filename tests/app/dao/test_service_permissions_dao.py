@@ -4,12 +4,7 @@ from app.dao.service_permissions_dao import (
     dao_fetch_service_permissions,
     dao_remove_service_permission,
 )
-from app.models import (
-    EMAIL_TYPE,
-    INBOUND_SMS_TYPE,
-    INTERNATIONAL_SMS_TYPE,
-    SMS_TYPE,
-)
+from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, INTERNATIONAL_SMS_TYPE, SMS_TYPE
 from tests.app.db import create_service, create_service_permission
 
 

@@ -22,9 +22,7 @@ from app.models import (
     SMS_TYPE,
     ServicePermission,
 )
-from app.notifications.process_notifications import (
-    create_content_for_notification,
-)
+from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text

@@ -11,10 +11,7 @@ import app
 from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
-from app.dao.templates_dao import (
-    dao_get_all_templates_for_service,
-    dao_update_template,
-)
+from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
 from app.errors import InvalidRequest
 from app.models import (
     EMAIL_TYPE,

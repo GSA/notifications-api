@@ -8,10 +8,7 @@ import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
 from notifications_utils.recipients import Row
-from notifications_utils.template import (
-    PlainTextEmailTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from requests import RequestException
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -663,14 +660,12 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     notification = _notification_json(sample_email_template, "my_email@my_email.com")
     version_on_notification = sample_email_template.version
     # Change the template
-    from app.dao.templates_dao import (
-        dao_get_template_by_id,
-        dao_update_template,
-    )
+    from app.dao.templates_dao import dao_get_template_by_id, dao_update_template
 
     sample_email_template.content = (
         sample_email_template.content + " another version of the template"
     )
+
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     dao_update_template(sample_email_template)
     t = dao_get_template_by_id(sample_email_template.id)

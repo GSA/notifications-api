@@ -275,9 +275,7 @@ def test_delete_template_folder_fails_if_folder_has_subfolders(
     admin_request, sample_service
 ):
     existing_folder = create_template_folder(sample_service)
-    existing_subfolder = create_template_folder(
-        sample_service, parent=existing_folder
-    )  # noqa
+    create_template_folder(sample_service, parent=existing_folder)  # noqa
 
     resp = admin_request.delete(
         "template_folder.delete_template_folder",

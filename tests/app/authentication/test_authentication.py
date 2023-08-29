@@ -16,16 +16,9 @@ from app.authentication.auth import (
     requires_auth,
     requires_internal_auth,
 )
-from app.dao.api_key_dao import (
-    expire_api_key,
-    get_model_api_keys,
-    get_unsigned_secrets,
-)
+from app.dao.api_key_dao import expire_api_key, get_model_api_keys, get_unsigned_secrets
 from app.dao.services_dao import dao_fetch_service_by_id
-from tests import (
-    create_admin_authorization_header,
-    create_service_authorization_header,
-)
+from tests import create_admin_authorization_header, create_service_authorization_header
 from tests.conftest import set_config_values
 
 

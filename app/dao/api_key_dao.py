@@ -35,8 +35,9 @@ def get_model_api_keys(service_id, id=None):
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     return ApiKey.query.filter(
         or_(
-            ApiKey.expiry_date == None, func.date(ApiKey.expiry_date) > seven_days_ago
-        ),  # noqa
+            ApiKey.expiry_date == None,  # noqa
+            func.date(ApiKey.expiry_date) > seven_days_ago,  # noqa
+        ),
         ApiKey.service_id == service_id,
     ).all()
 

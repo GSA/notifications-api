@@ -11,10 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.dao.organization_dao import dao_add_service_to_organization
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.dao.service_user_dao import dao_get_service_user
-from app.dao.services_dao import (
-    dao_add_user_to_service,
-    dao_remove_user_from_service,
-)
+from app.dao.services_dao import dao_add_user_to_service, dao_remove_user_from_service
 from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
 from app.models import (
@@ -761,7 +758,6 @@ def test_update_service_flags(client, sample_service):
     json_resp = resp.json
     assert resp.status_code == 200
     assert json_resp["data"]["name"] == sample_service.name
-
     data = {"permissions": [INTERNATIONAL_SMS_TYPE]}
 
     auth_header = create_admin_authorization_header()

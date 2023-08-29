@@ -7,10 +7,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
-from app.dao.service_user_dao import (
-    dao_get_service_user,
-    dao_update_service_user,
-)
+from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.dao.users_dao import (
     _remove_values_for_keys_if_present,
     count_user_verify_codes,

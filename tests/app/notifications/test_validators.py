@@ -6,9 +6,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 import app
 from app.dao import templates_dao
 from app.models import EMAIL_TYPE, SMS_TYPE
-from app.notifications.process_notifications import (
-    create_content_for_notification,
-)
+from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
     get_string_to_sign,
@@ -238,7 +236,7 @@ def test_service_can_send_to_recipient_fails_when_ignoring_guest_list(
         ("team", "Can’t send to this recipient using a team-only API key"),
         (
             "normal",
-            "Can’t send to this recipient when service is in trial mode – see https://www.notifications.service.gov.uk/trial-mode",
+            "Can’t send to this recipient when service is in trial mode – see https://www.notifications.service.gov.uk/trial-mode",  # noqa
         ),
     ],
 )  # noqa
@@ -723,8 +721,8 @@ def test_get_string_to_sign():
     str = get_string_to_sign(sns_payload)
     assert (
         str
-        == b'Message\n{"AbsoluteTime":"2021-09-08T13:28:24.656Z","Content":"help","ContentType":"text/plain","Id":"333333333-be0d-4a44-889d-d2a86fc06f0c","Type":"MESSAGE","ParticipantId":"bbbbbbbb-c562-4d95-b76c-dcbca8b4b5f7","DisplayName":"Jane","ParticipantRole":"CUSTOMER","InitialContactId":"33333333-abc5-46db-9ad5-d772559ab556","ContactId":"33333333-abc5-46db-9ad5-d772559ab556"}\nMessageId\nccccccccc-cccc-cccc-cccc-ccccccccccccc\nTimestamp\n2021-09-08T13:28:24.860Z\nTopicArn\narn:aws:sns:us-west-2:009969138378:connector-svc-test\nType\nNotification\n'
-    )  # noqa
+        == b'Message\n{"AbsoluteTime":"2021-09-08T13:28:24.656Z","Content":"help","ContentType":"text/plain","Id":"333333333-be0d-4a44-889d-d2a86fc06f0c","Type":"MESSAGE","ParticipantId":"bbbbbbbb-c562-4d95-b76c-dcbca8b4b5f7","DisplayName":"Jane","ParticipantRole":"CUSTOMER","InitialContactId":"33333333-abc5-46db-9ad5-d772559ab556","ContactId":"33333333-abc5-46db-9ad5-d772559ab556"}\nMessageId\nccccccccc-cccc-cccc-cccc-ccccccccccccc\nTimestamp\n2021-09-08T13:28:24.860Z\nTopicArn\narn:aws:sns:us-west-2:009969138378:connector-svc-test\nType\nNotification\n'  # noqa
+    )
 
     # This is a test payload with no valid cert, so it should raise a ValueError
     with pytest.raises(ValueError):

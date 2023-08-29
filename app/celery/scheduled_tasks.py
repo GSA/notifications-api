@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.clients.zendesk.zendesk_client import (
-    NotifySupportTicket,
-)
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,9 +16,7 @@ from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
 )
-from app.dao.invited_user_dao import (
-    delete_invitations_created_more_than_two_days_ago,
-)
+from app.dao.invited_user_dao import delete_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
     dao_update_job,
@@ -222,8 +218,8 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
         if current_app.config["NOTIFY_ENVIRONMENT"] in ["live", "production", "test"]:
             message += (
                 "\nYou can find instructions for this ticket in our manual:\n"
-                "https://github.com/alphagov/notifications-manuals/wiki/Support-Runbook#Deal-with-services-with-high-failure-rates-or-sending-sms-to-tv-numbers"
-            )  # noqa
+                "https://github.com/alphagov/notifications-manuals/wiki/Support-Runbook#Deal-with-services-with-high-failure-rates-or-sending-sms-to-tv-numbers"  # noqa
+            )
             ticket = NotifySupportTicket(
                 subject=f"[{current_app.config['NOTIFY_ENVIRONMENT']}] High failure rates for sms spotted for services",
                 message=message,

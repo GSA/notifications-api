@@ -8,10 +8,7 @@ from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_phone_number,
 )
-from notifications_utils.template import (
-    PlainTextEmailTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 from app import redis_store
 from app.celery import provider_tasks

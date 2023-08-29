@@ -5,10 +5,7 @@ from flask import current_app
 from app import notify_celery
 from app.config import QueueNames
 from app.cronitor import cronitor
-from app.dao.fact_billing_dao import (
-    fetch_billing_data_for_day,
-    update_fact_billing,
-)
+from app.dao.fact_billing_dao import fetch_billing_data_for_day, update_fact_billing
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
 from app.models import EMAIL_TYPE, SMS_TYPE

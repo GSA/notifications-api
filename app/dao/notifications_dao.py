@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.international_billing_rates import (
-    INTERNATIONAL_BILLING_RATES,
-)
+from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
 from notifications_utils.recipients import (
     InvalidEmailError,
     try_validate_and_format_phone_number,
