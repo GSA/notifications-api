@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import time
 
@@ -14,13 +15,26 @@ class AwsCloudwatchClient(Client):
     """
 
     def init_app(self, current_app, *args, **kwargs):
-        self._client = client(
-            "logs",
-            region_name=cloud_config.sns_region,
-            aws_access_key_id=cloud_config.sns_access_key,
-            aws_secret_access_key=cloud_config.sns_secret_key,
-            config=AWS_CLIENT_CONFIG
-        )
+        if os.getenv("LOCALSTACK_ENDPOINT_URL"):
+            self._client = client(
+                "logs",
+                region_name=cloud_config.sns_region,
+                aws_access_key_id=cloud_config.sns_access_key,
+                aws_secret_access_key=cloud_config.sns_secret_key,
+                config=AWS_CLIENT_CONFIG,
+                endpoint_url=os.getenv("LOCALSTACK_ENDPOINT_URL")
+            )
+            self._is_localstack = True
+        else:
+            self._client = client(
+                "logs",
+                region_name=cloud_config.sns_region,
+                aws_access_key_id=cloud_config.sns_access_key,
+                aws_secret_access_key=cloud_config.sns_secret_key,
+                config=AWS_CLIENT_CONFIG
+            )
+            self._is_localstack = False
+
         super(Client, self).__init__(*args, **kwargs)
         self.current_app = current_app
         self._valid_sender_regex = re.compile(r"^\+?\d{5,14}$")
@@ -28,6 +42,9 @@ class AwsCloudwatchClient(Client):
     @property
     def name(self):
         return 'cloudwatch'
+
+    def is_localstack(self):
+        return self._is_localstack
 
     def _get_log(self, my_filter, log_group_name, sent_at):
 
