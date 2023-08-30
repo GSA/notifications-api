@@ -23,7 +23,7 @@ jobs:
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-          cf_org: gsa-tts-benefits-studio-prototyping
+          cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
           full_command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
       - name: Restage ${{matrix.app}} egress
@@ -31,6 +31,6 @@ jobs:
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-          cf_org: gsa-tts-benefits-studio-prototyping
+          cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}-egress
           full_command: "cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}"

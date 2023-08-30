@@ -9,18 +9,26 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0281_non_null_folder_permissions'
-down_revision = '0280_invited_user_folder_perms'
+revision = "0281_non_null_folder_permissions"
+down_revision = "0280_invited_user_folder_perms"
 
 
 def upgrade():
-    op.execute("UPDATE invited_users SET folder_permissions = '[]' WHERE folder_permissions IS null")
-    op.alter_column('invited_users', 'folder_permissions',
-               existing_type=postgresql.JSONB(astext_type=sa.Text()),
-               nullable=False)
+    op.execute(
+        "UPDATE invited_users SET folder_permissions = '[]' WHERE folder_permissions IS null"
+    )
+    op.alter_column(
+        "invited_users",
+        "folder_permissions",
+        existing_type=postgresql.JSONB(astext_type=sa.Text()),
+        nullable=False,
+    )
 
 
 def downgrade():
-    op.alter_column('invited_users', 'folder_permissions',
-               existing_type=postgresql.JSONB(astext_type=sa.Text()),
-               nullable=True)
+    op.alter_column(
+        "invited_users",
+        "folder_permissions",
+        existing_type=postgresql.JSONB(astext_type=sa.Text()),
+        nullable=True,
+    )

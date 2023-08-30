@@ -1,5 +1,4 @@
 from flask import current_app
-from gds_metrics.metrics import Histogram
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     daily_total_cache_key,
@@ -23,37 +22,34 @@ from app.models import (
     SMS_TYPE,
     ServicePermission,
 )
-from app.notifications.process_notifications import (
-    create_content_for_notification,
-)
+from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 
-REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS = Histogram(
-    'redis_exceeded_rate_limit_duration_seconds',
-    'Time taken to check rate limit',
-)
-
 
 def check_service_over_api_rate_limit(service, api_key):
-    if current_app.config['API_RATE_LIMIT_ENABLED'] and current_app.config['REDIS_ENABLED']:
+    if (
+        current_app.config["API_RATE_LIMIT_ENABLED"]
+        and current_app.config["REDIS_ENABLED"]
+    ):
         cache_key = rate_limit_cache_key(service.id, api_key.key_type)
         rate_limit = service.rate_limit
         interval = 60
-        with REDIS_EXCEEDED_RATE_LIMIT_DURATION_SECONDS.time():
-            if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
-                current_app.logger.info("service {} has been rate limited for throughput".format(service.id))
-                raise RateLimitError(rate_limit, interval, api_key.key_type)
+        if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
+            current_app.logger.info(
+                "service {} has been rate limited for throughput".format(service.id)
+            )
+            raise RateLimitError(rate_limit, interval, api_key.key_type)
 
 
 def check_application_over_retention_limit(key_type, service):
-    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
+    if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
 
     cache_key = daily_total_cache_key()
-    daily_message_limit = current_app.config['DAILY_MESSAGE_LIMIT']
+    daily_message_limit = current_app.config["DAILY_MESSAGE_LIMIT"]
     total_stats = redis_store.get(cache_key)
     if total_stats is None:
         # first message of the day, set the cache to 0 and the expiry to 24 hours
@@ -63,7 +59,8 @@ def check_application_over_retention_limit(key_type, service):
     if int(total_stats) >= daily_message_limit:
         current_app.logger.info(
             "while sending for service {}, daily message limit of {} reached".format(
-                service.id, daily_message_limit)
+                service.id, daily_message_limit
+            )
         )
         raise TotalRequestsError(daily_message_limit)
     return int(total_stats)
@@ -76,25 +73,32 @@ def check_rate_limiting(service, api_key):
 
 def check_template_is_for_notification_type(notification_type, template_type):
     if notification_type != template_type:
-        message = "{0} template is not suitable for {1} notification".format(template_type,
-                                                                             notification_type)
-        raise BadRequestError(fields=[{'template': message}], message=message)
+        message = "{0} template is not suitable for {1} notification".format(
+            template_type, notification_type
+        )
+        raise BadRequestError(fields=[{"template": message}], message=message)
 
 
 def check_template_is_active(template):
     if template.archived:
-        raise BadRequestError(fields=[{'template': 'Template has been deleted'}],
-                              message="Template has been deleted")
+        raise BadRequestError(
+            fields=[{"template": "Template has been deleted"}],
+            message="Template has been deleted",
+        )
 
 
-def service_can_send_to_recipient(send_to, key_type, service, allow_guest_list_recipients=True):
-    if not service_allowed_to_send_to(send_to, service, key_type, allow_guest_list_recipients):
+def service_can_send_to_recipient(
+    send_to, key_type, service, allow_guest_list_recipients=True
+):
+    if not service_allowed_to_send_to(
+        send_to, service, key_type, allow_guest_list_recipients
+    ):
         if key_type == KEY_TYPE_TEAM:
-            message = 'Can’t send to this recipient using a team-only API key'
+            message = "Can’t send to this recipient using a team-only API key"
         else:
             message = (
-                'Can’t send to this recipient when service is in trial mode '
-                '– see https://www.notifications.service.gov.uk/trial-mode'
+                "Can’t send to this recipient when service is in trial mode "
+                "– see https://www.notifications.service.gov.uk/trial-mode"
             )
         raise BadRequestError(message=message)
 
@@ -105,9 +109,11 @@ def service_has_permission(notify_type, permissions):
 
 def check_service_has_permission(notify_type, permissions):
     if not service_has_permission(notify_type, permissions):
-        raise BadRequestError(message="Service is not allowed to send {}".format(
-            get_public_notify_type_text(notify_type, plural=True)
-        ))
+        raise BadRequestError(
+            message="Service is not allowed to send {}".format(
+                get_public_notify_type_text(notify_type, plural=True)
+            )
+        )
 
 
 def check_if_service_can_send_files_by_email(service_contact_link, service_id):
@@ -118,18 +124,21 @@ def check_if_service_can_send_files_by_email(service_contact_link, service_id):
         )
 
 
-def validate_and_format_recipient(send_to, key_type, service, notification_type, allow_guest_list_recipients=True):
+def validate_and_format_recipient(
+    send_to, key_type, service, notification_type, allow_guest_list_recipients=True
+):
     if send_to is None:
         raise BadRequestError(message="Recipient can't be empty")
 
-    service_can_send_to_recipient(send_to, key_type, service, allow_guest_list_recipients)
+    service_can_send_to_recipient(
+        send_to, key_type, service, allow_guest_list_recipients
+    )
 
     if notification_type == SMS_TYPE:
         international_phone_info = check_if_service_can_send_to_number(service, send_to)
 
         return validate_and_format_phone_number(
-            number=send_to,
-            international=international_phone_info.international
+            number=send_to, international=international_phone_info.international
         )
     elif notification_type == EMAIL_TYPE:
         return validate_and_format_email_address(email_address=send_to)
@@ -143,7 +152,10 @@ def check_if_service_can_send_to_number(service, number):
     else:
         permissions = service.permissions
 
-    if international_phone_info.international and INTERNATIONAL_SMS_TYPE not in permissions:
+    if (
+        international_phone_info.international
+        and INTERNATIONAL_SMS_TYPE not in permissions
+    ):
         raise BadRequestError(message="Cannot send to international mobile numbers")
     else:
         return international_phone_info
@@ -167,17 +179,18 @@ def check_is_message_too_long(template_with_content):
 
 def check_notification_content_is_not_empty(template_with_content):
     if template_with_content.is_message_empty():
-        message = 'Your message is empty.'
+        message = "Your message is empty."
         raise BadRequestError(message=message)
 
 
-def validate_template(template_id, personalisation, service, notification_type, check_char_count=True):
+def validate_template(
+    template_id, personalisation, service, notification_type, check_char_count=True
+):
     try:
         template = SerialisedTemplate.from_id_and_service_id(template_id, service.id)
     except NoResultFound:
-        message = 'Template not found'
-        raise BadRequestError(message=message,
-                              fields=[{'template': message}])
+        message = "Template not found"
+        raise BadRequestError(message=message, fields=[{"template": message}])
 
     check_template_is_for_notification_type(notification_type, template.template_type)
     check_template_is_active(template)
@@ -207,16 +220,22 @@ def check_service_email_reply_to_id(service_id, reply_to_id, notification_type):
         try:
             return dao_get_reply_to_by_id(service_id, reply_to_id).email_address
         except NoResultFound:
-            message = 'email_reply_to_id {} does not exist in database for service id {}' \
-                .format(reply_to_id, service_id)
+            message = "email_reply_to_id {} does not exist in database for service id {}".format(
+                reply_to_id, service_id
+            )
             raise BadRequestError(message=message)
 
 
 def check_service_sms_sender_id(service_id, sms_sender_id, notification_type):
     if sms_sender_id:
         try:
-            return dao_get_service_sms_senders_by_id(service_id, sms_sender_id).sms_sender
+            return dao_get_service_sms_senders_by_id(
+                service_id, sms_sender_id
+            ).sms_sender
         except NoResultFound:
-            message = 'sms_sender_id {} does not exist in database for service id {}' \
-                .format(sms_sender_id, service_id)
+            message = (
+                "sms_sender_id {} does not exist in database for service id {}".format(
+                    sms_sender_id, service_id
+                )
+            )
             raise BadRequestError(message=message)

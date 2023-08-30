@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0387_remove_letter_perms_'
-down_revision = '0385_remove_postage_'
+revision = "0387_remove_letter_perms_"
+down_revision = "0385_remove_postage_"
 
 
 def upgrade():
@@ -21,7 +21,8 @@ def upgrade():
 
 def downgrade():
     # this is the inverse of migration 0317
-     op.execute("""
+    op.execute(
+        """
         INSERT INTO
             service_permissions (service_id, permission, created_at)
         SELECT
@@ -37,5 +38,8 @@ def downgrade():
                     service_id = services.id and
                     permission = 'upload_letters'
            )
-    """)
-    # ### end Alembic commands ###
+    """
+    )
+
+
+# ### end Alembic commands ###

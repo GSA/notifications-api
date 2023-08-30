@@ -1,59 +1,41 @@
 name: Create a new ADR
-description: Create a new Architectural Decision Record.
-title: "[ADR]: "
-labels: ["documentation"]
+description: Create a new issue with an ADR proposal
+labels: ["ADR: proposed", "documentation"]
 body:
   - type: markdown
     attributes:
       value: |
         Use this form to create a new Architectural Decision Record.
-  - type: input
-    id: title
-    attributes:
-      label: ADR Title
-      description: What is the title of this ADR?
-      placeholder: e.g., Establishing ADRs for US Notify
+  - type: textarea
+    id: context
     validations:
       required: true
-  - type: input
-    id: created_date
     attributes:
-      label: Created Date
-      description: What is the date this ADR is being created?
-      placeholder: MM/DD/YYYY
+      label: Context
+      description: >
+        Explain the nature of the problem, challenge, or decision to be made here.
+        Be as succinct as possible, but do not leave out any details.  State things
+        matter of factly and as objectively as you can.
+  - type: textarea
+    id: decision
     validations:
       required: true
-  - type: dropdown
-    id: status
     attributes:
-      label: Status
-      description: What is the current status of this ADR?
-      options:
-        - Proposed
-        - Accepted
-        - Rejected
-        - Deprecated
-        - Superseded By
+      label: Decision
+      description: >
+        What was decided? This should be an active-voice statement. For example,
+        "We will use the US Web Design System." Note any major options that were
+        not selected.
+  - type: textarea
+    id: consequences
     validations:
       required: true
-  - type: dropdown
-    id: implemented
     attributes:
-      label: Implemented
-      description: Is this ADR implemented?
-      options:
-        - 'Yes'
-        - 'No'
-    validations:
-      required: true
-  - type: input
-    id: superseded_by
-    attributes:
-      label: Superseded By
-      description: If this ADR is superseded by another, which one is it?
-      placeholder: e.g., ADR-0001
-    validations:
-      required: false
+      label: Consequences
+      description: >
+        What are the consequences of this decision? Consequences can be
+        positive, negative, or neutral, but all known consequences of this
+        decision should be listed here.
   - type: input
     id: author
     attributes:
@@ -70,61 +52,12 @@ body:
       placeholder: Enter their GitHub username(s) here
     validations:
       required: false
-  - type: input
-    id: linked-github-issue
-    attributes:
-      label: Related Issue(s)
-      description: List any related GitHub issues to this ADR here (issue number only).
-      placeholder: e.g., 288
-    validations:
-      required: false
   - type: textarea
-    id: context-and-problem-statement
+    id: next-steps
     attributes:
-      label: Context and Problem Statement
-      description: Explain the nature of the problem, challenge, or decision to be made here.
-      placeholder: Be as succinct as possible, but do not leave out any details.  State things matter of factly and as objectively as you can.
-    validations:
-      required: true
-  - type: textarea
-    id: decision-drivers
-    attributes:
-      label: Decision Drivers
-      description: List anything that plays a major role in making a decision here.
-    validations:
-      required: true
-  - type: textarea
-    id: security-compliance-considerations
-    attributes:
-      label: Security Compliance Considerations
-      description: List any security concerns in this section along with any relevant details.
-    validations:
-      required: true
-  - type: textarea
-    id: considered-options
-    attributes:
-      label: Considered Options
-      description: List all options that have either been discussed or thought of as a potential solution to the context and problem statement.  Include any pros and cons with each option.
-    validations:
-      required: true
-  - type: input
-    id: proposed-option
-    attributes:
-      label: Proposed Option
-      description: If an option is already clear or has been chosen, please name it here.
-    validations:
-      required: false
-  - type: textarea
-    id: proposed-option-justification
-    attributes:
-      label: Proposed or Chosen Option
-      description: Summarize the decision for the proposed/chosen option here, including a list of positive and negative consequences.
-    validations:
-      required: false
-  - type: textarea
-    id: validation-and-next-steps
-    attributes:
-      label: Validation and Next Steps
-      description: If an option has already been chosen and justified, summarize or list the validation and next steps that came from the decision.
+      label: Next Steps
+      description: >
+        Once option has already been chosen and justified, summarize or list the next steps
+        that came from the decision. Link to GitHub issues that track these steps.
     validations:
       required: false

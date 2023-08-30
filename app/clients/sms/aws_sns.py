@@ -5,6 +5,7 @@ import botocore
 import phonenumbers
 from boto3 import client
 
+from app.clients import AWS_CLIENT_CONFIG
 from app.clients.sms import SmsClient
 from app.cloudfoundry_config import cloud_config
 
@@ -19,7 +20,8 @@ class AwsSnsClient(SmsClient):
             "sns",
             region_name=cloud_config.sns_region,
             aws_access_key_id=cloud_config.sns_access_key,
-            aws_secret_access_key=cloud_config.sns_secret_key
+            aws_secret_access_key=cloud_config.sns_secret_key,
+            config=AWS_CLIENT_CONFIG,
         )
         super(SmsClient, self).__init__(*args, **kwargs)
         self.current_app = current_app
@@ -27,7 +29,7 @@ class AwsSnsClient(SmsClient):
 
     @property
     def name(self):
-        return 'sns'
+        return "sns"
 
     def get_name(self):
         return self.name
@@ -40,7 +42,9 @@ class AwsSnsClient(SmsClient):
 
         for match in phonenumbers.PhoneNumberMatcher(to, "US"):
             matched = True
-            to = phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164)
+            to = phonenumbers.format_number(
+                match.number, phonenumbers.PhoneNumberFormat.E164
+            )
 
             # See documentation
             # https://docs.aws.amazon.com/sns/latest/dg/sms_publish-to-phone.html#sms_publish_sdk
@@ -64,14 +68,18 @@ class AwsSnsClient(SmsClient):
 
             try:
                 start_time = monotonic()
-                response = self._client.publish(PhoneNumber=to, Message=content, MessageAttributes=attributes)
+                response = self._client.publish(
+                    PhoneNumber=to, Message=content, MessageAttributes=attributes
+                )
             except botocore.exceptions.ClientError as e:
                 raise str(e)
             except Exception as e:
                 raise str(e)
             finally:
                 elapsed_time = monotonic() - start_time
-                self.current_app.logger.info("AWS SNS request finished in {}".format(elapsed_time))
+                self.current_app.logger.info(
+                    "AWS SNS request finished in {}".format(elapsed_time)
+                )
             return response["MessageId"]
 
         if not matched:

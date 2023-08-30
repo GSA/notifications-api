@@ -12,8 +12,8 @@ from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from flask import current_app
 
-revision = '0383_update_default_templates.py'
-down_revision = '0381_encrypted_column_types'
+revision = "0383_update_default_templates.py"
+down_revision = "0381_encrypted_column_types"
 
 
 def upgrade():
@@ -27,22 +27,18 @@ def upgrade():
             WHERE id = :id
         """
     conn = op.get_bind()
-    with open(current_app.config['CONFIG_FILES'] + '/templates.json') as f:
+    with open(current_app.config["CONFIG_FILES"] + "/templates.json") as f:
         data = json.load(f)
         for d in data:
             input_params = {
-                'name': d['name'],
-                'type': d['type'],
-                'content': '\n'.join(d['content']),
-                'subject': d.get('subject'),
-                'id': d['id']
+                "name": d["name"],
+                "type": d["type"],
+                "content": "\n".join(d["content"]),
+                "subject": d.get("subject"),
+                "id": d["id"],
             }
-            conn.execute(
-                text(update_t), input_params
-            )
-            conn.execute(
-                text(update_th), input_params
-            )
+            conn.execute(text(update_t), input_params)
+            conn.execute(text(update_th), input_params)
 
 
 def downgrade():

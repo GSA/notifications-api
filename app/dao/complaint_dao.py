@@ -15,20 +15,23 @@ def save_complaint(complaint):
 
 
 def fetch_paginated_complaints(page=1):
-    return Complaint.query.order_by(
-        desc(Complaint.created_at)
-    ).paginate(
-        page=page,
-        per_page=current_app.config['PAGE_SIZE']
+    return Complaint.query.order_by(desc(Complaint.created_at)).paginate(
+        page=page, per_page=current_app.config["PAGE_SIZE"]
     )
 
 
 def fetch_complaints_by_service(service_id):
-    return Complaint.query.filter_by(service_id=service_id).order_by(desc(Complaint.created_at)).all()
+    return (
+        Complaint.query.filter_by(service_id=service_id)
+        .order_by(desc(Complaint.created_at))
+        .all()
+    )
 
 
 def fetch_count_of_complaints(start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    return Complaint.query.filter(Complaint.created_at >= start_date, Complaint.created_at < end_date).count()
+    return Complaint.query.filter(
+        Complaint.created_at >= start_date, Complaint.created_at < end_date
+    ).count()

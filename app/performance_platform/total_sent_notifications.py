@@ -7,11 +7,11 @@ from app.dao.fact_notification_status_dao import (
 # TODO: is this obsolete? it doesn't seem to be used anywhere
 def send_total_notifications_sent_for_day_stats(start_time, notification_type, count):
     payload = performance_platform_client.format_payload(
-        dataset='notifications',
+        dataset="notifications",
         start_time=start_time,
-        group_name='channel',
+        group_name="channel",
         group_value=notification_type,
-        count=count
+        count=count,
     )
 
     performance_platform_client.send_stats_to_performance_platform(payload)
@@ -19,8 +19,8 @@ def send_total_notifications_sent_for_day_stats(start_time, notification_type, c
 
 # TODO: is this obsolete? it doesn't seem to be used anywhere
 def get_total_sent_notifications_for_day(day):
-    email_count = get_total_sent_notifications_for_day_and_type(day, 'email')
-    sms_count = get_total_sent_notifications_for_day_and_type(day, 'sms')
+    email_count = get_total_sent_notifications_for_day_and_type(day, "email")
+    sms_count = get_total_sent_notifications_for_day_and_type(day, "sms")
 
     return {
         "email": email_count,

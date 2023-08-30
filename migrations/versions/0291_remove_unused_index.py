@@ -9,13 +9,13 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0291_remove_unused_index'
-down_revision = '0290_org_go_live_notes'
+revision = "0291_remove_unused_index"
+down_revision = "0290_org_go_live_notes"
 
 
 def upgrade():
-    op.drop_index('ix_domain_domain', table_name='domain')
+    op.drop_index("ix_domain_domain", table_name="domain")
 
 
 def downgrade():
-    op.create_index('ix_domain_domain', 'domain', ['domain'], unique=True)
+    op.create_index("ix_domain_domain", "domain", ["domain"], unique=True)

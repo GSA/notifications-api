@@ -1,0 +1,18 @@
+name: ADR accepted
+on:
+  issues:
+    types:
+      - closed
+
+jobs:
+  main:
+    name: ADR accepted
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: memorialize the ADR
+        uses: 18F/adr-automation/accepted@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          label: "ADR: accepted"
+          path: docs/adrs

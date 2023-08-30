@@ -36,22 +36,17 @@ def send_email_response(reference, to):
 
 
 def make_request(notification_type, provider, data, headers):
-    api_call = "{}/notifications/{}/{}".format(current_app.config["API_HOST_NAME"], notification_type, provider)
+    api_call = "{}/notifications/{}/{}".format(
+        current_app.config["API_HOST_NAME"], notification_type, provider
+    )
 
     try:
-        response = request(
-            "POST",
-            api_call,
-            headers=headers,
-            data=data,
-            timeout=60
-        )
+        response = request("POST", api_call, headers=headers, data=data, timeout=60)
         response.raise_for_status()
     except HTTPError as e:
         current_app.logger.error(
             "API POST request on {} failed with status {}".format(
-                api_call,
-                e.response.status_code
+                api_call, e.response.status_code
             )
         )
         raise e
@@ -65,151 +60,131 @@ def sns_callback(notification_id):
 
     # This will only work if all notifications, including successful ones, are in the notifications table
     # If we decide to delete successful notifications, we will have to get this from notifications history
-    return json.dumps({
-        "CID": str(notification_id),
-        "status": notification.status,
-        # "deliverytime": notification.completed_at
-    })
+    return json.dumps(
+        {
+            "CID": str(notification_id),
+            "status": notification.status,
+            # "deliverytime": notification.completed_at
+        }
+    )
 
 
 def ses_notification_callback(reference):
     ses_message_body = {
-        'delivery': {
-            'processingTimeMillis': 2003,
-            'recipients': ['success@simulator.amazonses.com'],
-            'remoteMtaIp': '123.123.123.123',
-            'reportingMTA': 'a7-32.smtp-out.us-west-2.amazonses.com',
-            'smtpResponse': '250 2.6.0 Message received',
-            'timestamp': '2017-11-17T12:14:03.646Z'
+        "delivery": {
+            "processingTimeMillis": 2003,
+            "recipients": ["success@simulator.amazonses.com"],
+            "remoteMtaIp": "123.123.123.123",
+            "reportingMTA": "a7-32.smtp-out.us-west-2.amazonses.com",
+            "smtpResponse": "250 2.6.0 Message received",
+            "timestamp": "2017-11-17T12:14:03.646Z",
         },
-        'mail': {
-            'commonHeaders': {
-                'from': ['TEST <TEST@notify.works>'],
-                'subject': 'lambda test',
-                'to': ['success@simulator.amazonses.com']
+        "mail": {
+            "commonHeaders": {
+                "from": ["TEST <TEST@notify.works>"],
+                "subject": "lambda test",
+                "to": ["success@simulator.amazonses.com"],
             },
-            'destination': ['success@simulator.amazonses.com'],
-            'headers': [
+            "destination": ["success@simulator.amazonses.com"],
+            "headers": [
+                {"name": "From", "value": "TEST <TEST@notify.works>"},
+                {"name": "To", "value": "success@simulator.amazonses.com"},
+                {"name": "Subject", "value": "lambda test"},
+                {"name": "MIME-Version", "value": "1.0"},
                 {
-                    'name': 'From',
-                    'value': 'TEST <TEST@notify.works>'
+                    "name": "Content-Type",
+                    "value": 'multipart/alternative; boundary="----=_Part_617203_1627511946.1510920841645"',
                 },
-                {
-                    'name': 'To',
-                    'value': 'success@simulator.amazonses.com'
-                },
-                {
-                    'name': 'Subject',
-                    'value': 'lambda test'
-                },
-                {
-                    'name': 'MIME-Version',
-                    'value': '1.0'
-                },
-                {
-                    'name': 'Content-Type',
-                    'value': 'multipart/alternative; boundary="----=_Part_617203_1627511946.1510920841645"'
-                }
             ],
-            'headersTruncated': False,
-            'messageId': reference,
-            'sendingAccountId': '12341234',
-            'source': '"TEST" <TEST@notify.works>',
-            'sourceArn': 'arn:aws:ses:us-west-2:12341234:identity/notify.works',
-            'sourceIp': '0.0.0.1',
-            'timestamp': '2017-11-17T12:14:01.643Z'
+            "headersTruncated": False,
+            "messageId": reference,
+            "sendingAccountId": "12341234",
+            "source": '"TEST" <TEST@notify.works>',
+            "sourceArn": "arn:aws:ses:us-west-2:12341234:identity/notify.works",
+            "sourceIp": "0.0.0.1",
+            "timestamp": "2017-11-17T12:14:01.643Z",
         },
-        'notificationType': 'Delivery'
+        "notificationType": "Delivery",
     }
 
     return {
-        'Type': 'Notification',
-        'MessageId': '8e83c020-1234-1234-1234-92a8ee9baa0a',
-        'TopicArn': 'arn:aws:sns:us-west-2:12341234:ses_notifications',
-        'Subject': None,
-        'Message': json.dumps(ses_message_body),
-        'Timestamp': '2017-11-17T12:14:03.710Z',
-        'SignatureVersion': '1',
-        'Signature': '[REDACTED]',
-        'SigningCertUrl': 'https://sns.us-west-2.amazonaws.com/SimpleNotificationService-[REDACTED].pem',
-        'UnsubscribeUrl': 'https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=[REACTED]',
-        'MessageAttributes': {}
+        "Type": "Notification",
+        "MessageId": "8e83c020-1234-1234-1234-92a8ee9baa0a",
+        "TopicArn": "arn:aws:sns:us-west-2:12341234:ses_notifications",
+        "Subject": None,
+        "Message": json.dumps(ses_message_body),
+        "Timestamp": "2017-11-17T12:14:03.710Z",
+        "SignatureVersion": "1",
+        "Signature": "[REDACTED]",
+        "SigningCertUrl": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-[REDACTED].pem",
+        "UnsubscribeUrl": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=[REACTED]",
+        "MessageAttributes": {},
     }
 
 
 def ses_hard_bounce_callback(reference):
-    return _ses_bounce_callback(reference, 'Permanent')
+    return _ses_bounce_callback(reference, "Permanent")
 
 
 def ses_soft_bounce_callback(reference):
-    return _ses_bounce_callback(reference, 'Temporary')
+    return _ses_bounce_callback(reference, "Temporary")
 
 
 def _ses_bounce_callback(reference, bounce_type):
     ses_message_body = {
-        'bounce': {
-            'bounceSubType': 'General',
-            'bounceType': bounce_type,
-            'bouncedRecipients': [{
-                'action': 'failed',
-                'diagnosticCode': 'smtp; 550 5.1.1 user unknown',
-                'emailAddress': 'bounce@simulator.amazonses.com',
-                'status': '5.1.1'
-            }],
-            'feedbackId': '0102015fc9e676fb-12341234-1234-1234-1234-9301e86a4fa8-000000',
-            'remoteMtaIp': '123.123.123.123',
-            'reportingMTA': 'dsn; a7-31.smtp-out.us-west-2.amazonses.com',
-            'timestamp': '2017-11-17T12:14:05.131Z'
-        },
-        'mail': {
-            'commonHeaders': {
-                'from': ['TEST <TEST@notify.works>'],
-                'subject': 'ses callback test',
-                'to': ['bounce@simulator.amazonses.com']
-            },
-            'destination': ['bounce@simulator.amazonses.com'],
-            'headers': [
+        "bounce": {
+            "bounceSubType": "General",
+            "bounceType": bounce_type,
+            "bouncedRecipients": [
                 {
-                    'name': 'From',
-                    'value': 'TEST <TEST@notify.works>'
-                },
-                {
-                    'name': 'To',
-                    'value': 'bounce@simulator.amazonses.com'
-                },
-                {
-                    'name': 'Subject',
-                    'value': 'lambda test'
-                },
-                {
-                    'name': 'MIME-Version',
-                    'value': '1.0'
-                },
-                {
-                    'name': 'Content-Type',
-                    'value': 'multipart/alternative; boundary="----=_Part_596529_2039165601.1510920843367"'
+                    "action": "failed",
+                    "diagnosticCode": "smtp; 550 5.1.1 user unknown",
+                    "emailAddress": "bounce@simulator.amazonses.com",
+                    "status": "5.1.1",
                 }
             ],
-            'headersTruncated': False,
-            'messageId': reference,
-            'sendingAccountId': '12341234',
-            'source': '"TEST" <TEST@notify.works>',
-            'sourceArn': 'arn:aws:ses:us-west-2:12341234:identity/notify.works',
-            'sourceIp': '0.0.0.1',
-            'timestamp': '2017-11-17T12:14:03.000Z'
+            "feedbackId": "0102015fc9e676fb-12341234-1234-1234-1234-9301e86a4fa8-000000",
+            "remoteMtaIp": "123.123.123.123",
+            "reportingMTA": "dsn; a7-31.smtp-out.us-west-2.amazonses.com",
+            "timestamp": "2017-11-17T12:14:05.131Z",
         },
-        'notificationType': 'Bounce'
+        "mail": {
+            "commonHeaders": {
+                "from": ["TEST <TEST@notify.works>"],
+                "subject": "ses callback test",
+                "to": ["bounce@simulator.amazonses.com"],
+            },
+            "destination": ["bounce@simulator.amazonses.com"],
+            "headers": [
+                {"name": "From", "value": "TEST <TEST@notify.works>"},
+                {"name": "To", "value": "bounce@simulator.amazonses.com"},
+                {"name": "Subject", "value": "lambda test"},
+                {"name": "MIME-Version", "value": "1.0"},
+                {
+                    "name": "Content-Type",
+                    "value": 'multipart/alternative; boundary="----=_Part_596529_2039165601.1510920843367"',
+                },
+            ],
+            "headersTruncated": False,
+            "messageId": reference,
+            "sendingAccountId": "12341234",
+            "source": '"TEST" <TEST@notify.works>',
+            "sourceArn": "arn:aws:ses:us-west-2:12341234:identity/notify.works",
+            "sourceIp": "0.0.0.1",
+            "timestamp": "2017-11-17T12:14:03.000Z",
+        },
+        "notificationType": "Bounce",
     }
     return {
-        'Type': 'Notification',
-        'MessageId': '36e67c28-1234-1234-1234-2ea0172aa4a7',
-        'TopicArn': 'arn:aws:sns:us-west-2:12341234:ses_notifications',
-        'Subject': None,
-        'Message': json.dumps(ses_message_body),
-        'Timestamp': '2017-11-17T12:14:05.149Z',
-        'SignatureVersion': '1',
-        'Signature': '[REDACTED]',  # noqa
-        'SigningCertUrl': 'https://sns.us-west-2.amazonaws.com/SimpleNotificationService-[REDACTED]].pem',
-        'UnsubscribeUrl': 'https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=[REDACTED]]',
-        'MessageAttributes': {}
+        "Type": "Notification",
+        "MessageId": "36e67c28-1234-1234-1234-2ea0172aa4a7",
+        "TopicArn": "arn:aws:sns:us-west-2:12341234:ses_notifications",
+        "Subject": None,
+        "Message": json.dumps(ses_message_body),
+        "Timestamp": "2017-11-17T12:14:05.149Z",
+        "SignatureVersion": "1",
+        "Signature": "[REDACTED]",  # noqa
+        "SigningCertUrl": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-[REDACTED]].pem",
+        "UnsubscribeUrl": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=[REDACTED]]",
+        "MessageAttributes": {},
     }

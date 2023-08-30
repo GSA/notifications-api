@@ -12,9 +12,9 @@ DEFAULT_MAX_AGE = timedelta(days=10000)
 
 
 class SNSMessageType(enum.Enum):
-    SubscriptionConfirmation = 'SubscriptionConfirmation'
-    Notification = 'Notification'
-    UnsubscribeConfirmation = 'UnsubscribeConfirmation'
+    SubscriptionConfirmation = "SubscriptionConfirmation"
+    Notification = "Notification"
+    UnsubscribeConfirmation = "UnsubscribeConfirmation"
 
 
 class InvalidMessageTypeException(Exception):
@@ -29,17 +29,21 @@ def verify_message_type(message_type: str):
 
 
 def sns_notification_handler(data, headers):
-    message_type = headers.get('x-amz-sns-message-type')
+    message_type = headers.get("x-amz-sns-message-type")
     try:
         verify_message_type(message_type)
     except InvalidMessageTypeException:
-        current_app.logger.exception(f"Response headers: {headers}\nResponse data: {data}")
+        current_app.logger.exception(
+            f"Response headers: {headers}\nResponse data: {data}"
+        )
         raise InvalidRequest("SES-SNS callback failed: invalid message type", 400)
 
     try:
-        message = json.loads(data.decode('utf-8'))
+        message = json.loads(data.decode("utf-8"))
     except decoder.JSONDecodeError:
-        current_app.logger.exception(f"Response headers: {headers}\nResponse data: {data}")
+        current_app.logger.exception(
+            f"Response headers: {headers}\nResponse data: {data}"
+        )
         raise InvalidRequest("SES-SNS callback failed: invalid JSON given", 400)
 
     try:
@@ -50,9 +54,13 @@ def sns_notification_handler(data, headers):
         )
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)
 
-    if message.get('Type') == 'SubscriptionConfirmation':
+    if message.get("Type") == "SubscriptionConfirmation":
         # NOTE once a request is sent to SubscribeURL, AWS considers Notify a confirmed subscriber to this topic
-        url = message.get('SubscribeUrl') if 'SubscribeUrl' in message else message.get('SubscribeURL')
+        url = (
+            message.get("SubscribeUrl")
+            if "SubscribeUrl" in message
+            else message.get("SubscribeURL")
+        )
         response = requests.get(url)
         try:
             response.raise_for_status()
@@ -63,12 +71,15 @@ def sns_notification_handler(data, headers):
             )
             raise InvalidRequest(
                 "SES-SNS callback failed: attempt to raise_for_status()SubscriptionConfirmation "
-                "Type message failed", 400
+                "Type message failed",
+                400,
             )
         current_app.logger.info("SES-SNS auto-confirm subscription callback succeeded")
         return message
 
     # TODO remove after smoke testing on prod is implemented
-    current_app.logger.info(f"SNS message: {message} is a valid message. Attempting to process it now.")
+    current_app.logger.info(
+        f"SNS message: {message} is a valid message. Attempting to process it now."
+    )
 
     return message

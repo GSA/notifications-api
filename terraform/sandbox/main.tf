@@ -1,5 +1,5 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio-prototyping"
+  cf_org_name      = "gsa-tts-benefits-studio"
   cf_space_name    = "notify-sandbox"
   env              = "sandbox"
   app_name         = "notify-api"

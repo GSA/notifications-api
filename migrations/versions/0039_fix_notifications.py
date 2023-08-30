@@ -9,18 +9,22 @@ Create Date: 2016-07-06 13:28:48.381278
 # revision identifiers, used by Alembic.
 from sqlalchemy import text
 
-revision = '0039_fix_notifications'
-down_revision = '0038_test_api_key_type'
+revision = "0039_fix_notifications"
+down_revision = "0038_test_api_key_type"
 
 from alembic import op
 import sqlalchemy as sa
 
 
 def upgrade():
-    op.execute('update notifications set notification_type = (select cast(cast(template_type as text) as notification_type) from templates where templates.id= notifications.template_id)')
+    op.execute(
+        "update notifications set notification_type = (select cast(cast(template_type as text) as notification_type) from templates where templates.id= notifications.template_id)"
+    )
     conn = op.get_bind()
-    reset_counts = "update notification_statistics set emails_requested = 0, emails_delivered = 0, emails_failed=0," \
-                   "sms_requested = 0, sms_delivered = 0, sms_failed=0 where day > '2016-06-30'"
+    reset_counts = (
+        "update notification_statistics set emails_requested = 0, emails_delivered = 0, emails_failed=0,"
+        "sms_requested = 0, sms_delivered = 0, sms_failed=0 where day > '2016-06-30'"
+    )
     op.execute(reset_counts)
     all_notifications = "select * from notifications where date(created_at) > '2016-06-30' order by created_at;"
 
@@ -29,28 +33,53 @@ def upgrade():
 
     for x in res:
         created = x.created_at.strftime("%Y-%m-%d")
-        input_params = {
-            "created": created,
-            "service_id": x.service_id
-        }
-        if x.notification_type == 'email' and x.status == 'delivered':
-            sql = text("update notification_statistics set emails_requested = emails_requested + 1, " \
-                  "emails_delivered = emails_delivered + 1 where day = date(:created) and service_id = :service_id")
-        if x.notification_type == 'sms' and x.status == 'delivered':
-             sql = text("update notification_statistics set sms_requested = sms_requested + 1, " \
-                  "sms_delivered = sms_delivered + 1 where day = date(:created) and service_id = :service_id")
-        if x.notification_type == 'email' and x.status in ['technical-failure', 'temporary-failure', 'permanent-failure']:
-            sql = text("update notification_statistics set emails_requested = emails_requested + 1, " \
-                  "emails_failed = emails_failed + 1 where day = date(:created) and service_id = :service_id")
-        if x.notification_type == 'sms' and x.status in ['technical-failure', 'temporary-failure', 'permanent-failure']:
-            sql = text("update notification_statistics set sms_requested = sms_requested + 1, " \
-                  "sms_failed = sms_failed + 1 where day = date(:created) and service_id = :service_id")
-        if x.notification_type == 'email' and x.status in ['created', 'sending', 'pending']:
-            sql = text("update notification_statistics set emails_requested = emails_requested + 1 " \
-                  " where day = date(:created) and service_id = :service_id")
-        if x.notification_type == 'sms' and x.status in ['created', 'sending', 'pending']:
-            sql = text("update notification_statistics set sms_requested = sms_requested + 1 " \
-                  " where day = date(:created) and service_id = :service_id")
+        input_params = {"created": created, "service_id": x.service_id}
+        if x.notification_type == "email" and x.status == "delivered":
+            sql = text(
+                "update notification_statistics set emails_requested = emails_requested + 1, "
+                "emails_delivered = emails_delivered + 1 where day = date(:created) and service_id = :service_id"
+            )
+        if x.notification_type == "sms" and x.status == "delivered":
+            sql = text(
+                "update notification_statistics set sms_requested = sms_requested + 1, "
+                "sms_delivered = sms_delivered + 1 where day = date(:created) and service_id = :service_id"
+            )
+        if x.notification_type == "email" and x.status in [
+            "technical-failure",
+            "temporary-failure",
+            "permanent-failure",
+        ]:
+            sql = text(
+                "update notification_statistics set emails_requested = emails_requested + 1, "
+                "emails_failed = emails_failed + 1 where day = date(:created) and service_id = :service_id"
+            )
+        if x.notification_type == "sms" and x.status in [
+            "technical-failure",
+            "temporary-failure",
+            "permanent-failure",
+        ]:
+            sql = text(
+                "update notification_statistics set sms_requested = sms_requested + 1, "
+                "sms_failed = sms_failed + 1 where day = date(:created) and service_id = :service_id"
+            )
+        if x.notification_type == "email" and x.status in [
+            "created",
+            "sending",
+            "pending",
+        ]:
+            sql = text(
+                "update notification_statistics set emails_requested = emails_requested + 1 "
+                " where day = date(:created) and service_id = :service_id"
+            )
+        if x.notification_type == "sms" and x.status in [
+            "created",
+            "sending",
+            "pending",
+        ]:
+            sql = text(
+                "update notification_statistics set sms_requested = sms_requested + 1 "
+                " where day = date(:created) and service_id = :service_id"
+            )
         print(sql)
         conn.execute(sql, input_params)
 

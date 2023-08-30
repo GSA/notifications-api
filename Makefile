@@ -24,6 +24,16 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 run-procfile:
 	pipenv run honcho start -f Procfile.dev
 
+.PHONY: avg-complexity
+avg-complexity:
+	echo "*** Shows average complexity in radon of all code ***"
+	pipenv run radon cc ./app -a -na
+
+.PHONY: too-complex
+too-complex:
+	echo "*** Shows code that got a rating of C, D or F in radon ***"
+	pipenv run radon cc ./app -a -nc
+
 .PHONY: run-flask
 run-flask: ## Run flask
 	pipenv run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
@@ -36,6 +46,11 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
 		--concurrency=4
+
+
+.PHONY: dead-code
+dead-code:
+	pipenv run vulture ./app --min-confidence=100
 
 .PHONY: run-celery-beat
 run-celery-beat: ## Run celery beat
@@ -58,10 +73,11 @@ generate-version-file: ## Generates the app version file
 .PHONY: test
 test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
+	pipenv run black .
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
-	pipenv run coverage report --fail-under=88
+	pipenv run coverage run -m pytest -vv --maxfail=10
+	pipenv run coverage report -m --fail-under=95
 	pipenv run coverage html -d .coverage_cache
 
 .PHONY: freeze-requirements

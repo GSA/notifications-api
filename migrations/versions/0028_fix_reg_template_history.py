@@ -11,36 +11,38 @@ from datetime import datetime
 
 from sqlalchemy import text
 
-revision = '0028_fix_reg_template_history'
-down_revision = '0026_rename_notify_service'
+revision = "0028_fix_reg_template_history"
+down_revision = "0026_rename_notify_service"
 
 from alembic import op
 import sqlalchemy as sa
 
-service_id = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
-user_id= '6af522d0-2915-4e52-83a3-3690455a5fe6'
+service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+user_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+
 
 def upgrade():
     op.get_bind()
-    op.execute("delete from templates_history where name = 'Notify email verification code'")
+    op.execute(
+        "delete from templates_history where name = 'Notify email verification code'"
+    )
 
     template_history_insert = """INSERT INTO templates_history (id, name, template_type, created_at,
                                                                 content, archived, service_id,
                                                                 subject, created_by_id, version)
                                  VALUES (:id, :name, :type, :time_now, :content, False, :service_id, :subject, :user_id, 1)
                               """
-    email_verification_content = \
-        """Hi ((name)),\n\nTo complete your registration for GOV.UK Notify please click the link below\n\n((url))"""
+    email_verification_content = """Hi ((name)),\n\nTo complete your registration for GOV.UK Notify please click the link below\n\n((url))"""
 
     input_params = {
-        "id": 'ece42649-22a8-4d06-b87f-d52d5d3f0a27',
-        "name": 'Notify email verification code',
+        "id": "ece42649-22a8-4d06-b87f-d52d5d3f0a27",
+        "name": "Notify email verification code",
         "type": "email",
         "time_now": datetime.utcnow(),
         "content": email_verification_content,
         "service_id": service_id,
-        "subject": 'Confirm GOV.UK Notify registration',
-        "user_id": user_id
+        "subject": "Confirm GOV.UK Notify registration",
+        "user_id": user_id,
     }
     conn = op.get_bind()
     conn.execute(text(template_history_insert), input_params)

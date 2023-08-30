@@ -9,10 +9,10 @@ import os
 
 from alembic import op
 
-revision = '0351_unique_key_annual_billing'
-down_revision = '0349_add_ft_processing_time'
+revision = "0351_unique_key_annual_billing"
+down_revision = "0349_add_ft_processing_time"
 
-environment = os.environ['NOTIFY_ENVIRONMENT']
+environment = os.environ["NOTIFY_ENVIRONMENT"]
 
 
 def upgrade():
@@ -24,11 +24,12 @@ def upgrade():
         ALTER TABLE annual_BILLING add constraint uix_service_id_financial_year_start
          UNIQUE USING INDEX uix_service_id_financial_year_start
     """
-    op.execute('COMMIT')
+    op.execute("COMMIT")
     op.execute(index)
     op.execute(constraint)
 
 
 def downgrade():
-    op.drop_constraint('uix_service_id_financial_year_start', 'annual_billing', type_='unique')
-
+    op.drop_constraint(
+        "uix_service_id_financial_year_start", "annual_billing", type_="unique"
+    )
