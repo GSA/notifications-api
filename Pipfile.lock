@@ -1,11 +1,7 @@
 {
     "_meta": {
         "hash": {
-<<<<<<< HEAD
-            "sha256": "b79350e964b168c22b155b5c9dd23f07212e4c1199f3d97197a2d8c7a1716c6f"
-=======
             "sha256": "ac01972eca25a669ddc2bd36763234794ed87998cc6185d52c18bda75c148524"
->>>>>>> 85de5bfc63d59833aa9aedbcb67792acbd1bded0
         },
         "pipfile-spec": 6,
         "requires": {
@@ -865,7 +861,7 @@
         "notifications-utils": {
             "editable": true,
             "git": "https://github.com/GSA/notifications-utils.git",
-            "ref": "9197f35d9bf07983cd632a8b50f098d5eba762f0"
+            "ref": "d3ad5b127a257f52f6dc36fe555a4b9c980c16b3"
         },
         "numpy": {
             "hashes": [
@@ -1139,7 +1135,6 @@
                 "sha256:06570d0b2d84d46c21defc550afbaada381af82f5b83e5b3777600e05d8e2ed0",
                 "sha256:5cea6c0d335c9a7332a460ed8729ceabb4d0c489c7285b0a86dbbf8a017bd120"
             ],
-            "markers": "python_version >= '3.7'",
             "version": "==5.0.0"
         },
         "referencing": {
