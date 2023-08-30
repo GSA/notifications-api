@@ -9,13 +9,15 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0145_add_notification_reply_to'
-down_revision = '0144_template_service_letter'
+revision = "0145_add_notification_reply_to"
+down_revision = "0144_template_service_letter"
 
 
 def upgrade():
-    op.add_column('notifications', sa.Column('reply_to_text', sa.String(), nullable=True))
+    op.add_column(
+        "notifications", sa.Column("reply_to_text", sa.String(), nullable=True)
+    )
 
 
 def downgrade():
-    op.drop_column('notifications', 'reply_to_text')
+    op.drop_column("notifications", "reply_to_text")

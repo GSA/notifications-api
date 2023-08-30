@@ -9,13 +9,13 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0397_rename_organisation_2'
-down_revision = '0396_rename_organisation'
+revision = "0397_rename_organisation_2"
+down_revision = "0396_rename_organisation"
 
 
 def upgrade():
-    op.execute('ALTER TABLE organisation_types RENAME to organization_types')
+    op.execute("ALTER TABLE organisation_types RENAME to organization_types")
 
 
 def downgrade():
-    op.execute('ALTER TABLE organization_types RENAME to organisation_types')
+    op.execute("ALTER TABLE organization_types RENAME to organisation_types")

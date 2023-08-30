@@ -5,26 +5,28 @@ AWS_CLIENT_CONFIG = Config(
     # endpoints.  See https://aws.amazon.com/compliance/fips/ for more
     # information.
     s3={
-        'addressing_style': 'virtual',
+        "addressing_style": "virtual",
     },
-    use_fips_endpoint=True
+    use_fips_endpoint=True,
 )
-STATISTICS_REQUESTED = 'requested'
-STATISTICS_DELIVERED = 'delivered'
-STATISTICS_FAILURE = 'failure'
+STATISTICS_REQUESTED = "requested"
+STATISTICS_DELIVERED = "delivered"
+STATISTICS_FAILURE = "failure"
 
 
 class ClientException(Exception):
-    '''
+    """
     Base Exceptions for sending notifications that fail
-    '''
+    """
+
     pass
 
 
 class Client(object):
-    '''
+    """
     Base client for sending notifications.
-    '''
+    """
+
     pass
 
 
@@ -46,10 +48,10 @@ class NotificationProviderClients(object):
         return self.email_clients.get(name)
 
     def get_client_by_name_and_type(self, name, notification_type):
-        assert notification_type in ['email', 'sms']  # nosec B101
+        assert notification_type in ["email", "sms"]  # nosec B101
 
-        if notification_type == 'email':
+        if notification_type == "email":
             return self.get_email_client(name)
 
-        if notification_type == 'sms':
+        if notification_type == "sms":
             return self.get_sms_client(name)

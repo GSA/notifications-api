@@ -6,6 +6,6 @@ from flask import Flask
 from app import notify_celery, create_app  # noqa
 
 
-application = Flask('delivery')
+application = Flask("delivery")
 create_app(application)
 application.app_context().push()

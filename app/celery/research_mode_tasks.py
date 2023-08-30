@@ -32,7 +32,7 @@ def send_email_response(reference, to):
     else:
         body = ses_notification_callback(reference)
 
-    process_ses_results.apply_async([body], queue=QueueNames.SEND_EMAIL)
+    process_ses_results.apply_async([body], queue=QueueNames.RESEARCH_MODE)
 
 
 def make_request(notification_type, provider, data, headers):

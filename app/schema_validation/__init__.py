@@ -21,21 +21,21 @@ def validate_uuid(instance):
     return True
 
 
-@format_checker.checks('phone_number', raises=InvalidPhoneError)
+@format_checker.checks("phone_number", raises=InvalidPhoneError)
 def validate_schema_phone_number(instance):
     if isinstance(instance, str):
         validate_phone_number(instance, international=True)
     return True
 
 
-@format_checker.checks('email_address', raises=InvalidEmailError)
+@format_checker.checks("email_address", raises=InvalidEmailError)
 def validate_schema_email_address(instance):
     if isinstance(instance, str):
         validate_email_address(instance)
     return True
 
 
-@format_checker.checks('datetime_within_next_day', raises=ValidationError)
+@format_checker.checks("datetime_within_next_day", raises=ValidationError)
 def validate_schema_date_with_hour(instance):
     if isinstance(instance, str):
         try:
@@ -45,19 +45,23 @@ def validate_schema_date_with_hour(instance):
             if dt > datetime.utcnow() + timedelta(hours=24):
                 raise ValidationError("datetime can only be 24 hours in the future")
         except ParseError:
-            raise ValidationError("datetime format is invalid. It must be a valid ISO8601 date time format, "
-                                  "https://en.wikipedia.org/wiki/ISO_8601")
+            raise ValidationError(
+                "datetime format is invalid. It must be a valid ISO8601 date time format, "
+                "https://en.wikipedia.org/wiki/ISO_8601"
+            )
     return True
 
 
-@format_checker.checks('datetime', raises=ValidationError)
+@format_checker.checks("datetime", raises=ValidationError)
 def validate_schema_datetime(instance):
     if isinstance(instance, str):
         try:
             iso8601.parse_date(instance)
         except ParseError:
-            raise ValidationError("datetime format is invalid. It must be a valid ISO8601 date time format, "
-                                  "https://en.wikipedia.org/wiki/ISO_8601")
+            raise ValidationError(
+                "datetime format is invalid. It must be a valid ISO8601 date time format, "
+                "https://en.wikipedia.org/wiki/ISO_8601"
+            )
     return True
 
 
@@ -73,14 +77,12 @@ def build_error_message(errors):
     fields = []
     for e in errors:
         field = (
-            "{} {}".format(e.path[0], e.schema['validationMessage'])
-            if 'validationMessage' in e.schema else __format_message(e)
+            "{} {}".format(e.path[0], e.schema["validationMessage"])
+            if "validationMessage" in e.schema
+            else __format_message(e)
         )
         fields.append({"error": "ValidationError", "message": field})
-    message = {
-        "status_code": 400,
-        "errors": unique_errors(fields)
-    }
+    message = {"status_code": 400, "errors": unique_errors(fields)}
 
     return json.dumps(message)
 
@@ -108,7 +110,7 @@ def __format_message(e):
         # e.cause is an exception (such as InvalidPhoneError). if it's not present it was a standard jsonschema error
         # such as a required field not being present
         error_message = str(e.cause) if e.cause else e.message
-        return error_message.replace("'", '')
+        return error_message.replace("'", "")
 
     path = get_path(e)
     message = get_error_message(e)

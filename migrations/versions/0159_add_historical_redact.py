@@ -9,8 +9,8 @@ Create Date: 2017-01-17 15:00:00.000000
 # revision identifiers, used by Alembic.
 from sqlalchemy import text
 
-revision = '0159_add_historical_redact'
-down_revision = '0158_remove_rate_limit_default'
+revision = "0159_add_historical_redact"
+down_revision = "0158_remove_rate_limit_default"
 
 from alembic import op
 import sqlalchemy as sa
@@ -20,11 +20,10 @@ from flask import current_app
 
 def upgrade():
     conn = op.get_bind()
-    input_params = {
-        "notify_user": current_app.config['NOTIFY_USER_ID']
-    }
-    conn.execute(text(
-        """
+    input_params = {"notify_user": current_app.config["NOTIFY_USER_ID"]}
+    conn.execute(
+        text(
+            """
         INSERT INTO template_redacted
         (
             template_id,
@@ -41,7 +40,9 @@ def upgrade():
             templates
         LEFT JOIN template_redacted on template_redacted.template_id = templates.id
         WHERE template_redacted.template_id IS NULL
-        """), input_params
+        """
+        ),
+        input_params,
     )
 
 

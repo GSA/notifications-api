@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0381_encrypted_column_types'
-down_revision = '0380_bst_to_local'
+revision = "0381_encrypted_column_types"
+down_revision = "0380_bst_to_local"
 
 
 def upgrade():
