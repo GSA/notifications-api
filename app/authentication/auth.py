@@ -19,7 +19,9 @@ from app.serialised_models import SerialisedService
 
 # stvnrlly - this is silly, but bandit has a multiline string bug (https://github.com/PyCQA/bandit/issues/658)
 # and flake8 wants a multiline quote here. TODO: check on bug status and restore sanity once possible
-TOKEN_MESSAGE_ONE = "Invalid token: make sure your API token matches the example "  # nosec B105
+TOKEN_MESSAGE_ONE = (
+    "Invalid token: make sure your API token matches the example "  # nosec B105
+)
 TOKEN_MESSAGE_TWO = "at https://docs.notifications.service.gov.uk/rest-api.html#authorisation-header"  # nosec B105
 GENERAL_TOKEN_ERROR_MESSAGE = TOKEN_MESSAGE_ONE + TOKEN_MESSAGE_TWO
 
@@ -33,21 +35,18 @@ class AuthError(Exception):
         self.api_key_id = api_key_id
 
     def __str__(self):
-        return 'AuthError({message}, {code}, service_id={service_id}, api_key_id={api_key_id})'.format(**self.__dict__)
+        return "AuthError({message}, {code}, service_id={service_id}, api_key_id={api_key_id})".format(
+            **self.__dict__
+        )
 
     def to_dict_v2(self):
         return {
-            'status_code': self.code,
-            "errors": [
-                {
-                    "error": "AuthError",
-                    "message": self.short_message
-                }
-            ]
+            "status_code": self.code,
+            "errors": [{"error": "AuthError", "message": self.short_message}],
         }
 
 
-class InternalApiKey():
+class InternalApiKey:
     def __init__(self, client_id, secret):
         self.secret = secret
         self.id = client_id
@@ -59,11 +58,11 @@ def requires_no_auth():
 
 
 def requires_admin_auth():
-    requires_internal_auth(current_app.config.get('ADMIN_CLIENT_ID'))
+    requires_internal_auth(current_app.config.get("ADMIN_CLIENT_ID"))
 
 
 def requires_internal_auth(expected_client_id):
-    if expected_client_id not in current_app.config.get('INTERNAL_CLIENT_API_KEYS'):
+    if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
         raise TypeError("Unknown client_id for internal auth")
 
     request_helper.check_proxy_header_before_request()
@@ -71,13 +70,13 @@ def requires_internal_auth(expected_client_id):
     client_id = _get_token_issuer(auth_token)
 
     if client_id != expected_client_id:
-        current_app.logger.info('client_id: %s', client_id)
-        current_app.logger.info('expected_client_id: %s', expected_client_id)
+        current_app.logger.info("client_id: %s", client_id)
+        current_app.logger.info("expected_client_id: %s", expected_client_id)
         raise AuthError("Unauthorized: not allowed to perform this action", 401)
 
     api_keys = [
         InternalApiKey(client_id, secret)
-        for secret in current_app.config.get('INTERNAL_CLIENT_API_KEYS')[client_id]
+        for secret in current_app.config.get("INTERNAL_CLIENT_API_KEYS")[client_id]
     ]
 
     _decode_jwt_token(auth_token, api_keys, client_id)
@@ -88,7 +87,9 @@ def requires_auth():
     request_helper.check_proxy_header_before_request()
 
     auth_token = _get_auth_token(request)
-    issuer = _get_token_issuer(auth_token)  # ie the `iss` claim which should be a service ID
+    issuer = _get_token_issuer(
+        auth_token
+    )  # ie the `iss` claim which should be a service ID
 
     try:
         service_id = uuid.UUID(issuer)
@@ -101,19 +102,22 @@ def requires_auth():
         raise AuthError("Invalid token: service not found", 403)
 
     if not service.api_keys:
-        raise AuthError("Invalid token: service has no API keys", 403, service_id=service.id)
+        raise AuthError(
+            "Invalid token: service has no API keys", 403, service_id=service.id
+        )
 
     if not service.active:
-        raise AuthError("Invalid token: service is archived", 403, service_id=service.id)
+        raise AuthError(
+            "Invalid token: service is archived", 403, service_id=service.id
+        )
 
     api_key = _decode_jwt_token(auth_token, service.api_keys, service.id)
 
-    current_app.logger.info('API authorised for service {} with api key {}, using issuer {} for URL: {}'.format(
-        service_id,
-        api_key.id,
-        request.headers.get('User-Agent'),
-        request.base_url
-    ))
+    current_app.logger.info(
+        "API authorised for service {} with api key {}, using issuer {} for URL: {}".format(
+            service_id, api_key.id, request.headers.get("User-Agent"), request.base_url
+        )
+    )
 
     g.api_user = api_key
     g.service_id = service_id
@@ -125,9 +129,13 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
         try:
             decode_jwt_token(auth_token, api_key.secret)
         except TokenExpiredError:
-            if not current_app.config.get('ALLOW_EXPIRED_API_TOKEN', False):
-                err_msg = "Error: Your system clock must be accurate to within 30 seconds"
-                raise AuthError(err_msg, 403, service_id=service_id, api_key_id=api_key.id)
+            if not current_app.config.get("ALLOW_EXPIRED_API_TOKEN", False):
+                err_msg = (
+                    "Error: Your system clock must be accurate to within 30 seconds"
+                )
+                raise AuthError(
+                    err_msg, 403, service_id=service_id, api_key_id=api_key.id
+                )
         except TokenAlgorithmError:
             err_msg = "Invalid token: algorithm used is not HS256"
             raise AuthError(err_msg, 403, service_id=service_id, api_key_id=api_key.id)
@@ -140,10 +148,20 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
             continue
         except TokenError:
             # General error when trying to decode and validate the token
-            raise AuthError(GENERAL_TOKEN_ERROR_MESSAGE, 403, service_id=service_id, api_key_id=api_key.id)
+            raise AuthError(
+                GENERAL_TOKEN_ERROR_MESSAGE,
+                403,
+                service_id=service_id,
+                api_key_id=api_key.id,
+            )
 
         if api_key.expiry_date:
-            raise AuthError("Invalid token: API key revoked", 403, service_id=service_id, api_key_id=api_key.id)
+            raise AuthError(
+                "Invalid token: API key revoked",
+                403,
+                service_id=service_id,
+                api_key_id=api_key.id,
+            )
 
         return api_key
     else:
@@ -152,14 +170,14 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
 
 
 def _get_auth_token(req):
-    auth_header = req.headers.get('Authorization', None)
+    auth_header = req.headers.get("Authorization", None)
     if not auth_header:
-        raise AuthError('Unauthorized: authentication token must be provided', 401)
+        raise AuthError("Unauthorized: authentication token must be provided", 401)
 
     auth_scheme = auth_header[:7].title()
 
-    if auth_scheme != 'Bearer ':
-        raise AuthError('Unauthorized: authentication bearer scheme must be used', 401)
+    if auth_scheme != "Bearer ":
+        raise AuthError("Unauthorized: authentication bearer scheme must be used", 401)
 
     return auth_header[7:]
 

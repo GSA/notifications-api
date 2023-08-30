@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0239_add_edit_folder_permission'
-down_revision = '0238_add_validation_failed'
+revision = "0239_add_edit_folder_permission"
+down_revision = "0238_add_validation_failed"
 
 
 def upgrade():

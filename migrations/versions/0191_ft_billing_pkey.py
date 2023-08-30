@@ -7,8 +7,8 @@ Create Date: 2018-05-21 14:24:27.229511
 """
 from alembic import op
 
-revision = '0191_ft_billing_pkey'
-down_revision = '0189_ft_billing_data_type'
+revision = "0191_ft_billing_pkey"
+down_revision = "0189_ft_billing_data_type"
 
 
 def upgrade():

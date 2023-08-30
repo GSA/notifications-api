@@ -9,17 +9,19 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '0094_job_stats_update'
-down_revision = '0092_add_inbound_provider'
+revision = "0094_job_stats_update"
+down_revision = "0092_add_inbound_provider"
 
 
 def upgrade():
-    op.add_column('job_statistics', sa.Column('sent', sa.BigInteger(), nullable=True))
-    op.add_column('job_statistics', sa.Column('delivered', sa.BigInteger(), nullable=True))
-    op.add_column('job_statistics', sa.Column('failed', sa.BigInteger(), nullable=True))
+    op.add_column("job_statistics", sa.Column("sent", sa.BigInteger(), nullable=True))
+    op.add_column(
+        "job_statistics", sa.Column("delivered", sa.BigInteger(), nullable=True)
+    )
+    op.add_column("job_statistics", sa.Column("failed", sa.BigInteger(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('job_statistics', 'sent')
-    op.drop_column('job_statistics', 'failed')
-    op.drop_column('job_statistics', 'delivered')
+    op.drop_column("job_statistics", "sent")
+    op.drop_column("job_statistics", "failed")
+    op.drop_column("job_statistics", "delivered")

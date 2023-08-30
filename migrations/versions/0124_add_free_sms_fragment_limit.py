@@ -9,15 +9,20 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0124_add_free_sms_fragment_limit'
-down_revision = '0123_add_noti_to_email_reply'
+revision = "0124_add_free_sms_fragment_limit"
+down_revision = "0123_add_noti_to_email_reply"
 
 
 def upgrade():
-    op.add_column('services_history', sa.Column('free_sms_fragment_limit', sa.BigInteger(), nullable=True))
-    op.add_column('services', sa.Column('free_sms_fragment_limit', sa.BigInteger(), nullable=True))
+    op.add_column(
+        "services_history",
+        sa.Column("free_sms_fragment_limit", sa.BigInteger(), nullable=True),
+    )
+    op.add_column(
+        "services", sa.Column("free_sms_fragment_limit", sa.BigInteger(), nullable=True)
+    )
 
 
 def downgrade():
-    op.drop_column('services_history', 'free_sms_fragment_limit')
-    op.drop_column('services', 'free_sms_fragment_limit')
+    op.drop_column("services_history", "free_sms_fragment_limit")
+    op.drop_column("services", "free_sms_fragment_limit")

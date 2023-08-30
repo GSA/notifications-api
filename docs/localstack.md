@@ -40,5 +40,5 @@ Assuming you followed all these steps and nothing went wrong, you should be runn
 You should be able to send an SMS message in the UI and observe it in the dashboard moving from Pending to Delivered
 over a period of five minutes.  And you should not receive a text message.
 
-NOTE: You will still be prompted for a 2FA code when you log in, but you will not receive a text message on any device.
-To login, enter any six digit number.
+NOTE: You will still be prompted for a 2FA code when you log in.  To get the code, look in the notification-api
+logs for "AUTHENTICATION_CODE:".

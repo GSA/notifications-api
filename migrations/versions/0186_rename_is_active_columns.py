@@ -9,14 +9,29 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0186_rename_is_active_columns'
-down_revision = '0185_add_is_active_to_reply_tos'
+revision = "0186_rename_is_active_columns"
+down_revision = "0185_add_is_active_to_reply_tos"
 
 
 def upgrade():
-    op.alter_column('service_email_reply_to', 'is_active', new_column_name='archived', server_default=sa.false())
-    op.alter_column('service_letter_contacts', 'is_active', new_column_name='archived', server_default=sa.false())
-    op.alter_column('service_sms_senders', 'is_active', new_column_name='archived', server_default=sa.false())
+    op.alter_column(
+        "service_email_reply_to",
+        "is_active",
+        new_column_name="archived",
+        server_default=sa.false(),
+    )
+    op.alter_column(
+        "service_letter_contacts",
+        "is_active",
+        new_column_name="archived",
+        server_default=sa.false(),
+    )
+    op.alter_column(
+        "service_sms_senders",
+        "is_active",
+        new_column_name="archived",
+        server_default=sa.false(),
+    )
 
     op.execute("Update service_email_reply_to set archived = False")
     op.execute("Update service_letter_contacts set archived = False")
@@ -24,9 +39,24 @@ def upgrade():
 
 
 def downgrade():
-    op.alter_column('service_email_reply_to', 'archived', new_column_name='is_active', server_default=sa.true())
-    op.alter_column('service_letter_contacts', 'archived', new_column_name='is_active', server_default=sa.true())
-    op.alter_column('service_sms_senders', 'archived', new_column_name='is_active', server_default=sa.true())
+    op.alter_column(
+        "service_email_reply_to",
+        "archived",
+        new_column_name="is_active",
+        server_default=sa.true(),
+    )
+    op.alter_column(
+        "service_letter_contacts",
+        "archived",
+        new_column_name="is_active",
+        server_default=sa.true(),
+    )
+    op.alter_column(
+        "service_sms_senders",
+        "archived",
+        new_column_name="is_active",
+        server_default=sa.true(),
+    )
 
     op.execute("Update service_email_reply_to set is_active = True")
     op.execute("Update service_letter_contacts set is_active = True")
