@@ -76,7 +76,7 @@ test: ## Run tests and create coverage report
 	pipenv run black .
 	pipenv run flake8 .
 	pipenv run isort --check-only ./app ./tests
-	pipenv run coverage run -m pytest -vv --maxfail=10
+	pipenv run coverage run -m pytest --maxfail=10
 	pipenv run coverage report -m --fail-under=95
 	pipenv run coverage html -d .coverage_cache
 

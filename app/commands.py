@@ -792,3 +792,27 @@ def update_templates():
         data = json.load(f)
         for d in data:
             _update_template(d["id"], d["name"], d["type"], d["content"], d["subject"])
+
+
+@notify_command(name="create-new-service")
+@click.option("-n", "--name", required=True, prompt=True)
+@click.option("-l", "--message_limit", required=False, default=40000)
+@click.option("-r", "--restricted", required=False, default=False)
+@click.option("-e", "--email_from", required=True)
+@click.option("-c", "--created_by_id", required=True)
+def create_new_service(name, message_limit, restricted, email_from, created_by_id):
+    data = {
+        "name": name,
+        "message_limit": message_limit,
+        "restricted": restricted,
+        "email_from": email_from,
+        "created_by_id": created_by_id,
+    }
+
+    service = Service(**data)
+    try:
+        db.session.add(service)
+        db.session.commit()
+    except IntegrityError:
+        print("duplicate service", service.name)
+        db.session.rollback()
