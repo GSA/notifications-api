@@ -34,7 +34,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     failure appears in the cloudwatch logs, so this should keep retrying until the log appears, or until
     we run out of retries.
     """
-    # TODO the localstack version of cloudwatch doesn't have our log groups.  Possibly create them with awslocal?
+    # TODO the localstack cloudwatch doesn't currently have our log groups.  Possibly create them with awslocal?
     if aws_cloudwatch_client.is_localstack():
         status = 'success'
         provider_response = 'this is a fake successful localstack sms message'

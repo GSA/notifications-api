@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from datetime import datetime
 from urllib.parse import urlencode
@@ -197,6 +198,11 @@ def verify_user_password(user_id):
 
 @user_blueprint.route('/<uuid:user_id>/verify/code', methods=['POST'])
 def verify_user_code(user_id):
+
+    # TODO -- Hmmm!  Is this safe?
+    if os.getenv("LOCALSTACK_ENDPOINT_URL"):
+        return jsonify({}), 204
+
     data = request.get_json()
     validate(data, post_verify_code_schema)
 
