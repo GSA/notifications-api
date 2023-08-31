@@ -15,4 +15,4 @@ runs:
         python-version: "3.9"
     - name: Install pipenv
       shell: bash
-      run: pip install --upgrade pipenv
+      run: pip install --upgrade poetry
