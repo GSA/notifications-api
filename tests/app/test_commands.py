@@ -316,7 +316,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
         "Example text message template!",
         "sms",
         [
-            "Hi, I’m trying out U.S. Notify! Today is ((day of week)) and my favorite color is ((color))."
+            "Hi, I’m trying out Notify.gov! Today is ((day of week)) and my favorite color is ((color))."
         ],
         "",
     )

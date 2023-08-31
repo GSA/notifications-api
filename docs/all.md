@@ -182,7 +182,7 @@ TODO: create env vars for these origin and destination email addresses for the r
 
 #### Move SNS out of sandbox.
 
-This should be complete for all regions U.S. Notify has been deployed to or is currently planned to be deployed to.
+This should be complete for all regions Notify.gov has been deployed to or is currently planned to be deployed to.
 
 1. Visit the SNS console for the region you will be sending from. Notes:
     1. SNS settings are per-region, so each environment must have its own region
@@ -681,7 +681,7 @@ For further details of the system and how it connects to supporting services, se
 Run Book
 ========
 
-Policies and Procedures needed before and during US Notify Operations. Many of these policies are taken from the U.S. Notify System Security & Privacy Plan (SSPP).
+Policies and Procedures needed before and during US Notify Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
 
 Any changes to policies and procedures defined both here and in the SSPP must be kept in sync, and should be done collaboratively with the System ISSO and ISSM to ensure
 that the security of the system is maintained.
@@ -795,7 +795,7 @@ US_Notify Administrators are responsible for ensuring that remediations for vuln
 
 ## <a name="dns"></a> DNS Changes
 
-U.S. Notify DNS records are maintained within [the 18f/dns repository](https://github.com/18F/dns/blob/main/terraform/notify.gov.tf). To create new DNS records for notify.gov or any subdomains:
+Notify.gov DNS records are maintained within [the 18f/dns repository](https://github.com/18F/dns/blob/main/terraform/notify.gov.tf). To create new DNS records for notify.gov or any subdomains:
 
 1. Update the `notify.gov.tf` terraform to update or create the new records within Route53 and push the branch to the 18f/dns repository.
 1. Open a PR.
