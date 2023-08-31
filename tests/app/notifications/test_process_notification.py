@@ -248,7 +248,7 @@ def test_persist_notification_increments_cache_for_trial_or_live_service(
             [
                 # call(str(service.id) + "-2016-01-01-count", ),
                 call(
-                    "2016-01-01-total-count",
+                    "2016-01-01-total",
                 )
             ]
         )
@@ -283,7 +283,7 @@ def test_persist_notification_sets_daily_limit_cache_if_one_does_not_exists(
         mock_set.assert_has_calls(
             [
                 # call(str(service.id) + "-2016-01-01-count", 1, ex=86400),
-                call("2016-01-01-total-count", 1, ex=86400)
+                call("2016-01-01-total", 1, ex=86400)
             ]
         )
 
