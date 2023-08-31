@@ -46,7 +46,7 @@ def check_service_over_api_rate_limit(service, api_key):
 
 
 def check_service_over_total_message_limit(key_type, service):
-    if key_type == KEY_TYPE_TEST or not current_app.config['REDIS_ENABLED']:
+    if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
 
     cache_key = total_limit_cache_key(service.id)
@@ -59,9 +59,10 @@ def check_service_over_total_message_limit(key_type, service):
     if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
             "service {} has been rate limited for total use sent {} limit {}".format(
-                service.id, int(service_stats), service.total_message_limit)
+                service.id, int(service_stats), service.total_message_limit
+            )
         )
-        raise TooManyRequestsError(service.total_message_limit)
+        raise TotalRequestsError(service.total_message_limit)
     return int(service_stats)
 
 

@@ -710,7 +710,6 @@ def test_update_service(client, notify_db_session, sample_service):
 
 
 def test_cant_update_service_org_type_to_random_value(client, sample_service):
-
     data = {
         "name": "updated service name",
         "email_from": "updated.service.name",

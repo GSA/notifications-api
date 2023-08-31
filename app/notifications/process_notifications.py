@@ -81,7 +81,7 @@ def persist_notification(
     reply_to_text=None,
     billable_units=None,
     document_download_count=None,
-    updated_at=None
+    updated_at=None,
 ):
     current_app.logger.info("Persisting notification")
 

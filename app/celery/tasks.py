@@ -34,6 +34,7 @@ from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT
+from app.v2.errors import TotalRequestsError
 
 
 @notify_celery.task(name="process-job")
@@ -153,16 +154,17 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
     try:
         total_sent = check_service_over_total_message_limit(KEY_TYPE_NORMAL, service)
         if total_sent + job.notification_count > service.total_message_limit:
-            raise TooManyRequestsError(service.total_message_limit)
+            raise TotalRequestsError(service.total_message_limit)
         else:
             return False
-    except TooManyRequestsError:
-        job.job_status = 'sending limits exceeded'
+    except TotalRequestsError:
+        job.job_status = "sending limits exceeded"
         job.processing_finished = datetime.utcnow()
         dao_update_job(job)
         current_app.logger.error(
             "Job {} size {} error. Total sending limits {} exceeded".format(
-                job_id, job.notification_count, service.message_limit)
+                job_id, job.notification_count, service.message_limit
+            )
         )
         return True
 
