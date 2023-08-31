@@ -1,7 +1,7 @@
 """
 
-Revision ID: d2db89558026
-Revises: 0394_remove_contact_list
+Revision ID: 0400_add_total_message_limit
+Revises: 0399_remove_research_mode
 Create Date: 2023-04-24 11:35:22.873930
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0395_add_total_message_limit"
-down_revision = "0394_remove_contact_list"
+revision = "0400_add_total_message_limit"
+down_revision = "0399_remove_research_mode"
 
 
 def upgrade():
