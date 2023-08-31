@@ -12,7 +12,7 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry install --dev
+	poetry install
 	createdb notification_api || true
 	(poetry run flask db upgrade) || true
 
