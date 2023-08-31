@@ -17,23 +17,14 @@ class AwsSesStubClient(EmailClient):
 
     @property
     def name(self):
-        return 'ses'
+        return "ses"
 
-    def send_email(self,
-                   source,
-                   to_addresses,
-                   subject,
-                   body,
-                   html_body='',
-                   reply_to_address=None):
+    def send_email(
+        self, source, to_addresses, subject, body, html_body="", reply_to_address=None
+    ):
         try:
             start_time = monotonic()
-            response = request(
-                "POST",
-                self.url,
-                data={"id": "dummy-data"},
-                timeout=60
-            )
+            response = request("POST", self.url, data={"id": "dummy-data"}, timeout=60)
             response.raise_for_status()
             response_json = json.loads(response.text)
 
@@ -41,5 +32,7 @@ class AwsSesStubClient(EmailClient):
             raise AwsSesStubClientException(str(e))
         else:
             elapsed_time = monotonic() - start_time
-            current_app.logger.info("AWS SES stub request finished in {}".format(elapsed_time))
-            return response_json['MessageId']
+            current_app.logger.info(
+                "AWS SES stub request finished in {}".format(elapsed_time)
+            )
+            return response_json["MessageId"]

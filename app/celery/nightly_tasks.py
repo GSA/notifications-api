@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.timezones import convert_utc_to_local_timezone
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery
 from app.aws import s3
+from app.aws.s3 import remove_csv_object
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
 from app.cronitor import cronitor
@@ -14,6 +14,7 @@ from app.dao.inbound_sms_dao import delete_inbound_sms_older_than_retention
 from app.dao.jobs_dao import (
     dao_archive_job,
     dao_get_jobs_older_than_data_retention,
+    dao_get_unfinished_jobs,
 )
 from app.dao.notifications_dao import (
     dao_get_notifications_processing_time_stats,
@@ -25,7 +26,7 @@ from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
 from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime
-from app.utils import get_local_midnight_in_utc
+from app.utils import get_midnight_in_utc
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
@@ -42,68 +43,98 @@ def _remove_csv_files(job_types):
         current_app.logger.info("Job ID {} has been removed from s3.".format(job.id))
 
 
+@notify_celery.task(name="cleanup-unfinished-jobs")
+def cleanup_unfinished_jobs():
+    now = datetime.utcnow()
+    jobs = dao_get_unfinished_jobs()
+    for job in jobs:
+        # The query already checks that the processing_finished time is null, so here we are saying
+        # if it started more than 4 hours ago, that's too long
+        acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+        if now > acceptable_finish_time:
+            remove_csv_object(job.original_file_name)
+            dao_archive_job(job)
+
+
 @notify_celery.task(name="delete-notifications-older-than-retention")
 def delete_notifications_older_than_retention():
-    delete_email_notifications_older_than_retention.apply_async(queue=QueueNames.REPORTING)
-    delete_sms_notifications_older_than_retention.apply_async(queue=QueueNames.REPORTING)
+    delete_email_notifications_older_than_retention.apply_async(
+        queue=QueueNames.REPORTING
+    )
+    delete_sms_notifications_older_than_retention.apply_async(
+        queue=QueueNames.REPORTING
+    )
 
 
 @notify_celery.task(name="delete-sms-notifications")
 @cronitor("delete-sms-notifications")
 def delete_sms_notifications_older_than_retention():
-    _delete_notifications_older_than_retention_by_type('sms')
+    _delete_notifications_older_than_retention_by_type("sms")
 
 
 @notify_celery.task(name="delete-email-notifications")
 @cronitor("delete-email-notifications")
 def delete_email_notifications_older_than_retention():
-    _delete_notifications_older_than_retention_by_type('email')
+    _delete_notifications_older_than_retention_by_type("email")
 
 
 def _delete_notifications_older_than_retention_by_type(notification_type):
-    flexible_data_retention = fetch_service_data_retention_for_all_services_by_notification_type(notification_type)
+    flexible_data_retention = (
+        fetch_service_data_retention_for_all_services_by_notification_type(
+            notification_type
+        )
+    )
 
     for f in flexible_data_retention:
-        day_to_delete_backwards_from = get_local_midnight_in_utc(
-            convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=f.days_of_retention)
+        day_to_delete_backwards_from = get_midnight_in_utc(
+            datetime.utcnow()
+        ).date() - timedelta(days=f.days_of_retention)
+
+        delete_notifications_for_service_and_type.apply_async(
+            queue=QueueNames.REPORTING,
+            kwargs={
+                "service_id": f.service_id,
+                "notification_type": notification_type,
+                "datetime_to_delete_before": day_to_delete_backwards_from,
+            },
         )
 
-        delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
-            'service_id': f.service_id,
-            'notification_type': notification_type,
-            'datetime_to_delete_before': day_to_delete_backwards_from
-        })
+    seven_days_ago = get_midnight_in_utc(datetime.utcnow()).date() - timedelta(days=7)
 
-    seven_days_ago = get_local_midnight_in_utc(
-        convert_utc_to_local_timezone(datetime.utcnow()).date() - timedelta(days=7)
-    )
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
     # get a list of all service ids that we'll need to delete for. Typically that might only be 5% of services.
     # This query takes a couple of mins to run.
-    service_ids_that_have_sent_notifications_recently = get_service_ids_with_notifications_before(
-        notification_type,
-        seven_days_ago
+    service_ids_that_have_sent_notifications_recently = (
+        get_service_ids_with_notifications_before(notification_type, seven_days_ago)
     )
 
-    service_ids_to_purge = service_ids_that_have_sent_notifications_recently - service_ids_with_data_retention
+    service_ids_to_purge = (
+        service_ids_that_have_sent_notifications_recently
+        - service_ids_with_data_retention
+    )
 
     for service_id in service_ids_to_purge:
-        delete_notifications_for_service_and_type.apply_async(queue=QueueNames.REPORTING, kwargs={
-            'service_id': service_id,
-            'notification_type': notification_type,
-            'datetime_to_delete_before': seven_days_ago
-        })
+        delete_notifications_for_service_and_type.apply_async(
+            queue=QueueNames.REPORTING,
+            kwargs={
+                "service_id": service_id,
+                "notification_type": notification_type,
+                "datetime_to_delete_before": seven_days_ago,
+            },
+        )
 
     current_app.logger.info(
-        f'delete-notifications-older-than-retention: triggered subtasks for notification_type {notification_type}: '
-        f'{len(service_ids_with_data_retention)} services with flexible data retention, '
-        f'{len(service_ids_to_purge)} services without flexible data retention'
+        f"delete-notifications-older-than-retention: triggered subtasks for notification_type {notification_type}: "
+        f"{len(service_ids_with_data_retention)} services with flexible data retention, "
+        f"{len(service_ids_to_purge)} services without flexible data retention"
     )
 
 
-@notify_celery.task(name='delete-notifications-for-service-and-type')
-def delete_notifications_for_service_and_type(service_id, notification_type, datetime_to_delete_before):
+@notify_celery.task(name="delete-notifications-for-service-and-type")
+def delete_notifications_for_service_and_type(
+    service_id, notification_type, datetime_to_delete_before
+):
     start = datetime.utcnow()
     num_deleted = move_notifications_to_notification_history(
         notification_type,
@@ -113,21 +144,21 @@ def delete_notifications_for_service_and_type(service_id, notification_type, dat
     if num_deleted:
         end = datetime.utcnow()
         current_app.logger.info(
-            f'delete-notifications-for-service-and-type: '
-            f'service: {service_id}, '
-            f'notification_type: {notification_type}, '
-            f'count deleted: {num_deleted}, '
-            f'duration: {(end - start).seconds} seconds'
+            f"delete-notifications-for-service-and-type: "
+            f"service: {service_id}, "
+            f"notification_type: {notification_type}, "
+            f"count deleted: {num_deleted}, "
+            f"duration: {(end - start).seconds} seconds"
         )
 
 
-@notify_celery.task(name='timeout-sending-notifications')
-@cronitor('timeout-sending-notifications')
+@notify_celery.task(name="timeout-sending-notifications")
+@cronitor("timeout-sending-notifications")
 def timeout_notifications():
-    notifications = ['dummy value so len() > 0']
+    notifications = ["dummy value so len() > 0"]
 
     cutoff_time = datetime.utcnow() - timedelta(
-        seconds=current_app.config.get('SENDING_NOTIFICATIONS_TIMEOUT_PERIOD')
+        seconds=current_app.config.get("SENDING_NOTIFICATIONS_TIMEOUT_PERIOD")
     )
 
     while len(notifications) > 0:
@@ -137,7 +168,10 @@ def timeout_notifications():
             check_and_queue_callback_task(notification)
 
         current_app.logger.info(
-            "Timeout period reached for {} notifications, status has been updated.".format(len(notifications)))
+            "Timeout period reached for {} notifications, status has been updated.".format(
+                len(notifications)
+            )
+        )
 
 
 @notify_celery.task(name="delete-inbound-sms")
@@ -148,9 +182,7 @@ def delete_inbound_sms():
         deleted = delete_inbound_sms_older_than_retention()
         current_app.logger.info(
             "Delete inbound sms job started {} finished {} deleted {} inbound sms notifications".format(
-                start,
-                datetime.utcnow(),
-                deleted
+                start, datetime.utcnow(), deleted
             )
         )
     except SQLAlchemyError:
@@ -158,7 +190,7 @@ def delete_inbound_sms():
         raise
 
 
-@notify_celery.task(name='save-daily-notification-processing-time')
+@notify_celery.task(name="save-daily-notification-processing-time")
 @cronitor("save-daily-notification-processing-time")
 def save_daily_notification_processing_time(local_date=None):
     # local_date is a string in the format of "YYYY-MM-DD"
@@ -168,13 +200,13 @@ def save_daily_notification_processing_time(local_date=None):
     else:
         local_date = datetime.strptime(local_date, "%Y-%m-%d").date()
 
-    start_time = get_local_midnight_in_utc(local_date)
-    end_time = get_local_midnight_in_utc(local_date + timedelta(days=1))
+    start_time = get_midnight_in_utc(local_date)
+    end_time = get_midnight_in_utc(local_date + timedelta(days=1))
     result = dao_get_notifications_processing_time_stats(start_time, end_time)
     insert_update_processing_time(
         FactProcessingTime(
             local_date=local_date,
             messages_total=result.messages_total,
-            messages_within_10_secs=result.messages_within_10_secs
+            messages_within_10_secs=result.messages_within_10_secs,
         )
     )

@@ -20,7 +20,7 @@ def _remove_values_for_keys_if_present(dict, keys):
 
 
 def create_secret_code(length=6):
-    random_number = randbelow(10 ** length)
+    random_number = randbelow(10**length)
     return "{:0{length}d}".format(random_number, length=length)
 
 
@@ -29,14 +29,16 @@ def save_user_attribute(usr, update_dict=None):
     db.session.commit()
 
 
-def save_model_user(user, update_dict=None, password=None, validated_email_access=False):
+def save_model_user(
+    user, update_dict=None, password=None, validated_email_access=False
+):
     if password:
         user.password = password
         user.password_changed_at = datetime.utcnow()
     if validated_email_access:
         user.email_access_validated_at = datetime.utcnow()
     if update_dict:
-        _remove_values_for_keys_if_present(update_dict, ['id', 'password_changed_at'])
+        _remove_values_for_keys_if_present(update_dict, ["id", "password_changed_at"])
         db.session.query(User).filter_by(id=user.id).update(update_dict or {})
     else:
         db.session.add(user)
@@ -44,9 +46,11 @@ def save_model_user(user, update_dict=None, password=None, validated_email_acces
 
 
 def create_user_code(user, code, code_type):
-    verify_code = VerifyCode(code_type=code_type,
-                             expiry_datetime=datetime.utcnow() + timedelta(minutes=30),
-                             user=user)
+    verify_code = VerifyCode(
+        code_type=code_type,
+        expiry_datetime=datetime.utcnow() + timedelta(minutes=30),
+        user=user,
+    )
     verify_code.code = code
     db.session.add(verify_code)
     db.session.commit()
@@ -56,16 +60,18 @@ def create_user_code(user, code, code_type):
 def get_user_code(user, code, code_type):
     # Get the most recent codes to try and reduce the
     # time searching for the correct code.
-    codes = VerifyCode.query.filter_by(
-        user=user, code_type=code_type).order_by(
-        VerifyCode.created_at.desc())
+    codes = VerifyCode.query.filter_by(user=user, code_type=code_type).order_by(
+        VerifyCode.created_at.desc()
+    )
     return next((x for x in codes if x.check_code(code)), None)
 
 
 def delete_codes_older_created_more_than_a_day_ago():
-    deleted = db.session.query(VerifyCode).filter(
-        VerifyCode.created_at < datetime.utcnow() - timedelta(hours=24)
-    ).delete()
+    deleted = (
+        db.session.query(VerifyCode)
+        .filter(VerifyCode.created_at < datetime.utcnow() - timedelta(hours=24))
+        .delete()
+    )
     db.session.commit()
     return deleted
 
@@ -91,7 +97,7 @@ def count_user_verify_codes(user):
     query = VerifyCode.query.filter(
         VerifyCode.user == user,
         VerifyCode.expiry_datetime > datetime.utcnow(),
-        VerifyCode.code_used.is_(False)
+        VerifyCode.code_used.is_(False),
     )
     return query.count()
 
@@ -100,6 +106,10 @@ def get_user_by_id(user_id=None):
     if user_id:
         return User.query.filter_by(id=user_id).one()
     return User.query.filter_by().all()
+
+
+def get_users():
+    return User.query.all()
 
 
 def get_user_by_email(email):
@@ -133,16 +143,18 @@ def update_user_password(user, password):
 
 
 def get_user_and_accounts(user_id):
-    return User.query.filter(
-        User.id == user_id
-    ).options(
-        # eagerly load the user's services and organisations, and also the service's org and vice versa
-        # (so we can see if the user knows about it)
-        joinedload('services'),
-        joinedload('organisations'),
-        joinedload('organisations.services'),
-        joinedload('services.organisation'),
-    ).one()
+    return (
+        User.query.filter(User.id == user_id)
+        .options(
+            # eagerly load the user's services and organizations, and also the service's org and vice versa
+            # (so we can see if the user knows about it)
+            joinedload("services"),
+            joinedload("organizations"),
+            joinedload("organizations.services"),
+            joinedload("services.organization"),
+        )
+        .one()
+    )
 
 
 @autocommit
@@ -157,15 +169,15 @@ def dao_archive_user(user):
     for service_user in service_users:
         db.session.delete(service_user)
 
-    user.organisations = []
+    user.organizations = []
 
     user.auth_type = EMAIL_AUTH_TYPE
     user.email_address = get_archived_db_column_value(user.email_address)
     user.mobile_number = None
     user.password = str(uuid.uuid4())
     # Changing the current_session_id signs the user out
-    user.current_session_id = '00000000-0000-0000-0000-000000000000'
-    user.state = 'inactive'
+    user.current_session_id = "00000000-0000-0000-0000-000000000000"
+    user.state = "inactive"
 
     db.session.add(user)
 
@@ -174,12 +186,17 @@ def user_can_be_archived(user):
     active_services = [x for x in user.services if x.active]
 
     for service in active_services:
-        other_active_users = [x for x in service.users if x.state == 'active' and x != user]
+        other_active_users = [
+            x for x in service.users if x.state == "active" and x != user
+        ]
 
         if not other_active_users:
             return False
 
-        if not any('manage_settings' in user.get_permissions(service.id) for user in other_active_users):
+        if not any(
+            "manage_settings" in user.get_permissions(service.id)
+            for user in other_active_users
+        ):
             # no-one else has manage settings
             return False
 

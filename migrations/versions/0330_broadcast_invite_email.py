@@ -10,16 +10,19 @@ Create Date: 2020-09-15 14:17:01.963181
 from datetime import datetime
 
 from alembic import op
+from sqlalchemy import text
 
-revision = '0330_broadcast_invite_email'
-down_revision = '0329_purge_broadcast_data'
+revision = "0330_broadcast_invite_email"
+down_revision = "0329_purge_broadcast_data"
 
-user_id = '6af522d0-2915-4e52-83a3-3690455a5fe6'
-service_id = 'd6aa2c68-a2d9-4437-ab19-3ae8eb202553'
-template_id = '46152f7c-6901-41d5-8590-a5624d0d4359'
+user_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+template_id = "46152f7c-6901-41d5-8590-a5624d0d4359"
 
-broadcast_invitation_template_name = 'Notify broadcast invitation email'
-broadcast_invitation_subject = "((user_name)) has invited you to join ((service_name)) on GOV.UK Notify"
+broadcast_invitation_template_name = "Notify broadcast invitation email"
+broadcast_invitation_subject = (
+    "((user_name)) has invited you to join ((service_name)) on GOV.UK Notify"
+)
 broadcast_invitation_content = """((user_name)) has invited you to join ((service_name)) on GOV.UK Notify.
 
 In an emergency, use Notify to broadcast an alert, warning the public about an imminent risk to life.
@@ -37,38 +40,40 @@ https://www.gov.uk/notify
 
 
 def upgrade():
-    insert_query = """
-      INSERT INTO {}
+    insert_query_t = """
+      INSERT INTO templates
       (id, name, template_type, created_at, content, archived, service_id,
       subject, created_by_id, version, process_type, hidden)
       VALUES
-      ('{}', '{}', 'email', '{}', '{}', False, '{}', '{}', '{}', 1, 'normal', False)
+      (:template_id, :template_name, 'email', :time_now, :content, False, :service_id, :subject, :user_id, 1, 'normal', False)
     """
 
-    op.execute(insert_query.format(
-        'templates_history',
-        template_id,
-        broadcast_invitation_template_name,
-        datetime.utcnow(),
-        broadcast_invitation_content,
-        service_id,
-        broadcast_invitation_subject,
-        user_id
-    ))
+    insert_query_th = """
+          INSERT INTO templates_history
+          (id, name, template_type, created_at, content, archived, service_id,
+          subject, created_by_id, version, process_type, hidden)
+          VALUES
+      (:template_id, :template_name, 'email', :time_now, :content, False, :service_id, :subject, :user_id, 1, 'normal', False)
+        """
+    conn = op.get_bind()
 
-    op.execute(insert_query.format(
-        'templates',
-        template_id,
-        broadcast_invitation_template_name,
-        datetime.utcnow(),
-        broadcast_invitation_content,
-        service_id,
-        broadcast_invitation_subject,
-        user_id
-    ))
+    input_params = {
+        "template_id": template_id,
+        "template_name": broadcast_invitation_template_name,
+        "time_now": datetime.utcnow(),
+        "content": broadcast_invitation_content,
+        "service_id": service_id,
+        "subject": broadcast_invitation_subject,
+        "user_id": user_id,
+    }
+    conn.execute(text(insert_query_t), input_params)
+    conn.execute(text(insert_query_th), input_params)
 
 
 def downgrade():
-    op.get_bind()
-    op.execute("delete from templates where id = '{}'".format(template_id))
-    op.execute("delete from templates_history where id = '{}'".format(template_id))
+    conn = op.get_bind()
+    input_params = {"template_id": template_id}
+    conn.execute(text("delete from templates where id = :template_id"), input_params)
+    conn.execute(
+        text("delete from templates_history where id = :template_id"), input_params
+    )

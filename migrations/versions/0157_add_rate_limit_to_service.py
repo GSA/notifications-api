@@ -9,15 +9,21 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0157_add_rate_limit_to_service'
-down_revision = '0156_set_temp_letter_contact'
+revision = "0157_add_rate_limit_to_service"
+down_revision = "0156_set_temp_letter_contact"
 
 
 def upgrade():
-    op.add_column('services', sa.Column('rate_limit', sa.Integer(), nullable=False, server_default='3000'))
-    op.add_column('services_history', sa.Column('rate_limit', sa.Integer(), nullable=False, server_default='3000'))
+    op.add_column(
+        "services",
+        sa.Column("rate_limit", sa.Integer(), nullable=False, server_default="3000"),
+    )
+    op.add_column(
+        "services_history",
+        sa.Column("rate_limit", sa.Integer(), nullable=False, server_default="3000"),
+    )
 
 
 def downgrade():
-    op.drop_column('services_history', 'rate_limit')
-    op.drop_column('services', 'rate_limit')
+    op.drop_column("services_history", "rate_limit")
+    op.drop_column("services", "rate_limit")

@@ -13,21 +13,22 @@ from flask import current_app
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
-revision = '0082_add_go_live_template'
-down_revision = '0081_noti_status_as_enum'
+revision = "0082_add_go_live_template"
+down_revision = "0081_noti_status_as_enum"
 
-template_id = '618185c6-3636-49cd-b7d2-6f6f5eb3bdde'
+template_id = "618185c6-3636-49cd-b7d2-6f6f5eb3bdde"
 
 
 def upgrade():
     template_insert = """
         INSERT INTO templates (id, name, template_type, created_at, content, archived, service_id, subject, created_by_id, version, process_type)
-        VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1, '{}')
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, :subject, :user_id, 1, :process_type)
     """
     template_history_insert = """
         INSERT INTO templates_history (id, name, template_type, created_at, content, archived, service_id, subject, created_by_id, version, process_type)
-        VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1, '{}')
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, :subject, :user_id, 1, :process_type)
     """
 
     template_content = """Hi ((name)),
@@ -83,49 +84,33 @@ GOV.UK Notify team
 """
 
     template_name = "Automated \"You''re now live\" message"
-    template_subject = '((service name)) is now live on GOV.UK Notify'
+    template_subject = "((service name)) is now live on GOV.UK Notify"
 
-    op.execute(
-        template_history_insert.format(
-            template_id,
-            template_name,
-            'email',
-            datetime.utcnow(),
-            template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            template_subject,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
+    input_params = {
+        "template_id": template_id,
+        "template_name": template_name,
+        "template_type": "email",
+        "time_now": datetime.utcnow(),
+        "content": template_content,
+        "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
+        "subject": template_subject,
+        "user_id": current_app.config["NOTIFY_USER_ID"],
+        "process_type": "normal",
+    }
+    conn = op.get_bind()
+    conn.execute(text(template_history_insert), input_params)
 
-    op.execute(
-        template_insert.format(
-            template_id,
-            template_name,
-            'email',
-            datetime.utcnow(),
-            template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            template_subject,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
-
-# If you are copying this migration, please remember about an insert to TemplateRedacted,
-# which was not originally included here either by mistake or because it was before TemplateRedacted existed
-    # op.execute(
-    #     """
-    #         INSERT INTO template_redacted (template_id, redact_personalisation, updated_at, updated_by_id)
-    #         VALUES ('{}', '{}', '{}', '{}')
-    #         ;
-    #     """.format(template_id, False, datetime.utcnow(), current_app.config['NOTIFY_USER_ID'])
-    # )
+    conn.execute(text(template_insert), input_params)
 
 
 def downgrade():
-    op.execute("DELETE FROM notifications WHERE template_id = '{}'".format(template_id))
-    op.execute("DELETE FROM notification_history WHERE template_id = '{}'".format(template_id))
-    op.execute("DELETE FROM templates_history WHERE id = '{}'".format(template_id))
-    op.execute("DELETE FROM templates WHERE id = '{}'".format(template_id))
+    input_params = {"template_id": template_id}
+    conn = op.get_bind()
+    conn.execute(
+        text("DELETE FROM notifications WHERE template_id = '{}'"), input_params
+    )
+    conn.execute(
+        text("DELETE FROM notification_history WHERE template_id = '{}'"), input_params
+    )
+    conn.execute(text("DELETE FROM templates_history WHERE id = '{}'"), input_params)
+    conn.execute(text("DELETE FROM templates WHERE id = '{}'"), input_params)

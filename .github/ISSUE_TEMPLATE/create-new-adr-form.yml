@@ -1,0 +1,63 @@
+name: Create a new ADR
+description: Create a new issue with an ADR proposal
+labels: ["ADR: proposed", "documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to create a new Architectural Decision Record.
+  - type: textarea
+    id: context
+    validations:
+      required: true
+    attributes:
+      label: Context
+      description: >
+        Explain the nature of the problem, challenge, or decision to be made here.
+        Be as succinct as possible, but do not leave out any details.  State things
+        matter of factly and as objectively as you can.
+  - type: textarea
+    id: decision
+    validations:
+      required: true
+    attributes:
+      label: Decision
+      description: >
+        What was decided? This should be an active-voice statement. For example,
+        "We will use the US Web Design System." Note any major options that were
+        not selected.
+  - type: textarea
+    id: consequences
+    validations:
+      required: true
+    attributes:
+      label: Consequences
+      description: >
+        What are the consequences of this decision? Consequences can be
+        positive, negative, or neutral, but all known consequences of this
+        decision should be listed here.
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Who is the author(s) of this ADR?
+      placeholder: Enter your GitHub username here, and anyone else helping author this
+    validations:
+      required: true
+  - type: input
+    id: stakeholders
+    attributes:
+      label: Stakeholders
+      description: Who are the stakeholders of this ADR?
+      placeholder: Enter their GitHub username(s) here
+    validations:
+      required: false
+  - type: textarea
+    id: next-steps
+    attributes:
+      label: Next Steps
+      description: >
+        Once option has already been chosen and justified, summarize or list the next steps
+        that came from the decision. Link to GitHub issues that track these steps.
+    validations:
+      required: false

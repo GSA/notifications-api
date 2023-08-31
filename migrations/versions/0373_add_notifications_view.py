@@ -1,7 +1,7 @@
 """
 
 Revision ID: 0373_add_notifications_view
-Revises: 0372_remove_provider_rates
+Revises: 0364_drop_old_column
 Create Date: 2022-05-18 09:39:45.260951
 
 """
@@ -10,12 +10,13 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0373_add_notifications_view'
-down_revision = '0372_remove_provider_rates'
+revision = "0373_add_notifications_view"
+down_revision = "0364_drop_old_column"
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -71,7 +72,8 @@ def upgrade():
                 document_download_count
             FROM notification_history
         )
-    """)
+    """
+    )
 
 
 def downgrade():

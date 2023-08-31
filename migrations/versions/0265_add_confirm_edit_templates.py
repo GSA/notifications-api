@@ -9,10 +9,10 @@ from datetime import datetime
 
 from alembic import op
 from flask import current_app
+from sqlalchemy import text
 
-
-revision = '0265_add_confirm_edit_templates'
-down_revision = '0264_add_folder_permissions_perm'
+revision = "0265_add_confirm_edit_templates"
+down_revision = "0264_add_folder_permissions_perm"
 
 email_template_id = "c73f1d71-4049-46d5-a647-d013bdeca3f0"
 mobile_template_id = "8a31520f-4751-4789-8ea1-fe54496725eb"
@@ -22,120 +22,107 @@ def upgrade():
     template_insert = """
         INSERT INTO templates (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1, '{}', false)
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, 
+        :subject, :user_id, 1, :process_type, false)
     """
     template_history_insert = """
         INSERT INTO templates_history (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES ('{}', '{}', '{}', '{}', '{}', False, '{}', '{}', '{}', 1, '{}', false)
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, 
+        :subject, :user_id, 1, :process_type, false)
     """
 
-    email_template_content = '\n'.join([
-        "Dear ((name)),",
-        "",
-        "((servicemanagername)) changed your Notify account email address to:",
-        "",
-        "((email address))",
-        "",
-        "You’ll need to use this email address next time you sign in.",
-        "",
-        "Thanks",
-        "",
-        "GOV.​UK Notify team",
-        "https://www.gov.uk/notify"
-    ])
+    email_template_content = "\n".join(
+        [
+            "Dear ((name)),",
+            "",
+            "((servicemanagername)) changed your Notify account email address to:",
+            "",
+            "((email address))",
+            "",
+            "You’ll need to use this email address next time you sign in.",
+            "",
+            "Thanks",
+            "",
+            "GOV.​UK Notify team",
+            "https://www.gov.uk/notify",
+        ]
+    )
 
     email_template_name = "Email address changed by service manager"
-    email_template_subject = 'Your GOV.UK Notify email address has changed'
+    email_template_subject = "Your GOV.UK Notify email address has changed"
 
-    op.execute(
-        template_history_insert.format(
-            email_template_id,
-            email_template_name,
-            'email',
-            datetime.utcnow(),
-            email_template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            email_template_subject,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
+    input_params = {
+        "template_id": email_template_id,
+        "template_name": email_template_name,
+        "template_type": "email",
+        "time_now": datetime.utcnow(),
+        "content": email_template_content,
+        "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
+        "subject": email_template_subject,
+        "user_id": current_app.config["NOTIFY_USER_ID"],
+        "process_type": "normal",
+    }
+    conn = op.get_bind()
 
-    op.execute(
-        template_insert.format(
-            email_template_id,
-            email_template_name,
-            'email',
-            datetime.utcnow(),
-            email_template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            email_template_subject,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
+    conn.execute(text(template_history_insert), input_params)
+
+    conn.execute(text(template_insert), input_params)
 
     mobile_template_content = """Your mobile number was changed by ((servicemanagername)). Next time you sign in, your US Notify authentication code will be sent to this phone."""
 
     mobile_template_name = "Phone number changed by service manager"
 
-    op.execute(
-        template_history_insert.format(
-            mobile_template_id,
-            mobile_template_name,
-            'sms',
-            datetime.utcnow(),
-            mobile_template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            None,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
+    input_params = {
+        "template_id": mobile_template_id,
+        "template_name": mobile_template_name,
+        "template_type": "sms",
+        "time_now": datetime.utcnow(),
+        "content": mobile_template_content,
+        "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
+        "subject": None,
+        "user_id": current_app.config["NOTIFY_USER_ID"],
+        "process_type": "normal",
+    }
 
-    op.execute(
-        template_insert.format(
-            mobile_template_id,
-            mobile_template_name,
-            'sms',
-            datetime.utcnow(),
-            mobile_template_content,
-            current_app.config['NOTIFY_SERVICE_ID'],
-            None,
-            current_app.config['NOTIFY_USER_ID'],
-            'normal'
-        )
-    )
+    conn.execute(text(template_history_insert), input_params)
 
-# If you are copying this migration, please remember about an insert to TemplateRedacted,
-# which was not originally included here either by mistake or because it was before TemplateRedacted existed
-    # op.execute(
-    #     """
-    #         INSERT INTO template_redacted (template_id, redact_personalisation, updated_at, updated_by_id)
-    #         VALUES ('{}', '{}', '{}', '{}')
-    #         ;
-    #     """.format(email_template_id, False, datetime.utcnow(), current_app.config['NOTIFY_USER_ID'])
-    # )
-
-    # op.execute(
-    #     """
-    #         INSERT INTO template_redacted (template_id, redact_personalisation, updated_at, updated_by_id)
-    #         VALUES ('{}', '{}', '{}', '{}')
-    #         ;
-    #     """.format(mobile_template_id, False, datetime.utcnow(), current_app.config['NOTIFY_USER_ID'])
-    # )
+    conn.execute(text(template_insert), input_params)
 
 
 def downgrade():
-    op.execute("DELETE FROM notifications WHERE template_id = '{}'".format(email_template_id))
-    op.execute("DELETE FROM notification_history WHERE template_id = '{}'".format(email_template_id))
-    op.execute("DELETE FROM template_redacted WHERE template_id = '{}'".format(email_template_id))
-    op.execute("DELETE FROM templates_history WHERE id = '{}'".format(email_template_id))
-    op.execute("DELETE FROM templates WHERE id = '{}'".format(email_template_id))
+    input_params = {"template_id": email_template_id}
+    conn = op.get_bind()
 
-    op.execute("DELETE FROM notifications WHERE template_id = '{}'".format(mobile_template_id))
-    op.execute("DELETE FROM notification_history WHERE template_id = '{}'".format(mobile_template_id))
-    op.execute("DELETE FROM template_redacted WHERE template_id = '{}'".format(mobile_template_id))
-    op.execute("DELETE FROM templates_history WHERE id = '{}'".format(mobile_template_id))
-    op.execute("DELETE FROM templates WHERE id = '{}'".format(mobile_template_id))
+    conn.execute(
+        text("DELETE FROM notifications WHERE template_id = :template_id"), input_params
+    )
+    conn.execute(
+        text("DELETE FROM notification_history WHERE template_id = :template_id"),
+        input_params,
+    )
+    conn.execute(
+        text("DELETE FROM template_redacted WHERE template_id = :template_id"),
+        input_params,
+    )
+    conn.execute(
+        text("DELETE FROM templates_history WHERE id = :template_id"), input_params
+    )
+    conn.execute(text("DELETE FROM templates WHERE id = :template_id"), input_params)
+
+    input_params = {"template_id": mobile_template_id}
+    conn.execute(
+        text("DELETE FROM notifications WHERE template_id = :template_id"), input_params
+    )
+    conn.execute(
+        text("DELETE FROM notification_history WHERE template_id = :template_id"),
+        input_params,
+    )
+    conn.execute(
+        text("DELETE FROM template_redacted WHERE template_id = :template_id"),
+        input_params,
+    )
+    conn.execute(
+        text("DELETE FROM templates_history WHERE id = :template_id"), input_params
+    )
+    conn.execute(text("DELETE FROM templates WHERE id = :template_id"), input_params)

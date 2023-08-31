@@ -1,4 +1,10 @@
-email.us-west-2.amazonaws.com
-sns.us-west-2.amazonaws.com
+logs-fips.us-west-2.amazonaws.com
+monitoring-fips.us-west-2.amazonaws.com
+email-fips.us-west-2.amazonaws.com
+s3-fips.us-east-1.amazonaws.com
+s3-fips.us-east-2.amazonaws.com
+s3-fips.us-west-1.amazonaws.com
+s3-fips.us-west-2.amazonaws.com
+sns-fips.us-west-2.amazonaws.com
 gov-collector.newrelic.com
 egress-proxy-notify-api-staging.apps.internal

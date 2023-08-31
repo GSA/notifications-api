@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0301_upload_letters_permission'
-down_revision = '0300_migrate_org_types'
+revision = "0301_upload_letters_permission"
+down_revision = "0300_migrate_org_types"
 
 
 def upgrade():

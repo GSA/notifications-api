@@ -43,27 +43,13 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
         getattr(local_mapper.class_, prop.key).impl.active_history = True
 
     super_mapper = local_mapper.inherits
-    super_history_mapper = getattr(cls, '__history_mapper__', None)
+    super_history_mapper = getattr(cls, "__history_mapper__", None)
 
     polymorphic_on = None
     super_fks = []
 
-    def _col_copy(col):
-        orig = col
-        col = col.copy()
-        orig.info['history_copy'] = col
-        col.unique = False
-
-        # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
-        # if it's not nullable, however, the default may be relied upon to correctly set values within the database,
-        # so we should preserve it
-        if col.nullable:
-            col.default = col.server_default = None
-        return col
-
     properties = util.OrderedDict()
-    if not super_mapper or \
-            local_mapper.local_table is not super_mapper.local_table:
+    if not super_mapper or local_mapper.local_table is not super_mapper.local_table:
         cols = []
         version_meta = {"version_meta": True}
         for column in local_mapper.local_table.c:
@@ -71,15 +57,9 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
                 continue
 
             col = _col_copy(column)
-
-            if super_mapper and \
-                    col_references_table(column, super_mapper.local_table):
-                super_fks.append(
-                    (
-                        col.key,
-                        list(super_history_mapper.local_table.primary_key)[0]
-                    )
-                )
+            _add_primary_keys_to_super_fks(
+                super_mapper, column, super_fks, super_history_mapper, col
+            )
 
             cols.append(col)
 
@@ -88,54 +68,39 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
 
             orig_prop = local_mapper.get_property_by_column(column)
             # carry over column re-mappings
-            if len(orig_prop.columns) > 1 or \
-                    orig_prop.columns[0].key != orig_prop.key:
+            if len(orig_prop.columns) > 1 or orig_prop.columns[0].key != orig_prop.key:
                 properties[orig_prop.key] = tuple(
-                    col.info['history_copy'] for col in orig_prop.columns)
-
-        if super_mapper:
-            super_fks.append(
-                (
-                    'version', super_history_mapper.local_table.c.version
+                    col.info["history_copy"] for col in orig_prop.columns
                 )
-            )
+
+        _add_version_to_super_fks(super_fks, super_mapper, super_history_mapper)
 
         # "version" stores the integer version id.  This column is
         # required.
         cols.append(
             Column(
-                'version', Integer, primary_key=True,
-                autoincrement=False, info=version_meta))
+                "version",
+                Integer,
+                primary_key=True,
+                autoincrement=False,
+                info=version_meta,
+            )
+        )
 
-        if super_fks:
-            cols.append(ForeignKeyConstraint(*zip(*super_fks)))
+        _handle_super_fks(super_fks, cols)
 
         table = Table(
-            local_mapper.local_table.name + '_history',
+            local_mapper.local_table.name + "_history",
             local_mapper.local_table.metadata,
             *cols,
             schema=local_mapper.local_table.schema
         )
     else:
-        # single table inheritance.  take any additional columns that may have
-        # been added and add them to the history table.
-        for column in local_mapper.local_table.c:
-            if column.key not in super_history_mapper.local_table.c:
-                col = _col_copy(column)
-                super_history_mapper.local_table.append_column(col)
-        table = None
+        table = _handle_single_table_inheritance(local_mapper, super_history_mapper)
 
-    if super_history_mapper:
-        bases = (super_history_mapper.class_,)
-
-        if table is not None:
-            properties['changed'] = (
-                (table.c.changed, ) +
-                tuple(super_history_mapper.attrs.changed.columns)
-            )
-
-    else:
-        bases = local_mapper.base_mapper.class_.__bases__
+    bases = _get_bases_for_versioned_class(
+        super_history_mapper, table, properties, local_mapper
+    )
     versioned_cls = type.__new__(type, "%sHistory" % cls.__name__, bases, {})
 
     m = mapper(
@@ -144,16 +109,77 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
         inherits=super_history_mapper,
         polymorphic_on=polymorphic_on,
         polymorphic_identity=local_mapper.polymorphic_identity,
-        properties=properties
+        properties=properties,
     )
     cls.__history_mapper__ = m
+    _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper)
 
+
+def _add_primary_keys_to_super_fks(
+    super_mapper, column, super_fks, super_history_mapper, col
+):
+    if super_mapper and col_references_table(column, super_mapper.local_table):
+        super_fks.append(
+            (col.key, list(super_history_mapper.local_table.primary_key)[0])
+        )
+
+
+def _add_version_to_super_fks(super_fks, super_mapper, super_history_mapper):
+    if super_mapper:
+        super_fks.append(("version", super_history_mapper.local_table.c.version))
+
+
+def _handle_super_fks(super_fks, cols):
+    if super_fks:
+        cols.append(ForeignKeyConstraint(*zip(*super_fks)))
+
+
+def _handle_single_table_inheritance(local_mapper, super_history_mapper):
+    # single table inheritance.  take any additional columns that may have
+    # been added and add them to the history table.
+    for column in local_mapper.local_table.c:
+        if column.key not in super_history_mapper.local_table.c:
+            col = _col_copy(column)
+            super_history_mapper.local_table.append_column(col)
+    return None
+
+
+def _get_bases_for_versioned_class(
+    super_history_mapper, table, properties, local_mapper
+):
+    if super_history_mapper:
+        bases = (super_history_mapper.class_,)
+
+        if table is not None:
+            properties["changed"] = (table.c.changed,) + tuple(
+                super_history_mapper.attrs.changed.columns
+            )
+
+    else:
+        bases = local_mapper.base_mapper.class_.__bases__
+    return bases
+
+
+def _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper):
     if not super_history_mapper:
         local_mapper.local_table.append_column(
-            Column('version', Integer, default=1, nullable=False)
+            Column("version", Integer, default=1, nullable=False)
         )
-        local_mapper.add_property(
-            "version", local_mapper.local_table.c.version)
+        local_mapper.add_property("version", local_mapper.local_table.c.version)
+
+
+def _col_copy(col):
+    orig = col
+    col = col.copy()
+    orig.info["history_copy"] = col
+    col.unique = False
+
+    # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
+    # if it's not nullable, however, the default may be relied upon to correctly set values within the database,
+    # so we should preserve it
+    if col.nullable:
+        col.default = col.server_default = None
+    return col
 
 
 class Versioned(object):
@@ -163,6 +189,7 @@ class Versioned(object):
             mp = mapper(cls, *arg, **kw)
             _history_mapper(mp)
             return mp
+
         return map
 
     @classmethod
@@ -181,7 +208,6 @@ def create_history(obj, history_cls=None):
     obj_state = attributes.instance_state(obj)
     data = {}
     for prop in obj_mapper.iterate_properties:
-
         # expired object attributes and also deferred cols might not
         # be in the dict.  force it them load no matter what by using getattr().
         if prop.key not in obj_state.dict:
@@ -200,10 +226,10 @@ def create_history(obj, history_cls=None):
         # not yet have a value before insert
 
         elif isinstance(prop, RelationshipProperty):
-            if hasattr(history_cls, prop.key + '_id'):
+            if hasattr(history_cls, prop.key + "_id"):
                 foreign_obj = getattr(obj, prop.key)
                 # if it's a nullable relationship, foreign_obj will be None, and we actually want to record that
-                data[prop.key + '_id'] = getattr(foreign_obj, 'id', None)
+                data[prop.key + "_id"] = getattr(foreign_obj, "id", None)
 
     if not obj.version:
         obj.version = 1
@@ -212,9 +238,9 @@ def create_history(obj, history_cls=None):
         obj.version += 1
         now = datetime.datetime.utcnow()
         obj.updated_at = now
-        data['updated_at'] = now
+        data["updated_at"] = now
 
-    data['version'] = obj.version
-    data['created_at'] = obj.created_at
+    data["version"] = obj.version
+    data["created_at"] = obj.created_at
 
     return history_cls(**data)

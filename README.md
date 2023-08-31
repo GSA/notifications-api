@@ -15,30 +15,6 @@ Our other repositories are:
 - [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
 - [notify-python-demo](https://github.com/GSA/notify-python-demo)
 
-## Documentation, here and elsewhere
-
-### About Notify
-
-- [Roadmap](https://notifications-admin.app.cloud.gov/features/roadmap)
-- [Using the API](./docs/api-usage.md)
-
-### Infrastructure
-
-- [Overview, setup, and onboarding](./docs/infra-overview.md)
-- [Database management](./docs/database-management.md)
-- [Celery queues and tasks](./docs/queues-and-tasks.md)
-
-### Common dev work
-
-- [Local setup](#local-setup)
-- [Testing](./docs/testing.md), both automated and manual
-- [Deploying](./docs/deploying.md)
-- [Running one-off tasks](./docs/one-off-tasks.md)
-
-## UK docs that may still be helpful
-
-- [Writing public APIs](docs/writing-public-apis.md)
-- [Updating dependencies](https://github.com/alphagov/notifications-manuals/wiki/Dependencies)
 
 ## Local setup
 
@@ -121,6 +97,56 @@ NOTE: when you change .env in the future, you'll need to rebuild the devcontaine
 On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a different method of installing Python. Installation via `pyenv` is known to work.
 
 A direct installation of PostgreSQL will not put the `createdb` command on your `$PATH`. It can be added there in your shell startup script, or a Homebrew-managed installation of PostgreSQL will take care of it.
+
+## Documentation
+
+- [Infrastructure overview](#infrastructure-overview)
+  - [GitHub Repositories](#github-repositories)
+  - [Terraform](#terraform)
+  - [AWS](#aws)
+  - [New Relic](#new-relic)
+  - [Onboarding](#onboarding)
+  - [Setting up the infrastructure](#setting-up-the-infrastructure)
+- [Testing](#testing)
+  - [CI testing](#ci-testing)
+  - [Manual testing](#manual-testing)
+  - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
+- [Deploying](#deploying)
+  - [Egress Proxy](#egress-proxy)
+  - [Sandbox environment](#sandbox-environment)
+- [Database management](#database-management)
+  - [Initial state](#initial-state)
+  - [Data Model Diagram](#data-model-diagram)
+  - [Migrations](#migrations)
+  - [Purging user data](#purging-user-data)
+- [One-off tasks](#one-off-tasks)
+- [How messages are queued and sent](#how-messages-are-queued-and-sent)
+- [Writing public APIs](#writing-public-apis)
+  - [Overview](#overview)
+  - [Documenting APIs](#documenting-apis)
+  - [New APIs](#new-apis)
+- [API Usage](#api-usage)
+  - [Connecting to the API](#connecting-to-the-api)
+  - [Postman Documentation](#postman-documentation)
+  - [Using OpenAPI documentation](#using-openapi-documentation)
+- [Queues and tasks](#queues-and-tasks)
+  - [Priority queue](#priority-queue)
+  - [Celery scheduled tasks](#celery-scheduled-tasks)
+- [US Notify](#us-notify)
+  - [System Description](#system-description)
+- [Run Book](#run-book)
+  - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
+  - [ Restaging Apps](#-restaging-apps)
+  - [ Smoke-testing the App](#-smoke-testing-the-app)
+  - [ Configuration Management](#-configuration-management)
+  - [ DNS Changes](#-dns-changes)
+  - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
+  - [ Known Gotchas](#-known-gotchas)
+  - [ User Account Management](#-user-account-management)
+  - [ SMS Phone Number Management](#-sms-phone-number-management)
+- [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
+  - [Potential PII Locations](#potential-pii-locations)
+  - [Data Retention Policy](#data-retention-policy)
 
 ## License && public domain
 

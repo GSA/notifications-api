@@ -15,7 +15,9 @@ def save_service_inbound_api(service_inbound_api):
 
 @autocommit
 @version_class(ServiceInboundApi)
-def reset_service_inbound_api(service_inbound_api, updated_by_id, url=None, bearer_token=None):
+def reset_service_inbound_api(
+    service_inbound_api, updated_by_id, url=None, bearer_token=None
+):
     if url:
         service_inbound_api.url = url
     if bearer_token:
@@ -27,8 +29,9 @@ def reset_service_inbound_api(service_inbound_api, updated_by_id, url=None, bear
 
 
 def get_service_inbound_api(service_inbound_api_id, service_id):
-    return ServiceInboundApi.query.filter_by(id=service_inbound_api_id,
-                                             service_id=service_id).first()
+    return ServiceInboundApi.query.filter_by(
+        id=service_inbound_api_id, service_id=service_id
+    ).first()
 
 
 def get_service_inbound_api_for_service(service_id):

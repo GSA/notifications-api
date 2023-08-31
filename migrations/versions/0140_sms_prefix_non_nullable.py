@@ -8,39 +8,52 @@ Create Date: 2017-11-07 13:04:04.077142
 from alembic import op
 from flask import current_app
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
-revision = '0140_sms_prefix_non_nullable'
-down_revision = '0139_migrate_sms_allowance_data'
+revision = "0140_sms_prefix_non_nullable"
+down_revision = "0139_migrate_sms_allowance_data"
 
 
 def upgrade():
-
-    op.execute("""
+    conn = op.get_bind()
+    input_params = {"id": current_app.config["NOTIFY_SERVICE_ID"]}
+    conn.execute(
+        text(
+            """
         update services
         set prefix_sms = false
-        where id = '{}'
-    """.format(current_app.config['NOTIFY_SERVICE_ID']))
+        where id = :id
+    """
+        ),
+        input_params,
+    )
 
     op.alter_column(
-        'services',
-        'prefix_sms',
+        "services",
+        "prefix_sms",
         existing_type=sa.BOOLEAN(),
         nullable=False,
     )
 
 
 def downgrade():
-
     op.alter_column(
-        'services',
-        'prefix_sms',
+        "services",
+        "prefix_sms",
         existing_type=sa.BOOLEAN(),
         nullable=True,
     )
 
-    op.execute("""
+    conn = op.get_bind()
+    input_params = {"id": current_app.config["NOTIFY_SERVICE_ID"]}
+    conn.execute(
+        text(
+            """
         update services
         set prefix_sms = null
-        where id = '{}'
-    """.format(current_app.config['NOTIFY_SERVICE_ID']))
+        where id = :id
+    """
+        ),
+        input_params,
+    )

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 username=`whoami`
-org="gsa-tts-benefits-studio-prototyping"
+org="gsa-tts-benefits-studio"
 
 usage="
 $0: Create development infrastructure

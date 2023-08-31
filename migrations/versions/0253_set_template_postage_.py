@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '0253_set_template_postage'
-down_revision = '0252_letter_branding_table'
+revision = "0253_set_template_postage"
+down_revision = "0252_letter_branding_table"
 
 
 def upgrade():

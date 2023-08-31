@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 username=`whoami`
-org="gsa-tts-benefits-studio-prototyping"
+org="gsa-tts-benefits-studio"
 
 usage="
 $0: Reset terraform state so run.sh can be run again or for a new username
