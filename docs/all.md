@@ -327,8 +327,8 @@ Rules for use:
     $ terraform plan
     $ terraform apply
     ```
-1. start a pipenv shell as a shortcut to load `.env` file variables: `$ pipenv shell`
-1. Output requirements.txt file: `pipenv requirements > requirements.txt`
+1. start a poetry shell as a shortcut to load `.env` file variables: `$ poetry shell`
+1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Deploy the application:
   ```
   cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
@@ -405,7 +405,7 @@ command Using a command allows the operation to be tested, both with `pytest` an
 
 To see information about available commands, you can get a list with:
 
-`pipenv run flask command`
+`poetry run flask command`
 
 Appending `--help` to any command will give you more information about parameters.
 
