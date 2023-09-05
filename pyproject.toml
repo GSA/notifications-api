@@ -62,6 +62,7 @@ python-dotenv = "==1.0.0"
 radon = "==6.0.1"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
+notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
 vulture = "==2.8"
 packaging = "==23.1"
 notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, rev = "main"}
