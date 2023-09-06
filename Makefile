@@ -13,6 +13,7 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
 	poetry install
+	poetry self add poetry-dotenv-plugin
 	createdb notification_api || true
 	(poetry run flask db upgrade) || true
 
@@ -73,7 +74,6 @@ generate-version-file: ## Generates the app version file
 .PHONY: test
 test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
-	poetry self add poetry-dotenv-plugin
 	poetry run black .
 	poetry run flake8 .
 	poetry run isort --check-only ./app ./tests
