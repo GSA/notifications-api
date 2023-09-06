@@ -772,12 +772,23 @@ def create_user_jwt(token):
 
 def _update_template(id, name, template_type, content, subject):
     template = Template.query.filter_by(id=id).first()
+    if not template:
+        template = Template(id=id)
+        template.service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+        template.created_by_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+        db.session.add(template)
     template.name = name
     template.template_type = template_type
     template.content = "\n".join(content)
     template.subject = subject
 
     history = TemplateHistory.query.filter_by(id=id).first()
+    if not history:
+        history = TemplateHistory(id=id)
+        history.service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+        history.created_by_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+        history.version = 1
+        db.session.add(history)
     history.name = name
     history.template_type = template_type
     history.content = "\n".join(content)
