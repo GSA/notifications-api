@@ -30,13 +30,13 @@ cd /workspace
 git status
 
 make generate-version-file
-pipenv install --dev
+poetry install --dev
 
 # Install virtualenv to support running the isolated make freeze-requirements from within the devcontainer
 pip3 install virtualenv
 
 # Upgrade schema of the notification_api database
-pipenv run flask db upgrade
+poetry run flask db upgrade
 
 # Run flask server
 # make run-flask

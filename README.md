@@ -45,7 +45,7 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
 
 1. Set up Postgres && Redis on your machine
 
-1. Install [pipenv](https://pipenv.pypa.io/en/latest/)
+1. Install [poetry](https://python-poetry.org/docs/#installation)
 
 1. Run the project setup
 
