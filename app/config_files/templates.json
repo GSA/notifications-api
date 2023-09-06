@@ -4,20 +4,20 @@
         "name": "Example text message template",
         "type": "sms",
         "subject":  "",
-        "content": ["Hi, I’m trying out U.S. Notify. Today is ((day of week)) and my favorite color is ((color))."]
+        "content": ["Hi, I’m trying out Notify.gov. Today is ((day of week)) and my favorite color is ((color))."]
     },
     {
         "id": "4f46df42-f795-4cc4-83bb-65ca312f49cc",
         "name": "Notify invitation email",
         "type": "email",
-        "subject":  "((user_name)) has invited you to collaborate on ((service_name)) on U.S. Notify",
-        "content": ["((user_name)) has invited you to collaborate on ((service_name)) on U.S. Notify.",
+        "subject":  "((user_name)) has invited you to collaborate on ((service_name)) on Notify.gov",
+        "content": ["((user_name)) has invited you to collaborate on ((service_name)) on Notify.gov.",
             "",
             "",
-            "U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.",
+            "Notify.gov makes it easy to keep people updated by helping you send text messages and emails.",
             "",
             "",
-            "Click this link to create an account on U.S. Notify:",
+            "Click this link to create an account on Notify.gov:",
             "",
             "((url))",
             "",
@@ -29,17 +29,17 @@
         "name": "Notify SMS verify code",
         "type": "sms",
         "subject": "",
-        "content": ["((verify_code)) is your U.S. Notify authentication code"]
+        "content": ["((verify_code)) is your Notify.gov authentication code"]
     },
     {
         "id": "474e9242-823b-4f99-813d-ed392e7f1201",
         "name": "Notify password reset email",
         "type": "email",
-        "subject": "Reset your U.S. Notify password",
+        "subject": "Reset your Notify.gov password",
         "content": ["Hi ((user_name)),",
             "",
             "",
-            "We received a request to reset your password on U.S. Notify.",
+            "We received a request to reset your password on Notify.gov.",
             "",
             "",
             "If you didn’t request this email, you can ignore it – your password has not been changed.",
@@ -51,11 +51,11 @@
         "id": "299726d2-dba6-42b8-8209-30e1d66ea164",
         "name": "Notify email verify code",
         "type": "email",
-        "subject": "Sign in to U.S. Notify",
+        "subject": "Sign in to Notify.gov",
         "content": ["Hi ((name)),",
         "",
         "",
-        "To sign in to U.S. Notify please open this link:",
+        "To sign in to Notify.gov please open this link:",
         "",
         "",
         "((url))"]
@@ -64,21 +64,21 @@
         "id": "ece42649-22a8-4d06-b87f-d52d5d3f0a27",
         "name": "Notify email verification code",
         "type": "email",
-        "subject": "Confirm U.S. Notify registration",
+        "subject": "Confirm Notify.gov registration",
         "content": ["Hi ((name)),",
         "",
         "",
-        "To complete your registration for U.S. Notify please click the link below",
+        "To complete your registration for Notify.gov please click the link below",
         "",
         "",
         "((url))"]
     },
     {
         "id": "0880fbb1-a0c6-46f0-9a8e-36c986381ceb",
-        "name": "Your U.S. Notify account",
+        "name": "Your Notify.gov account",
         "type": "email",
-        "subject": "Your U.S. Notify account",
-        "content": ["You already have a U.S. Notify account with this email address.",
+        "subject": "Your Notify.gov account",
+        "content": ["You already have a Notify.gov account with this email address.",
         "",
         "",
         "Sign in here: ((signin_url))",
@@ -89,20 +89,20 @@
         "",
         "",
         "",
-        "If you didn’t try to register for a U.S. Notify account recently, please let us know here: ((feedback_url))"]
+        "If you didn’t try to register for a Notify.gov account recently, please let us know here: ((feedback_url))"]
     },
     {
         "id": "eb4d9930-87ab-4aef-9bce-786762687884",
         "name": "Confirm new email address",
         "type": "email",
-        "subject": "Confirm your email address for U.S. Notify",
+        "subject": "Confirm your email address for Notify.gov",
         "content": ["Hi ((name)),","","","Click this link to confirm your new email address:",
             "",
             "",
             "((url))",
             "",
             "",
-            "If you didn’t try to change the email address for your U.S. Notify account, let us know here:",
+            "If you didn’t try to change the email address for your Notify.gov account, let us know here:",
             "",
             "",
             "((feedback_url))"]
@@ -111,11 +111,11 @@
         "id": "618185c6-3636-49cd-b7d2-6f6f5eb3bdde",
         "name": "Automated \"You’re now live\" message",
         "type": "email",
-        "subject": "((service name)) is now live on U.S. Notify",
+        "subject": "((service name)) is now live on Notify.gov",
         "content": ["Hi ((name)),",
         "",
         "",
-        "((service name)) is now live on U.S. Notify.",
+        "((service name)) is now live on Notify.gov.",
         "",
         "",
         "You can send up to ((message limit)) messages per day.",
@@ -158,87 +158,87 @@
         "",
         "Thanks",
         "",
-        "U.S. Notify team"]
+        "Notify.gov team"]
     },
     {
         "id": "203566f0-d835-47c5-aa06-932439c86573",
         "name": "Notify organization invitation email",
         "type": "email",
-        "subject": "((user_name)) has invited you to collaborate on ((organization_name)) on U.S. Notify",
-        "content": ["((user_name)) has invited you to collaborate on ((organization_name)) on U.S. Notify.","","","U.S. Notify makes it easy to keep people updated by helping you send text messages and emails.","","","Open this link to create an account on U.S. Notify:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organization_name)) secure."]
+        "subject": "((user_name)) has invited you to collaborate on ((organization_name)) on Notify.gov",
+        "content": ["((user_name)) has invited you to collaborate on ((organization_name)) on Notify.gov.","","","Notify.gov makes it easy to keep people updated by helping you send text messages and emails.","","","Open this link to create an account on Notify.gov:","","((url))","","","This invitation will stop working at midnight tomorrow. This is to keep ((organization_name)) secure."]
     },
     {
         "id": "c73f1d71-4049-46d5-a647-d013bdeca3f0",
         "name": "Email address changed by service manager",
         "type": "email",
-        "subject": "Your U.S. Notify email address has changed",
-        "content":  ["Dear ((name)),","","","((servicemanagername)) changed your Notify account email address to:","","","((email address))","","","You’ll need to use this email address next time you sign in.","","","Thanks","","","U.S. Notify team"]
+        "subject": "Your Notify.gov email address has changed",
+        "content":  ["Dear ((name)),","","","((servicemanagername)) changed your Notify account email address to:","","","((email address))","","","You’ll need to use this email address next time you sign in.","","","Thanks","","","Notify.gov team"]
     },
     {
         "id": "8a31520f-4751-4789-8ea1-fe54496725eb",
         "name": "Phone number changed by service manager",
         "type": "sms",
         "subject": "",
-        "content": ["Your mobile number was changed by ((servicemanagername)). Next time you sign in, your U.S. Notify authentication code will be sent to this phone."]
+        "content": ["Your mobile number was changed by ((servicemanagername)). Next time you sign in, your Notify.gov authentication code will be sent to this phone."]
     },
     {
         "id": "a42f1d17-9404-46d5-a647-d013bdfca3e1",
         "name": "Verify email reply-to address for a service",
         "type": "email",
-        "subject": "Your U.S. Notify reply-to email address",
-        "content": ["Hi,","","","This address has been provided as a reply-to email address for a U.S. Notify account.","","Any replies from users to emails they receive through U.S. Notify will come back to this email address.","","","This is just a quick check to make sure the address is valid.","","","No need to reply.","","","Thanks","","","U.S. Notify team"]
+        "subject": "Your Notify.gov reply-to email address",
+        "content": ["Hi,","","","This address has been provided as a reply-to email address for a Notify.gov account.","","Any replies from users to emails they receive through Notify.gov will come back to this email address.","","","This is just a quick check to make sure the address is valid.","","","No need to reply.","","","Thanks","","","Notify.gov team"]
     },
     {
         "id": "4fd2e43c-309b-4e50-8fb8-1955852d9d71",
         "name": "MOU Signed By Receipt",
         "type": "email",
-        "subject": "You’ve accepted the U.S. Notify data sharing and financial agreement",
+        "subject": "You’ve accepted the Notify.gov data sharing and financial agreement",
         "content": [
             "Hi ((signed_by_name)),",
             "",
-            "((org_name)) has accepted the U.S. Notify data sharing and financial agreement. ",
+            "((org_name)) has accepted the Notify.gov data sharing and financial agreement. ",
             "",
             "If you need another copy of the agreement you can download it here: ((mou_link))",
             "",
             "",
             "Thanks,",
-            "U.S. Notify team"
+            "Notify.gov team"
         ]
     },
     {
         "id": "c20206d5-bf03-4002-9a90-37d5032d9e84",
         "name": "MOU Signed On Behalf Of Receipt - Signed by",
         "type": "email",
-        "subject": "You’ve accepted the U.S. Notify data sharing and financial agreement",
+        "subject": "You’ve accepted the Notify.gov data sharing and financial agreement",
         "content": [
             "Hi ((signed_by_name)),",
             "",
-            "((org_name)) has accepted the U.S. Notify data sharing and financial agreement. We’ve emailed ((on_behalf_of_name)) to let them know too.",
+            "((org_name)) has accepted the Notify.gov data sharing and financial agreement. We’ve emailed ((on_behalf_of_name)) to let them know too.",
             "",
             "If you need another copy of the agreement you can download it here: ((mou_link))",
             "",
             "",
             "Thanks,",
-            "U.S. Notify team"
+            "Notify.gov team"
         ]
     },
     {
         "id": "522b6657-5ca5-4368-a294-6b527703bd0b",
         "name": "MOU Signed On Behalf Of Receipt - On Behalf Of",
         "type": "email",
-        "subject": "((org_name)) has accepted the U.S. Notify data sharing and financial agreement",
+        "subject": "((org_name)) has accepted the Notify.gov data sharing and financial agreement",
         "content": [
             "Hi ((on_behalf_of_name)),",
             "",
-            "((signed_by_name)) has accepted the U.S. Notify data sharing and financial agreement on your behalf, for ((org_name)).",
+            "((signed_by_name)) has accepted the Notify.gov data sharing and financial agreement on your behalf, for ((org_name)).",
             "",
-            "U.S. Notify lets teams in the public sector send text messages and emails. It’s built and run by a team in the TTS Public Benefits Studio (part of GSA).",
+            "Notify.gov lets teams in the public sector send text messages and emails. It’s built and run by a team in the TTS Public Benefits Studio (part of GSA).",
             "",
             "If you need another copy of the agreement you can download it here: ((mou_link))",
             "",
             "",
             "Thanks,",
-            "U.S. Notify team"
+            "Notify.gov team"
         ]
     },
     {
@@ -268,7 +268,7 @@
             "",
             "Thanks",
             "",
-            "U.S. Notify team"
+            "Notify.gov team"
         ]
     }
 ]
