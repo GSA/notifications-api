@@ -247,7 +247,7 @@ Within GitHub Actions, several scans take place every day to ensure security and
 
 If you're checking out the system locally, you may want to create a user quickly.
 
-`pipenv run flask command create-test-user`
+`poetry run flask command create-test-user`
 
 This will run an interactive prompt to create a user, and then mark that user as active. *Use a real mobile number* if you want to log in, as the SMS auth code will be sent here.
 
@@ -327,8 +327,8 @@ Rules for use:
     $ terraform plan
     $ terraform apply
     ```
-1. start a pipenv shell as a shortcut to load `.env` file variables: `$ pipenv shell`
-1. Output requirements.txt file: `pipenv requirements > requirements.txt`
+1. start a poetry shell as a shortcut to load `.env` file variables: `$ poetry shell`
+1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Deploy the application:
   ```
   cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
@@ -405,7 +405,7 @@ command Using a command allows the operation to be tested, both with `pytest` an
 
 To see information about available commands, you can get a list with:
 
-`pipenv run flask command`
+`poetry run flask command`
 
 Appending `--help` to any command will give you more information about parameters.
 
@@ -797,7 +797,7 @@ US_Notify Administrators are responsible for ensuring that remediations for vuln
 
 Notify.gov DNS records are maintained within [the 18f/dns repository](https://github.com/18F/dns/blob/main/terraform/notify.gov.tf). To create new DNS records for notify.gov or any subdomains:
 
-1. Update the `notify.gov.tf` terraform to update or create the new records within Route53 and push the branch to the 18f/dns repository.
+1. Update the `notify.gov.tf` terraform to update oƒr create the new records within Route53 and push the branch to the 18f/dns repository.
 1. Open a PR.
 1. Verify that the plan output within circleci creates the records that you expect.
 1. Request a PR review from the 18F/tts-tech-portfolio team
