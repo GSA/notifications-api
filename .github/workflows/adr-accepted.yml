@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: memorialize the ADR
-        uses: 18F/adr-automation/accepted@v1
+        uses: 18F/adr-automation/accepted@actioning
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           label: "ADR: accepted"
