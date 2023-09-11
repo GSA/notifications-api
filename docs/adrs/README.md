@@ -38,9 +38,8 @@ whether or not to move forward, with or without any changes.
 
 ## How are ADRs created, reviewed, and maintained?
 
-First, we have an ADR template that folks can use to work off of.  The template
-exists as both a GitHub issue template and a standalone Markdown file that can
-be copied as needed if folks prefer to work locally first.
+First, we have an ADR issue template that folks can use to start. Select the
+"Create a new ADR" option when creating a new issue.
 
 By following the template, we ensure that our ADRs are consistent in language
 and structure.  This allows us to easily review the documentions and discuss
@@ -82,14 +81,22 @@ be links or the link will go to a :lock: *private document* instead.
 
 To create a new ADR in this repository, you can do one of two things:
 
-- Open a new GitHub issue and select the Architecture Decision Record issue type
+- Open a new GitHub issue and select the "Create a new ADR" option
 - Clone the repo locally, create a new branch for yourself, and make a copy of
   the Markdown template
 
-In either scenario, check to see what the latest ADR filename is, because they
-always start with a number (e.g., `0001`).  Name your ADR with a number one
-after the last ADR written; if the latest ADR starts with `0021-`, your ADR
-should start with `0022-`.
+Creating an ADR manually should be used primarily when memorializing a decision
+that the team has already made. Anything requiring discussion should be created
+as an issue.
+
+We are using [some automation]([url](https://github.com/18F/adr-automation/))
+to turn proposed-ADR issues into accepted-ADR documents. When an ADR is accepted,
+apply the `ADR: accepted` label and close the issue. The action will open a pull
+request with the document, which can then be merged.
+
+When working locally, be sure to number your ADR based on the last ADR written;
+if the latest ADR starts with `0021-`, for example, your ADR should start with
+`0022-`.
 
 At this point, it is a matter of filling in the details outlined in the template
 that are relevant to the ADR.
@@ -100,7 +107,8 @@ that are relevant to the ADR.
 Once an ADR is created, it's time for review and discussion!  This could happen
 a few ways:
 
-- Asynchronously via comments on the pull request itself
+- Asynchronously via comments on the issue itself
+- Synchronously-ish on Slack
 - Synchronously with a scheduled meeting(s) and a facilitator
 - A combination of these, depending on the nature of the ADR and needs of the
   team
