@@ -52,6 +52,10 @@ jobs:
       run: poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Check coverage threshold
       run: poetry run coverage report --fail-under=50
 
