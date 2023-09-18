@@ -43,6 +43,8 @@ applications:
       NOTIFY_ENVIRONMENT: ((env))
       API_HOST_NAME: https://((public_api_route))
       ADMIN_BASE_URL: ((admin_base_url))
+      NOTIFY_E2E_TEST_EMAIL: ((NOTIFY_E2E_TEST_EMAIL))
+      NOTIFY_E2E_TEST_PASSWORD: ((NOTIFY_E2E_TEST_PASSWORD))
 
       # Credentials variables
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
