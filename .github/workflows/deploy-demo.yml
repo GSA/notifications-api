@@ -55,6 +55,8 @@ jobs:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         ADMIN_CLIENT_SECRET: ${{ secrets.ADMIN_CLIENT_SECRET }}
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
         cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
