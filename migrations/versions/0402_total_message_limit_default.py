@@ -1,6 +1,6 @@
 """
 
-Revision ID: e1ca86e9c5d4
+Revision ID: 0402_total_message_limit_default
 Revises: 0401_add_e2e_test_user
 Create Date: 2023-09-18 10:04:58.957374
 
