@@ -5,12 +5,14 @@
   - [New Relic](#new-relic)
   - [Onboarding](#onboarding)
   - [Setting up the infrastructure](#setting-up-the-infrastructure)
+- [Using the logs](#using-the-logs)
 - [Testing](#testing)
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
   - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
+  - [Managing environment variables](#managing-environment-variables)
   - [Sandbox environment](#sandbox-environment)
 - [Database management](#database-management)
   - [Initial state](#initial-state)
@@ -205,6 +207,12 @@ Example answers for toll-free registration form
 
 ![example answers for toll-free registration form](./toll-free-registration.png)
 
+# Using the logs
+
+If you're using the `cf` CLI, you can run `cf logs notify-api-ENV` and/or `cf logs notify-admin-ENV` to stream logs in real time. Add `--recent` to get the last few logs, though logs often move pretty quickly.
+
+For general log searching, [the cloud.gov Kibana](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
+
 # Testing
 
 ```
@@ -303,6 +311,26 @@ application to a select list of allowed domains.
 
 Update the allowed domains by updating `deploy-config/egress_proxy/notify-api-<env>.allow.acl`
 and deploying an updated version of the application throught he normal deploy process.
+
+## Managing environment variables
+
+For an environment variable to make its way into the cloud.gov environment, it *must* end up in the `manifest.yml` file. Based on the deployment approach described above, there are 2 ways for this to happen.
+
+### Secret environment variables
+
+Because secrets are pulled from GitHub, they must be passed from our action to the deploy action and then placed into `manifest.yml`. This means that they should be in a 4 places:
+
+- [ ] The GitHub secrets store
+- [ ] The deploy action in the `env` section using the format `{secrets.SECRET_NAME}`
+- [ ] The deploy action in the `push_arguments` section using the format `--var SECRET_NAME="$SECRET_NAME"`
+- [ ] The manifest using the format `((SECRET_NAME))`
+
+### Public environment variables
+
+Public env vars make up the configuration in `deploy-config`. These are pulled in together by the `--vars-file` line in the deploy action. To add or update one, it should be in 2 places:
+
+- [ ] The relevant YAML file in `deploy-config` using the format `var_name: value`
+- [ ] The manifest using the format `((var_name))`
 
 ## Sandbox environment
 
