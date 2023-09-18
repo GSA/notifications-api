@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/06/2023 | 06/15/2023 | Proposed | @ccostino | @GSA/notify-contributors |
+| 06/06/2023 | 09/15/2023 | Accepted | @ccostino | @GSA/notify-contributors |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -48,8 +48,7 @@ that are already in place, which prevent the following:
 
 ## CONSIDERED OPTIONS
 
-These are the different approaches we're considering for implementing this
-change:
+This is the approach we've considered for implementing this change:
 
 - **Adjust `InvitedUser` management in the API:**  Instead of deleting
   `InvitedUser` objects, we manage them instead and track their `created_at`
@@ -107,8 +106,6 @@ value for the effort.
 
 
 ## VALIDATION AND NEXT STEPS
-
-TBD, pending additional ideas and discussion!
 
 Once a decision is made though, a seperate issue should be written up for the
 API changes that need to take place, and then follow-on work will be needed on
