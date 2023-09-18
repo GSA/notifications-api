@@ -81,7 +81,7 @@ def persist_notification(
     reply_to_text=None,
     billable_units=None,
     document_download_count=None,
-    updated_at=None
+    updated_at=None,
 ):
     current_app.logger.info("Persisting notification")
 
@@ -150,7 +150,7 @@ def persist_notification(
                 current_app.logger.info("Redis total limit cache key does exist")
                 redis_store.incr(total_key)
                 current_app.logger.info(
-                    "Redis total limit cache key has been incremented"
+                    f"Redis total limit cache key has been incremented to {redis_store.get(total_key)}"
                 )
         current_app.logger.info(
             "{} {} created at {}".format(

@@ -216,6 +216,8 @@ def create_service():
         raise InvalidRequest(errors, status_code=400)
     data.pop("service_domain", None)
 
+    data["total_message_limit"] = current_app.config["TOTAL_MESSAGE_LIMIT"]
+
     # validate json with marshmallow
     service_schema.load(data)
 

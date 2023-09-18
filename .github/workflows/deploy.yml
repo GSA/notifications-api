@@ -50,8 +50,8 @@ jobs:
     - name: Install application dependencies
       run: make bootstrap
 
-    - name: Create requirements.txt because Cloud Foundry does a weird pipenv thing
-      run: pipenv requirements > requirements.txt
+    - name: Create requirements.txt
+      run: poetry export --without-hashes --format=requirements.txt > requirements.txt
 
     - name: Deploy to cloud.gov
       uses: 18f/cg-deploy-action@main

@@ -30,9 +30,11 @@ from app.models import (
     SMS_TYPE,
 )
 from app.notifications.process_notifications import persist_notification
+from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT
+from app.v2.errors import TotalRequestsError
 
 
 @notify_celery.task(name="process-job")
@@ -62,6 +64,9 @@ def process_job(job_id, sender_id=None):
                 job_id, service.id
             )
         )
+        return
+
+    if __total_sending_limits_for_job_exceeded(service, job, job_id):
         return
 
     recipient_csv, template, sender_id = get_recipient_csv_and_template_and_sender_id(
@@ -143,6 +148,25 @@ def process_row(row, template, job, service, sender_id=None):
         queue=QueueNames.DATABASE,
     )
     return notification_id
+
+
+def __total_sending_limits_for_job_exceeded(service, job, job_id):
+    try:
+        total_sent = check_service_over_total_message_limit(KEY_TYPE_NORMAL, service)
+        if total_sent + job.notification_count > service.total_message_limit:
+            raise TotalRequestsError(service.total_message_limit)
+        else:
+            return False
+    except TotalRequestsError:
+        job.job_status = "sending limits exceeded"
+        job.processing_finished = datetime.utcnow()
+        dao_update_job(job)
+        current_app.logger.error(
+            "Job {} size {} error. Total sending limits {} exceeded".format(
+                job_id, job.notification_count, service.message_limit
+            )
+        )
+        return True
 
 
 @notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
