@@ -5,6 +5,7 @@ import pytest
 
 from app.commands import (
     _update_template,
+    create_new_service,
     create_test_user,
     fix_billable_units,
     insert_inbound_numbers_from_file,
@@ -24,6 +25,7 @@ from app.models import (
     Job,
     Notification,
     Organization,
+    Service,
     Template,
     User,
 )
@@ -316,7 +318,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
         "Example text message template!",
         "sms",
         [
-            "Hi, I’m trying out U.S. Notify! Today is ((day of week)) and my favorite color is ((color))."
+            "Hi, I’m trying out Notify.gov! Today is ((day of week)) and my favorite color is ((color))."
         ],
         "",
     )
@@ -324,3 +326,39 @@ def test_update_template(notify_db_session, email_2fa_code_template):
     t = Template.query.all()
 
     assert t[0].name == "Example text message template!"
+
+
+def test_create_service_command(notify_db_session, notify_api):
+    notify_api.test_cli_runner().invoke(
+        create_test_user,
+        [
+            "--email",
+            "somebody@fake.gov",
+            "--mobile_number",
+            "202-555-5555",
+            "--password",
+            "correct horse battery staple",
+            "--name",
+            "Fake Personson",
+        ],
+    )
+
+    user = User.query.first()
+
+    service_count = Service.query.count()
+
+    # run the command
+    result = notify_api.test_cli_runner().invoke(
+        create_new_service,
+        ["-e", "somebody@fake.gov", "-n", "Fake Service", "-c", user.id],
+    )
+    print(result)
+
+    # there should be one more service
+    assert Service.query.count() == service_count + 1
+
+    # that service should be the one we added
+    service = Service.query.filter_by(name="Fake Service").first()
+    assert service.email_from == "somebody@fake.gov"
+    assert service.restricted is False
+    assert service.message_limit == 40000

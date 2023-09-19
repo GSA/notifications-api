@@ -327,6 +327,7 @@ class DetailedServiceSchema(BaseSchema):
             "inbound_sms",
             "jobs",
             "message_limit",
+            "total_message_limit",
             "permissions",
             "rate_limit",
             "reply_to_email_addresses",
@@ -735,6 +736,7 @@ class ServiceHistorySchema(ma.Schema):
     updated_at = FlexibleDateTime()
     active = fields.Boolean()
     message_limit = fields.Integer()
+    total_message_limit = fields.Integer()
     restricted = fields.Boolean()
     email_from = fields.String()
     created_by_id = fields.UUID()

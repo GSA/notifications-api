@@ -487,6 +487,9 @@ class Service(db.Model, Versioned):
         db.Boolean, index=False, unique=False, nullable=False, default=True
     )
     message_limit = db.Column(db.BigInteger, index=False, unique=False, nullable=False)
+    total_message_limit = db.Column(
+        db.BigInteger, index=False, unique=False, nullable=False
+    )
     restricted = db.Column(db.Boolean, index=False, unique=False, nullable=False)
     email_from = db.Column(db.Text, index=False, unique=True, nullable=False)
     created_by_id = db.Column(

@@ -5,5 +5,5 @@ worker_instances: 1
 worker_memory: 512M
 scheduler_memory: 256M
 public_api_route: notify-api.app.cloud.gov
-admin_base_url: https://notify.app.cloud.gov
+admin_base_url: https://beta.notify.gov
 default_toll_free_number: "+18447952263"

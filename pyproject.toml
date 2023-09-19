@@ -1,9 +1,12 @@
-[[source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
+[tool.poetry]
+name = "notifications-api"
+version = "0.1.0"
+description = "Notify.gov backend"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
 
-[packages]
+[tool.poetry.dependencies]
+python = "^3.9"
 alembic = "==1.11.2"
 amqp = "==5.1.1"
 arrow = "==1.2.3"
@@ -28,7 +31,7 @@ click = "==8.1.6"
 click-datetime = "==0.2"
 click-didyoumean = "==0.3.0"
 click-plugins = "==1.1.1"
-click-repl = "==0.2.0"
+click-repl = "==0.3.0"
 colorama = "==0.4.4"
 defusedxml = "==0.7.1"
 deprecated = "==1.2.14"
@@ -45,12 +48,14 @@ flask-sqlalchemy = "==3.0.5"
 gunicorn = {version = "==21.2.0", extras = ["eventlet"]}
 iso8601 = "==2.0.0"
 itsdangerous = "==2.1.2"
-jsonschema = {version = "==4.19.0", extras = ["format"]}
+jsonschema = {version = "==4.17.0", extras = ["format"]}
 lxml = "==4.9.3"
 marshmallow = "==3.20.1"
 marshmallow-sqlalchemy = "==0.29.0"
-notifications-python-client = "==6.3.0"
+notifications-python-client = "==8.0.1"
 oscrypto = "==1.3.0"
+poetry = "==1.6.1"
+poetry-dotenv-plugin = "==0.2.0"
 psycopg2-binary = "==2.9.3"
 pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
@@ -58,19 +63,19 @@ radon = "==6.0.1"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
 vulture = "==2.8"
-
 packaging = "==23.1"
-notifications-utils = {editable = true, ref = "main", git = "https://github.com/GSA/notifications-utils.git"}
+notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
 newrelic = "*"
 
-[dev-packages]
+
+[tool.poetry.group.dev.dependencies]
 exceptiongroup = "==1.1.2"
 flake8 = "==4.0.1"
 flake8-bugbear = "==23.3.12"
 isort = "==5.10.1"
 moto = "==4.2.0"
-pytest = "==7.4.0"
-pytest-env = "==0.6.2"
+pytest = "==7.4.2"
+pytest-env = "==1.0.1"
 pytest-mock = "==3.11.1"
 pytest-cov = "==4.1.0"
 pytest-xdist = "==3.3.1"
@@ -82,5 +87,6 @@ bandit = "*"
 honcho = "*"
 cloudfoundry-client = "*"
 
-[requires]
-python_version = "3.9"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

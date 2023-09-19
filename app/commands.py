@@ -772,12 +772,23 @@ def create_user_jwt(token):
 
 def _update_template(id, name, template_type, content, subject):
     template = Template.query.filter_by(id=id).first()
+    if not template:
+        template = Template(id=id)
+        template.service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+        template.created_by_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+        db.session.add(template)
     template.name = name
     template.template_type = template_type
     template.content = "\n".join(content)
     template.subject = subject
 
     history = TemplateHistory.query.filter_by(id=id).first()
+    if not history:
+        history = TemplateHistory(id=id)
+        history.service_id = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
+        history.created_by_id = "6af522d0-2915-4e52-83a3-3690455a5fe6"
+        history.version = 1
+        db.session.add(history)
     history.name = name
     history.template_type = template_type
     history.content = "\n".join(content)
@@ -792,3 +803,27 @@ def update_templates():
         data = json.load(f)
         for d in data:
             _update_template(d["id"], d["name"], d["type"], d["content"], d["subject"])
+
+
+@notify_command(name="create-new-service")
+@click.option("-n", "--name", required=True, prompt=True)
+@click.option("-l", "--message_limit", required=False, default=40000)
+@click.option("-r", "--restricted", required=False, default=False)
+@click.option("-e", "--email_from", required=True)
+@click.option("-c", "--created_by_id", required=True)
+def create_new_service(name, message_limit, restricted, email_from, created_by_id):
+    data = {
+        "name": name,
+        "message_limit": message_limit,
+        "restricted": restricted,
+        "email_from": email_from,
+        "created_by_id": created_by_id,
+    }
+
+    service = Service(**data)
+    try:
+        db.session.add(service)
+        db.session.commit()
+    except IntegrityError:
+        print("duplicate service", service.name)
+        db.session.rollback()

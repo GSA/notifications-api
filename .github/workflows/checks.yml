@@ -42,18 +42,26 @@ jobs:
       run: make bootstrap
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Run style checks
-      run: pipenv run flake8 .
+      run: poetry run flake8 .
     - name: Check imports alphabetized
-      run: pipenv run isort --check-only ./app ./tests
+      run: poetry run isort --check-only ./app ./tests
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: pipenv run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+      run: poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
+        NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Check coverage threshold
-      run: pipenv run coverage report --fail-under=50
+      run: poetry run coverage report --fail-under=50
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
@@ -61,14 +69,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-project
-      - name: Install pipenv packages
-        run: pipenv install --dev
+      - name: Install poetry packages
+        run: poetry install
       - name: Validate NewRelic config
         env:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
           # Need to set a NEW_RELIC_ENVIRONMENT with monitor_mode: true
           NEW_RELIC_ENVIRONMENT: staging
-        run: pipenv run newrelic-admin validate-config $NEW_RELIC_CONFIG_FILE
+        run: poetry run newrelic-admin validate-config $NEW_RELIC_CONFIG_FILE
 
   pip-audit:
     runs-on: ubuntu-latest
@@ -76,7 +84,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
-        run: pipenv requirements > requirements.txt
+        run: poetry export --without-hashes --format=requirements.txt > requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.0.6
         with:
           inputs: requirements.txt
