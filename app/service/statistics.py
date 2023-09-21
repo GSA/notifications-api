@@ -1,8 +1,7 @@
 from collections import defaultdict
-from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.models import NOTIFICATION_STATUS_TYPES, NOTIFICATION_TYPES
+from app.models import NOTIFICATION_TYPES
 
 
 def format_statistics(statistics):
@@ -53,26 +52,6 @@ def create_stats_dict():
             "virus-scan-failed": 0,
         }
     return stats_dict
-
-
-def format_monthly_template_notification_stats(year, rows):
-    stats = {
-        datetime.strftime(date, "%Y-%m"): {}
-        for date in [datetime(year, month, 1) for month in range(4, 13)]
-        + [datetime(year + 1, month, 1) for month in range(1, 4)]
-    }
-
-    for row in rows:
-        formatted_month = row.month.strftime("%Y-%m")
-        if str(row.template_id) not in stats[formatted_month]:
-            stats[formatted_month][str(row.template_id)] = {
-                "name": row.name,
-                "type": row.template_type,
-                "counts": dict.fromkeys(NOTIFICATION_STATUS_TYPES, 0),
-            }
-        stats[formatted_month][str(row.template_id)]["counts"][row.status] += row.count
-
-    return stats
 
 
 def create_zeroed_stats_dicts():

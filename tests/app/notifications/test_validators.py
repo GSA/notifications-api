@@ -55,11 +55,31 @@ def enable_redis(notify_api):
 
 
 @pytest.mark.parametrize("key_type", ["team", "normal"])
-def test_check_service_message_limit_over_total_limit_fails(
+def test_check_service_over_total_message_limit_fails(
     key_type, mocker, notify_db_session
 ):
     service = create_service()
-    mocker.patch("app.redis_store.get", return_value="5001")
+    mocker.patch(
+        "app.redis_store.get",
+        return_value="250001",
+    )
+
+    with pytest.raises(TotalRequestsError) as e:
+        check_service_over_total_message_limit(key_type, service)
+    assert e.value.status_code == 429
+    assert e.value.message == "Exceeded total application limits (250000) for today"
+    assert e.value.fields == []
+
+
+@pytest.mark.parametrize("key_type", ["team", "normal"])
+def test_check_application_over_retention_limit_fails(
+    key_type, mocker, notify_db_session
+):
+    service = create_service()
+    mocker.patch(
+        "app.notifications.validators.dao_get_notification_count_for_service",
+        return_value="5001",
+    )
 
     with pytest.raises(TotalRequestsError) as e:
         check_application_over_retention_limit(key_type, service)

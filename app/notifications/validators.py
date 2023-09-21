@@ -1,7 +1,6 @@
 from flask import current_app
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
-    daily_total_cache_key,
     rate_limit_cache_key,
     total_limit_cache_key,
 )
@@ -13,6 +12,7 @@ from notifications_utils.recipients import (
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
+from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
@@ -69,15 +69,10 @@ def check_service_over_total_message_limit(key_type, service):
 def check_application_over_retention_limit(key_type, service):
     if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
+    total_stats = dao_get_notification_count_for_service(service=service)
 
-    cache_key = daily_total_cache_key()
     daily_message_limit = current_app.config["DAILY_MESSAGE_LIMIT"]
-    total_stats = redis_store.get(cache_key)
-    if total_stats is None:
-        # first message of the day, set the cache to 0 and the expiry to 24 hours
-        total_stats = 0
-        redis_store.set(cache_key, total_stats, ex=86400)
-        return total_stats
+
     if int(total_stats) >= daily_message_limit:
         current_app.logger.info(
             "while sending for service {}, daily message limit of {} reached".format(
