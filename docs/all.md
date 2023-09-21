@@ -87,13 +87,17 @@ In addition to terraform directories in the api and admin apps above:
 
 ## Terraform
 
+We use Terraform to manage our infrastructure, providing consistent setups across the environments.
+
+Our Terraform configurations manage components via cloud.gov. This means that the configurations should work out of the box if you are using a Cloud Foundry platform, but will not work for setups based on raw AWS.
+
 ### Development
 
 There are several remote services required for local development:
 
-* s3
-* ses
-* sns
+* S3
+* SES
+* SNS
 
 Credentials for these services are created by running:
 
