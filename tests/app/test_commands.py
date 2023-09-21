@@ -5,6 +5,7 @@ import pytest
 
 from app.commands import (
     _update_template,
+    bulk_invite_user_to_service,
     create_new_service,
     create_test_user,
     fix_billable_units,
@@ -168,6 +169,38 @@ def test_populate_organization_agreement_details_from_file(
     assert org_count == 1
     org = Organization.query.one()
     assert org.agreement_signed_on_behalf_of_name == "bob"
+    os.remove(file_name)
+
+
+def test_bulk_invite_user_to_service(
+    notify_db_session, notify_api, sample_service, sample_user
+):
+    file_name = "./tests/app/users.csv"
+
+    text = (
+        "service,email_address,from_user,permissions,auth_type,invite_link_host\n"
+        f"{sample_service.id},someone@fake.gov,{sample_user.id},sms,platform_admin,https://somewhere.fake.gov'\n"
+    )
+    f = open(file_name, "a")
+    f.write(text)
+    f.close()
+    command_response = notify_api.test_cli_runner().invoke(
+        bulk_invite_user_to_service,
+        [
+            "-f",
+            file_name,
+            "-s",
+            sample_service.id,
+            "-u",
+            sample_user.id,
+            "-p",
+            "send_texts",
+        ],
+    )
+    print(f"command_response = {command_response}")
+
+    assert "okay" in str(command_response)
+
     os.remove(file_name)
 
 

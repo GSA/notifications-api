@@ -79,13 +79,14 @@ class AwsCloudwatchClient(Client):
         return all_log_events
 
     def check_sms(self, message_id, notification_id, created_at):
+        region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = cloud_config.ses_domain_arn
-        account_number = account_number.replace("arn:aws:ses:us-west-2:", "")
+        account_number = account_number.replace(f"arn:aws:ses:{region}:", "")
         account_number = account_number.split(":")
         account_number = account_number[0]
 
-        log_group_name = f"sns/us-west-2/{account_number}/DirectPublishToPhoneNumber"
+        log_group_name = f"sns/{region}/{account_number}/DirectPublishToPhoneNumber"
         filter_pattern = '{$.notification.messageId="XXXXX"}'
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
         all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
@@ -96,7 +97,7 @@ class AwsCloudwatchClient(Client):
             return "success", message["delivery"]["providerResponse"]
 
         log_group_name = (
-            f"sns/us-west-2/{account_number}/DirectPublishToPhoneNumber/Failure"
+            f"sns/{region}/{account_number}/DirectPublishToPhoneNumber/Failure"
         )
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_failed_events and len(all_failed_events) > 0:
