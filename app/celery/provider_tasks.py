@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from time import time
 
@@ -39,9 +40,15 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     failure appears in the cloudwatch logs, so this should keep retrying until the log appears, or until
     we run out of retries.
     """
-    status, provider_response = aws_cloudwatch_client.check_sms(
-        message_id, notification_id, sent_at
-    )
+    # TODO the localstack cloudwatch doesn't currently have our log groups.  Possibly create them with awslocal?
+    if aws_cloudwatch_client.is_localstack():
+        status = "success"
+        provider_response = "this is a fake successful localstack sms message"
+    else:
+        status, provider_response = aws_cloudwatch_client.check_sms(
+            message_id, notification_id, sent_at
+        )
+
     if status == "success":
         status = NOTIFICATION_DELIVERED
     elif status == "failure":
@@ -73,8 +80,19 @@ def deliver_sms(self, notification_id):
             "Start sending SMS for notification id: {}".format(notification_id)
         )
         notification = notifications_dao.get_notification_by_id(notification_id)
+        ansi_green = "\033[32m"
+        ansi_reset = "\033[0m"
+
         if not notification:
             raise NoResultFound()
+        if (
+            os.getenv("NOTIFY_ENVIRONMENT") == "development"
+            and "authentication code" in notification.content
+        ):
+            current_app.logger.warning(
+                ansi_green + f"AUTHENTICATION CODE: {notification.content}" + ansi_reset
+            )
+
         message_id = send_to_providers.send_sms_to_provider(notification)
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
