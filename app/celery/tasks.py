@@ -31,7 +31,6 @@ from app.models import (
 )
 from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
-from app.schema_validation.definitions import uuid
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT
@@ -210,7 +209,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             api_key_id=None,
             key_type=KEY_TYPE_NORMAL,
             created_at=datetime.utcnow(),
-            created_by_id=uuid.UUID(created_by_id),
+            created_by_id=created_by_id,
             job_id=notification.get("job", None),
             job_row_number=notification.get("row_number", None),
             notification_id=notification_id,
