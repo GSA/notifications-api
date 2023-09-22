@@ -217,6 +217,14 @@ If you're using the `cf` CLI, you can run `cf logs notify-api-ENV` and/or `cf lo
 
 For general log searching, [the cloud.gov Kibana](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
 
+The links below will open a filtered view with logs from both applications, which can then be filtered further. However, for the links to work, you need to paste them into the URL bar while *already* on the Kibana page. If not, you'll just be redirected to the generic dashboard.
+
+Production: https://logs.fr.cloud.gov/app/discover#/view/218a6790-596d-11ee-a43a-090d426b9a38
+Demo: https://logs.fr.cloud.gov/app/discover#/view/891392a0-596e-11ee-921a-1b6b2f4d89ed
+Staging: https://logs.fr.cloud.gov/app/discover#/view/73d7c820-596e-11ee-a43a-090d426b9a38
+
+Once in the view, you'll likely want to adjust the time range in the upper right of the page.
+
 # Testing
 
 ```
