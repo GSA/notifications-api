@@ -335,7 +335,7 @@ Because secrets are pulled from GitHub, they must be passed from our action to t
 - [ ] The GitHub secrets store
 - [ ] The deploy action in the `env` section using the format `{secrets.SECRET_NAME}`
 - [ ] The deploy action in the `push_arguments` section using the format `--var SECRET_NAME="$SECRET_NAME"`
-- [ ] The manifest using the format `((SECRET_NAME))`
+- [ ] The manifest using the format `SECRET_NAME: ((SECRET_NAME))`
 
 ### Public environment variables
 
