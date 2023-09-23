@@ -215,7 +215,7 @@ Example answers for toll-free registration form
 
 If you're using the `cf` CLI, you can run `cf logs notify-api-ENV` and/or `cf logs notify-admin-ENV` to stream logs in real time. Add `--recent` to get the last few logs, though logs often move pretty quickly.
 
-For general log searching, [the cloud.gov Kibana](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
+For general log searching, [the cloud.gov Kibana instance](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
 
 The links below will open a filtered view with logs from both applications, which can then be filtered further. However, for the links to work, you need to paste them into the URL bar while *already* on the Kibana page. If not, you'll just be redirected to the generic dashboard.
 
