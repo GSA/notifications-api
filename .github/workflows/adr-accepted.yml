@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-     - name: check for tags
+    - name: check for tags
       if: "${{ !contains(github.event.issue.labels.*.name, 'ADR: accepted' )}}"
       shell: bash
       run: exit 0
