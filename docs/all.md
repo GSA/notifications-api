@@ -5,12 +5,14 @@
   - [New Relic](#new-relic)
   - [Onboarding](#onboarding)
   - [Setting up the infrastructure](#setting-up-the-infrastructure)
+- [Using the logs](#using-the-logs)
 - [Testing](#testing)
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
   - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
+  - [Managing environment variables](#managing-environment-variables)
   - [Sandbox environment](#sandbox-environment)
 - [Database management](#database-management)
   - [Initial state](#initial-state)
@@ -85,13 +87,17 @@ In addition to terraform directories in the api and admin apps above:
 
 ## Terraform
 
+We use Terraform to manage our infrastructure, providing consistent setups across the environments.
+
+Our Terraform configurations manage components via cloud.gov. This means that the configurations should work out of the box if you are using a Cloud Foundry platform, but will not work for setups based on raw AWS.
+
 ### Development
 
 There are several remote services required for local development:
 
-* s3
-* ses
-* sns
+* S3
+* SES
+* SNS
 
 Credentials for these services are created by running:
 
@@ -205,6 +211,20 @@ Example answers for toll-free registration form
 
 ![example answers for toll-free registration form](./toll-free-registration.png)
 
+# Using the logs
+
+If you're using the `cf` CLI, you can run `cf logs notify-api-ENV` and/or `cf logs notify-admin-ENV` to stream logs in real time. Add `--recent` to get the last few logs, though logs often move pretty quickly.
+
+For general log searching, [the cloud.gov Kibana instance](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
+
+The links below will open a filtered view with logs from both applications, which can then be filtered further. However, for the links to work, you need to paste them into the URL bar while *already* logged into and viewing the Kibana page. If not, you'll just be redirected to the generic dashboard.
+
+Production: https://logs.fr.cloud.gov/app/discover#/view/218a6790-596d-11ee-a43a-090d426b9a38
+Demo: https://logs.fr.cloud.gov/app/discover#/view/891392a0-596e-11ee-921a-1b6b2f4d89ed
+Staging: https://logs.fr.cloud.gov/app/discover#/view/73d7c820-596e-11ee-a43a-090d426b9a38
+
+Once in the view, you'll likely want to adjust the time range in the upper right of the page.
+
 # Testing
 
 ```
@@ -303,6 +323,26 @@ application to a select list of allowed domains.
 
 Update the allowed domains by updating `deploy-config/egress_proxy/notify-api-<env>.allow.acl`
 and deploying an updated version of the application throught he normal deploy process.
+
+## Managing environment variables
+
+For an environment variable to make its way into the cloud.gov environment, it *must* end up in the `manifest.yml` file. Based on the deployment approach described above, there are 2 ways for this to happen.
+
+### Secret environment variables
+
+Because secrets are pulled from GitHub, they must be passed from our action to the deploy action and then placed into `manifest.yml`. This means that they should be in a 4 places:
+
+- [ ] The GitHub secrets store
+- [ ] The deploy action in the `env` section using the format `{secrets.SECRET_NAME}`
+- [ ] The deploy action in the `push_arguments` section using the format `--var SECRET_NAME="$SECRET_NAME"`
+- [ ] The manifest using the format `SECRET_NAME: ((SECRET_NAME))`
+
+### Public environment variables
+
+Public env vars make up the configuration in `deploy-config`. These are pulled in together by the `--vars-file` line in the deploy action. To add or update one, it should be in 2 places:
+
+- [ ] The relevant YAML file in `deploy-config` using the format `var_name: value`
+- [ ] The manifest using the format `((var_name))`
 
 ## Sandbox environment
 

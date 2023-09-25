@@ -193,6 +193,12 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         return
 
     try:
+        job_id = notification.get("job", None)
+        created_by_id = None
+        if job_id:
+            job = dao_get_job_by_id(job_id)
+            created_by_id = job.created_by_id
+
         saved_notification = persist_notification(
             template_id=notification["template"],
             template_version=notification["template_version"],
@@ -203,6 +209,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             api_key_id=None,
             key_type=KEY_TYPE_NORMAL,
             created_at=datetime.utcnow(),
+            created_by_id=created_by_id,
             job_id=notification.get("job", None),
             job_row_number=notification.get("row_number", None),
             notification_id=notification_id,
