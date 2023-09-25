@@ -1,18 +1,86 @@
 name: ADR accepted
+
 on:
   issues:
     types:
       - closed
 
-jobs:
-  main:
-    name: ADR accepted
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  accept:
+    runs-on: ubuntu-latest
     steps:
-      - name: memorialize the ADR
-        uses: 18F/adr-automation/accepted@actioning
+
+     - name: check for tags
+      if: "${{ !contains(github.event.issue.labels.*.name, 'ADR: accepted' )}}"
+      shell: bash
+      run: exit 0
+
+    - name: checkout main branch
+      uses: actions/checkout@v3
+      with:
+        ref: main
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          label: "ADR: accepted"
-          path: docs/adrs
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: get ADR number
+      id: next
+      shell: bash
+      run: |
+        mkdir -p docs/adrs
+        LAST_ADR=$(ls docs/adrs/*.md | grep -Eo "/[0-9]+-" | sort | tail -n1 | grep -Eo "[0-9]+")
+        LAST_ADR=$(echo "$LAST_ADR" | sed -E 's/^0+//')
+        NEXT_ADR=$(($LAST_ADR + 1))
+        NEXT_ADR=$(printf "%04i" "$NEXT_ADR")
+        echo "number=$NEXT_ADR" >> "$GITHUB_OUTPUT"
+
+    - name: get date
+      id: date
+      shell: bash
+      run: echo "date=$(date +'%B %d, %Y')" >> "$GITHUB_OUTPUT"
+
+    - name: build filename
+      id: filename
+      shell: bash
+      run: |
+        SLUG=$(printf '%q\n' "${{ github.event.issue.title }}" | tr A-Z a-z)
+        SLUG=$(printf '%q\n' "$SLUG" | iconv -c -t ascii//TRANSLIT)
+        SLUG=$(printf '%q\n' "$SLUG" | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-+|-+$//g')
+
+        FILENAME="docs/adrs/${{ steps.next.outputs.number }}-$SLUG.md"
+        echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+        echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+
+    - name: write the ADR
+      uses: DamianReeves/write-file-action@v1.2
+      with:
+        path: ${{ steps.filename.outputs.filename }}
+        write-mode: overwrite
+        contents: |
+          # ${{ github.event.issue.title }}
+
+          Status: Accepted
+          Date: ${{ steps.date.outputs.date }}
+
+          ${{ github.event.issue.body }}
+
+    - name: branch, commit, and open PR
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        BRANCH="adr/auto/${{ steps.filename.outputs.slug }}"
+        git config --global user.email "tts@gsa.gov"
+        git config --global user.name "Notify ADR Automation"
+        git checkout -b $BRANCH
+        git add docs/adrs/*.md
+        git commit -m "add ADR ${{ steps.next.outputs.number }}: ${{ github.event.issue.title }}"
+        git push -f origin $BRANCH
+        gh pr create \
+          --title "Add ADR ${{ steps.next.outputs.number }} to the repo" \
+          --body "This pull request was opened automatically because #${{ github.event.issue.number }} was closed after being marked as an approved ADR. It contains a markdown file capturing the ADR body at the time the issue was closed. Please verify that the markdown is correct before merging!" || true
+        gh pr merge $BRANCH --auto --squash || true
+
+    
