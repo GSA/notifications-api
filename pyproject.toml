@@ -62,7 +62,7 @@ python-dotenv = "==1.0.0"
 radon = "==6.0.1"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
-vulture = "==2.8"
+vulture = "==2.9.1"
 packaging = "==23.1"
 notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
 newrelic = "*"
