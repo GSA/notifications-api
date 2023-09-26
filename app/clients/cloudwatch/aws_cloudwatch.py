@@ -51,7 +51,6 @@ class AwsCloudwatchClient(Client):
         # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
         now = round(time.time() * 1000)
         beginning = sent_at
-        current_app.logger.info(f"TIME RANGE TO CHECK {beginning} to {now}")
         next_token = None
         all_log_events = []
         while True:
@@ -74,40 +73,42 @@ class AwsCloudwatchClient(Client):
             all_log_events.extend(log_events)
             if len(log_events) > 0:
                 # We found it
-                current_app.logger.info(
-                    f"WE FOUND THE EVENT WE WERE LOOKING FOR? {log_events}"
-                )
+
                 break
             next_token = response.get("nextToken")
             if not next_token:
                 break
-        if len(all_log_events) == 0:
-            print(f"WE FOUND NO LOG EVENTS OVER TIME RANGE {beginning} to {now}")
         return all_log_events
 
+    def _extract_account_number(self, ses_domain_arn, region):
+        account_number = ses_domain_arn
+        # handle cloud.gov case
+        if "aws-us-gov" in account_number:
+            account_number = account_number.replace(f"arn:aws-us-gov:ses:{region}:", "")
+            account_number = account_number.split(":")
+            account_number = account_number[0]
+        # handle staging case
+        else:
+            account_number = account_number.replace(f"arn:aws:ses:{region}:", "")
+            account_number = account_number.split(":")
+            account_number = account_number[0]
+        return account_number
+
     def check_sms(self, message_id, notification_id, created_at):
-        if os.getenv("LOCALSTACK_ENDPOINT_URL"):
-            current_app.logger.info("GADZOOKS WE ARE RUNNING WITH LOCALSTACK")
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
-        account_number = cloud_config.ses_domain_arn
-        account_number = account_number.replace(f"arn:aws:ses:{region}:", "")
-        account_number = account_number.split(":")
-        account_number = account_number[0]
+        account_number = self._extract_account_number(
+            cloud_config.ses_domain_arn, region
+        )
 
         log_group_name = f"sns/{region}/{account_number}/DirectPublishToPhoneNumber"
         current_app.logger.info(
-            f"LOG GROUP NAME: {log_group_name} MESSAGE ID: {message_id}"
+            f"Log group name: {log_group_name} message id: {message_id}"
         )
         filter_pattern = '{$.notification.messageId="XXXXX"}'
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
         all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
-        current_app.logger.info(f"NUMBER OF ALL LOG EVENTS {len(all_log_events)}")
-
         if all_log_events and len(all_log_events) > 0:
-            current_app.logger.info(
-                "SHOULD RETURN SUCCESS BECAUSE WE FOUND A SUCCESS MESSAGE FOR MESSAGE ID"
-            )
             event = all_log_events[0]
             message = json.loads(event["message"])
             current_app.logger.info(f"MESSAGE {message}")
@@ -116,11 +117,8 @@ class AwsCloudwatchClient(Client):
         log_group_name = (
             f"sns/{region}/{account_number}/DirectPublishToPhoneNumber/Failure"
         )
-        current_app.logger.info(f"FAILURE LOG GROUP NAME {log_group_name}")
+        # current_app.logger.info(f"Failure log group name: {log_group_name}")
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
-        current_app.logger.info(
-            f"NUMBER OF ALL FAILED LOG EVENTS {len(all_failed_events)}"
-        )
         if all_failed_events and len(all_failed_events) > 0:
             current_app.logger.info("SHOULD RETURN FAILED BECAUSE WE FOUND A FAILURE")
             event = all_failed_events[0]
@@ -128,7 +126,6 @@ class AwsCloudwatchClient(Client):
             current_app.logger.info(f"MESSAGE {message}")
             return "failure", message["delivery"]["providerResponse"]
 
-        print(f"RAISING EXCEPTION FOR MESSAGE_ID {message_id}")
         raise Exception(
             f"No event found for message_id {message_id} notification_id {notification_id}"
         )
