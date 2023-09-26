@@ -86,3 +86,21 @@ def test_check_sms_failure(notify_api, mocker):
     assert "Failure" in mock_call
     assert "fail" in mock_call
     assert "notification.messageId" in mock_call
+
+
+def test_extract_account_number_gov_cloud():
+    domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
+    actual_account_number = aws_cloudwatch_client._extract_account_number(
+        domain_arn, "us-gov-west-1"
+    )
+    expected_account_number = "12345"
+    assert actual_account_number == expected_account_number
+
+
+def test_extract_account_number_gov_staging():
+    domain_arn = "arn:aws:ses:us-south-14:12345:identity/ses-abc.xxx.xxx.xxx"
+    actual_account_number = aws_cloudwatch_client._extract_account_number(
+        domain_arn, "us-south-14"
+    )
+    expected_account_number = "12345"
+    assert actual_account_number == expected_account_number
