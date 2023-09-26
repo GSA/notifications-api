@@ -22,8 +22,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         ref: main
-        with:
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - name: get ADR number
       id: next
