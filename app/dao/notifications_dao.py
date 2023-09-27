@@ -191,7 +191,9 @@ def dao_get_notification_count_for_job_id(*, job_id):
 
 
 def dao_get_notification_count_for_service(*, service):
-    return Notification.query.filter_by(service_id=service.id).count()
+    count = Notification.query.filter_by(service_id=service.id).count()
+    print(count)
+    return count
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
