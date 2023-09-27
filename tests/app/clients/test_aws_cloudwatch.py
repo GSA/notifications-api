@@ -54,7 +54,10 @@ def test_check_sms_success(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
     boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict("os.environ", {"SES_DOMAIN_ARN": "1111:"})
+    mocker.patch.dict(
+        "os.environ",
+        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
+    )
 
     message_id = "succeed"
     notification_id = "ccc"
@@ -73,8 +76,10 @@ def test_check_sms_failure(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
     boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict("os.environ", {"SES_DOMAIN_ARN": "1111:"})
-
+    mocker.patch.dict(
+        "os.environ",
+        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
+    )
     message_id = "fail"
     notification_id = "bbb"
     with notify_api.app_context():
@@ -90,17 +95,15 @@ def test_check_sms_failure(notify_api, mocker):
 
 def test_extract_account_number_gov_cloud():
     domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(
-        domain_arn, "us-gov-west-1"
-    )
+    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    assert len(actual_account_number) == 6
     expected_account_number = "12345"
-    assert actual_account_number == expected_account_number
+    assert actual_account_number[4] == expected_account_number
 
 
 def test_extract_account_number_gov_staging():
     domain_arn = "arn:aws:ses:us-south-14:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(
-        domain_arn, "us-south-14"
-    )
+    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    assert len(actual_account_number) == 6
     expected_account_number = "12345"
-    assert actual_account_number == expected_account_number
+    assert actual_account_number[4] == expected_account_number
