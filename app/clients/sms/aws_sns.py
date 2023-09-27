@@ -1,3 +1,4 @@
+import os
 import re
 from time import monotonic
 
@@ -16,13 +17,24 @@ class AwsSnsClient(SmsClient):
     """
 
     def init_app(self, current_app, *args, **kwargs):
-        self._client = client(
-            "sns",
-            region_name=cloud_config.sns_region,
-            aws_access_key_id=cloud_config.sns_access_key,
-            aws_secret_access_key=cloud_config.sns_secret_key,
-            config=AWS_CLIENT_CONFIG,
-        )
+        if os.getenv("LOCALSTACK_ENDPOINT_URL"):
+            self._client = client(
+                "sns",
+                region_name=cloud_config.sns_region,
+                aws_access_key_id=cloud_config.sns_access_key,
+                aws_secret_access_key=cloud_config.sns_secret_key,
+                config=AWS_CLIENT_CONFIG,
+                endpoint_url=os.getenv("LOCALSTACK_ENDPOINT_URL"),
+            )
+        else:
+            self._client = client(
+                "sns",
+                region_name=cloud_config.sns_region,
+                aws_access_key_id=cloud_config.sns_access_key,
+                aws_secret_access_key=cloud_config.sns_secret_key,
+                config=AWS_CLIENT_CONFIG,
+            )
+
         super(SmsClient, self).__init__(*args, **kwargs)
         self.current_app = current_app
         self._valid_sender_regex = re.compile(r"^\+?\d{5,14}$")

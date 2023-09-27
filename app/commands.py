@@ -263,6 +263,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
     # "send_texts,send_emails,view_activity"
     from app.service_invite.rest import create_invited_user
 
+    current_app.logger.info("ENTER")
     file = open(file_name)
     for email_address in file:
         data = {
@@ -273,6 +274,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
             "auth_type": auth_type,
             "invite_link_host": current_app.config["ADMIN_BASE_URL"],
         }
+        current_app.logger.info(f"DATA = {data}")
         with current_app.test_request_context(
             path="/service/{}/invite/".format(service_id),
             method="POST",
@@ -281,6 +283,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
         ):
             try:
                 response = create_invited_user(service_id)
+                current_app.logger.info(f"RESPONSE {response[1]}")
                 if response[1] != 201:
                     print(
                         "*** ERROR occurred for email address: {}".format(

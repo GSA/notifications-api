@@ -10,8 +10,8 @@ from flask import current_app
 import sqlalchemy as sa
 
 
-revision = '0402_total_message_limit_default'
-down_revision = '0401_add_e2e_test_user'
+revision = "0402_total_message_limit_default"
+down_revision = "0401_add_e2e_test_user"
 
 
 def upgrade():
