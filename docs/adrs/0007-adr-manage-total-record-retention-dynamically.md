@@ -1,7 +1,7 @@
 # ADR: Manage total record retention dynamically
 
 Status: Accepted
-Date: 
+Date: 09/27/23
 
 ### Context
 
