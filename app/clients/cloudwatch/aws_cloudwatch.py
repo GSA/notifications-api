@@ -80,28 +80,16 @@ class AwsCloudwatchClient(Client):
                 break
         return all_log_events
 
-    def _extract_account_number(self, ses_domain_arn, region):
-        account_number = ses_domain_arn
-        # handle cloud.gov case
-        if "aws-us-gov" in account_number:
-            account_number = account_number.replace(f"arn:aws-us-gov:ses:{region}:", "")
-            account_number = account_number.split(":")
-            account_number = account_number[0]
-        # handle staging case
-        else:
-            account_number = account_number.replace(f"arn:aws:ses:{region}:", "")
-            account_number = account_number.split(":")
-            account_number = account_number[0]
+    def _extract_account_number(self, ses_domain_arn):
+        account_number = ses_domain_arn.split(":")
         return account_number
 
     def check_sms(self, message_id, notification_id, created_at):
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
-        account_number = self._extract_account_number(
-            cloud_config.ses_domain_arn, region
-        )
+        account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
-        log_group_name = f"sns/{region}/{account_number}/DirectPublishToPhoneNumber"
+        log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
         current_app.logger.info(
             f"Log group name: {log_group_name} message id: {message_id}"
         )
