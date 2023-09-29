@@ -139,7 +139,11 @@ def update_notification_status_by_id(
         notification.provider_response = provider_response
     if not notification.sent_by and sent_by:
         notification.sent_by = sent_by
-    return _update_notification_status(notification=notification, status=status)
+    return _update_notification_status(
+        notification=notification,
+        status=status,
+        provider_response=notification.provider_response,
+    )
 
 
 @autocommit
@@ -288,24 +292,15 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
-@autocommit
-def sanitize_successful_notification_by_id(notification_id):
-    # TODO what to do for international?
-    # phone_prefix = '1'
-    # Notification.query.filter(
-    #     Notification.id.in_([notification_id]),
-    # ).update(
-    #     {'to': phone_prefix, 'normalised_to': phone_prefix, 'status': 'delivered'}
-    # )
-    # db.session.commit()
-
+def sanitize_successful_notification_by_id(notification_id, provider_response):
     update_query = """
-    update notifications set notification_status='delivered', "to"='1', normalised_to='1'
+    update notifications set provider_response=:response, notification_status='delivered', "to"='1', normalised_to='1'
     where id=:notification_id
     """
-    input_params = {"notification_id": notification_id}
+    input_params = {"notification_id": notification_id, "response": provider_response}
 
     db.session.execute(update_query, input_params)
+    db.session.commit()
 
 
 @autocommit

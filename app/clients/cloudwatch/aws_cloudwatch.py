@@ -103,7 +103,7 @@ class AwsCloudwatchClient(Client):
             return "success", message["delivery"]["providerResponse"]
 
         log_group_name = (
-            f"sns/{region}/{account_number}/DirectPublishToPhoneNumber/Failure"
+            f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
         # current_app.logger.info(f"Failure log group name: {log_group_name}")
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)

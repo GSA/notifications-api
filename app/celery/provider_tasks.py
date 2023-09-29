@@ -60,7 +60,9 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     # if status is not success or failure the client raised an exception and this method will retry
 
     if status == NOTIFICATION_DELIVERED:
-        sanitize_successful_notification_by_id(notification_id)
+        sanitize_successful_notification_by_id(
+            notification_id, provider_response=provider_response
+        )
         current_app.logger.info(
             f"Sanitized notification {notification_id} that was successfully delivered"
         )
