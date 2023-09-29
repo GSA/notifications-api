@@ -286,7 +286,6 @@ The equivalent command if you are running the API locally:
 docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf -r report.html
 ```
 
-
 # Deploying
 
 We deploy automatically to cloud.gov for production, demo, and staging environments.
@@ -727,13 +726,14 @@ Any changes to policies and procedures defined both here and in the SSPP must be
 that the security of the system is maintained.
 
 1. [Alerts, Notifications, Monitoring](#alerts)
-1. [Restaging Apps](#restaging-apps)
-1. [Smoke-testing the App](#smoke-testing)
-1. [Configuration Management](#cm)
-1. [DNS Changes](#dns)
-1. [Known Gotchas](#gotcha)
-1. [User Account Management](#ac)
-1. [SMS Phone Number Management](#phone-numbers)
+2. [Restaging Apps](#restaging-apps)
+3. [Smoke-testing the App](#smoke-testing)
+4. [Simulated bulk send testing](#simulated-bulk-send-testing)
+5. [Configuration Management](#cm)
+6. [DNS Changes](#dns)
+7. [Known Gotchas](#gotcha)
+8. [User Account Management](#ac)
+9. [SMS Phone Number Management](#phone-numbers)
 
 ## <a name="alerts"></a> Alerts, Notifications, Monitoring
 
@@ -791,6 +791,27 @@ To ensure that notifications are passing through the application properly, the f
 1. Send yourself a password reset email. This will verify SES integration. The email can be deleted once received if you don't wish to change your password.
 1. Log into the app. This will verify SNS integration for a one-off message.
 1. Upload a CSV and schedule send for the soonest time after "Now". This will verify S3 connections as well as scheduler and worker processes are running properly.
+
+## <a name="simulated-bulk-send-testing"></a> Simulated bulk send testing
+
+Assuming that you have followed all steps to set up localstack successfully (see docs/localstack.md), do the following:
+
+1. Create an sms template that requires no inputs from the user (i.e. the csv file will only have phone numbers)
+2. Uncomment the test 'test_generate_csv_for_bulk_testing' in app/test_utils.py
+3. Run `make test` on this project.  This will generate the csv file for the bulk test.
+4. If you are not a platform admin for your service when you run locally, do the following:
+   - >psql -d notification_api
+   - update users set platform_admin='t';
+   - \q
+   - sign out
+   - sign in.
+   - Go to settings and set the organization for your service to 'Broadcast services' (scroll down to platform admin)
+   - Go to settings and set your service to 'live' (scroll down to platform admin)
+5. Run your app 'locally'.  I.e. run `make run-procfile` on this project and `make run-flask` on the admin project
+6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead, 
+   you see your authentication code in green in the api logs
+7. Go to send messages and upload your csv file and send your 100000 messages
+
 
 ## <a name="cm"></a> Configuration Management
 

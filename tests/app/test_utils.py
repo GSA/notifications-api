@@ -90,3 +90,13 @@ def test_get_uuid_string_or_none():
 
 def test_get_public_notify_type_text():
     assert get_public_notify_type_text(UPLOAD_DOCUMENT) == "document"
+
+
+# This method is used for simulating bulk sends.  We use localstack and run on a developer's machine to do the
+# simulation.  Please see docs->bulk_testing.md for instructions.
+# def test_generate_csv_for_bulk_testing():
+#     f = open("bulktest_100000.csv", "w")
+#     f.write("phone number\n")
+#     for _ in range(0, 100000):
+#         f.write("16615555555\n")
+#     f.close()
