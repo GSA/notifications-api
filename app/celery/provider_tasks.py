@@ -56,9 +56,6 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
         except NotificationTechnicalFailureException as ntfe:
             provider_response = "Unable to find carrier response -- still looking"
             status = "pending"
-            current_app.logger.info(
-                "UPDATING WITH TEMPORARY FAILURE AND GOING TO RETRY"
-            )
             update_notification_status_by_id(
                 notification_id, status, provider_response=provider_response
             )
@@ -120,7 +117,6 @@ def deliver_sms(self, notification_id):
             queue=QueueNames.CHECK_SMS,
         )
     except Exception as e:
-        current_app.logger.info("TEMPORARY FAILURE!")
         update_notification_status_by_id(
             notification_id, NOTIFICATION_TEMPORARY_FAILURE
         )
@@ -140,7 +136,6 @@ def deliver_sms(self, notification_id):
             else:
                 self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
-            current_app.logger.info("PERMANENT FAILURE!")
             message = (
                 "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. "
                 "Notification has been updated to technical-failure".format(
