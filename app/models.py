@@ -1727,8 +1727,8 @@ class Notification(db.Model):
             "sms": {
                 "failed": "Failed",
                 "technical-failure": "Technical failure",
-                "temporary-failure": "Phone not accepting messages right now",
-                "permanent-failure": "Phone number doesn’t exist",
+                "temporary-failure": "Unable to find carrier response -- still looking",
+                "permanent-failure": "Unable to find carrier response.",
                 "delivered": "Delivered",
                 "sending": "Sending",
                 "created": "Sending",

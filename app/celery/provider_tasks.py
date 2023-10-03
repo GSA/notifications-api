@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta
-from time import time
 
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
@@ -21,6 +20,7 @@ from app.models import (
     NOTIFICATION_DELIVERED,
     NOTIFICATION_FAILED,
     NOTIFICATION_TECHNICAL_FAILURE,
+    NOTIFICATION_TEMPORARY_FAILURE,
 )
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
@@ -49,9 +49,17 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
         status = "success"
         provider_response = "this is a fake successful localstack sms message"
     else:
-        status, provider_response = aws_cloudwatch_client.check_sms(
-            message_id, notification_id, sent_at
-        )
+        try:
+            status, provider_response = aws_cloudwatch_client.check_sms(
+                message_id, notification_id, sent_at
+            )
+        except NotificationTechnicalFailureException as ntfe:
+            provider_response = "Unable to find carrier response -- still looking"
+            status = "pending"
+            update_notification_status_by_id(
+                notification_id, status, provider_response=provider_response
+            )
+            raise self.retry(exc=ntfe)
 
     if status == "success":
         status = NOTIFICATION_DELIVERED
@@ -80,8 +88,6 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
 )
 def deliver_sms(self, notification_id):
     try:
-        # Get the time we are doing the sending, to minimize the time period we need to check over for receipt
-        now = round(time() * 1000)
         current_app.logger.info(
             "Start sending SMS for notification id: {}".format(notification_id)
         )
@@ -106,9 +112,14 @@ def deliver_sms(self, notification_id):
             seconds=DELIVERY_RECEIPT_DELAY_IN_SECONDS
         )
         check_sms_delivery_receipt.apply_async(
-            [message_id, notification_id, now], eta=my_eta, queue=QueueNames.CHECK_SMS
+            [message_id, notification_id, notification.created_at],
+            eta=my_eta,
+            queue=QueueNames.CHECK_SMS,
         )
     except Exception as e:
+        update_notification_status_by_id(
+            notification_id, NOTIFICATION_TEMPORARY_FAILURE
+        )
         if isinstance(e, SmsClientResponseException):
             current_app.logger.warning(
                 "SMS notification delivery for id: {} failed".format(notification_id),

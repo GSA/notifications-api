@@ -139,8 +139,12 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
         ("email", "technical-failure", "Technical failure"),
         ("email", "temporary-failure", "Inbox not accepting messages right now"),
         ("email", "permanent-failure", "Email address doesn’t exist"),
-        ("sms", "temporary-failure", "Phone not accepting messages right now"),
-        ("sms", "permanent-failure", "Phone number doesn’t exist"),
+        (
+            "sms",
+            "temporary-failure",
+            "Unable to find carrier response -- still looking",
+        ),
+        ("sms", "permanent-failure", "Unable to find carrier response."),
         ("sms", "sent", "Sent internationally"),
     ],
 )

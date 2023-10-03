@@ -54,19 +54,13 @@ def receive_sns_sms():
             )
             return jsonify(result="success", message="SMS-SNS callback succeeded"), 200
 
-        content = message.get("messageBody")
-        from_number = message.get("originationNumber")
-        provider_ref = message.get("inboundMessageId")
-        date_received = post_data.get("Timestamp")
-        provider_name = "sns"
-
         inbound = create_inbound_sms_object(
             service,
-            content=content,
-            from_number=from_number,
-            provider_ref=provider_ref,
-            date_received=date_received,
-            provider_name=provider_name,
+            content=message.get("messageBody"),
+            from_number=message.get("originationNumber"),
+            provider_ref=message.get("inboundMessageId"),
+            date_received=post_data.get("Timestamp"),
+            provider_name="sns",
         )
 
         tasks.send_inbound_sms_to_service.apply_async(

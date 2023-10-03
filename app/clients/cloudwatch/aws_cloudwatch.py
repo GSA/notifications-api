@@ -2,12 +2,14 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timedelta
 
 from boto3 import client
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
+from app.exceptions import NotificationTechnicalFailureException
 
 
 class AwsCloudwatchClient(Client):
@@ -59,14 +61,14 @@ class AwsCloudwatchClient(Client):
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
                     nextToken=next_token,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             else:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             log_events = response.get("events", [])
@@ -89,6 +91,7 @@ class AwsCloudwatchClient(Client):
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
+        time_now = datetime.utcnow()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
         current_app.logger.info(
             f"Log group name: {log_group_name} message id: {message_id}"
@@ -105,7 +108,7 @@ class AwsCloudwatchClient(Client):
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
-        # current_app.logger.info(f"Failure log group name: {log_group_name}")
+        current_app.logger.info(f"Failure log group name: {log_group_name}")
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_failed_events and len(all_failed_events) > 0:
             current_app.logger.info("SHOULD RETURN FAILED BECAUSE WE FOUND A FAILURE")
@@ -114,6 +117,10 @@ class AwsCloudwatchClient(Client):
             current_app.logger.info(f"MESSAGE {message}")
             return "failure", message["delivery"]["providerResponse"]
 
-        raise Exception(
+        if time_now > (created_at + timedelta(hours=3)):
+            # see app/models.py Notification. This message corresponds to "permanent-failure",
+            # but we are copy/pasting here to avoid circular imports.
+            return "failure", "Unable to find carrier response."
+        raise NotificationTechnicalFailureException(
             f"No event found for message_id {message_id} notification_id {notification_id}"
         )

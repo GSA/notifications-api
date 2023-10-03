@@ -105,7 +105,7 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_sms_task(
         queue="retry-tasks", countdown=0
     )
 
-    assert sample_notification.status == "technical-failure"
+    assert sample_notification.status == "temporary-failure"
     assert mock_logger_exception.called
 
 
