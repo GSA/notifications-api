@@ -2,9 +2,8 @@ import json
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from _datetime import timedelta
 from boto3 import client
 from flask import current_app
 
