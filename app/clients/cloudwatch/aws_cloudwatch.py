@@ -61,14 +61,14 @@ class AwsCloudwatchClient(Client):
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
                     nextToken=next_token,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             else:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             log_events = response.get("events", [])
