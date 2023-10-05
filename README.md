@@ -29,6 +29,7 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
     * [postgresql](https://www.postgresql.org/): `brew install postgresql@15` (Homebrew requires a version pin, but any recent version will work)
     * [redis](https://redis.io/): `brew install redis`
     * [pyenv](https://github.com/pyenv/pyenv): `brew install pyenv`
+    * [poetry](https://python-poetry.org/docs/#installation): `brew install poetry`
 1. [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
 1. Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov
 1. Run the development terraform with:
@@ -39,19 +40,19 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
         ```
 
 1. If you want to send data to New Relic from your local develpment environment, set `NEW_RELIC_LICENSE_KEY` within `.env`
-1. Follow the instructions for either `Direct installation` or `Docker installation` below
+1. Start Postgres && Redis
 
-### Direct installation
+         ```
+         brew services start postgresql@15
+         brew services start redis
+         ```
 
-1. Set up Postgres && Redis on your machine
-
-1. Install [poetry](https://python-poetry.org/docs/#installation)
-
+1. Install 
 1. Run the project setup
 
     `make bootstrap`
 
-1. Run the web server and background worker
+1. Run the web server and background workers
 
     `make run-procfile`
 
@@ -64,33 +65,6 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
     * Run Celery (background worker)
 
         `make run-celery`
-
-
-### VS Code && Docker installation
-
-If you're working in VS Code, you can also leverage Docker for a containerized dev environment
-
-1. Uncomment the `Local Docker setup` lines in `.env` and comment out the `Local direct setup` lines.
-
-1. Install the Remote-Containers plug-in in VS Code
-
-1. With Docker running, create the network:
-
-    `docker network create notify-network`
-
-1. Using the command palette (shift+cmd+p) or green button thingy in the bottom left, search and select “Remote Containers: Open Folder in Container...” When prompted, choose **devcontainer-api** folder (note: this is a *subfolder* of notifications-api). This will start the container in a new window, replacing the current one.
-
-1. Wait a few minutes while things happen 🍵
-
-1. Open a VS Code terminal and run the Flask application:
-
-    `make run-flask`
-
-1. Open another VS Code terminal and run Celery:
-
-    `make run-celery`
-
-NOTE: when you change .env in the future, you'll need to rebuild the devcontainer for the change to take effect. VS Code _should_ detect the change and prompt you with a toast notification during a cached build. If not, you can find a manual rebuild in command pallette or just `docker rm` the notifications-api container.
 
 ### Known installation issues
 

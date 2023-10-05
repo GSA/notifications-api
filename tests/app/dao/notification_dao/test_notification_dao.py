@@ -109,10 +109,16 @@ def test_should_be_able_to_sanitize_successful_notification(
     assert Notification.query.get(notification.id).status == "sending"
 
     with freeze_time("2000-01-02 12:00:00"):
-        sanitize_successful_notification_by_id(notification.id)
+        sanitize_successful_notification_by_id(
+            notification.id, provider_response="Don't know what happened"
+        )
         assert Notification.query.get(notification.id).status == "delivered"
         assert Notification.query.get(notification.id).normalised_to == "1"
         assert Notification.query.get(notification.id).to == "1"
+        assert (
+            Notification.query.get(notification.id).provider_response
+            == "Don't know what happened"
+        )
 
 
 def test_should_not_update_status_by_id_if_not_sending_and_does_not_update_job(

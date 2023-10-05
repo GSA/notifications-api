@@ -75,14 +75,18 @@ jobs:
         run: make bootstrap
         env:
           SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+          NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+          NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
+          NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
+          NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
       - name: Run server
         run: make run-flask &
         env:
           SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-      - name: Run OWASP Baseline Scan
-        uses: zaproxy/action-api-scan@v0.4.0
+      - name: Run OWASP API Scan
+        uses: zaproxy/action-api-scan@v0.5.0
         with:
-          docker_name: 'owasp/zap2docker-weekly'
+          docker_name: 'ghcr.io/zaproxy/zaproxy:weekly'
           target: 'http://localhost:6011/docs/openapi.yml'
           fail_action: true
           allow_issue_writing: false

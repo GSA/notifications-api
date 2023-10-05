@@ -1,4 +1,6 @@
 # import pytest
+from datetime import datetime
+
 from flask import current_app
 
 from app import aws_cloudwatch_client
@@ -54,12 +56,16 @@ def test_check_sms_success(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
     boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict("os.environ", {"SES_DOMAIN_ARN": "1111:"})
+    mocker.patch.dict(
+        "os.environ",
+        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
+    )
 
     message_id = "succeed"
     notification_id = "ccc"
+    created_at = datetime.utcnow()
     with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id, 1000000000000)
+        aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
 
     # We check the 'success' log group first and if we find the message_id, we are done, so there is only 1 call
     assert boto_mock.filter_log_events.call_count == 1
@@ -73,12 +79,15 @@ def test_check_sms_failure(notify_api, mocker):
     aws_cloudwatch_client.init_app(current_app)
     boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
     boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict("os.environ", {"SES_DOMAIN_ARN": "1111:"})
-
+    mocker.patch.dict(
+        "os.environ",
+        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
+    )
     message_id = "fail"
     notification_id = "bbb"
+    created_at = datetime.utcnow()
     with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id, 1000000000000)
+        aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
 
     # We check the 'success' log group and find nothing, so we then check the 'fail' log group -- two calls.
     assert boto_mock.filter_log_events.call_count == 2
@@ -90,17 +99,15 @@ def test_check_sms_failure(notify_api, mocker):
 
 def test_extract_account_number_gov_cloud():
     domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(
-        domain_arn, "us-gov-west-1"
-    )
+    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    assert len(actual_account_number) == 6
     expected_account_number = "12345"
-    assert actual_account_number == expected_account_number
+    assert actual_account_number[4] == expected_account_number
 
 
 def test_extract_account_number_gov_staging():
     domain_arn = "arn:aws:ses:us-south-14:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(
-        domain_arn, "us-south-14"
-    )
+    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    assert len(actual_account_number) == 6
     expected_account_number = "12345"
-    assert actual_account_number == expected_account_number
+    assert actual_account_number[4] == expected_account_number

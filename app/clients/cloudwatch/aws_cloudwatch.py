@@ -2,12 +2,14 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timedelta
 
 from boto3 import client
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
+from app.exceptions import NotificationTechnicalFailureException
 
 
 class AwsCloudwatchClient(Client):
@@ -59,14 +61,14 @@ class AwsCloudwatchClient(Client):
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
                     nextToken=next_token,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             else:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
-                    startTime=beginning,
+                    startTime=int(beginning.timestamp() * 1000),
                     endTime=now,
                 )
             log_events = response.get("events", [])
@@ -80,28 +82,17 @@ class AwsCloudwatchClient(Client):
                 break
         return all_log_events
 
-    def _extract_account_number(self, ses_domain_arn, region):
-        account_number = ses_domain_arn
-        # handle cloud.gov case
-        if "aws-us-gov" in account_number:
-            account_number = account_number.replace(f"arn:aws-us-gov:ses:{region}:", "")
-            account_number = account_number.split(":")
-            account_number = account_number[0]
-        # handle staging case
-        else:
-            account_number = account_number.replace(f"arn:aws:ses:{region}:", "")
-            account_number = account_number.split(":")
-            account_number = account_number[0]
+    def _extract_account_number(self, ses_domain_arn):
+        account_number = ses_domain_arn.split(":")
         return account_number
 
     def check_sms(self, message_id, notification_id, created_at):
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
-        account_number = self._extract_account_number(
-            cloud_config.ses_domain_arn, region
-        )
+        account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
-        log_group_name = f"sns/{region}/{account_number}/DirectPublishToPhoneNumber"
+        time_now = datetime.utcnow()
+        log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
         current_app.logger.info(
             f"Log group name: {log_group_name} message id: {message_id}"
         )
@@ -115,9 +106,9 @@ class AwsCloudwatchClient(Client):
             return "success", message["delivery"]["providerResponse"]
 
         log_group_name = (
-            f"sns/{region}/{account_number}/DirectPublishToPhoneNumber/Failure"
+            f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
-        # current_app.logger.info(f"Failure log group name: {log_group_name}")
+        current_app.logger.info(f"Failure log group name: {log_group_name}")
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_failed_events and len(all_failed_events) > 0:
             current_app.logger.info("SHOULD RETURN FAILED BECAUSE WE FOUND A FAILURE")
@@ -126,6 +117,10 @@ class AwsCloudwatchClient(Client):
             current_app.logger.info(f"MESSAGE {message}")
             return "failure", message["delivery"]["providerResponse"]
 
-        raise Exception(
+        if time_now > (created_at + timedelta(hours=3)):
+            # see app/models.py Notification. This message corresponds to "permanent-failure",
+            # but we are copy/pasting here to avoid circular imports.
+            return "failure", "Unable to find carrier response."
+        raise NotificationTechnicalFailureException(
             f"No event found for message_id {message_id} notification_id {notification_id}"
         )
