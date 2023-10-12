@@ -950,6 +950,10 @@ Once you have a number, it must be set in the app in one of two ways:
 * +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number
 * +18447891134 - to be used by Pilot Partner 1
 * +18888402596 - to be used by Pilot Partner 2
+* +18555317292
+* +18889046435
+* +18447342791
+* +18447525067
 
 
 Data Storage Policies & Procedures
