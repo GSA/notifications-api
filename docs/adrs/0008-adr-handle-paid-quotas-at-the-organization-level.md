@@ -13,6 +13,8 @@ We have already decided to [connect organizations and agreements together](.docs
 
 We will move paid and free quotas from `Service` to `Organization`. Each service should draw its quota from its associated organization.
 
+Any conversion between dollars and messages should happen upstream of these models, in the `Agreement` class.
+
 We considered moving paid quotas while leaving free quotas at the service level, but as our current MOU specifies the total messages that would create some service-management headaches.
 
 We also considered validating service quotas based on organization-associated agreements. This would add some configurability, but is over-complex for the application's current usage.
@@ -33,11 +35,21 @@ At this time, services will pull directly from the organization's quota. We may 
 
 ### Next Steps
 
+**Step 1: Data flow**
+- Add a method that determines the active `Agreement` for an `Organization` based on the agreement's period of performance and signed status
 - Add a method that determines a quota for `Organization` based on the linked `Agreement` value
 - Move existing `Service` quota to exist on the organization instead
 - Add method for service to determine its remaining quota based on the organization
+
+**Step 2: Usage calculations**
 - Add a method to calculate message usage for an organization
-- Add organization selection to service creation form
-- Add sending validator for the organization limit
-- Convert service `organization_type` to pull from associated organization instead of being a separate field
-- Add a sandbox organization for unaffiliated trial-only services
+- Update sending validator to use the organization limit
+
+**Step 3: Cleanup**
+- Remove service `organization_type`
+- Add local, tribal, and territory to `ORGANIZATION_TYPES`
+- Remove legacy `agreement_*` fields from `Organization`
+
+**Step 4: Follow-up ADRs**
+- ADR for IAA support with paid message quotas
+- ADR for usage calculation (i.e. Redis key vs DB counting)
