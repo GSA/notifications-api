@@ -1040,7 +1040,7 @@ def check_if_reply_to_address_already_in_use(service_id, email_address):
         )
 
 
-@service_blueprint.route("/<uuid:service_id>/notification_count", methods=["GET"])
-def get_notification_count_for_job_id(service):
-    count = dao_get_notification_count_for_service(service=service)
+@service_blueprint.route("/service/<uuid:service_id>/notification-count", methods=["GET"])
+def get_notification_count_for_job_id(service_id):
+    count = dao_get_notification_count_for_service(service_id=service_id)
     return jsonify(count=count), 200
