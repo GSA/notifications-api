@@ -38,6 +38,7 @@
   - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
   - [ Restaging Apps](#-restaging-apps)
   - [ Smoke-testing the App](#-smoke-testing-the-app)
+  - [ Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [ Configuration Management](#-configuration-management)
   - [ DNS Changes](#-dns-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
@@ -288,7 +289,15 @@ docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t 
 
 # Deploying
 
-We deploy automatically to cloud.gov for production, demo, and staging environments.
+The API has 3 deployment environments, all of which deploy to cloud.gov:
+
+- Staging, which deploys from `main`
+- Demo, which deploys from `production`
+- Production, which deploys from `production`
+
+Configurations for these are located in [the `deploy-config` folder](../deploy-config/). This setup is duplicated for the front end.
+
+To trigger a new deploy, create a pull request from `main` to `production` in GitHub. This PR typically has release notes highlighting major and minor changes in the deployment. For help preparing this, [sorting closed pull requests by "recently updated"](https://github.com/GSA/notifications-api/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aclosed) will show all PRs merged since the last production deploy.
 
 Deployment to staging runs via the [base deployment action](../.github/workflows/deploy.yml) on GitHub, which pulls credentials from GitHub's secrets store in the staging environment.
 
@@ -297,14 +306,6 @@ Deployment to demo runs via the [demo deployment action](../.github/workflows/de
 Deployment to production runs via the [production deployment action](../.github/workflows/deploy-prod.yml) on GitHub, which pulls credentials from GitHub's secrets store in the production environment.
 
 The [action that we use](https://github.com/18F/cg-deploy-action) deploys using [a rolling strategy](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html), so all deployments should have zero downtime.
-
-The API has 3 deployment environments:
-
-- Staging, which deploys from `main`
-- Demo, which deploys from `production`
-- Production, which deploys from `production`
-
-Configurations for these are located in [the `deploy-config` folder](../deploy-config/).
 
 In the event that a deployment includes a Terraform change, that change will run before any code is deployed to the environment. Each environment has its own Terraform GitHub Action to handle that change.
 
