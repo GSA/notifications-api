@@ -227,7 +227,7 @@ def create_service():
     valid_service = Service.from_json(data)
 
     with transaction():
-        dao_create_service(valid_service, user)
+        dao_create_service(valid_service, user, create_default_sms_sender=True)
         set_default_free_allowance_for_service(service=valid_service, year_start=None)
 
     return jsonify(data=service_schema.dump(valid_service)), 201
