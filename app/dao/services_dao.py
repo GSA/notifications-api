@@ -273,6 +273,7 @@ def dao_create_service(
     user,
     service_id=None,
     service_permissions=None,
+    create_default_sms_sender=False,
 ):
     if not user:
         raise ValueError("Can't create a service without a user")
@@ -297,8 +298,11 @@ def dao_create_service(
         )
         service.permissions.append(service_permission)
 
-    # do we just add the default - or will we get a value from FE?
-    insert_service_sms_sender(service, current_app.config["FROM_NUMBER"])
+    # We are removing an sms default sender from being added to each
+    # service as it is created, but we will pass a default flag
+    # because some tests need a default number.
+    if create_default_sms_sender:
+        insert_service_sms_sender(service, current_app.config["FROM_NUMBER"])
 
     if organization:
         service.organization_id = organization.id

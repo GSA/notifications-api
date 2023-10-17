@@ -226,8 +226,16 @@ def create_service():
     # unpack valid json into service object
     valid_service = Service.from_json(data)
 
+    # Grabbing flag from request object for default SMS sender.
+    # This will only be true in our tests now; the value will default to false in normal app usage.
+    create_default_sms_sender = bool(
+        request.args.get("create_default_sms_sender", False)
+    )
+
     with transaction():
-        dao_create_service(valid_service, user)
+        dao_create_service(
+            valid_service, user, create_default_sms_sender=create_default_sms_sender
+        )
         set_default_free_allowance_for_service(service=valid_service, year_start=None)
 
     return jsonify(data=service_schema.dump(valid_service)), 201
