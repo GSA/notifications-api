@@ -404,7 +404,6 @@ def test_create_service(
     )
 
     assert json_resp["data"]["name"] == "created service"
-    # insert_service_sms_sender(service, current_app.config["FROM_NUMBER"])
     service_sms_senders = ServiceSmsSender.query.filter_by(
         service_id=service_db.id
     ).all()
