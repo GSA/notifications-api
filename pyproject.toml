@@ -60,13 +60,13 @@ psycopg2-binary = "==2.9.3"
 pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 radon = "==6.0.1"
+regex = "==2023.10.3"
 sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
 vulture = "==2.10"
 packaging = "==23.1"
-notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
+notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "notify-admin-687"}
 newrelic = "*"
-
 
 [tool.poetry.group.dev.dependencies]
 exceptiongroup = "==1.1.3"
