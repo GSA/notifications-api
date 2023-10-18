@@ -65,7 +65,7 @@ sqlalchemy = "==1.4.40"
 werkzeug = "~=2.3"
 vulture = "==2.10"
 packaging = "==23.1"
-notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
+notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "notify-admin-687"}
 newrelic = "*"
 
 [tool.poetry.group.dev.dependencies]
