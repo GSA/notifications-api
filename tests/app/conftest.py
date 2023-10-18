@@ -219,7 +219,12 @@ def sample_service(sample_user):
     service = Service.query.filter_by(name=service_name).first()
     if not service:
         service = Service(**data)
-        dao_create_service(service, sample_user, service_permissions=None)
+        dao_create_service(
+            service,
+            sample_user,
+            service_permissions=None,
+            create_default_sms_sender=True,
+        )
     else:
         if sample_user not in service.users:
             dao_add_user_to_service(service, sample_user)
@@ -241,7 +246,9 @@ def _sample_service_full_permissions(notify_db_session):
 @pytest.fixture(scope="function")
 def sample_template(sample_user):
     service = create_service(
-        service_permissions=[EMAIL_TYPE, SMS_TYPE], check_if_service_exists=True
+        service_permissions=[EMAIL_TYPE, SMS_TYPE],
+        check_if_service_exists=True,
+        create_default_sms_sender=True,
     )
 
     data = {
@@ -798,6 +805,7 @@ def notify_service(notify_db_session, sample_user):
             service=service,
             service_id=current_app.config["NOTIFY_SERVICE_ID"],
             user=sample_user,
+            create_default_sms_sender=True,
         )
 
         data = {
