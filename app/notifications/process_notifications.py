@@ -141,7 +141,9 @@ def persist_notification(
                     service.id
                 )
             )
-            total_key = redis.daily_total_cache_key()
+            # TODO FIX!
+            # total_key = redis.daily_total_cache_key()
+            total_key = 0
             if redis_store.get(total_key) is None:
                 current_app.logger.info("Redis daily total cache key does not exist")
                 redis_store.set(total_key, 1, ex=86400)
