@@ -554,7 +554,8 @@ class Service(db.Model, Versioned):
 
     def get_default_sms_sender(self):
         default_sms_sender = [x for x in self.service_sms_senders if x.is_default]
-        return default_sms_sender[0].sms_sender
+        return "sns"
+        # return default_sms_sender[0].sms_sender
 
     def get_default_reply_to_email_address(self):
         default_reply_to = [x for x in self.reply_to_email_addresses if x.is_default]
@@ -1598,6 +1599,8 @@ class Notification(db.Model):
     document_download_count = db.Column(db.Integer, nullable=True)
 
     provider_response = db.Column(db.Text, nullable=True)
+    carrier = db.Column(db.Text, nullable=True)
+
     # queue_name = db.Column(db.Text, nullable=True)
 
     __table_args__ = (
@@ -1788,6 +1791,7 @@ class Notification(db.Model):
             "type": self.notification_type,
             "status": self.status,
             "provider_response": self.provider_response,
+            "carrier": self.carrier,
             "template": template_dict,
             "body": self.content,
             "subject": self.subject,
