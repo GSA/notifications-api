@@ -103,7 +103,11 @@ class AwsCloudwatchClient(Client):
             event = all_log_events[0]
             message = json.loads(event["message"])
             current_app.logger.info(f"MESSAGE {message}")
-            return "success", message["delivery"]["providerResponse"]
+            return (
+                "success",
+                message["delivery"]["providerResponse"],
+                message["delivery"]["phoneCarrier"],
+            )
 
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
@@ -115,12 +119,16 @@ class AwsCloudwatchClient(Client):
             event = all_failed_events[0]
             message = json.loads(event["message"])
             current_app.logger.info(f"MESSAGE {message}")
-            return "failure", message["delivery"]["providerResponse"]
+            return (
+                "failure",
+                message["delivery"]["providerResponse"],
+                message["delivery"]["phoneCarrier"],
+            )
 
         if time_now > (created_at + timedelta(hours=3)):
             # see app/models.py Notification. This message corresponds to "permanent-failure",
             # but we are copy/pasting here to avoid circular imports.
-            return "failure", "Unable to find carrier response."
+            return "failure", "Unable to find carrier response.", "unknown"
         raise NotificationTechnicalFailureException(
             f"No event found for message_id {message_id} notification_id {notification_id}"
         )

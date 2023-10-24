@@ -48,16 +48,21 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     if aws_cloudwatch_client.is_localstack():
         status = "success"
         provider_response = "this is a fake successful localstack sms message"
+        carrier = "unknown"
     else:
         try:
-            status, provider_response = aws_cloudwatch_client.check_sms(
+            status, provider_response, carrier = aws_cloudwatch_client.check_sms(
                 message_id, notification_id, sent_at
             )
         except NotificationTechnicalFailureException as ntfe:
             provider_response = "Unable to find carrier response -- still looking"
             status = "pending"
+            carrier = ""
             update_notification_status_by_id(
-                notification_id, status, provider_response=provider_response
+                notification_id,
+                status,
+                carrier=carrier,
+                provider_response=provider_response,
             )
             raise self.retry(exc=ntfe)
 
@@ -69,14 +74,17 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
 
     if status == NOTIFICATION_DELIVERED:
         sanitize_successful_notification_by_id(
-            notification_id, provider_response=provider_response
+            notification_id, carrier=carrier, provider_response=provider_response
         )
         current_app.logger.info(
             f"Sanitized notification {notification_id} that was successfully delivered"
         )
     else:
         update_notification_status_by_id(
-            notification_id, status, provider_response=provider_response
+            notification_id,
+            status,
+            carrier=carrier,
+            provider_response=provider_response,
         )
         current_app.logger.info(
             f"Updated notification {notification_id} with response '{provider_response}'"
