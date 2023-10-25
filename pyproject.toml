@@ -61,7 +61,7 @@ pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 radon = "==6.0.1"
 sqlalchemy = "==1.4.40"
-werkzeug = "~=2.3"
+werkzeug = "~=3.0"
 vulture = "==2.10"
 packaging = "==23.1"
 notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
