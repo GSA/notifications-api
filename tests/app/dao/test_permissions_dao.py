@@ -1,3 +1,5 @@
+import pytest
+
 from app.dao import DAOClass
 from app.dao.permissions_dao import permission_dao
 from tests.app.db import create_service
@@ -45,3 +47,14 @@ def test_dao_class(sample_user):
         dao.delete_instance(permission, True)
     permissions = permission_dao.get_permissions_by_user_id(user_id=sample_user.id)
     assert len(permissions) == 0
+
+
+def test_set_user_service_permission_exception(mocker, sample_user, sample_service):
+    permissions = permission_dao.get_permissions_by_user_id(user_id=sample_user.id)
+    mocker.patch.object(
+        permission_dao, "create_instance", side_effect=Exception("Test Exception")
+    )
+    with pytest.raises(Exception, match="Test Exception"):
+        permission_dao.set_user_service_permission(
+            sample_user, sample_service, permissions
+        )
