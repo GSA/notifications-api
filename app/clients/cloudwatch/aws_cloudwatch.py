@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import time
 from datetime import datetime, timedelta
 
 from boto3 import client
@@ -51,25 +50,30 @@ class AwsCloudwatchClient(Client):
 
     def _get_log(self, my_filter, log_group_name, sent_at):
         # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
-        now = round(time.time() * 1000)
+        now = datetime.utcnow()
         beginning = sent_at
         next_token = None
         all_log_events = []
+        current_app.logger.info(f"START TIME {beginning} END TIME {now}")
+        # There has been a change somewhere and the time range we were previously using has become too
+        # narrow or wrong in some way, so events can't be found.  For the time being, adjust by adding
+        # a buffer on each side of 12 hours.
+        TWELVE_HOURS = 12 * 60 * 60 * 1000
         while True:
             if next_token:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
                     nextToken=next_token,
-                    startTime=int(beginning.timestamp() * 1000),
-                    endTime=now,
+                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
+                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
                 )
             else:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
                     filterPattern=my_filter,
-                    startTime=int(beginning.timestamp() * 1000),
-                    endTime=now,
+                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
+                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
                 )
             log_events = response.get("events", [])
             all_log_events.extend(log_events)
@@ -87,6 +91,7 @@ class AwsCloudwatchClient(Client):
         return account_number
 
     def check_sms(self, message_id, notification_id, created_at):
+        current_app.logger.info(f"CREATED AT = {created_at}")
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
