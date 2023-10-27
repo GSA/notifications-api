@@ -69,7 +69,7 @@ def check_service_over_total_message_limit(key_type, service):
 def check_application_over_retention_limit(key_type, service):
     if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
-    total_stats = dao_get_notification_count_for_service(service=service)
+    total_stats = dao_get_notification_count_for_service(service_id=service.id)
 
     daily_message_limit = current_app.config["DAILY_MESSAGE_LIMIT"]
 

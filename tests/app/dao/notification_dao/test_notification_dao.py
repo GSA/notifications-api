@@ -602,7 +602,7 @@ def test_dao_get_notification_count_for_service(notify_db_session):
 
     create_notification(template)
 
-    assert dao_get_notification_count_for_service(service=service) == 1
+    assert dao_get_notification_count_for_service(service_id=service.id) == 1
 
 
 def test_dao_get_notification_count_for_job_id_returns_zero_for_no_notifications_for_job(
