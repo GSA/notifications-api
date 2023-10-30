@@ -81,9 +81,13 @@ test: ## Run tests and create coverage report
 	poetry run coverage report -m --fail-under=95
 	poetry run coverage html -d .coverage_cache
 
+.PHONY: py-lock
+py-lock: ## Syncs dependencies and updates lock file without performing recursive internal updates
+	poetry lock --no-update
+
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
-	poetry lock
+	poetry lock --no-update
 	poetry requirements
 
 .PHONY: audit
