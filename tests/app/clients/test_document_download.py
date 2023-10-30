@@ -75,8 +75,8 @@ def test_should_raise_non_400_statuses_as_exceptions(document_download):
 
         document_download.upload_document("service-id", "abababab")
 
-    assert (
-        isinstance(excinfo.value) == Exception
+    assert isinstance(
+        excinfo.value, Exception
     )  # make sure it's a base exception, so will be handled as a 500 by v2 api
     assert (
         str(excinfo.value)
@@ -97,7 +97,7 @@ def test_should_raise_exceptions_without_http_response_bodies_as_exceptions(
 
         document_download.upload_document("service-id", "abababab")
 
-    assert (
-        isinstance(excinfo.value) == Exception
+    assert isinstance(
+        excinfo.value, Exception
     )  # make sure it's a base exception, so will be handled as a 500 by v2 api
     assert str(excinfo.value) == "Unhandled document download error: ConnectTimeout()"
