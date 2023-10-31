@@ -26,7 +26,7 @@ cachetools = "==5.3.1"
 celery = {version = "==5.2.7", extras = ["redis"]}
 certifi = ">=2022.12.7"
 cffi = "==1.16.0"
-charset-normalizer = "==2.0.12"
+charset-normalizer = "==3.3.1"
 click = "==8.1.6"
 click-datetime = "==0.2"
 click-didyoumean = "==0.3.0"
