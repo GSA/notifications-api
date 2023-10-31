@@ -47,7 +47,7 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
          brew services start redis
          ```
 
-1. Install 
+1. Install
 1. Run the project setup
 
     `make bootstrap`
@@ -66,11 +66,44 @@ On MacOS, using [Homebrew](https://brew.sh/) for package management is highly re
 
         `make run-celery`
 
+### Python dependency management
+
+We're using [`Poetry`](https://python-poetry.org/) for managing our Python
+dependencies and local virtual environments.  When it comes to managing the
+Python dependencies, there are a couple of things to bear in mind.
+
+For situations where you manually manipulate the `pyproject.toml` file, you
+should use the `make py-lock` command to sync the `poetry.lock` file.  This will
+ensure that you don't inadvertently bring in other transitive dependency updates
+that have not been fully tested with the project yet.
+
+If you're just trying to update a dependency to a newer (or the latest) version,
+you should let Poetry take care of that for you by running the following:
+
+```
+poetry update <dependency> [<dependency>...]
+```
+
+You can specify more than one dependency together.  With this command, Poetry
+will do the following for you:
+
+- Find the latest compatible version(s) of the specified dependency/dependencies
+- Install the new versions
+- Update and sync the `poetry.lock` file
+
+In either situation, once you are finished and have verified the dependency
+changes are working, please be sure to commit both the `pyproject.toml` and
+`poetry.lock` files.
+
 ### Known installation issues
 
-On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a different method of installing Python. Installation via `pyenv` is known to work.
+On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a
+different method of installing Python. Installation via `pyenv` is known to
+work.
 
-A direct installation of PostgreSQL will not put the `createdb` command on your `$PATH`. It can be added there in your shell startup script, or a Homebrew-managed installation of PostgreSQL will take care of it.
+A direct installation of PostgreSQL will not put the `createdb` command on your
+`$PATH`. It can be added there in your shell startup script, or a
+Homebrew-managed installation of PostgreSQL will take care of it.
 
 ## Documentation
 
