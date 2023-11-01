@@ -12,7 +12,7 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry install
+	poetry install --sync
 	poetry self add poetry-dotenv-plugin
 	createdb notification_api || true
 	(poetry run flask db upgrade) || true
@@ -84,6 +84,14 @@ test: ## Run tests and create coverage report
 .PHONY: py-lock
 py-lock: ## Syncs dependencies and updates lock file without performing recursive internal updates
 	poetry lock --no-update
+	poetry install --sync
+
+.PHONY: update-utils
+update-utils: ## Forces Poetry to pull the latest changes from the notifications-utils repo; requires that you commit the changes to poetry.lock!
+	poetry update notifications-utils
+	@echo
+	@echo !!! PLEASE MAKE SURE TO COMMIT AND PUSH THE UPDATED poetry.lock FILE !!!
+	@echo
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
@@ -94,7 +102,7 @@ audit:
 	poetry requirements > requirements.txt
 	poetry requirements --dev > requirements_for_test.txt
 	poetry run pip-audit -r requirements.txt
-	-poetry run pip-audit -r requirements_for_test.txt
+	poetry run pip-audit -r requirements_for_test.txt
 
 .PHONY: static-scan
 static-scan:

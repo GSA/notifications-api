@@ -7,7 +7,7 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.12"
 alembic = "==1.12.0"
 amqp = "==5.1.1"
 arrow = "==1.2.3"
@@ -26,7 +26,7 @@ cachetools = "==5.3.1"
 celery = {version = "==5.2.7", extras = ["redis"]}
 certifi = ">=2022.12.7"
 cffi = "==1.16.0"
-charset-normalizer = "==2.0.12"
+charset-normalizer = "^3.1.0"
 click = "==8.1.6"
 click-datetime = "==0.2"
 click-didyoumean = "==0.3.0"
@@ -54,7 +54,7 @@ marshmallow = "==3.20.1"
 marshmallow-sqlalchemy = "==0.29.0"
 newrelic = "*"
 notifications-python-client = "==8.0.1"
-notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true, branch = "main"}
+notifications-utils = {git = "https://github.com/GSA/notifications-utils.git", develop = true}
 oscrypto = "==1.3.0"
 packaging = "==23.1"
 poetry-dotenv-plugin = "==0.2.0"
@@ -78,9 +78,9 @@ isort = "^5.12.0"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
 moto = "==4.2.6"
 pip-audit = "*"
-pytest = "^7.4.2"
+pytest = "^7.4.3"
 pytest-env = "^1.0.1"
-pytest-mock = "^3.11.1"
+pytest-mock = "^3.12.0"
 pytest-cov = "^4.1.0"
 pytest-xdist = "^3.3.1"
 radon = "^6.0.1"
