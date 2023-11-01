@@ -38,6 +38,7 @@
   - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
   - [ Restaging Apps](#-restaging-apps)
   - [ Smoke-testing the App](#-smoke-testing-the-app)
+  - [ Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [ Configuration Management](#-configuration-management)
   - [ DNS Changes](#-dns-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
@@ -146,12 +147,17 @@ We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for 
 ## Onboarding
 
 - [ ] Join [the GSA GitHub org](https://github.com/GSA/GitHub-Administration#join-the-gsa-organization)
-- [ ] Get permissions for the repos
+- [ ] Get permissions for the repos via GitHub teams
 - [ ] Get access to the cloud.gov org && spaces
+- [ ] Set up a user account on [the staging site](https://notify-staging.app.cloud.gov)
 - [ ] Get [access to AWS](https://handbook.tts.gsa.gov/launching-software/infrastructure/#cloud-service-provider-csp-sandbox-accounts), if necessary
 - [ ] Get [access to New Relic](https://handbook.tts.gsa.gov/tools/new-relic/#how-do-i-get-access-to-new-relic), if necessary
-- [ ] Create the local `.env` file by copying `sample.env` and running `./run.sh` within the `terraform/development` folder
+- [ ] Create the local `.env` file by copying `sample.env` and running `./run.sh` within the `terraform/development` folder (see [these docs](https://github.com/GSA/notifications-api/blob/main/docs/all.md#development))
+- [ ] Run through [the local setup process](https://github.com/GSA/notifications-api/tree/main#local-setup)
+- [ ] Review [the system diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
 - [ ] Do stuff!
+
+Upon completion, an admin should update 🔒[the permissions and access tracker](https://docs.google.com/spreadsheets/d/1Z8s82dbLHHxGC8fF2U1K6YhtZZYVaEdliOZRbKWW9L4/edit#gid=0).
 
 ## Setting up the infrastructure
 
@@ -288,7 +294,15 @@ docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t 
 
 # Deploying
 
-We deploy automatically to cloud.gov for production, demo, and staging environments.
+The API has 3 deployment environments, all of which deploy to cloud.gov:
+
+- Staging, which deploys from `main`
+- Demo, which deploys from `production`
+- Production, which deploys from `production`
+
+Configurations for these are located in [the `deploy-config` folder](../deploy-config/). This setup is duplicated for the front end.
+
+To trigger a new deploy, create a pull request from `main` to `production` in GitHub. This PR typically has release notes highlighting major and minor changes in the deployment. For help preparing this, [sorting closed pull requests by "recently updated"](https://github.com/GSA/notifications-api/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aclosed) will show all PRs merged since the last production deploy.
 
 Deployment to staging runs via the [base deployment action](../.github/workflows/deploy.yml) on GitHub, which pulls credentials from GitHub's secrets store in the staging environment.
 
@@ -297,14 +311,6 @@ Deployment to demo runs via the [demo deployment action](../.github/workflows/de
 Deployment to production runs via the [production deployment action](../.github/workflows/deploy-prod.yml) on GitHub, which pulls credentials from GitHub's secrets store in the production environment.
 
 The [action that we use](https://github.com/18F/cg-deploy-action) deploys using [a rolling strategy](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html), so all deployments should have zero downtime.
-
-The API has 3 deployment environments:
-
-- Staging, which deploys from `main`
-- Demo, which deploys from `production`
-- Production, which deploys from `production`
-
-Configurations for these are located in [the `deploy-config` folder](../deploy-config/).
 
 In the event that a deployment includes a Terraform change, that change will run before any code is deployed to the environment. Each environment has its own Terraform GitHub Action to handle that change.
 
@@ -950,6 +956,10 @@ Once you have a number, it must be set in the app in one of two ways:
 * +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number
 * +18447891134 - to be used by Pilot Partner 1
 * +18888402596 - to be used by Pilot Partner 2
+* +18555317292
+* +18889046435
+* +18447342791
+* +18447525067
 
 
 Data Storage Policies & Procedures
