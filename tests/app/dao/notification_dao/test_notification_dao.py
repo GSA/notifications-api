@@ -13,6 +13,7 @@ from app.dao.notifications_dao import (
     dao_get_last_notification_added_for_job_id,
     dao_get_notification_by_reference,
     dao_get_notification_count_for_job_id,
+    dao_get_notification_count_for_service,
     dao_get_notification_history_by_reference,
     dao_get_notifications_by_recipient_or_reference,
     dao_timeout_notifications,
@@ -593,6 +594,15 @@ def test_dao_get_notification_count_for_job_id(notify_db_session):
     create_notification(template)
 
     assert dao_get_notification_count_for_job_id(job_id=job.id) == 3
+
+
+def test_dao_get_notification_count_for_service(notify_db_session):
+    service = create_service()
+    template = create_template(service)
+
+    create_notification(template)
+
+    assert dao_get_notification_count_for_service(service_id=service.id) == 1
 
 
 def test_dao_get_notification_count_for_job_id_returns_zero_for_no_notifications_for_job(
