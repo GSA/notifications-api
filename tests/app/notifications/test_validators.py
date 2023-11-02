@@ -78,13 +78,13 @@ def test_check_application_over_retention_limit_fails(
     service = create_service()
     mocker.patch(
         "app.notifications.validators.dao_get_notification_count_for_service",
-        return_value="5001",
+        return_value="10001",
     )
 
     with pytest.raises(TotalRequestsError) as e:
         check_application_over_retention_limit(key_type, service)
     assert e.value.status_code == 429
-    assert e.value.message == "Exceeded total application limits (5000) for today"
+    assert e.value.message == "Exceeded total application limits (10000) for today"
     assert e.value.fields == []
 
 
