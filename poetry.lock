@@ -2488,12 +2488,12 @@ infinite-tracing = ["grpcio", "protobuf"]
 
 [[package]]
 name = "notifications-python-client"
-version = "8.0.1"
+version = "8.1.0"
 description = "Python API client for GOV.UK Notify."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "notifications_python_client-8.0.1-py3-none-any.whl", hash = "sha256:e89f5ad7caf17065ede88a1c2270c32cc24de75843856e524a2336f952260b4c"},
+    {file = "notifications_python_client-8.1.0-py3-none-any.whl", hash = "sha256:8aec1f7a4ba592fd699eae899df8ccca9ccafb614f47826c07b318ca903c9c13"},
 ]
 
 [package.dependencies]
@@ -4513,4 +4513,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "5d1e44154061ef029b156d22b9e28f3c274dde7f35c6ea888a264363edbaf247"
+content-hash = "991d3f03daba0c8681fd062343fe87d8f165dc8eaa2f276b80d165d04d65377e"
