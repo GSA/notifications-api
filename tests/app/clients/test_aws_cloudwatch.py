@@ -30,7 +30,8 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
             "events": [
                 {
                     "logStreamName": "89db9712-c6d1-49f9-be7c-4caa7ed9efb1",
-                    "message": '{"delivery":{"destination":"+1661","providerResponse":"Invalid phone number"}}',
+                    "message": '{"delivery":{"destination":"+1661","phoneCarrier":"ATT Mobility", '
+                    '"providerResponse":"Invalid phone number"}}',
                     "eventId": "37535432778099870001723210579798865345508698025292922880",
                 }
             ]
@@ -42,7 +43,8 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
                 {
                     "logStreamName": "89db9712-c6d1-49f9-be7c-4caa7ed9efb1",
                     "timestamp": 1683147017911,
-                    "message": '{"delivery":{"destination":"+1661","providerResponse":"Phone accepted msg"}}',
+                    "message": '{"delivery":{"destination":"+1661","phoneCarrier":"ATT Mobility",'
+                    '"providerResponse":"Phone accepted msg"}}',
                     "ingestionTime": 1683147018026,
                     "eventId": "37535432778099870001723210579798865345508698025292922880",
                 }

@@ -304,12 +304,17 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
-def sanitize_successful_notification_by_id(notification_id, provider_response):
+def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
     update_query = """
-    update notifications set provider_response=:response, notification_status='delivered', "to"='1', normalised_to='1'
+    update notifications set provider_response=:response, carrier=:carrier,
+    notification_status='delivered', "to"='1', normalised_to='1'
     where id=:notification_id
     """
-    input_params = {"notification_id": notification_id, "response": provider_response}
+    input_params = {
+        "notification_id": notification_id,
+        "carrier": carrier,
+        "response": provider_response,
+    }
 
     db.session.execute(update_query, input_params)
     db.session.commit()
