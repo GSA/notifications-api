@@ -554,7 +554,6 @@ class Service(db.Model, Versioned):
 
     def get_default_sms_sender(self):
         default_sms_sender = [x for x in self.service_sms_senders if x.is_default]
-        return default_sms_sender[0].sms_sender
         if default_sms_sender:
             return default_sms_sender[0].sms_sender
         # Right now there is no default_sms_sender if we just go to 'Send messages' and click on a template.
