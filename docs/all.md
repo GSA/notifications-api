@@ -147,12 +147,17 @@ We are using [New Relic](https://one.newrelic.com/nr1-core?account=3389907) for 
 ## Onboarding
 
 - [ ] Join [the GSA GitHub org](https://github.com/GSA/GitHub-Administration#join-the-gsa-organization)
-- [ ] Get permissions for the repos
+- [ ] Get permissions for the repos via GitHub teams
 - [ ] Get access to the cloud.gov org && spaces
+- [ ] Set up a user account on [the staging site](https://notify-staging.app.cloud.gov)
 - [ ] Get [access to AWS](https://handbook.tts.gsa.gov/launching-software/infrastructure/#cloud-service-provider-csp-sandbox-accounts), if necessary
 - [ ] Get [access to New Relic](https://handbook.tts.gsa.gov/tools/new-relic/#how-do-i-get-access-to-new-relic), if necessary
-- [ ] Create the local `.env` file by copying `sample.env` and running `./run.sh` within the `terraform/development` folder
+- [ ] Create the local `.env` file by copying `sample.env` and running `./run.sh` within the `terraform/development` folder (see [these docs](https://github.com/GSA/notifications-api/blob/main/docs/all.md#development))
+- [ ] Run through [the local setup process](https://github.com/GSA/notifications-api/tree/main#local-setup)
+- [ ] Review [the system diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
 - [ ] Do stuff!
+
+Upon completion, an admin should update 🔒[the permissions and access tracker](https://docs.google.com/spreadsheets/d/1Z8s82dbLHHxGC8fF2U1K6YhtZZYVaEdliOZRbKWW9L4/edit#gid=0).
 
 ## Setting up the infrastructure
 

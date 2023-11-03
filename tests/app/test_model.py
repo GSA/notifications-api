@@ -403,7 +403,7 @@ def test_notification_get_created_by_email_address(sample_notification, sample_u
 
 def test_notification_history_from_original(sample_notification):
     history = NotificationHistory.from_original(sample_notification)
-    assert type(history) == NotificationHistory
+    assert isinstance(history, NotificationHistory)
 
 
 def test_rate_str():
