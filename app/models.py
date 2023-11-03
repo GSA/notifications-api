@@ -554,8 +554,13 @@ class Service(db.Model, Versioned):
 
     def get_default_sms_sender(self):
         default_sms_sender = [x for x in self.service_sms_senders if x.is_default]
-        # return "sns"
         return default_sms_sender[0].sms_sender
+        if default_sms_sender:
+            return default_sms_sender[0].sms_sender
+        # Right now there is no default_sms_sender if we just go to 'Send messages' and click on a template.
+        # It will blow up.  What should we return if no default sender?  Testing locally, the app seems happy
+        # with anything.
+        return "sns"
 
     def get_default_reply_to_email_address(self):
         default_reply_to = [x for x in self.reply_to_email_addresses if x.is_default]
@@ -1761,6 +1766,8 @@ class Notification(db.Model):
             "template_name": self.template.name,
             "template_type": self.template.template_type,
             "job_name": self.job.original_file_name if self.job else "",
+            "carrier": self.carrier,
+            "provider_response": self.provider_response,
             "status": self.formatted_status,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "created_by_name": self.get_created_by_name(),

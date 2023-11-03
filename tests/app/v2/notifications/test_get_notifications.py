@@ -123,7 +123,7 @@ def test_get_notification_by_id_with_placeholders_returns_200(
         "completed_at": sample_notification.completed_at(),
         "scheduled_for": None,
         "provider_response": None,
-        "carrier": None
+        "carrier": None,
     }
 
     assert json_response == expected_response
