@@ -90,20 +90,24 @@ def _decide_permanent_temporary_failure(current_status, status):
     return status
 
 
-def _update_notification_status(notification, status, provider_response=None):
+def _update_notification_status(
+    notification, status, provider_response=None, carrier=None
+):
     status = _decide_permanent_temporary_failure(
         current_status=notification.status, status=status
     )
     notification.status = status
     if provider_response:
         notification.provider_response = provider_response
+    if carrier:
+        notification.carrier = carrier
     dao_update_notification(notification)
     return notification
 
 
 @autocommit
 def update_notification_status_by_id(
-    notification_id, status, sent_by=None, provider_response=None
+    notification_id, status, sent_by=None, provider_response=None, carrier=None
 ):
     notification = (
         Notification.query.with_for_update()
@@ -137,12 +141,15 @@ def update_notification_status_by_id(
         return None
     if provider_response:
         notification.provider_response = provider_response
+    if carrier:
+        notification.carrier = carrier
     if not notification.sent_by and sent_by:
         notification.sent_by = sent_by
     return _update_notification_status(
         notification=notification,
         status=status,
         provider_response=notification.provider_response,
+        carrier=notification.carrier,
     )
 
 
@@ -297,12 +304,17 @@ def _filter_query(query, filter_dict=None):
     return query
 
 
-def sanitize_successful_notification_by_id(notification_id, provider_response):
+def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
     update_query = """
-    update notifications set provider_response=:response, notification_status='delivered', "to"='1', normalised_to='1'
+    update notifications set provider_response=:response, carrier=:carrier,
+    notification_status='delivered', "to"='1', normalised_to='1'
     where id=:notification_id
     """
-    input_params = {"notification_id": notification_id, "response": provider_response}
+    input_params = {
+        "notification_id": notification_id,
+        "carrier": carrier,
+        "response": provider_response,
+    }
 
     db.session.execute(update_query, input_params)
     db.session.commit()

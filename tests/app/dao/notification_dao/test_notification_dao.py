@@ -111,7 +111,7 @@ def test_should_be_able_to_sanitize_successful_notification(
 
     with freeze_time("2000-01-02 12:00:00"):
         sanitize_successful_notification_by_id(
-            notification.id, provider_response="Don't know what happened"
+            notification.id, carrier="ATT", provider_response="Don't know what happened"
         )
         assert Notification.query.get(notification.id).status == "delivered"
         assert Notification.query.get(notification.id).normalised_to == "1"
