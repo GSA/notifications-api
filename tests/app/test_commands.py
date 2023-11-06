@@ -14,10 +14,12 @@ from app.commands import (
     populate_annual_billing_with_the_previous_years_allowance,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
+    promote_user_to_platform_admin,
     purge_functional_test_data,
     update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
+from app.dao.users_dao import get_user_by_email
 from app.models import (
     KEY_TYPE_NORMAL,
     NOTIFICATION_DELIVERED,
@@ -395,3 +397,38 @@ def test_create_service_command(notify_db_session, notify_api):
     assert service.email_from == "somebody@fake.gov"
     assert service.restricted is False
     assert service.message_limit == 40000
+
+
+def test_promote_user_to_platform_admin(
+    notify_db_session, notify_api, sample_user, sample_platform_admin
+):
+    assert sample_user.platform_admin is False
+    assert sample_platform_admin.platform_admin is True
+
+    result = notify_api.test_cli_runner().invoke(
+        promote_user_to_platform_admin,
+        [
+            "-u",
+            "notify@digital.fake.gov",
+        ],
+    )
+    print(result)
+
+    user = get_user_by_email("notify@digital.fake.gov")
+    assert user.platform_admin is True
+
+
+def test_promote_user_to_platform_admin_no_result_found(
+    notify_db_session, notify_api, sample_user
+):
+    assert sample_user.platform_admin is False
+
+    result = notify_api.test_cli_runner().invoke(
+        promote_user_to_platform_admin,
+        [
+            "-u",
+            "notify@digital.fake.asefasefasefasef",
+        ],
+    )
+    assert "NoResultFound" in str(result)
+    assert sample_user.platform_admin is False
