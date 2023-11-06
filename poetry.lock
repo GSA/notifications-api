@@ -1691,13 +1691,13 @@ files = [
 
 [[package]]
 name = "iso8601"
-version = "2.0.0"
+version = "2.1.0"
 description = "Simple module to parse ISO 8601 dates"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "iso8601-2.0.0-py3-none-any.whl", hash = "sha256:ebe10061b932edb8a8e33cc635d661926c59b9c3bed7a4f4edca8c62d400af10"},
-    {file = "iso8601-2.0.0.tar.gz", hash = "sha256:739960d37c74c77bd9bd546a76562ccb581fe3d4820ff5c3141eb49c839fda8f"},
+    {file = "iso8601-2.1.0-py3-none-any.whl", hash = "sha256:aac4145c4dcb66ad8b648a02830f5e2ff6c24af20f4f482689be402db2429242"},
+    {file = "iso8601-2.1.0.tar.gz", hash = "sha256:6b1d3829ee8921c4301998c909f7829fa9ed3cbdac0d3b16af2d743aed1ba8df"},
 ]
 
 [[package]]
@@ -4520,4 +4520,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "717d7ec538c6dc8cd2d601527281d24a76513082c42d17aaa7f850e36d2f6bd3"
+content-hash = "fb6aabe642ae69597f971ffee83c7734e7d4105c12383efb8be6bed3c041a687"
