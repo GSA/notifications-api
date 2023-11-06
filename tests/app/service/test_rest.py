@@ -380,13 +380,8 @@ def test_create_service(
         "created_by": str(sample_user.id),
     }
 
-    create_default_sms_sender = True
-
     json_resp = admin_request.post(
-        "service.create_service",
-        _data=data,
-        _expected_status=201,
-        create_default_sms_sender=create_default_sms_sender,
+        "service.create_service", _data=data, _expected_status=201
     )
 
     assert json_resp["data"]["id"]
@@ -404,6 +399,7 @@ def test_create_service(
     )
 
     assert json_resp["data"]["name"] == "created service"
+
     service_sms_senders = ServiceSmsSender.query.filter_by(
         service_id=service_db.id
     ).all()
