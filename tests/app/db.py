@@ -117,7 +117,6 @@ def create_service(
     billing_contact_names=None,
     billing_contact_email_addresses=None,
     billing_reference=None,
-    create_default_sms_sender=True,
 ):
     if check_if_service_exists:
         service = Service.query.filter_by(name=service_name).first()
@@ -150,7 +149,6 @@ def create_service(
             service.created_by,
             service_id,
             service_permissions=service_permissions,
-            create_default_sms_sender=create_default_sms_sender,
         )
 
         service.active = active
