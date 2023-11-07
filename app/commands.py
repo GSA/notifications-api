@@ -835,13 +835,9 @@ def create_new_service(name, message_limit, restricted, email_from, created_by_i
 @notify_command(name="promote-user-to-platform-admin")
 @click.option("-u", "--user-email-address", required=True, prompt=True)
 def promote_user_to_platform_admin(user_email_address):
-    print("enter")
+    # If the email address is wrong, sqlalchemy will automatically raise a NoResultFound error which is what we want.
+    # See tests.
     user = get_user_by_email(user_email_address)
-    print(f"user is {user}")
-    # if not user:
-    #    raise ValueError(f"could not find user for {user_email_address}")
-    print("ok to proceed")
     user.platform_admin = True
     db.session.add(user)
     db.session.commit()
-    print("finished")

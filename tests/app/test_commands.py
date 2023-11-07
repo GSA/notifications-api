@@ -405,14 +405,13 @@ def test_promote_user_to_platform_admin(
     assert sample_user.platform_admin is False
     assert sample_platform_admin.platform_admin is True
 
-    result = notify_api.test_cli_runner().invoke(
+    notify_api.test_cli_runner().invoke(
         promote_user_to_platform_admin,
         [
             "-u",
             "notify@digital.fake.gov",
         ],
     )
-    print(result)
 
     user = get_user_by_email("notify@digital.fake.gov")
     assert user.platform_admin is True
