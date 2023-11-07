@@ -1,3 +1,4 @@
 Update this file to force a re-deploy of the egress proxy even when notify-api-staging.<allow|deny>.acl haven't changed
 
 20230412: Redeploy to re-calculate the list of allowed s3 buckets
+20231107: Redeploy to update cloud.gov users in Terraform config
