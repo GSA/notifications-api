@@ -1887,7 +1887,8 @@ class NotificationHistory(db.Model, HistoryModel):
 INVITE_PENDING = "pending"
 INVITE_ACCEPTED = "accepted"
 INVITE_CANCELLED = "cancelled"
-INVITED_USER_STATUS_TYPES = [INVITE_PENDING, INVITE_ACCEPTED, INVITE_CANCELLED]
+INVITE_EXPIRED = "expired"
+INVITED_USER_STATUS_TYPES = [INVITE_PENDING, INVITE_ACCEPTED, INVITE_CANCELLED, INVITE_EXPIRED]
 
 
 class InviteStatusType(db.Model):
@@ -1930,6 +1931,7 @@ class InvitedUser(db.Model):
         default=SMS_AUTH_TYPE,
     )
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
+    expired = db.Column(db.Boolean, nullable=False, default=False)
 
     # would like to have used properties for this but haven't found a way to make them
     # play nice with marshmallow yet
