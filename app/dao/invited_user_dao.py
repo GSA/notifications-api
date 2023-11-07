@@ -21,11 +21,11 @@ def get_invited_users_for_service(service_id):
     return InvitedUser.query.filter_by(service_id=service_id).all()
 
 
-def delete_invitations_created_more_than_two_days_ago():
-    deleted = (
+def expire_invitations_created_more_than_two_days_ago():
+    expired = (
         db.session.query(InvitedUser)
         .filter(InvitedUser.created_at <= datetime.utcnow() - timedelta(days=2))
-        .delete()
+        .update({InvitedUser.expired: True, InvitedUser.status: "expired"})
     )
     db.session.commit()
-    return deleted
+    return expired

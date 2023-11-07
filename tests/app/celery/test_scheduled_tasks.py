@@ -11,7 +11,7 @@ from app.celery.scheduled_tasks import (
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     check_job_status,
-    delete_invitations,
+    expire_or_delete_invitations,
     delete_verify_codes,
     replay_created_notifications,
     run_scheduled_jobs,
@@ -44,11 +44,11 @@ def test_should_call_delete_invotations_on_delete_invitations_task(
     notify_db_session, mocker
 ):
     mocker.patch(
-        "app.celery.scheduled_tasks.delete_invitations_created_more_than_two_days_ago"
+        "app.celery.scheduled_tasks.expire_invitations_created_more_than_two_days_ago"
     )
-    delete_invitations()
+    expire_or_delete_invitations()
     assert (
-        scheduled_tasks.delete_invitations_created_more_than_two_days_ago.call_count
+        scheduled_tasks.expire_invitations_created_more_than_two_days_ago.call_count
         == 1
     )
 

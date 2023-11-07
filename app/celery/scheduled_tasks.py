@@ -16,7 +16,7 @@ from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
 )
-from app.dao.invited_user_dao import delete_invitations_created_more_than_two_days_ago
+from app.dao.invited_user_dao import expire_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
     dao_update_job,
@@ -68,17 +68,20 @@ def delete_verify_codes():
         raise
 
 
-@notify_celery.task(name="delete-invitations")
-def delete_invitations():
+@notify_celery.task(name="expire-or-delete-invitations")
+def expire_or_delete_invitations():
     try:
         start = datetime.utcnow()
-        deleted_invites = delete_invitations_created_more_than_two_days_ago()
-        deleted_invites += delete_org_invitations_created_more_than_two_days_ago()
-        current_app.logger.info(
-            "Delete job started {} finished {} deleted {} invitations".format(
-                start, datetime.utcnow(), deleted_invites
-            )
-        )
+        expired_invites = expire_invitations_created_more_than_two_days_ago()
+        current_app.logger.info(f"Expire job started {start} finished {datetime.utcnow()} expired {len(expired_invites)} invitations")
+    except SQLAlchemyError:
+        current_app.logger.exception("Failed to expire invitations")
+        raise
+
+    try:
+        start = datetime.utcnow()
+        deleted_invites = delete_org_invitations_created_more_than_two_days_ago()
+        current_app.logger.info(f"Delete job started {start} finished {datetime.utcnow()} deleted {len(deleted_invites)} invitations")
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise

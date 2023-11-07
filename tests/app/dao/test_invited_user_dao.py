@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.dao.invited_user_dao import (
-    delete_invitations_created_more_than_two_days_ago,
+    expire_invitations_created_more_than_two_days_ago,
     get_invited_user_by_id,
     get_invited_user_by_service_and_id,
     get_invited_users_for_service,
@@ -122,7 +122,7 @@ def test_should_delete_all_invitations_more_than_one_day_old(
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     assert len(InvitedUser.query.all()) == 2
-    delete_invitations_created_more_than_two_days_ago()
+    expire_invitations_created_more_than_two_days_ago()
     assert len(InvitedUser.query.all()) == 0
 
 
@@ -143,7 +143,7 @@ def test_should_not_delete_invitations_less_than_two_days_old(
     )
 
     assert len(InvitedUser.query.all()) == 2
-    delete_invitations_created_more_than_two_days_ago()
+    expire_invitations_created_more_than_two_days_ago()
     assert len(InvitedUser.query.all()) == 1
     assert InvitedUser.query.first().email_address == "valid@2.com"
 
