@@ -70,6 +70,7 @@ def create_user(
     state="active",
     id_=None,
     name="Test User",
+    platform_admin=False,
 ):
     data = {
         "id": id_ or uuid.uuid4(),
@@ -78,6 +79,7 @@ def create_user(
         "password": "password",
         "mobile_number": mobile_number,
         "state": state,
+        "platform_admin": platform_admin,
     }
     user = User.query.filter_by(email_address=email).first()
     if not user:

@@ -183,6 +183,11 @@ def sample_user(notify_db_session):
 
 
 @pytest.fixture(scope="function")
+def sample_platform_admin(notify_db_session):
+    return create_user(email="notify_pa@digital.fake.gov", platform_admin=True)
+
+
+@pytest.fixture(scope="function")
 def notify_user(notify_db_session):
     return create_user(
         email="notify-service-user@digital.fake.gov",
