@@ -1931,7 +1931,6 @@ class InvitedUser(db.Model):
         default=SMS_AUTH_TYPE,
     )
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
-    expired = db.Column(db.Boolean, nullable=False, default=False)
 
     # would like to have used properties for this but haven't found a way to make them
     # play nice with marshmallow yet
