@@ -58,7 +58,7 @@ This is the approach we've considered for implementing this change:
 
   - Change the `delete_invitations` scheduled job to `expire_invitations` and
     change its behavior to check for `InvitedUser` objects that are older than
-    24 hours and flip the `expired` flag to `True`.
+    24 hours and change the status type to `expired`.
 
   - Add an additional `INVITE_EXPIRED` status to the API and include it in the
     `INVITED_USER_STATUS_TYPES` enum.  This will be necessary for future UI
