@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/06/2023 | 09/15/2023 | Accepted | @ccostino | @GSA/notify-contributors |
+| 06/06/2023 | 11/08/2023 | Accepted | @ccostino | @GSA/notify-contributors |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -30,7 +30,8 @@ has more specific details.)
 
 We'd like to adjust the API and data model so that invited users are no longer
 deleted from the system and are instead tracked as active or expired.  When an
-invite is expired, we'd like to be able to re-invite the person.
+invite is expired, we'd like to be able to show that in the invited users
+screen and provide the ability re-invite the person.
 
 
 ### SECURITY COMPLIANCE CONSIDERATIONS
@@ -55,20 +56,20 @@ This is the approach we've considered for implementing this change:
   dates for when they need to expire.  This would involve the following
   potential changes:
 
-  - Add an `expired` flag to the `InvitedUser` model
-
   - Change the `delete_invitations` scheduled job to `expire_invitations` and
     change its behavior to check for `InvitedUser` objects that are older than
-    24 hours and flip the `expired` flag to `True`.
+    24 hours and change the status type to `expired`.
 
   - Add an additional `INVITE_EXPIRED` status to the API and include it in the
     `INVITED_USER_STATUS_TYPES` enum.  This will be necessary for future UI
     changes.
 
   - Make sure the API responses that provided `InvitedUser` objects/data
-    included the new `expired` field and status.
+    included the new `expired` status.
 
-  - Update all tests related to `InvitedUsers` to account for the new behavior.
+  - Update all tests related to `InvitedUsers` to account for the new behavior;
+    this may require making a new test or two to check explicitly for the new
+    `expired` status.
 
   The pros in making this change:
 
