@@ -67,7 +67,7 @@ werkzeug = "^3.0.1"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"
-black = "^23.10.1"
+black = "^23.11.0"
 cloudfoundry-client = "*"
 exceptiongroup = "==1.1.3"
 flake8 = "^6.1.0"
