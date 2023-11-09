@@ -22,6 +22,17 @@ def get_s3_object(bucket_name, file_location, access_key, secret_key, region):
     return s3.Object(bucket_name, file_location)
 
 
+def purge_bucket(bucket_name, access_key, secret_key, region):
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
+    s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    bucket = s3.Bucket(bucket_name)
+    bucket.objects.all().delete()
+
+
 def file_exists(bucket_name, file_location, access_key, secret_key, region):
     try:
         # try and access metadata of object
