@@ -845,7 +845,7 @@ def promote_user_to_platform_admin(user_email_address):
 
 @notify_command(name="purge-csv-bucket")
 def purge_csv_bucket():
-    bucket_name = getenv("CSV_BUCKEY_NAME")
+    bucket_name = getenv("CSV_BUCKET_NAME")
     access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
     secret = getenv("CSV_AWS_SECRET_ACCESS_KEY")
     region = getenv("CSV_AWS_REGION")
