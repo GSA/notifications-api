@@ -73,7 +73,9 @@ def expire_or_delete_invitations():
     try:
         start = datetime.utcnow()
         expired_invites = expire_invitations_created_more_than_two_days_ago()
-        current_app.logger.info(f"Expire job started {start} finished {datetime.utcnow()} expired {len(expired_invites)} invitations")
+        current_app.logger.info(
+            f"Expire job started {start} finished {datetime.utcnow()} expired {expired_invites} invitations"
+        )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to expire invitations")
         raise
@@ -81,7 +83,9 @@ def expire_or_delete_invitations():
     try:
         start = datetime.utcnow()
         deleted_invites = delete_org_invitations_created_more_than_two_days_ago()
-        current_app.logger.info(f"Delete job started {start} finished {datetime.utcnow()} deleted {len(deleted_invites)} invitations")
+        current_app.logger.info(
+            f"Delete job started {start} finished {datetime.utcnow()} deleted {deleted_invites} invitations"
+        )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise

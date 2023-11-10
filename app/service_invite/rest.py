@@ -4,6 +4,7 @@ from notifications_utils.url_safe_token import check_token, generate_token
 
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
+    get_expired_invited_users_for_service,
     get_invited_user_by_id,
     get_invited_user_by_service_and_id,
     get_invited_users_for_service,
@@ -56,6 +57,12 @@ def create_invited_user(service_id):
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=invited_user_schema.dump(invited_user)), 201
+
+
+@service_invite.route("/service/<service_id>/invite/expired", methods=["GET"])
+def get_expired_invited_users_by_service(service_id):
+    expired_invited_users = get_expired_invited_users_for_service(service_id)
+    return jsonify(data=invited_user_schema.dump(expired_invited_users, many=True)), 200
 
 
 @service_invite.route("/service/<service_id>/invite", methods=["GET"])

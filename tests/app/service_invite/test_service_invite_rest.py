@@ -40,7 +40,7 @@ def test_create_invited_user(
         permissions="send_messages,manage_service,manage_api_keys",
         auth_type=EMAIL_AUTH_TYPE,
         folder_permissions=["folder_1", "folder_2", "folder_3"],
-        **extra_args
+        **extra_args,
     )
 
     json_resp = admin_request.post(
@@ -127,7 +127,7 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/invite".format(sample_service.id),
+        f"/service/{sample_service.id}/invite",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -145,7 +145,7 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
         invited_user = create_invited_user(sample_service, to_email_address=email)
         invites.append(invited_user)
 
-    url = "/service/{}/invite".format(sample_service.id)
+    url = f"/service/{sample_service.id}/invite"
 
     auth_header = create_admin_authorization_header()
 
@@ -167,7 +167,7 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
 def test_get_invited_users_by_service_with_no_invites(
     client, notify_db_session, sample_service
 ):
-    url = "/service/{}/invite".format(sample_service.id)
+    url = f"/service/{sample_service.id}/invite"
 
     auth_header = create_admin_authorization_header()
 
