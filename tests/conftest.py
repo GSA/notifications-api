@@ -110,9 +110,6 @@ def _notify_db(notify_api, worker_id):
         ALEMBIC_CONFIG = os.path.join(BASE_DIR, "migrations")
         config = Config(ALEMBIC_CONFIG + "/alembic.ini")
         config.set_main_option("script_location", ALEMBIC_CONFIG)
-        config.set_main_option(
-            "sqlalchemy.url", app_context.app.config["SQLALCHEMY_DATABASE_URI"]
-        )
 
         # Run migrations on the test database.
         upgrade(config, "head")
