@@ -121,7 +121,7 @@ def _notify_db(notify_api, worker_id):
         yield db
 
         db.session.remove()
-        db.engine.dispose()
+        db.get_engine(notify_api).dispose()
 
 
 @pytest.fixture(scope="function")
