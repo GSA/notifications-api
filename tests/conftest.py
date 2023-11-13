@@ -7,7 +7,7 @@ from alembic.command import upgrade
 from alembic.config import Config
 from flask import Flask
 
-from app import create_app
+from app import create_app, db
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
@@ -100,13 +100,12 @@ def _notify_db(notify_api, worker_id):
     create_test_db(current_app.config["SQLALCHEMY_DATABASE_URI"])
 
     with notify_api.app_context() as app_context:
-        db = app_context.app.extensions["sqlalchemy"]
+        # db = app_context.app.extensions["sqlalchemy"]
 
         assert (
             "test_notification_api" in db.engine.url.database
         ), "dont run tests against main db"
 
-        db.engine.url = current_app.config["SQLALCHEMY_DATABASE_URI"]
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
         ALEMBIC_CONFIG = os.path.join(BASE_DIR, "migrations")
         config = Config(ALEMBIC_CONFIG + "/alembic.ini")
