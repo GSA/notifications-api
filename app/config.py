@@ -194,8 +194,8 @@ class Config(object):
                 "schedule": timedelta(minutes=63),
                 "options": {"queue": QueueNames.PERIODIC},
             },
-            "delete-invitations": {
-                "task": "delete-invitations",
+            "expire-or-delete-invitations": {
+                "task": "expire-or-delete-invitations",
                 "schedule": timedelta(minutes=66),
                 "options": {"queue": QueueNames.PERIODIC},
             },

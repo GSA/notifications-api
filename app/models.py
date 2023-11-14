@@ -1887,7 +1887,13 @@ class NotificationHistory(db.Model, HistoryModel):
 INVITE_PENDING = "pending"
 INVITE_ACCEPTED = "accepted"
 INVITE_CANCELLED = "cancelled"
-INVITED_USER_STATUS_TYPES = [INVITE_PENDING, INVITE_ACCEPTED, INVITE_CANCELLED]
+INVITE_EXPIRED = "expired"
+INVITED_USER_STATUS_TYPES = [
+    INVITE_PENDING,
+    INVITE_ACCEPTED,
+    INVITE_CANCELLED,
+    INVITE_EXPIRED,
+]
 
 
 class InviteStatusType(db.Model):
