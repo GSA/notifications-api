@@ -15,65 +15,68 @@ Our other repositories are:
 - [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
 - [notify-python-demo](https://github.com/GSA/notify-python-demo)
 
-
 ## Local setup
 
 ### Common steps
 
 On MacOS, using [Homebrew](https://brew.sh/) for package management is highly recommended. This helps avoid some known installation issues.
 
-1. Install pre-requisites for setup:
-    * [jq](https://stedolan.github.io/jq/): `brew install jq`
-    * [terraform](https://www.terraform.io/): `brew install terraform` or `brew install tfenv` and use `tfenv` to install `terraform ~> 1.4.0`
-    * [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html): `brew install cloudfoundry/tap/cf-cli@8`
-    * [postgresql](https://www.postgresql.org/): `brew install postgresql@15` (Homebrew requires a version pin, but any recent version will work)
-    * [redis](https://redis.io/): `brew install redis`
-    * [pyenv](https://github.com/pyenv/pyenv): `brew install pyenv`
-    * [poetry](https://python-poetry.org/docs/#installation): `brew install poetry`
-1. [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
-1. Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov
-1. Run the development terraform with:
+_Note: If brew is not found: Verify that Homebrew is in your system's PATH. You may need to follow additional instructions to add Homebrew to your PATH in /Users/homefolder/.zprofile:_
 
-        ```
-        $ cd terraform/development
-        $ ./run.sh
-        ```
+1.  Install pre-requisites for setup:
+    - [jq](https://stedolan.github.io/jq/): `brew install jq`
+    - [terraform](https://www.terraform.io/): `brew install terraform` or `brew install tfenv` and use `tfenv` to install `terraform ~> 1.4.0`
+    - [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html): `brew install cloudfoundry/tap/cf-cli@8`
+    - [postgresql](https://www.postgresql.org/): `brew install postgresql@15` (Homebrew requires a version pin, but any recent version will work)
+    - [redis](https://redis.io/): `brew install redis`
+    - [pyenv](https://github.com/pyenv/pyenv): `brew install pyenv`
+    - [poetry](https://python-poetry.org/docs/#installation): `brew install poetry`
+1.  [Log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line): `cf login -a api.fr.cloud.gov --sso`
+1.  Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov
+1.  Run the development terraform
+    _(Be sure to clone the repository first and navigate to the terraform directory):_
 
-1. If you want to send data to New Relic from your local develpment environment, set `NEW_RELIC_LICENSE_KEY` within `.env`
-1. Start Postgres && Redis
+            ```
+            $ cd terraform/development
+            $ ./run.sh
+            ```
+
+1.  If you want to send data to New Relic from your local develpment environment, set `NEW_RELIC_LICENSE_KEY` within `.env`
+1.  Start Postgres && Redis
 
          ```
          brew services start postgresql@15
          brew services start redis
          ```
 
-1. Install
-1. Run the project setup
+#### Install
 
-    `make bootstrap`
+1. Run the project setup (If there are errors, check for Python versions >=3.9,<3.12. Ensure that you have the required database set up and migrations)
+
+   `make bootstrap`
 
 1. Run the web server and background workers
 
-    `make run-procfile`
+   `make run-procfile`
 
-1. Or run them individually:
+- Or run them individually:
 
-    * Run Flask (web server)
+- Run Flask (web server)
 
-        `make run-flask`
+  `make run-flask`
 
-    * Run Celery (background worker)
+- Run Celery (background worker)
 
-        `make run-celery`
+  `make run-celery`
 
 ### Python dependency management
 
 We're using [`Poetry`](https://python-poetry.org/) for managing our Python
-dependencies and local virtual environments.  When it comes to managing the
+dependencies and local virtual environments. When it comes to managing the
 Python dependencies, there are a couple of things to bear in mind.
 
 For situations where you manually manipulate the `pyproject.toml` file, you
-should use the `make py-lock` command to sync the `poetry.lock` file.  This will
+should use the `make py-lock` command to sync the `poetry.lock` file. This will
 ensure that you don't inadvertently bring in other transitive dependency updates
 that have not been fully tested with the project yet.
 
@@ -84,7 +87,7 @@ you should let Poetry take care of that for you by running the following:
 poetry update <dependency> [<dependency>...]
 ```
 
-You can specify more than one dependency together.  With this command, Poetry
+You can specify more than one dependency together. With this command, Poetry
 will do the following for you:
 
 - Find the latest compatible version(s) of the specified dependency/dependencies
