@@ -29,7 +29,7 @@ def upgrade():
 
 
 def downgrade():
-    op.execute(f"DELETE FROM invited_users WHERE status = 'expired'")
+    op.execute(f"DELETE FROM invited_users WHERE status in ('expired')")
 
     op.execute(f"ALTER TYPE {enum_name} RENAME TO {tmp_name}")
     old_type.create(op.get_bind())
