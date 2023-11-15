@@ -27,9 +27,9 @@ You will need the following items:
 
 - An active cloud.gov account with the correct permissions - speak with your
   onboarding buddy for help with
-  [setting up an account](https://cloud.gov/sign-up/) (requires a .mil, .gov, or
-  .fed.us email address) and getting access to the `notify-local-dev` and
-  `notify-staging` spaces.
+  [setting up an account](https://cloud.gov/sign-up/) (requires a `.mil`,
+  `.gov`, or `.fed.us` email address) and getting access to the
+  `notify-local-dev` and `notify-staging` spaces.
 - Admin priviliges and SSH access on your machine; you may need to work with
   your organization's IT support staff if you're not sure or don't currently
   have this access.
@@ -45,7 +45,7 @@ components:
 These instructions will walk you through how to set your machine up with all of
 the required tools for this project.
 
-### Common Steps and Project Pre-requisites
+### Common Steps and Project Pre-Requisites
 
 On MacOS, using [Homebrew](https://brew.sh/) for package management is highly
 recommended. This helps avoid some known installation issues. Start by following
@@ -64,9 +64,10 @@ If this is your first time installing Homebrew on your machine, you may need to
 add its binaries to your system's `$PATH` environment variable so that you can
 use the `brew` command.  Try running `brew help` to see if Homebrew is
 recognized and runs properly.  If that fails, then you'll need to add a
-configuration line to wherever your `$PATH` is set.
+configuration line to wherever your `$PATH` environment variable is set.
 
-Your system `$PATH` is likely set in one of these locations:
+Your system `$PATH` environment variable is likely set in one of these
+locations:
 
 For BASH shells:
 - `~/.bashrc`
@@ -140,11 +141,13 @@ itself, which can be done with this command:
 tfenv install latest:^1.4.0
 ```
 
-#### Python and Python Dependency Installation
+_NOTE: This project currently uses the latest `1.4.x release of Terraform._
+
+#### Python Installation
 
 Now we're going to install a tool to help us manage Python versions on our
-system.  First, we'll install [pyenv](https://github.com/pyenv/pyenv) to do this
-with Homebrew:
+system.  First, we'll install [pyenv](https://github.com/pyenv/pyenv) with
+Homebrew:
 
 ```sh
 brew install pyenv
@@ -166,21 +169,25 @@ session to make the changes take effect.
 
 Now we're ready to install the Python version we need with `pyenv`, like so:
 
-_NOTE: This project currently runs on Python 3.9.x._
-
 ```sh
 pyenv install 3.9
 ```
 
+_NOTE: This project currently runs on Python 3.9.x._
+
 This will install the latest version of Python 3.9.
+
+#### Python Dependency Installation
 
 Lastly, we need to install the tool we use to manage Python dependencies within
 the project, which is [poetry](https://python-poetry.org/).
+
 Visit the
 [official installer instructions page](https://python-poetry.org/docs/#installing-with-the-official-installer)
-and follow the steps to install Poetry directly with the script. This will
-ensure `poetry` doesn't conflict with any project virtual environments and can
-update itself properly.
+and follow the steps to install Poetry directly with the script.
+
+This will ensure `poetry` doesn't conflict with any project virtual environments
+and can update itself properly.
 
 #### PostgreSQL installation
 
@@ -212,19 +219,20 @@ this, which will include the PostgreSQL binaries:
 export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH
 ```
 
-_NOTE: You don't want to overwrite your existing $PATH! Hence the reason why it is included on the end like this; paths are separated by a colon._
+_NOTE: You don't want to overwrite your existing `$PATH` environment variable! Hence the reason why it is included on the end like this; paths are separated by a colon._
 
 #### Starting PostgreSQL and Redis
 
 With both PostgreSQL and Redis installed, you now need to start the services.
-Run this command so that they're available at all times going forward:
+Run this command so that they're available at all times going forward on your
+machine:
 
 ```sh
 brew services start postgresql@15 redis
 ```
 
-If they're already running, you can run this instead to make sure the latest
-updates are applied:
+If they're already running, you can run this command instead to make sure the
+latest updates are applied to both services:
 
 ```sh
 brew services restart postgresql@15 redis
@@ -233,7 +241,7 @@ brew services restart postgresql@15 redis
 ### First-Time Project Setup
 
 Once all of pre-requisites for the project are installed and you have a
-cloud.gov account, you can now set the API project up and get things running
+cloud.gov account, you can now set up the API project and get things running
 locally!
 
 First, clone the respository in the directory of your choosing on your machine:
@@ -243,7 +251,8 @@ git clone git@github.com:GSA/notifications-api.git
 ```
 
 Now go into the project directory (`notifications-api` by default) and set the
-local Python version:
+local Python version, like this (assumes version Python `3.9.18` is what is
+installed on your machine):
 
 ```sh
 cd notifications-api
@@ -269,7 +278,8 @@ cd terraform/development
 ./run.sh
 ```
 
-This will create a local `.env` file for you, which will include a handful of
+In addition to some infrastructure setup, this will also create a local `.env`
+file for you in the project's root directory, which will include a handful of
 project-specific environment variables.
 
 **OPTIONAL:** If you want to send data to New Relic from your local develpment
@@ -283,7 +293,7 @@ so now:
 brew services start postgresql@15 redis
 ```
 
-### Running the Project and Routine Maintenance
+## Running the Project and Routine Maintenance
 
 The first time you run the project you'll need to run the project setup from the
 root project directory:
@@ -306,13 +316,13 @@ make run-procfile
 This will run all of the services within the same shell session.  If you need to
 run them separately to help with debugging or tracing logs, you can do so by
 opening three sepearate shell sessions and running one of these commands in each
-one:
+one separately:
 
 - `make run-celery` - Handles the asynchronous jobs
 - `make run-celery-beat` - Handles the scheduling of asynchronous jobs
 - `make run-flask` - Runs the web server
 
-### Python Dependency Management
+## Python Dependency Management
 
 We're using [`Poetry`](https://python-poetry.org/) for managing our Python
 dependencies and local virtual environments. When it comes to managing the
@@ -358,7 +368,7 @@ You can do this by going through these steps:
 - Make a new PR with the change
 - Have the PR get reviewed and merged
 
-### Known Installation Issues
+## Known Installation Issues
 
 On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a
 different method of installing Python. Installation via `pyenv` is known to
