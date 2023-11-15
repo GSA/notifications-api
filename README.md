@@ -127,7 +127,7 @@ configuration after installation to get working out of the box:
 You can install them by running the following:
 
 ```sh
-brew install jq git tfenv cloudfoundry/tap/cf-cli@8 redis pyenv vim
+brew install jq git tfenv cloudfoundry/tap/cf-cli@8 redis vim
 ```
 
 #### Terraform Installation
