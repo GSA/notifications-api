@@ -378,11 +378,17 @@ class Agreement(db.Model):
         nullable=False,
     )
     partner_name = db.Column(db.String(255), primary_key=True)
-    # status
+    # TODO: status
     start = db.Column(db.DateTime, nullable=False)
     end = db.Column(db.DateTime, nullable=False)
     url = db.Column(db.String(2000), nullable=True)
     budget_amount = db.Column(db.Float, nullable=True)
+    organization_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("organization.id"),
+        nullable=True,
+    )
+    organization = db.relationship("Organization", backref="agreements")
 
 
 ORGANIZATION_TYPES = ["federal", "state", "other"]
