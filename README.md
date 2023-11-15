@@ -40,12 +40,12 @@ This project currently works with these major versions of the following main
 components:
 
 - Python 3.9.x
-- PostgreSQL 15.x
+- PostgreSQL 15.x (version 12.x is used in the hosted environments)
 
 These instructions will walk you through how to set your machine up with all of
 the required tools for this project.
 
-### Common Steps and Project Pre-Requisites
+### Project Pre-Requisite Setup
 
 On MacOS, using [Homebrew](https://brew.sh/) for package management is highly
 recommended. This helps avoid some known installation issues. Start by following
@@ -62,8 +62,8 @@ xcode-select –-install
 
 If this is your first time installing Homebrew on your machine, you may need to
 add its binaries to your system's `$PATH` environment variable so that you can
-use the `brew` command.  Try running `brew help` to see if Homebrew is
-recognized and runs properly.  If that fails, then you'll need to add a
+use the `brew` command. Try running `brew help` to see if Homebrew is
+recognized and runs properly. If that fails, then you'll need to add a
 configuration line to wherever your `$PATH` environment variable is set.
 
 Your system `$PATH` environment variable is likely set in one of these
@@ -227,14 +227,16 @@ Run this command so that they're available at all times going forward on your
 machine:
 
 ```sh
-brew services start postgresql@15 redis
+brew services start postgresql@15
+brew services start redis
 ```
 
 If they're already running, you can run this command instead to make sure the
 latest updates are applied to both services:
 
 ```sh
-brew services restart postgresql@15 redis
+brew services restart postgresql@15
+brew services restart redis
 ```
 
 ### First-Time Project Setup
@@ -281,15 +283,12 @@ In addition to some infrastructure setup, this will also create a local `.env`
 file for you in the project's root directory, which will include a handful of
 project-specific environment variables.
 
-**OPTIONAL:** If you want to send data to New Relic from your local develpment
-environment, set the `NEW_RELIC_LICENSE_KEY` environment variable within the
-`.env` file that was just created.
-
 Lastly, if you didn't already start PostgreSQL and Redis above, be sure to do
 so now:
 
 ```sh
-brew services start postgresql@15 redis
+brew services start postgresql@15
+brew services start redis
 ```
 
 ## Running the Project and Routine Maintenance
@@ -375,6 +374,12 @@ On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a
 different method of installing Python. The recommended approach is to use
 [`pyenv`](https://github.com/pyenv/pyenv), as noted above in the installation
 instructions.
+
+If you're using PyCharm for Python development, we've noticed some quirkiness
+with the IDE and the interaction between Poetry and virtual environment
+management that could cause a variety of problems to come up during project
+setup and dependency management. Other tools, such as Visual Studio Code, have
+proven to be a smoother experience for folks.
 
 ### PostgreSQL Installation Errors
 
