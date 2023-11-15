@@ -360,6 +360,31 @@ class Domain(db.Model):
     )
 
 
+class AgreementType(Enum):
+    MOU = "MOU"
+    IAA = "IAA"
+
+
+class Agreement(db.Model):
+    __tablename__ = "agreement"
+
+    id = db.Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
+    )
+    type = db.Column(
+        db.Enum(AgreementType, name="agreement_types"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
+    partner_name = db.Column(db.String(255), primary_key=True)
+    status
+    start
+    end
+    url
+    budget_amount
+
+
 ORGANIZATION_TYPES = ["federal", "state", "other"]
 
 
