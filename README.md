@@ -121,7 +121,6 @@ configuration after installation to get working out of the box:
   working with a Cloud Foundry platform (e.g., cloud.gov)
 - [redis](https://redis.io/) - required as the backend for the API's
   asynchronous job processing
-- [pyenv](https://github.com/pyenv/pyenv) - for managing Python installations
 - [vim](https://www.vim.org/) - for editing files more easily in the command
   line
 
@@ -370,9 +369,14 @@ You can do this by going through these steps:
 
 ## Known Installation Issues
 
+### Python Installation Errors
+
 On M1 Macs, if you get a `fatal error: 'Python.h' file not found` message, try a
-different method of installing Python. Installation via `pyenv` is known to
-work.
+different method of installing Python. The recommended approach is to use
+[`pyenv`](https://github.com/pyenv/pyenv), as noted above in the installation
+instructions.
+
+### PostgreSQL Installation Errors
 
 A direct installation of PostgreSQL will not put the `createdb` command on your
 `$PATH`. It can be added there in your shell startup script, or a
