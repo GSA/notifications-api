@@ -193,7 +193,7 @@ and can update itself properly.
 We now need to install a database - this project uses PostgreSQL, and Homebrew
 requires a version number to be included with it when installing it:
 
-_NOTE: This project currently works with PostgreSQL version 15.x_
+_NOTE: This project currently works with PostgreSQL version 15.x; version 12.x is currently used in our hosted environments._
 
 ```sh
 brew install postgresql@15
