@@ -62,7 +62,7 @@ freezegun = "^1.2.2"
 honcho = "*"
 isort = "^5.12.0"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
-moto = "==4.2.8"
+moto = "==4.2.9"
 pip-audit = "*"
 pytest = "^7.4.3"
 pytest-env = "^1.1.1"
