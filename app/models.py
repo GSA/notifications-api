@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import uuid
+from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -365,8 +366,13 @@ class AgreementType(Enum):
     IAA = "IAA"
 
 
+class AgreementStatus(Enum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+
+
 class Agreement(db.Model):
-    __tablename__ = "agreement"
+    __tablename__ = "agreements"
 
     id = db.Column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
@@ -378,7 +384,12 @@ class Agreement(db.Model):
         nullable=False,
     )
     partner_name = db.Column(db.String(255), primary_key=True)
-    # TODO: status
+    status = db.Column(
+        db.Enum(AgreementStatus, name="agreement_statuses"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
     start = db.Column(db.DateTime, nullable=False)
     end = db.Column(db.DateTime, nullable=False)
     url = db.Column(db.String(2000), nullable=True)
