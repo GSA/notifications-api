@@ -144,15 +144,16 @@ _NOTE: This project currently uses the latest `1.4.x release of Terraform._
 
 #### Python Installation
 
-Now we're going to install a tool to help us manage Python versions on our
-system.  First, we'll install [pyenv](https://github.com/pyenv/pyenv) with
-Homebrew:
+Now we're going to install a tool to help us manage Python versions and
+virtual environments on our system.  First, we'll install
+[pyenv](https://github.com/pyenv/pyenv) and one of its plugins,
+[pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv), with Homebrew:
 
 ```sh
-brew install pyenv
+brew install pyenv pyenv-virtualenv
 ```
 
-When that finishes installing, you'll need to make another adjustment in the
+When these finish installing, you'll need to make another adjustment in the
 file that you adjusted for your `$PATH` environment variable and Homebrew's
 setup. Open the file, and add these lines to it:
 
@@ -161,6 +162,7 @@ setup. Open the file, and add these lines to it:
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 ```
 
 Once again, start a new shell session or source the file in your current shell
@@ -251,13 +253,15 @@ First, clone the respository in the directory of your choosing on your machine:
 git clone git@github.com:GSA/notifications-api.git
 ```
 
-Now go into the project directory (`notifications-api` by default) and set the
-local Python version, like this (assumes version Python `3.9.18` is what is
-installed on your machine):
+Now go into the project directory (`notifications-api` by default), create a
+virtual environment, and set the local Python version to point to the virtual
+environment (assumes version Python `3.9.18` is what is installed on your
+machine):
 
 ```sh
 cd notifications-api
-pyenv local 3.9.18
+pyenv virtualenv 3.9.18 notify-api
+pyenv local notify-api
 ```
 
 _If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently._
