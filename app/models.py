@@ -361,47 +361,6 @@ class Domain(db.Model):
     )
 
 
-class AgreementType(Enum):
-    MOU = "MOU"
-    IAA = "IAA"
-
-
-class AgreementStatus(Enum):
-    ACTIVE = "active"
-    EXPIRED = "expired"
-
-
-class Agreement(db.Model):
-    __tablename__ = "agreements"
-
-    id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
-    )
-    type = db.Column(
-        db.Enum(AgreementType, name="agreement_types"),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
-    partner_name = db.Column(db.String(255), primary_key=True)
-    status = db.Column(
-        db.Enum(AgreementStatus, name="agreement_statuses"),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
-    start = db.Column(db.DateTime, nullable=False)
-    end = db.Column(db.DateTime, nullable=False)
-    url = db.Column(db.String(2000), nullable=True)
-    budget_amount = db.Column(db.Float, nullable=True)
-    organization_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("organization.id"),
-        nullable=True,
-    )
-    organization = db.relationship("Organization", backref="agreements")
-
-
 ORGANIZATION_TYPES = ["federal", "state", "other"]
 
 
@@ -2395,14 +2354,34 @@ class WebauthnCredential(db.Model):
         }
 
 
+class AgreementType(Enum):
+    MOU = "MOU"
+    IAA = "IAA"
+
+
+class AgreementStatus(Enum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+
+
 class Agreement(db.Model):
     __tablename__ = "agreements"
     id = db.Column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
     )
-    type = db.Column(db.String(3), nullable=False, unique=True, index=True)
+    type = db.Column(
+        db.Enum(AgreementType, name="agreement_types"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
     partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    status = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    status = db.Column(
+        db.Enum(AgreementStatus, name="agreement_statuses"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     url = db.Column(db.String(255), nullable=False, unique=True, index=True)
@@ -2412,6 +2391,7 @@ class Agreement(db.Model):
         db.ForeignKey("organization.id"),
         nullable=True,
     )
+    organization = db.relationship("Organization", backref="agreements")
 
     def serialize(self):
         return {
