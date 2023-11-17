@@ -15,6 +15,7 @@ bootstrap: ## Set up everything to run the app
 	poetry install --sync --no-root
 	poetry self add poetry-dotenv-plugin
 	poetry self update
+	poetry run pre-commit install
 	createdb notification_api || true
 	(poetry run flask db upgrade) || true
 
