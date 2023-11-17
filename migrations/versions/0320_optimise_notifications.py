@@ -28,13 +28,13 @@ def upgrade():
         # PLEASE NOTE: that if you create index on production you need to add concurrently to the create statement,
         # however we are unable to do that inside a transaction like this upgrade method
         ix_notifications_service_id_composite = """
-        CREATE INDEX ix_notifications_service_id_composite 
+        CREATE INDEX ix_notifications_service_id_composite
             on notifications (service_id, notification_type, notification_status, created_at)
         """
         op.execute(ix_notifications_service_id_composite)
 
         ix_notifications_notification_type_composite = """
-            CREATE INDEX ix_notifications_notification_type_composite 
+            CREATE INDEX ix_notifications_notification_type_composite
             on notifications (notification_type, notification_status, created_at)
         """
         op.execute(ix_notifications_notification_type_composite)

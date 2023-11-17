@@ -41,8 +41,8 @@ def upgrade():
     conn.execute(
         """
     INSERT INTO service_permissions (service_id, permission, created_at)
-    SELECT id, 'sms', '2017-05-26 17:30:00.000000' FROM services 
-    WHERE id NOT IN (SELECT service_id FROM service_permissions 
+    SELECT id, 'sms', '2017-05-26 17:30:00.000000' FROM services
+    WHERE id NOT IN (SELECT service_id FROM service_permissions
     WHERE service_id=id AND permission='sms')
     """
     )
@@ -50,8 +50,8 @@ def upgrade():
     conn.execute(
         """
         INSERT INTO service_permissions (service_id, permission, created_at)
-        SELECT id, 'email', '2017-05-26 17:30:00.000000' FROM services 
-        WHERE id NOT IN (SELECT service_id FROM service_permissions 
+        SELECT id, 'email', '2017-05-26 17:30:00.000000' FROM services
+        WHERE id NOT IN (SELECT service_id FROM service_permissions
         WHERE service_id=id AND permission='email')
         """
     )
@@ -59,7 +59,7 @@ def upgrade():
     conn.execute(
         """
     INSERT INTO service_permissions (service_id, permission, created_at)
-    SELECT id, 'letter', '2017-05-26 17:30:00.000000' FROM services 
+    SELECT id, 'letter', '2017-05-26 17:30:00.000000' FROM services
     WHERE can_send_letters AND id NOT IN (SELECT service_id FROM service_permissions
     WHERE service_id=id AND permission='letter')
     """
@@ -67,8 +67,8 @@ def upgrade():
     conn.execute(
         """
         INSERT INTO service_permissions (service_id, permission, created_at)
-        SELECT id, 'international_sms', '2017-05-26 17:30:00.000000' FROM services 
-        WHERE can_send_international_sms AND id NOT IN (SELECT service_id FROM service_permissions 
+        SELECT id, 'international_sms', '2017-05-26 17:30:00.000000' FROM services
+        WHERE can_send_international_sms AND id NOT IN (SELECT service_id FROM service_permissions
         WHERE service_id=id AND permission='international_sms')
         """
     )

@@ -17,7 +17,7 @@ environment = os.environ["NOTIFY_ENVIRONMENT"]
 
 def upgrade():
     index = """
-        CREATE UNIQUE INDEX CONCURRENTLY uix_service_id_financial_year_start 
+        CREATE UNIQUE INDEX CONCURRENTLY uix_service_id_financial_year_start
         ON annual_billing (service_id, financial_year_start)
     """
     constraint = """

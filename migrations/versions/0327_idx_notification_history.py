@@ -21,13 +21,13 @@ def upgrade():
         op.execute("DROP INDEX IF EXISTS ix_notification_history_service_id_created_at")
 
         index = """
-            CREATE INDEX IF NOT EXISTS ix_notification_history_service_id_composite 
+            CREATE INDEX IF NOT EXISTS ix_notification_history_service_id_composite
             on notification_history(service_id, key_type, notification_type, created_at)
             """
         op.execute(index)
 
         composite_index = """
-        CREATE INDEX IF NOT EXISTS ix_notifications_notification_type_composite 
+        CREATE INDEX IF NOT EXISTS ix_notifications_notification_type_composite
             on notifications(notification_type, notification_status, created_at)
         """
         op.execute(composite_index)
@@ -43,19 +43,19 @@ def downgrade():
     if environment not in ["live", "production"]:
         op.execute(
             """
-            CREATE INDEX IF NOT EXISTS ix_notifications_service_id_created_at 
+            CREATE INDEX IF NOT EXISTS ix_notifications_service_id_created_at
             ON notifications(service_id, date(created_at))
             """
         )
         op.execute(
             """
-            CREATE INDEX IF NOT EXISTS ix_notification_history_created_at 
+            CREATE INDEX IF NOT EXISTS ix_notification_history_created_at
             on notification_history(created_at)
             """
         )
         op.execute(
             """
-            CREATE INDEX IF NOT EXISTS ix_notification_history_service_id_created_at 
+            CREATE INDEX IF NOT EXISTS ix_notification_history_service_id_created_at
             on notification_history(created_at)
             """
         )
@@ -75,13 +75,13 @@ def downgrade():
         )
         op.execute(
             """
-            CREATE INDEX IF NOT EXISTS ix_notification_history_notification_status 
+            CREATE INDEX IF NOT EXISTS ix_notification_history_notification_status
             on notification_history (notification_status)
             """
         )
         op.execute(
             """
-            CREATE INDEX IF NOT EXISTS ix_notification_history_notification_type 
+            CREATE INDEX IF NOT EXISTS ix_notification_history_notification_type
             on notification_history (notification_type)
             """
         )

@@ -14,8 +14,8 @@ down_revision = "0189_ft_billing_data_type"
 def upgrade():
     op.get_bind()
     op.execute("ALTER TABLE ft_billing DROP CONSTRAINT ft_billing_pkey")
-    sql = """ALTER TABLE ft_billing ADD CONSTRAINT 
-    ft_billing_pkey PRIMARY KEY 
+    sql = """ALTER TABLE ft_billing ADD CONSTRAINT
+    ft_billing_pkey PRIMARY KEY
     (bst_date, template_id, service_id, rate_multiplier, provider, notification_type, international, rate)"""
     op.execute(sql)
 
@@ -23,7 +23,7 @@ def upgrade():
 def downgrade():
     op.get_bind()
     op.execute("ALTER TABLE ft_billing DROP CONSTRAINT ft_billing_pkey")
-    sql = """ALTER TABLE ft_billing ADD CONSTRAINT 
-    ft_billing_pkey PRIMARY KEY 
+    sql = """ALTER TABLE ft_billing ADD CONSTRAINT
+    ft_billing_pkey PRIMARY KEY
     (bst_date, template_id, service_id, rate_multiplier, provider, notification_type, international)"""
     op.execute(sql)

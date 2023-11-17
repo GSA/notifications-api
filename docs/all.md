@@ -6,6 +6,7 @@
   - [Onboarding](#onboarding)
   - [Setting up the infrastructure](#setting-up-the-infrastructure)
 - [Using the logs](#using-the-logs)
+- [`git` hooks](#git-hooks)
 - [Testing](#testing)
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
@@ -231,6 +232,14 @@ Staging: https://logs.fr.cloud.gov/app/discover#/view/73d7c820-596e-11ee-a43a-09
 
 Once in the view, you'll likely want to adjust the time range in the upper right of the page.
 
+# `git` hooks
+
+We're using [`pre-commit`](https://pre-commit.com/) to manage hooks in order to automate common tasks or easily-missed cleanup. It's installed as part of `make bootstrap` and is limited to this project's virtualenv.
+
+The configuration is stored in `.pre-commit-config.yaml`. In that config, there are links to the repos from which the hooks are pulled, so hop through there if you want a detailed description of what each one is doing.
+
+We do not maintain any hooks in this repository.
+
 # Testing
 
 ```
@@ -428,7 +437,7 @@ There is a Flask command to wipe user-created data (users, services, etc.).
 The command should stop itself if it's run in a production environment, but, you know, please don't run it
 in a production environment.
 
-Running locally: 
+Running locally:
 
 ```
 flask command purge_functional_test_data -u <functional tests user name prefix>
@@ -445,7 +454,7 @@ cf run-task notify-api "flask command purge_functional_test_data -u <functional 
 
 For these, we're using Flask commands, which live in [`/app/commands.py`](../app/commands.py).
 
-This includes things that might be one-time operations! If we're running it on production, it should be a Flask 
+This includes things that might be one-time operations! If we're running it on production, it should be a Flask
 command Using a command allows the operation to be tested, both with `pytest` and with trial runs in staging.
 
 To see information about available commands, you can get a list with:
@@ -473,7 +482,7 @@ that both end up at `persist_notification`, which writes to the database, and `p
 which enqueues the sending.
 
 For CSV uploads, the CSV is first stored in S3 and queued as a `Job`. When the job runs, it iterates
-through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and 
+through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and
 `provider_tasks.deliver_sms`.
 
 # Writing public APIs
@@ -667,7 +676,7 @@ For tasks that should happen before other stuff, there's a priority queue. Platf
 can set templates to use this queue.
 
 Currently, this queue doesn't do anything special. If the normal queue is very busy, it's
-possible that this queue will be faster merely because it's shorter. By the same logic, a 
+possible that this queue will be faster merely because it's shorter. By the same logic, a
 busy priority queue is likely to be _slower_ than the normal queue
 
 ## Celery scheduled tasks
@@ -814,7 +823,7 @@ Assuming that you have followed all steps to set up localstack successfully (see
    - Go to settings and set the organization for your service to 'Broadcast services' (scroll down to platform admin)
    - Go to settings and set your service to 'live' (scroll down to platform admin)
 5. Run your app 'locally'.  I.e. run `make run-procfile` on this project and `make run-flask` on the admin project
-6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead, 
+6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead,
    you see your authentication code in green in the api logs
 7. Go to send messages and upload your csv file and send your 100000 messages
 

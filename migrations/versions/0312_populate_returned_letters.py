@@ -16,11 +16,11 @@ def upgrade():
     conn = op.get_bind()
     sql = """
         select id, service_id, reference, updated_at
-        from notification_history 
+        from notification_history
         where notification_type = 'letter'
         and notification_status = 'returned-letter'"""
     insert_sql = """
-        insert into returned_letters(id, reported_at, service_id, notification_id, created_at, updated_at) 
+        insert into returned_letters(id, reported_at, service_id, notification_id, created_at, updated_at)
         values(uuid_in(md5(random()::text)::cstring), :updated_at, :service_id, :id, now(), null)
     """
 

@@ -25,7 +25,7 @@ def upgrade():
     history_query = """
         UPDATE templates_history t_history set service_letter_contact_id = (
             SELECT service_letter_contact_id from templates
-            where service_letter_contact_id is not null 
+            where service_letter_contact_id is not null
             and id = t_history.id
             and version = t_history.version
         )

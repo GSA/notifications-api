@@ -62,12 +62,12 @@ def upgrade():
     template_history_insert = """INSERT INTO templates_history (id, name, template_type, created_at,
                                                                 content, archived, service_id,
                                                                 subject, created_by_id, version)
-                                 VALUES (:template_id, :template_name, :template_type, :time_now, 
+                                 VALUES (:template_id, :template_name, :template_type, :time_now,
                                  :content, False, :service_id, :subject, :user_id, 1)
                               """
     template_insert = """INSERT INTO templates (id, name, template_type, created_at,
                                                 content, archived, service_id, subject, created_by_id, version)
-                                 VALUES (:template_id, :template_name, :template_type, :time_now, 
+                                 VALUES (:template_id, :template_name, :template_type, :time_now,
                                  :content, False, :service_id, :subject, :user_id, 1)
                               """
     email_verification_content = """Hi ((name)),\n\nTo complete your registration for GOV.UK Notify please click the link below\n\n((url))"""
