@@ -81,7 +81,6 @@ class User(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String, nullable=False, index=True, unique=False)
     email_address = db.Column(db.String(255), nullable=False, index=True, unique=True)
-    preferred_timezone = db.Column(db.Text, nullable=True, index=False, unique=False)
     created_at = db.Column(
         db.DateTime,
         index=False,
@@ -123,6 +122,9 @@ class User(db.Model):
         unique=False,
         nullable=False,
         default=datetime.datetime.utcnow,
+    )
+    preferred_timezone = db.Column(
+        db.Text, nullable=True, index=False, unique=False, default="US/Eastern"
     )
 
     # either email auth or a mobile number must be provided
