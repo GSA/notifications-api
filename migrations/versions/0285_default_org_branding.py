@@ -16,14 +16,14 @@ import sqlalchemy as sa
 
 def upgrade():
     op.execute(
-        """UPDATE organisation SET email_branding_id = email_branding.id 
+        """UPDATE organisation SET email_branding_id = email_branding.id
     FROM email_branding
     WHERE email_branding.domain in (SELECT domain FROM domain WHERE domain.organisation_id = organisation.id)
     """
     )
 
     op.execute(
-        """UPDATE organisation SET letter_branding_id = letter_branding.id 
+        """UPDATE organisation SET letter_branding_id = letter_branding.id
     FROM letter_branding
     WHERE letter_branding.domain in (SELECT domain FROM domain WHERE domain.organisation_id = organisation.id)
     """

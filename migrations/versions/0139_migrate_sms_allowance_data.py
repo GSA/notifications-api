@@ -37,10 +37,10 @@ def upgrade():
         "time_now": datetime.utcnow(),
     }
     insert_row_if_not_exist = """
-        INSERT INTO annual_billing 
-        (id, service_id, financial_year_start, free_sms_fragment_limit, created_at, updated_at) 
-         SELECT uuid_in(md5(random()::text)::cstring), id, :current_year, :default_limit, :time_now, :time_now 
-         FROM services WHERE id NOT IN 
+        INSERT INTO annual_billing
+        (id, service_id, financial_year_start, free_sms_fragment_limit, created_at, updated_at)
+         SELECT uuid_in(md5(random()::text)::cstring), id, :current_year, :default_limit, :time_now, :time_now
+         FROM services WHERE id NOT IN
         (select service_id from annual_billing)
     """
     conn.execute(text(insert_row_if_not_exist), input_params)

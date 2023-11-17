@@ -21,15 +21,15 @@ def upgrade():
     template_insert = """
         INSERT INTO templates (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, 
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id,
         :subject, :user_id, 1, :process_type, false)
     """
     template_history_insert = """
         INSERT INTO templates_history (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id, 
+        VALUES (:template_id, :template_name, :template_type, :time_now, :content, False, :notify_service_id,
         :subject, :user_id, 1, :process_type, false)
-  
+
     """
 
     email_template_content = "\n".join(

@@ -102,15 +102,15 @@ def upgrade():
     insert_t = """
         INSERT INTO templates (id, name, template_type, created_at, content, archived, service_id, subject,
         created_by_id, version, process_type, hidden)
-        VALUES (:template_id, :template_name, :template_type, current_timestamp, 
+        VALUES (:template_id, :template_name, :template_type, current_timestamp,
         :content, False, :notify_service_id, :subject, :user_id, 1, :process_type, false)
     """
     insert_th = """
             INSERT INTO templates_history (id, name, template_type, created_at, content, archived, service_id, subject,
             created_by_id, version, process_type, hidden)
-        VALUES (:template_id, :template_name, :template_type, current_timestamp, 
+        VALUES (:template_id, :template_name, :template_type, current_timestamp,
         :content, False, :notify_service_id, :subject, :user_id, 1, :process_type, false)
-        
+
         """
 
     for template in templates:

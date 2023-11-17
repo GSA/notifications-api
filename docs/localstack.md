@@ -16,7 +16,7 @@ How to Use Localstack in Your Development Work
 
 ### Add LOCALSTACK_ENDPOINT_URL to Your .env File (One-Time)
 
-* Find the value in the sample.env file  (# LOCALSTACK_ENDPOINT_URL=http://localhost:4566).  
+* Find the value in the sample.env file  (# LOCALSTACK_ENDPOINT_URL=http://localhost:4566).
 * Copy and uncomment it into your .env file
 
 ### Run with Localstack (Recurring)

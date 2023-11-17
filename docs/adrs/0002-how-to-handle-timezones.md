@@ -31,7 +31,7 @@ We've also identified the following areas as pieces of the application and
 service that could be impacted by any timezone changes:
 
 - Reports by day (or specific month/year)
-- Jobs running at a reasonable time 
+- Jobs running at a reasonable time
 - Job schedules (we want users to understand when things will happen)
 - Scheduling sending of messages
 - UI listing of time messages were sent
