@@ -9,16 +9,17 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '0405_adjust_agreement_model'
-down_revision = '0404_expire_invites'
+revision = "0405_adjust_agreement_model"
+down_revision = "0404_expire_invites"
 
-agreement_type_name = 'agreement_types'
+agreement_type_name = "agreement_types"
 agreement_type_options = ("MOU", "IAA")
 agreement_types = sa.Enum(*agreement_type_options, name=agreement_type_name)
 
-agreement_status_name = 'agreement_statuses'
+agreement_status_name = "agreement_statuses"
 agreement_status_options = ("active", "expired")
 agreement_statuses = sa.Enum(*agreement_status_options, name=agreement_status_name)
+
 
 def upgrade():
     agreement_types.create(op.get_bind())
@@ -34,8 +35,8 @@ def upgrade():
 
 def downgrade():
     op.alter_column(
-        'agreements',
-        'status',
+        "agreements",
+        "status",
         existing_type=agreement_statuses,
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
@@ -43,8 +44,8 @@ def downgrade():
     op.execute(f"DROP TYPE {agreement_status_name}")
 
     op.alter_column(
-        'agreements',
-        'type',
+        "agreements",
+        "type",
         existing_type=agreement_types,
         type_=sa.VARCHAR(length=3),
         existing_nullable=False,

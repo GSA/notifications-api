@@ -435,6 +435,18 @@ class Organization(db.Model):
         return [domain.domain for domain in self.domains]
 
     @property
+    def agreement(self):
+        try:
+            active_agreements = [
+                agreement
+                for agreement in self.agreements
+                if agreement.status == AgreementStatus.ACTIVE
+            ]
+            return active_agreements[0]
+        except IndexError:
+            return None
+
+    @property
     def is_active(self):
         return self.agreement and self.agreement.status == AgreementStatus.active
 
