@@ -434,6 +434,14 @@ class Organization(db.Model):
     def domain_list(self):
         return [domain.domain for domain in self.domains]
 
+    @property
+    def is_active(self):
+        return self.agreement and self.agreement.status == AgreementStatus.active
+
+    @property
+    def has_mou(self):
+        return self.agreement and self.agreement.type == AgreementType.MOU
+
     def serialize(self):
         return {
             "id": str(self.id),
