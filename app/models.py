@@ -447,7 +447,7 @@ class Organization(db.Model):
             return None
 
     @property
-    def is_active(self):
+    def agreement_active(self):
         return self.agreement and self.agreement.status == AgreementStatus.active
 
     @property
