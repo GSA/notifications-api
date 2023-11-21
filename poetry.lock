@@ -216,17 +216,17 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "awscli"
-version = "1.30.4"
+version = "1.30.5"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "awscli-1.30.4-py3-none-any.whl", hash = "sha256:823a77ff27f9e9b3f62f0209835197e681f6016a662a210167f5bb59504c3de1"},
-    {file = "awscli-1.30.4.tar.gz", hash = "sha256:2d842940d47577c02fa464ad8a9219ae71c35a46d22737adf151cc832b6c2708"},
+    {file = "awscli-1.30.5-py3-none-any.whl", hash = "sha256:ed1604ae65749e734b804dab432a5e49f1bedf8b21d26381b1baf4ba46ad0d39"},
+    {file = "awscli-1.30.5.tar.gz", hash = "sha256:536efba329a65efe3a99756dc931d5d9775b3e90562716cd021603bae61b3afa"},
 ]
 
 [package.dependencies]
-botocore = "1.32.4"
+botocore = "1.32.5"
 colorama = ">=0.2.5,<0.4.5"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.32.4"
+version = "1.32.5"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.32.4-py3-none-any.whl", hash = "sha256:3ee73c0d93bdb944d0c46772f08f09cdcf25ef58bd86962e6f4a24e531198bfa"},
-    {file = "botocore-1.32.4.tar.gz", hash = "sha256:6bfa75e28c9ad0321cefefa51b00ff233b16b2416f8b95229796263edba45a39"},
+    {file = "botocore-1.32.5-py3-none-any.whl", hash = "sha256:b8960c955ba275915bf022c54c896c2dac1038289d8a5ace92d1431257c0a439"},
+    {file = "botocore-1.32.5.tar.gz", hash = "sha256:75a68f942cd87baff83b3a20dfda11b3aeda48aad32e4dcd6fe8992c0cb0e7db"},
 ]
 
 [package.dependencies]
@@ -4709,4 +4709,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "cb171dad835e6ca2dbb6def27e6aa59b98d2c213d352dba1cce43b76dfd5f8c9"
+content-hash = "a3e444bb8269fe4665262055075fe09a366ad236eabed7e18fc6ed704a348f20"
