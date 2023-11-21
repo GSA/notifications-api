@@ -5,6 +5,7 @@ Revises: 0399_remove_research_mode
 Create Date: 2023-04-24 11:35:22.873930
 
 """
+import datetime
 import os
 import uuid
 
@@ -30,10 +31,18 @@ def upgrade():
         "password": password,
         "mobile_number": "+12025555555",
         "state": "active",
+        "created_at": datetime.datetime.utcnow(),
+        "password_changed_at": datetime.datetime.utcnow(),
+        "failed_login_count": 0,
+        "platform_admin": "f",
+        "email_access_validated_at": datetime.datetime.utcnow(),
     }
-    user = User(**data)
-    db.session.add(user)
-    db.session.commit()
+    conn = op.get_bind()
+    insert_sql = """
+        insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at)
+        values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at)
+        """
+    conn.execute(sa.text(insert_sql), data)
 
 
 def downgrade():

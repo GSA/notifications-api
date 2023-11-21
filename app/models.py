@@ -123,6 +123,9 @@ class User(db.Model):
         nullable=False,
         default=datetime.datetime.utcnow,
     )
+    preferred_timezone = db.Column(
+        db.Text, nullable=True, index=False, unique=False, default="US/Eastern"
+    )
 
     # either email auth or a mobile number must be provided
     CheckConstraint(
