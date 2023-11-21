@@ -216,17 +216,17 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "awscli"
-version = "1.30.2"
+version = "1.30.4"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "awscli-1.30.2-py3-none-any.whl", hash = "sha256:6656cbe69f5ff9576e28a13ba19194b2373b18240d9f8f8025713ad8a9a39b5b"},
-    {file = "awscli-1.30.2.tar.gz", hash = "sha256:5db62c3db6142093c24be9e1704dc0e4aef2c47706524ba54f9bc73d3e53f643"},
+    {file = "awscli-1.30.4-py3-none-any.whl", hash = "sha256:823a77ff27f9e9b3f62f0209835197e681f6016a662a210167f5bb59504c3de1"},
+    {file = "awscli-1.30.4.tar.gz", hash = "sha256:2d842940d47577c02fa464ad8a9219ae71c35a46d22737adf151cc832b6c2708"},
 ]
 
 [package.dependencies]
-botocore = "1.32.2"
+botocore = "1.32.4"
 colorama = ">=0.2.5,<0.4.5"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.32.2"
+version = "1.32.4"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.32.2-py3-none-any.whl", hash = "sha256:a68a33193d8cd59e3b2142bff632e562afc02f9c4417e3dcc81a6e1b1f47148e"},
-    {file = "botocore-1.32.2.tar.gz", hash = "sha256:0e231524e9b72169fe0b8d9310f47072c245fb712778e0669f53f264f0e49536"},
+    {file = "botocore-1.32.4-py3-none-any.whl", hash = "sha256:3ee73c0d93bdb944d0c46772f08f09cdcf25ef58bd86962e6f4a24e531198bfa"},
+    {file = "botocore-1.32.4.tar.gz", hash = "sha256:6bfa75e28c9ad0321cefefa51b00ff233b16b2416f8b95229796263edba45a39"},
 ]
 
 [package.dependencies]
@@ -4709,4 +4709,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "1dd7ea26489462b83d51f0d85c454330efd27ebfa916ee9705782804cc5ba09d"
+content-hash = "cb171dad835e6ca2dbb6def27e6aa59b98d2c213d352dba1cce43b76dfd5f8c9"
