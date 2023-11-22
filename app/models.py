@@ -448,11 +448,13 @@ class Organization(db.Model):
 
     @property
     def agreement_active(self):
-        return self.agreement and self.agreement.status == AgreementStatus.active
+        return (
+            self.agreement.status == AgreementStatus.active if self.agreement else False
+        )
 
     @property
     def has_mou(self):
-        return self.agreement and self.agreement.type == AgreementType.MOU
+        return self.agreement.type == AgreementType.MOU if self.agreement else False
 
     def serialize(self):
         return {

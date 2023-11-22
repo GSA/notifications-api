@@ -138,7 +138,7 @@ def test_should_not_delete_invitations_less_than_two_days_old(
     make_invitation(
         sample_user,
         sample_service,
-        age=two_days - one_second, # Not quite two days
+        age=two_days - one_second,  # Not quite two days
         email_address="valid@2.com",
     )
     make_invitation(
