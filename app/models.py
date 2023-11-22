@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import uuid
+from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -432,6 +433,32 @@ class Organization(db.Model):
     @property
     def domain_list(self):
         return [domain.domain for domain in self.domains]
+
+    @property
+    def agreement(self):
+        try:
+            active_agreements = [
+                agreement
+                for agreement in self.agreements
+                if agreement.status == AgreementStatus.ACTIVE
+            ]
+            return active_agreements[0]
+        except IndexError:
+            return None
+
+    @property
+    def agreement_active(self):
+        try:
+            return self.agreement.status == AgreementStatus.ACTIVE
+        except AttributeError:
+            return False
+
+    @property
+    def has_mou(self):
+        try:
+            return self.agreement.type == AgreementType.MOU
+        except AttributeError:
+            return False
 
     def serialize(self):
         return {
@@ -2353,14 +2380,34 @@ class WebauthnCredential(db.Model):
         }
 
 
+class AgreementType(Enum):
+    MOU = "MOU"
+    IAA = "IAA"
+
+
+class AgreementStatus(Enum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+
+
 class Agreement(db.Model):
     __tablename__ = "agreements"
     id = db.Column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
     )
-    type = db.Column(db.String(3), nullable=False, unique=True, index=True)
+    type = db.Column(
+        db.Enum(AgreementType, name="agreement_types"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
     partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    status = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    status = db.Column(
+        db.Enum(AgreementStatus, name="agreement_statuses"),
+        index=False,
+        unique=False,
+        nullable=False,
+    )
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     url = db.Column(db.String(255), nullable=False, unique=True, index=True)
@@ -2370,6 +2417,7 @@ class Agreement(db.Model):
         db.ForeignKey("organization.id"),
         nullable=True,
     )
+    organization = db.relationship("Organization", backref="agreements")
 
     def serialize(self):
         return {

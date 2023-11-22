@@ -133,16 +133,18 @@ def test_should_delete_all_invitations_more_than_one_day_old(
 def test_should_not_delete_invitations_less_than_two_days_old(
     sample_user, sample_service
 ):
+    two_days = timedelta(days=2)
+    one_second = timedelta(seconds=1)
     make_invitation(
         sample_user,
         sample_service,
-        age=timedelta(hours=47, minutes=59, seconds=59),
+        age=two_days - one_second,  # Not quite two days
         email_address="valid@2.com",
     )
     make_invitation(
         sample_user,
         sample_service,
-        age=timedelta(hours=48),
+        age=two_days,
         email_address="expired@1.com",
     )
 
