@@ -216,17 +216,17 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "awscli"
-version = "1.30.5"
+version = "1.30.6"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "awscli-1.30.5-py3-none-any.whl", hash = "sha256:ed1604ae65749e734b804dab432a5e49f1bedf8b21d26381b1baf4ba46ad0d39"},
-    {file = "awscli-1.30.5.tar.gz", hash = "sha256:536efba329a65efe3a99756dc931d5d9775b3e90562716cd021603bae61b3afa"},
+    {file = "awscli-1.30.6-py3-none-any.whl", hash = "sha256:0bd6d440b055fbf5b07763df3079eedeed9dbc674ce80876ba2db99202aca8d6"},
+    {file = "awscli-1.30.6.tar.gz", hash = "sha256:2d7f4758df35b71ae1e1662451371bcad2f0516c1b030d1ba298a49d5a5d8289"},
 ]
 
 [package.dependencies]
-botocore = "1.32.5"
+botocore = "1.32.6"
 colorama = ">=0.2.5,<0.4.5"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.32.5"
+version = "1.32.6"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.32.5-py3-none-any.whl", hash = "sha256:b8960c955ba275915bf022c54c896c2dac1038289d8a5ace92d1431257c0a439"},
-    {file = "botocore-1.32.5.tar.gz", hash = "sha256:75a68f942cd87baff83b3a20dfda11b3aeda48aad32e4dcd6fe8992c0cb0e7db"},
+    {file = "botocore-1.32.6-py3-none-any.whl", hash = "sha256:4454f967a4d1a01e3e6205c070455bc4e8fd53b5b0753221581ae679c55a9dfd"},
+    {file = "botocore-1.32.6.tar.gz", hash = "sha256:ecec876103783b5efe6099762dda60c2af67e45f7c0ab4568e8265d11c6c449b"},
 ]
 
 [package.dependencies]
@@ -4709,4 +4709,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "8a1abc8059a353107cd5e1ecef44d70fca97c125913935ee0f09506b2bbd68af"
+content-hash = "66f719b7c25a1379b9ecc12f5d102153e171c304dcf430b75d9f45a6e8035a4e"
