@@ -452,7 +452,7 @@ def test_organization_agreement_active(notify_db_session, agreement_status, expe
     agree.type = AgreementType.IAA
     organization = create_organization(name="Something")
     organization.agreements.append(agree)
-    assert organization.active == expected
+    assert organization.agreement_active == expected
 
 
 def test_agreement_serialize():
