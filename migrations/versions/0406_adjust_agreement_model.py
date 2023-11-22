@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = "0405_adjust_agreement_model"
-down_revision = "0404_expire_invites"
+revision = "0406_adjust_agreement_model"
+down_revision = "0405_add_preferred_timezone"
 
 agreement_type_name = "agreement_types"
 agreement_type_options = ("MOU", "IAA")
