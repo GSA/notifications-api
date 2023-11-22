@@ -1,16 +1,16 @@
-# US Notify API
+# US Notify.gov API
 
-This project is the core of [Notify](https://notifications-admin.app.cloud.gov/).
+This project is the core of [Notify.gov](https://notifications-admin.app.cloud.gov/).
 It's cloned from the brilliant work of the team at
 [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
 
 This repo contains:
 
 - A public-facing REST API for Notify, which teams can integrate with using
- [API clients built by UK](https://www.notifications.service.gov.uk/documentation)
+ [API clients built by UK](https://www.notifications.service.gov.uk/documentation).
 - An internal-only REST API built using Flask to manage services, users,
-  templates, etc., which the [admin UI](http://github.com/18F/notifications-admin)
-  talks to)
+  templates, etc., which the
+  [Notify.gov Admin UI](http://github.com/18F/notifications-admin) talks to.
 - Asynchronous workers built using Celery to put things on queues and read them
   off to be processed, sent to providers, updated, etc.
 
@@ -123,11 +123,13 @@ configuration after installation to get working out of the box:
   asynchronous job processing
 - [vim](https://www.vim.org/) - for editing files more easily in the command
   line
+- [wget](https://www.gnu.org/software/wget/) - for retrieving files in the
+  command line
 
 You can install them by running the following:
 
 ```sh
-brew install jq git tfenv cloudfoundry/tap/cf-cli@8 redis vim
+brew install jq git tfenv cloudfoundry/tap/cf-cli@8 redis vim wget
 ```
 
 #### Terraform Installation
@@ -446,8 +448,14 @@ instructions above for more details.
 
 ## License && public domain
 
-Work through [commit `e604385`](https://github.com/GSA/notifications-api/commit/e604385e0cf4c2ab8c6451b7120ceb196cce21b5) is licensed by the UK government under the MIT license. Work after that commit is in the worldwide public domain. See [LICENSE.md](./LICENSE.md) for more information.
+Work through
+[commit `e604385`](https://github.com/GSA/notifications-api/commit/e604385e0cf4c2ab8c6451b7120ceb196cce21b5)
+is licensed by the UK government under the MIT license. Work after that commit
+is in the worldwide public domain. See [LICENSE.md](./LICENSE.md) for more
+information.
 
 ## Contributing
 
-As stated in [CONTRIBUTING.md](CONTRIBUTING.md), all contributions to this project will be released under the CC0 dedication. By submitting a pull request, you are agreeing to comply with this waiver of copyright interest.
+As stated in [CONTRIBUTING.md](CONTRIBUTING.md), all contributions to this
+project will be released under the CC0 dedication. By submitting a pull request,
+you are agreeing to comply with this waiver of copyright interest.
