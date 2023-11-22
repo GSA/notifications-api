@@ -33,7 +33,7 @@
 - [Queues and tasks](#queues-and-tasks)
   - [Priority queue](#priority-queue)
   - [Celery scheduled tasks](#celery-scheduled-tasks)
-- [US Notify](#us-notify)
+- [Notify.gov](#us-notify)
   - [System Description](#system-description)
 - [Run Book](#run-book)
   - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
@@ -694,13 +694,13 @@ make run-celery-beat
 
 
 
-US Notify
+Notify.gov
 =========
 
 System Description
 ------------------
 
-US Notify is a service being developed by the TTS Public Benefits Studio to increase the availability of
+Notify.gov is a service being developed by the TTS Public Benefits Studio to increase the availability of
 SMS and email notifications to Federal, State, and Local Benefits agencies.
 
 Agencies that sign up will be able to create and use personalized message templates for sending
@@ -710,23 +710,23 @@ or services.
 
 The templates are sent by the agency using one of two methods:
 
-* using the US Notify API to send a message to a given recipient with given personalization values
-* using the US Notify website to upload a CSV file of recipients and their personalization values, one row per message
+* using the Notify.gov API to send a message to a given recipient with given personalization values
+* using the Notify.gov website to upload a CSV file of recipients and their personalization values, one row per message
 
 ### Environment
 
-US Notify is comprised of two applications both running on cloud.gov:
+Notify.gov is comprised of two applications both running on cloud.gov:
 
 * Admin, a Flask website running on the python_buildpack which hosts agency user-facing UI
-* API, a Flask application running on the python_buildpack hosting the US Notify API
+* API, a Flask application running on the python_buildpack hosting the Notify.gov API
 
-US Notify utilizes several cloud.gov-provided services:
+Notify.gov utilizes several cloud.gov-provided services:
 
 * S3 buckets for temporary file storage
 * Elasticache (redis) for cacheing data and enqueueing background tasks
 * RDS (PostgreSQL) for system data storage
 
-US Notify also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
+Notify.gov also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
 
 * [SNS](https://aws.amazon.com/sns/) for sending SMS messages
 * [SES](https://aws.amazon.com/ses/) for sending email messages
@@ -737,7 +737,7 @@ For further details of the system and how it connects to supporting services, se
 Run Book
 ========
 
-Policies and Procedures needed before and during US Notify Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
+Policies and Procedures needed before and during Notify.gov Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
 
 Any changes to policies and procedures defined both here and in the SSPP must be kept in sync, and should be done collaboratively with the System ISSO and ISSM to ensure
 that the security of the system is maintained.
@@ -840,7 +840,7 @@ Also known as: **How to move code from my machine to production**
 1. All PRs must be approved by another developer
 1. PRs to `main` and `production` branches must be merged by a someone with the `Administrator` role.
 1. PR documentation includes a Security Impact Analysis
-1. PRs that will impact the Security Posture must be approved by the US Notify ISSO.
+1. PRs that will impact the Security Posture must be approved by the Notify.gov ISSO.
 1. Any PRs waiting for approval should be talked about during daily Standup meetings.
 
 ### notifications-api & notifications-admin
@@ -940,9 +940,9 @@ Important policies:
 
 | Role Name | Permissions | Who | Responsibilities |
 | --------- | ----------- | --- | ---------------- |
-| Platform Administrator | `platform_admin` | PBS Fed | Administer system settings within US Notify across Services |
+| Platform Administrator | `platform_admin` | PBS Fed | Administer system settings within Notify.gov across Services |
 | User Manager | `MANAGE_USERS` | Agency Partner | Manage service team members |
-| User | any except `MANAGE_USERS` | Agency Partner | Use US Notify |
+| User | any except `MANAGE_USERS` | Agency Partner | Use Notify.gov |
 
 ### Service Accounts
 

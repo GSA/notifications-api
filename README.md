@@ -1,12 +1,12 @@
-# US Notify.gov API
+# Notify.gov API
 
-This project is the core of [Notify.gov](https://notifications-admin.app.cloud.gov/).
+This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
 It's cloned from the brilliant work of the team at
 [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
 
 This repo contains:
 
-- A public-facing REST API for Notify, which teams can integrate with using
+- A public-facing REST API for Notify.gov, which teams can integrate with using
  [API clients built by UK](https://www.notifications.service.gov.uk/documentation).
 - An internal-only REST API built using Flask to manage services, users,
   templates, etc., which the
@@ -430,7 +430,7 @@ instructions above for more details.
 - [Queues and tasks](./docs/all.md#queues-and-tasks)
   - [Priority queue](./docs/all.md#priority-queue)
   - [Celery scheduled tasks](./docs/all.md#celery-scheduled-tasks)
-- [US Notify](./docs/all.md#us-notify)
+- [Notify.gov](./docs/all.md#us-notify)
   - [System Description](./docs/all.md#system-description)
 - [Run Book](./docs/all.md#run-book)
   - [ Alerts, Notifications, Monitoring](./docs/all.md#-alerts-notifications-monitoring)
