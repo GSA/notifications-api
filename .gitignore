@@ -36,9 +36,6 @@ var/
 *.manifest
 *.spec
 
-# Pyenv
-.python-version
-
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
