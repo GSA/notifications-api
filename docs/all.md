@@ -360,6 +360,15 @@ Public env vars make up the configuration in `deploy-config`. These are pulled i
 - [ ] The relevant YAML file in `deploy-config` using the format `var_name: value`
 - [ ] The manifest using the format `((var_name))`
 
+## Managing application initiatlization
+
+In addition to the environment variable management, there may be some [additional application initialization](https://docs.cloudfoundry.org/devguide/deploy-apps/deploy-app.html#profile) that needs to be accounted for. This can include the following:
+
+- Setting other environment variables that require host environment information directly that the application will run in as opposed to being managed by the `manifest.yml` file or or a user-provided service.
+- Running app initializing scripts that require host environment information directly prior to starting the application itself.
+
+These initialization steps are taken care of in the `.profile` file, which we use to set a couple of host environment-specific environment variables.
+
 ## Sandbox environment
 
 There is a sandbox space, complete with terraform and `deploy-config/sandbox.yml` file available
