@@ -431,7 +431,7 @@ instructions above for more details.
 - [Queues and tasks](./docs/all.md#queues-and-tasks)
   - [Priority queue](./docs/all.md#priority-queue)
   - [Celery scheduled tasks](./docs/all.md#celery-scheduled-tasks)
-- [Notify.gov](./docs/all.md#us-notify)
+- [Notify.gov](./docs/all.md#notifygov)
   - [System Description](./docs/all.md#system-description)
 - [Run Book](./docs/all.md#run-book)
   - [ Alerts, Notifications, Monitoring](./docs/all.md#-alerts-notifications-monitoring)
