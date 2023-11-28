@@ -411,6 +411,7 @@ instructions above for more details.
 - [Deploying](./docs/all.md#deploying)
   - [Egress Proxy](./docs/all.md#egress-proxy)
   - [Managing environment variables](./docs/all.md#managing-environment-variables)
+  - [Managing application initiatlization](./docs/all.md#managing-application-initiatlization)
   - [Sandbox environment](./docs/all.md#sandbox-environment)
 - [Database management](./docs/all.md#database-management)
   - [Initial state](./docs/all.md#initial-state)
