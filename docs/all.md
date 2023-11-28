@@ -14,6 +14,7 @@
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
   - [Managing environment variables](#managing-environment-variables)
+  - [Managing application initiatlization](#managing-application-initiatlization)
   - [Sandbox environment](#sandbox-environment)
 - [Database management](#database-management)
   - [Initial state](#initial-state)
