@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 from flask import current_app
@@ -5,7 +6,7 @@ from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTick
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, zendesk_client
+from app import notify_celery, redis_store, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -23,12 +24,16 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import notifications_not_yet_sent
+from app.dao.notifications_dao import (
+    dao_get_failed_notification_count,
+    notifications_not_yet_sent,
+)
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
+from app.delivery.send_to_providers import provider_to_use
 from app.models import (
     EMAIL_TYPE,
     JOB_STATUS_ERROR,
@@ -89,6 +94,49 @@ def expire_or_delete_invitations():
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise
+
+
+@notify_celery.task(name="check-db-notification-fails")
+def check_db_notification_fails():
+    # get values from
+    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
+
+    if not last_value:
+        last_value = 0
+    # get count from db
+    failed_count = dao_get_failed_notification_count()
+    # update redis if need be
+    if failed_count > last_value:
+        redis_store.set("LAST_DB_NOTIFICATION_COUNT", failed_count)
+    # TODO send to slack as well
+    # Only send the first time if we breach a level, except for case of >= 100%
+    message = ""
+    if failed_count >= 10000:
+        message = "We are over 100% in the db for failed notifications"
+    elif failed_count >= 7500 and last_value < 7500:
+        message = (
+            "tts-notify-alerts@gsa.gov",
+            f"We crossed above 75% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+        )
+    elif failed_count >= 5000 and last_value < 5000:
+        message = (
+            "tts-notify-alerts@gsa.gov",
+            f"We crossed above 50% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+        )
+    elif failed_count >= 2500 and last_value < 2500:
+        message = (
+            "tts-notify-alerts@gsa.gov",
+            f"We crossed above 25% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+        )
+    # We don't have permissions to send email in development
+    if message and os.getenv("ENVIRONMENT") != "development":
+        provider = provider_to_use(EMAIL_TYPE, False)
+        provider.send_email(
+            "ken.kehl@gsa.gov",
+            "ken.kehl@gsa.gov",
+            "DB Notification Failures Level Breached",
+            body=str(message),
+        )
 
 
 @notify_celery.task(name="check-job-status")

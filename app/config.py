@@ -199,6 +199,11 @@ class Config(object):
                 "schedule": timedelta(minutes=66),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "check-db-notification-fails": {
+                "task": "check-db-notification-fails",
+                "schedule": timedelta(minutes=77),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "check-job-status": {
                 "task": "check-job-status",
                 "schedule": crontab(),
