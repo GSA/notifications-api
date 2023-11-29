@@ -98,18 +98,23 @@ def expire_or_delete_invitations():
 
 @notify_celery.task(name="check-db-notification-fails")
 def check_db_notification_fails():
-    # get values from
-    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
+    """
+    We are going to use redis to keep track of the previous fail count.
 
+    If the number of fails is more than 100% of the limit, we want to send an alert every time this
+    runs, because it is urgent to fix it.
+
+    If the number is more than 25%, 50% or 75% of the limit, we only want to send an alert
+    on a breach.  I.e., if the last number was at 23% and the current number is 27%, send an email.
+    But if the last number was 26% and the current is 27%, don't.
+    """
+    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
     if not last_value:
         last_value = 0
-    # get count from db
+
     failed_count = dao_get_failed_notification_count()
-    # update redis if need be
     if failed_count > last_value:
         redis_store.set("LAST_DB_NOTIFICATION_COUNT", failed_count)
-    # TODO send to slack as well
-    # Only send the first time if we breach a level, except for case of >= 100%
     message = ""
     if failed_count >= 10000:
         message = "We are over 100% in the db for failed notifications"
@@ -128,12 +133,17 @@ def check_db_notification_fails():
             "tts-notify-alerts@gsa.gov",
             f"We crossed above 25% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
         )
-    # We don't have permissions to send email in development
+    # suppress any spam coming from development tier
     if message and os.getenv("ENVIRONMENT") != "development":
         provider = provider_to_use(EMAIL_TYPE, False)
+        from_address = '"{}" <{}@{}>'.format(
+            "Failed Notification Count Alert",
+            "test_sender",
+            current_app.config["NOTIFY_EMAIL_DOMAIN"],
+        )
         provider.send_email(
-            "ken.kehl@gsa.gov",
-            "ken.kehl@gsa.gov",
+            from_address,
+            "tts-notify-alerts@gsa.gov",
             "DB Notification Failures Level Breached",
             body=str(message),
         )
