@@ -201,7 +201,7 @@ class Config(object):
             },
             "check-db-notification-fails": {
                 "task": "check-db-notification-fails",
-                "schedule": timedelta(minutes=2),
+                "schedule": crontab(minute="18, 48"),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "check-job-status": {
