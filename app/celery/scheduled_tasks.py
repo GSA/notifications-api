@@ -44,6 +44,8 @@ from app.models import (
 )
 from app.notifications.process_notifications import send_notification_to_queue
 
+MAX_NOTIFICATION_FAILS = 10000
+
 
 @notify_celery.task(name="run-scheduled-jobs")
 def run_scheduled_jobs():
@@ -116,25 +118,44 @@ def check_db_notification_fails():
     if failed_count > last_value:
         redis_store.set("LAST_DB_NOTIFICATION_COUNT", failed_count)
     message = ""
-    if failed_count >= 10000:
-        message = "We are over 100% in the db for failed notifications"
-    elif failed_count >= 7500 and last_value < 7500:
+    curr_env = os.getenv("ENVIRONMENT")
+    if failed_count >= MAX_NOTIFICATION_FAILS:
+        message = f"We are over 100% in the db for failed notifications on {curr_env}"
+    elif (
+        failed_count >= MAX_NOTIFICATION_FAILS * 0.9
+        and last_value < MAX_NOTIFICATION_FAILS * 0.9
+    ):
         message = (
             "tts-notify-alerts@gsa.gov",
-            f"We crossed above 75% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+            f"We crossed above 75% in the db for failed notifications on {curr_env}",
         )
-    elif failed_count >= 5000 and last_value < 5000:
+
+    elif (
+        failed_count >= MAX_NOTIFICATION_FAILS * 0.75
+        and last_value < MAX_NOTIFICATION_FAILS * 0.75
+    ):
         message = (
             "tts-notify-alerts@gsa.gov",
-            f"We crossed above 50% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+            f"We crossed above 75% in the db for failed notifications on {curr_env}",
         )
-    elif failed_count >= 2500 and last_value < 2500:
+    elif (
+        failed_count >= MAX_NOTIFICATION_FAILS * 0.5
+        and last_value < MAX_NOTIFICATION_FAILS * 0.5
+    ):
         message = (
             "tts-notify-alerts@gsa.gov",
-            f"We crossed above 25% in the db for failed notifications on {os.getenv('ENVIRONMENT')}",
+            f"We crossed above 50% in the db for failed notifications on {curr_env}",
+        )
+    elif (
+        failed_count >= MAX_NOTIFICATION_FAILS * 0.25
+        and last_value < MAX_NOTIFICATION_FAILS * 0.25
+    ):
+        message = (
+            "tts-notify-alerts@gsa.gov",
+            f"We crossed above 25% in the db for failed notifications on {curr_env}",
         )
     # suppress any spam coming from development tier
-    if message and os.getenv("ENVIRONMENT") != "development":
+    if message and curr_env != "development":
         provider = provider_to_use(EMAIL_TYPE, False)
         from_address = '"{}" <{}@{}>'.format(
             "Failed Notification Count Alert",
