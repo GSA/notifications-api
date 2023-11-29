@@ -15,6 +15,8 @@ from app.models import (
     NOTIFICATION_TECHNICAL_FAILURE,
     SMS_TYPE,
     Agreement,
+    AgreementStatus,
+    AgreementType,
     AnnualBilling,
     Notification,
     NotificationHistory,
@@ -28,6 +30,7 @@ from app.models import (
 from tests.app.db import (
     create_inbound_number,
     create_notification,
+    create_organization,
     create_rate,
     create_reply_to_email,
     create_service,
@@ -410,6 +413,46 @@ def test_rate_str():
     rate = create_rate("2023-01-01 00:00:00", 1.5, "sms")
 
     assert rate.__str__() == "1.5 sms 2023-01-01 00:00:00"
+
+
+@pytest.mark.parametrize(
+    ["agreement_type", "expected"],
+    (
+        (AgreementType.IAA, False),
+        (AgreementType.MOU, True),
+    ),
+)
+def test_organization_agreement_mou(notify_db_session, agreement_type, expected):
+    now = datetime.utcnow()
+    agree = Agreement()
+    agree.id = "whatever"
+    agree.start_time = now
+    agree.end_time = now
+    agree.status = AgreementStatus.ACTIVE
+    agree.type = agreement_type
+    organization = create_organization(name="Something")
+    organization.agreements.append(agree)
+    assert organization.has_mou == expected
+
+
+@pytest.mark.parametrize(
+    ["agreement_status", "expected"],
+    (
+        (AgreementStatus.EXPIRED, False),
+        (AgreementStatus.ACTIVE, True),
+    ),
+)
+def test_organization_agreement_active(notify_db_session, agreement_status, expected):
+    now = datetime.utcnow()
+    agree = Agreement()
+    agree.id = "whatever"
+    agree.start_time = now
+    agree.end_time = now
+    agree.status = agreement_status
+    agree.type = AgreementType.IAA
+    organization = create_organization(name="Something")
+    organization.agreements.append(agree)
+    assert organization.agreement_active == expected
 
 
 def test_agreement_serialize():

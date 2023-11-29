@@ -79,5 +79,3 @@ Mockup of Option 1:
 
 Mockup of Option 2:
 ![Option 2](https://github.com/GSA/notifications-api/assets/6556888/ea7442e4-745a-49d2-a90c-156cc6129356)
-
-

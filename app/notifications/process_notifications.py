@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 
 from flask import current_app
-from notifications_utils.clients import redis
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
@@ -10,7 +9,6 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
-from app import redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
@@ -141,17 +139,7 @@ def persist_notification(
                     service.id
                 )
             )
-            total_key = redis.daily_total_cache_key()
-            if redis_store.get(total_key) is None:
-                current_app.logger.info("Redis daily total cache key does not exist")
-                redis_store.set(total_key, 1, ex=86400)
-                current_app.logger.info("Set redis daily total cache key to 1")
-            else:
-                current_app.logger.info("Redis total limit cache key does exist")
-                redis_store.incr(total_key)
-                current_app.logger.info(
-                    f"Redis total limit cache key has been incremented to {redis_store.get(total_key)}"
-                )
+
         current_app.logger.info(
             "{} {} created at {}".format(
                 notification_type, notification_id, notification_created_at

@@ -92,3 +92,7 @@ varsfile*
 secrets.auto.tfvars
 terraform.tfstate
 terraform.tfstate.backup
+
+
+# Pyenv
+.python-version

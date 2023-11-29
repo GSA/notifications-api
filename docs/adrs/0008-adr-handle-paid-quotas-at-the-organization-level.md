@@ -27,11 +27,11 @@ At this time, services will pull directly from the organization's quota. We may 
 
 ### Author
 
-@stvnrlly, @ccostino, @tdlowden 
+@stvnrlly, @ccostino, @tdlowden
 
 ### Stakeholders
 
-@amyashida 
+@amyashida
 
 ### Next Steps
 

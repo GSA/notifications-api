@@ -34,7 +34,7 @@ def upgrade():
             UPDATE services_history
                SET organisation_id = :organisation_id
             WHERE id = :service_id
-              AND version = (select max(version) from services_history sh2 where id = services_history.id); 
+              AND version = (select max(version) from services_history sh2 where id = services_history.id);
         """
         conn.execute(
             text(history_sql),

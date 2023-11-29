@@ -6,6 +6,7 @@
   - [Onboarding](#onboarding)
   - [Setting up the infrastructure](#setting-up-the-infrastructure)
 - [Using the logs](#using-the-logs)
+- [`git` hooks](#git-hooks)
 - [Testing](#testing)
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
@@ -13,6 +14,7 @@
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
   - [Managing environment variables](#managing-environment-variables)
+  - [Managing application initialization](#managing-application-initialization)
   - [Sandbox environment](#sandbox-environment)
 - [Database management](#database-management)
   - [Initial state](#initial-state)
@@ -32,7 +34,7 @@
 - [Queues and tasks](#queues-and-tasks)
   - [Priority queue](#priority-queue)
   - [Celery scheduled tasks](#celery-scheduled-tasks)
-- [US Notify](#us-notify)
+- [Notify.gov](#notifygov)
   - [System Description](#system-description)
 - [Run Book](#run-book)
   - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
@@ -231,6 +233,16 @@ Staging: https://logs.fr.cloud.gov/app/discover#/view/73d7c820-596e-11ee-a43a-09
 
 Once in the view, you'll likely want to adjust the time range in the upper right of the page.
 
+# `git` hooks
+
+We're using [`pre-commit`](https://pre-commit.com/) to manage hooks in order to automate common tasks or easily-missed cleanup. It's installed as part of `make bootstrap` and is limited to this project's virtualenv.
+
+To run the hooks in advance of a `git` operation, use `poetry run pre-commit run`. For running across the whole codebase (useful after adding a new hook), use `poetry run pre-commit run --all-files`.
+
+The configuration is stored in `.pre-commit-config.yaml`. In that config, there are links to the repos from which the hooks are pulled, so hop through there if you want a detailed description of what each one is doing.
+
+We do not maintain any hooks in this repository.
+
 # Testing
 
 ```
@@ -349,6 +361,15 @@ Public env vars make up the configuration in `deploy-config`. These are pulled i
 - [ ] The relevant YAML file in `deploy-config` using the format `var_name: value`
 - [ ] The manifest using the format `((var_name))`
 
+## Managing application initialization
+
+In addition to the environment variable management, there may be some [additional application initialization](https://docs.cloudfoundry.org/devguide/deploy-apps/deploy-app.html#profile) that needs to be accounted for. This can include the following:
+
+- Setting other environment variables that require host environment information directly that the application will run in as opposed to being managed by the `manifest.yml` file or or a user-provided service.
+- Running app initializing scripts that require host environment information directly prior to starting the application itself.
+
+These initialization steps are taken care of in the `.profile` file, which we use to set a couple of host environment-specific environment variables.
+
 ## Sandbox environment
 
 There is a sandbox space, complete with terraform and `deploy-config/sandbox.yml` file available
@@ -428,7 +449,7 @@ There is a Flask command to wipe user-created data (users, services, etc.).
 The command should stop itself if it's run in a production environment, but, you know, please don't run it
 in a production environment.
 
-Running locally: 
+Running locally:
 
 ```
 flask command purge_functional_test_data -u <functional tests user name prefix>
@@ -445,7 +466,7 @@ cf run-task notify-api "flask command purge_functional_test_data -u <functional 
 
 For these, we're using Flask commands, which live in [`/app/commands.py`](../app/commands.py).
 
-This includes things that might be one-time operations! If we're running it on production, it should be a Flask 
+This includes things that might be one-time operations! If we're running it on production, it should be a Flask
 command Using a command allows the operation to be tested, both with `pytest` and with trial runs in staging.
 
 To see information about available commands, you can get a list with:
@@ -473,7 +494,7 @@ that both end up at `persist_notification`, which writes to the database, and `p
 which enqueues the sending.
 
 For CSV uploads, the CSV is first stored in S3 and queued as a `Job`. When the job runs, it iterates
-through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and 
+through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and
 `provider_tasks.deliver_sms`.
 
 # Writing public APIs
@@ -667,7 +688,7 @@ For tasks that should happen before other stuff, there's a priority queue. Platf
 can set templates to use this queue.
 
 Currently, this queue doesn't do anything special. If the normal queue is very busy, it's
-possible that this queue will be faster merely because it's shorter. By the same logic, a 
+possible that this queue will be faster merely because it's shorter. By the same logic, a
 busy priority queue is likely to be _slower_ than the normal queue
 
 ## Celery scheduled tasks
@@ -683,13 +704,13 @@ make run-celery-beat
 
 
 
-US Notify
+Notify.gov
 =========
 
 System Description
 ------------------
 
-US Notify is a service being developed by the TTS Public Benefits Studio to increase the availability of
+Notify.gov is a service being developed by the TTS Public Benefits Studio to increase the availability of
 SMS and email notifications to Federal, State, and Local Benefits agencies.
 
 Agencies that sign up will be able to create and use personalized message templates for sending
@@ -699,23 +720,23 @@ or services.
 
 The templates are sent by the agency using one of two methods:
 
-* using the US Notify API to send a message to a given recipient with given personalization values
-* using the US Notify website to upload a CSV file of recipients and their personalization values, one row per message
+* using the Notify.gov API to send a message to a given recipient with given personalization values
+* using the Notify.gov website to upload a CSV file of recipients and their personalization values, one row per message
 
 ### Environment
 
-US Notify is comprised of two applications both running on cloud.gov:
+Notify.gov is comprised of two applications both running on cloud.gov:
 
 * Admin, a Flask website running on the python_buildpack which hosts agency user-facing UI
-* API, a Flask application running on the python_buildpack hosting the US Notify API
+* API, a Flask application running on the python_buildpack hosting the Notify.gov API
 
-US Notify utilizes several cloud.gov-provided services:
+Notify.gov utilizes several cloud.gov-provided services:
 
 * S3 buckets for temporary file storage
 * Elasticache (redis) for cacheing data and enqueueing background tasks
 * RDS (PostgreSQL) for system data storage
 
-US Notify also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
+Notify.gov also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
 
 * [SNS](https://aws.amazon.com/sns/) for sending SMS messages
 * [SES](https://aws.amazon.com/ses/) for sending email messages
@@ -726,7 +747,7 @@ For further details of the system and how it connects to supporting services, se
 Run Book
 ========
 
-Policies and Procedures needed before and during US Notify Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
+Policies and Procedures needed before and during Notify.gov Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
 
 Any changes to policies and procedures defined both here and in the SSPP must be kept in sync, and should be done collaboratively with the System ISSO and ISSM to ensure
 that the security of the system is maintained.
@@ -814,7 +835,7 @@ Assuming that you have followed all steps to set up localstack successfully (see
    - Go to settings and set the organization for your service to 'Broadcast services' (scroll down to platform admin)
    - Go to settings and set your service to 'live' (scroll down to platform admin)
 5. Run your app 'locally'.  I.e. run `make run-procfile` on this project and `make run-flask` on the admin project
-6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead, 
+6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead,
    you see your authentication code in green in the api logs
 7. Go to send messages and upload your csv file and send your 100000 messages
 
@@ -829,7 +850,7 @@ Also known as: **How to move code from my machine to production**
 1. All PRs must be approved by another developer
 1. PRs to `main` and `production` branches must be merged by a someone with the `Administrator` role.
 1. PR documentation includes a Security Impact Analysis
-1. PRs that will impact the Security Posture must be approved by the US Notify ISSO.
+1. PRs that will impact the Security Posture must be approved by the Notify.gov ISSO.
 1. Any PRs waiting for approval should be talked about during daily Standup meetings.
 
 ### notifications-api & notifications-admin
@@ -929,9 +950,9 @@ Important policies:
 
 | Role Name | Permissions | Who | Responsibilities |
 | --------- | ----------- | --- | ---------------- |
-| Platform Administrator | `platform_admin` | PBS Fed | Administer system settings within US Notify across Services |
+| Platform Administrator | `platform_admin` | PBS Fed | Administer system settings within Notify.gov across Services |
 | User Manager | `MANAGE_USERS` | Agency Partner | Manage service team members |
-| User | any except `MANAGE_USERS` | Agency Partner | Use US Notify |
+| User | any except `MANAGE_USERS` | Agency Partner | Use Notify.gov |
 
 ### Service Accounts
 

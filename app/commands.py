@@ -830,3 +830,25 @@ def create_new_service(name, message_limit, restricted, email_from, created_by_i
     except IntegrityError:
         print("duplicate service", service.name)
         db.session.rollback()
+
+
+@notify_command(name="promote-user-to-platform-admin")
+@click.option("-u", "--user-email-address", required=True, prompt=True)
+def promote_user_to_platform_admin(user_email_address):
+    # If the email address is wrong, sqlalchemy will automatically raise a NoResultFound error which is what we want.
+    # See tests.
+    user = get_user_by_email(user_email_address)
+    user.platform_admin = True
+    db.session.add(user)
+    db.session.commit()
+
+
+@notify_command(name="purge-csv-bucket")
+def purge_csv_bucket():
+    bucket_name = getenv("CSV_BUCKET_NAME")
+    access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
+    secret = getenv("CSV_AWS_SECRET_ACCESS_KEY")
+    region = getenv("CSV_AWS_REGION")
+    print("ABOUT TO RUN PURGE CSV BUCKET")
+    s3.purge_bucket(bucket_name, access_key, secret, region)
+    print("RAN PURGE CSV BUCKET")

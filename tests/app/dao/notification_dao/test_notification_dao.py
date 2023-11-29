@@ -13,6 +13,7 @@ from app.dao.notifications_dao import (
     dao_get_last_notification_added_for_job_id,
     dao_get_notification_by_reference,
     dao_get_notification_count_for_job_id,
+    dao_get_notification_count_for_service,
     dao_get_notification_history_by_reference,
     dao_get_notifications_by_recipient_or_reference,
     dao_timeout_notifications,
@@ -110,7 +111,7 @@ def test_should_be_able_to_sanitize_successful_notification(
 
     with freeze_time("2000-01-02 12:00:00"):
         sanitize_successful_notification_by_id(
-            notification.id, provider_response="Don't know what happened"
+            notification.id, carrier="ATT", provider_response="Don't know what happened"
         )
         assert Notification.query.get(notification.id).status == "delivered"
         assert Notification.query.get(notification.id).normalised_to == "1"
@@ -593,6 +594,15 @@ def test_dao_get_notification_count_for_job_id(notify_db_session):
     create_notification(template)
 
     assert dao_get_notification_count_for_job_id(job_id=job.id) == 3
+
+
+def test_dao_get_notification_count_for_service(notify_db_session):
+    service = create_service()
+    template = create_template(service)
+
+    create_notification(template)
+
+    assert dao_get_notification_count_for_service(service_id=service.id) == 1
 
 
 def test_dao_get_notification_count_for_job_id_returns_zero_for_no_notifications_for_job(

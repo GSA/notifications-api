@@ -198,7 +198,7 @@ def test_update_org_invited_user_for_invalid_data_returns_400(
     assert len(json_resp["errors"]) == 1
     assert (
         json_resp["errors"][0]["message"]
-        == "status garbage is not one of [pending, accepted, cancelled]"
+        == "status garbage is not one of [pending, accepted, cancelled, expired]"
     )
 
 

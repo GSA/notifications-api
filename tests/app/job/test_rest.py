@@ -830,6 +830,8 @@ def test_get_all_notifications_for_job_returns_csv_format(
         "template_type",
         "template_name",
         "job_name",
+        "carrier",
+        "provider_response",
         "status",
         "row_number",
         "recipient",

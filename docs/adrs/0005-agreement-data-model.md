@@ -3,7 +3,7 @@
 
 | CREATED DATE | LAST UPDATED | STATUS | AUTHOR | STAKEHOLDERS |
 | :---: | :---: | :---: | :---: | :---: |
-| 06/21/2023 | 07/05/2023 | Accepted | @stvnrlly, @ccostino | @GSA/notify-contributors |
+| 06/21/2023 | 11/16/2023 | Accepted | @stvnrlly, @ccostino | @GSA/notify-contributors |
 
 
 ## CONTEXT AND PROBLEM STATEMENT
@@ -30,7 +30,7 @@ This information includes:
 - Agreement identifier
 - Agreement type (MOU or IAA)
 - Agreement partner name
-- Agreement status
+- Agreement status (active or expired; pending/draft may be added in the future)
 - Agreement start datetime (known as period of performance)
 - Agreement end datetime (known as period of performance)
 - Agreement URL (where it is in Google Drive)
