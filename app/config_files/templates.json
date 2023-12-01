@@ -22,7 +22,7 @@
       "",
       "Click this link to create an account on Notify.gov:",
       "",
-      "[Join Service] ((url))",
+      "[Join Service](url)",
       "",
       "",
       "This invitation will stop working at midnight tomorrow. This is to keep ((service_name)) secure."
@@ -83,7 +83,7 @@
       "To complete your registration for Notify.gov please click the link below",
       "",
       "",
-      "[Join Service] ((url))"
+      "[Join Service](url)"
     ]
   },
   {
