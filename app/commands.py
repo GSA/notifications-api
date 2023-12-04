@@ -118,7 +118,7 @@ def purge_functional_test_data(user_email_prefix):
         return
 
     users = User.query.filter(
-        User.email_address.like("{}%".format(user_email_prefix))
+        User.email_address.like(f"{user_email_prefix}%")
     ).all()
     for usr in users:
         # Make sure the full email includes a uuid in it
@@ -126,11 +126,7 @@ def purge_functional_test_data(user_email_prefix):
         try:
             uuid.UUID(usr.email_address.split("@")[0].split("+")[1])
         except ValueError:
-            print(
-                "Skipping {} as the user email doesn't contain a UUID.".format(
-                    usr.email_address
-                )
-            )
+            print(f"Skipping {usr.email_address} as the user email doesn't contain a UUID.")
         else:
             services = dao_fetch_all_services_by_user(usr.id)
             if services:
@@ -164,7 +160,7 @@ def purge_functional_test_data(user_email_prefix):
 def insert_inbound_numbers_from_file(file_name):
     # TODO maintainability what is the purpose of this command?  Who would use it and why?
 
-    print("Inserting inbound numbers from {}".format(file_name))
+    print(f"Inserting inbound numbers from {file_name}")
     with open(file_name) as file:
         sql = "insert into inbound_numbers values('{}', '{}', 'sns', null, True, now(), null);"
 
@@ -199,9 +195,7 @@ def rebuild_ft_billing_for_day(service_id, day):
     def rebuild_ft_data(process_day, service):
         deleted_rows = delete_billing_data_for_service_for_day(process_day, service)
         current_app.logger.info(
-            "deleted {} existing billing rows for {} on {}".format(
-                deleted_rows, service, process_day
-            )
+            f"deleted {deleted_rows} existing billing rows for {service} on {process_day}"
         )
         transit_data = fetch_billing_data_for_day(
             process_day=process_day, service_id=service
@@ -211,9 +205,7 @@ def rebuild_ft_billing_for_day(service_id, day):
             # upsert existing rows
             update_fact_billing(data, process_day)
         current_app.logger.info(
-            "added/updated {} billing rows for {} on {}".format(
-                len(transit_data), service, process_day
-            )
+            f"added/updated {len(transit_data)} billing rows for {service} on {process_day}"
         )
 
     if service_id:
@@ -276,7 +268,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
         }
         current_app.logger.info(f"DATA = {data}")
         with current_app.test_request_context(
-            path="/service/{}/invite/".format(service_id),
+            path=f"/service/{service_id}/invite/",
             method="POST",
             data=json.dumps(data),
             headers={"Content-Type": "application/json"},
@@ -286,16 +278,12 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                 current_app.logger.info(f"RESPONSE {response[1]}")
                 if response[1] != 201:
                     print(
-                        "*** ERROR occurred for email address: {}".format(
-                            email_address.strip()
-                        )
+                        f"*** ERROR occurred for email address: {email_address.strip()}"
                     )
                 print(response[0].get_data(as_text=True))
             except Exception as e:
                 print(
-                    "*** ERROR occurred for email address: {}. \n{}".format(
-                        email_address.strip(), e
-                    )
+                    f"*** ERROR occurred for email address: {email_address.strip()}. \n{e}"
                 )
 
     file.close()
@@ -318,7 +306,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 )
 def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info(
-        "Archiving jobs created between {} to {}".format(start_date, end_date)
+        f"Archiving jobs created between {start_date} to {end_date}"
     )
 
     process_date = start_date
@@ -337,15 +325,13 @@ def update_jobs_archived_flag(start_date, end_date):
         )
         db.session.commit()
         current_app.logger.info(
-            "jobs: --- Completed took {}ms. Archived {} jobs for {}".format(
-                datetime.now() - start_time, result.rowcount, process_date
-            )
+            f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived {result.rowcount} jobs for {process_date}"
         )
 
         process_date += timedelta(days=1)
 
         total_updated += result.rowcount
-    current_app.logger.info("Total archived jobs = {}".format(total_updated))
+    current_app.logger.info(f"Total archived jobs = {total_updated}")
 
 
 @notify_command(name="populate-organizations-from-file")
@@ -551,9 +537,7 @@ def fix_billable_units():
             show_prefix=notification.service.prefix_sms,
         )
         print(
-            "Updating notification: {} with {} billable_units".format(
-                notification.id, template.fragment_count
-            )
+            f"Updating notification: {notification.id} with {template.fragment_count} billable_units"
         )
 
         Notification.query.filter(Notification.id == notification.id).update(
@@ -586,9 +570,7 @@ def process_row_from_job(job_id, job_row_number):
         if row.index == job_row_number:
             notification_id = process_row(row, template, job, job.service)
             current_app.logger.info(
-                "Process row {} for job {} created notification_id: {}".format(
-                    job_row_number, job_id, notification_id
-                )
+                f"Process row {job_row_number} for job {job_id} created notification_id: {notification_id}"
             )
 
 
@@ -623,9 +605,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
             latest_annual_billing, {"service_id": row.id}
         )
         free_allowance = [x[0] for x in free_allowance_rows]
-        print(
-            "create free limit of {} for service: {}".format(free_allowance[0], row.id)
-        )
+        print(f"create free limit of {free_allowance[0]} for service: {row.id}")
         dao_create_or_update_annual_billing_for_year(
             service_id=row.id,
             free_sms_fragment_limit=free_allowance[0],
