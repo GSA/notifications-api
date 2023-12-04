@@ -190,7 +190,7 @@ class User(db.Model):
         return retval
 
     def serialize(self):
-        return {
+        x = {
             "id": self.id,
             "name": self.name,
             "email_address": self.email_address,
@@ -211,7 +211,10 @@ class User(db.Model):
             "services": [x.id for x in self.services if x.active],
             "can_use_webauthn": self.can_use_webauthn,
             "state": self.state,
+            "preferred_timezone": self.preferred_timezone,
         }
+        print(f"X = {x}")
+        return x
 
     def serialize_for_users_list(self):
         return {
