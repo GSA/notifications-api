@@ -2298,13 +2298,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "4.2.10"
+version = "4.2.11"
 description = ""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "moto-4.2.10-py2.py3-none-any.whl", hash = "sha256:5cf0736d1f43cb887498d00b00ae522774bfddb7db1f4994fedea65b290b9f0e"},
-    {file = "moto-4.2.10.tar.gz", hash = "sha256:92595fe287474a31ac3ef847941ebb097e8ffb0c3d6c106e47cf573db06933b2"},
+    {file = "moto-4.2.11-py2.py3-none-any.whl", hash = "sha256:58c12ab9ee69b6a5d1cddf83611ba4071508f07894317c57844b3ae6dc5bcd38"},
+    {file = "moto-4.2.11.tar.gz", hash = "sha256:2da62d52eaa765dfe2762c920f0a88a58f3a09e04581c91db967d92faec848f1"},
 ]
 
 [package.dependencies]
@@ -4697,4 +4697,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "2a2d611c6fe2471a976dcd14d726dd523d06a5d521ed433ffc63544bb7b6a0d0"
+content-hash = "ca550cc96aa27ec67a307b945f4f7c98811a7e625e28cb9e02b6a4108799b0d7"
