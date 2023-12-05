@@ -211,6 +211,7 @@ class User(db.Model):
             "services": [x.id for x in self.services if x.active],
             "can_use_webauthn": self.can_use_webauthn,
             "state": self.state,
+            "preferred_timezone": self.preferred_timezone,
         }
 
     def serialize_for_users_list(self):
