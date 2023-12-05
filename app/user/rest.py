@@ -117,7 +117,6 @@ def update_user_attribute(user_id):
             recipient = user_to_update.mobile_number
             reply_to = get_sms_reply_to_for_notify_service(recipient, template)
         else:
-            print(f"REST1 returns {user_to_update.serialize()}")
             return jsonify(data=user_to_update.serialize()), 200
         service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
 
@@ -139,7 +138,6 @@ def update_user_attribute(user_id):
 
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
-    print(f"REST2 returns {user_to_update.serialize()}")
     return jsonify(data=user_to_update.serialize()), 200
 
 
