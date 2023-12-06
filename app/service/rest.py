@@ -25,7 +25,10 @@ from app.dao.fact_notification_status_dao import (
     fetch_stats_for_all_services_by_date_range,
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
-from app.dao.notifications_dao import dao_get_notification_count_for_service
+from app.dao.notifications_dao import (
+    dao_get_notification_count_for_service,
+    dao_get_notification_failure_count,
+)
 from app.dao.organization_dao import dao_get_organization_by_service_id
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
@@ -1032,4 +1035,12 @@ def check_if_reply_to_address_already_in_use(service_id, email_address):
 @service_blueprint.route("/<uuid:service_id>/notification-count", methods=["GET"])
 def get_notification_count_for_service_id(service_id):
     count = dao_get_notification_count_for_service(service_id=service_id)
+    return jsonify(count=count), 200
+
+
+@service_blueprint.route(
+    "/<uuid:service_id>/notification-failure-count", methods=["GET"]
+)
+def get_notification_failure_count():
+    count = dao_get_notification_failure_count()
     return jsonify(count=count), 200
