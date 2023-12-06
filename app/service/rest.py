@@ -260,9 +260,7 @@ def update_service(service_id):
         send_notification_to_service_users(
             service_id=service_id,
             template_id=current_app.config["SERVICE_NOW_LIVE_TEMPLATE_ID"],
-            personalisation={
-                "service_name": current_data["name"]
-            },
+            personalisation={"service_name": current_data["name"]},
             include_user_fields=["name"],
         )
 
