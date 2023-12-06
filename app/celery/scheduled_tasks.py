@@ -127,7 +127,7 @@ def check_db_notification_fails():
     ):
         message = (
             "tts-notify-alerts@gsa.gov",
-            f"We crossed above 75% in the db for failed notifications on {curr_env}",
+            f"We crossed above 90% in the db for failed notifications on {curr_env}",
         )
 
     elif (
