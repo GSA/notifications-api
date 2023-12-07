@@ -20,6 +20,7 @@ from app.models import (
     EMAIL_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
+    NOTIFICATION_FAILED,
     NOTIFICATION_PENDING,
     NOTIFICATION_PENDING_VIRUS_CHECK,
     NOTIFICATION_PERMANENT_FAILURE,
@@ -200,6 +201,11 @@ def dao_get_notification_count_for_job_id(*, job_id):
 def dao_get_notification_count_for_service(*, service_id):
     notification_count = Notification.query.filter_by(service_id=service_id).count()
     return notification_count
+
+
+def dao_get_failed_notification_count():
+    failed_count = Notification.query.filter_by(status=NOTIFICATION_FAILED).count()
+    return failed_count
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
