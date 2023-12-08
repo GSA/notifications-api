@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import uuid
 
@@ -202,9 +203,12 @@ def test_get_invited_user_by_service_when_user_does_not_belong_to_the_service(
     assert json_resp["result"] == "error"
 
 
-def test_resend_expired_invite(client, sample_expired_user):
+def test_resend_expired_invite(client, sample_expired_user, mocker):
     url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}"
-    # TODO: Don't actually send email, need to mock it out.
+    mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
+    mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
+    from app.notifications.process_notifications import persist_notification
+    mock_persist.side_effect = partial(persist_notification, simulated=True)
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,
