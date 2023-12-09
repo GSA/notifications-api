@@ -10,8 +10,8 @@ Create Date: 2017-06-02 16:50:11.698423
 revision = "0097_notnull_inbound_provider"
 down_revision = "0096_update_job_stats"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

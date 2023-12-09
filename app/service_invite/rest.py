@@ -1,7 +1,6 @@
+from datetime import datetime
 from re import I
 
-
-from datetime import datetime
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
@@ -26,6 +25,7 @@ from app.schemas import invited_user_schema
 service_invite = Blueprint("service_invite", __name__)
 
 register_errors(service_invite)
+
 
 def _create_service_invite(invited_user, invite_link_host):
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]

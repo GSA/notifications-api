@@ -5,9 +5,8 @@ Revises: 0258_service_postage_nullable
 Create Date: 2019-02-11 17:12:22.341599
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0259_remove_service_postage"
 down_revision = "0258_service_postage_nullable"

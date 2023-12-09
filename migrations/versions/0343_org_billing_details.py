@@ -5,9 +5,8 @@ Revises: 0342_service_broadcast_settings
 Create Date: 2021-02-01 14:40:14.809632
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0343_org_billing_details"
 down_revision = "0342_service_broadcast_settings"

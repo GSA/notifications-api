@@ -5,8 +5,8 @@ Revises: 0318_service_contact_list
 Create Date: 2020-03-26 11:16:12.389524
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0319_contact_list_archived"
 down_revision = "0318_service_contact_list"

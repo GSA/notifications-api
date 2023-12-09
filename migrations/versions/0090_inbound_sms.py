@@ -10,8 +10,8 @@ Create Date: 2017-05-22 11:28:53.471004
 revision = "0090_inbound_sms"
 down_revision = "0089_govuk_sms_sender"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

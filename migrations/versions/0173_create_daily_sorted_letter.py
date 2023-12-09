@@ -5,8 +5,8 @@ Revises: 0172_deprioritise_examples
 Create Date: 2018-03-01 11:53:32.964256
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0173_create_daily_sorted_letter"

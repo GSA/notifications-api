@@ -5,8 +5,8 @@ Revises: 0404_expire_invites
 Create Date: 2023-11-17 15:39:45.470089
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0406_adjust_agreement_model"

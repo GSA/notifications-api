@@ -10,8 +10,8 @@ Create Date: 2017-07-12 13:35:45.636618
 revision = "0111_drop_old_service_flags"
 down_revision = "0110_monthly_billing"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

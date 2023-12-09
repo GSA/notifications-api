@@ -5,8 +5,8 @@ Revises: 0340_stub_training_broadcasts
 Create Date: 2021-01-28 21:30:23.102340
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0342_service_broadcast_settings"

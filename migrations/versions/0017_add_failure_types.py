@@ -10,12 +10,8 @@ Create Date: 2016-05-17 11:23:36.881219
 revision = "0017_add_failure_types"
 down_revision = "0016_reply_to_email"
 
-from alembic import op
 import sqlalchemy as sa
-
-
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 

@@ -6,8 +6,9 @@ Create Date: 2017-07-12 13:35:45.636618
 
 """
 from datetime import datetime
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import text
 
 from app.dao.date_util import get_month_start_and_end_date_in_utc

@@ -9,8 +9,8 @@ import datetime
 import os
 import uuid
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 from app import db
 from app.dao.users_dao import get_user_by_email

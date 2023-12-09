@@ -5,8 +5,8 @@ Revises: 0277_consent_to_research_null
 Create Date: 2019-02-26 10:15:22.430340
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0278_add_more_stuff_to_orgs"

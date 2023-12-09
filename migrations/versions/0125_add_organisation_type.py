@@ -5,9 +5,8 @@ Revises: 0124_add_free_sms_fragment_limit
 Create Date: 2017-10-05 14:03:00.248005
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0125_add_organisation_type"
 down_revision = "0124_add_free_sms_fragment_limit"

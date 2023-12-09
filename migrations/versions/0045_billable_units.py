@@ -7,13 +7,13 @@ Create Date: 2016-08-02 16:36:42.455838
 """
 
 # revision identifiers, used by Alembic.
-from sqlalchemy import text, bindparam
+from sqlalchemy import bindparam, text
 
 revision = "0045_billable_units"
 down_revision = "0044_jobs_to_notification_hist"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.orm.session import Session
 
 from app.models import Service

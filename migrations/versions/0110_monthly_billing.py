@@ -10,8 +10,8 @@ Create Date: 2017-07-13 14:35:03.183659
 revision = "0110_monthly_billing"
 down_revision = "0109_rem_old_noti_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

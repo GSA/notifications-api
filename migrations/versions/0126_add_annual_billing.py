@@ -5,8 +5,8 @@ Revises: 0125_add_organisation_type
 Create Date: 2017-10-19 11:38:32.849573
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0126_add_annual_billing"

@@ -170,7 +170,10 @@ def send_notification_to_queue_detached(
 
 def send_notification_to_queue(notification, queue=None):
     send_notification_to_queue_detached(
-        notification.key_type, notification.notification_type, notification.id, queue,
+        notification.key_type,
+        notification.notification_type,
+        notification.id,
+        queue,
     )
 
 

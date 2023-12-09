@@ -10,8 +10,8 @@ Create Date: 2016-06-29 10:48:55.955317
 revision = "0035_notification_type"
 down_revision = "0034_pwd_changed_at_not_null"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

@@ -5,8 +5,8 @@ Revises: 0394_remove_contact_list
 Create Date: 2023-05-23 10:03:10.485368
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0395_remove_intl_letters_perm"

@@ -5,8 +5,8 @@ Revises: 0164_add_organisation_to_service
 Create Date: 2018-02-14 17:25:11.747996
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0166_add_org_user_stuff"

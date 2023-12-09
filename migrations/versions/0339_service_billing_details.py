@@ -5,9 +5,8 @@ Revises: 0338_add_notes_to_service
 Create Date: 2021-01-20 17:55:46.555460
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0339_service_billing_details"
 down_revision = "0338_add_notes_to_service"

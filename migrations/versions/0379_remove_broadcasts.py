@@ -5,9 +5,9 @@ Revises: 0378_add_org_names
 Create Date: 2022-10-25 14:41:29.429928
 
 """
-from alembic import op
-import sqlalchemy as sa
 import psycopg2
+import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0379_remove_broadcasts"

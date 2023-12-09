@@ -6,8 +6,9 @@ Create Date: 2023-11-10 15:52:07.348485
 
 """
 from re import I
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 
 # Copied pattern for adjusting a enum as defined in 0359_more_permissions
 

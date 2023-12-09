@@ -8,7 +8,6 @@ Create Date: 2019-04-01 16:36:53.274394
 from alembic import op
 from sqlalchemy.sql import text
 
-
 revision = "0292_give_users_folder_perms"
 down_revision = "0291_remove_unused_index"
 

@@ -5,9 +5,8 @@ Revises: 0184_alter_primary_key_1
 Create Date: 2018-04-10 16:35:41.824981
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0185_add_is_active_to_reply_tos"
 down_revision = "0184_alter_primary_key_1"

@@ -5,9 +5,8 @@ Revises: 0177_add_virus_scan_statuses
 Create Date: 2018-03-14 16:15:01.886998
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0178_add_filename"
 down_revision = "0177_add_virus_scan_statuses"

@@ -5,8 +5,8 @@ Revises: 0384_remove_letter_branding_
 Create Date: 2023-02-10 12:20:39.411493
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0385_remove_postage_"

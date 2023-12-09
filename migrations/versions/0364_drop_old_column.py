@@ -5,8 +5,8 @@ Revises: 0363_cancelled_by_api_key
 Create Date: 2022-01-25 18:05:27.750234
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0364_drop_old_column"

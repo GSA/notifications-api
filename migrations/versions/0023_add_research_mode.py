@@ -10,8 +10,8 @@ Create Date: 2016-05-31 11:11:45.979594
 revision = "0023_add_research_mode"
 down_revision = "0022_add_pending_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

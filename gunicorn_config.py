@@ -1,10 +1,10 @@
 import os
+import socket
 import sys
 import traceback
-import gunicorn
-import eventlet
-import socket
 
+import eventlet
+import gunicorn
 
 workers = 4
 worker_class = "eventlet"

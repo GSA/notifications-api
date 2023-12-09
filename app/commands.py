@@ -117,16 +117,16 @@ def purge_functional_test_data(user_email_prefix):
         current_app.logger.error("Can only be run in development")
         return
 
-    users = User.query.filter(
-        User.email_address.like(f"{user_email_prefix}%")
-    ).all()
+    users = User.query.filter(User.email_address.like(f"{user_email_prefix}%")).all()
     for usr in users:
         # Make sure the full email includes a uuid in it
         # Just in case someone decides to use a similar email address.
         try:
             uuid.UUID(usr.email_address.split("@")[0].split("+")[1])
         except ValueError:
-            print(f"Skipping {usr.email_address} as the user email doesn't contain a UUID.")
+            print(
+                f"Skipping {usr.email_address} as the user email doesn't contain a UUID."
+            )
         else:
             services = dao_fetch_all_services_by_user(usr.id)
             if services:

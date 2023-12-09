@@ -5,8 +5,8 @@ Revises: 0175_drop_job_statistics_table
 Create Date: 2018-03-12 16:54:30.663897
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0176_alter_billing_columns"
 down_revision = "0175_drop_job_statistics_table"

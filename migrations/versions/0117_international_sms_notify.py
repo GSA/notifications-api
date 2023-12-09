@@ -12,9 +12,9 @@ from sqlalchemy import text
 revision = "0117_international_sms_notify"
 down_revision = "0115_add_inbound_numbers"
 
-from alembic import op
 from datetime import datetime
 
+from alembic import op
 
 NOTIFY_SERVICE_ID = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
 

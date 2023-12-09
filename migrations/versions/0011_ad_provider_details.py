@@ -14,8 +14,8 @@ down_revision = "0010_events_table"
 
 import uuid
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
