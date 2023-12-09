@@ -218,7 +218,8 @@ def test_resend_expired_invite(client, sample_expired_user, mocker):
 
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))["data"]
-    assert json_resp["status"] == "cancelled"
+    assert json_resp["status"] == "pending"
+    assert mock_send.called
 
 
 def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user):
