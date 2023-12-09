@@ -213,7 +213,6 @@ def test_resend_expired_invite(client, sample_expired_user, mocker):
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,
-        data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
 

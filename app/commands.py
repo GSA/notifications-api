@@ -325,7 +325,8 @@ def update_jobs_archived_flag(start_date, end_date):
         )
         db.session.commit()
         current_app.logger.info(
-            f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived {result.rowcount} jobs for {process_date}"
+            f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived "
+            f"{result.rowcount} jobs for {process_date}"
         )
 
         process_date += timedelta(days=1)

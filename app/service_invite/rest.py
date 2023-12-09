@@ -1,5 +1,4 @@
 from datetime import datetime
-from re import I
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
