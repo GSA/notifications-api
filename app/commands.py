@@ -319,7 +319,7 @@ def update_jobs_archived_flag(start_date, end_date):
                 where
                     created_at >= (date :start + time '00:00:00')
                     and created_at < (date :end + time '00:00:00')
-               """
+        """
         result = db.session.execute(
             sql, {"start": process_date, "end": process_date + timedelta(days=1)}
         )
