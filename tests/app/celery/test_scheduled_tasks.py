@@ -8,6 +8,7 @@ from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTick
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
+    check_db_notification_fails,
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     check_job_status,
@@ -51,6 +52,51 @@ def test_should_call_expire_or_delete_invotations_on_expire_or_delete_invitation
         scheduled_tasks.expire_invitations_created_more_than_two_days_ago.call_count
         == 1
     )
+
+
+def test_should_check_db_notification_fails_task_over_100_percent(
+    notify_db_session, mocker
+):
+    mock_dao = mocker.patch(
+        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
+    )
+    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
+    mock_dao.return_value = 100000
+    check_db_notification_fails()
+    assert mock_provider.call_count == 1
+
+
+def test_should_check_db_notification_fails_task_less_than_25_percent(
+    notify_db_session, mocker
+):
+    mock_dao = mocker.patch(
+        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
+    )
+    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
+    mock_dao.return_value = 10
+    check_db_notification_fails()
+    assert mock_provider.call_count == 0
+
+
+def test_should_check_db_notification_fails_task_over_50_percent(
+    notify_db_session, mocker
+):
+    # This tests that we only send an alert the 1st time we cross over 50%.  We don't want
+    # to be sending the same alert every hour, especially as it might be quite normal for the db
+    # fails to be at 25 or 50 for long periods of time.
+    mock_dao = mocker.patch(
+        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
+    )
+    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
+    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store.get")
+    mock_dao.return_value = 5001
+    mock_redis.return_value = 0
+    check_db_notification_fails()
+    assert mock_provider.call_count == 1
+
+    mock_redis.return_value = 5001
+    check_db_notification_fails()
+    assert mock_provider.call_count == 1
 
 
 def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
