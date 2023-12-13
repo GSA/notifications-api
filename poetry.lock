@@ -112,13 +112,13 @@ frozenlist = ">=1.1.0"
 
 [[package]]
 name = "alembic"
-version = "1.12.1"
+version = "1.13.0"
 description = "A database migration tool for SQLAlchemy."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "alembic-1.12.1-py3-none-any.whl", hash = "sha256:47d52e3dfb03666ed945becb723d6482e52190917fdb47071440cfdba05d92cb"},
-    {file = "alembic-1.12.1.tar.gz", hash = "sha256:bca5877e9678b454706347bc10b97cb7d67f300320fa5c3a94423e8266e2823f"},
+    {file = "alembic-1.13.0-py3-none-any.whl", hash = "sha256:a23974ea301c3ee52705db809c7413cecd165290c6679b9998dd6c74342ca23a"},
+    {file = "alembic-1.13.0.tar.gz", hash = "sha256:ab4b3b94d2e1e5f81e34be8a9b7b7575fc9dd5398fccb0bef351ec9b14872623"},
 ]
 
 [package.dependencies]
@@ -127,7 +127,7 @@ SQLAlchemy = ">=1.3.0"
 typing-extensions = ">=4"
 
 [package.extras]
-tz = ["python-dateutil"]
+tz = ["backports.zoneinfo"]
 
 [[package]]
 name = "amqp"
@@ -223,18 +223,18 @@ s3transfer = ">=0.7.0,<0.8.0"
 
 [[package]]
 name = "bandit"
-version = "1.7.5"
+version = "1.7.6"
 description = "Security oriented static analyser for python code."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "bandit-1.7.5-py3-none-any.whl", hash = "sha256:75665181dc1e0096369112541a056c59d1c5f66f9bb74a8d686c3c362b83f549"},
-    {file = "bandit-1.7.5.tar.gz", hash = "sha256:bdfc739baa03b880c2d15d0431b31c658ffc348e907fe197e54e0389dd59e11e"},
+    {file = "bandit-1.7.6-py3-none-any.whl", hash = "sha256:36da17c67fc87579a5d20c323c8d0b1643a890a2b93f00b3d1229966624694ff"},
+    {file = "bandit-1.7.6.tar.gz", hash = "sha256:72ce7bc9741374d96fb2f1c9a8960829885f1243ffde743de70a19cee353e8f3"},
 ]
 
 [package.dependencies]
 colorama = {version = ">=0.3.9", markers = "platform_system == \"Windows\""}
-GitPython = ">=1.0.1"
+GitPython = ">=3.1.30"
 PyYAML = ">=5.3.1"
 rich = "*"
 stevedore = ">=1.20.0"
@@ -1238,13 +1238,13 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "flake8-bugbear"
-version = "23.11.28"
+version = "23.12.2"
 description = "A plugin for flake8 finding likely bugs and design problems in your program. Contains warnings that don't belong in pyflakes and pycodestyle."
 optional = false
 python-versions = ">=3.8.1"
 files = [
-    {file = "flake8-bugbear-23.11.28.tar.gz", hash = "sha256:0ba6c44eaa0e4782da94c5c2607159a0e73569369246cd179cc143a0e16b78ba"},
-    {file = "flake8_bugbear-23.11.28-py3-none-any.whl", hash = "sha256:8d0f351d954fd860851710cd8b5b28742b2339c0e58848b103418dd9cddb9aa4"},
+    {file = "flake8-bugbear-23.12.2.tar.gz", hash = "sha256:32b2903e22331ae04885dae25756a32a8c666c85142e933f43512a70f342052a"},
+    {file = "flake8_bugbear-23.12.2-py3-none-any.whl", hash = "sha256:83324bad4d90fee4bf64dd69c61aff94debf8073fbd807c8b6a36eec7a2f0719"},
 ]
 
 [package.dependencies]
@@ -1378,13 +1378,13 @@ files = [
 
 [[package]]
 name = "freezegun"
-version = "1.2.2"
+version = "1.3.1"
 description = "Let your Python tests travel through time"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "freezegun-1.2.2-py3-none-any.whl", hash = "sha256:ea1b963b993cb9ea195adbd893a48d573fda951b0da64f60883d7e988b606c9f"},
-    {file = "freezegun-1.2.2.tar.gz", hash = "sha256:cd22d1ba06941384410cd967d8a99d5ae2442f57dfafeff2fda5de8dc5c05446"},
+    {file = "freezegun-1.3.1-py3-none-any.whl", hash = "sha256:065e77a12624d05531afa87ade12a0b9bdb53495c4573893252a055b545ce3ea"},
+    {file = "freezegun-1.3.1.tar.gz", hash = "sha256:48984397b3b58ef5dfc645d6a304b0060f612bcecfdaaf45ce8aff0077a6cb6a"},
 ]
 
 [package.dependencies]
@@ -1738,20 +1738,14 @@ arrow = ">=0.15.0"
 
 [[package]]
 name = "isort"
-version = "5.12.0"
+version = "5.13.1"
 description = "A Python utility / library to sort Python imports."
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "isort-5.12.0-py3-none-any.whl", hash = "sha256:f84c2818376e66cf843d497486ea8fed8700b340f308f076c6fb1229dff318b6"},
-    {file = "isort-5.12.0.tar.gz", hash = "sha256:8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504"},
+    {file = "isort-5.13.1-py3-none-any.whl", hash = "sha256:56a51732c25f94ca96f6721be206dd96a95f42950502eb26c1015d333bc6edb7"},
+    {file = "isort-5.13.1.tar.gz", hash = "sha256:aaed790b463e8703fb1eddb831dfa8e8616bacde2c083bd557ef73c8189b7263"},
 ]
-
-[package.extras]
-colors = ["colorama (>=0.4.3)"]
-pipfile-deprecated-finder = ["pip-shims (>=0.5.2)", "pipreqs", "requirementslib"]
-plugins = ["setuptools"]
-requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
 name = "itsdangerous"
@@ -2288,13 +2282,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "4.2.10"
+version = "4.2.11"
 description = ""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "moto-4.2.10-py2.py3-none-any.whl", hash = "sha256:5cf0736d1f43cb887498d00b00ae522774bfddb7db1f4994fedea65b290b9f0e"},
-    {file = "moto-4.2.10.tar.gz", hash = "sha256:92595fe287474a31ac3ef847941ebb097e8ffb0c3d6c106e47cf573db06933b2"},
+    {file = "moto-4.2.11-py2.py3-none-any.whl", hash = "sha256:58c12ab9ee69b6a5d1cddf83611ba4071508f07894317c57844b3ae6dc5bcd38"},
+    {file = "moto-4.2.11.tar.gz", hash = "sha256:2da62d52eaa765dfe2762c920f0a88a58f3a09e04581c91db967d92faec848f1"},
 ]
 
 [package.dependencies]
@@ -2496,26 +2490,26 @@ files = [
 
 [[package]]
 name = "newrelic"
-version = "9.2.0"
+version = "9.3.0"
 description = "New Relic Python Agent"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*"
 files = [
-    {file = "newrelic-9.2.0-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:2b942eb9cfe8f62268e091d399d95a6762ef5fb90636839d61a30391efbcfbf0"},
-    {file = "newrelic-9.2.0-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:56df42fc26400d8ee1e324bfff40439399149b15fbeb8ffd532a96e54576e69c"},
-    {file = "newrelic-9.2.0-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:2cfa86a5c3388490335385e0c8c155ee1f06d738282721bd05a8c7ceed33fd92"},
-    {file = "newrelic-9.2.0-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:4139ef79e6abb7458edcf67f4ac0ce0b7dacbb58357f4d41716971fb15f778b6"},
-    {file = "newrelic-9.2.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d36cf6ad3cf1df3989dba9c8a5dbc36150dd1852ffeccdf6b957f21a2d5869c0"},
-    {file = "newrelic-9.2.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:420f07d0ea1bfde21507e6a59c5714f3a0451d01ab08f5ef79dd42b4552ef5ac"},
-    {file = "newrelic-9.2.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b1bddb5793117d91e130f2f93a86f5c3d9f29823329d35a38f8f64b738b3335e"},
-    {file = "newrelic-9.2.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c5b1edfc48c3d483d990bab28f268d64914f76180e057424914bb29e5bcfa927"},
-    {file = "newrelic-9.2.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8f6c5065c434f8fb65e0e5a96a0e385be9baf5625e024cb9c87f345d966a9e5f"},
-    {file = "newrelic-9.2.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b151f1830590cebb53ddf45462101a0ef59d91e28a46a1a652626dc0d4c0148d"},
-    {file = "newrelic-9.2.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d9db7dc6541a519acb327f9409c96f42faefb60748f0827c1dacce7613f88864"},
-    {file = "newrelic-9.2.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a2a69115893ec53b1815b1041e231265abcf60d7d4c07ccc335b6146459e07ed"},
-    {file = "newrelic-9.2.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2911fb601b2a66eb0ab328342e0253889d94102c0b823f9dc5f6124917f9fbac"},
-    {file = "newrelic-9.2.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:88c799cb29e6b9c20fed50709edea6bc2b05fc5e40d0fd4d3fe2a37ae4352043"},
-    {file = "newrelic-9.2.0.tar.gz", hash = "sha256:32395e1c6a97cc96427abaf4b274ccf00709613a68d18b51fc2c0711cda89bc7"},
+    {file = "newrelic-9.3.0-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:f25980a8c86bda75344b5b22edd5d6ad41777776e1ed8a495eb6e38e9813b02c"},
+    {file = "newrelic-9.3.0-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:adefb6620c5a5d75b4bf3ec565cc4d91abcb5cc4e5569f5f82ab29fa3d5aa2d9"},
+    {file = "newrelic-9.3.0-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:27056ab8a3cf39787fc1f93f55243749dd25786f65b15032b6fbb3e8534f4c2a"},
+    {file = "newrelic-9.3.0-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:663fa1c074661f93abf681c8f6028de64744c67f004b722835de1372b6bc4d19"},
+    {file = "newrelic-9.3.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:83346c8f0bcb8f07f74c88f6073e4d44a2e2b3eeec5b2ebe8c450ae695d02b88"},
+    {file = "newrelic-9.3.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2187078d7b0054b30f39dbf891cb2caa71a7046f6d0258fb8c0fcfce70777774"},
+    {file = "newrelic-9.3.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fe0f5edd4eba3d62742b3b0730bb4f826be015dd7fbb9c455b01c410421661a2"},
+    {file = "newrelic-9.3.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8577a0f733174bee70a147f71aa061fb44a593a1be841feffe12dff480c6e02e"},
+    {file = "newrelic-9.3.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:234594655ac0fbe938d34ce5d5d38549d0f5cc11d0552170903ad09574bb4499"},
+    {file = "newrelic-9.3.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1ce38949404e974b566b21487394f5ea36a1fb80ba36cc4a6e8fb968d2e150ab"},
+    {file = "newrelic-9.3.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a750ffed8aedacdafcb548b3d3f45630a96862db630c9f72520ebbfe91e4e9e0"},
+    {file = "newrelic-9.3.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d01d0f0c22b1290dbd2756ef120cfbe154179aae35e1dfc579f8bfd574066105"},
+    {file = "newrelic-9.3.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:53e860c6eacfdef879f23fbbf7d76d8bbb90b725a1c422f62439c6edfceebc21"},
+    {file = "newrelic-9.3.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4caad3017cc978f3130fe2f3933f233c214a4850a595458b733282b3b7f7e886"},
+    {file = "newrelic-9.3.0.tar.gz", hash = "sha256:c2dd685527433f6b6fbffe58f83852b46c24b9713ebb8ee7af647e04c2de3ee4"},
 ]
 
 [package.extras]
@@ -2552,7 +2546,7 @@ requests = ">=2.0.0"
 
 [[package]]
 name = "notifications-utils"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 optional = false
 python-versions = ">=3.9,<3.12"
@@ -2604,7 +2598,7 @@ werkzeug = "^3.0.1"
 type = "git"
 url = "https://github.com/GSA/notifications-utils.git"
 reference = "HEAD"
-resolved_reference = "4cdd67a377f4a6dea1f96b26ba5a1a4bca9afce3"
+resolved_reference = "bd604dc32ea80b5d8a1157b09653e4bd4a755a6e"
 
 [[package]]
 name = "numpy"
@@ -2971,13 +2965,13 @@ files = [
 
 [[package]]
 name = "pre-commit"
-version = "3.5.0"
+version = "3.6.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "pre_commit-3.5.0-py2.py3-none-any.whl", hash = "sha256:841dc9aef25daba9a0238cd27984041fa0467b4199fc4852e27950664919f660"},
-    {file = "pre_commit-3.5.0.tar.gz", hash = "sha256:5804465c675b659b0862f07907f96295d490822a450c4c40e747d0b1c6ebcb32"},
+    {file = "pre_commit-3.6.0-py2.py3-none-any.whl", hash = "sha256:c255039ef399049a5544b6ce13d135caba8f2c28c3b4033277a788f434308376"},
+    {file = "pre_commit-3.6.0.tar.gz", hash = "sha256:d30bad9abf165f7785c15a21a1f46da7d0677cb00ee7ff4c579fd38922efe15d"},
 ]
 
 [package.dependencies]
@@ -4687,4 +4681,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "488b03d81918c0e9d5e16292fc563b59ddfc72662d85ff98311e81223f0d10a5"
+content-hash = "e33c77f33cd844adfbd7dec68fc17744ab07387979b542cabfa0ae6f33bfbc4f"

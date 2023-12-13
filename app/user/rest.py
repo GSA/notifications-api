@@ -137,6 +137,7 @@ def update_user_attribute(user_id):
         )
 
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
+
     return jsonify(data=user_to_update.serialize()), 200
 
 

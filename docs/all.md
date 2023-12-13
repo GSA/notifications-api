@@ -477,7 +477,18 @@ Appending `--help` to any command will give you more information about parameter
 
 To run a command on cloud.gov, use this format:
 
-`cf run-task CLOUD-GOV-APP --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND`
+`cf run-task CLOUD-GOV-APP --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND-NAME`
+
+**NOTE:** Do not include `poetry run` in the command you provide for `cf run-task`!  cloud.gov is already aware
+of the Python virtual environment and Python dependencies; it's all handled through the Python brokerpak we use
+to deploy the application.
+
+For example, if you want to update the templates in one of the remote environments after a change to the JSON
+file, you would run this:
+
+```sh
+cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR-COMMAND-NAME
+```
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
 

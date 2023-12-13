@@ -2399,10 +2399,7 @@ def test_update_service_calls_send_notification_as_service_becomes_live(
     send_notification_mock.assert_called_once_with(
         service_id=restricted_service.id,
         template_id="618185c6-3636-49cd-b7d2-6f6f5eb3bdde",
-        personalisation={
-            "service_name": restricted_service.name,
-            "message_limit": "1,000",
-        },
+        personalisation={"service_name": restricted_service.name},
         include_user_fields=["name"],
     )
 
