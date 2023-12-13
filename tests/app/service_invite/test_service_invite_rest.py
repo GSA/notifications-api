@@ -204,7 +204,7 @@ def test_get_invited_user_by_service_when_user_does_not_belong_to_the_service(
 
 
 def test_resend_expired_invite(client, sample_expired_user, mocker):
-    url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}"
+    url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
     mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
     mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
     from app.notifications.process_notifications import persist_notification

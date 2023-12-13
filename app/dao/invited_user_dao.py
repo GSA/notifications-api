@@ -33,7 +33,7 @@ def expire_invitations_created_more_than_two_days_ago():
         db.session.query(InvitedUser)
         .filter(
             InvitedUser.created_at <= datetime.utcnow() - timedelta(days=2),
-            InvitedUser.status.in_(INVITE_PENDING),
+            InvitedUser.status.in_((INVITE_PENDING,)),
         )
         .update({InvitedUser.status: INVITE_EXPIRED})
     )
