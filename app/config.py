@@ -364,7 +364,7 @@ class Production(Config):
         f"notify-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}"
     )
 
-    FROM_NUMBER = "US Notify"
+    FROM_NUMBER = "Notify.gov"
     CRONITOR_ENABLED = True
 
 
