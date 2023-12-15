@@ -203,7 +203,12 @@ def test_get_invited_user_by_service_when_user_does_not_belong_to_the_service(
     assert json_resp["result"] == "error"
 
 
-def test_resend_expired_invite(client, sample_expired_user, mocker):
+def test_resend_expired_invite(
+    client,
+    sample_expired_user,
+    invitation_email_template,
+    mocker,
+):
     url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
     mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
     mock_persist = mocker.patch("app.service_invite.rest.persist_notification")

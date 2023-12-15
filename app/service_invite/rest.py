@@ -30,6 +30,7 @@ def _create_service_invite(invited_user, invite_link_host):
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
+
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
 
     saved_notification = persist_notification(
@@ -116,6 +117,7 @@ def resend_service_invite(service_id, invited_user_id):
 
     current_data = {k: v for k, v in invited_user_schema.dump(fetched).items()}
     update_dict = invited_user_schema.load(current_data)
+
     save_invited_user(update_dict)
 
     _create_service_invite(fetched, current_app.config["ADMIN_BASE_URL"])
