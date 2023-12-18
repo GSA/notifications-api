@@ -203,7 +203,7 @@ brew install postgresql@15
 
 _NOTE: This project currently works with PostgreSQL version 15.x; version 12.x is currently used in our hosted environments._
 
-_NOTE: If you have a pre-existing instance of PSQL install because of another product like PGAdmin. Homebrew installs Postgres without a password. This may create a scenario where you cannot use PSQL to login to the database as PSQL for PGAdmin will require a password. It is recommended that you remove PGAdmin before this step as PSQL will be installed with Postgres and allow you to login without a password._
+_NOTE: If you have a pre-existing instance of PSQL installed because of another product like PGAdmin, your database configuration may differ from the instructions above, which uses Homebrew to install and configure PostgreSQL.  If this is the case for you, you may have to either account for slightly different user permissions with the database, or uninstall PGAdmin and/or PostgreSQL itself, and reinstall it with Homebrew to follow the steps above._
 
 You'll now need to modify (or create, if it doesn't already exist) the `$PATH`
 environment variable to include the PostgreSQL binaries. Open the file you have
