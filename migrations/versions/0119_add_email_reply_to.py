@@ -5,8 +5,8 @@ Revises: 0118_service_sms_senders
 Create Date: 2017-09-07 15:29:49.087143
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0119_add_email_reply_to"

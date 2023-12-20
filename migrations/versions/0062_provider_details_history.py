@@ -13,8 +13,8 @@ Create Date: 2016-12-14 13:00:24.226990
 revision = "0062_provider_details_history"
 down_revision = "0061_add_client_reference"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

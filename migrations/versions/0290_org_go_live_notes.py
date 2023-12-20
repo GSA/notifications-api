@@ -5,9 +5,8 @@ Revises: 0289_precompiled_for_all
 Create Date: 2019-05-13 14:55:10.291781
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0290_org_go_live_notes"
 down_revision = "0289_precompiled_for_all"

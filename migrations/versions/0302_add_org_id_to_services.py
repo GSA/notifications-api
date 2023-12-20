@@ -5,8 +5,8 @@ Revises: 0301_upload_letters_permission
 Create Date: 2019-08-06 09:43:57.993510
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0302_add_org_id_to_services"

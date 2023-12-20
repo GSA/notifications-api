@@ -5,8 +5,8 @@ Revises: 0285_default_org_branding
 Create Date: 2019-04-09 13:01:13.892249
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0286_add_unique_email_name"
 down_revision = "0285_default_org_branding"

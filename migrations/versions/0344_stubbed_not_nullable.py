@@ -5,9 +5,8 @@ Revises: 0343_org_billing_details
 Create Date: 2021-02-08 18:10:15.533279
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0344_stubbed_not_nullable"
 down_revision = "0343_org_billing_details"

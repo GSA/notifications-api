@@ -5,8 +5,8 @@ Revises: 0302_add_org_id_to_services
 Create Date: 2019-08-06 09:43:57.993510
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.sql import text
 
 revision = "0303_populate_services_org_id"

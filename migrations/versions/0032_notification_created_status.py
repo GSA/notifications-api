@@ -10,8 +10,8 @@ Create Date: 2016-06-21 11:29:28.963615
 revision = "0032_notification_created_status"
 down_revision = "0031_store_personalisation"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

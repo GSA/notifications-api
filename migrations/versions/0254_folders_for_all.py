@@ -7,7 +7,6 @@ Create Date: 2019-01-08 13:30:48.694881+00
 """
 from alembic import op
 
-
 revision = "0254_folders_for_all"
 down_revision = "0253_set_template_postage"
 

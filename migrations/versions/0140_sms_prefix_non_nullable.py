@@ -5,9 +5,9 @@ Revises: 0139_migrate_sms_allowance_data
 Create Date: 2017-11-07 13:04:04.077142
 
 """
+import sqlalchemy as sa
 from alembic import op
 from flask import current_app
-import sqlalchemy as sa
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 

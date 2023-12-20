@@ -5,9 +5,8 @@ Revises: 0312_populate_returned_letters
 Create Date: 2020-01-28 18:03:22.237386
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0313_email_access_validated_at"
 down_revision = "0312_populate_returned_letters"

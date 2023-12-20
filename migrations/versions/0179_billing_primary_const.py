@@ -5,8 +5,8 @@ Revises: 0178_add_filename
 Create Date: 2018-03-13 14:52:40.413474
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0179_billing_primary_const"

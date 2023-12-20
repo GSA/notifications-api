@@ -6,8 +6,8 @@ Create Date: 2022-05-18 09:39:45.260951
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0373_add_notifications_view"

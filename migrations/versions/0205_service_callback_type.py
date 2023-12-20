@@ -5,9 +5,8 @@ Revises: 0204_service_data_retention
 Create Date: 2018-07-17 15:51:10.776698
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0205_service_callback_type"
 down_revision = "0204_service_data_retention"

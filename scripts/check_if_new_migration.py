@@ -1,7 +1,8 @@
 import os
-from os.path import dirname, abspath
-import requests
 import sys
+from os.path import abspath, dirname
+
+import requests
 
 
 def get_latest_db_migration_to_apply():

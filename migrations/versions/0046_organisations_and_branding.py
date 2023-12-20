@@ -10,8 +10,8 @@ Create Date: 2016-08-04 12:00:43.682610
 revision = "0046_organisations_and_branding"
 down_revision = "0045_billable_units"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

@@ -10,8 +10,8 @@ Create Date: 2016-10-25 17:37:27.660723
 revision = "0058_add_letters_flag"
 down_revision = "0056_minor_updates"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

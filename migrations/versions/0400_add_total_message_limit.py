@@ -5,9 +5,8 @@ Revises: 0399_remove_research_mode
 Create Date: 2023-04-24 11:35:22.873930
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0400_add_total_message_limit"
 down_revision = "0399_remove_research_mode"

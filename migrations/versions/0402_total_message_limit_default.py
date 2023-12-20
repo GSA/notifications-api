@@ -5,10 +5,9 @@ Revises: 0401_add_e2e_test_user
 Create Date: 2023-09-18 10:04:58.957374
 
 """
+import sqlalchemy as sa
 from alembic import op
 from flask import current_app
-import sqlalchemy as sa
-
 
 revision = "0402_total_message_limit_default"
 down_revision = "0401_add_e2e_test_user"

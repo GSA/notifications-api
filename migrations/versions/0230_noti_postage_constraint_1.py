@@ -7,7 +7,6 @@ Create Date: 2018-09-19 11:42:52.229430
 """
 from alembic import op
 
-
 revision = "0230_noti_postage_constraint_1"
 down_revision = "0228_notification_postage"
 

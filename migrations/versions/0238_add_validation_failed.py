@@ -5,9 +5,8 @@ Revises: 0237_add_filename_to_dvla_org
 Create Date: 2018-09-03 11:24:58.773824
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0238_add_validation_failed"
 down_revision = "0237_add_filename_to_dvla_org"

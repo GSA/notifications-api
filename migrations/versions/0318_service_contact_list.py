@@ -5,8 +5,8 @@ Revises: 0317_uploads_for_all
 Create Date: 2020-03-12 15:44:30.784031
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0318_service_contact_list"

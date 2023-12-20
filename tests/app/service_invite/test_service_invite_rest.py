@@ -1,5 +1,6 @@
 import json
 import uuid
+from functools import partial
 
 import pytest
 from flask import current_app
@@ -141,7 +142,7 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
 def test_get_all_invited_users_by_service(client, notify_db_session, sample_service):
     invites = []
     for i in range(0, 5):
-        email = "invited_user_{}@service.gov.uk".format(i)
+        email = f"invited_user_{i}@service.gov.uk"
         invited_user = create_invited_user(sample_service, to_email_address=email)
         invites.append(invited_user)
 
@@ -202,11 +203,33 @@ def test_get_invited_user_by_service_when_user_does_not_belong_to_the_service(
     assert json_resp["result"] == "error"
 
 
+def test_resend_expired_invite(
+    client,
+    sample_expired_user,
+    invitation_email_template,
+    mocker,
+):
+    url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
+    mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
+    mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
+    from app.notifications.process_notifications import persist_notification
+
+    mock_persist.side_effect = partial(persist_notification, simulated=True)
+    auth_header = create_admin_authorization_header()
+    response = client.post(
+        url,
+        headers=[("Content-Type", "application/json"), auth_header],
+    )
+
+    assert response.status_code == 200
+    json_resp = json.loads(response.get_data(as_text=True))["data"]
+    assert json_resp["status"] == "pending"
+    assert mock_send.called
+
+
 def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user):
     data = {"status": "cancelled"}
-    url = "/service/{0}/invite/{1}".format(
-        sample_invited_user.service_id, sample_invited_user.id
-    )
+    url = f"/service/{sample_invited_user.service_id}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,
@@ -223,7 +246,7 @@ def test_update_invited_user_for_wrong_service_returns_404(
     client, sample_invited_user, fake_uuid
 ):
     data = {"status": "cancelled"}
-    url = "/service/{0}/invite/{1}".format(fake_uuid, sample_invited_user.id)
+    url = f"/service/{fake_uuid}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,
@@ -237,9 +260,7 @@ def test_update_invited_user_for_wrong_service_returns_404(
 
 def test_update_invited_user_for_invalid_data_returns_400(client, sample_invited_user):
     data = {"status": "garbage"}
-    url = "/service/{0}/invite/{1}".format(
-        sample_invited_user.service_id, sample_invited_user.id
-    )
+    url = f"/service/{sample_invited_user.service_id}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,
@@ -291,7 +312,7 @@ def test_validate_invitation_token_for_expired_token_returns_400(client):
             current_app.config["SECRET_KEY"],
             current_app.config["DANGEROUS_SALT"],
         )
-    url = "/invite/service/{}".format(token)
+    url = f"/invite/service/{token}"
     auth_header = create_admin_authorization_header()
     response = client.get(
         url, headers=[("Content-Type", "application/json"), auth_header]
@@ -312,7 +333,7 @@ def test_validate_invitation_token_returns_400_when_invited_user_does_not_exist(
         current_app.config["SECRET_KEY"],
         current_app.config["DANGEROUS_SALT"],
     )
-    url = "/invite/service/{}".format(token)
+    url = f"/invite/service/{token}"
     auth_header = create_admin_authorization_header()
     response = client.get(
         url, headers=[("Content-Type", "application/json"), auth_header]
@@ -331,7 +352,7 @@ def test_validate_invitation_token_returns_400_when_token_is_malformed(client):
         current_app.config["DANGEROUS_SALT"],
     )[:-2]
 
-    url = "/invite/service/{}".format(token)
+    url = f"/invite/service/{token}"
     auth_header = create_admin_authorization_header()
     response = client.get(
         url, headers=[("Content-Type", "application/json"), auth_header]

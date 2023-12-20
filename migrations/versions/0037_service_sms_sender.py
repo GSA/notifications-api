@@ -10,8 +10,8 @@ Create Date: 2016-06-30 14:55:33.811696
 revision = "0037_service_sms_sender"
 down_revision = "0036_notif_key_type_not_null"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

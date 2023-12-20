@@ -10,8 +10,8 @@ Create Date: 2016-05-17 09:59:49.032865
 revision = "0016_reply_to_email"
 down_revision = "0015_fix_template_data"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

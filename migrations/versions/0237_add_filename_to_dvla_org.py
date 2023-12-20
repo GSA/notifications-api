@@ -5,10 +5,9 @@ Revises: 0235_add_postage_to_pk
 Create Date: 2018-09-28 15:39:21.115358
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.sql import text
-
 
 revision = "0237_add_filename_to_dvla_org"
 down_revision = "0235_add_postage_to_pk"

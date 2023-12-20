@@ -5,9 +5,8 @@ Revises: 0210_remove_monthly_billing
 Create Date: 2018-07-31 18:00:20.457755
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0211_email_branding_update"
 down_revision = "0210_remove_monthly_billing"

@@ -11,8 +11,8 @@ Revises: 0132_add_sms_prefix_setting
 Create Date: 2017-11-03 15:55:35.657488
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0133_set_services_sms_prefix"

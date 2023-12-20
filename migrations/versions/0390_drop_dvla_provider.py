@@ -7,8 +7,8 @@ Create Date: 2023-02-28 14:25:50.751952
 """
 import uuid
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 

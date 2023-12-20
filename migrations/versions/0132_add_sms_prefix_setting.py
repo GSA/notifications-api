@@ -5,8 +5,8 @@ Revises: 0131_user_auth_types
 Create Date: 2017-11-03 11:07:40.537006
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0132_add_sms_prefix_setting"

@@ -10,8 +10,8 @@ Create Date: 2016-08-25 15:56:31.779399
 revision = "0052_drop_jobs_status"
 down_revision = "0051_set_job_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

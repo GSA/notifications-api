@@ -155,7 +155,18 @@ def test_should_not_delete_invitations_less_than_two_days_old(
     assert (
         len(InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED).all()) == 1
     )
-    assert InvitedUser.query.first().email_address == "valid@2.com"
+    assert (
+        InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED)
+        .first()
+        .email_address
+        == "valid@2.com"
+    )
+    assert (
+        InvitedUser.query.filter(InvitedUser.status == INVITE_EXPIRED)
+        .first()
+        .email_address
+        == "expired@1.com"
+    )
 
 
 def make_invitation(user, service, age=None, email_address="test@test.com"):

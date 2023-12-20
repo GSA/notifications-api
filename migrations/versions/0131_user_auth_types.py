@@ -5,9 +5,8 @@ Revises: 0130_service_email_reply_to_row
 Create Date: 2017-10-27 16:19:51.458863
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0131_user_auth_types"
 down_revision = "0130_service_email_reply_to_row"

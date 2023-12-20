@@ -5,8 +5,8 @@ Revises: 0248_enable_choose_postage
 Create Date: 2019-01-15 16:47:08.049369
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0250_drop_stats_template_table"

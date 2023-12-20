@@ -12,8 +12,8 @@ from sqlalchemy import text
 revision = "0095_migrate_existing_svc_perms"
 down_revision = "0094_job_stats_update"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 migration_date = "2017-05-26 17:30:00.000000"
 

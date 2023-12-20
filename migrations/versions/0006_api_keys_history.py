@@ -10,8 +10,8 @@ Create Date: 2016-04-20 17:21:38.541766
 revision = "0006_api_keys_history"
 down_revision = "0005_add_provider_stats"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

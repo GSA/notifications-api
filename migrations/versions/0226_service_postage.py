@@ -5,9 +5,8 @@ Revises: 0224_returned_letter_status
 Create Date: 2018-09-13 16:23:59.168877
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0226_service_postage"
 down_revision = "0224_returned_letter_status"

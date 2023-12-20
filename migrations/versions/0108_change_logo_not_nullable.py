@@ -10,8 +10,8 @@ Create Date: 2017-07-06 10:14:35.188404
 revision = "0108_change_logo_not_nullable"
 down_revision = "0107_drop_template_stats"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

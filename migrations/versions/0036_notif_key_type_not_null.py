@@ -10,8 +10,8 @@ Create Date: 2016-07-01 16:01:16.892638
 revision = "0036_notif_key_type_not_null"
 down_revision = "0035_notification_type"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

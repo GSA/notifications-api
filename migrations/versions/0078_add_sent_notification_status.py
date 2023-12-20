@@ -10,8 +10,8 @@ Create Date: 2017-04-24 16:55:20.731069
 revision = "0078_sent_notification_status"
 down_revision = "0077_add_intl_notification"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 enum_name = "notify_status_type"
 tmp_name = "tmp_" + enum_name

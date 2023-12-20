@@ -5,8 +5,8 @@ Revises: 0279_remove_fk_to_users
 Create Date: 2019-03-11 14:38:28.010082
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0280_invited_user_folder_perms"

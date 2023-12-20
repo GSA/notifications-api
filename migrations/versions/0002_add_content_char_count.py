@@ -10,9 +10,9 @@ Create Date: 2016-04-15 12:12:46.383782
 revision = "0002_add_content_char_count"
 down_revision = "0001_restart_migrations"
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.sql import table, column
+from alembic import op
+from sqlalchemy.sql import column, table
 
 
 def upgrade():

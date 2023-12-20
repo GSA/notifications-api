@@ -5,8 +5,8 @@ Revises: 0174_add_billing_facts
 Create Date: 2018-03-12 10:27:09.050837
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0175_drop_job_statistics_table"

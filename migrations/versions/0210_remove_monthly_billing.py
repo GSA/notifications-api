@@ -5,8 +5,8 @@ Revises: 0209_add_cancelled_status
 Create Date: 2018-07-31 16:43:00.568972
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0210_remove_monthly_billing"

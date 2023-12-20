@@ -10,8 +10,8 @@ Create Date: 2016-06-28 10:37:25.389020
 revision = "0034_pwd_changed_at_not_null"
 down_revision = "0033_api_key_type"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

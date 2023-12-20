@@ -10,8 +10,8 @@ Create Date: 2017-04-25 11:34:43.229494
 revision = "0077_add_intl_notification"
 down_revision = "0076_add_intl_flag_to_provider"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

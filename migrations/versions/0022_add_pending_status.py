@@ -10,8 +10,8 @@ Create Date: 2016-05-25 15:47:32.568097
 revision = "0022_add_pending_status"
 down_revision = "0021_add_delivered_failed_counts"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

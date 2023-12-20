@@ -10,8 +10,8 @@ Create Date: 2016-04-20 15:13:42.229197
 revision = "0005_add_provider_stats"
 down_revision = "0004_notification_stats_date"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

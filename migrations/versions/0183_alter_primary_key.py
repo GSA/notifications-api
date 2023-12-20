@@ -5,8 +5,8 @@ Revises: 0182_add_upload_document_perm
 Create Date: 2018-03-25 21:23:32.403212
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0183_alter_primary_key"

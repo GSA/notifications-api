@@ -5,8 +5,8 @@ Revises: 0212_remove_caseworking
 Create Date: 2018-08-16 16:29:41.374944
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0213_brand_colour_domain"
 down_revision = "0212_remove_caseworking"

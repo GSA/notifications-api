@@ -10,8 +10,8 @@ Create Date: 2016-04-07 17:22:12.147542
 revision = "0001_restart_migrations"
 down_revision = None
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
