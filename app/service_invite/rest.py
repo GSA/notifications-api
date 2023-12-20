@@ -6,6 +6,7 @@ from notifications_utils.url_safe_token import check_token, generate_token
 
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
+    get_expired_invite_by_service_and_id,
     get_expired_invited_users_for_service,
     get_invited_user_by_id,
     get_invited_user_by_service_and_id,
@@ -14,13 +15,7 @@ from app.dao.invited_user_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    EMAIL_TYPE,
-    INVITE_EXPIRED,
-    INVITE_PENDING,
-    KEY_TYPE_NORMAL,
-    Service,
-)
+from app.models import EMAIL_TYPE, INVITE_PENDING, KEY_TYPE_NORMAL, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -114,10 +109,9 @@ def resend_service_invite(service_id, invited_user_id):
     Note:
         This ignores the POST data entirely.
     """
-    fetched = get_invited_user_by_service_and_id(
+    fetched = get_expired_invite_by_service_and_id(
         service_id=service_id,
         invited_user_id=invited_user_id,
-        status=INVITE_EXPIRED,
     )
 
     fetched.created_at = datetime.utcnow()

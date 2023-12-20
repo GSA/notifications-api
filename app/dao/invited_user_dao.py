@@ -16,6 +16,14 @@ def get_invited_user_by_service_and_id(service_id, invited_user_id):
     ).one()
 
 
+def get_expired_invite_by_service_and_id(service_id, invited_user_id):
+    return InvitedUser.query.filter(
+        InvitedUser.service_id == service_id,
+        InvitedUser.id == invited_user_id,
+        InvitedUser.status == INVITE_EXPIRED,
+    ).one()
+
+
 def get_invited_user_by_id(invited_user_id):
     return InvitedUser.query.filter(InvitedUser.id == invited_user_id).one()
 
