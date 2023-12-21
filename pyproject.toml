@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-alembic = "==1.13.0"
+alembic = "==1.13.1"
 amqp = "==5.2.0"
 beautifulsoup4 = "==4.12.2"
 boto3 = "^1.29.6"
