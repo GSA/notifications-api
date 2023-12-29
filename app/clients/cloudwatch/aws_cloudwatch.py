@@ -127,7 +127,7 @@ class AwsCloudwatchClient(Client):
             return (
                 "failure",
                 message["delivery"]["providerResponse"],
-                message["delivery"]["phoneCarrier"],
+                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
             )
 
         if time_now > (created_at + timedelta(hours=3)):
