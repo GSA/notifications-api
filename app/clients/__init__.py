@@ -1,3 +1,5 @@
+from typing import Protocol
+
 from botocore.config import Config
 
 AWS_CLIENT_CONFIG = Config(
@@ -22,7 +24,7 @@ class ClientException(Exception):
     pass
 
 
-class Client(object):
+class Client(Protocol):
     """
     Base client for sending notifications.
     """
