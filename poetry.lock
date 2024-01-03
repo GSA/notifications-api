@@ -1152,19 +1152,22 @@ pgp = ["gpg"]
 
 [[package]]
 name = "eventlet"
-version = "0.33.3"
+version = "0.34.2"
 description = "Highly concurrent networking library"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "eventlet-0.33.3-py2.py3-none-any.whl", hash = "sha256:e43b9ae05ba4bb477a10307699c9aff7ff86121b2640f9184d29059f5a687df8"},
-    {file = "eventlet-0.33.3.tar.gz", hash = "sha256:722803e7eadff295347539da363d68ae155b8b26ae6a634474d0a920be73cfda"},
+    {file = "eventlet-0.34.2-py3-none-any.whl", hash = "sha256:eca0114398d3133f94d16590d205bbb010668a3bc7453fddadb51d63e8c1bac2"},
+    {file = "eventlet-0.34.2.tar.gz", hash = "sha256:2115c7c6742e6893bf1347f82915572f8895c911cb5abaad4d3596a7daa847cc"},
 ]
 
 [package.dependencies]
 dnspython = ">=1.15.0"
-greenlet = ">=0.3"
+greenlet = ">=1.0"
 six = ">=1.10.0"
+
+[package.extras]
+dev = ["black", "build", "commitizen", "isort", "pip-tools", "pre-commit", "twine"]
 
 [[package]]
 name = "exceptiongroup"
@@ -4694,4 +4697,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "2ced3799090bd2327e2d2a33a57641fdfe79c57f89344bf0d55d04b4f333142d"
+content-hash = "186b2a08e1d3975c13a1ca78390e0416649a36ab80327bbc5c5f6d15f47c118f"
