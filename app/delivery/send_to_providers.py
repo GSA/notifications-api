@@ -3,6 +3,7 @@ from urllib import parse
 
 from cachetools import TTLCache, cached
 from flask import current_app
+from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -10,10 +11,12 @@ from notifications_utils.template import (
 )
 
 from app import create_uuid, db, notification_provider_clients
+from app.aws import s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
+from app.dao.templates_dao import dao_get_template_by_id
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
@@ -27,9 +30,52 @@ from app.models import (
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
+try:
+    phones_for_current_job_from_csv
+except NameError:
+    phones_for_current_job_from_csv = {}
+
+
+def get_phones_from_s3(notification):
+    print(
+        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
+    )
+    if notification.job_id == phones_for_current_job_from_csv.get("job_id"):
+        # We already downloaded the phone numbers, nothing to do for now
+        print("REUSING THE PHONES!!!")
+        return
+    print("!!!!! ENTER GET_PHONES_FROM_S3")
+    db_template = dao_get_template_by_id(
+        notification.template_id, notification.template_version
+    )
+    template = db_template._as_utils_template()
+    print("!!!!! GOT TEMPLATE")
+    print(f"!!!!! NOTIFICATION JOB_ID is {notification.job_id}")
+
+    for row in RecipientCSV(
+        s3.get_job_from_s3(str(notification.service_id), str(notification.job_id)),
+        template=template,
+    ).get_rows():
+        phones_for_current_job_from_csv[row.index] = row.recipient
+    print(
+        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
+    )
+    phones_for_current_job_from_csv["job_id"] = notification.job_id
+    print(
+        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
+    )
+
 
 def send_sms_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
+    # if len(phones_for_current_job_from_csv) == 0:
+    try:
+        # TODO add test on job_id so we reuse
+        get_phones_from_s3(notification)
+        print(f"!!!!!GOT ALL PHONES HERE {phones_for_current_job_from_csv}")
+    except Exception as e:
+        print(f"BLEW UP WITH {e}")
+
     message_id = None
     if not service.active:
         technical_failure(notification=notification)
@@ -65,8 +111,24 @@ def send_sms_to_provider(notification):
                 # providers as a slow down of our providers can cause us to run out of DB connections
                 # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
                 # closing the session (as otherwise it would be reopened immediately)
+
+                # We have a very tiny number of use cases where the notification may not have an associated job
+                # (such as initial login when we receive the verify code)
+                # TODO fix all these so we can remove the PII columns from db
+                if phones_for_current_job_from_csv.get(notification.job_row_number):
+                    send_to = phones_for_current_job_from_csv[
+                        notification.job_row_number
+                    ]
+                    current_app.logger.info(
+                        "USING phone number from csv file, very good!"
+                    )
+                else:
+                    current_app.logger.warning(
+                        "USING normalised_to instead of job, very bad!"
+                    )
+                    send_to = notification.normalised_to
                 send_sms_kwargs = {
-                    "to": notification.normalised_to,
+                    "to": send_to,
                     "content": str(template),
                     "reference": str(notification.id),
                     "sender": notification.reply_to_text,
@@ -101,7 +163,7 @@ def send_email_to_provider(notification):
         html_email = HTMLEmailTemplate(
             template_dict,
             values=notification.personalisation,
-            **get_html_email_options(service)
+            **get_html_email_options(service),
         )
 
         plain_text_email = PlainTextEmailTemplate(

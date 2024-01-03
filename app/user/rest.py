@@ -325,6 +325,7 @@ def send_user_email_code(user_to_send_to, data):
     )
 
 
+# TODO THIS SHOULD BE A JOB OR THERE SHOULD BE SOME WAY TO HANDLE PHONE
 def create_2fa_code(
     template_id, user_to_send_to, secret_code, recipient, personalisation
 ):
