@@ -38,7 +38,7 @@ lxml = "==5.0.0"
 marshmallow = "==3.20.1"
 marshmallow-sqlalchemy = "==0.29.0"
 newrelic = "*"
-notifications-python-client = "==8.1.0"
+notifications-python-client = "==8.2.0"
 notifications-utils = {git = "https://github.com/GSA/notifications-utils.git"}
 oscrypto = "==1.3.0"
 packaging = "==23.2"

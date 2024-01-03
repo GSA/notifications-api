@@ -2547,12 +2547,12 @@ setuptools = "*"
 
 [[package]]
 name = "notifications-python-client"
-version = "8.1.0"
+version = "8.2.0"
 description = "Python API client for GOV.UK Notify."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "notifications_python_client-8.1.0-py3-none-any.whl", hash = "sha256:8aec1f7a4ba592fd699eae899df8ccca9ccafb614f47826c07b318ca903c9c13"},
+    {file = "notifications_python_client-8.2.0-py3-none-any.whl", hash = "sha256:8cd8bd01ae603a972a5413c430ca42b16f6481f37d98406c3e9b68c1c192f59e"},
 ]
 
 [package.dependencies]
@@ -4697,4 +4697,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "186b2a08e1d3975c13a1ca78390e0416649a36ab80327bbc5c5f6d15f47c118f"
+content-hash = "a5f9bd15a2dc8c11fd394e13e6ed3e50f7b7c7b5830c619e0a7124dee498c8e9"
