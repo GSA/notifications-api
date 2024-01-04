@@ -13,7 +13,7 @@ class SmsClientResponseException(ClientException):
         self.message = message
 
     def __str__(self):
-        return "Message {}".format(self.message)
+        return f"Message {self.message}"
 
 
 class SmsClient(Client):
