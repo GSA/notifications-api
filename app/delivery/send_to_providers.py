@@ -1,22 +1,20 @@
+import json
 from datetime import datetime
 from urllib import parse
 
 from cachetools import TTLCache, cached
 from flask import current_app
-from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients
-from app.aws import s3
+from app import create_uuid, db, notification_provider_clients, redis_store
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
-from app.dao.templates_dao import dao_get_template_by_id
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
@@ -30,75 +28,39 @@ from app.models import (
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
-try:
-    phones_for_current_job_from_csv
-except NameError:
-    phones_for_current_job_from_csv = {}
-
-
-def get_phones_from_s3(notification):
-    print(
-        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
-    )
-    if notification.job_id == phones_for_current_job_from_csv.get("job_id"):
-        # We already downloaded the phone numbers, nothing to do for now
-        print("REUSING THE PHONES!!!")
-        return
-    print("!!!!! ENTER GET_PHONES_FROM_S3")
-    db_template = dao_get_template_by_id(
-        notification.template_id, notification.template_version
-    )
-    template = db_template._as_utils_template()
-    print("!!!!! GOT TEMPLATE")
-    print(f"!!!!! NOTIFICATION JOB_ID is {notification.job_id}")
-
-    for row in RecipientCSV(
-        s3.get_job_from_s3(str(notification.service_id), str(notification.job_id)),
-        template=template,
-    ).get_rows():
-        phones_for_current_job_from_csv[row.index] = row.recipient
-    print(
-        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
-    )
-    phones_for_current_job_from_csv["job_id"] = notification.job_id
-    print(
-        f"!!!!! phones for_current_job_from_csv are {phones_for_current_job_from_csv}"
-    )
-
 
 def send_sms_to_provider(notification):
+    print("enter send_sms_to_provider")
     service = SerialisedService.from_id(notification.service_id)
-    # if len(phones_for_current_job_from_csv) == 0:
-    try:
-        # TODO add test on job_id so we reuse
-        get_phones_from_s3(notification)
-        print(f"!!!!!GOT ALL PHONES HERE {phones_for_current_job_from_csv}")
-    except Exception as e:
-        print(f"BLEW UP WITH {e}")
-
+    print(f"service {service}")
+    phones = redis_store.get(f"phones_{notification.job_id}")
+    print(f"phones {phones}")
+    if phones:
+        phones = json.loads(phones)
     message_id = None
     if not service.active:
         technical_failure(notification=notification)
         return
-
+    print(f"ok 1 notification.status=={notification.status}")
     if notification.status == "created":
         provider = provider_to_use(SMS_TYPE, notification.international)
         if not provider:
             technical_failure(notification=notification)
             return
-
+        print("lets get the template model")
         template_model = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id,
             service_id=service.id,
             version=notification.template_version,
         )
-
+        print("got template model")
         template = SMSMessageTemplate(
             template_model.__dict__,
             values=notification.personalisation,
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
+        print("got template")
         if notification.key_type == KEY_TYPE_TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id))
@@ -115,14 +77,16 @@ def send_sms_to_provider(notification):
                 # We have a very tiny number of use cases where the notification may not have an associated job
                 # (such as initial login when we receive the verify code)
                 # TODO fix all these so we can remove the PII columns from db
-                if phones_for_current_job_from_csv.get(notification.job_row_number):
-                    send_to = phones_for_current_job_from_csv[
-                        notification.job_row_number
-                    ]
+                print(f"PHONES {phones}")
+                if phones and phones.get(str(notification.job_row_number)):
+                    send_to = phones[str(notification.job_row_number)]
                     current_app.logger.info(
                         "USING phone number from csv file, very good!"
                     )
                 else:
+                    current_app.logger.warning(
+                        f"COULD NOT FIND PHONE NUMBER FOR job_row_number {notification.job_row_number} in {phones}"
+                    )
                     current_app.logger.warning(
                         "USING normalised_to instead of job, very bad!"
                     )
@@ -135,6 +99,7 @@ def send_sms_to_provider(notification):
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
+                print("Sending")
                 message_id = provider.send_sms(**send_sms_kwargs)
             except Exception as e:
                 notification.billable_units = template.fragment_count

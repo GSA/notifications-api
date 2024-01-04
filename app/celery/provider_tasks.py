@@ -100,6 +100,7 @@ def deliver_sms(self, notification_id):
             "Start sending SMS for notification id: {}".format(notification_id)
         )
         notification = notifications_dao.get_notification_by_id(notification_id)
+
         ansi_green = "\033[32m"
         ansi_reset = "\033[0m"
 
@@ -112,7 +113,6 @@ def deliver_sms(self, notification_id):
             current_app.logger.warning(
                 ansi_green + f"AUTHENTICATION CODE: {notification.content}" + ansi_reset
             )
-
         message_id = send_to_providers.send_sms_to_provider(notification)
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)

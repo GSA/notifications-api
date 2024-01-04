@@ -665,6 +665,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
         "app.redis_store.get",
         side_effect=[
             json.dumps({"data": service_dict}).encode("utf-8"),
+            json.dumps({"data": service_dict}).encode("utf-8"),
             json.dumps({"data": template_dict}).encode("utf-8"),
         ],
     )
@@ -702,6 +703,7 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
         side_effect=[
             json.dumps({"data": service_dict}).encode("utf-8"),
             json.dumps({"data": template_dict}).encode("utf-8"),
+            json.dumps({}).encode("utf-8"),
         ],
     )
     mock_get_template = mocker.patch(

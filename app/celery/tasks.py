@@ -6,7 +6,7 @@ from notifications_utils.recipients import RecipientCSV
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from app import create_uuid, encryption, notify_celery
+from app import create_uuid, encryption, notify_celery, redis_store
 from app.aws import s3
 from app.celery import provider_tasks
 from app.config import QueueNames
@@ -128,6 +128,16 @@ def process_row(row, template, job, service, sender_id=None):
             "personalisation": dict(row.personalisation),
         }
     )
+    if redis_store.get(f"phones_{job.id}"):
+        phones = json.loads(redis_store.get(f"phones_{job.id}"))
+        phones[row.index] = row.recipient
+        redis_store.set(f"phones_{job.id}", json.dumps(phones), ex=3600 * 4)
+    else:
+        print(
+            f"ROW INDEX IS TYPE {type(row.index)} ROW RECIPIENT IS TYPE {type(row.recipient)}"
+        )
+        phones = {"job_id": str(job.id), row.index: row.recipient}
+        redis_store.set(f"phones_{job.id}", json.dumps(phones), ex=3600 * 4)
 
     send_fns = {SMS_TYPE: save_sms, EMAIL_TYPE: save_email}
 
