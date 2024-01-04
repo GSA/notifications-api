@@ -10,7 +10,7 @@ class PerformancePlatformClient:
     def active(self):
         return self._active
 
-    def init_app(self, app):
+    def init_app(self, app, *args, **kwargs):
         self._active = app.config.get("PERFORMANCE_PLATFORM_ENABLED")
         if self.active:
             self.performance_platform_url = app.config.get("PERFORMANCE_PLATFORM_URL")

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Protocol
 
 from botocore.config import Config
@@ -29,7 +30,9 @@ class Client(Protocol):
     Base client for sending notifications.
     """
 
-    pass
+    @abstractmethod
+    def init_app(self, current_app, *args, **kwargs):
+        raise NotImplementedError("TODO: Need to implement.")
 
 
 class NotificationProviderClients(object):

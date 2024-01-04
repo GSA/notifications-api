@@ -1,4 +1,5 @@
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
+from typing import final
 
 from app.clients import Client, ClientException
 
@@ -21,13 +22,13 @@ class SmsClient(Client):
     """
 
     @abstractmethod
-    def init_app(self, *args, **kwargs):
-        raise NotImplementedError("TODO Need to implement.")
-
-    @abstractmethod
     def send_sms(self, *args, **kwargs):
         raise NotImplementedError("TODO Need to implement.")
 
-    @abstractmethod
-    def get_name(self):
+    @abstractproperty
+    def name(self):
         raise NotImplementedError("TODO Need to implement.")
+
+    @final
+    def get_name(self):
+        return self.name
