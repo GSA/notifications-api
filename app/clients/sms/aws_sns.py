@@ -43,9 +43,6 @@ class AwsSnsClient(SmsClient):
     def name(self):
         return "sns"
 
-    def get_name(self):
-        return self.name
-
     def _valid_sender_number(self, sender):
         return sender and re.match(self._valid_sender_regex, sender)
 
