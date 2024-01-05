@@ -66,9 +66,7 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 
 
 def get_job_from_s3(service_id, job_id):
-    print(f"ENTERE get_job_from_s3 with {service_id} {job_id}")
     obj = get_s3_object(*get_job_location(service_id, job_id))
-    print(f"obj is {obj}")
     return obj.get()["Body"].read().decode("utf-8")
 
 
@@ -76,21 +74,11 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need a phone number.
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
-    print(
-        f"ENTER GET_PHONE_NUMBER_FROM_S3 WITH JOB_ID {job_id} SERVICE_ID {service_id} JOB_ROW_NUMBER {job_row_number}"
-    )
     job = JOBS.get(job_id)
-    print(f"JOB FROM EXPIRINGDICT {job} JOB ID {job_id}")
     if job is None:
-        print("JOB IS NONE")
         job = get_job_from_s3(service_id, job_id)
-        print(f"FRESH JOB {job}")
         JOBS[job_id] = job
-        print("ADDED {job} to EXPRING DICT")
-    else:
-        print("JOB IS NOT NONE")
     job = job.split("\r\n")
-    print(f"JOB AFTER SPLIT {job}")
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")

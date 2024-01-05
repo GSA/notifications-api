@@ -62,7 +62,6 @@ def test_get_phone_number_from_s3(
 ):
     get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
     get_job_mock.return_value = job
-    print(f"ABOUT TO CALL GET_PHONE_NUMBER_FROM_S3 WITH JOB_ID {job_id}")
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
 

@@ -76,12 +76,10 @@ def send_sms_to_provider(notification):
                         notification.job_id,
                         notification.job_row_number,
                     )
-                    print(f"MY PHONE FROM JOB {my_phone}")
                 except BaseException:
                     my_phone = redis_store.get(f"2facode_{notification.id}")
                     if my_phone:
                         my_phone = my_phone.decode("utf-8")
-                        print(f"MY PHONE FROM VERIFY CODE {my_phone}")
                 if my_phone is None:
                     raise Exception("what happened to the phone number")
                 send_sms_kwargs = {
