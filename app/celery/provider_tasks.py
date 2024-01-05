@@ -31,7 +31,7 @@ DELIVERY_RECEIPT_DELAY_IN_SECONDS = 120
 @notify_celery.task(
     bind=True,
     name="check_sms_delivery_receipt",
-    max_retries=48,
+    max_retries=12,
     default_retry_delay=300,
 )
 def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
@@ -92,7 +92,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
 
 
 @notify_celery.task(
-    bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300
+    bind=True, name="deliver_sms", max_retries=12, default_retry_delay=300
 )
 def deliver_sms(self, notification_id):
     try:
