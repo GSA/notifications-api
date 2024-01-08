@@ -50,10 +50,16 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
     [
         ("phone number\r\n+15555555555", "aaa", 0, "15555555555"),
         (
-            "day of week,favorite color,phone number\r\nmonday,green,15551111111\r\ntuesday,red,15552222222",
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
             "bbb",
             1,
             "15552222222",
+        ),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "ccc",
+            0,
+            "15551111111",
         ),
     ],
 )

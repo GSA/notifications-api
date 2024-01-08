@@ -1,3 +1,5 @@
+import re
+
 import botocore
 from boto3 import Session
 from expiringdict import ExpiringDict
@@ -8,7 +10,7 @@ from app.clients import AWS_CLIENT_CONFIG
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
 
-JOBS = ExpiringDict(max_len=100, max_age_seconds=3600)
+JOBS = ExpiringDict(max_len=100, max_age_seconds=3600 * 4)
 
 
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
@@ -91,11 +93,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     correct_row = correct_row.split(",")
 
     my_phone = correct_row[phone_index]
-    my_phone = my_phone.replace("(", "")
-    my_phone = my_phone.replace(")", "")
-    my_phone = my_phone.replace("-", "")
-    my_phone = my_phone.replace(" ", "")
-    my_phone = my_phone.replace("+", "")
+    my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
     return my_phone
 
 

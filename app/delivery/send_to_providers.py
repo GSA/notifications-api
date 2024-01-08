@@ -81,7 +81,12 @@ def send_sms_to_provider(notification):
                     if my_phone:
                         my_phone = my_phone.decode("utf-8")
                 if my_phone is None:
-                    raise Exception("what happened to the phone number")
+                    si = notification.service_id
+                    ji = notification.job_id
+                    jrn = notification.job_row_number
+                    raise Exception(
+                        f"The phone number for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                    )
                 send_sms_kwargs = {
                     "to": my_phone,
                     "content": str(template),
