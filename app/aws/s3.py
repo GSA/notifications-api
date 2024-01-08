@@ -1,10 +1,16 @@
+import re
+
 import botocore
 from boto3 import Session
+from expiringdict import ExpiringDict
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
+
+
+JOBS = ExpiringDict(max_len=100, max_age_seconds=3600 * 4)
 
 
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
@@ -64,6 +70,31 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 def get_job_from_s3(service_id, job_id):
     obj = get_s3_object(*get_job_location(service_id, job_id))
     return obj.get()["Body"].read().decode("utf-8")
+
+
+def get_phone_number_from_s3(service_id, job_id, job_row_number):
+    # We don't want to constantly pull down a job from s3 every time we need a phone number.
+    # At the same time we don't want to store it in redis or the db
+    # So this is a little recycling mechanism to reduce the number of downloads.
+    job = JOBS.get(job_id)
+    if job is None:
+        job = get_job_from_s3(service_id, job_id)
+        JOBS[job_id] = job
+    job = job.split("\r\n")
+    first_row = job[0]
+    job.pop(0)
+    first_row = first_row.split(",")
+    phone_index = 0
+    for item in first_row:
+        if item == "phone number":
+            break
+        phone_index = phone_index + 1
+    correct_row = job[job_row_number]
+    correct_row = correct_row.split(",")
+
+    my_phone = correct_row[phone_index]
+    my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
+    return my_phone
 
 
 def get_job_metadata_from_s3(service_id, job_id):

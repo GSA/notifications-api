@@ -7,6 +7,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -337,6 +338,7 @@ def create_2fa_code(
         reply_to = get_sms_reply_to_for_notify_service(recipient, template)
     elif template.template_type == EMAIL_TYPE:
         reply_to = template.service.get_default_reply_to_email_address()
+
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
@@ -348,6 +350,8 @@ def create_2fa_code(
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=reply_to,
     )
+
+    redis_store.set(f"2facode_{saved_notification.id}", recipient, ex=1800)
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:

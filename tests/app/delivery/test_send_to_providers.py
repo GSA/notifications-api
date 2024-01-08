@@ -94,6 +94,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     mocker.patch("app.aws_sns_client.send_sms")
 
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
     send_to_providers.send_sms_to_provider(db_notification)
 
     aws_sns_client.send_sms.assert_called_once_with(
@@ -186,6 +189,9 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
         normalised_to="2028675309",
     )
 
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
     mocker.patch("app.aws_sns_client.send_sms")
 
     version_on_notification = sample_template.version
@@ -266,6 +272,9 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
 
     mocker.patch("app.aws_sns_client.send_sms")
 
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
+
     send_to_providers.send_sms_to_provider(db_notification)
 
     aws_sns_client.send_sms.assert_called_once_with(
@@ -285,6 +294,8 @@ def test_send_sms_should_use_service_sms_sender(
         template=sample_template, reply_to_text=sms_sender.sms_sender
     )
     expected_sender_name = sms_sender.sms_sender
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
 
     send_to_providers.send_sms_to_provider(
         db_notification,
@@ -513,6 +524,9 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     if research_mode:
         sample_template.service.research_mode = True
 
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
+
     send_to_providers.send_sms_to_provider(notification)
     assert notification.billable_units == billable_units
     assert notification.status == expected_status
@@ -552,6 +566,9 @@ def test_should_send_sms_to_international_providers(
         normalised_to="601117224412",
     )
 
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "601117224412"
+
     send_to_providers.send_sms_to_provider(notification_international)
 
     aws_sns_client.send_sms.assert_called_once_with(
@@ -588,6 +605,9 @@ def test_should_handle_sms_sender_and_prefix_message(
     template = create_template(service, content="bar")
     notification = create_notification(template, reply_to_text=sms_sender)
 
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
+
     send_to_providers.send_sms_to_provider(notification)
 
     aws_sns_client.send_sms.assert_called_once_with(
@@ -622,6 +642,9 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     notification = create_notification(
         template=sample_template, to_field="+12028675309", normalised_to="2028675309"
     )
+
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
     send_to_providers.send_sms_to_provider(notification)
     send_mock.assert_called_once_with(
         to=notification.normalised_to,
@@ -677,6 +700,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     notification = create_notification(
         template=sample_template, to_field="+447700900855", normalised_to="447700900855"
     )
+
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "447700900855"
+
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False

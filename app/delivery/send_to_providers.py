@@ -9,7 +9,8 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients
+from app import create_uuid, db, notification_provider_clients, redis_store
+from app.aws.s3 import get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
@@ -65,8 +66,29 @@ def send_sms_to_provider(notification):
                 # providers as a slow down of our providers can cause us to run out of DB connections
                 # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
                 # closing the session (as otherwise it would be reopened immediately)
+
+                # We start by trying to get the phone number from a job in s3.  If we fail, we assume
+                # the phone number is for the verification code on login, which is not a job.
+                my_phone = None
+                try:
+                    my_phone = get_phone_number_from_s3(
+                        notification.service_id,
+                        notification.job_id,
+                        notification.job_row_number,
+                    )
+                except BaseException:
+                    my_phone = redis_store.get(f"2facode_{notification.id}")
+                    if my_phone:
+                        my_phone = my_phone.decode("utf-8")
+                if my_phone is None:
+                    si = notification.service_id
+                    ji = notification.job_id
+                    jrn = notification.job_row_number
+                    raise Exception(
+                        f"The phone number for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                    )
                 send_sms_kwargs = {
-                    "to": notification.normalised_to,
+                    "to": my_phone,
                     "content": str(template),
                     "reference": str(notification.id),
                     "sender": notification.reply_to_text,
@@ -101,7 +123,7 @@ def send_email_to_provider(notification):
         html_email = HTMLEmailTemplate(
             template_dict,
             values=notification.personalisation,
-            **get_html_email_options(service)
+            **get_html_email_options(service),
         )
 
         plain_text_email = PlainTextEmailTemplate(
