@@ -77,10 +77,9 @@ def send_sms_to_provider(notification):
                         notification.job_row_number,
                     )
                 except BaseException:
-                    key = f"2facode{notification.id}"
-                    key = key.replace("-", "")
-                    key = key.replace(" ", "")
+                    key = f"2facode-{notification.id}".replace(" ", "")
                     my_phone = redis_store.get(key)
+
                     if my_phone:
                         my_phone = my_phone.decode("utf-8")
                 if my_phone is None:
