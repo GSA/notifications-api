@@ -353,12 +353,25 @@ def create_2fa_code(
 
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
+    # TODO REMOVE
+    current_app.logger.info(
+        f"IN REST, WHERE WE SET THE VALUE, KEY IS {key} and value is {recipient}"
+    )
     redis_store.set(key, recipient)
     stored_recipient = redis_store.get(key)
+    # TODO REMOVE
+    current_app.logger.info(
+        f"IN REST, WHERE WE GET THE VALUE, KEY IS {key} and value is {stored_recipient}"
+    )
+
     if stored_recipient:
-        current_app.logger.info("IN user/rest.py we saved the recipient of the 2facode to redis!")
+        current_app.logger.info(
+            "IN user/rest.py we saved the recipient of the 2facode to redis!"
+        )
     else:
-        current_app.logger.info("IN user/rest.py we did NOT save the recipient of the 2facode to redis!")
+        current_app.logger.info(
+            "IN user/rest.py we did NOT save the recipient of the 2facode to redis!"
+        )
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
