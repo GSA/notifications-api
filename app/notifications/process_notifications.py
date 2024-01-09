@@ -2,8 +2,7 @@ import uuid
 from datetime import datetime
 
 from flask import current_app
-from notifications_utils.recipients import (
-    format_email_address,
+from notifications_utils.recipients import (  # format_email_address,
     get_international_phone_info,
     validate_and_format_phone_number,
 )
@@ -93,7 +92,6 @@ def persist_notification(
         id=notification_id,
         template_id=template_id,
         template_version=template_version,
-        to=recipient,
         service_id=service.id,
         personalisation=personalisation,
         notification_type=notification_type,
@@ -117,13 +115,9 @@ def persist_notification(
             recipient, international=True
         )
         recipient_info = get_international_phone_info(formatted_recipient)
-        notification.normalised_to = formatted_recipient
         notification.international = recipient_info.international
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
-    elif notification_type == EMAIL_TYPE:
-        current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
-        notification.normalised_to = format_email_address(notification.to)
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:

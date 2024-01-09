@@ -1061,8 +1061,6 @@ def test_dao_get_notifications_by_recipient_is_limited_to_50_results(sample_temp
     for _ in range(100):
         create_notification(
             template=sample_template,
-            to_field="+447700900855",
-            normalised_to="447700900855",
         )
 
     results = dao_get_notifications_by_recipient_or_reference(
@@ -1075,47 +1073,9 @@ def test_dao_get_notifications_by_recipient_is_limited_to_50_results(sample_temp
     assert len(results.items) == 50
 
 
-@pytest.mark.parametrize("search_term", ["JACK", "JACK@gmail.com", "jack@gmail.com"])
-def test_dao_get_notifications_by_recipient_is_not_case_sensitive(
-    sample_email_template, search_term
-):
-    notification = create_notification(
-        template=sample_email_template,
-        to_field="jack@gmail.com",
-        normalised_to="jack@gmail.com",
-    )
-    results = dao_get_notifications_by_recipient_or_reference(
-        notification.service_id, search_term, notification_type="email"
-    )
-    notification_ids = [notification.id for notification in results.items]
-
-    assert len(results.items) == 1
-    assert notification.id in notification_ids
-
-
-def test_dao_get_notifications_by_recipient_matches_partial_emails(
-    sample_email_template,
-):
-    notification_1 = create_notification(
-        template=sample_email_template,
-        to_field="jack@gmail.com",
-        normalised_to="jack@gmail.com",
-    )
-    notification_2 = create_notification(
-        template=sample_email_template,
-        to_field="jacque@gmail.com",
-        normalised_to="jacque@gmail.com",
-    )
-    results = dao_get_notifications_by_recipient_or_reference(
-        notification_1.service_id, "ack", notification_type="email"
-    )
-    notification_ids = [notification.id for notification in results.items]
-
-    assert len(results.items) == 1
-    assert notification_1.id in notification_ids
-    assert notification_2.id not in notification_ids
-
-
+@pytest.mark.skip(
+    reason="We can't support search for recipients this way if recipients are not in the db"
+)
 @pytest.mark.parametrize(
     "search_term, expected_result_count",
     [
@@ -1149,8 +1109,6 @@ def test_dao_get_notifications_by_recipient_escapes(
     }:
         create_notification(
             template=sample_email_template,
-            to_field=email_address,
-            normalised_to=email_address,
         )
 
     assert (
@@ -1164,7 +1122,9 @@ def test_dao_get_notifications_by_recipient_escapes(
         == expected_result_count
     )
 
-
+@pytest.mark.skip(
+    reason="We can't support search for recipients this way if recipients are not in the db"
+)
 @pytest.mark.parametrize(
     "search_term, expected_result_count",
     [
@@ -1198,8 +1158,6 @@ def test_dao_get_notifications_by_reference_escapes_special_character(
     }:
         create_notification(
             template=sample_email_template,
-            to_field="test@example.com",
-            normalised_to="test@example.com",
             client_reference=reference,
         )
 
@@ -1214,7 +1172,9 @@ def test_dao_get_notifications_by_reference_escapes_special_character(
         == expected_result_count
     )
 
-
+@pytest.mark.skip(
+    reason="We can't support search for recipients this way if recipients are not in the db"
+)
 @pytest.mark.parametrize(
     "search_term",
     [
@@ -1234,13 +1194,9 @@ def test_dao_get_notifications_by_recipient_matches_partial_phone_numbers(
 ):
     notification_1 = create_notification(
         template=sample_template,
-        to_field="202-867-5309",
-        normalised_to="+12028675309",
     )
     notification_2 = create_notification(
         template=sample_template,
-        to_field="202-678-5000",
-        normalised_to="+12026785000",
     )
     results = dao_get_notifications_by_recipient_or_reference(
         notification_1.service_id, search_term, notification_type="sms"
@@ -1252,6 +1208,9 @@ def test_dao_get_notifications_by_recipient_matches_partial_phone_numbers(
     assert notification_2.id not in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't support search for recipients this way if recipients are not in the db"
+)
 @pytest.mark.parametrize("to", ["not@email", "123"])
 def test_dao_get_notifications_by_recipient_accepts_invalid_phone_numbers_and_email_addresses(
     sample_template,
@@ -1259,8 +1218,6 @@ def test_dao_get_notifications_by_recipient_accepts_invalid_phone_numbers_and_em
 ):
     notification = create_notification(
         template=sample_template,
-        to_field="test@example.com",
-        normalised_to="test@example.com",
     )
     results = dao_get_notifications_by_recipient_or_reference(
         notification.service_id, to, notification_type="email"
@@ -1274,18 +1231,12 @@ def test_dao_get_notifications_by_recipient_ignores_spaces(sample_template):
     )
     notification2 = create_notification(
         template=sample_template,
-        to_field="+44 77 00900 855",
-        normalised_to="447700900855",
     )
     notification3 = create_notification(
         template=sample_template,
-        to_field=" +4477009 00 855 ",
-        normalised_to="447700900855",
     )
     create_notification(
         template=sample_template,
-        to_field="jaCK@gmail.com",
-        normalised_to="jack@gmail.com",
     )
 
     results = dao_get_notifications_by_recipient_or_reference(
@@ -1299,6 +1250,9 @@ def test_dao_get_notifications_by_recipient_ignores_spaces(sample_template):
     assert notification3.id in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't support search for recipients this way if recipients are not in the db"
+)
 @pytest.mark.parametrize("phone_search", ("202", "7-5", "+1 (202) 867-5309"))
 @pytest.mark.parametrize(
     "email_search",
@@ -1316,12 +1270,10 @@ def test_dao_get_notifications_by_recipient_searches_across_notification_types(
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type="email")
     sms = create_notification(
-        template=sms_template, to_field="202-867-5309", normalised_to="+12028675309"
+        template=sms_template
     )
     email = create_notification(
         template=email_template,
-        to_field="202@example.com",
-        normalised_to="202@example.com",
     )
 
     results = dao_get_notifications_by_recipient_or_reference(
@@ -1348,14 +1300,10 @@ def test_dao_get_notifications_by_reference(notify_db_session):
     email_template = create_template(service=service, template_type="email")
     sms = create_notification(
         template=sms_template,
-        to_field="07711111111",
-        normalised_to="447711111111",
         client_reference="77aA",
     )
     email = create_notification(
         template=email_template,
-        to_field="077@example.com",
-        normalised_to="077@example.com",
         client_reference="77bB",
     )
 
@@ -1419,14 +1367,10 @@ def test_dao_get_notifications_by_reference(notify_db_session):
 def test_dao_get_notifications_by_to_field_filters_status(sample_template):
     notification = create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="delivered",
     )
     create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="temporary-failure",
     )
 
@@ -1444,14 +1388,10 @@ def test_dao_get_notifications_by_to_field_filters_status(sample_template):
 def test_dao_get_notifications_by_to_field_filters_multiple_statuses(sample_template):
     notification1 = create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="delivered",
     )
     notification2 = create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="sending",
     )
 
@@ -1473,14 +1413,10 @@ def test_dao_get_notifications_by_to_field_returns_all_if_no_status_filter(
 ):
     notification1 = create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="delivered",
     )
     notification2 = create_notification(
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
         status="temporary-failure",
     )
 
@@ -1499,8 +1435,6 @@ def test_dao_get_notifications_by_to_field_orders_by_created_at_desc(sample_temp
     notification = partial(
         create_notification,
         template=sample_template,
-        to_field="+447700900855",
-        normalised_to="447700900855",
     )
 
     notification_a_minute_ago = notification(

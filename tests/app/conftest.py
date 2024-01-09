@@ -109,7 +109,6 @@ def create_sample_notification(
 
     data = {
         "id": notification_id,
-        "to": to,
         "job_id": job.id if job else None,
         "job": job,
         "service_id": service.id,
@@ -133,7 +132,6 @@ def create_sample_notification(
         else None,
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
-        "normalised_to": normalised_to,
     }
     if job_row_number is not None:
         data["job_row_number"] = job_row_number
@@ -417,7 +415,6 @@ def sample_notification_with_job(notify_db_session):
         template=template,
         job=job,
         job_row_number=None,
-        to_field=None,
         status="created",
         reference=None,
         created_at=None,
@@ -446,7 +443,6 @@ def sample_notification(notify_db_session):
 
     data = {
         "id": notification_id,
-        "to": to,
         "job_id": None,
         "job": None,
         "service_id": service.id,
@@ -467,7 +463,6 @@ def sample_notification(notify_db_session):
         "updated_at": None,
         "client_reference": None,
         "rate_multiplier": 1.0,
-        "normalised_to": None,
     }
 
     notification = Notification(**data)
@@ -489,7 +484,6 @@ def sample_email_notification(notify_db_session):
 
     data = {
         "id": notification_id,
-        "to": to,
         "job_id": job.id,
         "job": job,
         "service_id": service.id,

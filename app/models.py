@@ -1570,8 +1570,7 @@ class Notification(db.Model):
     __tablename__ = "notifications"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    to = db.Column(db.String, nullable=False)
-    normalised_to = db.Column(db.String, nullable=True)
+
     job_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("jobs.id"), index=True, unique=False
     )
@@ -1786,7 +1785,6 @@ class Notification(db.Model):
             "row_number": ""
             if self.job_row_number is None
             else self.job_row_number + 1,
-            "recipient": self.to,
             "client_reference": self.client_reference or "",
             "template_name": self.template.name,
             "template_type": self.template.template_type,
@@ -1811,8 +1809,6 @@ class Notification(db.Model):
         serialized = {
             "id": self.id,
             "reference": self.client_reference,
-            "email_address": self.to if self.notification_type == EMAIL_TYPE else None,
-            "phone_number": self.to if self.notification_type == SMS_TYPE else None,
             "line_1": None,
             "line_2": None,
             "line_3": None,

@@ -44,7 +44,6 @@ def test_send_delivery_status_to_service_post_https_request_to_service_with_encr
     mock_data = {
         "id": str(notification.id),
         "reference": notification.client_reference,
-        "to": notification.to,
         "status": notification.status,
         "created_at": datestr.strftime(DATETIME_FORMAT),
         "completed_at": datestr.strftime(DATETIME_FORMAT),
@@ -85,7 +84,6 @@ def test_send_complaint_to_service_posts_https_request_to_service_with_encrypted
             "notification_id": str(notification.id),
             "complaint_id": str(complaint.id),
             "reference": notification.client_reference,
-            "to": notification.to,
             "complaint_date": datetime.utcnow().strftime(DATETIME_FORMAT),
         }
 
@@ -199,7 +197,6 @@ def _set_up_data_for_status_update(callback_api, notification):
     data = {
         "notification_id": str(notification.id),
         "notification_client_reference": notification.client_reference,
-        "notification_to": notification.to,
         "notification_status": notification.status,
         "notification_created_at": notification.created_at.strftime(DATETIME_FORMAT),
         "notification_updated_at": notification.updated_at.strftime(DATETIME_FORMAT)
@@ -223,7 +220,6 @@ def _set_up_data_for_complaint(callback_api, complaint, notification):
         "complaint_id": str(complaint.id),
         "notification_id": str(notification.id),
         "reference": notification.client_reference,
-        "to": notification.to,
         "complaint_date": complaint.complaint_date.strftime(DATETIME_FORMAT),
         "service_callback_api_url": callback_api.url,
         "service_callback_api_bearer_token": callback_api.bearer_token,

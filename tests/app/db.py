@@ -231,7 +231,6 @@ def create_notification(
     template=None,
     job=None,
     job_row_number=None,
-    to_field=None,
     status="created",
     reference=None,
     created_at=None,
@@ -246,7 +245,6 @@ def create_notification(
     rate_multiplier=None,
     international=False,
     phone_prefix=None,
-    normalised_to=None,
     one_off=False,
     reply_to_text=None,
     created_by_id=None,
@@ -258,13 +256,6 @@ def create_notification(
 
     if created_at is None:
         created_at = datetime.utcnow()
-
-    if to_field is None:
-        to_field = (
-            "+447700900855"
-            if template.template_type == SMS_TYPE
-            else "test@example.com"
-        )
 
     if status not in (
         "created",
@@ -285,7 +276,6 @@ def create_notification(
 
     data = {
         "id": uuid.uuid4(),
-        "to": to_field,
         "job_id": job and job.id,
         "job": job,
         "service_id": template.service.id,
@@ -309,7 +299,6 @@ def create_notification(
         "rate_multiplier": rate_multiplier,
         "international": international,
         "phone_prefix": phone_prefix,
-        "normalised_to": normalised_to,
         "reply_to_text": reply_to_text,
         "created_by_id": created_by_id,
         "document_download_count": document_download_count,

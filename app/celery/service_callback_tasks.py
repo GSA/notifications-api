@@ -17,7 +17,6 @@ def send_delivery_status_to_service(self, notification_id, encrypted_status_upda
     data = {
         "id": str(notification_id),
         "reference": status_update["notification_client_reference"],
-        "to": status_update["notification_to"],
         "status": status_update["notification_status"],
         "created_at": status_update["notification_created_at"],
         "completed_at": status_update["notification_updated_at"],
@@ -116,7 +115,6 @@ def create_delivery_status_callback_data(notification, service_callback_api):
     data = {
         "notification_id": str(notification.id),
         "notification_client_reference": notification.client_reference,
-        "notification_to": notification.to,
         "notification_status": notification.status,
         "notification_provider_response": notification.provider_response,  # TODO do we test for provider_response?
         "notification_created_at": notification.created_at.strftime(DATETIME_FORMAT),

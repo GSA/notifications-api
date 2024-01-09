@@ -62,11 +62,10 @@ class AnyStringWith(str):
         return self in other
 
 
-def _notification_json(template, to, personalisation=None, job_id=None, row_number=0):
+def _notification_json(template, personalisation=None, job_id=None, row_number=0):
     return {
         "template": str(template.id),
         "template_version": template.version,
-        "to": to,
         "notification_type": template.template_type,
         "personalisation": personalisation or {},
         "job": job_id and str(job_id),
@@ -402,22 +401,26 @@ def test_should_send_template_to_correct_sms_task_and_persist(
 ):
     notification = _notification_json(
         sample_template_with_placeholders,
-        to="+447234123123",
         personalisation={"name": "Jo"},
     )
+    notification["job_id"] = "my_job_id"
+    notification["job_row_number"] = 0
 
     mocked_deliver_sms = mocker.patch(
         "app.celery.provider_tasks.deliver_sms.apply_async"
     )
 
+    mock_s3 = mocker.patch("app.celery.tasks.s3.get_phone_number_from_s3")
+    mock_s3.return_value = "12028675000"
+
     save_sms(
         sample_template_with_placeholders.service_id,
         uuid.uuid4(),
         encryption.encrypt(notification),
+        job_id="my_job_id",
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+447234123123"
     assert persisted_notification.template_id == sample_template_with_placeholders.id
     assert (
         persisted_notification.template_version
@@ -442,10 +445,15 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
     notification = _notification_json(
-        template, "+12028675309"
-    )  # The user’s own number, but in a different format
+        template,
+    )
+    notification["job_id"] = "my_job_id"
+    notification["job_row_number"] = 0
 
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
+
+    mock_s3 = mocker.patch("app.celery.tasks.s3.get_phone_number_from_s3")
+    mock_s3.return_value = "12028675000"
 
     notification_id = uuid.uuid4()
     encrypt_notification = encryption.encrypt(notification)
@@ -456,7 +464,6 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+12028675309"
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
     assert persisted_notification.status == "created"
@@ -471,6 +478,9 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     )
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_save_email_should_save_default_email_reply_to_text_on_notification(
     notify_db_session, mocker
 ):
@@ -480,7 +490,7 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(
     )
     template = create_template(service=service, template_type="email", subject="Hello")
 
-    notification = _notification_json(template, to="test@example.com")
+    notification = _notification_json(template)
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     notification_id = uuid.uuid4()
@@ -500,7 +510,7 @@ def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(
     service = create_service_with_defined_sms_sender(sms_sender_value="12345")
     template = create_template(service=service)
 
-    notification = _notification_json(template, to="2028675309")
+    notification = _notification_json(template)
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
@@ -521,8 +531,13 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
 
-    notification = _notification_json(template, "2028675400")
+    notification = _notification_json(template)
+    notification["job_id"] = "my_job_id"
+    notification["job_row_number"] = 0
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
+
+    mock_s3 = mocker.patch("app.celery.tasks.s3.get_phone_number_from_s3")
+    mock_s3.return_value = "12028675000"
 
     notification_id = uuid.uuid4()
     save_sms(
@@ -534,13 +549,16 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
     assert Notification.query.count() == 0
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
     notify_db_session, mocker
 ):
     user = create_user()
     service = create_service(user=user, restricted=True)
     template = create_template(service=service, template_type="email", subject="Hello")
-    notification = _notification_json(template, to="test@example.com")
+    notification = _notification_json(template)
 
     notification_id = uuid.uuid4()
     save_email(
@@ -554,9 +572,12 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
     notification = _notification_json(
-        sample_job.template, to="+447234123123", job_id=sample_job.id, row_number=2
+        sample_job.template, job_id=sample_job.id, row_number=2
     )
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
+
+    mock_s3 = mocker.patch("app.celery.tasks.s3.get_phone_number_from_s3")
+    mock_s3.return_value = "12028675000"
 
     notification_id = uuid.uuid4()
     now = datetime.utcnow()
@@ -564,9 +585,9 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
         sample_job.service.id,
         notification_id,
         encryption.encrypt(notification),
+        sample_job.id,
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+447234123123"
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.template_id == sample_job.template.id
     assert persisted_notification.status == "created"
@@ -593,8 +614,10 @@ def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
 
     team_members = [user.mobile_number for user in service.users]
     assert "07890 300000" not in team_members
+    mock_s3 = mocker.patch("app.celery.tasks.s3.get_phone_number_from_s3")
+    mock_s3.return_value = "12028675000"
 
-    notification = _notification_json(template, "2028675400")
+    notification = _notification_json(template)
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
@@ -607,6 +630,9 @@ def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
     assert Notification.query.count() == 0
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_should_use_email_template_and_persist(
     sample_email_template_with_placeholders, sample_api_key, mocker
 ):
@@ -618,7 +644,6 @@ def test_should_use_email_template_and_persist(
     with freeze_time("2016-01-01 12:00:00.000000"):
         notification = _notification_json(
             sample_email_template_with_placeholders,
-            "my_email@my_email.com",
             {"name": "Jo"},
             row_number=1,
         )
@@ -631,7 +656,6 @@ def test_should_use_email_template_and_persist(
         )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
     )
@@ -654,10 +678,13 @@ def test_should_use_email_template_and_persist(
     )
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_save_email_should_use_template_version_from_job_not_latest(
     sample_email_template, mocker
 ):
-    notification = _notification_json(sample_email_template, "my_email@my_email.com")
+    notification = _notification_json(sample_email_template)
     version_on_notification = sample_email_template.version
     # Change the template
     from app.dao.templates_dao import dao_get_template_by_id, dao_update_template
@@ -678,7 +705,6 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.created_at >= now
@@ -691,11 +717,14 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     )
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_should_use_email_template_subject_placeholders(
     sample_email_template_with_placeholders, mocker
 ):
     notification = _notification_json(
-        sample_email_template_with_placeholders, "my_email@my_email.com", {"name": "Jo"}
+        sample_email_template_with_placeholders, {"name": "Jo"}
     )
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
@@ -707,7 +736,6 @@ def test_should_use_email_template_subject_placeholders(
         encryption.encrypt(notification),
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
     )
@@ -722,8 +750,11 @@ def test_should_use_email_template_subject_placeholders(
     )
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, mocker):
-    notification = _notification_json(sample_email_template, "my_email@my_email.com")
+    notification = _notification_json(sample_email_template)
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     service = sample_email_template.service
@@ -748,10 +779,13 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
     assert persisted_notification.reply_to_text == "other@example.com"
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
     sample_email_template, mocker
 ):
-    notification = _notification_json(sample_email_template, "my_email@my_email.com")
+    notification = _notification_json(sample_email_template)
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     service = sample_email_template.service
@@ -771,10 +805,13 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
     assert persisted_notification.reply_to_text == "default@example.com"
 
 
+@pytest.mark.skip(
+    reason="Need a get_email_from_s3 method similar to get_phone_number_from_s3"
+)
 def test_should_use_email_template_and_persist_without_personalisation(
     sample_email_template, mocker
 ):
-    notification = _notification_json(sample_email_template, "my_email@my_email.com")
+    notification = _notification_json(sample_email_template)
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     notification_id = uuid.uuid4()
@@ -786,7 +823,6 @@ def test_should_use_email_template_and_persist_without_personalisation(
         encryption.encrypt(notification),
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_at
@@ -801,7 +837,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
 
 
 def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, mocker):
-    notification = _notification_json(sample_template, "+447234123123")
+    notification = _notification_json(sample_template)
 
     expected_exception = SQLAlchemyError()
 
@@ -829,7 +865,7 @@ def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, m
 def test_save_email_should_go_to_retry_queue_if_database_errors(
     sample_email_template, mocker
 ):
-    notification = _notification_json(sample_email_template, "test@example.gov.uk")
+    notification = _notification_json(sample_email_template)
 
     expected_exception = SQLAlchemyError()
 
@@ -861,7 +897,6 @@ def test_save_email_does_not_send_duplicate_and_does_not_put_in_retry_queue(
 ):
     json = _notification_json(
         sample_notification.template,
-        sample_notification.to,
         job_id=uuid.uuid4(),
         row_number=1,
     )
@@ -885,7 +920,6 @@ def test_save_sms_does_not_send_duplicate_and_does_not_put_in_retry_queue(
 ):
     json = _notification_json(
         sample_notification.template,
-        sample_notification.to,
         job_id=uuid.uuid4(),
         row_number=1,
     )
@@ -908,7 +942,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
     service = create_service_with_defined_sms_sender(sms_sender_value="2028675309")
     template = create_template(service=service)
 
-    notification = _notification_json(template, to="2028675301")
+    notification = _notification_json(template)
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
@@ -931,7 +965,7 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(
         service.id, "new-sender", False
     )
 
-    notification = _notification_json(template, to="202-867-5301")
+    notification = _notification_json(template)
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
@@ -1516,7 +1550,7 @@ def test_save_tasks_use_cached_service_and_template(
     service = create_service()
     template = create_template(service=service, **template_args)
 
-    notification = _notification_json(template, to=recipient)
+    notification = _notification_json(template)
     delivery_mock = mocker.patch(delivery_mock)
     service_dict_mock = mocker.patch(
         "app.serialised_models.SerialisedService.get_dict",

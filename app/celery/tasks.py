@@ -170,7 +170,14 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
 
 
 @notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
-def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
+def save_sms(
+    self,
+    service_id,
+    notification_id,
+    encrypted_notification,
+    sender_id=None,
+    job_id=None,
+):
     notification = encryption.decrypt(encrypted_notification)
     service = SerialisedService.from_id(service_id)
     template = SerialisedTemplate.from_id_and_service_id(
@@ -186,7 +193,10 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
     else:
         reply_to_text = template.reply_to_text
 
-    if not service_allowed_to_send_to(notification["to"], service, KEY_TYPE_NORMAL):
+    phone_number = s3.get_phone_number_from_s3(
+        service_id, notification["job_id"], notification["job_row_number"]
+    )
+    if not service_allowed_to_send_to(phone_number, service, KEY_TYPE_NORMAL):
         current_app.logger.debug(
             "SMS {} failed as restricted service".format(notification_id)
         )
@@ -202,7 +212,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         saved_notification = persist_notification(
             template_id=notification["template"],
             template_version=notification["template_version"],
-            recipient=notification["to"],
+            recipient=phone_number,
             service=service,
             personalisation=notification.get("personalisation"),
             notification_type=SMS_TYPE,

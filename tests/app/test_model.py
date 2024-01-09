@@ -118,7 +118,7 @@ def test_notification_for_csv_returns_correct_type(
     sample_service, template_type, recipient
 ):
     template = create_template(sample_service, template_type=template_type)
-    notification = create_notification(template, to_field=recipient)
+    notification = create_notification(template)
 
     serialized = notification.serialize_for_csv()
     assert serialized["template_type"] == template_type

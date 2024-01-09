@@ -38,7 +38,6 @@ def test_get_notification_by_id(
         "template_type": notification_to_get.template.template_type,
         "version": 1,
     }
-    assert notification["to"] == notification_to_get.to
     assert notification["service"] == str(notification_to_get.service_id)
     assert notification["body"] == notification_to_get.template.content
     assert notification.get("subject", None) == notification_to_get.subject
@@ -146,6 +145,8 @@ def test_get_all_notifications(client, sample_notification):
     auth_header = create_service_authorization_header(
         service_id=sample_notification.service_id
     )
+    print(f"sample notification job id {sample_notification.job_id}")
+
 
     response = client.get("/notifications", headers=[auth_header])
 
@@ -159,7 +160,6 @@ def test_get_all_notifications(client, sample_notification):
         "version": 1,
     }
 
-    assert notifications["notifications"][0]["to"] == "+447700900855"
     assert notifications["notifications"][0]["service"] == str(
         sample_notification.service_id
     )
@@ -310,9 +310,6 @@ def test_get_all_notifications_newest_first(client, sample_email_template):
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 3
-    assert notifications["notifications"][0]["to"] == notification_3.to
-    assert notifications["notifications"][1]["to"] == notification_2.to
-    assert notifications["notifications"][2]["to"] == notification_1.to
     assert response.status_code == 200
 
 
@@ -388,7 +385,6 @@ def test_should_return_pagination_links(client, sample_email_template):
         assert notifications["links"]["last"] == "/notifications?page=3"
         assert notifications["links"]["prev"] == "/notifications?page=1"
         assert notifications["links"]["next"] == "/notifications?page=3"
-        assert notifications["notifications"][0]["to"] == notification_2.to
         assert response.status_code == 200
 
     finally:

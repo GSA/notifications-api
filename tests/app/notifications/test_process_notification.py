@@ -350,61 +350,6 @@ def test_persist_notification_with_international_info_does_not_store_for_email(
     assert persisted_notification.rate_multiplier is None
 
 
-@pytest.mark.parametrize(
-    "recipient, expected_recipient_normalised",
-    [
-        ("+4407900900123", "+447900900123"),
-        ("202-867-5309", "+12028675309"),
-        ("1 202-867-5309", "+12028675309"),
-        ("+1 (202) 867-5309", "+12028675309"),
-        ("(202) 867-5309", "+12028675309"),
-        ("2028675309", "+12028675309"),
-    ],
-)
-def test_persist_sms_notification_stores_normalised_number(
-    sample_job, sample_api_key, mocker, recipient, expected_recipient_normalised
-):
-    persist_notification(
-        template_id=sample_job.template.id,
-        template_version=sample_job.template.version,
-        recipient=recipient,
-        service=sample_job.service,
-        personalisation=None,
-        notification_type="sms",
-        api_key_id=sample_api_key.id,
-        key_type=sample_api_key.key_type,
-        job_id=sample_job.id,
-    )
-    persisted_notification = Notification.query.all()[0]
-
-    assert persisted_notification.to == recipient
-    assert persisted_notification.normalised_to == expected_recipient_normalised
-
-
-@pytest.mark.parametrize(
-    "recipient, expected_recipient_normalised",
-    [("FOO@bar.com", "foo@bar.com"), ("BAR@foo.com", "bar@foo.com")],
-)
-def test_persist_email_notification_stores_normalised_email(
-    sample_job, sample_api_key, mocker, recipient, expected_recipient_normalised
-):
-    persist_notification(
-        template_id=sample_job.template.id,
-        template_version=sample_job.template.version,
-        recipient=recipient,
-        service=sample_job.service,
-        personalisation=None,
-        notification_type="email",
-        api_key_id=sample_api_key.id,
-        key_type=sample_api_key.key_type,
-        job_id=sample_job.id,
-    )
-    persisted_notification = Notification.query.all()[0]
-
-    assert persisted_notification.to == recipient
-    assert persisted_notification.normalised_to == expected_recipient_normalised
-
-
 def test_persist_notification_with_billable_units_stores_correct_info(mocker):
     service = create_service(service_permissions=[SMS_TYPE])
     template = create_template(service, template_type=SMS_TYPE)
