@@ -353,8 +353,13 @@ def create_2fa_code(
 
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
+    # TODO REMOVE
+    current_app.logger.info(f"IN REST, WHERE WE SET THE VALUE, KEY IS {key} and value is {recipient}")
     redis_store.set(key, recipient)
     stored_recipient = redis_store.get(key)
+    # TODO REMOVE
+    current_app.logger.info(f"IN REST, WHERE WE GET THE VALUE, KEY IS {key} and value is {stored_recipient}")
+
     if stored_recipient:
         current_app.logger.info("IN user/rest.py we saved the recipient of the 2facode to redis!")
     else:
