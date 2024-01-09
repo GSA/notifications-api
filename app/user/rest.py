@@ -351,8 +351,12 @@ def create_2fa_code(
         reply_to_text=reply_to,
     )
 
-    redis_store.set(f"2facode_{saved_notification.id}", recipient, ex=1800)
-    stored_recipient = redis_store.get("2facode_{saved_notification.id}")
+    key = f"2facode{saved_notification.id}"
+    key = key.replace("-", "")
+    key = key.replace(" ", "")
+    recipient = str(recipient)
+    redis_store.set(key, recipient)
+    stored_recipient = redis_store.get(key)
     if stored_recipient:
         current_app.logger.info("IN user/rest.py we saved the recipient of the 2facode to redis!")
     else:
