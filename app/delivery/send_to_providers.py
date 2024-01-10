@@ -1,4 +1,4 @@
-import shelve
+import json
 from datetime import datetime
 from urllib import parse
 
@@ -80,14 +80,14 @@ def send_sms_to_provider(notification):
                 except BaseException:
                     key = f"2facode-{notification.id}".replace(" ", "")
 
-                    s = shelve.open("VERIFY_CODE_RECIPIENT")
-                    my_phone = s[key]
-                    s.pop(key)
-                    s.close()
-                    # TODO REMOVE
-                    current_app.logger.info(
-                        f"IN SEND TO PROVIDERS, WHERE WE GET THE VALUE, KEY IS {key} and value is {my_phone}"
-                    )
+                    with open("verify_code_recipient.json", "r") as openfile:
+                        json_object = json.load(openfile)
+                        my_phone = json_object[key]
+                        # TODO REMOVE
+                        current_app.logger.info(
+                            f"IN SEND TO PROVIDERS, WHERE WE GET THE VALUE, KEY IS {key} and value is {my_phone}"
+                        )
+
                 if my_phone is None:
                     si = notification.service_id
                     ji = notification.job_id

@@ -1,5 +1,5 @@
 import json
-import shelve
+import time
 import uuid
 from datetime import datetime
 from urllib.parse import urlencode
@@ -357,29 +357,36 @@ def create_2fa_code(
     current_app.logger.info(
         f"IN REST, WHERE WE SET THE VALUE, KEY IS {key} and value is {recipient}"
     )
-    s = shelve.open("VERIFY_CODE_RECIPIENT")
-    s[key] = recipient
-    s.close()
-    s = shelve.open("VERIFY_CODE_RECIPIENT")
-    stored_recipient = s[key]
-    s.close()
-    # TODO REMOVE
-    current_app.logger.info(
-        f"IN REST, WHERE WE GET THE VALUE, KEY IS {key} and value is {stored_recipient}"
-    )
+    save_recipient(key, recipient)
 
-    if stored_recipient:
-        current_app.logger.info(
-            "IN user/rest.py we saved the recipient of the 2facode to redis!"
-        )
-    else:
-        current_app.logger.info(
-            "IN user/rest.py we did NOT save the recipient of the 2facode to redis!"
-        )
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
+
+
+def save_recipient(key, recipient):
+    try:
+        with open("verify_code_recipient.json", "r") as openfile:
+            json_object = json.load(openfile)
+    except BaseException:
+        json_object = {}
+
+    json_object[key] = recipient
+    json_object[f"expire{key}"] = int(time.time())
+
+    delete_old_keys = []
+    for k, v in json_object.items():
+        if k.startswith("expire"):
+            if v < int(time.time()) - 60 * 10:
+                delete_old_keys.append(k)
+                real_key = k.replace("expire", "")
+                delete_old_keys.append(real_key)
+    for k in delete_old_keys:
+        json_object.pop(k)
+
+    with open("verify_code_recipient.json", "w") as outfile:
+        json.dump(json_object, outfile)
 
 
 @user_blueprint.route("/<uuid:user_id>/change-email-verification", methods=["POST"])
