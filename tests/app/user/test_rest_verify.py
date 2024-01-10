@@ -570,8 +570,6 @@ def test_user_verify_email_code_fails_if_code_already_used(
 def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     client, sample_user, mocker, sms_code_template
 ):
-
-
     mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
