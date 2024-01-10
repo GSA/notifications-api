@@ -39,6 +39,7 @@ from app.models import (
     Permission,
     Service,
     TemplateType,
+    VerifyCodeType,
 )
 from app.notifications.process_notifications import (
     persist_notification,
@@ -226,7 +227,7 @@ def verify_user_code(user_id):
 
     user_to_verify.current_session_id = str(uuid.uuid4())
     user_to_verify.logged_in_at = datetime.utcnow()
-    if data["code_type"] == "email":
+    if data["code_type"] == VerifyCodeType.EMAIL:
         user_to_verify.email_access_validated_at = datetime.utcnow()
     user_to_verify.failed_login_count = 0
     save_model_user(user_to_verify)

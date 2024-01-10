@@ -1,3 +1,5 @@
+from app.models import NotificationType
+
 add_service_data_retention_request = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "POST service data retention schema",
@@ -5,7 +7,7 @@ add_service_data_retention_request = {
     "type": "object",
     "properties": {
         "days_of_retention": {"type": "integer"},
-        "notification_type": {"enum": ["sms", "email"]},
+        "notification_type": {"enum": [NotificationType.SMS.value, NotificationType.EMAIL.value]},
     },
     "required": ["days_of_retention", "notification_type"],
 }

@@ -120,7 +120,7 @@ def test_get_template_with_non_existent_template_id_returns_404(
     }
 
 
-@pytest.mark.parametrize("tmp_type", list(TemplateType))
+@pytest.mark.parametrize("tmp_type", TemplateType)
 def test_get_template_with_non_existent_version_returns_404(
     client, sample_service, tmp_type
 ):

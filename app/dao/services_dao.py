@@ -106,7 +106,7 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == "email",
+                        this_year_ft_billing.c.notification_type == NotificationType.EMAIL,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],
@@ -115,7 +115,7 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == "sms",
+                        this_year_ft_billing.c.notification_type == NotificationType.SMS,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],

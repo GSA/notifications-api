@@ -25,7 +25,7 @@ def serialize_ft_billing_remove_emails(rows):
             "charged_units": row.charged_units,
         }
         for row in rows
-        if row.notification_type != "email"
+        if row.notification_type != NotificationType.EMAIL
     ]
 
 

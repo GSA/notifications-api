@@ -41,7 +41,7 @@ def test_get_all_templates_returns_200(client, sample_service):
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", list(TemplateType))
+@pytest.mark.parametrize("tmp_type", TemplateType)
 def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tmp_type):
     templates = [
         create_template(
@@ -75,7 +75,7 @@ def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tm
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", list(TemplateType))
+@pytest.mark.parametrize("tmp_type", TemplateType)
 def test_get_correct_num_templates_for_valid_type_returns_200(
     client, sample_service, tmp_type
 ):

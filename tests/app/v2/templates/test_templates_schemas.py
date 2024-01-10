@@ -256,19 +256,19 @@ invalid_json_get_all_response = [
 ]
 
 
-@pytest.mark.parametrize("template_type", list(TemplateType))
+@pytest.mark.parametrize("template_type", TemplateType)
 def test_get_all_template_request_schema_against_no_args_is_valid(template_type):
     data = {}
     assert validate(data, get_all_template_request) == data
 
 
-@pytest.mark.parametrize("template_type", list(TemplateType))
+@pytest.mark.parametrize("template_type", TemplateType)
 def test_get_all_template_request_schema_against_valid_args_is_valid(template_type):
     data = {"type": template_type}
     assert validate(data, get_all_template_request) == data
 
 
-@pytest.mark.parametrize("template_type", list(TemplateType))
+@pytest.mark.parametrize("template_type", TemplateType)
 def test_get_all_template_request_schema_against_invalid_args_is_invalid(template_type):
     data = {"type": "unknown"}
 

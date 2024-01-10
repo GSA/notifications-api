@@ -62,7 +62,7 @@ def _get_sms_providers_for_update(time_threshold):
     # get current priority of both providers
     q = (
         ProviderDetails.query.filter(
-            ProviderDetails.notification_type == "sms", ProviderDetails.active
+            ProviderDetails.notification_type == NotificationType.SMS, ProviderDetails.active
         )
         .with_for_update()
         .all()

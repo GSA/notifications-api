@@ -114,7 +114,7 @@ def test_get_template_request_schema_against_invalid_args_is_invalid(
         assert error["message"] in error_message
 
 
-@pytest.mark.parametrize("template_type", list(TemplateType))
+@pytest.mark.parametrize("template_type", TemplateType)
 @pytest.mark.parametrize(
     "response", [valid_json_get_response, valid_json_get_response_with_optionals]
 )
@@ -149,7 +149,7 @@ def test_post_template_preview_against_invalid_args_is_invalid(args, error_messa
         assert error["message"] in error_messages
 
 
-@pytest.mark.parametrize("template_type", list(TemplateType))
+@pytest.mark.parametrize("template_type", TemplateType)
 @pytest.mark.parametrize(
     "response", [valid_json_post_response, valid_json_post_response_with_optionals]
 )

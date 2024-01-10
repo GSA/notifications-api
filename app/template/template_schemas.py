@@ -16,7 +16,7 @@ post_create_template_schema = {
         "created_by": uuid,
         "parent_folder_id": uuid,
     },
-    "if": {"properties": {"template_type": {"enum": ["email"]}}},
+    "if": {"properties": {"template_type": {"enum": [TemplateType.EMAIL.value]}}},
     "then": {"required": ["subject"]},
     "required": ["name", "template_type", "content", "service", "created_by"],
 }

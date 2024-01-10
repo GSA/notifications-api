@@ -41,7 +41,7 @@ get_notification_response = {
         "line_5": {"type": ["string", "null"]},
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
-        "type": {"enum": ["sms", "email"]},
+        "type": {"enum": [e.value for e in TemplateType]},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},

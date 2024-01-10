@@ -11,6 +11,7 @@ from app.dao.service_data_retention_dao import (
 )
 from app.errors import register_errors
 from app.inbound_sms.inbound_sms_schemas import get_inbound_sms_for_service_schema
+from app.models import NotificationType
 from app.schema_validation import validate
 
 inbound_sms = Blueprint(
@@ -31,7 +32,7 @@ def post_inbound_sms_for_service(service_id):
     #     user_number = try_validate_and_format_phone_number(user_number, international=True)
 
     inbound_data_retention = fetch_service_data_retention_by_notification_type(
-        service_id, "sms"
+        service_id, NotificationType.SMS
     )
     limit_days = (
         inbound_data_retention.days_of_retention if inbound_data_retention else 7
@@ -49,7 +50,7 @@ def get_most_recent_inbound_sms_for_service(service_id):
     page = request.args.get("page", 1)
 
     inbound_data_retention = fetch_service_data_retention_by_notification_type(
-        service_id, "sms"
+        service_id, NotificationType.SMS
     )
     limit_days = (
         inbound_data_retention.days_of_retention if inbound_data_retention else 7
