@@ -387,7 +387,7 @@ def save_recipient(key, recipient):
         json.dump(json_object, outfile)
 
 
-def _expire_old_recipients(jsonobject):
+def _expire_old_recipients(json_object):
     delete_old_keys = []
     for k, v in json_object.items():
         if k.startswith("expire"):
