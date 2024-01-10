@@ -13,8 +13,9 @@ from app.dao.templates_dao import (
     dao_redact_template,
     dao_update_template,
 )
+from app.enums import TemplateType
 from app.errors import InvalidRequest, register_errors
-from app.models import Template, TemplateType
+from app.models import Template
 from app.notifications.validators import check_reply_to, service_has_permission
 from app.schema_validation import validate
 from app.schemas import (

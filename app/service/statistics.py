@@ -2,7 +2,8 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.models import NOTIFICATION_STATUS_TYPES, TemplateType
+from app.enums import TemplateType
+from app.models import NOTIFICATION_STATUS_TYPES
 
 
 def format_statistics(statistics):

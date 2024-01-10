@@ -24,6 +24,7 @@ from notifications_utils.recipients import (
 
 from app import ma, models
 from app.dao.permissions_dao import permission_dao
+from app.enums import TemplateType
 from app.models import ServicePermission
 from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance
 
@@ -382,7 +383,7 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
 
     @validates_schema
     def validate_type(self, data, **kwargs):
-        if data.get("template_type") == models.TemplateType.EMAIL:
+        if data.get("template_type") == TemplateType.EMAIL:
             subject = data.get("subject")
             if not subject or subject.strip() == "":
                 raise ValidationError("Invalid template subject", "subject")
@@ -628,7 +629,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
             in_data["template"], in_data["personalisation"]
         )
         in_data["body"] = template.content_with_placeholders_filled_in
-        if in_data["template"]["template_type"] != models.TemplateType.SMS:
+        if in_data["template"]["template_type"] != TemplateType.SMS:
             in_data["subject"] = template.subject
             in_data["content_char_count"] = None
         else:

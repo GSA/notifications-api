@@ -1,4 +1,4 @@
-from app.models import TemplateType
+from app.enums import TemplateType
 from app.schema_validation.definitions import personalisation, uuid
 
 get_template_by_id_request = {

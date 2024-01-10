@@ -5,8 +5,9 @@ from app.celery import tasks
 from app.config import QueueNames
 from app.dao.inbound_sms_dao import dao_create_inbound_sms
 from app.dao.services_dao import dao_fetch_service_by_inbound_number
+from app.enums import ServicePermissionType
 from app.errors import InvalidRequest, register_errors
-from app.models import InboundSms, ServicePermissionType
+from app.models import InboundSms
 from app.notifications.sns_handlers import sns_notification_handler
 
 receive_notifications_blueprint = Blueprint("receive_notifications", __name__)

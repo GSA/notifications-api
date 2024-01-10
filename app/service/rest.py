@@ -633,7 +633,7 @@ def get_detailed_services(
 
 @service_blueprint.route("/<uuid:service_id>/guest-list", methods=["GET"])
 def get_guest_list(service_id):
-    from app.models import GuestListRecipientType
+    from app.enums import GuestListRecipientType
 
     service = dao_fetch_service_by_id(service_id)
 

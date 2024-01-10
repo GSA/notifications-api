@@ -1,4 +1,5 @@
-from app.models import TEMPLATE_PROCESS_TYPE, TemplateType
+from app.enums import TemplateType
+from app.models import TEMPLATE_PROCESS_TYPE
 from app.schema_validation.definitions import nullable_uuid, uuid
 
 post_create_template_schema = {

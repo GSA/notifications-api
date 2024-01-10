@@ -6,7 +6,8 @@ from app.dao.services_dao import (
     dao_fetch_service_by_id,
 )
 from app.dao.templates_dao import dao_get_template_by_id
-from app.models import KEY_TYPE_NORMAL, TemplateType
+from app.enums import TemplateType
+from app.models import KEY_TYPE_NORMAL
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

@@ -3,13 +3,8 @@ import itertools
 from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    GuestListRecipientType,
-    ServiceGuestList,
-)
+from app.enums import GuestListRecipientType
+from app.models import KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST, ServiceGuestList
 
 
 def get_recipients_from_request(request_json, key, type):

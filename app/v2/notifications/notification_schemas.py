@@ -1,4 +1,5 @@
-from app.models import NOTIFICATION_STATUS_TYPES, TemplateType
+from app.enums import TemplateType
+from app.models import NOTIFICATION_STATUS_TYPES
 from app.schema_validation.definitions import personalisation, uuid
 
 template = {

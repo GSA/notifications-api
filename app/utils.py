@@ -41,7 +41,7 @@ def url_with_token(data, url, config, base_url=None):
 
 
 def get_template_instance(template, values):
-    from app.models import TemplateType
+    from app.enums import TemplateType
 
     return {
         TemplateType.SMS: SMSMessageTemplate,
