@@ -454,7 +454,7 @@ def test_send_user_email_code(
     sample_user.auth_type = auth_type
 
     mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
-    mock_redis_get.return_value="foo"
+    mock_redis_get.return_value = "foo"
 
     mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
 

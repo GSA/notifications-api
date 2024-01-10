@@ -353,7 +353,9 @@ def create_2fa_code(
 
     current_app.logger.info("TESTING REDIS")
     redis_store.raw_set("TESTKEY5", "WORKS")
-    current_app.logger.info(f"SHOULD SEE THE WORD 'WORKS' HERE:  {redis_store.get('TESTKEY5')}")
+    current_app.logger.info(
+        f"SHOULD SEE THE WORD 'WORKS' HERE:  {redis_store.get('TESTKEY5')}"
+    )
 
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
