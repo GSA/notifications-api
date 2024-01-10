@@ -456,7 +456,7 @@ def test_send_user_email_code(
     mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
     mock_redis_get.return_value="foo"
 
-    mock_redis_set = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
+    mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
 
     admin_request.post(
         "user.send_user_2fa_code",
