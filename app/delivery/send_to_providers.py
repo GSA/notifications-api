@@ -1,3 +1,4 @@
+import shelve
 from datetime import datetime
 from urllib import parse
 
@@ -9,7 +10,7 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients, redis_store
+from app import create_uuid, db, notification_provider_clients
 from app.aws.s3 import get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
@@ -78,10 +79,11 @@ def send_sms_to_provider(notification):
                     )
                 except BaseException:
                     key = f"2facode-{notification.id}".replace(" ", "")
-                    my_phone = redis_store.get(key)
 
-                    if my_phone:
-                        my_phone = my_phone.decode("utf-8")
+                    s = shelve.open("VERIFY_CODE_RECIPIENT")
+                    my_phone = s[key]
+                    s.pop(key)
+                    s.close()
                     # TODO REMOVE
                     current_app.logger.info(
                         f"IN SEND TO PROVIDERS, WHERE WE GET THE VALUE, KEY IS {key} and value is {my_phone}"

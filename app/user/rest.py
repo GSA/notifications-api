@@ -1,4 +1,5 @@
 import json
+import shelve
 import uuid
 from datetime import datetime
 from urllib.parse import urlencode
@@ -7,7 +8,6 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 
-from app import redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -357,8 +357,12 @@ def create_2fa_code(
     current_app.logger.info(
         f"IN REST, WHERE WE SET THE VALUE, KEY IS {key} and value is {recipient}"
     )
-    redis_store.set(key, recipient)
-    stored_recipient = redis_store.get(key)
+    s = shelve.open("VERIFY_CODE_RECIPIENT")
+    s[key] = recipient
+    s.close()
+    s = shelve.open("VERIFY_CODE_RECIPIENT")
+    stored_recipient = s[key]
+    s.close()
     # TODO REMOVE
     current_app.logger.info(
         f"IN REST, WHERE WE GET THE VALUE, KEY IS {key} and value is {stored_recipient}"
