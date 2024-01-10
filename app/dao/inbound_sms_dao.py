@@ -5,13 +5,8 @@ from sqlalchemy.orm import aliased
 
 from app import db
 from app.dao.dao_utils import autocommit
-from app.models import (
-    InboundSms,
-    InboundSmsHistory,
-    NotificationType,
-    Service,
-    ServiceDataRetention,
-)
+from app.enums import NotificationType
+from app.models import InboundSms, InboundSmsHistory, Service, ServiceDataRetention
 from app.utils import midnight_n_days_ago
 
 

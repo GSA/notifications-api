@@ -13,6 +13,7 @@ from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
+from app.enums import NotificationType
 from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_PERMANENT_FAILURE,
@@ -24,7 +25,6 @@ from app.models import (
     Job,
     Notification,
     NotificationHistory,
-    NotificationType,
     Organization,
     Permission,
     Service,
@@ -106,7 +106,8 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == NotificationType.EMAIL,
+                        this_year_ft_billing.c.notification_type
+                        == NotificationType.EMAIL,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],
@@ -115,7 +116,8 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == NotificationType.SMS,
+                        this_year_ft_billing.c.notification_type
+                        == NotificationType.SMS,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],

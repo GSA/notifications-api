@@ -15,6 +15,7 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
+from app.enums import NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
@@ -23,7 +24,6 @@ from app.models import (
     NOTIFICATION_SENDING,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     NOTIFICATION_TECHNICAL_FAILURE,
-    NotificationType,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 

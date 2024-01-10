@@ -20,13 +20,13 @@ from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import NotificationType
 from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_FINISHED,
     JOB_STATUS_IN_PROGRESS,
     JOB_STATUS_PENDING,
     KEY_TYPE_NORMAL,
-    NotificationType,
 )
 from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit

@@ -12,8 +12,9 @@ from app.dao.invited_org_user_dao import (
     save_invited_org_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, InvitedOrganizationUser, NotificationType
+from app.models import KEY_TYPE_NORMAL, InvitedOrganizationUser
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

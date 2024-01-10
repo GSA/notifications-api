@@ -8,7 +8,7 @@ from app.cronitor import cronitor
 from app.dao.fact_billing_dao import fetch_billing_data_for_day, update_fact_billing
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
-from app.models import NotificationType
+from app.enums import NotificationType
 
 
 @notify_celery.task(name="create-nightly-billing")

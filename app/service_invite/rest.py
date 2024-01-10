@@ -14,8 +14,9 @@ from app.dao.invited_user_dao import (
     save_invited_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import INVITE_PENDING, KEY_TYPE_NORMAL, NotificationType, Service
+from app.models import INVITE_PENDING, KEY_TYPE_NORMAL, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

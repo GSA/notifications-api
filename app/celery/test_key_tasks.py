@@ -6,7 +6,7 @@ from requests import HTTPError, request
 from app.celery.process_ses_receipts_tasks import process_ses_results
 from app.config import QueueNames
 from app.dao.notifications_dao import get_notification_by_id
-from app.models import NotificationType
+from app.enums import NotificationType
 
 temp_fail = "2028675303"
 perm_fail = "2028675302"

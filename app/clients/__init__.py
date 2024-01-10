@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from app.models import NotificationType
 from botocore.config import Config
+
+from app.enums import NotificationType
 
 AWS_CLIENT_CONFIG = Config(
     # This config is required to enable S3 to connect to FIPS-enabled
@@ -54,7 +55,10 @@ class NotificationProviderClients(object):
         return self.email_clients.get(name)
 
     def get_client_by_name_and_type(self, name, notification_type):
-        assert notification_type in {NotificationType.EMAIL, NotificationType.SMS}  # nosec B101
+        assert notification_type in {
+            NotificationType.EMAIL,
+            NotificationType.SMS,
+        }  # nosec B101
 
         if notification_type == NotificationType.EMAIL:
             return self.get_email_client(name)

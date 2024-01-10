@@ -10,13 +10,8 @@ from app import api_user, authenticated_service, document_download_client, encry
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames
-from app.models import (
-    KEY_TYPE_NORMAL,
-    NOTIFICATION_CREATED,
-    PRIORITY,
-    Notification,
-    NotificationType,
-)
+from app.enums import NotificationType
+from app.models import KEY_TYPE_NORMAL, NOTIFICATION_CREATED, PRIORITY, Notification
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue_detached,

@@ -21,6 +21,13 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
+from app.enums import (  # JobStatusType,; KeyType,; ServicePermissionType,; UserAuthType,
+    AgreementStatus,
+    AgreementType,
+    GuestListRecipientType,
+    NotificationType,
+    TemplateType,
+)
 from app.hashing import check_hash, hashpw
 from app.history_meta import Versioned
 from app.utils import (
@@ -28,19 +35,6 @@ from app.utils import (
     DATETIME_FORMAT_NO_TIMEZONE,
     get_dt_string_or_none,
 )
-
-
-class TemplateType(Enum):
-    SMS = "sms"
-    EMAIL = "email"
-    LETTER = "letter"
-
-
-class NotificationType(Enum):
-    SMS = "sms"
-    EMAIL = "email"
-    LETTER = "letter"
-
 
 NORMAL = "normal"
 PRIORITY = "priority"
@@ -53,28 +47,18 @@ class TemplateProcessType(Enum):
     PRIORITY = "priority"
 
 
+# TODO: Change this
 SMS_AUTH_TYPE = "sms_auth"
 EMAIL_AUTH_TYPE = "email_auth"
 WEBAUTHN_AUTH_TYPE = "webauthn_auth"
 USER_AUTH_TYPES = [SMS_AUTH_TYPE, EMAIL_AUTH_TYPE, WEBAUTHN_AUTH_TYPE]
 
 
-class UserAuthType(Enum):
-    # TODO: Should User.auth_type be changed to use this?
-    SMS = "sms_auth"
-    EMAIL = "email_auth"
-    WEBAUTHN = "webauthn_auth"
-
-
+# TODO: Change this
 DELIVERY_STATUS_CALLBACK_TYPE = "delivery_status"
 COMPLAINT_CALLBACK_TYPE = "complaint"
 SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
-
-
-# class ServiceCallbackType(Enum):
-#     # TODO: Should ServiceCallbackApi.callback_type be changed to use this?
-#     DELIVERY_STATUS = "delivery_status"
-#     COMPLAINT = "complaint"
+# Need to import ServiceCallbackType from app.enums
 
 
 def filter_null_value_fields(obj):
@@ -290,6 +274,7 @@ user_folder_permissions = db.Table(
 )
 
 
+# TODO: Change this
 BRANDING_GOVUK = "govuk"  # Deprecated outside migrations
 BRANDING_ORG = "org"
 BRANDING_BOTH = "both"
@@ -358,17 +343,7 @@ service_email_branding = db.Table(
 )
 
 
-class ServicePermissionType(Enum):
-    EMAIL = "email"
-    SMS = "sms"
-    INTERNATIONAL_SMS = "international_sms"
-    INBOUND_SMS = "inbound_sms"
-    SCHEDULE_NOTIFICATIONS = "schedule_notifications"
-    EMAIL_AUTH = "email_auth"
-    UPLOAD_DOCUMENT = "upload_document"
-    EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
-
-
+# TODO: This need to be changed
 class ServicePermissionTypes(db.Model):
     __tablename__ = "service_permission_types"
 
@@ -386,6 +361,7 @@ class Domain(db.Model):
     )
 
 
+# TODO: Change this
 ORGANIZATION_TYPES = ["federal", "state", "other"]
 
 
@@ -811,15 +787,6 @@ class ServicePermission(db.Model):
         )
 
 
-# MOBILE_TYPE = "mobile"
-# EMAIL_TYPE = "email"
-
-
-class GuestListRecipientType(Enum):
-    MOBILE = "mobile"
-    EMAIL = "email"
-
-
 guest_list_recipient_types = db.Enum(GuestListRecipientType, name="recipient_type")
 
 
@@ -1007,16 +974,10 @@ class ApiKey(db.Model, Versioned):
             self._secret = encryption.encrypt(str(secret))
 
 
+# TODO: This needs to be changed
 KEY_TYPE_NORMAL = "normal"
 KEY_TYPE_TEAM = "team"
 KEY_TYPE_TEST = "test"
-
-
-class KeyType(Enum):
-    # TODO: Should Key Types be rewritten to use this?
-    NORMAL = "normal"
-    TEAM = "team"
-    TEST = "test"
 
 
 class KeyTypes(db.Model):
@@ -1371,19 +1332,6 @@ JOB_STATUS_TYPES = [
     JOB_STATUS_SENT_TO_DVLA,
     JOB_STATUS_ERROR,
 ]
-
-
-class JobStatusType(Enum):
-    # TODO: Should Job.job_status be changed to use this?
-    PENDING = "pending"
-    IN_PROGRESS = "in progress"
-    FINISHED = "finished"
-    SENDING_LIMITS_EXCEEDED = "sending limits exceeded"
-    SCHEDULED = "scheduled"
-    CANCELLED = "cancelled"
-    READY_TO_SEND = "ready to send"
-    SENT_TO_DVLA = "sent to dvla"
-    ERROR = "error"
 
 
 class JobStatus(db.Model):
@@ -1986,6 +1934,7 @@ INVITED_USER_STATUS_TYPES = [
     INVITE_CANCELLED,
     INVITE_EXPIRED,
 ]
+# TODO: Change these
 
 
 class InviteStatusType(db.Model):
@@ -2091,6 +2040,7 @@ PERMISSION_LIST = [
     PLATFORM_ADMIN,
     VIEW_ACTIVITY,
 ]
+# TODO: Change These
 
 
 class Permission(db.Model):
@@ -2440,16 +2390,6 @@ class WebauthnCredential(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class AgreementType(Enum):
-    MOU = "MOU"
-    IAA = "IAA"
-
-
-class AgreementStatus(Enum):
-    ACTIVE = "active"
-    EXPIRED = "expired"
 
 
 class Agreement(db.Model):

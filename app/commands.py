@@ -49,6 +49,7 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
+from app.enums import NotificationType
 from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
@@ -56,7 +57,6 @@ from app.models import (
     Domain,
     EmailBranding,
     Notification,
-    NotificationType,
     Organization,
     Service,
     Template,

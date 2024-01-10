@@ -8,6 +8,7 @@ from sqlalchemy.sql.expression import case, literal
 from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
 from app.dao.organization_dao import dao_get_organization_live_services
+from app.enums import NotificationType
 from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
@@ -17,7 +18,6 @@ from app.models import (
     FactBilling,
     NotificationAllTimeView,
     NotificationHistory,
-    NotificationType,
     Organization,
     Rate,
     Service,

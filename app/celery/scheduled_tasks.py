@@ -34,13 +34,8 @@ from app.dao.services_dao import (
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.delivery.send_to_providers import provider_to_use
-from app.models import (
-    JOB_STATUS_ERROR,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_PENDING,
-    Job,
-    NotificationType,
-)
+from app.enums import NotificationType
+from app.models import JOB_STATUS_ERROR, JOB_STATUS_IN_PROGRESS, JOB_STATUS_PENDING, Job
 from app.notifications.process_notifications import send_notification_to_queue
 
 MAX_NOTIFICATION_FAILS = 10000

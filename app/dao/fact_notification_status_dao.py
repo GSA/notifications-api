@@ -7,6 +7,7 @@ from sqlalchemy.types import DateTime, Integer
 
 from app import db
 from app.dao.dao_utils import autocommit
+from app.enums import NotificationType
 from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
@@ -23,7 +24,6 @@ from app.models import (
     NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     Notification,
-    NotificationType,
     NotificationAllTimeView,
     Service,
     Template,
@@ -468,7 +468,8 @@ def get_total_notifications_for_date_range(start_date, end_date):
                 case(
                     [
                         (
-                            FactNotificationStatus.notification_type == NotificationType.EMAIL,
+                            FactNotificationStatus.notification_type
+                            == NotificationType.EMAIL,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -479,7 +480,8 @@ def get_total_notifications_for_date_range(start_date, end_date):
                 case(
                     [
                         (
-                            FactNotificationStatus.notification_type == NotificationType.SMS,
+                            FactNotificationStatus.notification_type
+                            == NotificationType.SMS,
                             FactNotificationStatus.notification_count,
                         )
                     ],

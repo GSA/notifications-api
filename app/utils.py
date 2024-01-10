@@ -78,7 +78,8 @@ def get_month_from_utc_column(column):
 
 
 def get_public_notify_type_text(notify_type, plural=False):
-    from app.models import UPLOAD_DOCUMENT, NotificationType
+    from app.enums import NotificationType
+    from app.models import UPLOAD_DOCUMENT
 
     notify_type_text = notify_type
     if notify_type == NotificationType.SMS:

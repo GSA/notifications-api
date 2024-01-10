@@ -4,8 +4,9 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from app import api_user, authenticated_service
 from app.config import QueueNames
 from app.dao import notifications_dao
+from app.enums import NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_TEAM, PRIORITY, NotificationType
+from app.models import KEY_TYPE_TEAM, PRIORITY
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

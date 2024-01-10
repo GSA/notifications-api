@@ -16,6 +16,7 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
+from app.enums import NotificationType
 from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
@@ -29,7 +30,6 @@ from app.models import (
     FactNotificationStatus,
     Notification,
     NotificationHistory,
-    NotificationType,
 )
 from app.utils import (
     escape_special_characters,

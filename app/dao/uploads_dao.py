@@ -5,13 +5,13 @@ from flask import current_app
 from sqlalchemy import String, and_, desc, func, literal, text
 
 from app import db
+from app.enums import NotificationType
 from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_SCHEDULED,
     NOTIFICATION_CANCELLED,
     Job,
     Notification,
-    NotificationType,
     ServiceDataRetention,
     Template,
 )

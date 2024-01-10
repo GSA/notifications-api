@@ -32,15 +32,9 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
+from app.enums import NotificationType, TemplateType, VerifyCodeType
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    KEY_TYPE_NORMAL,
-    NotificationType,
-    Permission,
-    Service,
-    TemplateType,
-    VerifyCodeType,
-)
+from app.models import KEY_TYPE_NORMAL, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

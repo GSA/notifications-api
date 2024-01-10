@@ -6,7 +6,8 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.models import KEY_TYPE_NORMAL, PRIORITY, NotificationType
+from app.enums import NotificationType
+from app.models import KEY_TYPE_NORMAL, PRIORITY
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from app.enums import NotificationType
+
 create_or_update_free_sms_fragment_limit_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "POST annual billing schema",
