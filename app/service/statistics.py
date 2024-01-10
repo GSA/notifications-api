@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.models import NOTIFICATION_STATUS_TYPES, NOTIFICATION_TYPES
+from app.models import NOTIFICATION_STATUS_TYPES, TemplateType
 
 
 def format_statistics(statistics):
@@ -40,7 +40,7 @@ def format_admin_stats(statistics):
 
 def create_stats_dict():
     stats_dict = {}
-    for template in NOTIFICATION_TYPES:
+    for template in TemplateType:
         stats_dict[template] = {}
 
         for status in ("total", "test-key"):
@@ -78,7 +78,7 @@ def format_monthly_template_notification_stats(year, rows):
 def create_zeroed_stats_dicts():
     return {
         template_type: {status: 0 for status in ("requested", "delivered", "failed")}
-        for template_type in NOTIFICATION_TYPES
+        for template_type in TemplateType
     }
 
 
@@ -103,7 +103,7 @@ def create_empty_monthly_notification_status_stats_dict(year):
     # nested dicts - data[month][template type][status] = count
     return {
         start.strftime("%Y-%m"): {
-            template_type: defaultdict(int) for template_type in NOTIFICATION_TYPES
+            template_type: defaultdict(int) for template_type in TemplateType
         }
         for start in utc_month_starts
     }

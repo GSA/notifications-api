@@ -4,7 +4,7 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.models import UPLOAD_DOCUMENT
+from app.models import ServicePermissionType
 from app.utils import (
     format_sequential_number,
     get_midnight_for_day_before,
@@ -89,7 +89,9 @@ def test_get_uuid_string_or_none():
 
 
 def test_get_public_notify_type_text():
-    assert get_public_notify_type_text(UPLOAD_DOCUMENT) == "document"
+    assert (
+        get_public_notify_type_text(ServicePermissionType.UPLOAD_DOCUMENT) == "document"
+    )
 
 
 # This method is used for simulating bulk sends.  We use localstack and run on a developer's machine to do the

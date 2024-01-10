@@ -17,7 +17,6 @@ from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    NOTIFICATION_TYPES,
     FactBilling,
     FactNotificationStatus,
     Notification,
@@ -109,7 +108,7 @@ def test_create_nightly_notification_status_triggers_relevant_tasks(
         "app.celery.reporting_tasks.create_nightly_notification_status_for_service_and_day"
     ).apply_async
 
-    for notification_type in NOTIFICATION_TYPES:
+    for notification_type in NotificationType:
         template = create_template(sample_service, template_type=notification_type)
         create_notification(template=template, created_at=notification_date)
 

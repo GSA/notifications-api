@@ -23,7 +23,6 @@ from app.models import (
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
-    SERVICE_PERMISSION_TYPES,
     ApiKey,
     GuestListRecipientType,
     InvitedUser,
@@ -237,7 +236,7 @@ def sample_service(sample_user):
 def _sample_service_full_permissions(notify_db_session):
     service = create_service(
         service_name="sample service full permissions",
-        service_permissions=set(SERVICE_PERMISSION_TYPES),
+        service_permissions=set(ServicePermissionType),
         check_if_service_exists=True,
     )
     create_inbound_number("12345", service_id=service.id)

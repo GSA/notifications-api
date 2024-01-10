@@ -33,7 +33,6 @@ from app.utils import (
 class TemplateType(Enum):
     SMS = "sms"
     EMAIL = "email"
-    LETTER = "letter"
 
 
 class NotificationType(Enum):

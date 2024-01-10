@@ -1,4 +1,4 @@
-from app.models import TEMPLATE_PROCESS_TYPE, TEMPLATE_TYPES
+from app.models import TEMPLATE_PROCESS_TYPE, TemplateType
 from app.schema_validation.definitions import nullable_uuid, uuid
 
 post_create_template_schema = {
@@ -8,7 +8,7 @@ post_create_template_schema = {
     "title": "payload for POST /service/<uuid:service_id>/template",
     "properties": {
         "name": {"type": "string"},
-        "template_type": {"enum": TEMPLATE_TYPES},
+        "template_type": {"enum": [e.value for e in TemplateType]},
         "service": uuid,
         "process_type": {"enum": TEMPLATE_PROCESS_TYPE},
         "content": {"type": "string"},
@@ -29,7 +29,7 @@ post_update_template_schema = {
     "properties": {
         "id": uuid,
         "name": {"type": "string"},
-        "template_type": {"enum": TEMPLATE_TYPES},
+        "template_type": {"enum": [e.value for e in TemplateType]},
         "service": uuid,
         "process_type": {"enum": TEMPLATE_PROCESS_TYPE},
         "content": {"type": "string"},
