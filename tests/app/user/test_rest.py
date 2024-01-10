@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 from datetime import datetime
 from unittest import mock
@@ -18,6 +19,7 @@ from app.models import (
     Permission,
     User,
 )
+from app.user.rest import _expire_old_recipients
 from tests.app.db import (
     create_organization,
     create_service,
@@ -1276,3 +1278,13 @@ def test_complete_login_after_webauthn_authentication_attempt_raises_400_if_sche
         _data={"successful": "True"},
         _expected_status=400,
     )
+
+def test_expire_old_recipients():
+    json_object = {}
+    json_object['2facodeblah1'] = 'phone1'
+    json_object['expire2facodeblah1'] = 1500000000
+    json_object['2facodeblah2'] = 'phone2'
+    json_object['expire2facodeblah2'] = int(time.time())
+    assert len(json_object.keys()) == 4
+    json_object = _expire_old_recipients(json_object)
+    assert len(json_object.keys()) == 2

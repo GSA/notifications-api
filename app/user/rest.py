@@ -366,6 +366,13 @@ def create_2fa_code(
 
 
 def save_recipient(key, recipient):
+    """
+    Save a JSON object that contains the phone number of a verification code recipient.
+    This is to pass said phone number from user/rest to send_to_providers while bypassing
+    the db.
+
+    Include an expiration time so the file doesn't file up with old numbers.
+    """
     try:
         with open("verify_code_recipient.json", "r") as openfile:
             json_object = json.load(openfile)
@@ -374,6 +381,13 @@ def save_recipient(key, recipient):
 
     json_object[key] = recipient
     json_object[f"expire{key}"] = int(time.time())
+    json_object = _expire_old_recipients(json_object)
+
+    with open("verify_code_recipient.json", "w") as outfile:
+        json.dump(json_object, outfile)
+
+def _expire_old_recipients(jsonobject):
+
 
     delete_old_keys = []
     for k, v in json_object.items():
@@ -384,10 +398,7 @@ def save_recipient(key, recipient):
                 delete_old_keys.append(real_key)
     for k in delete_old_keys:
         json_object.pop(k)
-
-    with open("verify_code_recipient.json", "w") as outfile:
-        json.dump(json_object, outfile)
-
+    return json_object
 
 @user_blueprint.route("/<uuid:user_id>/change-email-verification", methods=["POST"])
 def send_user_confirm_new_email(user_id):
