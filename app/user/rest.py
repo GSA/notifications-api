@@ -386,9 +386,8 @@ def save_recipient(key, recipient):
     with open("verify_code_recipient.json", "w") as outfile:
         json.dump(json_object, outfile)
 
+
 def _expire_old_recipients(jsonobject):
-
-
     delete_old_keys = []
     for k, v in json_object.items():
         if k.startswith("expire"):
@@ -399,6 +398,7 @@ def _expire_old_recipients(jsonobject):
     for k in delete_old_keys:
         json_object.pop(k)
     return json_object
+
 
 @user_blueprint.route("/<uuid:user_id>/change-email-verification", methods=["POST"])
 def send_user_confirm_new_email(user_id):
