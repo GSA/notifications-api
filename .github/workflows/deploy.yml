@@ -62,6 +62,7 @@ jobs:
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        REDIS_ENABLED: 1
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
         cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
@@ -75,6 +76,7 @@ jobs:
           --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
           --var NOTIFY_E2E_TEST_EMAIL="$NOTIFY_E2E_TEST_EMAIL"
           --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
+          --var REDIS_ENABLED="$REDIS_ENABLED"
 
     - name: Check for changes to egress config
       id: changed-egress-config
