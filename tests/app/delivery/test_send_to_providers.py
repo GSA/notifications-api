@@ -85,11 +85,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 ):
     db_notification = create_notification(
         template=sample_sms_template_with_html,
-        to_field="2028675309",
         personalisation={"name": "Jo"},
         status="created",
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
-        normalised_to="2028675309",
     )
 
     mocker.patch("app.aws_sns_client.send_sms")
@@ -119,11 +117,12 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 def test_should_send_personalised_template_to_correct_email_provider_and_persist(
     sample_email_template_with_html, mocker
 ):
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+
     db_notification = create_notification(
         template=sample_email_template_with_html,
-        to_field="jo.smith@example.com",
         personalisation={"name": "Jo"},
-        normalised_to="jo.smith@example.com",
     )
 
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
@@ -313,6 +312,9 @@ def test_send_sms_should_use_service_sms_sender(
 def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_created(
     sample_email_template, mocker
 ):
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
     notification = create_notification(template=sample_email_template, status="sending")
     mocker.patch("app.aws_ses_client.send_email")
     mocker.patch("app.delivery.send_to_providers.send_email_response")
@@ -326,6 +328,9 @@ def test_send_email_should_use_service_reply_to_email(
     sample_service, sample_email_template, mocker
 ):
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
     db_notification = create_notification(
         template=sample_email_template, reply_to_text="foo@bar.com"
@@ -622,6 +627,9 @@ def test_should_handle_sms_sender_and_prefix_message(
 def test_send_email_to_provider_uses_reply_to_from_notification(
     sample_email_template, mocker
 ):
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
 
     db_notification = create_notification(
@@ -661,14 +669,14 @@ def test_send_email_to_provider_should_user_normalised_to(
     send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     notification = create_notification(
         template=sample_email_template,
-        to_field="TEST@example.com",
-        normalised_to="test@example.com",
     )
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
     send_to_providers.send_email_to_provider(notification)
     send_mock.assert_called_once_with(
         ANY,
-        notification.normalised_to,
+        "test@example.com",
         ANY,
         body=ANY,
         html_body=ANY,
@@ -721,6 +729,9 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
 ):
     from app.schemas import service_schema, template_schema
 
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
     service_dict = service_schema.dump(sample_email_template.service)
     template_dict = template_schema.dump(sample_email_template)
 
@@ -738,8 +749,6 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     notification = create_notification(
         template=sample_email_template,
-        to_field="TEST@example.com",
-        normalised_to="test@example.com",
     )
 
     send_to_providers.send_email_to_provider(notification)
@@ -747,7 +756,7 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     assert mock_get_service.called is False
     send_mock.assert_called_once_with(
         ANY,
-        notification.normalised_to,
+        "test@example.com",
         ANY,
         body=ANY,
         html_body=ANY,

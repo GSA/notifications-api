@@ -112,7 +112,6 @@ def send_sms_to_provider(notification):
 
 def send_email_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
-
     if not service.active:
         technical_failure(notification=notification)
         return
@@ -134,8 +133,8 @@ def send_email_to_provider(notification):
             template_dict, values=notification.personalisation
         )
         # Someone needs an email, possibly new registration
-        recipient = redis_store.get(f"email-address-{notification.id}").decode("utf-8")
-
+        recipient = redis_store.get(f"email-address-{notification.id}")
+        recipient = recipient.decode("utf-8")
         if notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
