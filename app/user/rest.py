@@ -354,7 +354,6 @@ def create_2fa_code(
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
     redis_store.raw_set(key, recipient)
-    stored_recipient = redis_store.raw_get(key)
 
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
