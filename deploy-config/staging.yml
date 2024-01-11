@@ -6,4 +6,5 @@ worker_memory: 512M
 scheduler_memory: 256M
 public_api_route: notify-api-staging.app.cloud.gov
 admin_base_url: https://notify-staging.app.cloud.gov
+redis_enabled: 1
 default_toll_free_number: "+18556438890"
