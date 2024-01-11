@@ -81,8 +81,10 @@ class AwsSnsClient(SmsClient):
                     PhoneNumber=to, Message=content, MessageAttributes=attributes
                 )
             except botocore.exceptions.ClientError as e:
+                self.current_app.logger.error(e)
                 raise str(e)
             except Exception as e:
+                self.current_app.logger(e)
                 raise str(e)
             finally:
                 elapsed_time = monotonic() - start_time
