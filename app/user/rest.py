@@ -353,7 +353,7 @@ def create_2fa_code(
 
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
-    redis_store.raw_set(key, recipient)
+    redis_store.raw_set(key, recipient, ex=60 * 60)
 
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
@@ -430,6 +430,12 @@ def send_new_user_email_verification(user_id):
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
+    )
+
+    redis_store.set(
+        f"email-address-{saved_notification.id}",
+        str(user_to_send_to.email_address),
+        ex=60 * 60,
     )
     current_app.logger.info("Sending notification to queue")
 

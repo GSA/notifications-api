@@ -69,29 +69,30 @@ def send_sms_to_provider(notification):
 
                 # We start by trying to get the phone number from a job in s3.  If we fail, we assume
                 # the phone number is for the verification code on login, which is not a job.
-                my_phone = None
+                recipient = None
                 try:
-                    my_phone = get_phone_number_from_s3(
+                    recipient = get_phone_number_from_s3(
                         notification.service_id,
                         notification.job_id,
                         notification.job_row_number,
                     )
                 except BaseException:
+                    # It is our 2facode, maybe
                     key = f"2facode-{notification.id}".replace(" ", "")
-                    my_phone = redis_store.raw_get(key)
+                    recipient = redis_store.raw_get(key)
 
-                    if my_phone:
-                        my_phone = my_phone.decode("utf-8")
+                    if recipient:
+                        recipient = recipient.decode("utf-8")
 
-                if my_phone is None:
+                if recipient is None:
                     si = notification.service_id
                     ji = notification.job_id
                     jrn = notification.job_row_number
                     raise Exception(
-                        f"The phone number for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                        f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
                     )
                 send_sms_kwargs = {
-                    "to": my_phone,
+                    "to": recipient,
                     "content": str(template),
                     "reference": str(notification.id),
                     "sender": notification.reply_to_text,
@@ -111,7 +112,6 @@ def send_sms_to_provider(notification):
 
 def send_email_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
-
     if not service.active:
         technical_failure(notification=notification)
         return
@@ -132,10 +132,13 @@ def send_email_to_provider(notification):
         plain_text_email = PlainTextEmailTemplate(
             template_dict, values=notification.personalisation
         )
+        # Someone needs an email, possibly new registration
+        recipient = redis_store.get(f"email-address-{notification.id}")
+        recipient = recipient.decode("utf-8")
         if notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
-            send_email_response(notification.reference, notification.to)
+            send_email_response(notification.reference, recipient)
         else:
             from_address = '"{}" <{}@{}>'.format(
                 service.name,
@@ -145,7 +148,7 @@ def send_email_to_provider(notification):
 
             reference = provider.send_email(
                 from_address,
-                notification.normalised_to,
+                recipient,
                 plain_text_email.subject,
                 body=str(plain_text_email),
                 html_body=str(html_email),
