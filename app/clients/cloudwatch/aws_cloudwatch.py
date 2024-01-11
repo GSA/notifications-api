@@ -111,7 +111,7 @@ class AwsCloudwatchClient(Client):
             return (
                 "success",
                 message["delivery"]["providerResponse"],
-                message["delivery"]["phoneCarrier"],
+                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
             )
 
         log_group_name = (
