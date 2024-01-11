@@ -82,10 +82,7 @@ def send_sms_to_provider(notification):
 
                     if my_phone:
                         my_phone = my_phone.decode("utf-8")
-                    # TODO REMOVE
-                    current_app.logger.info(
-                        f"IN SEND TO PROVIDERS, WHERE WE GET THE VALUE, KEY IS {key} and value is {my_phone}"
-                    )
+
                 if my_phone is None:
                     si = notification.service_id
                     ji = notification.job_id
