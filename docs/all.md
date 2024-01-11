@@ -993,6 +993,8 @@ Once you have a number, it must be set in the app in one of two ways:
 * +18447342791
 * +18447525067
 
+For a full list of phone numbers in trial and production, team members can access a [tracking list here](https://docs.google.com/spreadsheets/d/1lq3Wi_up7EkcKvmwO3oTw30m7kVt1iXvdS3KAp0smh4/edit#gid=0).
+
 
 Data Storage Policies & Procedures
 ==================================

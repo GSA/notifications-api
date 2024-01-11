@@ -40,6 +40,7 @@ applications:
       NEW_RELIC_ENVIRONMENT: ((env))
       NEW_RELIC_LICENSE_KEY: ((NEW_RELIC_LICENSE_KEY))
 
+      REDIS_ENABLED: ((redis_enabled))
       NOTIFY_ENVIRONMENT: ((env))
       API_HOST_NAME: https://((public_api_route))
       ADMIN_BASE_URL: ((admin_base_url))

@@ -89,7 +89,7 @@ class Config(object):
     PAGE_SIZE = 50
     API_PAGE_SIZE = 250
     REDIS_URL = cloud_config.redis_url
-    REDIS_ENABLED = getenv("REDIS_ENABLED", "0") == "1"
+    REDIS_ENABLED = getenv("REDIS_ENABLED", "1") == "1"
     EXPIRE_CACHE_TEN_MINUTES = 600
     EXPIRE_CACHE_EIGHT_DAYS = 8 * 24 * 60 * 60
 
