@@ -43,12 +43,6 @@ from app.utils import (
     get_midnight_in_utc,
 )
 
-DEFAULT_SERVICE_PERMISSIONS = [
-    ServicePermissionType.SMS,
-    ServicePermissionType.EMAIL,
-    ServicePermissionType.INTERNATIONAL_SMS,
-]
-
 
 def dao_fetch_all_services(only_active=False):
     query = Service.query.order_by(asc(Service.created_at)).options(joinedload("users"))
@@ -278,7 +272,7 @@ def dao_create_service(
         raise ValueError("Can't create a service without a user")
 
     if service_permissions is None:
-        service_permissions = DEFAULT_SERVICE_PERMISSIONS
+        service_permissions = ServicePermissionType.defaults
 
     organization = dao_get_organization_by_email_address(user.email_address)
 

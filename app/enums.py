@@ -13,6 +13,12 @@ class NotificationType(Enum):
     LETTER = "letter"
 
 
+class TemplateProcessType(Enum):
+    # TODO: Should Template.process_type be changed to use this?
+    NORMAL = "normal"
+    PRIORITY = "priority"
+
+
 class UserAuthType(Enum):
     SMS = "sms_auth"
     EMAIL = "email_auth"
@@ -20,10 +26,32 @@ class UserAuthType(Enum):
 
 
 class ServiceCallbackType(Enum):
-    # TODO: Should ServiceCallbackApi.callback_type be changed to use this?
     DELIVERY_STATUS = "delivery_status"
     COMPLAINT = "complaint"
 
+
+class PermissionType(Enum):
+    MANAGE_USERS = "manage_users"
+    MANAGE_TEMPLATES = "manage_templates"
+    MANAGE_SETTINGS = "manage_settings"
+    SEND_TEXTS = "send_texts"
+    SEND_EMAILS = "send_emails"
+    MANAGE_API_KEYS = "manage_api_keys"
+    PLATFORM_ADMIN = "platform_admin"
+    VIEW_ACTIVITY = "view_activity"
+
+    @property
+    def defaults(self) -> tuple["PermissionType", ...]:
+        cls = type(self)
+        return (
+            cls.MANAGE_USERS,
+            cls.MANAGE_TEMPLATES,
+            cls.MANAGE_SETTINGS,
+            cls.SEND_TEXTS,
+            cls.SEND_EMAILS,
+            cls.MANAGE_API_KEYS,
+            cls.VIEW_ACTIVITY,
+        )
 
 class ServicePermissionType(Enum):
     EMAIL = "email"
@@ -35,6 +63,14 @@ class ServicePermissionType(Enum):
     UPLOAD_DOCUMENT = "upload_document"
     EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
 
+    @property
+    def defaults(self) -> tuple["ServicePermissionType", ...]:
+        cls = type(self)
+        return (
+            cls.SMS,
+            cls.EMAIL,
+            cls.INTERNATIONAL_SMS,
+        )
 
 class GuestListRecipientType(Enum):
     MOBILE = "mobile"
@@ -57,6 +93,26 @@ class JobStatusType(Enum):
     READY_TO_SEND = "ready to send"
     SENT_TO_DVLA = "sent to dvla"
     ERROR = "error"
+
+
+class InvitedUserStatusType(Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+
+
+class BrandingType(Enum):
+    # TODO: Should EmailBranding.branding_type be changed to use this?
+    GOVUK = "govuk"  # Deprecated outside migrations
+    ORG = "org"
+    BOTH = "both"
+    ORG_BANNER = "org_banner"
+
+
+class VerifyCodeType(Enum):
+    EMAIL = "email"
+    SMS = "sms"
 
 
 class AgreementType(Enum):

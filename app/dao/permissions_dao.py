@@ -1,26 +1,7 @@
 from app import db
 from app.dao import DAOClass
-from app.models import (
-    MANAGE_API_KEYS,
-    MANAGE_SETTINGS,
-    MANAGE_TEMPLATES,
-    MANAGE_USERS,
-    SEND_EMAILS,
-    SEND_TEXTS,
-    VIEW_ACTIVITY,
-    Permission,
-)
-
-# Default permissions for a service
-default_service_permissions = [
-    MANAGE_USERS,
-    MANAGE_TEMPLATES,
-    MANAGE_SETTINGS,
-    SEND_TEXTS,
-    SEND_EMAILS,
-    MANAGE_API_KEYS,
-    VIEW_ACTIVITY,
-]
+from app.enums import PermissionType
+from app.models import Permission
 
 
 class PermissionDAO(DAOClass):
@@ -28,7 +9,7 @@ class PermissionDAO(DAOClass):
         model = Permission
 
     def add_default_service_permissions_for_user(self, user, service):
-        for name in default_service_permissions:
+        for name in PermissionType.defaults:
             permission = Permission(permission=name, user=user, service=service)
             self.create_instance(permission, _commit=False)
 

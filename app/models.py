@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import uuid
-from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -21,12 +20,16 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
-from app.enums import (  # JobStatusType,; KeyType,; ServicePermissionType,; UserAuthType,
+from app.enums import (  # JobStatusType,; KeyType,; UserAuthType,; TemplateProcessType,
     AgreementStatus,
     AgreementType,
     GuestListRecipientType,
+    InvitedUserStatusType,
     NotificationType,
+    PermissionType,
+    ServicePermissionType,
     TemplateType,
+    VerifyCodeType,
 )
 from app.hashing import check_hash, hashpw
 from app.history_meta import Versioned
@@ -36,15 +39,10 @@ from app.utils import (
     get_dt_string_or_none,
 )
 
+# TODO: Change this
 NORMAL = "normal"
 PRIORITY = "priority"
 TEMPLATE_PROCESS_TYPE = [NORMAL, PRIORITY]
-
-
-class TemplateProcessType(Enum):
-    # TODO: Should Template.process_type be changed to use this?
-    NORMAL = "normal"
-    PRIORITY = "priority"
 
 
 # TODO: Change this
@@ -282,14 +280,6 @@ BRANDING_ORG_BANNER = "org_banner"
 BRANDING_TYPES = [BRANDING_ORG, BRANDING_BOTH, BRANDING_ORG_BANNER]
 
 
-class BrandingType(Enum):
-    # TODO: Should EmailBranding.branding_type be changed to use this?
-    GOVUK = "govuk"  # Deprecated outside migrations
-    ORG = "org"
-    BOTH = "both"
-    ORG_BANNER = "org_banner"
-
-
 class BrandingTypes(db.Model):
     __tablename__ = "branding_type"
     name = db.Column(db.String(255), primary_key=True)
@@ -341,13 +331,6 @@ service_email_branding = db.Table(
         nullable=False,
     ),
 )
-
-
-# TODO: This need to be changed
-class ServicePermissionTypes(db.Model):
-    __tablename__ = "service_permission_types"
-
-    name = db.Column(db.String(255), primary_key=True)
 
 
 class Domain(db.Model):
@@ -766,12 +749,12 @@ class ServicePermission(db.Model):
         index=True,
         nullable=False,
     )
-    permission = db.Column(
-        db.String(255),
-        db.ForeignKey("service_permission_types.name"),
+    permission = db.Enum(
+        PermissionType,
+        name="permission_type",
         index=True,
         primary_key=True,
-        nullable=False,
+        nullable=False
     )
     created_at = db.Column(
         db.DateTime, default=datetime.datetime.utcnow, nullable=False
@@ -1398,11 +1381,6 @@ class Job(db.Model):
     archived = db.Column(db.Boolean, nullable=False, default=False)
 
 
-class VerifyCodeType(Enum):
-    EMAIL = "email"
-    SMS = "sms"
-
-
 class VerifyCode(db.Model):
     __tablename__ = "verify_codes"
 
@@ -1924,25 +1902,6 @@ class NotificationHistory(db.Model, HistoryModel):
         self.status = original.status
 
 
-INVITE_PENDING = "pending"
-INVITE_ACCEPTED = "accepted"
-INVITE_CANCELLED = "cancelled"
-INVITE_EXPIRED = "expired"
-INVITED_USER_STATUS_TYPES = [
-    INVITE_PENDING,
-    INVITE_ACCEPTED,
-    INVITE_CANCELLED,
-    INVITE_EXPIRED,
-]
-# TODO: Change these
-
-
-class InviteStatusType(db.Model):
-    __tablename__ = "invite_status_type"
-
-    name = db.Column(db.String, primary_key=True)
-
-
 class InvitedUser(db.Model):
     __tablename__ = "invited_users"
 
@@ -1964,9 +1923,9 @@ class InvitedUser(db.Model):
         default=datetime.datetime.utcnow,
     )
     status = db.Column(
-        db.Enum(*INVITED_USER_STATUS_TYPES, name="invited_users_status_types"),
+        db.Enum(InvitedUserStatusType, name="invited_users_status_types"),
         nullable=False,
-        default=INVITE_PENDING,
+        default=InvitedUserStatusType.PENDING,
     )
     permissions = db.Column(db.String, nullable=False)
     auth_type = db.Column(
@@ -2002,10 +1961,9 @@ class InvitedOrganizationUser(db.Model):
     )
 
     status = db.Column(
-        db.String,
-        db.ForeignKey("invite_status_type.name"),
+        db.Enum(InvitedUserStatusType, name="invited_users_status_types"),
         nullable=False,
-        default=INVITE_PENDING,
+        default=InvitedUserStatusType.PENDING,
     )
 
     def serialize(self):
@@ -2017,30 +1975,6 @@ class InvitedOrganizationUser(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "status": self.status,
         }
-
-
-# Service Permissions
-MANAGE_USERS = "manage_users"
-MANAGE_TEMPLATES = "manage_templates"
-MANAGE_SETTINGS = "manage_settings"
-SEND_TEXTS = "send_texts"
-SEND_EMAILS = "send_emails"
-MANAGE_API_KEYS = "manage_api_keys"
-PLATFORM_ADMIN = "platform_admin"
-VIEW_ACTIVITY = "view_activity"
-
-# List of permissions
-PERMISSION_LIST = [
-    MANAGE_USERS,
-    MANAGE_TEMPLATES,
-    MANAGE_SETTINGS,
-    SEND_TEXTS,
-    SEND_EMAILS,
-    MANAGE_API_KEYS,
-    PLATFORM_ADMIN,
-    VIEW_ACTIVITY,
-]
-# TODO: Change These
 
 
 class Permission(db.Model):
@@ -2061,7 +1995,7 @@ class Permission(db.Model):
     )
     user = db.relationship("User")
     permission = db.Column(
-        db.Enum(*PERMISSION_LIST, name="permission_types"),
+        db.Enum(ServicePermissionType, name="permission_types"),
         index=False,
         unique=False,
         nullable=False,
