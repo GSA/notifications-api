@@ -107,7 +107,6 @@ class AwsCloudwatchClient(Client):
         if all_log_events and len(all_log_events) > 0:
             event = all_log_events[0]
             message = json.loads(event["message"])
-            current_app.logger.info(f"MESSAGE {message}")
             return (
                 "success",
                 message["delivery"]["providerResponse"],
