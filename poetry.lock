@@ -2823,13 +2823,13 @@ pip = "*"
 
 [[package]]
 name = "pip-audit"
-version = "2.6.3"
+version = "2.7.0"
 description = "A tool for scanning Python environments for known vulnerabilities"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pip_audit-2.6.3-py3-none-any.whl", hash = "sha256:216983210db4a15393f9e80e4d24a805f5767e4c8e0c31fc70c336acc629613b"},
-    {file = "pip_audit-2.6.3.tar.gz", hash = "sha256:bd796066f69684b2f4fc2c2b6d222589e23190db0bbde069cea5c2b0be2cc57d"},
+    {file = "pip_audit-2.7.0-py3-none-any.whl", hash = "sha256:83e039740653eb9ef1a78b1540ed441600cd88a560588ba2c0a169180685a522"},
+    {file = "pip_audit-2.7.0.tar.gz", hash = "sha256:67740c5b1d5d967a258c3dfefc46f9713a2819c48062505ddf4b29de101c2b75"},
 ]
 
 [package.dependencies]
