@@ -53,6 +53,7 @@ class PermissionType(Enum):
             cls.VIEW_ACTIVITY,
         )
 
+
 class ServicePermissionType(Enum):
     EMAIL = "email"
     SMS = "sms"
@@ -72,7 +73,8 @@ class ServicePermissionType(Enum):
             cls.INTERNATIONAL_SMS,
         )
 
-class GuestListRecipientType(Enum):
+
+class RecipientType(Enum):
     MOBILE = "mobile"
     EMAIL = "email"
 

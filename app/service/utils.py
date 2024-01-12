@@ -3,7 +3,7 @@ import itertools
 from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.enums import GuestListRecipientType
+from app.enums import RecipientType
 from app.models import KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST, ServiceGuestList
 
 
@@ -16,10 +16,10 @@ def get_guest_list_objects(service_id, request_json):
         ServiceGuestList.from_string(service_id, type, recipient)
         for type, recipient in (
             get_recipients_from_request(
-                request_json, "phone_numbers", GuestListRecipientType.MOBILE
+                request_json, "phone_numbers", RecipientType.MOBILE
             )
             + get_recipients_from_request(
-                request_json, "email_addresses", GuestListRecipientType.EMAIL
+                request_json, "email_addresses", RecipientType.EMAIL
             )
         )
     ]

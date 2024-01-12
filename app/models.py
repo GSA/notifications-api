@@ -23,10 +23,9 @@ from app import db, encryption
 from app.enums import (  # JobStatusType,; KeyType,; UserAuthType,; TemplateProcessType,
     AgreementStatus,
     AgreementType,
-    GuestListRecipientType,
     InvitedUserStatusType,
     NotificationType,
-    PermissionType,
+    RecipientType,
     ServicePermissionType,
     TemplateType,
     VerifyCodeType,
@@ -749,12 +748,11 @@ class ServicePermission(db.Model):
         index=True,
         nullable=False,
     )
-    permission = db.Enum(
-        PermissionType,
-        name="permission_type",
+    permission = db.Column(
+        db.Enum(ServicePermissionType, name="service_permission_types"),
         index=True,
         primary_key=True,
-        nullable=False
+        nullable=False,
     )
     created_at = db.Column(
         db.DateTime, default=datetime.datetime.utcnow, nullable=False
@@ -770,9 +768,6 @@ class ServicePermission(db.Model):
         )
 
 
-guest_list_recipient_types = db.Enum(GuestListRecipientType, name="recipient_type")
-
-
 class ServiceGuestList(db.Model):
     __tablename__ = "service_whitelist"
 
@@ -781,7 +776,9 @@ class ServiceGuestList(db.Model):
         UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, nullable=False
     )
     service = db.relationship("Service", backref="guest_list")
-    recipient_type = db.Column(guest_list_recipient_types, nullable=False)
+    recipient_type = db.Column(
+        db.Enum(RecipientType, name="recipient_types"), nullable=False
+    )
     recipient = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -790,11 +787,11 @@ class ServiceGuestList(db.Model):
         instance = cls(service_id=service_id, recipient_type=recipient_type)
 
         try:
-            if recipient_type == GuestListRecipientType.MOBILE:
+            if recipient_type == RecipientType.MOBILE:
                 instance.recipient = validate_phone_number(
                     recipient, international=True
                 )
-            elif recipient_type == GuestListRecipientType.EMAIL:
+            elif recipient_type == RecipientType.EMAIL:
                 instance.recipient = validate_email_address(recipient)
             else:
                 raise ValueError("Invalid recipient type")
@@ -1252,8 +1249,6 @@ EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
 # TODO: What about these?
 
-notification_types = db.Enum(NotificationType, name="notification_type")
-
 
 class ProviderDetails(db.Model):
     __tablename__ = "provider_details"
@@ -1262,7 +1257,9 @@ class ProviderDetails(db.Model):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"), nullable=False
+    )
     active = db.Column(db.Boolean, default=False, nullable=False)
     version = db.Column(db.Integer, default=1, nullable=False)
     updated_at = db.Column(
@@ -1282,7 +1279,10 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"),
+        nullable=False,
+    )
     active = db.Column(db.Boolean, nullable=False)
     version = db.Column(db.Integer, primary_key=True, nullable=False)
     updated_at = db.Column(
@@ -1533,7 +1533,7 @@ class NotificationAllTimeView(db.Model):
     api_key_id = db.Column(UUID(as_uuid=True))
     key_type = db.Column(db.String)
     billable_units = db.Column(db.Integer)
-    notification_type = db.Column(notification_types)
+    notification_type = db.Column(db.Enum(NotificationType, name="notification_type"))
     created_at = db.Column(db.DateTime)
     sent_at = db.Column(db.DateTime)
     sent_by = db.Column(db.String)
@@ -1574,7 +1574,9 @@ class Notification(db.Model):
         db.String, db.ForeignKey("key_types.name"), unique=False, nullable=False
     )
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"), nullable=False
+    )
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -1847,7 +1849,9 @@ class NotificationHistory(db.Model, HistoryModel):
         db.String, db.ForeignKey("key_types.name"), unique=False, nullable=False
     )
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"), nullable=False
+    )
     created_at = db.Column(db.DateTime, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -2036,7 +2040,9 @@ class Rate(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     valid_from = db.Column(db.DateTime, nullable=False)
     rate = db.Column(db.Float(asdecimal=False), nullable=False)
-    notification_type = db.Column(notification_types, index=True, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"), index=True, nullable=False
+    )
 
     def __str__(self):
         the_string = "{}".format(self.rate)
@@ -2259,7 +2265,9 @@ class ServiceDataRetention(db.Model):
             collection_class=attribute_mapped_collection("notification_type"),
         ),
     )
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = db.Column(
+        db.Enum(NotificationType, name="notification_type"), nullable=False
+    )
     days_of_retention = db.Column(db.Integer, nullable=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.datetime.utcnow
