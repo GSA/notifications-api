@@ -2240,13 +2240,13 @@ tests = ["pytest", "pytz", "simplejson"]
 
 [[package]]
 name = "marshmallow-sqlalchemy"
-version = "0.29.0"
+version = "0.30.0"
 description = "SQLAlchemy integration with the marshmallow (de)serialization library"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "marshmallow-sqlalchemy-0.29.0.tar.gz", hash = "sha256:3523a774390ef0c1c0f7c708a7519809c5396cf608720f14f55c36f74ff5bbec"},
-    {file = "marshmallow_sqlalchemy-0.29.0-py2.py3-none-any.whl", hash = "sha256:3cee0bf61ed10687c0a41448e1916649b28222334a02f7b937c39d1c69c18bee"},
+    {file = "marshmallow-sqlalchemy-0.30.0.tar.gz", hash = "sha256:29ad0a4fd1b4a1e52dcb07f9673d284a6b0795141916cc2169d4ee9a5d007347"},
+    {file = "marshmallow_sqlalchemy-0.30.0-py2.py3-none-any.whl", hash = "sha256:808c1e95bf72f4491ad2f3498e73116b33074d7dcef79f0e6997d0d37d648ac7"},
 ]
 
 [package.dependencies]
@@ -2255,9 +2255,9 @@ packaging = ">=21.3"
 SQLAlchemy = ">=1.4.40,<3.0"
 
 [package.extras]
-dev = ["flake8 (==6.0.0)", "flake8-bugbear (==23.2.13)", "pre-commit (==3.1.0)", "pytest", "pytest-lazy-fixture (>=0.6.2)", "tox"]
-docs = ["alabaster (==0.7.13)", "sphinx (==6.1.3)", "sphinx-issues (==3.0.1)"]
-lint = ["flake8 (==6.0.0)", "flake8-bugbear (==23.2.13)", "pre-commit (==3.1.0)"]
+dev = ["flake8 (==7.0.0)", "flake8-bugbear (==23.12.2)", "pre-commit (==3.6.0)", "pytest", "pytest-lazy-fixture (>=0.6.2)", "tox"]
+docs = ["alabaster (==0.7.13)", "sphinx (==7.2.6)", "sphinx-issues (==3.0.1)"]
+lint = ["flake8 (==7.0.0)", "flake8-bugbear (==23.12.2)", "pre-commit (==3.6.0)"]
 tests = ["pytest", "pytest-lazy-fixture (>=0.6.2)"]
 
 [[package]]
@@ -4719,4 +4719,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "de049f487d61d11519ec5c1c3e5066f0e9fa46eb2201891f8733aebd63c1de28"
+content-hash = "e915371224cb1a76603cf5b3e57c14ddce536d933d05ac9520da8e79b4b69665"
