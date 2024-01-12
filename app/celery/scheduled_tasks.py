@@ -98,6 +98,8 @@ def expire_or_delete_invitations():
         raise
 
 
+# TODO THIS IS ACTUALLY DEPRECATED, WE ARE REMOVING PHONE NUMBERS FROM THE DB
+# SO THERE WILL BE NO REASON TO KEEP TRACK OF THIS COUNT
 @notify_celery.task(name="check-db-notification-fails")
 def check_db_notification_fails():
     """
@@ -110,7 +112,7 @@ def check_db_notification_fails():
     on a breach.  I.e., if the last number was at 23% and the current number is 27%, send an email.
     But if the last number was 26% and the current is 27%, don't.
     """
-    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
+    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT").decode("utf-8")
     if not last_value:
         last_value = 0
 
