@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from app import db
-from app.enums import InvitedUserStatusType
+from app.enums import InvitedUserStatus
 from app.models import InvitedUser
 
 
@@ -21,7 +21,7 @@ def get_expired_invite_by_service_and_id(service_id, invited_user_id):
     return InvitedUser.query.filter(
         InvitedUser.service_id == service_id,
         InvitedUser.id == invited_user_id,
-        InvitedUser.status == InvitedUserStatusType.EXPIRED,
+        InvitedUser.status == InvitedUserStatus.EXPIRED,
     ).one()
 
 
@@ -42,9 +42,9 @@ def expire_invitations_created_more_than_two_days_ago():
         db.session.query(InvitedUser)
         .filter(
             InvitedUser.created_at <= datetime.utcnow() - timedelta(days=2),
-            InvitedUser.status.in_((InvitedUserStatusType.PENDING,)),
+            InvitedUser.status.in_((InvitedUserStatus.PENDING,)),
         )
-        .update({InvitedUser.status: InvitedUserStatusType.EXPIRED})
+        .update({InvitedUser.status: InvitedUserStatus.EXPIRED})
     )
     db.session.commit()
     return expired

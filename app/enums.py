@@ -97,7 +97,7 @@ class JobStatusType(Enum):
     ERROR = "error"
 
 
-class InvitedUserStatusType(Enum):
+class InvitedUserStatus(Enum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     CANCELLED = "cancelled"
@@ -112,7 +112,7 @@ class BrandingType(Enum):
     ORG_BANNER = "org_banner"
 
 
-class VerifyCodeType(Enum):
+class CodeType(Enum):
     EMAIL = "email"
     SMS = "sms"
 

@@ -32,7 +32,7 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
-from app.enums import NotificationType, TemplateType, VerifyCodeType
+from app.enums import CodeType, NotificationType, TemplateType
 from app.errors import InvalidRequest, register_errors
 from app.models import KEY_TYPE_NORMAL, Permission, Service
 from app.notifications.process_notifications import (
@@ -221,7 +221,7 @@ def verify_user_code(user_id):
 
     user_to_verify.current_session_id = str(uuid.uuid4())
     user_to_verify.logged_in_at = datetime.utcnow()
-    if data["code_type"] == VerifyCodeType.EMAIL:
+    if data["code_type"] == CodeType.EMAIL:
         user_to_verify.email_access_validated_at = datetime.utcnow()
     user_to_verify.failed_login_count = 0
     save_model_user(user_to_verify)
