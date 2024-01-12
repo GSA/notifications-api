@@ -5,12 +5,16 @@ from boto3 import Session
 from expiringdict import ExpiringDict
 from flask import current_app
 
+from app import redis_store
 from app.clients import AWS_CLIENT_CONFIG
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
 
 JOBS = ExpiringDict(max_len=100, max_age_seconds=3600 * 4)
+
+JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
+JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
 
 
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
@@ -72,6 +76,26 @@ def get_job_from_s3(service_id, job_id):
     return obj.get()["Body"].read().decode("utf-8")
 
 
+def incr_jobs_cache_misses():
+    if not redis_store.get(JOBS_CACHE_MISSES):
+        redis_store.set(JOBS_CACHE_MISSES, 1)
+    else:
+        redis_store.incr(JOBS_CACHE_MISSES)
+    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
+    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
+    current_app.logger.info(f"JOBS CACHE MISS hits {hits} misses {misses}")
+
+
+def incr_jobs_cache_hits():
+    if not redis_store.get(JOBS_CACHE_HITS):
+        redis_store.set(JOBS_CACHE_HITS, 1)
+    else:
+        redis_store.incr(JOBS_CACHE_HITS)
+    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
+    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
+    current_app.logger.info(f"JOBS CACHE MISS hits {hits} misses {misses}")
+
+
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need a phone number.
     # At the same time we don't want to store it in redis or the db
@@ -80,6 +104,10 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     if job is None:
         job = get_job_from_s3(service_id, job_id)
         JOBS[job_id] = job
+        incr_jobs_cache_misses()
+    else:
+        incr_jobs_cache_hits()
+
     job = job.split("\r\n")
     first_row = job[0]
     job.pop(0)
