@@ -2571,7 +2571,7 @@ requests = ">=2.0.0"
 
 [[package]]
 name = "notifications-utils"
-version = "0.2.5"
+version = "0.2.6"
 description = ""
 optional = false
 python-versions = ">=3.9,<3.12"
@@ -2596,7 +2596,7 @@ geojson = "^3.0.1"
 govuk-bank-holidays = "^0.13"
 idna = "^3.4"
 itsdangerous = "^2.1.2"
-jinja2 = "^3.1.2"
+jinja2 = "^3.1.3"
 jmespath = "^1.0.1"
 markupsafe = "^2.1.2"
 mistune = "==0.8.4"
@@ -2623,7 +2623,7 @@ werkzeug = "^3.0.1"
 type = "git"
 url = "https://github.com/GSA/notifications-utils.git"
 reference = "HEAD"
-resolved_reference = "4d18d2c333811fa8c2f8440feca050c21c85f7ff"
+resolved_reference = "f183d120a8b86e655405694adde1f0d95e4e5a51"
 
 [[package]]
 name = "numpy"
