@@ -72,6 +72,8 @@ def test_should_check_db_notification_fails_task_less_than_25_percent(
     mock_dao = mocker.patch(
         "app.celery.scheduled_tasks.dao_get_failed_notification_count"
     )
+    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store")
+    mock_redis.get.return_value = 0
     mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
     mock_dao.return_value = 10
     check_db_notification_fails()
@@ -88,13 +90,13 @@ def test_should_check_db_notification_fails_task_over_50_percent(
         "app.celery.scheduled_tasks.dao_get_failed_notification_count"
     )
     mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
-    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store.get")
+    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store")
     mock_dao.return_value = 5001
-    mock_redis.return_value = 0
+    mock_redis.get.return_value = "0".encode("utf-8")
     check_db_notification_fails()
     assert mock_provider.call_count == 1
 
-    mock_redis.return_value = 5001
+    mock_redis.get.return_value = "5001".encode("utf-8")
     check_db_notification_fails()
     assert mock_provider.call_count == 1
 

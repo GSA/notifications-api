@@ -112,9 +112,11 @@ def check_db_notification_fails():
     on a breach.  I.e., if the last number was at 23% and the current number is 27%, send an email.
     But if the last number was 26% and the current is 27%, don't.
     """
-    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT").decode("utf-8")
+    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
     if not last_value:
         last_value = 0
+    else:
+        last_value = int(last_value.decode("utf-8"))
 
     failed_count = dao_get_failed_notification_count()
     if failed_count > last_value:
