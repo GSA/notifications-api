@@ -15,12 +15,8 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
-from app.enums import NotificationStatus, NotificationType, KeyType
+from app.enums import NotificationStatus, NotificationType, KeyType, BrandType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    BRANDING_BOTH,
-    BRANDING_ORG_BANNER,
-)
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
@@ -231,8 +227,8 @@ def get_html_email_options(service):
     )
 
     return {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": logo_url,
         "brand_text": branding.text,

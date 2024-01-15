@@ -78,13 +78,12 @@ def get_month_from_utc_column(column):
 
 
 def get_public_notify_type_text(notify_type, plural=False):
-    from app.enums import NotificationType
-    from app.models import UPLOAD_DOCUMENT
+    from app.enums import NotificationType, ServicePermissionType
 
     notify_type_text = notify_type
     if notify_type == NotificationType.SMS:
         notify_type_text = "text message"
-    elif notify_type == UPLOAD_DOCUMENT:
+    elif notify_type == ServicePermissionType.UPLOAD_DOCUMENT:
         notify_type_text = "document"
 
     return "{}{}".format(notify_type_text, "s" if plural else "")

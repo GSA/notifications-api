@@ -6,8 +6,7 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.enums import NotificationType, KeyType
-from app.models import PRIORITY
+from app.enums import NotificationType, KeyType, TemplateProcessType
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -81,7 +80,7 @@ def send_one_off_notification(service_id, post_data):
         client_reference=client_reference,
     )
 
-    queue_name = QueueNames.PRIORITY if template.process_type == PRIORITY else None
+    queue_name = QueueNames.PRIORITY if template.process_type == TemplateProcessType.PRIORITY else None
 
     send_notification_to_queue(
         notification=notification,

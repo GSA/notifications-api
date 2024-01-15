@@ -9,8 +9,9 @@ from app import db
 from app.dao.dao_utils import autocommit
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
+from app.enums import AuthType
 from app.errors import InvalidRequest
-from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
+from app.models import User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
 
@@ -171,7 +172,7 @@ def dao_archive_user(user):
 
     user.organizations = []
 
-    user.auth_type = EMAIL_AUTH_TYPE
+    user.auth_type = AuthType.EMAIL
     user.email_address = get_archived_db_column_value(user.email_address)
     user.mobile_number = None
     user.password = str(uuid.uuid4())

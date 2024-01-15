@@ -1,4 +1,4 @@
-from app.models import INVITED_USER_STATUS_TYPES, ORGANIZATION_TYPES
+from app.enums import InvitedUserStatus, OrganizationType
 from app.schema_validation.definitions import uuid
 
 post_create_organization_schema = {
@@ -8,7 +8,7 @@ post_create_organization_schema = {
     "properties": {
         "name": {"type": "string"},
         "active": {"type": ["boolean", "null"]},
-        "organization_type": {"enum": ORGANIZATION_TYPES},
+        "organization_type": {"enum": [e.value for e in OrganizationType]},
     },
     "required": ["name", "organization_type"],
 }
@@ -20,7 +20,7 @@ post_update_organization_schema = {
     "properties": {
         "name": {"type": ["string", "null"]},
         "active": {"type": ["boolean", "null"]},
-        "organization_type": {"enum": ORGANIZATION_TYPES},
+        "organization_type": {"enum": [e.value for e in OrganizationType]},
     },
     "required": [],
 }
@@ -51,6 +51,6 @@ post_update_invited_org_user_status_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "POST update organization invite schema",
     "type": "object",
-    "properties": {"status": {"enum": INVITED_USER_STATUS_TYPES}},
+    "properties": {"status": {"enum": [e.value for e in InvitedUserStatus]}},
     "required": ["status"],
 }
