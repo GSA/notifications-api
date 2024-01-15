@@ -28,6 +28,7 @@ from app.enums import (
     CallbackType,
     CodeType,
     InvitedUserStatus,
+    JobStatus,
     KeyType,
     NotificationStatus,
     NotificationType,
@@ -1346,33 +1347,6 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     supports_international = db.Column(db.Boolean, nullable=False, default=False)
 
 
-JOB_STATUS_PENDING = "pending"
-JOB_STATUS_IN_PROGRESS = "in progress"
-JOB_STATUS_FINISHED = "finished"
-JOB_STATUS_SENDING_LIMITS_EXCEEDED = "sending limits exceeded"
-JOB_STATUS_SCHEDULED = "scheduled"
-JOB_STATUS_CANCELLED = "cancelled"
-JOB_STATUS_READY_TO_SEND = "ready to send"
-JOB_STATUS_SENT_TO_DVLA = "sent to dvla"
-JOB_STATUS_ERROR = "error"
-JOB_STATUS_TYPES = [
-    JOB_STATUS_PENDING,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_SENDING_LIMITS_EXCEEDED,
-    JOB_STATUS_SCHEDULED,
-    JOB_STATUS_CANCELLED,
-    JOB_STATUS_READY_TO_SEND,
-    JOB_STATUS_SENT_TO_DVLA,
-    JOB_STATUS_ERROR,
-]
-
-
-class JobStatus(db.Model):
-    __tablename__ = "job_status"
-
-    name = db.Column(db.String(255), primary_key=True)
-
 
 class Job(db.Model):
     __tablename__ = "jobs"
@@ -1423,8 +1397,7 @@ class Job(db.Model):
     )
     scheduled_for = db.Column(db.DateTime, index=True, unique=False, nullable=True)
     job_status = db.Column(
-        db.String(255),
-        db.ForeignKey("job_status.name"),
+        db.Enum(JobStatus, name="job_status"),
         index=True,
         nullable=False,
         default="pending",

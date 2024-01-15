@@ -20,14 +20,8 @@ from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
-from app.enums import NotificationType
-from app.models import (
-    JOB_STATUS_CANCELLED,
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_PENDING,
-    KEY_TYPE_NORMAL,
-)
+from app.enums import NotificationType, JobStatus
+from app.models import KEY_TYPE_NORMAL
 from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
@@ -46,17 +40,17 @@ def process_job(job_id, sender_id=None):
         )
     )
 
-    if job.job_status != JOB_STATUS_PENDING:
+    if job.job_status != JobStatus.PENDING:
         return
 
     service = job.service
 
-    job.job_status = JOB_STATUS_IN_PROGRESS
+    job.job_status = JobStatus.IN_PROGRESS
     job.processing_started = start
     dao_update_job(job)
 
     if not service.active:
-        job.job_status = JOB_STATUS_CANCELLED
+        job.job_status = JobStatus.CANCELLED
         dao_update_job(job)
         current_app.logger.warning(
             "Job {} has been cancelled, service {} is inactive".format(
@@ -85,7 +79,7 @@ def process_job(job_id, sender_id=None):
 
 
 def job_complete(job, resumed=False, start=None):
-    job.job_status = JOB_STATUS_FINISHED
+    job.job_status = JobStatus.FINISHED
 
     finished = datetime.utcnow()
     job.processing_finished = finished
@@ -432,7 +426,7 @@ def process_incomplete_jobs(job_ids):
 
     # reset the processing start time so that the check_job_status scheduled task doesn't pick this job up again
     for job in jobs:
-        job.job_status = JOB_STATUS_IN_PROGRESS
+        job.job_status = JobStatus.IN_PROGRESS
         job.processing_started = datetime.utcnow()
         dao_update_job(job)
 

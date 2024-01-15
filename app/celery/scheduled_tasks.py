@@ -34,8 +34,8 @@ from app.dao.services_dao import (
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.delivery.send_to_providers import provider_to_use
-from app.enums import NotificationType
-from app.models import JOB_STATUS_ERROR, JOB_STATUS_IN_PROGRESS, JOB_STATUS_PENDING, Job
+from app.enums import NotificationType, JobStatus
+from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
 
 MAX_NOTIFICATION_FAILS = 10000
@@ -186,11 +186,11 @@ def check_job_status():
     thirty_five_minutes_ago = datetime.utcnow() - timedelta(minutes=35)
 
     incomplete_in_progress_jobs = Job.query.filter(
-        Job.job_status == JOB_STATUS_IN_PROGRESS,
+        Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
     incomplete_pending_jobs = Job.query.filter(
-        Job.job_status == JOB_STATUS_PENDING,
+        Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
@@ -205,7 +205,7 @@ def check_job_status():
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_30_minutes:
-        job.job_status = JOB_STATUS_ERROR
+        job.job_status = JobStatus.ERROR
         dao_update_job(job)
         job_ids.append(str(job.id))
 

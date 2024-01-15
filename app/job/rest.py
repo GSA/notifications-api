@@ -22,7 +22,7 @@ from app.dao.notifications_dao import (
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import JOB_STATUS_CANCELLED, JOB_STATUS_PENDING, JOB_STATUS_SCHEDULED
+from app.enums import JobStatus
 from app.schemas import (
     job_schema,
     notification_with_template_schema,
@@ -53,7 +53,7 @@ def get_job_by_service_and_job_id(service_id, job_id):
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])
 def cancel_job(service_id, job_id):
     job = dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id)
-    job.job_status = JOB_STATUS_CANCELLED
+    job.job_status = JobStatus.CANCELLED
     dao_update_job(job)
 
     return get_job_by_service_and_job_id(service_id, job_id)
@@ -175,13 +175,13 @@ def create_job(service_id):
     job = job_schema.load(data)
 
     if job.scheduled_for:
-        job.job_status = JOB_STATUS_SCHEDULED
+        job.job_status = JobStatus.SCHEDULED
 
     dao_create_job(job)
 
     sender_id = data.get("sender_id")
 
-    if job.job_status == JOB_STATUS_PENDING:
+    if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS
         )

@@ -178,7 +178,7 @@ class KeyType(Enum):
     TEST = "test"
 
 
-class JobStatusType(Enum):
+class JobStatus(Enum):
     PENDING = "pending"
     IN_PROGRESS = "in progress"
     FINISHED = "finished"
