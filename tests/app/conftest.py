@@ -102,11 +102,6 @@ def create_sample_notification(
 
     notification_id = uuid.uuid4()
 
-    if to_field:
-        to = to_field
-    else:
-        to = "+16502532222"
-
     data = {
         "id": notification_id,
         "job_id": job.id if job else None,
@@ -439,7 +434,6 @@ def sample_notification(notify_db_session):
         api_key = create_api_key(template.service, key_type=KEY_TYPE_NORMAL)
 
     notification_id = uuid.uuid4()
-    to = "+447700900855"
 
     data = {
         "id": notification_id,
@@ -479,8 +473,6 @@ def sample_email_notification(notify_db_session):
     job = create_job(template)
 
     notification_id = uuid.uuid4()
-
-    to = "foo@bar.com"
 
     data = {
         "id": notification_id,

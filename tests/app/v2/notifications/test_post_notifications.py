@@ -838,7 +838,6 @@ def test_post_sms_should_persist_supplied_sms_number(
     notifications = Notification.query.all()
     assert len(notifications) == 1
     notification_id = notifications[0].id
-    assert "+(44) 77009-00855" == notifications[0].to
     assert resp_json["id"] == str(notification_id)
     assert mocked.called
 
@@ -1233,11 +1232,6 @@ def test_post_notifications_saves_email_or_sms_to_queue(
             "template_id": template.id,
             "personalisation": {"message": "Dear citizen, have a nice day"},
         }
-        data.update(
-            {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == EMAIL_TYPE else data.update(
-            {"phone_number": "+447700900855"}
-        )
 
         response = client.post(
             path=f"/v2/notifications/{notification_type}",

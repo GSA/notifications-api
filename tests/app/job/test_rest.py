@@ -453,9 +453,9 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     main_job = create_job(sample_template)
     another_job = create_job(sample_template)
 
-    notification_1 = create_notification(job=main_job, to_field="1", job_row_number=1)
-    notification_2 = create_notification(job=main_job, to_field="2", job_row_number=2)
-    notification_3 = create_notification(job=main_job, to_field="3", job_row_number=3)
+    notification_1 = create_notification(job=main_job, job_row_number=1)
+    notification_2 = create_notification(job=main_job, job_row_number=2)
+    notification_3 = create_notification(job=main_job, job_row_number=3)
     create_notification(job=another_job)
 
     resp = admin_request.get(
@@ -465,11 +465,8 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     )
 
     assert len(resp["notifications"]) == 3
-    assert resp["notifications"][0]["to"] == notification_1.to
     assert resp["notifications"][0]["job_row_number"] == notification_1.job_row_number
-    assert resp["notifications"][1]["to"] == notification_2.to
     assert resp["notifications"][1]["job_row_number"] == notification_2.job_row_number
-    assert resp["notifications"][2]["to"] == notification_3.to
     assert resp["notifications"][2]["job_row_number"] == notification_3.job_row_number
 
 
@@ -485,7 +482,7 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
 def test_get_all_notifications_for_job_filtered_by_status(
     admin_request, sample_job, expected_notification_count, status_args
 ):
-    create_notification(job=sample_job, to_field="1", status="created")
+    create_notification(job=sample_job, status="created")
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",

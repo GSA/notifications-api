@@ -47,8 +47,8 @@ def test_get_notification_by_id_returns_200(
     expected_response = {
         "id": "{}".format(sample_notification.id),
         "reference": None,
-        "email_address": None,
-        "phone_number": "{}".format(sample_notification.to),
+        # "email_address": None,
+        # "phone_number": "{}".format(sample_notification.to),
         "line_1": None,
         "line_2": None,
         "line_3": None,

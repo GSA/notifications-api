@@ -102,7 +102,6 @@ def test_should_process_sms_job(sample_job, mocker):
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(sample_job.service.id), job_id=str(sample_job.id)
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123123"
     assert encryption.encrypt.call_args[0][0]["template"] == str(sample_job.template.id)
     assert (
         encryption.encrypt.call_args[0][0]["template_version"]
@@ -218,7 +217,6 @@ def test_should_process_email_job(email_job_with_placeholders, mocker):
         service_id=str(email_job_with_placeholders.service.id),
         job_id=str(email_job_with_placeholders.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "test@test.com"
     assert encryption.encrypt.call_args[0][0]["template"] == str(
         email_job_with_placeholders.template.id
     )
@@ -281,7 +279,6 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
         service_id=str(sample_job_with_placeholdered_template.service.id),
         job_id=str(sample_job_with_placeholdered_template.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123120"
     assert encryption.encrypt.call_args[0][0]["template"] == str(
         sample_job_with_placeholdered_template.template.id
     )
@@ -325,7 +322,7 @@ def test_process_row_sends_letter_task(
             {"foo": "bar", "to": "recip"},
             index="row_num",
             error_fn=lambda k, v: None,
-            recipient_column_headers=["to"],
+            # recipient_column_headers=["to"],
             placeholders={"foo"},
             template=template,
             allow_international_letters=True,
@@ -370,7 +367,7 @@ def test_process_row_when_sender_id_is_provided(mocker, fake_uuid):
             {"foo": "bar", "to": "recip"},
             index="row_num",
             error_fn=lambda k, v: None,
-            recipient_column_headers=["to"],
+            # recipient_column_headers=["to"],
             placeholders={"foo"},
             template=template,
             allow_international_letters=True,

@@ -85,11 +85,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 ):
     db_notification = create_notification(
         template=sample_sms_template_with_html,
-        to_field="2028675309",
         personalisation={"name": "Jo"},
         status="created",
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
-        normalised_to="2028675309",
     )
 
     mocker.patch("app.aws_sns_client.send_sms")
@@ -121,9 +119,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
 ):
     db_notification = create_notification(
         template=sample_email_template_with_html,
-        to_field="jo.smith@example.com",
         personalisation={"name": "Jo"},
-        normalised_to="jo.smith@example.com",
     )
 
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
@@ -183,10 +179,8 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
 ):
     db_notification = create_notification(
         template=sample_template,
-        to_field="2028675309",
         status="created",
         reply_to_text=sample_template.service.get_default_sms_sender(),
-        normalised_to="2028675309",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -558,12 +552,10 @@ def test_should_send_sms_to_international_providers(
 
     notification_international = create_notification(
         template=sample_template,
-        to_field="+6011-17224412",
         personalisation={"name": "Jo"},
         status="created",
         international=True,
         reply_to_text=sample_template.service.get_default_sms_sender(),
-        normalised_to="601117224412",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -640,14 +632,13 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_template):
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+12028675309", normalised_to="2028675309"
+        template=sample_template,
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
     send_to_providers.send_sms_to_provider(notification)
     send_mock.assert_called_once_with(
-        to=notification.normalised_to,
         content=ANY,
         reference=str(notification.id),
         sender=notification.reply_to_text,
@@ -661,14 +652,11 @@ def test_send_email_to_provider_should_user_normalised_to(
     send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     notification = create_notification(
         template=sample_email_template,
-        to_field="TEST@example.com",
-        normalised_to="test@example.com",
     )
 
     send_to_providers.send_email_to_provider(notification)
     send_mock.assert_called_once_with(
         ANY,
-        notification.normalised_to,
         ANY,
         body=ANY,
         html_body=ANY,
@@ -698,7 +686,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
 
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+447700900855", normalised_to="447700900855"
+        template=sample_template,
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -708,7 +696,6 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     assert mock_get_template.called is False
     assert mock_get_service.called is False
     send_mock.assert_called_once_with(
-        to=notification.normalised_to,
         content=ANY,
         reference=str(notification.id),
         sender=notification.reply_to_text,
@@ -738,8 +725,6 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     notification = create_notification(
         template=sample_email_template,
-        to_field="TEST@example.com",
-        normalised_to="test@example.com",
     )
 
     send_to_providers.send_email_to_provider(notification)
@@ -747,7 +732,6 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     assert mock_get_service.called is False
     send_mock.assert_called_once_with(
         ANY,
-        notification.normalised_to,
         ANY,
         body=ANY,
         html_body=ANY,

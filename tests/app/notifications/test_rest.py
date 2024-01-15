@@ -147,7 +147,6 @@ def test_get_all_notifications(client, sample_notification):
     )
     print(f"sample notification job id {sample_notification.job_id}")
 
-
     response = client.get("/notifications", headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))

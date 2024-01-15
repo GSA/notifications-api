@@ -92,35 +92,6 @@ def test_should_by_able_to_update_status_by_id(
     assert notification.status == "delivered"
 
 
-def test_should_be_able_to_sanitize_successful_notification(
-    sample_template, sample_job, sns_provider
-):
-    with freeze_time("2000-01-01 12:00:00"):
-        data = _notification_json(
-            sample_template, job_id=sample_job.id, status="sending"
-        )
-        notification = Notification(**data)
-        notification.to = "15555555555"
-        notification.normalised_to = "15555555555"
-        dao_create_notification(notification)
-        assert notification.status == "sending"
-        assert notification.normalised_to == "15555555555"
-        assert notification.to == "15555555555"
-
-    assert Notification.query.get(notification.id).status == "sending"
-
-    with freeze_time("2000-01-02 12:00:00"):
-        sanitize_successful_notification_by_id(
-            notification.id, carrier="ATT", provider_response="Don't know what happened"
-        )
-        assert Notification.query.get(notification.id).status == "delivered"
-        assert Notification.query.get(notification.id).normalised_to == "1"
-        assert Notification.query.get(notification.id).to == "1"
-        assert (
-            Notification.query.get(notification.id).provider_response
-            == "Don't know what happened"
-        )
-
 
 def test_should_not_update_status_by_id_if_not_sending_and_does_not_update_job(
     sample_job,
@@ -320,7 +291,6 @@ def test_create_notification_creates_notification_with_personalisation(
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data.to == notification_from_db.to
     assert data.job_id == notification_from_db.job_id
     assert data.service == notification_from_db.service
     assert data.template == notification_from_db.template
@@ -341,7 +311,6 @@ def test_save_notification_creates_sms(sample_template, sample_job):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -361,7 +330,6 @@ def test_save_notification_and_create_email(sample_email_template, sample_job):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -438,7 +406,6 @@ def test_save_notification_and_increment_job(sample_template, sample_job, sns_pr
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -464,7 +431,6 @@ def test_save_notification_and_increment_correct_job(sample_template, sns_provid
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -484,7 +450,6 @@ def test_save_notification_with_no_job(sample_template, sns_provider):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
     assert data["template_version"] == notification_from_db.template_version
@@ -545,7 +510,6 @@ def test_save_notification_no_job_id(sample_template):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
     assert data["template_version"] == notification_from_db.template_version
@@ -704,7 +668,6 @@ def test_should_delete_no_notifications_if_no_matching_ids(sample_template):
 
 def _notification_json(sample_template, job_id=None, id=None, status=None):
     data = {
-        "to": "+44709123456",
         "service": sample_template.service,
         "service_id": sample_template.service.id,
         "template_id": sample_template.id,
@@ -1024,54 +987,6 @@ def test_should_exclude_test_key_notifications_by_default(
     assert len(all_notifications) == 1
 
 
-def test_dao_get_notifications_by_recipient(sample_template):
-    recipient_to_search_for = {
-        "to_field": "+447700900855",
-        "normalised_to": "447700900855",
-    }
-
-    notification1 = create_notification(
-        template=sample_template, **recipient_to_search_for
-    )
-    create_notification(
-        template=sample_template, key_type=KEY_TYPE_TEST, **recipient_to_search_for
-    )
-    create_notification(
-        template=sample_template,
-        to_field="jack@gmail.com",
-        normalised_to="jack@gmail.com",
-    )
-    create_notification(
-        template=sample_template,
-        to_field="jane@gmail.com",
-        normalised_to="jane@gmail.com",
-    )
-
-    results = dao_get_notifications_by_recipient_or_reference(
-        notification1.service_id,
-        recipient_to_search_for["to_field"],
-        notification_type="sms",
-    )
-
-    assert len(results.items) == 1
-    assert notification1.id == results.items[0].id
-
-
-def test_dao_get_notifications_by_recipient_is_limited_to_50_results(sample_template):
-    for _ in range(100):
-        create_notification(
-            template=sample_template,
-        )
-
-    results = dao_get_notifications_by_recipient_or_reference(
-        sample_template.service_id,
-        "447700900855",
-        notification_type="sms",
-        page_size=50,
-    )
-
-    assert len(results.items) == 50
-
 
 @pytest.mark.skip(
     reason="We can't support search for recipients this way if recipients are not in the db"
@@ -1122,6 +1037,7 @@ def test_dao_get_notifications_by_recipient_escapes(
         == expected_result_count
     )
 
+
 @pytest.mark.skip(
     reason="We can't support search for recipients this way if recipients are not in the db"
 )
@@ -1171,6 +1087,7 @@ def test_dao_get_notifications_by_reference_escapes_special_character(
         )
         == expected_result_count
     )
+
 
 @pytest.mark.skip(
     reason="We can't support search for recipients this way if recipients are not in the db"
@@ -1269,9 +1186,7 @@ def test_dao_get_notifications_by_recipient_searches_across_notification_types(
     service = create_service()
     sms_template = create_template(service=service)
     email_template = create_template(service=service, template_type="email")
-    sms = create_notification(
-        template=sms_template
-    )
+    sms = create_notification(template=sms_template)
     email = create_notification(
         template=email_template,
     )
