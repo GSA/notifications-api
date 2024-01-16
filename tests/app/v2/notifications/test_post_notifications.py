@@ -8,12 +8,8 @@ from flask import current_app, json
 
 from app.dao import templates_dao
 from app.dao.service_sms_sender_dao import dao_update_service_sms_sender
-from app.models import (
-    NOTIFICATION_CREATED,
-    Notification,
-    NotificationType,
-    ServicePermissionType,
-)
+from app.enums import NotificationStatus, NotificationType, ServicePermissionType
+from app.models import Notification
 from app.schema_validation import validate
 from app.v2.errors import RateLimitError
 from app.v2.notifications.notification_schemas import (
@@ -59,7 +55,7 @@ def test_post_sms_notification_returns_201(
     assert validate(resp_json, post_sms_response) == resp_json
     notifications = Notification.query.all()
     assert len(notifications) == 1
-    assert notifications[0].status == NOTIFICATION_CREATED
+    assert notifications[0].status == NotificationStatus.CREATED
     notification_id = notifications[0].id
     assert notifications[0].document_download_count is None
     assert resp_json["id"] == str(notification_id)
@@ -490,7 +486,7 @@ def test_post_email_notification_returns_201(
     resp_json = json.loads(response.get_data(as_text=True))
     assert validate(resp_json, post_email_response) == resp_json
     notification = Notification.query.one()
-    assert notification.status == NOTIFICATION_CREATED
+    assert notification.status == NotificationStatus.CREATED
     assert resp_json["id"] == str(notification.id)
     assert resp_json["reference"] == reference
     assert notification.reference is None
@@ -1042,7 +1038,7 @@ def test_post_notification_with_document_upload(
     ]
 
     notification = Notification.query.one()
-    assert notification.status == NOTIFICATION_CREATED
+    assert notification.status == NotificationStatus.CREATED
     assert notification.personalisation == {
         "first_link": "abababab-link",
         "second_link": "cdcdcdcd-link",

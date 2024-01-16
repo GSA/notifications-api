@@ -29,17 +29,14 @@ from app.celery.tasks import (
 )
 from app.config import QueueNames
 from app.dao import jobs_dao, service_email_reply_to_dao, service_sms_sender_dao
-from app.models import (
-    JOB_STATUS_ERROR,
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_IN_PROGRESS,
-    KEY_TYPE_NORMAL,
-    NOTIFICATION_CREATED,
-    Job,
-    Notification,
+from app.enums import (
+    JobStatus,
+    KeyType,
+    NotificationStatus,
     NotificationType,
     TemplateType,
 )
+from app.models import Job, Notification
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import DATETIME_FORMAT
 from tests.app import load_example_csv
@@ -575,7 +572,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
     assert not persisted_notification.sent_by
     assert persisted_notification.job_row_number == 2
     assert persisted_notification.api_key_id is None
-    assert persisted_notification.key_type == KEY_TYPE_NORMAL
+    assert persisted_notification.key_type == KeyType.NORMAL
     assert persisted_notification.notification_type == "sms"
 
     provider_tasks.deliver_sms.apply_async.assert_called_once_with(
@@ -646,7 +643,7 @@ def test_should_use_email_template_and_persist(
     assert persisted_notification.job_row_number == 1
     assert persisted_notification.personalisation == {"name": "Jo"}
     assert persisted_notification.api_key_id is None
-    assert persisted_notification.key_type == KEY_TYPE_NORMAL
+    assert persisted_notification.key_type == KeyType.NORMAL
     assert persisted_notification.notification_type == "email"
 
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
@@ -1145,7 +1142,7 @@ def test_process_incomplete_job_sms(mocker, sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     create_notification(sample_template, job, 0)
@@ -1157,7 +1154,7 @@ def test_process_incomplete_job_sms(mocker, sample_template):
 
     completed_job = Job.query.filter(Job.id == job.id).one()
 
-    assert completed_job.job_status == JOB_STATUS_FINISHED
+    assert completed_job.job_status == JobStatus.FINISHED
 
     assert (
         save_sms.call_count == 8
@@ -1177,7 +1174,7 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     create_notification(sample_template, job, 0)
@@ -1197,7 +1194,7 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
 
     completed_job = Job.query.filter(Job.id == job.id).one()
 
-    assert completed_job.job_status == JOB_STATUS_FINISHED
+    assert completed_job.job_status == JobStatus.FINISHED
 
     assert (
         mock_save_sms.call_count == 0
@@ -1217,7 +1214,7 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
     create_notification(sample_template, job, 0)
     create_notification(sample_template, job, 1)
@@ -1231,7 +1228,7 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     create_notification(sample_template, job2, 0)
@@ -1248,9 +1245,9 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     completed_job = Job.query.filter(Job.id == job.id).one()
     completed_job2 = Job.query.filter(Job.id == job2.id).one()
 
-    assert completed_job.job_status == JOB_STATUS_FINISHED
+    assert completed_job.job_status == JobStatus.FINISHED
 
-    assert completed_job2.job_status == JOB_STATUS_FINISHED
+    assert completed_job2.job_status == JobStatus.FINISHED
 
     assert (
         mock_save_sms.call_count == 12
@@ -1270,7 +1267,7 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     assert Notification.query.filter(Notification.job_id == job.id).count() == 0
@@ -1279,7 +1276,7 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
 
     completed_job = Job.query.filter(Job.id == job.id).one()
 
-    assert completed_job.job_status == JOB_STATUS_FINISHED
+    assert completed_job.job_status == JobStatus.FINISHED
 
     assert mock_save_sms.call_count == 10  # There are 10 in the csv file
 
@@ -1327,7 +1324,7 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     create_notification(sample_email_template, job, 0)
@@ -1339,7 +1336,7 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
 
     completed_job = Job.query.filter(Job.id == job.id).one()
 
-    assert completed_job.job_status == JOB_STATUS_FINISHED
+    assert completed_job.job_status == JobStatus.FINISHED
 
     assert (
         mock_email_saver.call_count == 8
@@ -1357,20 +1354,20 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
     job1 = create_job(
         sample_template,
         processing_started=datetime.utcnow() - timedelta(minutes=30),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
     job2 = create_job(
         sample_template,
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_ERROR,
+        job_status=JobStatus.ERROR,
     )
 
     process_incomplete_jobs([str(job1.id), str(job2.id)])
 
-    assert job1.job_status == JOB_STATUS_IN_PROGRESS
+    assert job1.job_status == JobStatus.IN_PROGRESS
     assert job1.processing_started == datetime.utcnow()
 
-    assert job2.job_status == JOB_STATUS_IN_PROGRESS
+    assert job2.job_status == JobStatus.IN_PROGRESS
     assert job2.processing_started == datetime.utcnow()
 
     assert mock_process_incomplete_job.mock_calls == [
@@ -1403,7 +1400,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
         "client_reference": "our email",
         "reply_to_text": None,
         "document_download_count": 0,
-        "status": NOTIFICATION_CREATED,
+        "status": NotificationStatus.CREATED,
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
 
@@ -1455,7 +1452,7 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         "client_reference": "our email",
         "reply_to_text": "our.email@gov.uk",
         "document_download_count": 0,
-        "status": NOTIFICATION_CREATED,
+        "status": NotificationStatus.CREATED,
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
 
@@ -1590,7 +1587,7 @@ def test_save_api_tasks_use_cache(
                 "client_reference": "our email",
                 "reply_to_text": "our.email@gov.uk",
                 "document_download_count": 0,
-                "status": NOTIFICATION_CREATED,
+                "status": NotificationStatus.CREATED,
                 "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
             }
         )
