@@ -1363,6 +1363,9 @@ def _assert_service_permissions(service_permissions, expected):
     assert set(expected) == set(p.permission for p in service_permissions)
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @freeze_time("2019-12-02 12:00:00.000000")
 def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
     service_1 = create_service(service_name="Service 1", service_id=fake_uuid)

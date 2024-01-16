@@ -226,7 +226,7 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
 
     notification = Notification.query.one()
     assert notification.personalisation == {"verify_code": "11111"}
-    assert notification.to == sample_user.mobile_number
+    assert notification.to == "1"
     assert str(notification.service_id) == current_app.config["NOTIFY_SERVICE_ID"]
     assert notification.reply_to_text == notify_service.get_default_sms_sender()
 
@@ -261,7 +261,7 @@ def test_send_user_code_for_sms_with_optional_to_field(
     assert resp.status_code == 204
     assert mocked.call_count == 1
     notification = Notification.query.first()
-    assert notification.to == to_number
+    assert notification.to == "1"
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )
@@ -479,7 +479,7 @@ def test_send_user_email_code(
         noti.reply_to_text
         == email_2fa_code_template.service.get_default_reply_to_email_address()
     )
-    assert noti.to == sample_user.email_address
+    assert noti.to == "1"
     assert str(noti.template_id) == current_app.config["EMAIL_2FA_TEMPLATE_ID"]
     assert noti.personalisation["name"] == "Test User"
     assert noti.personalisation["url"].startswith(expected_auth_url)

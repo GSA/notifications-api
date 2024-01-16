@@ -1685,6 +1685,9 @@ def test_get_all_notifications_for_service_in_order_with_post_request(
     assert response.status_code == 200
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_get_all_notifications_for_service_filters_notifications_when_using_post_request(
     client, notify_db_session
 ):
@@ -1725,7 +1728,7 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
 
     resp = json.loads(response.get_data(as_text=True))
     assert len(resp["notifications"]) == 1
-    assert resp["notifications"][0]["to"] == returned_notification.to
+    assert resp["notifications"][0]["to"] == "1"
     assert resp["notifications"][0]["status"] == returned_notification.status
     assert response.status_code == 200
 
@@ -2256,6 +2259,9 @@ def test_get_detailed_services_for_date_range(
     }
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field(
     client, sample_template, sample_email_template
 ):
@@ -2281,6 +2287,9 @@ def test_search_for_notification_by_to_field(
     assert str(notification2.id) == notifications[0]["id"]
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_return_empty_list_if_there_is_no_match(
     client, sample_template, sample_email_template
 ):
@@ -2299,6 +2308,9 @@ def test_search_for_notification_by_to_field_return_empty_list_if_there_is_no_ma
     assert len(notifications) == 0
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_return_multiple_matches(
     client, sample_template, sample_email_template
 ):
@@ -2333,6 +2345,9 @@ def test_search_for_notification_by_to_field_return_multiple_matches(
     assert str(notification4.id) not in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_returns_next_link_if_more_than_50(
     client, sample_template
 ):
@@ -2355,6 +2370,9 @@ def test_search_for_notification_by_to_field_returns_next_link_if_more_than_50(
     assert "page=2" in response_json["links"]["next"]
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_returns_no_next_link_if_50_or_less(
     client, sample_template
 ):
@@ -2446,6 +2464,9 @@ def test_update_service_does_not_call_send_notification_when_restricted_not_chan
     assert not send_notification_mock.called
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_filters_by_status(client, sample_template):
     notification1 = create_notification(
         sample_template,
@@ -2474,6 +2495,9 @@ def test_search_for_notification_by_to_field_filters_by_status(client, sample_te
     assert str(notification1.id) in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_filters_by_statuses(
     client, sample_template
 ):
@@ -2505,6 +2529,9 @@ def test_search_for_notification_by_to_field_filters_by_statuses(
     assert str(notification2.id) in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_returns_content(
     client, sample_template_with_placeholders
 ):
@@ -2608,6 +2635,9 @@ def test_get_all_notifications_for_service_includes_template_redacted(
 #     assert resp['notifications'][1]['template']['is_precompiled_letter'] is False
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_returns_personlisation(
     client, sample_template_with_placeholders
 ):
@@ -2632,6 +2662,9 @@ def test_search_for_notification_by_to_field_returns_personlisation(
     assert notifications[0]["personalisation"]["name"] == "Foo"
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_search_for_notification_by_to_field_returns_notifications_by_type(
     client, sample_template, sample_email_template
 ):
