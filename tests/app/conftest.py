@@ -17,7 +17,13 @@ from app.dao.organization_dao import dao_create_organization
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
-from app.enums import KeyType, NotificationStatus, ServicePermissionType, TemplateType, RecipientType
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    RecipientType,
+    ServicePermissionType,
+    TemplateType,
+)
 from app.history_meta import create_history
 from app.models import (
     ApiKey,

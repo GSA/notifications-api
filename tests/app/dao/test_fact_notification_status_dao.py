@@ -18,11 +18,7 @@ from app.dao.fact_notification_status_dao import (
     update_fact_notification_status,
 )
 from app.enums import KeyType, NotificationStatus
-from app.models import (
-    FactNotificationStatus,
-    NotificationType,
-    TemplateType,
-)
+from app.models import FactNotificationStatus, NotificationType, TemplateType
 from tests.app.db import (
     create_ft_notification_status,
     create_job,

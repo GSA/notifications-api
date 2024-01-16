@@ -7,15 +7,14 @@ from notifications_utils.recipients import InvalidPhoneError
 
 from app.config import QueueNames
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
-from app.models import (
-    KEY_TYPE_NORMAL,
-    PRIORITY,
-    GuestListRecipientType,
-    Notification,
+from app.enums import (
+    KeyType,
     NotificationType,
-    ServiceGuestList,
+    RecipientType,
+    TemplateProcessType,
     TemplateType,
 )
+from app.models import Notification, ServiceGuestList
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import BadRequestError
 from tests.app.db import (
@@ -90,7 +89,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
         personalisation={"name": "foo"},
         notification_type=NotificationType.SMS,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         created_by_id=str(service.created_by_id),
         reply_to_text="testing",
         reference=None,
@@ -147,7 +146,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
         personalisation={"name": "foo"},
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         created_by_id=str(service.created_by_id),
         reply_to_text=None,
         reference=None,
@@ -160,7 +159,7 @@ def test_send_one_off_notification_honors_priority(
 ):
     service = create_service()
     template = create_template(service=service)
-    template.process_type = PRIORITY
+    template.process_type = TemplateProcessType.PRIORITY
 
     post_data = {
         "template_id": str(template.id),
@@ -204,7 +203,7 @@ def test_send_one_off_notification_raises_if_cant_send_to_recipient(
     dao_add_and_commit_guest_list_contacts(
         [
             ServiceGuestList.from_string(
-                service.id, GuestListRecipientType.MOBILE, "2028765309"
+                service.id, RecipientType.MOBILE, "2028765309"
             ),
         ]
     )

@@ -123,11 +123,21 @@ def test_should_delete_all_invitations_more_than_one_day_old(
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED).all()) == 2
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 2
     )
     expire_invitations_created_more_than_two_days_ago()
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED).all()) == 0
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 0
     )
 
 
@@ -150,11 +160,21 @@ def test_should_not_delete_invitations_less_than_two_days_old(
     )
 
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED).all()) == 2
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 2
     )
     expire_invitations_created_more_than_two_days_ago()
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED).all()) == 1
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 1
     )
     assert (
         InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED)

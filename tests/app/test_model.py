@@ -4,15 +4,14 @@ import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
+from app import encryption
 from app.enums import (
+    AgreementStatus,
+    AgreementType,
     NotificationStatus,
     RecipientType,
     TemplateType,
-    AgreementStatus,
-    AgreementType,
 )
-
-from app import encryption
 from app.models import (
     Agreement,
     AnnualBilling,
@@ -50,7 +49,7 @@ def test_should_build_service_guest_list_from_mobile_number(mobile_number):
 @pytest.mark.parametrize("email_address", ["test@example.com"])
 def test_should_build_service_guest_list_from_email_address(email_address):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", GuestListRecipientType.EMAIL, email_address
+        "service_id", RecipientType.EMAIL, email_address
     )
 
     assert service_guest_list.recipient == email_address
@@ -60,8 +59,8 @@ def test_should_build_service_guest_list_from_email_address(email_address):
     "contact, recipient_type",
     [
         ("", None),
-        ("07700dsadsad", GuestListRecipientType.MOBILE),
-        ("gmail.com", GuestListRecipientType.EMAIL),
+        ("07700dsadsad", RecipientType.MOBILE),
+        ("gmail.com", RecipientType.EMAIL),
     ],
 )
 def test_should_not_build_service_guest_list_from_invalid_contact(

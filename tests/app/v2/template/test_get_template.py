@@ -1,7 +1,7 @@
 import pytest
 from flask import json
 
-from app.models import TemplateType
+from app.enums import TemplateType
 from app.utils import DATETIME_FORMAT
 from tests import create_service_authorization_header
 from tests.app.db import create_template

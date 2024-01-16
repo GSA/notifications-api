@@ -4,13 +4,7 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NotificationType,
-    TemplateType,
-)
+from app.enums import KeyType, NotificationType, TemplateType
 from tests.app.db import (
     create_ft_notification_status,
     create_notification,
@@ -285,13 +279,13 @@ def test_get_monthly_notification_stats_ignores_test_keys(
     admin_request, sample_service
 ):
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_NORMAL, count=1
+        datetime(2016, 6, 1), service=sample_service, key_type=KeyType.NORMAL, count=1
     )
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_TEAM, count=2
+        datetime(2016, 6, 1), service=sample_service, key_type=KeyType.TEAM, count=2
     )
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_TEST, count=4
+        datetime(2016, 6, 1), service=sample_service, key_type=KeyType.TEST, count=4
     )
 
     response = admin_request.get(

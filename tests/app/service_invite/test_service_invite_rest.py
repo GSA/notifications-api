@@ -7,7 +7,8 @@ from flask import current_app
 from freezegun import freeze_time
 from notifications_utils.url_safe_token import generate_token
 
-from app.models import EMAIL_AUTH_TYPE, SMS_AUTH_TYPE, Notification
+from app.enums import AuthType
+from app.models import Notification
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
@@ -39,7 +40,7 @@ def test_create_invited_user(
         email_address=email_address,
         from_user=str(invite_from.id),
         permissions="send_messages,manage_service,manage_api_keys",
-        auth_type=EMAIL_AUTH_TYPE,
+        auth_type=AuthType.EMAIL,
         folder_permissions=["folder_1", "folder_2", "folder_3"],
         **extra_args,
     )
@@ -58,7 +59,7 @@ def test_create_invited_user(
         json_resp["data"]["permissions"]
         == "send_messages,manage_service,manage_api_keys"
     )
-    assert json_resp["data"]["auth_type"] == EMAIL_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.EMAIL
     assert json_resp["data"]["id"]
     assert json_resp["data"]["folder_permissions"] == [
         "folder_1",
@@ -107,7 +108,7 @@ def test_create_invited_user_without_auth_type(
         _expected_status=201,
     )
 
-    assert json_resp["data"]["auth_type"] == SMS_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.SMS
 
 
 def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_uuid):
@@ -161,7 +162,7 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
     for invite in json_resp["data"]:
         assert invite["service"] == str(sample_service.id)
         assert invite["from_user"] == str(invite_from.id)
-        assert invite["auth_type"] == SMS_AUTH_TYPE
+        assert invite["auth_type"] == AuthType.SMS
         assert invite["id"]
 
 

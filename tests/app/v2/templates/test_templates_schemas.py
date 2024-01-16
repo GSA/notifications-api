@@ -4,7 +4,7 @@ import pytest
 from flask import json
 from jsonschema.exceptions import ValidationError
 
-from app.models import TemplateType
+from app.enums import TemplateType
 from app.schema_validation import validate
 from app.v2.templates.templates_schemas import (
     get_all_template_request,

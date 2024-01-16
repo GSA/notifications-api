@@ -2,7 +2,8 @@ import pytest
 from flask import current_app
 
 from app.dao.services_dao import dao_add_user_to_service
-from app.models import Notification, NotificationType, TemplateType
+from app.enums import NotificationType, TemplateType
+from app.models import Notification
 from app.service.sender import send_notification_to_service_users
 from tests.app.db import create_service, create_template, create_user
 

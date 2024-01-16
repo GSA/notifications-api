@@ -8,10 +8,7 @@ from app.dao.notifications_dao import (
     move_notifications_to_notification_history,
 )
 from app.enums import KeyType
-from app.models import (
-    Notification,
-    NotificationHistory,
-)
+from app.models import Notification, NotificationHistory
 from tests.app.db import (
     create_notification,
     create_notification_history,

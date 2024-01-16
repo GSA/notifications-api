@@ -12,18 +12,9 @@ from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
+from app.enums import KeyType, NotificationType, TemplateType
 from app.errors import InvalidRequest
-from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    ApiKey,
-    Notification,
-    NotificationHistory,
-    NotificationType,
-    Template,
-    TemplateType,
-)
+from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import RateLimitError
 from tests import create_service_authorization_header
@@ -557,7 +548,7 @@ def test_should_not_send_email_if_team_api_key_and_not_a_service_user(
     }
 
     auth_header = create_service_authorization_header(
-        service_id=sample_email_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_email_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -587,7 +578,7 @@ def test_should_not_send_sms_if_team_api_key_and_not_a_service_user(
     }
 
     auth_header = create_service_authorization_header(
-        service_id=sample_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -618,7 +609,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
         "template": sample_email_template.id,
     }
     auth_header = create_service_authorization_header(
-        service_id=sample_email_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_email_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -650,7 +641,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         service=sample_template.service,
         name="test_key",
         created_by=sample_template.created_by,
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -688,7 +679,7 @@ def test_should_send_email_to_anyone_with_test_key(
         service=sample_email_template.service,
         name="test_key",
         created_by=sample_email_template.created_by,
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -726,7 +717,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
         service=sample_template.service,
         name="team_key",
         created_by=sample_template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -784,7 +775,7 @@ def test_should_persist_notification(
         service=template.service,
         name="team_key",
         created_by=template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -843,7 +834,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         service=template.service,
         name="team_key",
         created_by=template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -919,7 +910,7 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
     assert Notification.query.count() == 0
 
 
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])
 @pytest.mark.parametrize(
     "notification_type, to",
     [
@@ -964,7 +955,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
             "Can’t send to this recipient when service is in trial mode "
             "– see https://www.notifications.service.gov.uk/trial-mode"
         )
-        if key_type == KEY_TYPE_NORMAL
+        if key_type == KeyType.NORMAL
         else ("Can’t send to this recipient using a team-only API key")
     )
 
@@ -976,7 +967,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
 
 
 @pytest.mark.parametrize("service_restricted", [True, False])
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])
 @pytest.mark.parametrize(
     "notification_type, to, normalized_to",
     [

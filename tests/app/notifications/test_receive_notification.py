@@ -5,8 +5,8 @@ from unittest import mock
 import pytest
 from flask import json
 
-from app.models import InboundSms
 from app.enums import ServicePermissionType
+from app.models import InboundSms
 from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     fetch_potential_service,

@@ -13,12 +13,8 @@ from app.celery.reporting_tasks import (
 )
 from app.config import QueueNames
 from app.dao.fact_billing_dao import get_rate
-from app.enums import NotificationType, KeyType
-from app.models import (
-    FactBilling,
-    FactNotificationStatus,
-    Notification,
-)
+from app.enums import KeyType, NotificationType
+from app.models import FactBilling, FactNotificationStatus, Notification
 from tests.app.db import (
     create_notification,
     create_notification_history,

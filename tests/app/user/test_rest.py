@@ -9,15 +9,8 @@ from freezegun import freeze_time
 
 from app.dao.permissions_dao import default_service_permissions
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
-from app.models import (
-    EMAIL_AUTH_TYPE,
-    MANAGE_SETTINGS,
-    MANAGE_TEMPLATES,
-    SMS_AUTH_TYPE,
-    Notification,
-    Permission,
-    User,
-)
+from app.enums import AuthType, PermissionType
+from app.models import Notification, Permission, User
 from tests.app.db import (
     create_organization,
     create_service,
@@ -71,7 +64,7 @@ def test_get_user(admin_request, sample_service, sample_organization):
     assert fetched["mobile_number"] == sample_user.mobile_number
     assert fetched["email_address"] == sample_user.email_address
     assert fetched["state"] == sample_user.state
-    assert fetched["auth_type"] == SMS_AUTH_TYPE
+    assert fetched["auth_type"] == AuthType.SMS
     assert fetched["permissions"].keys() == {str(sample_service.id)}
     assert fetched["services"] == [str(sample_service.id)]
     assert fetched["organizations"] == [str(sample_organization.id)]
@@ -117,7 +110,7 @@ def test_post_user(admin_request, notify_db_session):
         "state": "active",
         "failed_login_count": 0,
         "permissions": {},
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
@@ -125,7 +118,7 @@ def test_post_user(admin_request, notify_db_session):
     assert user.check_password("password")
     assert json_resp["data"]["email_address"] == user.email_address
     assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == EMAIL_AUTH_TYPE
+    assert user.auth_type == AuthType.EMAIL
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
@@ -142,7 +135,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     user = User.query.filter_by(email_address="user@digital.fake.gov").first()
     assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == SMS_AUTH_TYPE
+    assert user.auth_type == AuthType.SMS
 
 
 def test_post_user_missing_attribute_email(admin_request, notify_db_session):
@@ -194,12 +187,12 @@ def test_can_create_user_with_email_auth_and_no_mobile(
         "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": None,
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    assert json_resp["data"]["auth_type"] == EMAIL_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.EMAIL
     assert json_resp["data"]["mobile_number"] is None
 
 
@@ -211,7 +204,7 @@ def test_cannot_create_user_with_sms_auth_and_no_mobile(
         "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": None,
-        "auth_type": SMS_AUTH_TYPE,
+        "auth_type": AuthType.SMS,
     }
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
@@ -228,7 +221,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
         "email_address": "",
         "password": "password",
         "mobile_number": "",
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
     resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
     assert resp["message"] == {
@@ -465,21 +458,27 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
         "user.set_permissions",
         user_id=str(sample_user.id),
         service_id=str(sample_service.id),
-        _data={"permissions": [{"permission": MANAGE_SETTINGS}]},
+        _data={
+            "permissions": [
+                {"permission": PermissionType.PermissionType.MANAGE_SETTINGS}
+            ]
+        },
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(permission=MANAGE_SETTINGS).first()
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_SETTINGS
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_SETTINGS
+    assert permission.permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_permissions_multiple(admin_request, sample_user, sample_service):
     data = {
         "permissions": [
-            {"permission": MANAGE_SETTINGS},
-            {"permission": MANAGE_TEMPLATES},
+            {"permission": PermissionType.MANAGE_SETTINGS},
+            {"permission": PermissionType.MANAGE_TEMPLATES},
         ]
     }
     admin_request.post(
@@ -490,18 +489,22 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(permission=MANAGE_SETTINGS).first()
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_SETTINGS
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_SETTINGS
-    permission = Permission.query.filter_by(permission=MANAGE_TEMPLATES).first()
+    assert permission.permission == PermissionType.MANAGE_SETTINGS
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_TEMPLATES
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_TEMPLATES
+    assert permission.permission == PermissionType.MANAGE_TEMPLATES
 
 
 def test_set_user_permissions_remove_old(admin_request, sample_user, sample_service):
-    data = {"permissions": [{"permission": MANAGE_SETTINGS}]}
+    data = {"permissions": [{"permission": PermissionType.MANAGE_SETTINGS}]}
 
     admin_request.post(
         "user.set_permissions",
@@ -513,7 +516,7 @@ def test_set_user_permissions_remove_old(admin_request, sample_user, sample_serv
 
     query = Permission.query.filter_by(user=sample_user)
     assert query.count() == 1
-    assert query.first().permission == MANAGE_SETTINGS
+    assert query.first().permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_folder_permissions(admin_request, sample_user, sample_service):
@@ -893,23 +896,23 @@ def test_update_user_auth_type(admin_request, sample_user):
 
 
 def test_can_set_email_auth_and_remove_mobile_at_same_time(admin_request, sample_user):
-    sample_user.auth_type = SMS_AUTH_TYPE
+    sample_user.auth_type = AuthType.SMS
 
     admin_request.post(
         "user.update_user_attribute",
         user_id=sample_user.id,
         _data={
             "mobile_number": None,
-            "auth_type": EMAIL_AUTH_TYPE,
+            "auth_type": AuthType.EMAIL,
         },
     )
 
     assert sample_user.mobile_number is None
-    assert sample_user.auth_type == EMAIL_AUTH_TYPE
+    assert sample_user.auth_type == AuthType.EMAIL
 
 
 def test_cannot_remove_mobile_if_sms_auth(admin_request, sample_user):
-    sample_user.auth_type = SMS_AUTH_TYPE
+    sample_user.auth_type = AuthType.SMS
 
     json_resp = admin_request.post(
         "user.update_user_attribute",
@@ -925,7 +928,7 @@ def test_cannot_remove_mobile_if_sms_auth(admin_request, sample_user):
 
 
 def test_can_remove_mobile_if_email_auth(admin_request, sample_user):
-    sample_user.auth_type = EMAIL_AUTH_TYPE
+    sample_user.auth_type = AuthType.EMAIL
 
     admin_request.post(
         "user.update_user_attribute",
@@ -939,7 +942,7 @@ def test_can_remove_mobile_if_email_auth(admin_request, sample_user):
 def test_cannot_update_user_with_mobile_number_as_empty_string(
     admin_request, sample_user
 ):
-    sample_user.auth_type = EMAIL_AUTH_TYPE
+    sample_user.auth_type = AuthType.EMAIL
 
     resp = admin_request.post(
         "user.update_user_attribute",

@@ -5,7 +5,7 @@ from flask import json
 from freezegun import freeze_time
 from jsonschema import ValidationError
 
-from app.models import NOTIFICATION_CREATED, TemplateType
+from app.enums import NotificationStatus, TemplateType
 from app.schema_validation import validate
 from app.v2.notifications.notification_schemas import get_notifications_request
 from app.v2.notifications.notification_schemas import (
@@ -19,7 +19,7 @@ valid_get_json = {}
 
 valid_get_with_optionals_json = {
     "reference": "test reference",
-    "status": [NOTIFICATION_CREATED],
+    "status": [NotificationStatus.CREATED],
     "template_type": [TemplateType.EMAIL],
     "include_jobs": "true",
     "older_than": "a5149c32-f03b-4711-af49-ad6993797d45",
