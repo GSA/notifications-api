@@ -16,12 +16,8 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
-from app.enums import NotificationType, NotificationStatus, KeyType
-from app.models import (
-    FactNotificationStatus,
-    Notification,
-    NotificationHistory,
-)
+from app.enums import KeyType, NotificationStatus, NotificationType
+from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
@@ -162,7 +158,10 @@ def update_notification_status_by_reference(reference, status):
         )
         return None
 
-    if notification.status not in {NotificationStatus.SENDING, NotificationStatus.PENDING}:
+    if notification.status not in {
+        NotificationStatus.SENDING,
+        NotificationStatus.PENDING,
+    }:
         _duplicate_update_warning(notification, status)
         return None
 
@@ -200,7 +199,9 @@ def dao_get_notification_count_for_service(*, service_id):
 
 
 def dao_get_failed_notification_count():
-    failed_count = Notification.query.filter_by(status=NotificationStatus.FAILED).count()
+    failed_count = Notification.query.filter_by(
+        status=NotificationStatus.FAILED
+    ).count()
     return failed_count
 
 

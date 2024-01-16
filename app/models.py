@@ -1001,11 +1001,6 @@ class ApiKey(db.Model, Versioned):
             self._secret = encryption.encrypt(str(secret))
 
 
-class TemplateProcessTypes(db.Model):
-    __tablename__ = "template_process_type"
-    name = db.Column(db.String(255), primary_key=True)
-
-
 class TemplateFolder(db.Model):
     __tablename__ = "template_folder"
 
@@ -1129,7 +1124,7 @@ class TemplateBase(db.Model):
             db.Enum(TemplateProcessType, name="template_process_type"),
             index=True,
             nullable=False,
-            default=NORMAL,
+            default=TemplateProcessType.NORMAL,
         )
 
     redact_personalisation = association_proxy(
@@ -1336,7 +1331,6 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     )
     created_by = db.relationship("User")
     supports_international = db.Column(db.Boolean, nullable=False, default=False)
-
 
 
 class Job(db.Model):

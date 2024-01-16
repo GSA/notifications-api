@@ -1,6 +1,4 @@
 from enum import Enum
-from functools import lru_cache
-from xml.sax.handler import property_interning_dict
 
 
 class TemplateType(Enum):
@@ -118,9 +116,13 @@ class NotificationStatus(Enum):
         )
 
     @property
-    @lru_cache
     def non_billable(self) -> tuple["NotificationStatus", ...]:
-        return tuple(set(type(self)) - set(self.billable))
+        self._non_billable: tuple["NotificationStatus", ...]
+        try:
+            return self._non_billable
+        except AttributeError:
+            self._non_billable = tuple(set(type(self)) - set(self.billable))
+            return self._non_billable
 
 
 class PermissionType(Enum):

@@ -1,4 +1,4 @@
-from app.enums import TemplateType, NotificationStatus
+from app.enums import NotificationStatus, TemplateType
 from app.schema_validation.definitions import personalisation, uuid
 
 template = {
@@ -80,7 +80,10 @@ get_notifications_request = {
     "type": "object",
     "properties": {
         "reference": {"type": "string"},
-        "status": {"type": "array", "items": {"enum": [e.value for e in NotificationStatus]}},
+        "status": {
+            "type": "array",
+            "items": {"enum": [e.value for e in NotificationStatus]},
+        },
         "template_type": {
             "type": "array",
             "items": {"enum": [e.value for e in TemplateType]},

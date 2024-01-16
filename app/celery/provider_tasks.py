@@ -121,7 +121,8 @@ def deliver_sms(self, notification_id):
         )
     except Exception as e:
         update_notification_status_by_id(
-            notification_id, NotificationStatus.TEMPORARY_FAILURE,
+            notification_id,
+            NotificationStatus.TEMPORARY_FAILURE,
         )
         if isinstance(e, SmsClientResponseException):
             current_app.logger.warning(
@@ -146,7 +147,8 @@ def deliver_sms(self, notification_id):
                 )
             )
             update_notification_status_by_id(
-                notification_id, NotificationStatus.TECHNICAL_FAILURE,
+                notification_id,
+                NotificationStatus.TECHNICAL_FAILURE,
             )
             raise NotificationTechnicalFailureException(message)
 
@@ -189,6 +191,7 @@ def deliver_email(self, notification_id):
                 )
             )
             update_notification_status_by_id(
-                notification_id, NotificationStatus.TECHNICAL_FAILURE,
+                notification_id,
+                NotificationStatus.TECHNICAL_FAILURE,
             )
             raise NotificationTechnicalFailureException(message)

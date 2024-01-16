@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import TemplateType, NotificationStatus
+from app.enums import NotificationStatus, TemplateType
 
 
 def format_statistics(statistics):

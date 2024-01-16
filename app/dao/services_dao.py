@@ -13,7 +13,12 @@ from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
-from app.enums import NotificationStatus, NotificationType, ServicePermissionType, KeyType
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    ServicePermissionType,
+)
 from app.models import (
     AnnualBilling,
     ApiKey,

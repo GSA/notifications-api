@@ -32,7 +32,7 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
-from app.enums import CodeType, NotificationType, TemplateType, KeyType
+from app.enums import CodeType, KeyType, NotificationType, TemplateType
 from app.errors import InvalidRequest, register_errors
 from app.models import Permission, Service
 from app.notifications.process_notifications import (

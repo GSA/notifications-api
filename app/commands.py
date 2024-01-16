@@ -49,7 +49,7 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
-from app.enums import NotificationType, NotificationStatus, KeyType
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
     AnnualBilling,
     Domain,

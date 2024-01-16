@@ -4,7 +4,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from app import api_user, authenticated_service
 from app.config import QueueNames
 from app.dao import notifications_dao
-from app.enums import NotificationType, KeyType, TemplateProcessType
+from app.enums import KeyType, NotificationType, TemplateProcessType
 from app.errors import InvalidRequest, register_errors
 from app.notifications.process_notifications import (
     persist_notification,
@@ -136,7 +136,11 @@ def send_notification(notification_type):
         reply_to_text=template.reply_to_text,
     )
     if not simulated:
-        queue_name = QueueNames.PRIORITY if template.process_type == TemplateProcessType.PRIORITY else None
+        queue_name = (
+            QueueNames.PRIORITY
+            if template.process_type == TemplateProcessType.PRIORITY
+            else None
+        )
         send_notification_to_queue(notification=notification_model, queue=queue_name)
 
     else:

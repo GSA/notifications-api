@@ -3,7 +3,7 @@ import itertools
 from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.enums import RecipientType, KeyType
+from app.enums import KeyType, RecipientType
 from app.models import ServiceGuestList
 
 

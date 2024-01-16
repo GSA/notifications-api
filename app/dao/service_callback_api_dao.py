@@ -3,9 +3,7 @@ from datetime import datetime
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit, version_class
 from app.enums import CallbackType
-from app.models import (
-    ServiceCallbackApi,
-)
+from app.models import ServiceCallbackApi
 
 
 @autocommit
@@ -39,13 +37,15 @@ def get_service_callback_api(service_callback_api_id, service_id):
 
 def get_service_delivery_status_callback_api_for_service(service_id):
     return ServiceCallbackApi.query.filter_by(
-        service_id=service_id, callback_type=CallbackType.DELIVERY_STATUS,
+        service_id=service_id,
+        callback_type=CallbackType.DELIVERY_STATUS,
     ).first()
 
 
 def get_service_complaint_callback_api_for_service(service_id):
     return ServiceCallbackApi.query.filter_by(
-        service_id=service_id, callback_type=CallbackType.COMPLAINT,
+        service_id=service_id,
+        callback_type=CallbackType.COMPLAINT,
     ).first()
 
 

@@ -14,7 +14,7 @@ from app.dao.invited_user_dao import (
     save_invited_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
-from app.enums import InvitedUserStatus, NotificationType, KeyType
+from app.enums import InvitedUserStatus, KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
 from app.models import Service
 from app.notifications.process_notifications import (

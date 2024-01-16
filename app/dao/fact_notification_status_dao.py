@@ -7,7 +7,7 @@ from sqlalchemy.types import DateTime, Integer
 
 from app import db
 from app.dao.dao_utils import autocommit
-from app.enums import NotificationType, NotificationStatus, KeyType
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
     FactNotificationStatus,
     Notification,
@@ -529,7 +529,10 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status.in_(
-                                [NotificationStatus.TECHNICAL_FAILURE, NotificationStatus.FAILED]
+                                [
+                                    NotificationStatus.TECHNICAL_FAILURE,
+                                    NotificationStatus.FAILED,
+                                ]
                             ),
                             FactNotificationStatus.notification_count,
                         )

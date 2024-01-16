@@ -21,8 +21,8 @@ from app.dao.notifications_dao import (
 )
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
-from app.errors import InvalidRequest, register_errors
 from app.enums import JobStatus
+from app.errors import InvalidRequest, register_errors
 from app.schemas import (
     job_schema,
     notification_with_template_schema,

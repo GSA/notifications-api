@@ -16,7 +16,7 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
-from app.enums import NotificationType, NotificationStatus, KeyType
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
 from app.v2.errors import BadRequestError
 

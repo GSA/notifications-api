@@ -5,13 +5,8 @@ from flask import current_app
 from sqlalchemy import String, and_, desc, func, literal, text
 
 from app import db
-from app.enums import NotificationStatus, NotificationType, JobStatus
-from app.models import (
-    Job,
-    Notification,
-    ServiceDataRetention,
-    Template,
-)
+from app.enums import JobStatus, NotificationStatus, NotificationType
+from app.models import Job, Notification, ServiceDataRetention, Template
 from app.utils import midnight_n_days_ago
 
 

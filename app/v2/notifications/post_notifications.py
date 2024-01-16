@@ -10,7 +10,7 @@ from app import api_user, authenticated_service, document_download_client, encry
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames
-from app.enums import NotificationType, NotificationStatus, KeyType, TemplateProcessType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateProcessType
 from app.models import Notification
 from app.notifications.process_notifications import (
     persist_notification,
@@ -177,7 +177,11 @@ def process_sms_or_email_notification(
     )
 
     if not simulated:
-        queue_name = QueueNames.PRIORITY if template_process_type == TemplateProcessType.PRIORITY else None
+        queue_name = (
+            QueueNames.PRIORITY
+            if template_process_type == TemplateProcessType.PRIORITY
+            else None
+        )
         send_notification_to_queue_detached(
             key_type=api_user.key_type,
             notification_type=notification_type,
