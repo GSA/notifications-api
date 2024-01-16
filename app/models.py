@@ -232,10 +232,12 @@ class ServiceUser(db.Model):
         primary_key=True,
     )
 
-    __table_args__ = UniqueConstraint(
-        "user_id",
-        "service_id",
-        name="uix_user_to_service",
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "service_id",
+            name="uix_user_to_service",
+        ),
     )
 
 
@@ -1581,7 +1583,7 @@ class Notification(db.Model):
         self._personalisation = encryption.encrypt(personalisation or {})
 
     def completed_at(self):
-        if self.status in NotificationStatus.completed_types:
+        if self.status in NotificationStatus.completed_types():
             return self.updated_at.strftime(DATETIME_FORMAT)
 
         return None
@@ -1621,7 +1623,7 @@ class Notification(db.Model):
 
         def _substitute_status_str(_status):
             return (
-                NotificationStatus.failed_types
+                NotificationStatus.failed_types()
                 if _status == NotificationStatus.FAILED
                 else [_status]
             )

@@ -51,9 +51,8 @@ class NotificationStatus(Enum):
     VALIDATION_FAILED = "validation-failed"
     VIRUS_SCAN_FAILED = "virus-scan-failed"
 
-    @property
-    def failed_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def failed_types(cls) -> tuple["NotificationStatus", ...]:
         return (
             cls.TECHNICAL_FAILURE,
             cls.TEMPORARY_FAILURE,
@@ -62,9 +61,8 @@ class NotificationStatus(Enum):
             cls.VIRUS_SCAN_FAILED,
         )
 
-    @property
-    def completed_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def completed_types(cls) -> tuple["NotificationStatus", ...]:
         return (
             cls.SENT,
             cls.DELIVERED,
@@ -75,14 +73,12 @@ class NotificationStatus(Enum):
             cls.CANCELLED,
         )
 
-    @property
-    def success_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def success_types(cls) -> tuple["NotificationStatus", ...]:
         return (cls.SENT, cls.DELIVERED)
 
-    @property
-    def billable_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def billable_types(cls) -> tuple["NotificationStatus", ...]:
         return (
             cls.SENDING,
             cls.SENT,
@@ -93,9 +89,8 @@ class NotificationStatus(Enum):
             cls.PERMANENT_FAILURE,
         )
 
-    @property
-    def billable_sms_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def billable_sms_types(cls) -> tuple["NotificationStatus", ...]:
         return (
             cls.SENDING,
             cls.SENT,  # internationally
@@ -105,9 +100,8 @@ class NotificationStatus(Enum):
             cls.PERMANENT_FAILURE,
         )
 
-    @property
-    def sent_email_types(self) -> tuple["NotificationStatus", ...]:
-        cls = type(self)
+    @classmethod
+    def sent_email_types(cls) -> tuple["NotificationStatus", ...]:
         return (
             cls.SENDING,
             cls.DELIVERED,
@@ -115,14 +109,9 @@ class NotificationStatus(Enum):
             cls.PERMANENT_FAILURE,
         )
 
-    @property
-    def non_billable_types(self) -> tuple["NotificationStatus", ...]:
-        self._non_billable: tuple["NotificationStatus", ...]
-        try:
-            return self._non_billable
-        except AttributeError:
-            self._non_billable = tuple(set(type(self)) - set(self.billable))
-            return self._non_billable
+    @classmethod
+    def non_billable_types(cls) -> tuple["NotificationStatus", ...]:
+        return tuple({i for i in cls} - set(cls.billable_types()))
 
 
 class PermissionType(Enum):
@@ -135,9 +124,8 @@ class PermissionType(Enum):
     PLATFORM_ADMIN = "platform_admin"
     VIEW_ACTIVITY = "view_activity"
 
-    @property
-    def defaults(self) -> tuple["PermissionType", ...]:
-        cls = type(self)
+    @classmethod
+    def defaults(cls) -> tuple["PermissionType", ...]:
         return (
             cls.MANAGE_USERS,
             cls.MANAGE_TEMPLATES,

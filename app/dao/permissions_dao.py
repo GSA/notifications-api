@@ -9,7 +9,7 @@ class PermissionDAO(DAOClass):
         model = Permission
 
     def add_default_service_permissions_for_user(self, user, service):
-        for name in PermissionType.defaults:
+        for name in PermissionType.defaults():
             permission = Permission(permission=name, user=user, service=service)
             self.create_instance(permission, _commit=False)
 

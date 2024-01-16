@@ -129,7 +129,7 @@ def create_sample_notification(
         "key_type": api_key.key_type if api_key else key_type,
         "sent_by": sent_by,
         "updated_at": created_at
-        if status in NotificationStatus.completed_types
+        if status in NotificationStatus.completed_types()
         else None,
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,

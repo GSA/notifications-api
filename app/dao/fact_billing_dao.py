@@ -408,7 +408,9 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
                 func.count().label("notifications_sent"),
             )
             .filter(
-                NotificationAllTimeView.status.in_(NotificationStatus.sent_email_types),
+                NotificationAllTimeView.status.in_(
+                    NotificationStatus.sent_email_types()
+                ),
                 NotificationAllTimeView.key_type.in_((KeyType.NORMAL, KeyType.TEAM)),
                 NotificationAllTimeView.created_at >= start_date,
                 NotificationAllTimeView.created_at < end_date,
@@ -441,7 +443,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
             )
             .filter(
                 NotificationAllTimeView.status.in_(
-                    NotificationStatus.billable_sms_types
+                    NotificationStatus.billable_sms_types()
                 ),
                 NotificationAllTimeView.key_type.in_((KeyType.NORMAL, KeyType.TEAM)),
                 NotificationAllTimeView.created_at >= start_date,

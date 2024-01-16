@@ -74,11 +74,11 @@ def test_should_not_build_service_guest_list_from_invalid_contact(
     "initial_statuses, expected_statuses",
     [
         # passing in single statuses as strings
-        (NotificationStatus.FAILED, NotificationStatus.failed_types),
+        (NotificationStatus.FAILED, NotificationStatus.failed_types()),
         (NotificationStatus.CREATED, [NotificationStatus.CREATED]),
         (NotificationStatus.TECHNICAL_FAILURE, [NotificationStatus.TECHNICAL_FAILURE]),
         # passing in lists containing single statuses
-        ([NotificationStatus.FAILED], NotificationStatus.failed_types),
+        ([NotificationStatus.FAILED], NotificationStatus.failed_types()),
         ([NotificationStatus.CREATED], [NotificationStatus.CREATED]),
         (
             [NotificationStatus.TECHNICAL_FAILURE],
@@ -87,7 +87,7 @@ def test_should_not_build_service_guest_list_from_invalid_contact(
         # passing in lists containing multiple statuses
         (
             [NotificationStatus.FAILED, NotificationStatus.CREATED],
-            list(NotificationStatus.failed_types) + [NotificationStatus.CREATED],
+            list(NotificationStatus.failed_types()) + [NotificationStatus.CREATED],
         ),
         (
             [NotificationStatus.CREATED, NotificationStatus.PENDING],
@@ -104,7 +104,7 @@ def test_should_not_build_service_guest_list_from_invalid_contact(
                 NotificationStatus.CREATED,
                 NotificationStatus.TECHNICAL_FAILURE,
             ],
-            list(NotificationStatus.failed_types) + [NotificationStatus.CREATED],
+            list(NotificationStatus.failed_types()) + [NotificationStatus.CREATED],
         ),
     ],
 )

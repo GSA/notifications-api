@@ -275,7 +275,7 @@ def dao_create_service(
         raise ValueError("Can't create a service without a user")
 
     if service_permissions is None:
-        service_permissions = ServicePermissionType.defaults
+        service_permissions = ServicePermissionType.defaults()
 
     organization = dao_get_organization_by_email_address(user.email_address)
 

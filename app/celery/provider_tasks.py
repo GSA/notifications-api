@@ -15,7 +15,7 @@ from app.dao.notifications_dao import (
     update_notification_status_by_id,
 )
 from app.delivery import send_to_providers
-from app.enum import NotificationStatus
+from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery

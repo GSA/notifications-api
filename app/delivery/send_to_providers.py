@@ -155,7 +155,7 @@ def send_email_to_provider(notification):
 def update_notification_to_sending(notification, provider):
     notification.sent_at = datetime.utcnow()
     notification.sent_by = provider.name
-    if notification.status not in NotificationStatus.completed_types:
+    if notification.status not in NotificationStatus.completed_types():
         notification.status = NotificationStatus.SENDING
 
     dao_update_notification(notification)
