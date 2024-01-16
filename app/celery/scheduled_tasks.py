@@ -98,6 +98,8 @@ def expire_or_delete_invitations():
         raise
 
 
+# TODO THIS IS ACTUALLY DEPRECATED, WE ARE REMOVING PHONE NUMBERS FROM THE DB
+# SO THERE WILL BE NO REASON TO KEEP TRACK OF THIS COUNT
 @notify_celery.task(name="check-db-notification-fails")
 def check_db_notification_fails():
     """
@@ -113,6 +115,8 @@ def check_db_notification_fails():
     last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
     if not last_value:
         last_value = 0
+    else:
+        last_value = int(last_value.decode("utf-8"))
 
     failed_count = dao_get_failed_notification_count()
     if failed_count > last_value:
