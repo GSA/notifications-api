@@ -18,7 +18,8 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.models import JOB_STATUS_FINISHED, Job, NotificationType, TemplateType
+from app.enums import JobStatus
+from app.models import Job, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -379,7 +380,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
     healthy_job = create_job(
         template=sample_email_template,
         notification_count=3,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 3):
@@ -387,7 +388,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
     job_with_missing_rows = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 4):
@@ -405,7 +406,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_less_th
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=9),
     )
     for i in range(0, 4):
@@ -422,7 +423,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(days=1),
     )
     for i in range(0, 4):
@@ -455,7 +456,7 @@ def test_find_missing_row_for_job(sample_email_template):
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
@@ -472,7 +473,7 @@ def test_find_missing_row_for_job_more_than_one_missing_row(sample_email_templat
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
@@ -491,7 +492,7 @@ def test_find_missing_row_for_job_return_none_when_row_isnt_missing(
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     for i in range(0, 5):

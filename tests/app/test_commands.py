@@ -20,13 +20,11 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    NOTIFICATION_DELIVERED,
     AnnualBilling,
     Job,
     Notification,
-    NotificationType,
     Organization,
     Service,
     Template,
@@ -315,9 +313,9 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
     notification = Notification.query.one()
     notification.billable_units = 0
     notification.notification_type = NotificationType.SMS
-    notification.status = NOTIFICATION_DELIVERED
+    notification.status = NotificationStatus.DELIVERED
     notification.sent_at = None
-    notification.key_type = KEY_TYPE_NORMAL
+    notification.key_type = KeyType.NORMAL
 
     notify_db_session.commit()
 

@@ -26,8 +26,8 @@ from app.dao.service_sms_sender_dao import (
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template, dao_update_template
 from app.dao.users_dao import save_model_user
+from app.enums import KeyType, RecipientType, TemplateType, ServicePermissionType
 from app.models import (
-    KEY_TYPE_NORMAL,
     AnnualBilling,
     ApiKey,
     Complaint,
@@ -36,7 +36,6 @@ from app.models import (
     FactBilling,
     FactNotificationStatus,
     FactProcessingTime,
-    GuestListRecipientType,
     InboundNumber,
     InboundSms,
     InvitedOrganizationUser,
@@ -53,11 +52,9 @@ from app.models import (
     ServiceGuestList,
     ServiceInboundApi,
     ServicePermission,
-    ServicePermissionType,
     ServiceSmsSender,
     Template,
     TemplateFolder,
-    TemplateType,
     User,
     WebauthnCredential,
 )
@@ -240,7 +237,7 @@ def create_notification(
     billable_units=1,
     personalisation=None,
     api_key=None,
-    key_type=KEY_TYPE_NORMAL,
+    key_type=KeyType.NORMAL,
     sent_by=None,
     client_reference=None,
     rate_multiplier=None,
@@ -330,7 +327,7 @@ def create_notification_history(
     updated_at=None,
     billable_units=1,
     api_key=None,
-    key_type=KEY_TYPE_NORMAL,
+    key_type=KeyType.NORMAL,
     sent_by=None,
     client_reference=None,
     rate_multiplier=None,
@@ -519,7 +516,7 @@ def create_rate(start_date, value, notification_type):
     return rate
 
 
-def create_api_key(service, key_type=KEY_TYPE_NORMAL, key_name=None):
+def create_api_key(service, key_type=KeyType.NORMAL, key_name=None):
     id_ = uuid.uuid4()
 
     name = key_name if key_name else "{} api key {}".format(key_type, id_)
@@ -725,15 +722,15 @@ def create_process_time(
 def create_service_guest_list(service, email_address=None, mobile_number=None):
     if email_address:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, GuestListRecipientType.EMAIL, email_address
+            service.id, RecipientType.EMAIL, email_address
         )
     elif mobile_number:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, GuestListRecipientType.MOBILE, mobile_number
+            service.id, RecipientType.MOBILE, mobile_number
         )
     else:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, GuestListRecipientType.EMAIL, "guest_list_user@digital.fake.gov"
+            service.id, RecipientType.EMAIL, "guest_list_user@digital.fake.gov"
         )
 
     db.session.add(guest_list_user)

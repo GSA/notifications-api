@@ -40,10 +40,8 @@ from app.dao.services_dao import (
     get_services_by_partial_name,
 )
 from app.dao.users_dao import create_user_code, save_model_user
+from app.enums import KeyType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
     ApiKey,
     InvitedUser,
     Job,
@@ -982,9 +980,9 @@ def test_dao_fetch_todays_stats_for_service(notify_db_session):
 def test_dao_fetch_todays_stats_for_service_should_ignore_test_key(notify_db_session):
     service = create_service()
     template = create_template(service=service)
-    live_api_key = create_api_key(service=service, key_type=KEY_TYPE_NORMAL)
-    team_api_key = create_api_key(service=service, key_type=KEY_TYPE_TEAM)
-    test_api_key = create_api_key(service=service, key_type=KEY_TYPE_TEST)
+    live_api_key = create_api_key(service=service, key_type=KeyType.NORMAL)
+    team_api_key = create_api_key(service=service, key_type=KeyType.TEAM)
+    test_api_key = create_api_key(service=service, key_type=KeyType.TEST)
 
     # two created email, one failed email, and one created sms
     create_notification(
@@ -1224,9 +1222,9 @@ def test_dao_fetch_todays_stats_for_all_services_includes_all_keys_by_default(
     notify_db_session,
 ):
     template = create_template(service=create_service())
-    create_notification(template=template, key_type=KEY_TYPE_NORMAL)
-    create_notification(template=template, key_type=KEY_TYPE_TEAM)
-    create_notification(template=template, key_type=KEY_TYPE_TEST)
+    create_notification(template=template, key_type=KeyType.NORMAL)
+    create_notification(template=template, key_type=KeyType.TEAM)
+    create_notification(template=template, key_type=KeyType.TEST)
 
     stats = dao_fetch_todays_stats_for_all_services()
 
@@ -1238,9 +1236,9 @@ def test_dao_fetch_todays_stats_for_all_services_can_exclude_from_test_key(
     notify_db_session,
 ):
     template = create_template(service=create_service())
-    create_notification(template=template, key_type=KEY_TYPE_NORMAL)
-    create_notification(template=template, key_type=KEY_TYPE_TEAM)
-    create_notification(template=template, key_type=KEY_TYPE_TEST)
+    create_notification(template=template, key_type=KeyType.NORMAL)
+    create_notification(template=template, key_type=KeyType.TEAM)
+    create_notification(template=template, key_type=KeyType.TEST)
 
     stats = dao_fetch_todays_stats_for_all_services(include_from_test_key=False)
 

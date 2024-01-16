@@ -14,17 +14,9 @@ from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
 from app.delivery.send_to_providers import get_html_email_options, get_logo_url
+from app.enums import BrandType, KeyType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    BRANDING_BOTH,
-    BRANDING_ORG,
-    BRANDING_ORG_BANNER,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    EmailBranding,
-    Notification,
-)
+from app.models import EmailBranding, Notification
 from app.serialised_models import SerialisedService
 from tests.app.db import (
     create_email_branding,
@@ -236,7 +228,7 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
         "app.delivery.send_to_providers.send_sms_response", side_effect=HTTPError
     )
 
-    sample_notification.key_type = KEY_TYPE_TEST
+    sample_notification.key_type = KeyType.TEST
     with pytest.raises(HTTPError):
         send_to_providers.send_sms_to_provider(sample_notification)
     assert sample_notification.status == "sending"
@@ -357,7 +349,7 @@ def test_get_html_email_renderer_should_return_for_normal_service(sample_service
 
 @pytest.mark.parametrize(
     "branding_type, govuk_banner",
-    [(BRANDING_ORG, False), (BRANDING_BOTH, True), (BRANDING_ORG_BANNER, False)],
+    [(BrandType.ORG, False), (BrandType.BOTH, True), (BrandType.ORG_BANNER, False)],
 )
 def test_get_html_email_renderer_with_branding_details(
     branding_type, govuk_banner, notify_db_session, sample_service
@@ -380,7 +372,7 @@ def test_get_html_email_renderer_with_branding_details(
     assert options["brand_text"] == "League of Justice"
     assert options["brand_name"] == "Justice League"
 
-    if branding_type == BRANDING_ORG_BANNER:
+    if branding_type == BrandType.ORG_BANNER:
         assert options["brand_banner"] is True
     else:
         assert options["brand_banner"] is False
@@ -405,7 +397,7 @@ def test_get_html_email_renderer_prepends_logo_path(notify_api):
     )
 
     email_branding = EmailBranding(
-        brand_type=BRANDING_ORG,
+        brand_type=BrandType.ORG,
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -429,7 +421,7 @@ def test_get_html_email_renderer_handles_email_branding_without_logo(notify_api)
     )
 
     email_branding = EmailBranding(
-        brand_type=BRANDING_ORG_BANNER,
+        brand_type=BrandType.ORG_BANNER,
         colour="#000000",
         logo=None,
         name="Justice League",
@@ -499,19 +491,19 @@ def test_update_notification_to_sending_does_not_update_status_from_a_final_stat
 
 
 def __update_notification(notification_to_update, research_mode, expected_status):
-    if research_mode or notification_to_update.key_type == KEY_TYPE_TEST:
+    if research_mode or notification_to_update.key_type == KeyType.TEST:
         notification_to_update.status = expected_status
 
 
 @pytest.mark.parametrize(
     "research_mode,key_type, billable_units, expected_status",
     [
-        (True, KEY_TYPE_NORMAL, 0, "delivered"),
-        (False, KEY_TYPE_NORMAL, 1, "sending"),
-        (False, KEY_TYPE_TEST, 0, "sending"),
-        (True, KEY_TYPE_TEST, 0, "sending"),
-        (True, KEY_TYPE_TEAM, 0, "delivered"),
-        (False, KEY_TYPE_TEAM, 1, "sending"),
+        (True, KeyType.NORMAL, 0, "delivered"),
+        (False, KeyType.NORMAL, 1, "sending"),
+        (False, KeyType.TEST, 0, "sending"),
+        (True, KeyType.TEST, 0, "sending"),
+        (True, KeyType.TEAM, 0, "delivered"),
+        (False, KeyType.TEAM, 1, "sending"),
     ],
 )
 def test_should_update_billable_units_and_status_according_to_research_mode_and_key_type(
@@ -773,8 +765,8 @@ def test_get_html_email_options_return_email_branding_from_serialised_service(
     email_options = get_html_email_options(service)
     assert email_options is not None
     assert email_options == {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": get_logo_url(current_app.config["ADMIN_BASE_URL"], branding.logo),
         "brand_text": branding.text,
@@ -788,8 +780,8 @@ def test_get_html_email_options_add_email_branding_from_service(sample_service):
     email_options = get_html_email_options(sample_service)
     assert email_options is not None
     assert email_options == {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": get_logo_url(current_app.config["ADMIN_BASE_URL"], branding.logo),
         "brand_text": branding.text,

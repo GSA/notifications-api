@@ -5,10 +5,11 @@ from notifications_python_client.authentication import create_jwt_token
 
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.models import KEY_TYPE_NORMAL, ApiKey
+from app.enums import KeyType
+from app.models import ApiKey
 
 
-def create_service_authorization_header(service_id, key_type=KEY_TYPE_NORMAL):
+def create_service_authorization_header(service_id, key_type=KeyType.NORMAL):
     client_id = str(service_id)
     secrets = ApiKey.query.filter_by(service_id=service_id, key_type=key_type).all()
 

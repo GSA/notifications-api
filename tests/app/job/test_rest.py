@@ -9,7 +9,7 @@ from freezegun import freeze_time
 
 import app.celery.tasks
 from app.dao.templates_dao import dao_update_template
-from app.models import JOB_STATUS_PENDING, JOB_STATUS_TYPES
+from app.enums import JobStatus
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_ft_notification_status,
@@ -782,11 +782,11 @@ def test_get_jobs_accepts_page_parameter(admin_request, sample_template):
 @pytest.mark.parametrize(
     "statuses_filter, expected_statuses",
     [
-        ("", JOB_STATUS_TYPES),
-        ("pending", [JOB_STATUS_PENDING]),
+        ("", JobStatus.TYPES),
+        ("pending", [JobStatus.PENDING]),
         (
             "pending, in progress, finished, sending limits exceeded, scheduled, cancelled, ready to send, sent to dvla, error",  # noqa
-            JOB_STATUS_TYPES,
+            JobStatus.TYPES,
         ),
         # bad statuses are accepted, just return no data
         ("foo", []),

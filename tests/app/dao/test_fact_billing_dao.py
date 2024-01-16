@@ -21,7 +21,8 @@ from app.dao.fact_billing_dao import (
     query_organization_sms_usage_for_year,
 )
 from app.dao.organization_dao import dao_add_service_to_organization
-from app.models import NOTIFICATION_STATUS_TYPES, FactBilling
+from app.enums import NotificationStatus
+from app.models import FactBilling
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -301,7 +302,7 @@ def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session
     service = create_service()
     sms_template = create_template(service=service, template_type="sms")
     email_template = create_template(service=service, template_type="email")
-    for status in NOTIFICATION_STATUS_TYPES:
+    for status in NotificationStatus:
         create_notification(template=sms_template, status=status)
         create_notification(template=email_template, status=status)
     today = datetime.utcnow()

@@ -4,7 +4,7 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.models import ServicePermissionType
+from app.enums import ServicePermissionType
 from app.utils import (
     format_sequential_number,
     get_midnight_for_day_before,

@@ -7,10 +7,8 @@ from app.dao.notifications_dao import (
     insert_notification_history_delete_notifications,
     move_notifications_to_notification_history,
 )
+from app.enums import KeyType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
     Notification,
     NotificationHistory,
 )
@@ -137,13 +135,13 @@ def test_move_notifications_just_deletes_test_key_notifications(sample_template)
     delete_time = datetime(2020, 6, 1, 12)
     one_second_before = delete_time - timedelta(seconds=1)
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KEY_TYPE_NORMAL
+        template=sample_template, created_at=one_second_before, key_type=KeyType.NORMAL
     )
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KEY_TYPE_TEAM
+        template=sample_template, created_at=one_second_before, key_type=KeyType.TEAM
     )
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KEY_TYPE_TEST
+        template=sample_template, created_at=one_second_before, key_type=KeyType.TEST
     )
 
     result = move_notifications_to_notification_history(
@@ -156,7 +154,7 @@ def test_move_notifications_just_deletes_test_key_notifications(sample_template)
     assert NotificationHistory.query.count() == 2
     assert (
         NotificationHistory.query.filter(
-            NotificationHistory.key_type == KEY_TYPE_TEST
+            NotificationHistory.key_type == KeyType.TEST
         ).count()
         == 0
     )

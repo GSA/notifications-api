@@ -14,22 +14,17 @@ from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import dao_add_user_to_service, dao_remove_user_from_service
 from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
+from app.enums import KeyType, ServicePermissionType, TemplateType, NotificationType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
     AnnualBilling,
     EmailBranding,
     InboundNumber,
     Notification,
-    NotificationType,
     Permission,
     Service,
     ServiceEmailReplyTo,
     ServicePermission,
-    ServicePermissionType,
     ServiceSmsSender,
-    TemplateType,
     User,
 )
 from tests import create_admin_authorization_header
@@ -1882,7 +1877,7 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
     mock_s3.return_value = "1"
 
     # notification from_test_api_key
-    create_notification(sample_template, key_type=KEY_TYPE_TEST)
+    create_notification(sample_template, key_type=KeyType.TEST)
 
     auth_header = create_admin_authorization_header()
 
@@ -2081,7 +2076,7 @@ def test_get_services_with_detailed_flag(client, sample_template):
     notifications = [
         create_notification(sample_template),
         create_notification(sample_template),
-        create_notification(sample_template, key_type=KEY_TYPE_TEST),
+        create_notification(sample_template, key_type=KeyType.TEST),
     ]
     resp = client.get(
         "/service?detailed=True", headers=[create_admin_authorization_header()]
@@ -2101,11 +2096,11 @@ def test_get_services_with_detailed_flag(client, sample_template):
 def test_get_services_with_detailed_flag_excluding_from_test_key(
     client, sample_template
 ):
-    create_notification(sample_template, key_type=KEY_TYPE_NORMAL)
-    create_notification(sample_template, key_type=KEY_TYPE_TEAM)
-    create_notification(sample_template, key_type=KEY_TYPE_TEST)
-    create_notification(sample_template, key_type=KEY_TYPE_TEST)
-    create_notification(sample_template, key_type=KEY_TYPE_TEST)
+    create_notification(sample_template, key_type=KeyType.NORMAL)
+    create_notification(sample_template, key_type=KeyType.TEAM)
+    create_notification(sample_template, key_type=KeyType.TEST)
+    create_notification(sample_template, key_type=KeyType.TEST)
+    create_notification(sample_template, key_type=KeyType.TEST)
 
     resp = client.get(
         "/service?detailed=True&include_from_test_key=False",

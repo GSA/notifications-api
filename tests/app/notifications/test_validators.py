@@ -5,12 +5,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import templates_dao
-from app.models import (
-    KEY_TYPE_NORMAL,
-    NotificationType,
-    ServicePermissionType,
-    TemplateType,
-)
+from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
 from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
@@ -783,6 +778,6 @@ def test_check_service_over_total_message_limit(mocker, sample_service):
     get_redis_mock = mocker.patch("app.notifications.validators.redis_store.get")
     get_redis_mock.return_value = None
     service_stats = check_service_over_total_message_limit(
-        KEY_TYPE_NORMAL, sample_service
+        KeyType.NORMAL, sample_service
     )
     assert service_stats == 0

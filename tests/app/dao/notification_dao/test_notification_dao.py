@@ -28,19 +28,8 @@ from app.dao.notifications_dao import (
     update_notification_status_by_id,
     update_notification_status_by_reference,
 )
-from app.models import (
-    JOB_STATUS_IN_PROGRESS,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_SENT,
-    NOTIFICATION_STATUS_TYPES,
-    Job,
-    Notification,
-    NotificationHistory,
-    NotificationType,
-)
+from app.enums import JobStatus, KeyType, NotificationStatus, NotificationType
+from app.models import Job, Notification, NotificationHistory
 from tests.app.db import (
     create_ft_notification_status,
     create_job,
@@ -139,13 +128,13 @@ def test_should_not_update_status_by_reference_if_from_country_with_no_delivery_
     sample_template,
 ):
     notification = create_notification(
-        sample_template, status=NOTIFICATION_SENT, reference="foo"
+        sample_template, status=NotificationStatus.SENT, reference="foo"
     )
 
     res = update_notification_status_by_reference("foo", "failed")
 
     assert res is None
-    assert notification.status == NOTIFICATION_SENT
+    assert notification.status == NotificationStatus.SENT
 
 
 def test_should_not_update_status_by_id_if_sent_to_country_with_unknown_delivery_receipts(
@@ -153,7 +142,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_unknown_delivery
 ):
     notification = create_notification(
         sample_template,
-        status=NOTIFICATION_SENT,
+        status=NotificationStatus.SENT,
         international=True,
         phone_prefix="249",  # sudan has no delivery receipts (or at least, that we know about)
     )
@@ -161,7 +150,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_unknown_delivery
     res = update_notification_status_by_id(notification.id, "delivered")
 
     assert res is None
-    assert notification.status == NOTIFICATION_SENT
+    assert notification.status == NotificationStatus.SENT
 
 
 def test_should_not_update_status_by_id_if_sent_to_country_with_carrier_delivery_receipts(
@@ -169,7 +158,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_carrier_delivery
 ):
     notification = create_notification(
         sample_template,
-        status=NOTIFICATION_SENT,
+        status=NotificationStatus.SENT,
         international=True,
         phone_prefix="1",  # americans only have carrier delivery receipts
     )
@@ -177,7 +166,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_carrier_delivery
     res = update_notification_status_by_id(notification.id, "delivered")
 
     assert res is None
-    assert notification.status == NOTIFICATION_SENT
+    assert notification.status == NotificationStatus.SENT
 
 
 def test_should_not_update_status_by_id_if_sent_to_country_with_delivery_receipts(
@@ -185,7 +174,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_delivery_receipt
 ):
     notification = create_notification(
         sample_template,
-        status=NOTIFICATION_SENT,
+        status=NotificationStatus.SENT,
         international=True,
         phone_prefix="7",  # russians have full delivery receipts
     )
@@ -193,7 +182,7 @@ def test_should_not_update_status_by_id_if_sent_to_country_with_delivery_receipt
     res = update_notification_status_by_id(notification.id, "delivered")
 
     assert res == notification
-    assert notification.status == NOTIFICATION_DELIVERED
+    assert notification.status == NotificationStatus.DELIVERED
 
 
 def test_should_not_update_status_by_reference_if_not_sending(sample_template):
@@ -540,15 +529,15 @@ def test_get_all_notifications_for_job_by_status(sample_job):
         get_notifications_for_job, sample_job.service.id, sample_job.id
     )
 
-    for status in NOTIFICATION_STATUS_TYPES:
+    for status in NotificationStatus:
         create_notification(template=sample_job.template, job=sample_job, status=status)
 
-    # assert len(notifications().items) == len(NOTIFICATION_STATUS_TYPES)
+    # assert len(notifications().items) == len(NotificationStatus)
 
     assert len(notifications(filter_dict={"status": status}).items) == 1
 
     assert (
-        len(notifications(filter_dict={"status": NOTIFICATION_STATUS_TYPES[:3]}).items)
+        len(notifications(filter_dict={"status": NotificationStatus[:3]}).items)
         == 3
     )
 
@@ -681,7 +670,7 @@ def _notification_json(sample_template, job_id=None, id=None, status=None):
         "created_at": datetime.utcnow(),
         "billable_units": 1,
         "notification_type": sample_template.template_type,
-        "key_type": KEY_TYPE_NORMAL,
+        "key_type": KeyType.NORMAL,
     }
     if job_id:
         data.update({"job_id": job_id})
@@ -861,13 +850,13 @@ def test_get_notifications_with_a_live_api_key_type(
 
     # only those created with normal API key, no jobs
     all_notifications = get_notifications_for_service(
-        sample_job.service.id, limit_days=1, key_type=KEY_TYPE_NORMAL
+        sample_job.service.id, limit_days=1, key_type=KeyType.NORMAL
     ).items
     assert len(all_notifications) == 1
 
     # only those created with normal API key, with jobs
     all_notifications = get_notifications_for_service(
-        sample_job.service.id, limit_days=1, include_jobs=True, key_type=KEY_TYPE_NORMAL
+        sample_job.service.id, limit_days=1, include_jobs=True, key_type=KeyType.NORMAL
     ).items
     assert len(all_notifications) == 2
 
@@ -899,13 +888,13 @@ def test_get_notifications_with_a_test_api_key_type(
 
     # only those created with test API key, no jobs
     all_notifications = get_notifications_for_service(
-        sample_job.service_id, limit_days=1, key_type=KEY_TYPE_TEST
+        sample_job.service_id, limit_days=1, key_type=KeyType.TEST
     ).items
     assert len(all_notifications) == 1
 
     # only those created with test API key, no jobs, even when requested
     all_notifications = get_notifications_for_service(
-        sample_job.service_id, limit_days=1, include_jobs=True, key_type=KEY_TYPE_TEST
+        sample_job.service_id, limit_days=1, include_jobs=True, key_type=KeyType.TEST
     ).items
     assert len(all_notifications) == 1
 
@@ -937,13 +926,13 @@ def test_get_notifications_with_a_team_api_key_type(
 
     # only those created with team API key, no jobs
     all_notifications = get_notifications_for_service(
-        sample_job.service_id, limit_days=1, key_type=KEY_TYPE_TEAM
+        sample_job.service_id, limit_days=1, key_type=KeyType.TEAM
     ).items
     assert len(all_notifications) == 1
 
     # only those created with team API key, no jobs, even when requested
     all_notifications = get_notifications_for_service(
-        sample_job.service_id, limit_days=1, include_jobs=True, key_type=KEY_TYPE_TEAM
+        sample_job.service_id, limit_days=1, include_jobs=True, key_type=KeyType.TEAM
     ).items
     assert len(all_notifications) == 1
 
@@ -988,7 +977,7 @@ def test_should_exclude_test_key_notifications_by_default(
     assert len(all_notifications) == 3
 
     all_notifications = get_notifications_for_service(
-        sample_job.service_id, limit_days=1, key_type=KEY_TYPE_TEST
+        sample_job.service_id, limit_days=1, key_type=KeyType.TEST
     ).items
     assert len(all_notifications) == 1
 
@@ -1006,7 +995,7 @@ def test_dao_get_notifications_by_recipient(sample_template):
         template=sample_template, **recipient_to_search_for
     )
     create_notification(
-        template=sample_template, key_type=KEY_TYPE_TEST, **recipient_to_search_for
+        template=sample_template, key_type=KeyType.TEST, **recipient_to_search_for
     )
     create_notification(
         template=sample_template,
@@ -1538,7 +1527,7 @@ def test_dao_get_last_notification_added_for_job_id_valid_job_id(sample_template
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     create_notification(sample_template, job, 0)
     create_notification(sample_template, job, 1)
@@ -1554,7 +1543,7 @@ def test_dao_get_last_notification_added_for_job_id_no_notifications(sample_temp
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
 
     assert dao_get_last_notification_added_for_job_id(job.id) is None

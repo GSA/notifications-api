@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
-from app.models import JOB_STATUS_IN_PROGRESS, TemplateType
+from app.enums import JobStatus, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -89,13 +89,13 @@ def test_get_uploads_orders_by_processing_started_desc(sample_template):
         sample_template,
         processing_started=datetime.utcnow() - timedelta(days=1),
         created_at=days_ago,
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     upload_2 = create_job(
         sample_template,
         processing_started=datetime.utcnow() - timedelta(days=2),
         created_at=days_ago,
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
 
     results = dao_get_uploads_by_service_id(service_id=sample_template.service_id).items

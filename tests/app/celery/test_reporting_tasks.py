@@ -13,14 +13,11 @@ from app.celery.reporting_tasks import (
 )
 from app.config import QueueNames
 from app.dao.fact_billing_dao import get_rate
+from app.enums import NotificationType, KeyType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
     FactBilling,
     FactNotificationStatus,
     Notification,
-    NotificationType,
 )
 from tests.app.db import (
     create_notification,
@@ -431,12 +428,12 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
 
         # team API key notifications are included
         create_notification(
-            template=second_template, status="sending", key_type=KEY_TYPE_TEAM
+            template=second_template, status="sending", key_type=KeyType.TEAM
         )
 
         # test notifications are ignored
         create_notification(
-            template=second_template, status="sending", key_type=KEY_TYPE_TEST
+            template=second_template, status="sending", key_type=KeyType.TEST
         )
 
         # historical notifications are included
@@ -471,7 +468,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_delivered_row.notification_type == "email"
     assert email_delivered_row.notification_status == "delivered"
     assert email_delivered_row.notification_count == 1
-    assert email_delivered_row.key_type == KEY_TYPE_NORMAL
+    assert email_delivered_row.key_type == KeyType.NORMAL
 
     email_sending_row = new_fact_data[1]
     assert email_sending_row.template_id == second_template.id
@@ -479,7 +476,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_sending_row.notification_type == "email"
     assert email_sending_row.notification_status == "failed"
     assert email_sending_row.notification_count == 1
-    assert email_sending_row.key_type == KEY_TYPE_NORMAL
+    assert email_sending_row.key_type == KeyType.NORMAL
 
     email_failure_row = new_fact_data[2]
     assert email_failure_row.local_date == process_day
@@ -489,7 +486,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert email_failure_row.notification_type == "email"
     assert email_failure_row.notification_status == "sending"
     assert email_failure_row.notification_count == 1
-    assert email_failure_row.key_type == KEY_TYPE_TEAM
+    assert email_failure_row.key_type == KeyType.TEAM
 
     sms_delivered_row = new_fact_data[3]
     assert sms_delivered_row.template_id == first_template.id
@@ -497,7 +494,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert sms_delivered_row.notification_type == "sms"
     assert sms_delivered_row.notification_status == "delivered"
     assert sms_delivered_row.notification_count == 1
-    assert sms_delivered_row.key_type == KEY_TYPE_NORMAL
+    assert sms_delivered_row.key_type == KeyType.NORMAL
 
 
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(

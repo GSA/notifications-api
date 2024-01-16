@@ -17,18 +17,8 @@ from app.dao.fact_notification_status_dao import (
     get_total_notifications_for_date_range,
     update_fact_notification_status,
 )
+from app.enums import KeyType, NotificationStatus
 from app.models import (
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     NotificationType,
     TemplateType,
@@ -63,7 +53,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     create_ft_notification_status(date(2018, 1, 3), "sms", service_2)
     # not included - test keys
     create_ft_notification_status(
-        date(2018, 1, 3), "sms", service_1, key_type=KEY_TYPE_TEST
+        date(2018, 1, 3), "sms", service_1, key_type=KeyType.TEST
     )
 
     results = sorted(
@@ -118,7 +108,7 @@ def test_fetch_notification_status_for_service_for_day(notify_db_session):
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 6, 1, 12, 0, 0),
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     create_notification(
         service_1.templates[0],
@@ -130,7 +120,7 @@ def test_fetch_notification_status_for_service_for_day(notify_db_session):
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 6, 1, 12, 0, 0),
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
 
     # wrong service
@@ -638,69 +628,69 @@ def test_fetch_monthly_notification_statuses_per_service(notify_db_session):
         date(2019, 4, 30),
         notification_type="sms",
         service=service_one,
-        notification_status=NOTIFICATION_DELIVERED,
+        notification_status=NotificationStatus.DELIVERED,
     )
     create_ft_notification_status(
         date(2019, 3, 1),
         notification_type="email",
         service=service_one,
-        notification_status=NOTIFICATION_SENDING,
+        notification_status=NotificationStatus.SENDING,
         count=4,
     )
     create_ft_notification_status(
         date(2019, 3, 1),
         notification_type="email",
         service=service_one,
-        notification_status=NOTIFICATION_PENDING,
+        notification_status=NotificationStatus.PENDING,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 2),
         notification_type="email",
         service=service_one,
-        notification_status=NOTIFICATION_TECHNICAL_FAILURE,
+        notification_status=NotificationStatus.TECHNICAL_FAILURE,
         count=2,
     )
     create_ft_notification_status(
         date(2019, 3, 7),
         notification_type="email",
         service=service_one,
-        notification_status=NOTIFICATION_FAILED,
+        notification_status=NotificationStatus.FAILED,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 10),
         notification_type="sms",
         service=service_two,
-        notification_status=NOTIFICATION_PERMANENT_FAILURE,
+        notification_status=NotificationStatus.PERMANENT_FAILURE,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 10),
         notification_type="sms",
         service=service_two,
-        notification_status=NOTIFICATION_PERMANENT_FAILURE,
+        notification_status=NotificationStatus.PERMANENT_FAILURE,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 13),
         notification_type="sms",
         service=service_one,
-        notification_status=NOTIFICATION_SENT,
+        notification_status=NotificationStatus.SENT,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 4, 1),
         notification_type="sms",
         service=service_two,
-        notification_status=NOTIFICATION_TEMPORARY_FAILURE,
+        notification_status=NotificationStatus.TEMPORARY_FAILURE,
         count=10,
     )
     create_ft_notification_status(
         date(2019, 3, 31),
         notification_type="sms",
         service=service_one,
-        notification_status=NOTIFICATION_DELIVERED,
+        notification_status=NotificationStatus.DELIVERED,
     )
 
     results = fetch_monthly_notification_statuses_per_service(
@@ -784,13 +774,13 @@ def test_fetch_monthly_notification_statuses_per_service_for_rows_that_should_be
     create_ft_notification_status(
         date(2019, 3, 15),
         service=valid_service,
-        notification_status=NOTIFICATION_CREATED,
+        notification_status=NotificationStatus.CREATED,
     )
     # notification created by inactive service
     create_ft_notification_status(date(2019, 3, 15), service=inactive_service)
     # notification created with test key
     create_ft_notification_status(
-        date(2019, 3, 12), service=valid_service, key_type=KEY_TYPE_TEST
+        date(2019, 3, 12), service=valid_service, key_type=KeyType.TEST
     )
     # notification created by trial mode service
     create_ft_notification_status(date(2019, 3, 19), service=restricted_service)

@@ -12,7 +12,8 @@ from app.celery.test_key_tasks import (
     sns_callback,
 )
 from app.config import QueueNames
-from app.models import NOTIFICATION_DELIVERED, NOTIFICATION_FAILED, Notification
+from app.enums import NotificationStatus
+from app.models import Notification
 from tests.conftest import Matcher
 
 dvla_response_file_matcher = Matcher(
@@ -28,7 +29,7 @@ def test_make_sns_callback(notify_api, rmock, mocker):
     )
     n = Notification()
     n.id = 1234
-    n.status = NOTIFICATION_DELIVERED
+    n.status = NotificationStatus.DELIVERED
     get_notification_by_id.return_value = n
     rmock.request("POST", endpoint, json={"status": "success"}, status_code=200)
     send_sms_response("sns", "1234")
@@ -45,7 +46,7 @@ def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
     )
     n = Notification()
     n.id = 1234
-    n.status = NOTIFICATION_FAILED
+    n.status = NotificationStatus.FAILED
     get_notification_by_id.return_value = n
 
     rmock.request(
@@ -81,7 +82,7 @@ def test_delivered_sns_callback(mocker):
     )
     n = Notification()
     n.id = 1234
-    n.status = NOTIFICATION_DELIVERED
+    n.status = NotificationStatus.DELIVERED
     get_notification_by_id.return_value = n
 
     data = json.loads(sns_callback("1234"))

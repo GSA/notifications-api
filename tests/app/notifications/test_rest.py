@@ -8,7 +8,8 @@ from notifications_python_client.authentication import create_jwt_token
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.templates_dao import dao_update_template
-from app.models import KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST, ApiKey
+from app.enums import KeyType
+from app.models import ApiKey
 from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
@@ -80,12 +81,12 @@ def test_get_notifications_empty_result(client, sample_api_key):
 @pytest.mark.parametrize(
     "api_key_type,notification_key_type",
     [
-        (KEY_TYPE_NORMAL, KEY_TYPE_TEAM),
-        (KEY_TYPE_NORMAL, KEY_TYPE_TEST),
-        (KEY_TYPE_TEST, KEY_TYPE_NORMAL),
-        (KEY_TYPE_TEST, KEY_TYPE_TEAM),
-        (KEY_TYPE_TEAM, KEY_TYPE_NORMAL),
-        (KEY_TYPE_TEAM, KEY_TYPE_TEST),
+        (KeyType.NORMAL, KeyType.TEAM),
+        (KeyType.NORMAL, KeyType.TEST),
+        (KeyType.TEST, KeyType.NORMAL),
+        (KeyType.TEST, KeyType.TEAM),
+        (KeyType.TEAM, KeyType.NORMAL),
+        (KeyType.TEAM, KeyType.TEST),
     ],
 )
 def test_get_notification_from_different_api_key_works(
@@ -107,7 +108,7 @@ def test_get_notification_from_different_api_key_works(
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM, KeyType.TEST])
 def test_get_notification_from_different_api_key_of_same_type_succeeds(
     client, sample_notification, key_type
 ):
@@ -190,7 +191,7 @@ def test_normal_api_key_returns_notifications_created_from_jobs_and_from_api(
     }
 
 
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM, KeyType.TEST])
 def test_get_all_notifications_only_returns_notifications_of_matching_type(
     client,
     sample_template,
@@ -200,19 +201,19 @@ def test_get_all_notifications_only_returns_notifications_of_matching_type(
     key_type,
 ):
     normal_notification = create_notification(
-        sample_template, api_key=sample_api_key, key_type=KEY_TYPE_NORMAL
+        sample_template, api_key=sample_api_key, key_type=KeyType.NORMAL
     )
     team_notification = create_notification(
-        sample_template, api_key=sample_team_api_key, key_type=KEY_TYPE_TEAM
+        sample_template, api_key=sample_team_api_key, key_type=KeyType.TEAM
     )
     test_notification = create_notification(
-        sample_template, api_key=sample_test_api_key, key_type=KEY_TYPE_TEST
+        sample_template, api_key=sample_test_api_key, key_type=KeyType.TEST
     )
 
     notification_objs = {
-        KEY_TYPE_NORMAL: normal_notification,
-        KEY_TYPE_TEAM: team_notification,
-        KEY_TYPE_TEST: test_notification,
+        KeyType.NORMAL: normal_notification,
+        KeyType.TEAM: team_notification,
+        KeyType.TEST: test_notification,
     }
 
     response = client.get(
@@ -227,13 +228,13 @@ def test_get_all_notifications_only_returns_notifications_of_matching_type(
     assert notifications[0]["id"] == str(notification_objs[key_type].id)
 
 
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM, KEY_TYPE_TEST])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM, KeyType.TEST])
 def test_do_not_return_job_notifications_by_default(
     client, sample_template, sample_job, key_type
 ):
-    team_api_key = create_api_key(sample_template.service, KEY_TYPE_TEAM)
-    normal_api_key = create_api_key(sample_template.service, KEY_TYPE_NORMAL)
-    test_api_key = create_api_key(sample_template.service, KEY_TYPE_TEST)
+    team_api_key = create_api_key(sample_template.service, KeyType.TEAM)
+    normal_api_key = create_api_key(sample_template.service, KeyType.NORMAL)
+    test_api_key = create_api_key(sample_template.service, KeyType.TEST)
 
     create_notification(sample_template, job=sample_job)
     normal_notification = create_notification(sample_template, api_key=normal_api_key)
@@ -241,9 +242,9 @@ def test_do_not_return_job_notifications_by_default(
     test_notification = create_notification(sample_template, api_key=test_api_key)
 
     notification_objs = {
-        KEY_TYPE_NORMAL: normal_notification,
-        KEY_TYPE_TEAM: team_notification,
-        KEY_TYPE_TEST: test_notification,
+        KeyType.NORMAL: normal_notification,
+        KeyType.TEAM: team_notification,
+        KeyType.TEST: test_notification,
     }
 
     response = client.get(
@@ -259,7 +260,7 @@ def test_do_not_return_job_notifications_by_default(
 
 
 @pytest.mark.parametrize(
-    "key_type", [(KEY_TYPE_NORMAL, 2), (KEY_TYPE_TEAM, 1), (KEY_TYPE_TEST, 1)]
+    "key_type", [(KeyType.NORMAL, 2), (KeyType.TEAM, 1), (KeyType.TEST, 1)]
 )
 def test_only_normal_api_keys_can_return_job_notifications(
     client,
@@ -271,19 +272,19 @@ def test_only_normal_api_keys_can_return_job_notifications(
     key_type,
 ):
     normal_notification = create_notification(
-        template=sample_template, api_key=sample_api_key, key_type=KEY_TYPE_NORMAL
+        template=sample_template, api_key=sample_api_key, key_type=KeyType.NORMAL
     )
     team_notification = create_notification(
-        template=sample_template, api_key=sample_team_api_key, key_type=KEY_TYPE_TEAM
+        template=sample_template, api_key=sample_team_api_key, key_type=KeyType.TEAM
     )
     test_notification = create_notification(
-        template=sample_template, api_key=sample_test_api_key, key_type=KEY_TYPE_TEST
+        template=sample_template, api_key=sample_test_api_key, key_type=KeyType.TEST
     )
 
     notification_objs = {
-        KEY_TYPE_NORMAL: normal_notification,
-        KEY_TYPE_TEAM: team_notification,
-        KEY_TYPE_TEST: test_notification,
+        KeyType.NORMAL: normal_notification,
+        KeyType.TEAM: team_notification,
+        KeyType.TEST: test_notification,
     }
 
     response = client.get(

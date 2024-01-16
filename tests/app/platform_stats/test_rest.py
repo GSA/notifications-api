@@ -4,7 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from app.errors import InvalidRequest
-from app.models import TemplateType
+from app.enums import TemplateType
 from app.platform_stats.rest import validate_date_range_is_within_a_financial_year
 from tests.app.db import (
     create_ft_billing,

@@ -52,7 +52,7 @@ class NotificationStatus(Enum):
     VIRUS_SCAN_FAILED = "virus-scan-failed"
 
     @property
-    def failed(self) -> tuple["NotificationStatus", ...]:
+    def failed_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (
             cls.TECHNICAL_FAILURE,
@@ -63,7 +63,7 @@ class NotificationStatus(Enum):
         )
 
     @property
-    def completed(self) -> tuple["NotificationStatus", ...]:
+    def completed_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (
             cls.SENT,
@@ -76,12 +76,12 @@ class NotificationStatus(Enum):
         )
 
     @property
-    def success(self) -> tuple["NotificationStatus", ...]:
+    def success_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (cls.SENT, cls.DELIVERED)
 
     @property
-    def billable(self) -> tuple["NotificationStatus", ...]:
+    def billable_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (
             cls.SENDING,
@@ -94,7 +94,7 @@ class NotificationStatus(Enum):
         )
 
     @property
-    def billable_sms(self) -> tuple["NotificationStatus", ...]:
+    def billable_sms_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (
             cls.SENDING,
@@ -106,7 +106,7 @@ class NotificationStatus(Enum):
         )
 
     @property
-    def sent_emails(self) -> tuple["NotificationStatus", ...]:
+    def sent_email_types(self) -> tuple["NotificationStatus", ...]:
         cls = type(self)
         return (
             cls.SENDING,
@@ -116,7 +116,7 @@ class NotificationStatus(Enum):
         )
 
     @property
-    def non_billable(self) -> tuple["NotificationStatus", ...]:
+    def non_billable_types(self) -> tuple["NotificationStatus", ...]:
         self._non_billable: tuple["NotificationStatus", ...]
         try:
             return self._non_billable

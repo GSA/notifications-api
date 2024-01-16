@@ -4,24 +4,23 @@ import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
-from app import encryption
-from app.models import (
-    NOTIFICATION_CREATED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_STATUS_TYPES_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    Agreement,
+from app.enums import (
+    NotificationStatus,
+    RecipientType,
+    TemplateType,
     AgreementStatus,
     AgreementType,
+)
+
+from app import encryption
+from app.models import (
+    Agreement,
     AnnualBilling,
-    GuestListRecipientType,
     Notification,
     NotificationHistory,
     Service,
     ServiceGuestList,
     ServicePermission,
-    TemplateType,
     User,
     VerifyCode,
     filter_null_value_fields,
@@ -42,7 +41,7 @@ from tests.app.db import (
 @pytest.mark.parametrize("mobile_number", ["+447700900855", "+12348675309"])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", GuestListRecipientType.MOBILE, mobile_number
+        "service_id", RecipientType.MOBILE, mobile_number
     )
 
     assert service_guest_list.recipient == mobile_number
@@ -76,30 +75,37 @@ def test_should_not_build_service_guest_list_from_invalid_contact(
     "initial_statuses, expected_statuses",
     [
         # passing in single statuses as strings
-        (NOTIFICATION_FAILED, NOTIFICATION_STATUS_TYPES_FAILED),
-        (NOTIFICATION_CREATED, [NOTIFICATION_CREATED]),
-        (NOTIFICATION_TECHNICAL_FAILURE, [NOTIFICATION_TECHNICAL_FAILURE]),
+        (NotificationStatus.FAILED, NotificationStatus.failed_types),
+        (NotificationStatus.CREATED, [NotificationStatus.CREATED]),
+        (NotificationStatus.TECHNICAL_FAILURE, [NotificationStatus.TECHNICAL_FAILURE]),
         # passing in lists containing single statuses
-        ([NOTIFICATION_FAILED], NOTIFICATION_STATUS_TYPES_FAILED),
-        ([NOTIFICATION_CREATED], [NOTIFICATION_CREATED]),
-        ([NOTIFICATION_TECHNICAL_FAILURE], [NOTIFICATION_TECHNICAL_FAILURE]),
+        ([NotificationStatus.FAILED], NotificationStatus.failed_types),
+        ([NotificationStatus.CREATED], [NotificationStatus.CREATED]),
+        (
+            [NotificationStatus.TECHNICAL_FAILURE],
+            [NotificationStatus.TECHNICAL_FAILURE],
+        ),
         # passing in lists containing multiple statuses
         (
-            [NOTIFICATION_FAILED, NOTIFICATION_CREATED],
-            NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_CREATED],
+            [NotificationStatus.FAILED, NotificationStatus.CREATED],
+            list(NotificationStatus.failed_types) + [NotificationStatus.CREATED],
         ),
         (
-            [NOTIFICATION_CREATED, NOTIFICATION_PENDING],
-            [NOTIFICATION_CREATED, NOTIFICATION_PENDING],
+            [NotificationStatus.CREATED, NotificationStatus.PENDING],
+            [NotificationStatus.CREATED, NotificationStatus.PENDING],
         ),
         (
-            [NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
-            [NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
+            [NotificationStatus.CREATED, NotificationStatus.TECHNICAL_FAILURE],
+            [NotificationStatus.CREATED, NotificationStatus.TECHNICAL_FAILURE],
         ),
         # checking we don't end up with duplicates
         (
-            [NOTIFICATION_FAILED, NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
-            NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_CREATED],
+            [
+                NotificationStatus.FAILED,
+                NotificationStatus.CREATED,
+                NotificationStatus.TECHNICAL_FAILURE,
+            ],
+            list(NotificationStatus.failed_types) + [NotificationStatus.CREATED],
         ),
     ],
 )

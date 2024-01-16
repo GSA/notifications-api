@@ -17,14 +17,10 @@ from app.dao.organization_dao import dao_create_organization
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
+from app.enums import KeyType, NotificationStatus, ServicePermissionType, TemplateType, RecipientType
 from app.history_meta import create_history
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
     ApiKey,
-    GuestListRecipientType,
     InvitedUser,
     Job,
     Notification,
@@ -36,10 +32,8 @@ from app.models import (
     Service,
     ServiceEmailReplyTo,
     ServiceGuestList,
-    ServicePermissionType,
     Template,
     TemplateHistory,
-    TemplateType,
 )
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -77,7 +71,7 @@ def create_sample_notification(
     billable_units=1,
     personalisation=None,
     api_key=None,
-    key_type=KEY_TYPE_NORMAL,
+    key_type=KeyType.NORMAL,
     sent_by=None,
     international=False,
     client_reference=None,
@@ -129,7 +123,7 @@ def create_sample_notification(
         "key_type": api_key.key_type if api_key else key_type,
         "sent_by": sent_by,
         "updated_at": created_at
-        if status in NOTIFICATION_STATUS_TYPES_COMPLETED
+        if status in NotificationStatus.completed_types
         else None,
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
@@ -345,7 +339,7 @@ def sample_api_key(notify_db_session):
         "service": service,
         "name": uuid.uuid4(),
         "created_by": service.created_by,
-        "key_type": KEY_TYPE_NORMAL,
+        "key_type": KeyType.NORMAL,
     }
     api_key = ApiKey(**data)
     save_model_api_key(api_key)
@@ -356,14 +350,14 @@ def sample_api_key(notify_db_session):
 def sample_test_api_key(sample_api_key):
     service = create_service(check_if_service_exists=True)
 
-    return create_api_key(service, key_type=KEY_TYPE_TEST)
+    return create_api_key(service, key_type=KeyType.TEST)
 
 
 @pytest.fixture(scope="function")
 def sample_team_api_key(sample_api_key):
     service = create_service(check_if_service_exists=True)
 
-    return create_api_key(service, key_type=KEY_TYPE_TEAM)
+    return create_api_key(service, key_type=KeyType.TEAM)
 
 
 @pytest.fixture(scope="function")
@@ -426,7 +420,7 @@ def sample_notification_with_job(notify_db_session):
         billable_units=1,
         personalisation=None,
         api_key=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
     )
 
 
@@ -437,10 +431,10 @@ def sample_notification(notify_db_session):
     template = create_template(service=service)
 
     api_key = ApiKey.query.filter(
-        ApiKey.service == template.service, ApiKey.key_type == KEY_TYPE_NORMAL
+        ApiKey.service == template.service, ApiKey.key_type == KeyType.NORMAL
     ).first()
     if not api_key:
-        api_key = create_api_key(template.service, key_type=KEY_TYPE_NORMAL)
+        api_key = create_api_key(template.service, key_type=KeyType.NORMAL)
 
     notification_id = uuid.uuid4()
     to = "+447700900855"
@@ -504,7 +498,7 @@ def sample_email_notification(notify_db_session):
         "personalisation": None,
         "notification_type": template.template_type,
         "api_key_id": None,
-        "key_type": KEY_TYPE_NORMAL,
+        "key_type": KeyType.NORMAL,
         "job_row_number": 1,
     }
     notification = Notification(**data)
@@ -517,7 +511,7 @@ def sample_notification_history(notify_db_session, sample_template):
     created_at = datetime.utcnow()
     sent_at = datetime.utcnow()
     notification_type = sample_template.template_type
-    api_key = create_api_key(sample_template.service, key_type=KEY_TYPE_NORMAL)
+    api_key = create_api_key(sample_template.service, key_type=KeyType.NORMAL)
 
     notification_history = NotificationHistory(
         id=uuid.uuid4(),
@@ -527,7 +521,7 @@ def sample_notification_history(notify_db_session, sample_template):
         status="created",
         created_at=created_at,
         notification_type=notification_type,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         api_key=api_key,
         api_key_id=api_key and api_key.id,
         sent_at=sent_at,
@@ -844,7 +838,7 @@ def notify_service(notify_db_session, sample_user):
 def sample_service_guest_list(notify_db_session):
     service = create_service(check_if_service_exists=True)
     guest_list_user = ServiceGuestList.from_string(
-        service.id, GuestListRecipientType.EMAIL, "guest_list_user@digital.fake.gov"
+        service.id, RecipientType.EMAIL, "guest_list_user@digital.fake.gov"
     )
 
     notify_db_session.add(guest_list_user)
