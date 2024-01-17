@@ -1846,7 +1846,11 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
     sample_notification,
     sample_notification_with_job,
     sample_template,
+    mocker,
 ):
+    mock_s3 = mocker.patch("app.service.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "1"
+
     # notification from_test_api_key
     create_notification(sample_template, key_type=KEY_TYPE_TEST)
 
