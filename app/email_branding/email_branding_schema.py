@@ -1,4 +1,4 @@
-from app.models import BRANDING_TYPES
+from app.enums import BrandType
 
 post_create_email_branding_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -9,7 +9,7 @@ post_create_email_branding_schema = {
         "name": {"type": "string"},
         "text": {"type": ["string", "null"]},
         "logo": {"type": ["string", "null"]},
-        "brand_type": {"enum": BRANDING_TYPES},
+        "brand_type": {"enum": [e.value for e in BrandType]},
     },
     "required": ["name"],
 }
@@ -23,7 +23,7 @@ post_update_email_branding_schema = {
         "name": {"type": ["string", "null"]},
         "text": {"type": ["string", "null"]},
         "logo": {"type": ["string", "null"]},
-        "brand_type": {"enum": BRANDING_TYPES},
+        "brand_type": {"enum": [e.value for e in BrandType]},
     },
     "required": [],
 }

@@ -13,7 +13,7 @@ from marshmallow import (
     validates,
     validates_schema,
 )
-from marshmallow_sqlalchemy import field_for
+from marshmallow_sqlalchemy import auto_field, field_for
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -464,7 +464,7 @@ class JobSchema(BaseSchema):
     processing_started = FlexibleDateTime()
     processing_finished = FlexibleDateTime()
 
-    job_status = field_for(models.JobStatus, "name", required=False)
+    job_status = auto_field()
 
     scheduled_for = FlexibleDateTime()
     service_name = fields.Nested(

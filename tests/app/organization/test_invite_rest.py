@@ -5,7 +5,8 @@ from flask import current_app, json
 from freezegun import freeze_time
 from notifications_utils.url_safe_token import generate_token
 
-from app.models import INVITE_PENDING, Notification
+from app.enums import InvitedUserStatus
+from app.models import Notification
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_org_user
 
@@ -56,7 +57,7 @@ def test_create_invited_org_user(
     assert json_resp["data"]["organization"] == str(sample_organization.id)
     assert json_resp["data"]["email_address"] == email_address
     assert json_resp["data"]["invited_by"] == str(sample_user.id)
-    assert json_resp["data"]["status"] == INVITE_PENDING
+    assert json_resp["data"]["status"] == InvitedUserStatus.PENDING
     assert json_resp["data"]["id"]
 
     notification = Notification.query.first()

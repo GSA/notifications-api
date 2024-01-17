@@ -24,8 +24,9 @@ from app.dao.users_dao import (
     update_user_password,
     user_can_be_archived,
 )
+from app.enums import AuthType
 from app.errors import InvalidRequest
-from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
+from app.models import User, VerifyCode
 from tests.app.db import (
     create_permissions,
     create_service,
@@ -229,7 +230,7 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     assert sample_user.get_permissions() == {}
     assert sample_user.services == []
     assert sample_user.organizations == []
-    assert sample_user.auth_type == EMAIL_AUTH_TYPE
+    assert sample_user.auth_type == AuthType.EMAIL
     assert sample_user.email_address == "_archived_2018-07-07_notify@digital.fake.gov"
     assert sample_user.mobile_number is None
     assert sample_user.current_session_id == uuid.UUID(

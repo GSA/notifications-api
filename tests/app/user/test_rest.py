@@ -7,7 +7,6 @@ import pytest
 from flask import current_app
 from freezegun import freeze_time
 
-from app.dao.permissions_dao import default_service_permissions
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.enums import AuthType, PermissionType
 from app.models import Notification, Permission, User
@@ -28,7 +27,7 @@ def test_get_user_list(admin_request, sample_service):
     # it may have the notify user in the DB still :weary:
     assert len(json_resp["data"]) >= 1
     sample_user = sample_service.users[0]
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = next(x for x in json_resp["data"] if x["id"] == str(sample_user.id))
 
     assert sample_user.name == fetched["name"]
@@ -56,7 +55,7 @@ def test_get_user(admin_request, sample_service, sample_organization):
     sample_user.organizations = [sample_organization]
     json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = json_resp["data"]
 
     assert fetched["id"] == str(sample_user.id)
@@ -376,7 +375,7 @@ def test_get_user_by_email(admin_request, sample_service):
 
     json_resp = admin_request.get("user.get_by_email", email=sample_user.email_address)
 
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = json_resp["data"]
 
     assert str(sample_user.id) == fetched["id"]
