@@ -20,15 +20,22 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
-from app.enums import (  # JobStatusType,; KeyType,; UserAuthType,; TemplateProcessType,
+from app.enums import (
     AgreementStatus,
     AgreementType,
+    AuthType,
+    BrandType,
+    CallbackType,
     CodeType,
     InvitedUserStatus,
+    KeyType,
+    NotificationStatus,
     NotificationType,
+    OrganizationType,
     PermissionType,
     RecipientType,
     ServicePermissionType,
+    TemplateProcessType,
     TemplateType,
 )
 from app.hashing import check_hash, hashpw
@@ -38,25 +45,6 @@ from app.utils import (
     DATETIME_FORMAT_NO_TIMEZONE,
     get_dt_string_or_none,
 )
-
-# TODO: Change this
-NORMAL = "normal"
-PRIORITY = "priority"
-TEMPLATE_PROCESS_TYPE = [NORMAL, PRIORITY]
-
-
-# TODO: Change this
-SMS_AUTH_TYPE = "sms_auth"
-EMAIL_AUTH_TYPE = "email_auth"
-WEBAUTHN_AUTH_TYPE = "webauthn_auth"
-USER_AUTH_TYPES = [SMS_AUTH_TYPE, EMAIL_AUTH_TYPE, WEBAUTHN_AUTH_TYPE]
-
-
-# TODO: Change this
-DELIVERY_STATUS_CALLBACK_TYPE = "delivery_status"
-COMPLAINT_CALLBACK_TYPE = "complaint"
-SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
-# Need to import ServiceCallbackType from app.enums
 
 
 def filter_null_value_fields(obj):
@@ -117,11 +105,10 @@ class User(db.Model):
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
     auth_type = db.Column(
-        db.String,
-        db.ForeignKey("auth_type.name"),
+        db.Enum(AuthType, name="auth_type"),
         index=True,
         nullable=False,
-        default=SMS_AUTH_TYPE,
+        default=AuthType.SMS,
     )
     email_access_validated_at = db.Column(
         db.DateTime,
@@ -282,19 +269,6 @@ user_folder_permissions = db.Table(
 )
 
 
-# TODO: Change this
-BRANDING_GOVUK = "govuk"  # Deprecated outside migrations
-BRANDING_ORG = "org"
-BRANDING_BOTH = "both"
-BRANDING_ORG_BANNER = "org_banner"
-BRANDING_TYPES = [BRANDING_ORG, BRANDING_BOTH, BRANDING_ORG_BANNER]
-
-
-class BrandingTypes(db.Model):
-    __tablename__ = "branding_type"
-    name = db.Column(db.String(255), primary_key=True)
-
-
 class EmailBranding(db.Model):
     __tablename__ = "email_branding"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -303,11 +277,10 @@ class EmailBranding(db.Model):
     name = db.Column(db.String(255), unique=True, nullable=False)
     text = db.Column(db.String(255), nullable=True)
     brand_type = db.Column(
-        db.String(255),
-        db.ForeignKey("branding_type.name"),
+        db.Enum(BrandType, name="brand_type"),
         index=True,
         nullable=False,
-        default=BRANDING_ORG,
+        default=BrandType.ORG,
     )
 
     def serialize(self):
@@ -354,17 +327,6 @@ class Domain(db.Model):
     )
 
 
-# TODO: Change this
-ORGANIZATION_TYPES = ["federal", "state", "other"]
-
-
-class OrganizationTypes(db.Model):
-    __tablename__ = "organization_types"
-
-    name = db.Column(db.String(255), primary_key=True)
-    annual_free_sms_fragment_limit = db.Column(db.BigInteger, nullable=False)
-
-
 class Organization(db.Model):
     __tablename__ = "organization"
     id = db.Column(
@@ -396,8 +358,7 @@ class Organization(db.Model):
     )
     agreement_signed_version = db.Column(db.Float, nullable=True)
     organization_type = db.Column(
-        db.String(255),
-        db.ForeignKey("organization_types.name"),
+        db.Enum(OrganizationType, name="organization_type"),
         unique=False,
         nullable=True,
     )
@@ -931,8 +892,7 @@ class ServiceCallbackApi(db.Model, Versioned):
     service = db.relationship("Service", backref="service_callback_api")
     url = db.Column(db.String(), nullable=False)
     callback_type = db.Column(
-        db.String(),
-        db.ForeignKey("service_callback_type.name"),
+        db.Enum(CallbackType, name="callback_type"),
         nullable=True,
     )
     _bearer_token = db.Column("bearer_token", db.String(), nullable=False)
@@ -976,12 +936,6 @@ class ServiceCallbackApi(db.Model, Versioned):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class ServiceCallbackType(db.Model):
-    __tablename__ = "service_callback_type"
-
-    name = db.Column(db.String, primary_key=True)
 
 
 class ApiKey(db.Model, Versioned):
@@ -1044,18 +998,6 @@ class ApiKey(db.Model, Versioned):
     def secret(self, secret):
         if secret:
             self._secret = encryption.encrypt(str(secret))
-
-
-# TODO: This needs to be changed
-KEY_TYPE_NORMAL = "normal"
-KEY_TYPE_TEAM = "team"
-KEY_TYPE_TEST = "test"
-
-
-class KeyTypes(db.Model):
-    __tablename__ = "key_types"
-
-    name = db.Column(db.String(255), primary_key=True)
 
 
 class TemplateProcessTypes(db.Model):
@@ -1183,8 +1125,7 @@ class TemplateBase(db.Model):
     @declared_attr
     def process_type(cls):
         return db.Column(
-            db.String(255),
-            db.ForeignKey("template_process_type.name"),
+            db.Enum(TemplateProcessType, name="template_process_type"),
             index=True,
             nullable=False,
             default=NORMAL,
@@ -1528,99 +1469,6 @@ class VerifyCode(db.Model):
         return check_hash(cde, self._code)
 
 
-NOTIFICATION_CANCELLED = "cancelled"
-NOTIFICATION_CREATED = "created"
-NOTIFICATION_SENDING = "sending"
-NOTIFICATION_SENT = "sent"
-NOTIFICATION_DELIVERED = "delivered"
-NOTIFICATION_PENDING = "pending"
-NOTIFICATION_FAILED = "failed"
-NOTIFICATION_TECHNICAL_FAILURE = "technical-failure"
-NOTIFICATION_TEMPORARY_FAILURE = "temporary-failure"
-NOTIFICATION_PERMANENT_FAILURE = "permanent-failure"
-NOTIFICATION_PENDING_VIRUS_CHECK = "pending-virus-check"
-NOTIFICATION_VALIDATION_FAILED = "validation-failed"
-NOTIFICATION_VIRUS_SCAN_FAILED = "virus-scan-failed"
-
-NOTIFICATION_STATUS_TYPES_FAILED = [
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_VALIDATION_FAILED,
-    NOTIFICATION_VIRUS_SCAN_FAILED,
-]
-
-NOTIFICATION_STATUS_TYPES_COMPLETED = [
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_CANCELLED,
-]
-
-NOTIFICATION_STATUS_SUCCESS = [NOTIFICATION_SENT, NOTIFICATION_DELIVERED]
-
-NOTIFICATION_STATUS_TYPES_BILLABLE = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,  # internationally
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-# we don't really have a concept of billable emails - however the ft billing table only includes emails that we have
-# actually sent.
-NOTIFICATION_STATUS_TYPES_SENT_EMAILS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-NOTIFICATION_STATUS_TYPES = [
-    NOTIFICATION_CANCELLED,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_PENDING_VIRUS_CHECK,
-    NOTIFICATION_VALIDATION_FAILED,
-    NOTIFICATION_VIRUS_SCAN_FAILED,
-]
-
-NOTIFICATION_STATUS_TYPES_NON_BILLABLE = list(
-    set(NOTIFICATION_STATUS_TYPES) - set(NOTIFICATION_STATUS_TYPES_BILLABLE)
-)
-
-NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(
-    *NOTIFICATION_STATUS_TYPES, name="notify_status_type"
-)
-
-
-class NotificationStatusTypes(db.Model):
-    __tablename__ = "notification_status_types"
-
-    name = db.Column(db.String(), primary_key=True)
-
-
 class NotificationAllTimeView(db.Model):
     """
     WARNING: this view is a union of rows in "notifications" and
@@ -1688,8 +1536,7 @@ class Notification(db.Model):
     )
     api_key = db.relationship("ApiKey")
     key_type = db.Column(
-        db.String,
-        db.ForeignKey("key_types.name"),
+        db.Enum(KeyType, name="key_type"),
         unique=False,
         nullable=False,
     )
@@ -1709,9 +1556,7 @@ class Notification(db.Model):
         onupdate=datetime.datetime.utcnow,
     )
     status = db.Column(
-        "notification_status",
-        db.Text,
-        db.ForeignKey("notification_status_types.name"),
+        db.Enum(NotificationStatus, name="notify_status_type"),
         nullable=True,
         default="created",
         key="status",  # http://docs.sqlalchemy.org/en/latest/core/metadata.html#sqlalchemy.schema.Column
@@ -1778,7 +1623,7 @@ class Notification(db.Model):
         self._personalisation = encryption.encrypt(personalisation or {})
 
     def completed_at(self):
-        if self.status in NOTIFICATION_STATUS_TYPES_COMPLETED:
+        if self.status in NotificationStatus.completed:
             return self.updated_at.strftime(DATETIME_FORMAT)
 
         return None
@@ -1818,8 +1663,8 @@ class Notification(db.Model):
 
         def _substitute_status_str(_status):
             return (
-                NOTIFICATION_STATUS_TYPES_FAILED
-                if _status == NOTIFICATION_FAILED
+                NotificationStatus.failed
+                if _status == NotificationStatus.FAILED
                 else [_status]
             )
 
@@ -2071,11 +1916,10 @@ class InvitedUser(db.Model):
     )
     permissions = db.Column(db.String, nullable=False)
     auth_type = db.Column(
-        db.String,
-        db.ForeignKey("auth_type.name"),
+        db.Enum(AuthType, name="auth_type"),
         index=True,
         nullable=False,
-        default=SMS_AUTH_TYPE,
+        default=AuthType.SMS,
     )
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
 
@@ -2308,12 +2152,6 @@ class ServiceEmailReplyTo(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
-
-
-class AuthType(db.Model):
-    __tablename__ = "auth_type"
-
-    name = db.Column(db.String, primary_key=True)
 
 
 class FactBilling(db.Model):

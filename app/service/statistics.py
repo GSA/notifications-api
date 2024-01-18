@@ -2,8 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import TemplateType
-from app.models import NOTIFICATION_STATUS_TYPES
+from app.enums import TemplateType, NotificationStatus
 
 
 def format_statistics(statistics):
@@ -69,7 +68,7 @@ def format_monthly_template_notification_stats(year, rows):
             stats[formatted_month][str(row.template_id)] = {
                 "name": row.name,
                 "type": row.template_type,
-                "counts": dict.fromkeys(NOTIFICATION_STATUS_TYPES, 0),
+                "counts": dict.fromkeys([e.value for e in NotificationStatus], 0),
             }
         stats[formatted_month][str(row.template_id)]["counts"][row.status] += row.count
 

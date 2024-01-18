@@ -16,17 +16,9 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
-from app.enums import NotificationType
+from app.enums import NotificationType, NotificationStatus
 from app.models import (
     KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PENDING_VIRUS_CHECK,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     Notification,
     NotificationHistory,
@@ -70,7 +62,7 @@ def dao_create_notification(notification):
         # need to populate defaulted fields before we create the notification history object
         notification.id = create_uuid()
     if not notification.status:
-        notification.status = NOTIFICATION_CREATED
+        notification.status = NotificationStatus.CREATED
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
@@ -85,10 +77,10 @@ def country_records_delivery(phone_prefix):
 def _decide_permanent_temporary_failure(current_status, status):
     # If we go from pending to delivered we need to set failure type as temporary-failure
     if (
-        current_status == NOTIFICATION_PENDING
-        and status == NOTIFICATION_PERMANENT_FAILURE
+        current_status == NotificationStatus.PENDING
+        and status == NotificationStatus.PERMANENT_FAILURE
     ):
-        status = NOTIFICATION_TEMPORARY_FAILURE
+        status = NotificationStatus.TEMPORARY_FAILURE
     return status
 
 
@@ -127,11 +119,11 @@ def update_notification_status_by_id(
         return None
 
     if notification.status not in {
-        NOTIFICATION_CREATED,
-        NOTIFICATION_SENDING,
-        NOTIFICATION_PENDING,
-        NOTIFICATION_SENT,
-        NOTIFICATION_PENDING_VIRUS_CHECK,
+        NotificationStatus.CREATED,
+        NotificationStatus.SENDING,
+        NotificationStatus.PENDING,
+        NotificationStatus.SENT,
+        NotificationStatus.PENDING_VIRUS_CHECK,
     }:
         _duplicate_update_warning(notification, status)
         return None
@@ -171,7 +163,7 @@ def update_notification_status_by_reference(reference, status):
         )
         return None
 
-    if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
+    if notification.status not in {NotificationStatus.SENDING, NotificationStatus.PENDING}:
         _duplicate_update_warning(notification, status)
         return None
 
@@ -209,7 +201,7 @@ def dao_get_notification_count_for_service(*, service_id):
 
 
 def dao_get_failed_notification_count():
-    failed_count = Notification.query.filter_by(status=NOTIFICATION_FAILED).count()
+    failed_count = Notification.query.filter_by(status=NotificationStatus.FAILED).count()
     return failed_count
 
 
@@ -437,8 +429,8 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
     if they're still sending from before the specified cutoff_time.
     """
     updated_at = datetime.utcnow()
-    current_statuses = [NOTIFICATION_SENDING, NOTIFICATION_PENDING]
-    new_status = NOTIFICATION_TEMPORARY_FAILURE
+    current_statuses = [NotificationStatus.SENDING, NotificationStatus.PENDING]
+    new_status = NotificationStatus.TEMPORARY_FAILURE
 
     notifications = (
         Notification.query.filter(
@@ -608,7 +600,7 @@ def notifications_not_yet_sent(should_be_sending_after_seconds, notification_typ
     notifications = Notification.query.filter(
         Notification.created_at <= older_than_date,
         Notification.notification_type == notification_type,
-        Notification.status == NOTIFICATION_CREATED,
+        Notification.status == NotificationStatus.CREATED,
     ).all()
     return notifications
 

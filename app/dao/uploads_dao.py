@@ -5,11 +5,10 @@ from flask import current_app
 from sqlalchemy import String, and_, desc, func, literal, text
 
 from app import db
-from app.enums import NotificationType
+from app.enums import NotificationStatus, NotificationType
 from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_SCHEDULED,
-    NOTIFICATION_CANCELLED,
     Job,
     Notification,
     ServiceDataRetention,
@@ -92,7 +91,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         Notification.service_id == service_id,
         Notification.notification_type == NotificationType.LETTER,
         Notification.api_key_id == None,  # noqa
-        Notification.status != NOTIFICATION_CANCELLED,
+        Notification.status != NotificationStatus.CANCELLED,
         Template.hidden == True,  # noqa
         Notification.created_at
         >= today - func.coalesce(ServiceDataRetention.days_of_retention, 7),

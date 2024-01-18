@@ -7,21 +7,11 @@ from sqlalchemy.types import DateTime, Integer
 
 from app import db
 from app.dao.dao_utils import autocommit
-from app.enums import NotificationType
+from app.enums import NotificationType, NotificationStatus
 from app.models import (
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    NOTIFICATION_CANCELLED,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     Notification,
     NotificationAllTimeView,
@@ -386,7 +376,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
             FactNotificationStatus.key_type != KEY_TYPE_TEST,
-            FactNotificationStatus.notification_status != NOTIFICATION_CANCELLED,
+            FactNotificationStatus.notification_status != NotificationStatus.CANCELLED,
         )
         .group_by(
             FactNotificationStatus.template_id,
@@ -423,7 +413,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
                 Notification.created_at >= today,
                 Notification.service_id == service_id,
                 Notification.key_type != KEY_TYPE_TEST,
-                Notification.status != NOTIFICATION_CANCELLED,
+                Notification.status != NotificationStatus.CANCELLED,
             )
             .group_by(
                 Notification.template_id,
@@ -517,7 +507,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status.in_(
-                                [NOTIFICATION_SENDING, NOTIFICATION_PENDING]
+                                [NotificationStatus.SENDING, NotificationStatus.PENDING]
                             ),
                             FactNotificationStatus.notification_count,
                         )
@@ -530,7 +520,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_DELIVERED,
+                            == NotificationStatus.DELIVERED,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -542,7 +532,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status.in_(
-                                [NOTIFICATION_TECHNICAL_FAILURE, NOTIFICATION_FAILED]
+                                [NotificationStatus.TECHNICAL_FAILURE, NotificationStatus.FAILED]
                             ),
                             FactNotificationStatus.notification_count,
                         )
@@ -555,7 +545,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_TEMPORARY_FAILURE,
+                            == NotificationStatus.TEMPORARY_FAILURE,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -567,7 +557,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_PERMANENT_FAILURE,
+                            == NotificationStatus.PERMANENT_FAILURE,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -579,7 +569,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_SENT,
+                            == NotificationStatus.SENT,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -589,7 +579,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
         )
         .join(Service, FactNotificationStatus.service_id == Service.id)
         .filter(
-            FactNotificationStatus.notification_status != NOTIFICATION_CREATED,
+            FactNotificationStatus.notification_status != NotificationStatus.CREATED,
             Service.active.is_(True),
             FactNotificationStatus.key_type != KEY_TYPE_TEST,
             Service.restricted.is_(False),

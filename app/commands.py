@@ -49,10 +49,9 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
-from app.enums import NotificationType
+from app.enums import NotificationType, NotificationStatus
 from app.models import (
     KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -520,7 +519,7 @@ def populate_go_live(file_name):
 def fix_billable_units():
     query = Notification.query.filter(
         Notification.notification_type == NotificationType.SMS,
-        Notification.status != NOTIFICATION_CREATED,
+        Notification.status != NotificationStatus.CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,
         Notification.key_type != KEY_TYPE_TEST,

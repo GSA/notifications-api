@@ -20,7 +20,8 @@ from app.dao.service_callback_api_dao import (
     get_service_complaint_callback_api_for_service,
     get_service_delivery_status_callback_api_for_service,
 )
-from app.models import NOTIFICATION_PENDING, NOTIFICATION_SENDING, Complaint
+from app.enums import NotificationStatus
+from app.models import Complaint
 
 
 @notify_celery.task(
@@ -76,7 +77,7 @@ def process_ses_results(self, response):
                 f"SES bounce for notification ID {notification.id}: {bounce_message}"
             )
 
-        if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
+        if notification.status not in {NotificationStatus.SENDING, NotificationStatus.PENDING}:
             notifications_dao._duplicate_update_warning(
                 notification, notification_status
             )

@@ -16,8 +16,8 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
-from app.enums import NotificationType
-from app.models import KEY_TYPE_TEST, NOTIFICATION_CREATED, Notification
+from app.enums import NotificationType, NotificationStatus
+from app.models import KEY_TYPE_TEST, Notification
 from app.v2.errors import BadRequestError
 
 
@@ -71,7 +71,7 @@ def persist_notification(
     notification_id=None,
     simulated=False,
     created_by_id=None,
-    status=NOTIFICATION_CREATED,
+    status=NotificationStatus.CREATED,
     reply_to_text=None,
     billable_units=None,
     document_download_count=None,

@@ -15,15 +15,12 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
-from app.enums import NotificationType
+from app.enums import NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
     BRANDING_ORG_BANNER,
     KEY_TYPE_TEST,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
-    NOTIFICATION_TECHNICAL_FAILURE,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
@@ -163,8 +160,8 @@ def send_email_to_provider(notification):
 def update_notification_to_sending(notification, provider):
     notification.sent_at = datetime.utcnow()
     notification.sent_by = provider.name
-    if notification.status not in NOTIFICATION_STATUS_TYPES_COMPLETED:
-        notification.status = NOTIFICATION_SENDING
+    if notification.status not in NotificationStatus.completed:
+        notification.status = NotificationStatus.SENDING
 
     dao_update_notification(notification)
 
@@ -245,7 +242,7 @@ def get_html_email_options(service):
 
 
 def technical_failure(notification):
-    notification.status = NOTIFICATION_TECHNICAL_FAILURE
+    notification.status = NotificationStatus.TECHNICAL_FAILURE
     dao_update_notification(notification)
     raise NotificationTechnicalFailureException(
         "Send {} for notification id {} to provider is not allowed: service {} is inactive".format(

@@ -13,10 +13,9 @@ from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
-from app.enums import NotificationType, ServicePermissionType
+from app.enums import NotificationStatus, NotificationType, ServicePermissionType
 from app.models import (
     KEY_TYPE_TEST,
-    NOTIFICATION_PERMANENT_FAILURE,
     AnnualBilling,
     ApiKey,
     FactBilling,
@@ -565,7 +564,7 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Notification.created_at <= end_date,
             Notification.key_type != KEY_TYPE_TEST,
             Notification.notification_type == NotificationType.SMS,
-            Notification.status == NOTIFICATION_PERMANENT_FAILURE,
+            Notification.status == NotificationStatus.PERMANENT_FAILURE,
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )

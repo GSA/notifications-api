@@ -1,4 +1,6 @@
 from enum import Enum
+from functools import lru_cache
+from xml.sax.handler import property_interning_dict
 
 
 class TemplateType(Enum):
@@ -19,15 +21,106 @@ class TemplateProcessType(Enum):
     PRIORITY = "priority"
 
 
-class UserAuthType(Enum):
+class AuthType(Enum):
     SMS = "sms_auth"
     EMAIL = "email_auth"
     WEBAUTHN = "webauthn_auth"
 
 
-class ServiceCallbackType(Enum):
+class CallbackType(Enum):
     DELIVERY_STATUS = "delivery_status"
     COMPLAINT = "complaint"
+
+
+class OrganizationType(Enum):
+    FEDERAL = "federal"
+    STATE = "state"
+    OTHER = "other"
+
+
+class NotificationStatus(Enum):
+    CANCELLED = "cancelled"
+    CREATED = "created"
+    SENDING = "sending"
+    SENT = "sent"
+    DELIVERED = "delivered"
+    PENDING = "pending"
+    FAILED = "failed"
+    TECHNICAL_FAILURE = "technical-failure"
+    TEMPORARY_FAILURE = "temporary-failure"
+    PERMANENT_FAILURE = "permanent-failure"
+    PENDING_VIRUS_CHECK = "pending-virus-check"
+    VALIDATION_FAILED = "validation-failed"
+    VIRUS_SCAN_FAILED = "virus-scan-failed"
+
+    @property
+    def failed(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (
+            cls.TECHNICAL_FAILURE,
+            cls.TEMPORARY_FAILURE,
+            cls.PERMANENT_FAILURE,
+            cls.VALIDATION_FAILED,
+            cls.VIRUS_SCAN_FAILED,
+        )
+
+    @property
+    def completed(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (
+            cls.SENT,
+            cls.DELIVERED,
+            cls.FAILED,
+            cls.TECHNICAL_FAILURE,
+            cls.TEMPORARY_FAILURE,
+            cls.PERMANENT_FAILURE,
+            cls.CANCELLED,
+        )
+
+    @property
+    def success(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (cls.SENT, cls.DELIVERED)
+
+    @property
+    def billable(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (
+            cls.SENDING,
+            cls.SENT,
+            cls.DELIVERED,
+            cls.PENDING,
+            cls.FAILED,
+            cls.TEMPORARY_FAILURE,
+            cls.PERMANENT_FAILURE,
+        )
+
+    @property
+    def billable_sms(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (
+            cls.SENDING,
+            cls.SENT,  # internationally
+            cls.DELIVERED,
+            cls.PENDING,
+            cls.TEMPORARY_FAILURE,
+            cls.PERMANENT_FAILURE,
+        )
+
+    @property
+    def sent_emails(self) -> tuple["NotificationStatus", ...]:
+        cls = type(self)
+        return (
+            cls.SENDING,
+            cls.DELIVERED,
+            cls.TEMPORARY_FAILURE,
+            cls.PERMANENT_FAILURE,
+        )
+
+    @property
+    @lru_cache
+    def non_billable(self) -> tuple["NotificationStatus", ...]:
+        return tuple(set(type(self)) - set(self.billable))
 
 
 class PermissionType(Enum):
@@ -104,7 +197,7 @@ class InvitedUserStatus(Enum):
     EXPIRED = "expired"
 
 
-class BrandingType(Enum):
+class BrandType(Enum):
     # TODO: Should EmailBranding.branding_type be changed to use this?
     GOVUK = "govuk"  # Deprecated outside migrations
     ORG = "org"
