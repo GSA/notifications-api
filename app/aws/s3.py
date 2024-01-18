@@ -124,6 +124,29 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
     return my_phone
 
+def get_personalisation_from_s3(service_id, job_id, job_row_number):
+    job = JOBS.get(job_id)
+    if job is None:
+        job = get_job_from_s3(service_id, job_id)
+        JOBS[job_id] = job
+        incr_jobs_cache_misses()
+    else:
+        incr_jobs_cache_hits()
+
+    job = job.split("\r\n")
+    first_row = job[0]
+    job.pop(0)
+    first_row = first_row.split(",")
+    correct_row = job[job_row_number]
+    correct_row = correct_row.split(",")
+    personalisation_dict = {}
+    index = 0
+    for header in first_row:
+        personalisation_dict[header] = correct_row[index]
+        index = index + 1
+    print(f"get personalisation returns {personalisation_dict}")
+    return personalisation_dict
+
 
 def get_job_metadata_from_s3(service_id, job_id):
     obj = get_s3_object(*get_job_location(service_id, job_id))

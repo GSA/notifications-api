@@ -2,7 +2,7 @@ import dateutil
 import pytz
 from flask import Blueprint, current_app, jsonify, request
 
-from app.aws.s3 import get_job_metadata_from_s3
+from app.aws.s3 import get_job_metadata_from_s3, get_personalisation_from_s3
 from app.celery.tasks import process_job
 from app.config import QueueNames
 from app.dao.fact_notification_status_dao import fetch_notification_statuses_for_job
@@ -86,6 +86,12 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
+
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id, notification.job_id, notification.job_row_number
+                )
 
     return (
         jsonify(

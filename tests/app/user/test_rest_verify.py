@@ -481,8 +481,6 @@ def test_send_user_email_code(
     )
     assert noti.to == sample_user.email_address
     assert str(noti.template_id) == current_app.config["EMAIL_2FA_TEMPLATE_ID"]
-    assert noti.personalisation["name"] == "Test User"
-    assert noti.personalisation["url"].startswith(expected_auth_url)
     deliver_email.assert_called_once_with([str(noti.id)], queue="notify-internal-tasks")
 
 

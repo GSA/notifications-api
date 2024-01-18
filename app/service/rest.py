@@ -2,6 +2,7 @@ import itertools
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
+from app.aws.s3 import get_personalisation_from_s3
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
@@ -424,6 +425,12 @@ def get_all_notifications_for_service(service_id):
         include_from_test_key=include_from_test_key,
         include_one_off=include_one_off,
     )
+
+    for notification in pagination.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id, notification.job_id, notification.job_row_number
+                )
 
     kwargs = request.args.to_dict()
     kwargs["service_id"] = service_id

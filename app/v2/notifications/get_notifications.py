@@ -1,6 +1,7 @@
 from flask import current_app, jsonify, request, url_for
 
 from app import api_user, authenticated_service
+from app.aws.s3 import get_personalisation_from_s3
 from app.dao import notifications_dao
 from app.schema_validation import validate
 from app.v2.notifications import v2_notification_blueprint
@@ -48,6 +49,12 @@ def get_notifications():
         include_jobs=data.get("include_jobs"),
         count_pages=False,
     )
+
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id, notification.job_id, notification.job_row_number
+                )
 
     def _build_links(notifications):
         _links = {
