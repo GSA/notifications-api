@@ -1723,7 +1723,9 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     service_2 = create_service(service_name="2")
 
     service_1_sms_template = create_template(service_1)
-    service_1_email_template = create_template(service_1, template_type=TemplateType.EMAIL)
+    service_1_email_template = create_template(
+        service_1, template_type=TemplateType.EMAIL
+    )
     service_2_sms_template = create_template(service_2)
 
     returned_notification = create_notification(

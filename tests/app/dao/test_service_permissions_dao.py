@@ -41,7 +41,8 @@ def test_fetch_service_permissions_gets_service_permissions(
         sp.service_id == service_without_permissions.id for sp in service_permissions
     )
     assert all(
-        sp.permission in {
+        sp.permission
+        in {
             ServicePermissionType.INTERNATIONAL_SMS,
             ServicePermissionType.SMS,
         }

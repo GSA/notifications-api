@@ -7,7 +7,9 @@ from app.service.sender import send_notification_to_service_users
 from tests.app.db import create_service, create_template, create_user
 
 
-@pytest.mark.parametrize("notification_type", [NotificationType.EMAIL, NotificationType.SMS])
+@pytest.mark.parametrize(
+    "notification_type", [NotificationType.EMAIL, NotificationType.SMS]
+)
 def test_send_notification_to_service_users_persists_notifications_correctly(
     notify_service, notification_type, sample_service, mocker
 ):

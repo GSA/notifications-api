@@ -10,13 +10,7 @@ import app.celery.tasks
 from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.users_dao import create_user_code
-from app.models import (
-    USER_AUTH_TYPES,
-    Notification,
-    User,
-    VerifyCode,
-    VerifyCodeType,
-)
+from app.models import USER_AUTH_TYPES, Notification, User, VerifyCode, VerifyCodeType
 from tests import create_admin_authorization_header
 
 

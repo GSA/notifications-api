@@ -268,7 +268,7 @@ def test_receive_notification_error_if_not_single_matching_service(
         service_permissions=[
             ServicePermissionType.EMAIL,
             ServicePermissionType.SMS,
-            ServicePermissionType.INBOUND_SMS
+            ServicePermissionType.INBOUND_SMS,
         ],
     )
 

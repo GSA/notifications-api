@@ -1762,8 +1762,18 @@ def test_get_service_ids_with_notifications_on_date_checks_ft_status(
     create_ft_notification_status(template=sample_template, local_date="2022-01-02")
 
     assert (
-        len(get_service_ids_with_notifications_on_date(NotificationType.SMS, date(2022, 1, 1))) == 1
+        len(
+            get_service_ids_with_notifications_on_date(
+                NotificationType.SMS, date(2022, 1, 1)
+            )
+        )
+        == 1
     )
     assert (
-        len(get_service_ids_with_notifications_on_date(NotificationType.SMS, date(2022, 1, 2))) == 1
+        len(
+            get_service_ids_with_notifications_on_date(
+                NotificationType.SMS, date(2022, 1, 2)
+            )
+        )
+        == 1
     )

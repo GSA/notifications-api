@@ -98,7 +98,9 @@ def test_will_remove_csv_files_for_jobs_older_than_retention_period(
         service=service_1, notification_type=NotificationType.SMS, days_of_retention=3
     )
     create_service_data_retention(
-        service=service_2, notification_type=NotificationType.EMAIL, days_of_retention=30
+        service=service_2,
+        notification_type=NotificationType.EMAIL,
+        days_of_retention=30,
     )
     sms_template_service_1 = create_template(service=service_1)
     email_template_service_1 = create_template(service=service_1, template_type="email")

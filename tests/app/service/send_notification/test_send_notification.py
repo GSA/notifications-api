@@ -100,7 +100,7 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
     [
         (TemplateType.SMS, "+447700900855"),
         (TemplateType.EMAIL, "ok@ok.com"),
-    ]
+    ],
 )
 def test_send_notification_invalid_template_id(
     notify_api, sample_template, mocker, fake_uuid, template_type, to
@@ -339,7 +339,9 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             )
 
             template = (
-                sample_template if template_type == TemplateType.SMS else sample_email_template
+                sample_template
+                if template_type == TemplateType.SMS
+                else sample_email_template
             )
             to = (
                 template.service.created_by.mobile_number
@@ -769,7 +771,9 @@ def test_should_persist_notification(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == TemplateType.SMS else sample_email_template
+    template = (
+        sample_template if template_type == TemplateType.SMS else sample_email_template
+    )
     to = (
         sample_template.service.created_by.mobile_number
         if template_type == TemplateType.SMS
@@ -826,7 +830,9 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == TemplateType.SMS else sample_email_template
+    template = (
+        sample_template if template_type == TemplateType.SMS else sample_email_template
+    )
     to = (
         sample_template.service.created_by.mobile_number
         if template_type == TemplateType.SMS
@@ -1086,7 +1092,7 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
     [
         (TemplateType.SMS, True),
         (TemplateType.EMAIL, False),
-    ]
+    ],
 )
 def test_create_template_raises_invalid_request_when_content_too_large(
     sample_service, template_type, should_error

@@ -247,7 +247,8 @@ def _sample_service_full_permissions(notify_db_session):
 @pytest.fixture(scope="function")
 def sample_template(sample_user):
     service = create_service(
-        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS],
+        check_if_service_exists=True,
     )
 
     data = {

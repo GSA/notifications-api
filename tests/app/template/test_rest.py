@@ -223,7 +223,7 @@ def test_should_raise_error_on_create_if_no_permission(
         ),
         (
             TemplateType.EMAIL,
-            [ServicePErmissionType.SMS],
+            [ServicePermissionType.SMS],
             {"template_type": ["Updating email templates is not allowed"]},
         ),
     ],

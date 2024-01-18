@@ -203,7 +203,9 @@ def test_send_one_off_notification_raises_if_cant_send_to_recipient(
     template = create_template(service=service)
     dao_add_and_commit_guest_list_contacts(
         [
-            ServiceGuestList.from_string(service.id, GuestListRecipientType.MOBILE, "2028765309"),
+            ServiceGuestList.from_string(
+                service.id, GuestListRecipientType.MOBILE, "2028765309"
+            ),
         ]
     )
 

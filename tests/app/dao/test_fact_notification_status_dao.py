@@ -169,7 +169,9 @@ def test_fetch_notification_status_for_service_for_today_and_7_previous_days(
     service_1 = create_service(service_name="service_1")
     sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
     sms_template_2 = create_template(service=service_1, template_type=TemplateType.SMS)
-    email_template = create_template(service=service_1, template_type=TemplateType.EMAIL)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
 
     create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
     create_ft_notification_status(date(2018, 10, 25), "sms", service_1, count=8)
@@ -222,12 +224,18 @@ def test_fetch_notification_status_by_template_for_service_for_today_and_7_previ
 ):
     service_1 = create_service(service_name="service_1")
     sms_template = create_template(
-        template_name="sms Template 1", service=service_1, template_type=TemplateType.SMS
+        template_name="sms Template 1",
+        service=service_1,
+        template_type=TemplateType.SMS,
     )
     sms_template_2 = create_template(
-        template_name="sms Template 2", service=service_1, template_type=TemplateType.SMS
+        template_name="sms Template 2",
+        service=service_1,
+        template_type=TemplateType.SMS,
     )
-    email_template = create_template(service=service_1, template_type=TemplateType.EMAIL)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
 
     # create unused email template
     create_template(service=service_1, template_type=TemplateType.EMAIL)
@@ -324,7 +332,9 @@ def test_fetch_notification_status_totals_for_all_services_works_in_est(
 ):
     service_1 = create_service(service_name="service_1")
     sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
-    email_template = create_template(service=service_1, template_type=TemplateType.EMAIL)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
 
     create_notification(
         sms_template, created_at=datetime(2018, 4, 20, 12, 0, 0), status="delivered"
@@ -368,7 +378,9 @@ def set_up_data():
     service_2 = create_service(service_name="service_2")
     service_1 = create_service(service_name="service_1")
     sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
-    email_template = create_template(service=service_1, template_type=TemplateType.EMAIL)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
     create_ft_notification_status(date(2018, 10, 24), "sms", service_1, count=8)
     create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
     create_ft_notification_status(
@@ -854,7 +866,9 @@ def test_update_fact_notification_status_respects_gmt_bst(
     expected_count,
 ):
     create_notification(template=sample_template, created_at=created_at_utc)
-    update_fact_notification_status(process_day, NotificationType.SMS, sample_service.id)
+    update_fact_notification_status(
+        process_day, NotificationType.SMS, sample_service.id
+    )
 
     assert (
         FactNotificationStatus.query.filter_by(

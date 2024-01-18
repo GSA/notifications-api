@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
-from app.models import JOB_STATUS_IN_PROGRESS
+from app.models import JOB_STATUS_IN_PROGRESS, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,

@@ -28,7 +28,9 @@ def test_get_guest_list_separates_emails_and_phones(client, sample_service):
                 GuestListRecipientType.EMAIL,
                 "service@example.com",
             ),
-            ServiceGuestList.from_string(sample_service.id, GuestListRecipientType.MOBILE, "2028675309"),
+            ServiceGuestList.from_string(
+                sample_service.id, GuestListRecipientType.MOBILE, "2028675309"
+            ),
             ServiceGuestList.from_string(
                 sample_service.id,
                 GuestListRecipientType.MOBILE,

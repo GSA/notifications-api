@@ -352,7 +352,9 @@ def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
         sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago
     )
 
-    jobs = dao_get_jobs_older_than_data_retention(notification_types=[NotificationType.SMS])
+    jobs = dao_get_jobs_older_than_data_retention(
+        notification_types=[NotificationType.SMS]
+    )
 
     assert len(jobs) == 2
     assert job_to_remain.id not in [job.id for job in jobs]

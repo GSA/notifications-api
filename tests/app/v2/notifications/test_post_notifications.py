@@ -761,7 +761,11 @@ def test_post_sms_notification_returns_400_if_number_not_in_guest_list(
     notify_db_session, client, restricted
 ):
     service = create_service(
-        restricted=restricted, service_permissions=[ServicePermissionType.SMS, ServicePermissionType.INTERNATIONAL_SMS]
+        restricted=restricted,
+        service_permissions=[
+            ServicePermissionType.SMS,
+            ServicePermissionType.INTERNATIONAL_SMS,
+        ],
     )
     template = create_template(service=service)
     create_api_key(service=service, key_type="team")
