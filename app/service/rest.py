@@ -433,7 +433,6 @@ def get_all_notifications_for_service(service_id):
                 notification.job_id,
                 notification.job_row_number,
             )
-            print(f"RECIPIENTE IN service/rest {recipient}")
             notification.to = recipient
             notification.normalised_to = recipient
         else:
