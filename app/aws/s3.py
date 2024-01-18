@@ -147,7 +147,6 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     if JOBS.get(f"{job_id}_phones") is not None:
         phone_to_return = JOBS.get(f"{job_id}_phones").get(job_row_number)
         if phone_to_return:
-            print(f"USING SHORT CUT!  {phone_to_return}")
             return phone_to_return
 
     job = job.split("\r\n")
