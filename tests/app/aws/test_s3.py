@@ -61,6 +61,12 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             0,
             "15551111111",
         ),
+        (
+            "Phone number,name,date,time,address,English,Spanish\r\n15553333333,Tim,10/16,2:00 PM,5678 Tom St.,no,yes",
+            "ddd",
+            0,
+            "15553333333",
+        ),
     ],
 )
 def test_get_phone_number_from_s3(
