@@ -15,8 +15,8 @@ from app import redis_store
 from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
-from app.enums import NotificationType, ServicePermissionType, TemplateType
-from app.models import KEY_TYPE_TEAM, KEY_TYPE_TEST, ServicePermission
+from app.enums import NotificationType, ServicePermissionType, TemplateType, KeyType
+from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
@@ -40,7 +40,7 @@ def check_service_over_api_rate_limit(service, api_key):
 
 
 def check_service_over_total_message_limit(key_type, service):
-    if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
+    if key_type == KeyType.TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
 
     cache_key = total_limit_cache_key(service.id)
@@ -61,7 +61,7 @@ def check_service_over_total_message_limit(key_type, service):
 
 
 def check_application_over_retention_limit(key_type, service):
-    if key_type == KEY_TYPE_TEST or not current_app.config["REDIS_ENABLED"]:
+    if key_type == KeyType.TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
     total_stats = dao_get_notification_count_for_service(service_id=service.id)
 
@@ -104,7 +104,7 @@ def service_can_send_to_recipient(
     if not service_allowed_to_send_to(
         send_to, service, key_type, allow_guest_list_recipients
     ):
-        if key_type == KEY_TYPE_TEAM:
+        if key_type == KeyType.TEAM:
             message = "Can’t send to this recipient using a team-only API key"
         else:
             message = (

@@ -15,12 +15,11 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
-from app.enums import NotificationStatus, NotificationType
+from app.enums import NotificationStatus, NotificationType, KeyType
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
     BRANDING_ORG_BANNER,
-    KEY_TYPE_TEST,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
@@ -50,7 +49,7 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        if notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KeyType.TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id))
 
@@ -134,7 +133,7 @@ def send_email_to_provider(notification):
         # Someone needs an email, possibly new registration
         recipient = redis_store.get(f"email-address-{notification.id}")
         recipient = recipient.decode("utf-8")
-        if notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
             send_email_response(notification.reference, recipient)

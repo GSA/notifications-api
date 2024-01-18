@@ -8,10 +8,8 @@ from sqlalchemy.sql.expression import case, literal
 from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
 from app.dao.organization_dao import dao_get_organization_live_services
-from app.enums import NotificationStatus, NotificationType
+from app.enums import NotificationStatus, NotificationType, KeyType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
     AnnualBilling,
     FactBilling,
     NotificationAllTimeView,
@@ -411,7 +409,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
             )
             .filter(
                 NotificationAllTimeView.status.in_(NotificationStatus.sent_emails),
-                NotificationAllTimeView.key_type.in_((KEY_TYPE_NORMAL, KEY_TYPE_TEAM)),
+                NotificationAllTimeView.key_type.in_((KeyType.NORMAL, KeyType.TEAM)),
                 NotificationAllTimeView.created_at >= start_date,
                 NotificationAllTimeView.created_at < end_date,
                 NotificationAllTimeView.notification_type == notification_type,
@@ -443,7 +441,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
             )
             .filter(
                 NotificationAllTimeView.status.in_(NotificationStatus.billable_sms),
-                NotificationAllTimeView.key_type.in_((KEY_TYPE_NORMAL, KEY_TYPE_TEAM)),
+                NotificationAllTimeView.key_type.in_((KeyType.NORMAL, KeyType.TEAM)),
                 NotificationAllTimeView.created_at >= start_date,
                 NotificationAllTimeView.created_at < end_date,
                 NotificationAllTimeView.notification_type == notification_type,

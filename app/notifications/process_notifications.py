@@ -16,8 +16,8 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
-from app.enums import NotificationType, NotificationStatus
-from app.models import KEY_TYPE_TEST, Notification
+from app.enums import NotificationType, NotificationStatus, KeyType
+from app.models import Notification
 from app.v2.errors import BadRequestError
 
 
@@ -131,7 +131,7 @@ def persist_notification(
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
         dao_create_notification(notification)
-        if key_type != KEY_TYPE_TEST and current_app.config["REDIS_ENABLED"]:
+        if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
                 "Redis enabled, querying cache key for service id: {}".format(
                     service.id
@@ -147,7 +147,7 @@ def persist_notification(
 def send_notification_to_queue_detached(
     key_type, notification_type, notification_id, queue=None
 ):
-    if key_type == KEY_TYPE_TEST:
+    if key_type == KeyType.TEST:
         print("send_notification_to_queue_detached key is test key")
 
     if notification_type == NotificationType.SMS:

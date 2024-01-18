@@ -32,9 +32,9 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
-from app.enums import CodeType, NotificationType, TemplateType
+from app.enums import CodeType, NotificationType, TemplateType, KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, Permission, Service
+from app.models import Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -134,7 +134,7 @@ def update_user_attribute(user_id):
             },
             notification_type=template.template_type,
             api_key_id=None,
-            key_type=KEY_TYPE_NORMAL,
+            key_type=KeyType.NORMAL,
             reply_to_text=reply_to,
         )
 
@@ -348,7 +348,7 @@ def create_2fa_code(
         personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=reply_to,
     )
 
@@ -387,7 +387,7 @@ def send_user_confirm_new_email(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -425,7 +425,7 @@ def send_new_user_email_verification(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -471,7 +471,7 @@ def send_already_registered_email(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -588,7 +588,7 @@ def send_user_reset_password():
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 

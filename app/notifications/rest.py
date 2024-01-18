@@ -4,9 +4,8 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from app import api_user, authenticated_service
 from app.config import QueueNames
 from app.dao import notifications_dao
-from app.enums import NotificationType
+from app.enums import NotificationType, KeyType, TemplateProcessType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_TEAM, PRIORITY
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -137,7 +136,7 @@ def send_notification(notification_type):
         reply_to_text=template.reply_to_text,
     )
     if not simulated:
-        queue_name = QueueNames.PRIORITY if template.process_type == PRIORITY else None
+        queue_name = QueueNames.PRIORITY if template.process_type == TemplateProcessType.PRIORITY else None
         send_notification_to_queue(notification=notification_model, queue=queue_name)
 
     else:
@@ -171,7 +170,7 @@ def get_notification_return_data(notification_id, notification, template):
 
 def _service_allowed_to_send_to(notification, service):
     if not service_allowed_to_send_to(notification["to"], service, api_user.key_type):
-        if api_user.key_type == KEY_TYPE_TEAM:
+        if api_user.key_type == KeyType.TEAM:
             message = "Can’t send to this recipient using a team-only API key"
         else:
             message = (

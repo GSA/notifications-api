@@ -1287,15 +1287,6 @@ class TemplateHistory(TemplateBase):
         )
 
 
-SNS_PROVIDER = "sns"
-SES_PROVIDER = "ses"
-
-SMS_PROVIDERS = [SNS_PROVIDER]
-EMAIL_PROVIDERS = [SES_PROVIDER]
-PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
-# TODO: What about these?
-
-
 class ProviderDetails(db.Model):
     __tablename__ = "provider_details"
 

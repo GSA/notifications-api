@@ -73,8 +73,9 @@ from app.dao.services_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
+from app.enums import KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
+from app.models import EmailBranding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -782,7 +783,7 @@ def verify_reply_to_email_address(service_id):
         personalisation="",
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=notify_service.get_default_reply_to_email_address(),
     )
 

@@ -10,8 +10,8 @@ from app import api_user, authenticated_service, document_download_client, encry
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames
-from app.enums import NotificationType, NotificationStatus
-from app.models import KEY_TYPE_NORMAL, PRIORITY, Notification
+from app.enums import NotificationType, NotificationStatus, KeyType, TemplateProcessType
+from app.models import Notification
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue_detached,
@@ -130,7 +130,7 @@ def process_sms_or_email_notification(
 
     if (
         service.high_volume
-        and api_user.key_type == KEY_TYPE_NORMAL
+        and api_user.key_type == KeyType.NORMAL
         and notification_type in {NotificationType.EMAIL, NotificationType.SMS}
     ):
         # Put service with high volumes of notifications onto a queue
@@ -177,7 +177,7 @@ def process_sms_or_email_notification(
     )
 
     if not simulated:
-        queue_name = QueueNames.PRIORITY if template_process_type == PRIORITY else None
+        queue_name = QueueNames.PRIORITY if template_process_type == TemplateProcessType.PRIORITY else None
         send_notification_to_queue_detached(
             key_type=api_user.key_type,
             notification_type=notification_type,

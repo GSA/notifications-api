@@ -6,8 +6,8 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.enums import NotificationType
-from app.models import KEY_TYPE_NORMAL, PRIORITY
+from app.enums import NotificationType, KeyType
+from app.models import PRIORITY
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -46,11 +46,11 @@ def send_one_off_notification(service_id, post_data):
 
     validate_template(template.id, personalisation, service, template.template_type)
 
-    check_service_over_total_message_limit(KEY_TYPE_NORMAL, service)
+    check_service_over_total_message_limit(KeyType.NORMAL, service)
 
     validate_and_format_recipient(
         send_to=post_data["to"],
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         service=service,
         notification_type=template.template_type,
         allow_guest_list_recipients=False,
@@ -74,7 +74,7 @@ def send_one_off_notification(service_id, post_data):
         personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         created_by_id=post_data["created_by"],
         reply_to_text=reply_to,
         reference=create_one_off_reference(template.template_type),

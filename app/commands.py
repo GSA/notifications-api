@@ -49,9 +49,8 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
-from app.enums import NotificationType, NotificationStatus
+from app.enums import NotificationType, NotificationStatus, KeyType
 from app.models import (
-    KEY_TYPE_TEST,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -522,7 +521,7 @@ def fix_billable_units():
         Notification.status != NotificationStatus.CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     )
 
     for notification in query.all():

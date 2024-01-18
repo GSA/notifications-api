@@ -16,9 +16,8 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
-from app.enums import NotificationType, NotificationStatus
+from app.enums import NotificationType, NotificationStatus, KeyType
 from app.models import (
-    KEY_TYPE_TEST,
     FactNotificationStatus,
     Notification,
     NotificationHistory,
@@ -36,7 +35,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
         .filter(
             Notification.service_id == service_id,
             Notification.template_id == template_id,
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .scalar()
     )
@@ -48,7 +47,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
         db.session.query(functions.max(FactNotificationStatus.local_date))
         .filter(
             FactNotificationStatus.template_id == template_id,
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
+            FactNotificationStatus.key_type != KeyType.TEST,
         )
         .scalar()
     )
@@ -269,7 +268,7 @@ def get_notifications_for_service(
     if key_type is not None:
         filters.append(Notification.key_type == key_type)
     elif not include_from_test_key:
-        filters.append(Notification.key_type != KEY_TYPE_TEST)
+        filters.append(Notification.key_type != KeyType.TEST)
 
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
@@ -409,7 +408,7 @@ def move_notifications_to_notification_history(
         Notification.notification_type == notification_type,
         Notification.service_id == service_id,
         Notification.created_at < timestamp_to_delete_backwards_from,
-        Notification.key_type == KEY_TYPE_TEST,
+        Notification.key_type == KeyType.TEST,
     ).delete(synchronize_session=False)
     db.session.commit()
 
@@ -513,7 +512,7 @@ def dao_get_notifications_by_recipient_or_reference(
             Notification.normalised_to.like("%{}%".format(normalised)),
             Notification.client_reference.ilike("%{}%".format(search_term)),
         ),
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     ]
 
     if statuses:
@@ -576,7 +575,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
             Notification.created_at >= start_date,
             Notification.created_at < end_date,
             Notification.api_key_id.isnot(None),
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .one()
     )
