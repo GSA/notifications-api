@@ -34,7 +34,7 @@ flask-redis = "==0.4.0"
 flask-sqlalchemy = "==3.0.5"
 gunicorn = {version = "==21.2.0", extras = ["eventlet"]}
 iso8601 = "==2.1.0"
-jsonschema = {version = "==4.20.0", extras = ["format"]}
+jsonschema = {version = "==4.21.0", extras = ["format"]}
 lxml = "==5.1.0"
 marshmallow = "==3.20.2"
 marshmallow-sqlalchemy = "==0.30.0"
