@@ -25,7 +25,6 @@ from app.dao.notifications_dao import (
     get_notifications_for_service,
     get_service_ids_with_notifications_on_date,
     notifications_not_yet_sent,
-    sanitize_successful_notification_by_id,
     update_notification_status_by_id,
     update_notification_status_by_reference,
 )
@@ -90,36 +89,6 @@ def test_should_by_able_to_update_status_by_id(
     assert Notification.query.get(notification.id).status == "delivered"
     assert notification.updated_at == datetime(2000, 1, 2, 12, 0, 0)
     assert notification.status == "delivered"
-
-
-def test_should_be_able_to_sanitize_successful_notification(
-    sample_template, sample_job, sns_provider
-):
-    with freeze_time("2000-01-01 12:00:00"):
-        data = _notification_json(
-            sample_template, job_id=sample_job.id, status="sending"
-        )
-        notification = Notification(**data)
-        notification.to = "15555555555"
-        notification.normalised_to = "15555555555"
-        dao_create_notification(notification)
-        assert notification.status == "sending"
-        assert notification.normalised_to == "15555555555"
-        assert notification.to == "15555555555"
-
-    assert Notification.query.get(notification.id).status == "sending"
-
-    with freeze_time("2000-01-02 12:00:00"):
-        sanitize_successful_notification_by_id(
-            notification.id, carrier="ATT", provider_response="Don't know what happened"
-        )
-        assert Notification.query.get(notification.id).status == "delivered"
-        assert Notification.query.get(notification.id).normalised_to == "1"
-        assert Notification.query.get(notification.id).to == "1"
-        assert (
-            Notification.query.get(notification.id).provider_response
-            == "Don't know what happened"
-        )
 
 
 def test_should_not_update_status_by_id_if_not_sending_and_does_not_update_job(
@@ -341,7 +310,7 @@ def test_save_notification_creates_sms(sample_template, sample_job):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -361,7 +330,7 @@ def test_save_notification_and_create_email(sample_email_template, sample_job):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -438,7 +407,7 @@ def test_save_notification_and_increment_job(sample_template, sample_job, sns_pr
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -464,7 +433,7 @@ def test_save_notification_and_increment_correct_job(sample_template, sns_provid
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
@@ -484,7 +453,7 @@ def test_save_notification_with_no_job(sample_template, sns_provider):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
     assert data["template_version"] == notification_from_db.template_version
@@ -545,7 +514,7 @@ def test_save_notification_no_job_id(sample_template):
     assert Notification.query.count() == 1
     notification_from_db = Notification.query.all()[0]
     assert notification_from_db.id
-    assert data["to"] == notification_from_db.to
+    assert "1" == notification_from_db.to
     assert data["service"] == notification_from_db.service
     assert data["template_id"] == notification_from_db.template_id
     assert data["template_version"] == notification_from_db.template_version
@@ -1024,6 +993,9 @@ def test_should_exclude_test_key_notifications_by_default(
     assert len(all_notifications) == 1
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_recipient(sample_template):
     recipient_to_search_for = {
         "to_field": "+447700900855",
@@ -1057,6 +1029,9 @@ def test_dao_get_notifications_by_recipient(sample_template):
     assert notification1.id == results.items[0].id
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_recipient_is_limited_to_50_results(sample_template):
     for _ in range(100):
         create_notification(
@@ -1075,6 +1050,9 @@ def test_dao_get_notifications_by_recipient_is_limited_to_50_results(sample_temp
     assert len(results.items) == 50
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize("search_term", ["JACK", "JACK@gmail.com", "jack@gmail.com"])
 def test_dao_get_notifications_by_recipient_is_not_case_sensitive(
     sample_email_template, search_term
@@ -1093,6 +1071,9 @@ def test_dao_get_notifications_by_recipient_is_not_case_sensitive(
     assert notification.id in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_recipient_matches_partial_emails(
     sample_email_template,
 ):
@@ -1116,6 +1097,9 @@ def test_dao_get_notifications_by_recipient_matches_partial_emails(
     assert notification_2.id not in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize(
     "search_term, expected_result_count",
     [
@@ -1165,6 +1149,9 @@ def test_dao_get_notifications_by_recipient_escapes(
     )
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize(
     "search_term, expected_result_count",
     [
@@ -1215,6 +1202,9 @@ def test_dao_get_notifications_by_reference_escapes_special_character(
     )
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize(
     "search_term",
     [
@@ -1252,6 +1242,9 @@ def test_dao_get_notifications_by_recipient_matches_partial_phone_numbers(
     assert notification_2.id not in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize("to", ["not@email", "123"])
 def test_dao_get_notifications_by_recipient_accepts_invalid_phone_numbers_and_email_addresses(
     sample_template,
@@ -1268,6 +1261,9 @@ def test_dao_get_notifications_by_recipient_accepts_invalid_phone_numbers_and_em
     assert len(results.items) == 0
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_recipient_ignores_spaces(sample_template):
     notification1 = create_notification(
         template=sample_template, to_field="+447700900855", normalised_to="447700900855"
@@ -1299,6 +1295,9 @@ def test_dao_get_notifications_by_recipient_ignores_spaces(sample_template):
     assert notification3.id in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @pytest.mark.parametrize("phone_search", ("202", "7-5", "+1 (202) 867-5309"))
 @pytest.mark.parametrize(
     "email_search",
@@ -1342,6 +1341,9 @@ def test_dao_get_notifications_by_recipient_searches_across_notification_types(
     assert results.items[1].id == sms.id
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_reference(notify_db_session):
     service = create_service()
     sms_template = create_template(service=service)
@@ -1416,6 +1418,9 @@ def test_dao_get_notifications_by_reference(notify_db_session):
     assert len(results.items) == 0
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_to_field_filters_status(sample_template):
     notification = create_notification(
         template=sample_template,
@@ -1441,6 +1446,9 @@ def test_dao_get_notifications_by_to_field_filters_status(sample_template):
     assert notification.id == notifications.items[0].id
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_to_field_filters_multiple_statuses(sample_template):
     notification1 = create_notification(
         template=sample_template,
@@ -1468,6 +1476,9 @@ def test_dao_get_notifications_by_to_field_filters_multiple_statuses(sample_temp
     assert notification2.id in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 def test_dao_get_notifications_by_to_field_returns_all_if_no_status_filter(
     sample_template,
 ):
@@ -1494,6 +1505,9 @@ def test_dao_get_notifications_by_to_field_returns_all_if_no_status_filter(
     assert notification2.id in notification_ids
 
 
+@pytest.mark.skip(
+    reason="We can't search on recipient if recipient is not kept in the db"
+)
 @freeze_time("2016-01-01 11:10:00")
 def test_dao_get_notifications_by_to_field_orders_by_created_at_desc(sample_template):
     notification = partial(

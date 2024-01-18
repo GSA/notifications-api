@@ -377,8 +377,8 @@ def test_persist_sms_notification_stores_normalised_number(
     )
     persisted_notification = Notification.query.all()[0]
 
-    assert persisted_notification.to == recipient
-    assert persisted_notification.normalised_to == expected_recipient_normalised
+    assert persisted_notification.to == "1"
+    assert persisted_notification.normalised_to == "1"
 
 
 @pytest.mark.parametrize(
@@ -401,8 +401,8 @@ def test_persist_email_notification_stores_normalised_email(
     )
     persisted_notification = Notification.query.all()[0]
 
-    assert persisted_notification.to == recipient
-    assert persisted_notification.normalised_to == expected_recipient_normalised
+    assert persisted_notification.to == "1"
+    assert persisted_notification.normalised_to == "1"
 
 
 def test_persist_notification_with_billable_units_stores_correct_info(mocker):

@@ -791,7 +791,7 @@ def test_should_persist_notification(
     assert response.status_code == 201
 
     notification = notifications_dao.get_notification_by_id(fake_uuid)
-    assert notification.to == to
+    assert notification.to == "1"
     assert notification.template_id == template.id
     assert notification.notification_type == template_type
 
@@ -1202,7 +1202,7 @@ def test_should_allow_store_original_number_on_sms_notification(
     assert notification_id
     notifications = Notification.query.all()
     assert len(notifications) == 1
-    assert "(202) 867-5309" == notifications[0].to
+    assert "1" == notifications[0].to
 
 
 def test_should_not_allow_sending_to_international_number_without_international_permission(

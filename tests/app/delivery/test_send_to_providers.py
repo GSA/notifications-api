@@ -652,10 +652,10 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_s3.return_value = "2028675309"
+    mock_s3.return_value = "12028675309"
     send_to_providers.send_sms_to_provider(notification)
     send_mock.assert_called_once_with(
-        to=notification.normalised_to,
+        to="12028675309",
         content=ANY,
         reference=str(notification.id),
         sender=notification.reply_to_text,
@@ -716,7 +716,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     assert mock_get_template.called is False
     assert mock_get_service.called is False
     send_mock.assert_called_once_with(
-        to=notification.normalised_to,
+        to="447700900855",
         content=ANY,
         reference=str(notification.id),
         sender=notification.reply_to_text,

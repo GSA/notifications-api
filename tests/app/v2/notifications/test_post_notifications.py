@@ -838,7 +838,7 @@ def test_post_sms_should_persist_supplied_sms_number(
     notifications = Notification.query.all()
     assert len(notifications) == 1
     notification_id = notifications[0].id
-    assert "+(44) 77009-00855" == notifications[0].to
+    assert "1" == notifications[0].to
     assert resp_json["id"] == str(notification_id)
     assert mocked.called
 

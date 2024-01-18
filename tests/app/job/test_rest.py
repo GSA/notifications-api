@@ -448,8 +448,11 @@ def _setup_jobs(template, number_of_jobs=5):
 
 
 def test_get_all_notifications_for_job_in_order_of_job_number(
-    admin_request, sample_template
+    admin_request, sample_template, mocker
 ):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
     main_job = create_job(sample_template)
     another_job = create_job(sample_template)
 
@@ -483,8 +486,11 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     ],
 )
 def test_get_all_notifications_for_job_filtered_by_status(
-    admin_request, sample_job, expected_notification_count, status_args
+    admin_request, sample_job, expected_notification_count, status_args, mocker
 ):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
     create_notification(job=sample_job, to_field="1", status="created")
 
     resp = admin_request.get(
@@ -497,8 +503,11 @@ def test_get_all_notifications_for_job_filtered_by_status(
 
 
 def test_get_all_notifications_for_job_returns_correct_format(
-    admin_request, sample_notification_with_job
+    admin_request, sample_notification_with_job, mocker
 ):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
     service_id = sample_notification_with_job.service_id
     job_id = sample_notification_with_job.job_id
 
@@ -813,8 +822,11 @@ def create_10_jobs(template):
 
 
 def test_get_all_notifications_for_job_returns_csv_format(
-    admin_request, sample_notification_with_job
+    admin_request, sample_notification_with_job, mocker
 ):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
         service_id=sample_notification_with_job.service_id,
