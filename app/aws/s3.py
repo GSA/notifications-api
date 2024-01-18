@@ -101,12 +101,8 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = JOBS.get(job_id)
-    # TODO REMOVE
-    current_app.logger.info(f"HERE IS THE JOB FROM CACHE {job}")
     if job is None:
         job = get_job_from_s3(service_id, job_id)
-        # TODO REMOVE
-        current_app.logger.info(f"HERE IS THE JOB FROM S3 {job}")
         JOBS[job_id] = job
         incr_jobs_cache_misses()
     else:
@@ -118,16 +114,12 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     first_row = first_row.split(",")
     phone_index = 0
     for item in first_row:
-        if item == "phone number":
+        if item.lower() == "phone number":
             break
         phone_index = phone_index + 1
 
     correct_row = job[job_row_number]
     correct_row = correct_row.split(",")
-    # TODO REMOVE
-    current_app.logger.info(
-        f"HERE IS THE CORRECT ROW AND PHONE INDEX {correct_row} {phone_index}"
-    )
 
     # This could happen if an old job cannot be retrieved from s3
     if len(correct_row) <= phone_index:
