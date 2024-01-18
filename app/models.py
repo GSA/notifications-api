@@ -70,6 +70,99 @@ def enum_values(enum: Enum) -> list[str]:
     """
     return [i.value for i in enum]  # type: ignore[attr-defined]
 
+# This has the standard definition for all of the enum columns used throughout the models.
+# This is used in the enum_column() function below.
+_enum_column_types = {
+    AuthType: db.Enum(               # the key should be the Enum class to use.
+        AuthType,                    # The Enum class to use.
+        name="auth_types",           # The name of the type defined in PostgreSQL - should be plural
+        values_callable=enum_values, # Every entry in this dict should contain this, note above.
+    ),
+    BrandType: db.Enum(
+        BrandType,
+        name="brand_types",
+        values_callable=enum_values,
+    ),
+    OrganizationType: db.Enum(
+        OrganizationType,
+        name="organization_types",
+        values_callable=enum_values,
+    ),
+    ServicePermissionType: db.Enum(
+        ServicePermissionType,
+        name="service_permission_types",
+        values_callable=enum_values,
+    ),
+    RecipientType: db.Enum(
+        RecipientType,
+        name="recipient_types",
+        values_callable=enum_values,
+    ),
+    CallbackType: db.Enum(
+        CallbackType,
+        name="callback_types",
+        values_callable=enum_values,
+    ),
+    KeyType: db.Enum(
+        KeyType,
+        name="key_types",
+        values_callable=enum_values,
+    ),
+    TemplateType: db.Enum(
+        TemplateType,
+        name="template_types",
+        values_callable=enum_values,
+    ),
+    TemplateProcessType: db.Enum(
+        TemplateProcessType,
+        name="template_process_types",
+        values_callable=enum_values,
+    ),
+    NotificationType: db.Enum(
+        NotificationType,
+        name="notification_types",
+        values_callable=enum_values,
+    ),
+    JobStatus: db.Enum(
+        JobStatus,
+        name="job_statuses",
+        values_callable=enum_values,
+    ),
+    CodeType: db.Enum(
+        CodeType,
+        name="code_types",
+        values_callable=enum_values,
+    ),
+    NotificationStatus: db.Enum(
+        NotificationStatus,
+        name="notify_statuses",
+        values_callable=enum_values,
+    ),
+    InvitedUserStatus: db.Enum(
+        InvitedUserStatus,
+        name="invited_user_statuses",
+        values_callable=enum_values,
+    ),
+    PermissionType: db.Enum(
+        PermissionType,
+        name="permission_types",
+        values_callable=enum_values,
+    ),
+    AgreementType: db.Enum(
+        AgreementType,
+        name="agreement_types",
+        values_callable=enum_values,
+    ),
+    AgreementStatus: db.Enum(
+        AgreementStatus,
+        name="agreement_statuses",
+        values_callable=enum_values,
+    ),
+}
+
+
+def enum_column(enum_type, **kwargs):
+    return db.Column(_enum_column_types[enum_type], **kwargs)
 
 class HistoryModel:
     @classmethod
@@ -124,16 +217,7 @@ class User(db.Model):
     state = db.Column(db.String, nullable=False, default="pending")
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
-    auth_type = db.Column(
-        db.Enum(
-            AuthType,
-            name="auth_type",
-            values_callable=enum_values,
-        ),
-        index=True,
-        nullable=False,
-        default=AuthType.SMS,
-    )
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
     email_access_validated_at = db.Column(
         db.DateTime,
         index=False,
@@ -302,12 +386,8 @@ class EmailBranding(db.Model):
     logo = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
     text = db.Column(db.String(255), nullable=True)
-    brand_type = db.Column(
-        db.Enum(
-            BrandType,
-            name="brand_type",
-            values_callable=enum_values,
-        ),
+    brand_type = enum_column(
+        BrandType,
         index=True,
         nullable=False,
         default=BrandType.ORG,
@@ -387,15 +467,7 @@ class Organization(db.Model):
         db.String(255), nullable=True
     )
     agreement_signed_version = db.Column(db.Float, nullable=True)
-    organization_type = db.Column(
-        db.Enum(
-            OrganizationType,
-            name="organization_type",
-            values_callable=enum_values,
-        ),
-        unique=False,
-        nullable=True,
-    )
+    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
     request_to_go_live_notes = db.Column(db.Text)
 
     domains = db.relationship("Domain")
@@ -528,15 +600,7 @@ class Service(db.Model, Versioned):
     )
     created_by = db.relationship("User", foreign_keys=[created_by_id])
     prefix_sms = db.Column(db.Boolean, nullable=False, default=True)
-    organization_type = db.Column(
-        db.Enum(
-            OrganizationType,
-            name="organization_type",
-            values_callable=enum_values,
-        ),
-        unique=False,
-        nullable=True,
-    )
+    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
     rate_limit = db.Column(db.Integer, index=False, nullable=False, default=3000)
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)
@@ -805,12 +869,8 @@ class ServicePermission(db.Model):
         index=True,
         nullable=False,
     )
-    permission = db.Column(
-        db.Enum(
-            ServicePermissionType,
-            name="service_permission_type",
-            values_callable=enum_values,
-        ),
+    permission = enum_column(
+        ServicePermissionType,
         index=True,
         primary_key=True,
         nullable=False,
@@ -843,14 +903,7 @@ class ServiceGuestList(db.Model):
         nullable=False,
     )
     service = db.relationship("Service", backref="guest_list")
-    recipient_type = db.Column(
-        db.Enum(
-            RecipientType,
-            name="recipient_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    recipient_type = enum_column(RecipientType, nullable=False)
     recipient = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -936,14 +989,7 @@ class ServiceCallbackApi(db.Model, Versioned):
     )
     service = db.relationship("Service", backref="service_callback_api")
     url = db.Column(db.String(), nullable=False)
-    callback_type = db.Column(
-        db.Enum(
-            CallbackType,
-            name="callback_type",
-            values_callable=enum_values,
-        ),
-        nullable=True,
-    )
+    callback_type = enum_column(CallbackType, nullable=True)
     _bearer_token = db.Column("bearer_token", db.String(), nullable=False)
     created_at = db.Column(
         db.DateTime,
@@ -1000,15 +1046,7 @@ class ApiKey(db.Model, Versioned):
         nullable=False,
     )
     service = db.relationship("Service", backref="api_keys")
-    key_type = db.Column(
-        db.Enum(
-            KeyType,
-            name="key_type",
-            values_callable=enum_values,
-        ),
-        index=True,
-        nullable=False,
-    )
+    key_type = enum_column(KeyType, index=True, nullable=False)
     expiry_date = db.Column(db.DateTime)
     created_at = db.Column(
         db.DateTime,
@@ -1138,14 +1176,7 @@ class TemplateBase(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(255), nullable=False)
-    template_type = db.Column(
-        db.Enum(
-            TemplateType,
-            name="template_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    template_type = enum_column(TemplateType, nullable=False)
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -1175,12 +1206,8 @@ class TemplateBase(db.Model):
 
     @declared_attr
     def process_type(cls):
-        return db.Column(
-            db.Enum(
-                TemplateProcessType,
-                name="template_process_type",
-                values_callable=enum_values,
-            ),
+        return enum_column(
+            TemplateProcessType,
             index=True,
             nullable=False,
             default=TemplateProcessType.NORMAL,
@@ -1348,14 +1375,7 @@ class ProviderDetails(db.Model):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, nullable=False)
     active = db.Column(db.Boolean, default=False, nullable=False)
     version = db.Column(db.Integer, default=1, nullable=False)
     updated_at = db.Column(
@@ -1380,14 +1400,7 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, nullable=False)
     active = db.Column(db.Boolean, nullable=False)
     version = db.Column(db.Integer, primary_key=True, nullable=False)
     updated_at = db.Column(
@@ -1448,15 +1461,11 @@ class Job(db.Model):
         UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=True
     )
     scheduled_for = db.Column(db.DateTime, index=True, unique=False, nullable=True)
-    job_status = db.Column(
-        db.Enum(
-            JobStatus,
-            name="job_status",
-            values_callable=enum_values,
-        ),
+    job_status = enum_column(
+        JobStatus,
         index=True,
         nullable=False,
-        default="pending",
+        default=JobStatus.PENDING,
     )
     archived = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -1470,16 +1479,7 @@ class VerifyCode(db.Model):
     )
     user = db.relationship("User", backref=db.backref("verify_codes", lazy="dynamic"))
     _code = db.Column(db.String, nullable=False)
-    code_type = db.Column(
-        db.Enum(
-            CodeType,
-            name="code_type",
-            values_callable=enum_values,
-        ),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    code_type = enum_column(CodeType, index=False, unique=False, nullable=False)
     expiry_datetime = db.Column(db.DateTime, nullable=False)
     code_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(
@@ -1524,13 +1524,7 @@ class NotificationAllTimeView(db.Model):
     api_key_id = db.Column(UUID(as_uuid=True))
     key_type = db.Column(db.String)
     billable_units = db.Column(db.Integer)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        )
-    )
+    notification_type = enum_column(NotificationType)
     created_at = db.Column(db.DateTime)
     sent_at = db.Column(db.DateTime)
     sent_by = db.Column(db.String)
@@ -1574,24 +1568,9 @@ class Notification(db.Model):
         unique=False,
     )
     api_key = db.relationship("ApiKey")
-    key_type = db.Column(
-        db.Enum(
-            KeyType,
-            name="key_type",
-            values_callable=enum_values,
-        ),
-        unique=False,
-        nullable=False,
-    )
+    key_type = enum_column(KeyType, unique=False, nullable=False)
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, nullable=False)
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -1602,15 +1581,10 @@ class Notification(db.Model):
         nullable=True,
         onupdate=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        db.Enum(
-            NotificationStatus,
-            name="notify_status_type",
-            values_callable=enum_values,
-        ),
+    status = enum_column(
+        NotificationStatus,
         nullable=True,
-        default="created",
-        key="status",  # http://docs.sqlalchemy.org/en/latest/core/metadata.html#sqlalchemy.schema.Column
+        default=NotificationStatus.CREATED,
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, index=True, nullable=True)
@@ -1869,24 +1843,9 @@ class NotificationHistory(db.Model, HistoryModel):
         unique=False,
     )
     api_key = db.relationship("ApiKey")
-    key_type = db.Column(
-        db.Enum(
-            KeyType,
-            name="key_type",
-            values_callable=enum_values,
-        ),
-        unique=False,
-        nullable=False,
-    )
+    key_type = enum_column(KeyType, unique=False, nullable=False)
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, nullable=False)
     created_at = db.Column(db.DateTime, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -1897,16 +1856,10 @@ class NotificationHistory(db.Model, HistoryModel):
         nullable=True,
         onupdate=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        "notification_status",
-        db.Enum(
-            NotificationStatus,
-            nsmr="notification_status_type",
-            values_callable=enum_values,
-        ),
+    status = enum_column(
+        NotificationStatus,
         nullable=True,
-        default="created",
-        key="status",  # http://docs.sqlalchemy.org/en/latest/core/metadata.html#sqlalchemy.schema.Column
+        default=NotificationStatus.CREATED,
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, nullable=True)
@@ -1970,26 +1923,13 @@ class InvitedUser(db.Model):
         nullable=False,
         default=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        db.Enum(
-            InvitedUserStatus,
-            name="invited_user_status",
-            values_callable=enum_values,
-        ),
+    status = enum_column(
+        InvitedUserStatus,
         nullable=False,
         default=InvitedUserStatus.PENDING,
     )
     permissions = db.Column(db.String, nullable=False)
-    auth_type = db.Column(
-        db.Enum(
-            AuthType,
-            name="auth_type",
-            values_callable=enum_values,
-        ),
-        index=True,
-        nullable=False,
-        default=AuthType.SMS,
-    )
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
 
     # would like to have used properties for this but haven't found a way to make them
@@ -2021,12 +1961,8 @@ class InvitedOrganizationUser(db.Model):
         default=datetime.datetime.utcnow,
     )
 
-    status = db.Column(
-        db.Enum(
-            InvitedUserStatus,
-            name="invited_users_status",
-            values_callable=enum_values,
-        ),
+    status = enum_column(
+        InvitedUserStatus,
         nullable=False,
         default=InvitedUserStatus.PENDING,
     )
@@ -2062,16 +1998,7 @@ class Permission(db.Model):
         nullable=False,
     )
     user = db.relationship("User")
-    permission = db.Column(
-        db.Enum(
-            PermissionType,
-            name="permission_type",
-            values_callable=enum_values,
-        ),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    permission = enum_column(PermissionType, index=False, unique=False, nullable=False)
     created_at = db.Column(
         db.DateTime,
         index=False,
@@ -2111,15 +2038,7 @@ class Rate(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     valid_from = db.Column(db.DateTime, nullable=False)
     rate = db.Column(db.Float(asdecimal=False), nullable=False)
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        index=True,
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, index=True, nullable=False)
 
     def __str__(self):
         the_string = "{}".format(self.rate)
@@ -2374,14 +2293,7 @@ class ServiceDataRetention(db.Model):
             collection_class=attribute_mapped_collection("notification_type"),
         ),
     )
-    notification_type = db.Column(
-        db.Enum(
-            NotificationType,
-            name="notification_type",
-            values_callable=enum_values,
-        ),
-        nullable=False,
-    )
+    notification_type = enum_column(NotificationType, nullable=False)
     days_of_retention = db.Column(db.Integer, nullable=False)
     created_at = db.Column(
         db.DateTime,
@@ -2467,27 +2379,9 @@ class Agreement(db.Model):
         default=uuid.uuid4,
         unique=False,
     )
-    type = db.Column(
-        db.Enum(
-            AgreementType,
-            name="agreement_type",
-            values_callable=enum_values,
-        ),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    type = enum_column(AgreementType, index=False, unique=False, nullable=False)
     partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    status = db.Column(
-        db.Enum(
-            AgreementStatus,
-            name="agreement_status",
-            values_callable=enum_values,
-        ),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    status = enum_column(AgreementStatus, index=False, unique=False, nullable=False)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     url = db.Column(db.String(255), nullable=False, unique=True, index=True)
