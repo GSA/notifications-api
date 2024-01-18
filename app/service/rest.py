@@ -433,8 +433,12 @@ def get_all_notifications_for_service(service_id):
                 notification.job_id,
                 notification.job_row_number,
             )
+            print(f"RECIPIENTE IN service/rest {recipient}")
             notification.to = recipient
             notification.normalised_to = recipient
+        else:
+            notification.to = "1"
+            notification.normalised_to = "1"
 
     kwargs = request.args.to_dict()
     kwargs["service_id"] = service_id
@@ -474,7 +478,7 @@ def get_all_notifications_for_service(service_id):
                 page,
                 len(next_page_of_pagination.items),
                 ".get_all_notifications_for_service",
-                **kwargs
+                **kwargs,
             )
             if count_pages
             else {},

@@ -11,7 +11,8 @@ from app.clients import AWS_CLIENT_CONFIG
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
 
-JOBS = ExpiringDict(max_len=100, max_age_seconds=3600 * 4)
+JOBS = ExpiringDict(max_len=1000, max_age_seconds=3600 * 4)
+
 
 JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
 JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
@@ -96,6 +97,32 @@ def incr_jobs_cache_hits():
     current_app.logger.info(f"JOBS CACHE MISS hits {hits} misses {misses}")
 
 
+def extract_phones(job):
+    job = job.split("\r\n")
+    first_row = job[0]
+    job.pop(0)
+    first_row = first_row.split(",")
+    phone_index = 0
+    for item in first_row:
+        if item.lower() == "phone number":
+            break
+        phone_index = phone_index + 1
+    phones = {}
+    job_row = 0
+    for row in job:
+        row = row.split(",")
+        phone_index = 0
+        for item in first_row:
+            if item.lower() == "phone number":
+                break
+            phone_index = phone_index + 1
+        my_phone = row[phone_index]
+        my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
+        phones[job_row] = my_phone
+        job_row = job_row + 1
+    return phones
+
+
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need a phone number.
     # At the same time we don't want to store it in redis or the db
@@ -107,6 +134,21 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         incr_jobs_cache_misses()
     else:
         incr_jobs_cache_hits()
+
+    if job is None:
+        current_app.logger.warning(
+            "Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+        )
+        return "Unknown Phone"
+
+    if JOBS.get(f"{job_id}_phones") is None:
+        JOBS[f"{job_id}_phones"] = extract_phones(job)
+
+    if JOBS.get(f"{job_id}_phones") is not None:
+        phone_to_return = JOBS.get(f"{job_id}_phones").get(job_row_number)
+        if phone_to_return:
+            print(f"USING SHORT CUT!  {phone_to_return}")
+            return phone_to_return
 
     job = job.split("\r\n")
     first_row = job[0]
@@ -121,11 +163,10 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     correct_row = job[job_row_number]
     correct_row = correct_row.split(",")
 
-    # This could happen if an old job cannot be retrieved from s3
-    if len(correct_row) <= phone_index:
-        return "Unknown Phone"
     my_phone = correct_row[phone_index]
     my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
+    if not my_phone:
+        return "Unknown Phone"
     return my_phone
 
 
