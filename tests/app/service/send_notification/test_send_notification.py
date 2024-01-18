@@ -14,15 +14,15 @@ from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
 from app.errors import InvalidRequest
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    SMS_TYPE,
     ApiKey,
     Notification,
     NotificationHistory,
+    NotificationType,
     Template,
+    TemplateType,
 )
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import RateLimitError
@@ -37,7 +37,7 @@ from tests.app.db import (
 )
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_create_notification_should_reject_if_missing_required_fields(
     notify_api, sample_api_key, mocker, template_type
 ):
@@ -96,7 +96,11 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
 
 
 @pytest.mark.parametrize(
-    "template_type, to", [(SMS_TYPE, "+447700900855"), (EMAIL_TYPE, "ok@ok.com")]
+    "template_type, to",
+    [
+        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.EMAIL, "ok@ok.com"),
+    ]
 )
 def test_send_notification_invalid_template_id(
     notify_api, sample_template, mocker, fake_uuid, template_type, to
@@ -281,8 +285,8 @@ def test_should_not_send_notification_for_archived_template(
 @pytest.mark.parametrize(
     "template_type, to",
     [
-        (SMS_TYPE, "+447700900855"),
-        (EMAIL_TYPE, "not-someone-we-trust@email-address.com"),
+        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.EMAIL, "not-someone-we-trust@email-address.com"),
     ],
 )
 def test_should_not_send_notification_if_restricted_and_not_a_service_user(
@@ -294,7 +298,9 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
                 "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
             )
             template = (
-                sample_template if template_type == SMS_TYPE else sample_email_template
+                sample_template
+                if template_type == TemplateType.SMS
+                else sample_email_template
             )
             template.service.restricted = True
             dao_update_service(template.service)
@@ -322,7 +328,7 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
             ] == json_resp["message"]["to"]
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_should_send_notification_if_restricted_and_a_service_user(
     notify_api, sample_template, sample_email_template, template_type, mocker
 ):
@@ -333,11 +339,11 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             )
 
             template = (
-                sample_template if template_type == SMS_TYPE else sample_email_template
+                sample_template if template_type == TemplateType.SMS else sample_email_template
             )
             to = (
                 template.service.created_by.mobile_number
-                if template_type == SMS_TYPE
+                if template_type == TemplateType.SMS
                 else template.service.created_by.email_address
             )
             template.service.restricted = True
@@ -358,7 +364,7 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             assert response.status_code == 201
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_should_not_allow_template_from_another_service(
     notify_api, service_factory, sample_user, mocker, template_type
 ):
@@ -379,7 +385,7 @@ def test_should_not_allow_template_from_another_service(
             )
             to = (
                 sample_user.mobile_number
-                if template_type == SMS_TYPE
+                if template_type == TemplateType.SMS
                 else sample_user.email_address
             )
             data = {"to": to, "template": service_2_templates[0].id}
@@ -496,8 +502,8 @@ def test_should_allow_api_call_if_under_day_limit_regardless_of_type(
             mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
             service = create_service(restricted=restricted, message_limit=2)
-            email_template = create_template(service, template_type=EMAIL_TYPE)
-            sms_template = create_template(service, template_type=SMS_TYPE)
+            email_template = create_template(service, template_type=TemplateType.EMAIL)
+            sms_template = create_template(service, template_type=TemplateType.SMS)
             create_notification(template=email_template)
 
             data = {"to": sample_user.mobile_number, "template": str(sms_template.id)}
@@ -518,7 +524,7 @@ def test_should_not_return_html_in_body(notify_api, sample_service, mocker):
         with notify_api.test_client() as client:
             mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
             email_template = create_template(
-                sample_service, template_type=EMAIL_TYPE, content="hello\nthere"
+                sample_service, template_type=TemplateType.EMAIL, content="hello\nthere"
             )
 
             data = {"to": "ok@ok.com", "template": str(email_template.id)}
@@ -742,7 +748,10 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
 
 @pytest.mark.parametrize(
     "template_type,queue_name",
-    [(SMS_TYPE, "send-sms-tasks"), (EMAIL_TYPE, "send-email-tasks")],
+    [
+        (TemplateType.SMS, "send-sms-tasks"),
+        (TemplateType.EMAIL, "send-email-tasks"),
+    ],
 )
 def test_should_persist_notification(
     client,
@@ -760,10 +769,10 @@ def test_should_persist_notification(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == SMS_TYPE else sample_email_template
+    template = sample_template if template_type == TemplateType.SMS else sample_email_template
     to = (
         sample_template.service.created_by.mobile_number
-        if template_type == SMS_TYPE
+        if template_type == TemplateType.SMS
         else sample_email_template.service.created_by.email_address
     )
     data = {"to": to, "template": template.id}
@@ -798,7 +807,7 @@ def test_should_persist_notification(
 
 @pytest.mark.parametrize(
     "template_type,queue_name",
-    [(SMS_TYPE, "send-sms-tasks"), (EMAIL_TYPE, "send-email-tasks")],
+    [(TemplateType.SMS, "send-sms-tasks"), (TemplateType.EMAIL, "send-email-tasks")],
 )
 def test_should_delete_notification_and_return_error_if_redis_fails(
     client,
@@ -817,10 +826,10 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == SMS_TYPE else sample_email_template
+    template = sample_template if template_type == TemplateType.SMS else sample_email_template
     to = (
         sample_template.service.created_by.mobile_number
-        if template_type == SMS_TYPE
+        if template_type == TemplateType.SMS
         else sample_email_template.service.created_by.email_address
     )
     data = {"to": to, "template": template.id}
@@ -907,7 +916,10 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
 @pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM])
 @pytest.mark.parametrize(
     "notification_type, to",
-    [(SMS_TYPE, "2028675300"), (EMAIL_TYPE, "non_guest_list_recipient@mail.com")],
+    [
+        (TemplateType.SMS, "2028675300"),
+        (TemplateType.EMAIL, "non_guest_list_recipient@mail.com"),
+    ],
 )
 def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     client, sample_service_guest_list, notification_type, to, key_type, mocker
@@ -962,8 +974,8 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
 @pytest.mark.parametrize(
     "notification_type, to, normalized_to",
     [
-        (SMS_TYPE, "2028675300", "+12028675300"),
-        (EMAIL_TYPE, "guest_list_recipient@mail.com", None),
+        (NotificationType.SMS, "2028675300", "+12028675300"),
+        (NotificationType.EMAIL, "guest_list_recipient@mail.com", None),
     ],
 )
 def test_should_send_notification_to_guest_list_recipient(
@@ -983,9 +995,9 @@ def test_should_send_notification_to_guest_list_recipient(
         "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
     )
     template = create_template(sample_service, template_type=notification_type)
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         service_guest_list = create_service_guest_list(sample_service, mobile_number=to)
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         service_guest_list = create_service_guest_list(sample_service, email_address=to)
 
     assert service_guest_list.service_id == sample_service.id
@@ -1022,8 +1034,8 @@ def test_should_send_notification_to_guest_list_recipient(
 @pytest.mark.parametrize(
     "notification_type, template_type, to",
     [
-        (EMAIL_TYPE, SMS_TYPE, "notify@digital.fake.gov"),
-        (SMS_TYPE, EMAIL_TYPE, "+12028675309"),
+        (NotificationType.EMAIL, TemplateType.SMS, "notify@digital.fake.gov"),
+        (NotificationType.SMS, TemplateType.EMAIL, "+12028675309"),
     ],
 )
 def test_should_error_if_notification_type_does_not_match_template_type(
@@ -1070,7 +1082,11 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
 
 
 @pytest.mark.parametrize(
-    "template_type, should_error", [(SMS_TYPE, True), (EMAIL_TYPE, False)]
+    "template_type, should_error",
+    [
+        (TemplateType.SMS, True),
+        (TemplateType.EMAIL, False),
+    ]
 )
 def test_create_template_raises_invalid_request_when_content_too_large(
     sample_service, template_type, should_error
@@ -1338,7 +1354,7 @@ def test_post_notification_should_set_reply_to_text(
     )
     template = create_template(sample_service, template_type=notification_type)
     expected_reply_to = current_app.config["FROM_NUMBER"]
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         expected_reply_to = "reply_to@gov.uk"
         create_reply_to_email(
             service=sample_service, email_address=expected_reply_to, is_default=True

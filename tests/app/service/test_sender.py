@@ -2,12 +2,12 @@ import pytest
 from flask import current_app
 
 from app.dao.services_dao import dao_add_user_to_service
-from app.models import EMAIL_TYPE, SMS_TYPE, Notification
+from app.models import Notification, NotificationType, TemplateType
 from app.service.sender import send_notification_to_service_users
 from tests.app.db import create_service, create_template, create_user
 
 
-@pytest.mark.parametrize("notification_type", [EMAIL_TYPE, SMS_TYPE])
+@pytest.mark.parametrize("notification_type", [NotificationType.EMAIL, NotificationType.SMS])
 def test_send_notification_to_service_users_persists_notifications_correctly(
     notify_service, notification_type, sample_service, mocker
 ):
@@ -37,7 +37,7 @@ def test_send_notification_to_service_users_sends_to_queue(
 ):
     send_mock = mocker.patch("app.service.sender.send_notification_to_queue")
 
-    template = create_template(sample_service, template_type=EMAIL_TYPE)
+    template = create_template(sample_service, template_type=NotificationType.EMAIL)
     send_notification_to_service_users(
         service_id=sample_service.id, template_id=template.id
     )
@@ -54,7 +54,7 @@ def test_send_notification_to_service_users_includes_user_fields_in_personalisat
 
     user = sample_service.users[0]
 
-    template = create_template(sample_service, template_type=EMAIL_TYPE)
+    template = create_template(sample_service, template_type=TemplateType.EMAIL)
     send_notification_to_service_users(
         service_id=sample_service.id,
         template_id=template.id,
@@ -82,7 +82,7 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
     service = create_service(user=first_active_user)
     dao_add_user_to_service(service, second_active_user)
     dao_add_user_to_service(service, pending_user)
-    template = create_template(service, template_type=EMAIL_TYPE)
+    template = create_template(service, template_type=TemplateType.EMAIL)
 
     send_notification_to_service_users(service_id=service.id, template_id=template.id)
 

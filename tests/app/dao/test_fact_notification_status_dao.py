@@ -30,6 +30,7 @@ from app.models import (
     NOTIFICATION_TECHNICAL_FAILURE,
     NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
+    NotificationType,
     TemplateType,
 )
 from tests.app.db import (
@@ -853,7 +854,7 @@ def test_update_fact_notification_status_respects_gmt_bst(
     expected_count,
 ):
     create_notification(template=sample_template, created_at=created_at_utc)
-    update_fact_notification_status(process_day, SMS_TYPE, sample_service.id)
+    update_fact_notification_status(process_day, NotificationType.SMS, sample_service.id)
 
     assert (
         FactNotificationStatus.query.filter_by(

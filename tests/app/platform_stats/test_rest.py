@@ -4,7 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from app.errors import InvalidRequest
-from app.models import EMAIL_TYPE, SMS_TYPE
+from app.models import TemplateType
 from app.platform_stats.rest import validate_date_range_is_within_a_financial_year
 from tests.app.db import (
     create_ft_billing,
@@ -59,8 +59,11 @@ def test_get_platform_stats_validates_the_date(admin_request):
 @freeze_time("2018-10-31 14:00")
 def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
     service_1 = create_service(service_name="service_1")
-    sms_template = create_template(service=service_1, template_type=SMS_TYPE)
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
+    sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
+    email_template = create_template(
+        service=service_1,
+        template_type=TemplateType.EMAIL,
+    )
     create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
     create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
 

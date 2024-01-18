@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
-from app.models import EMAIL_TYPE, SMS_TYPE, Template, TemplateHistory
+from app.models import ServicePermissionType, Template, TemplateHistory, TemplateType
 from tests import create_admin_authorization_header
 from tests.app.db import create_service, create_template, create_template_folder
 
@@ -17,8 +17,8 @@ from tests.app.db import create_service, create_template, create_template_folder
 @pytest.mark.parametrize(
     "template_type, subject",
     [
-        (SMS_TYPE, None),
-        (EMAIL_TYPE, "subject"),
+        (TemplateType.SMS, None),
+        (TemplateType.EMAIL, "subject"),
     ],
 )
 def test_should_create_a_new_template_for_a_service(
@@ -149,7 +149,7 @@ def test_should_raise_error_if_service_does_not_exist_on_create(
 ):
     data = {
         "name": "my template",
-        "template_type": SMS_TYPE,
+        "template_type": TemplateType.SMS,
         "content": "template content",
         "service": fake_uuid,
         "created_by": str(sample_user.id),
@@ -172,14 +172,14 @@ def test_should_raise_error_if_service_does_not_exist_on_create(
     "permissions, template_type, subject, expected_error",
     [
         (
-            [EMAIL_TYPE],
-            SMS_TYPE,
+            [ServicePermissionType.EMAIL],
+            TemplateType.SMS,
             None,
             {"template_type": ["Creating text message templates is not allowed"]},
         ),
         (
-            [SMS_TYPE],
-            EMAIL_TYPE,
+            [ServicePermissionType.SMS],
+            TemplateType.EMAIL,
             "subject",
             {"template_type": ["Creating email templates is not allowed"]},
         ),
@@ -217,13 +217,13 @@ def test_should_raise_error_on_create_if_no_permission(
     "template_type, permissions, expected_error",
     [
         (
-            SMS_TYPE,
-            [EMAIL_TYPE],
+            TemplateType.SMS,
+            [ServicePermissionType.EMAIL],
             {"template_type": ["Updating text message templates is not allowed"]},
         ),
         (
-            EMAIL_TYPE,
-            [SMS_TYPE],
+            TemplateType.EMAIL,
+            [ServicePErmissionType.SMS],
             {"template_type": ["Updating email templates is not allowed"]},
         ),
     ],
@@ -261,7 +261,7 @@ def test_should_error_if_created_by_missing(client, sample_user, sample_service)
     service_id = str(sample_service.id)
     data = {
         "name": "my template",
-        "template_type": SMS_TYPE,
+        "template_type": TemplateType.SMS,
         "content": "template content",
         "service": service_id,
     }
@@ -295,7 +295,7 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert json_resp["message"] == "No result found"
 
 
-@pytest.mark.parametrize("template_type", [EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.EMAIL])
 def test_must_have_a_subject_on_an_email_template(
     client, sample_user, sample_service, template_type
 ):
@@ -412,7 +412,7 @@ def test_should_be_able_to_get_all_templates_for_a_service(
 ):
     data = {
         "name": "my template 1",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "subject": "subject 1",
         "content": "template content",
         "service": str(sample_service.id),
@@ -421,7 +421,7 @@ def test_should_be_able_to_get_all_templates_for_a_service(
     data_1 = json.dumps(data)
     data = {
         "name": "my template 2",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "subject": "subject 2",
         "content": "template content",
         "service": str(sample_service.id),
@@ -529,8 +529,8 @@ def test_should_get_return_all_fields_by_default(
 @pytest.mark.parametrize(
     "template_type, expected_content",
     (
-        (EMAIL_TYPE, None),
-        (SMS_TYPE, None),
+        (TemplateType.EMAIL, None),
+        (TemplateType.SMS, None),
     ),
 )
 def test_should_not_return_content_and_subject_if_requested(
@@ -566,9 +566,9 @@ def test_should_not_return_content_and_subject_if_requested(
         (
             "about your ((thing))",
             "hello ((name)) we’ve received your ((thing))",
-            EMAIL_TYPE,
+            TemplateType.EMAIL,
         ),
-        (None, "hello ((name)) we’ve received your ((thing))", SMS_TYPE),
+        (None, "hello ((name)) we’ve received your ((thing))", TemplateType.SMS),
     ],
 )
 def test_should_get_a_single_template(
@@ -640,7 +640,10 @@ def test_should_preview_a_single_template(
     expected_error,
 ):
     template = create_template(
-        sample_service, template_type=EMAIL_TYPE, subject=subject, content=content
+        sample_service,
+        template_type=TemplateType.EMAIL,
+        subject=subject,
+        content=content,
     )
 
     response = client.get(
@@ -687,7 +690,7 @@ def test_should_return_404_if_no_templates_for_service_with_id(
     assert json_resp["message"] == "No result found"
 
 
-@pytest.mark.parametrize("template_type", (SMS_TYPE,))
+@pytest.mark.parametrize("template_type", (TemplateType.SMS,))
 def test_create_400_for_over_limit_content(
     client,
     notify_api,

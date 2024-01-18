@@ -4,7 +4,7 @@ import pytest
 from flask import json
 from jsonschema.exceptions import ValidationError
 
-from app.models import EMAIL_TYPE, SMS_TYPE, TEMPLATE_TYPES
+from app.models import TemplateType
 from app.schema_validation import validate
 from app.v2.templates.templates_schemas import (
     get_all_template_request,
@@ -16,7 +16,7 @@ valid_json_get_all_response = [
         "templates": [
             {
                 "id": str(uuid.uuid4()),
-                "type": SMS_TYPE,
+                "type": TemplateType.SMS,
                 "created_at": "2017-01-10T18:25:43.511Z",
                 "updated_at": None,
                 "version": 1,
@@ -26,7 +26,7 @@ valid_json_get_all_response = [
             },
             {
                 "id": str(uuid.uuid4()),
-                "type": EMAIL_TYPE,
+                "type": TemplateType.EMAIL,
                 "created_at": "2017-02-10T18:25:43.511Z",
                 "updated_at": None,
                 "version": 2,
@@ -41,7 +41,7 @@ valid_json_get_all_response = [
         "templates": [
             {
                 "id": str(uuid.uuid4()),
-                "type": SMS_TYPE,
+                "type": TemplateType.SMS,
                 "created_at": "2017-02-10T18:25:43.511Z",
                 "updated_at": None,
                 "version": 2,
@@ -60,7 +60,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": "invalid_id",
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": 1,
@@ -77,7 +77,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": "invalid_version",
@@ -94,7 +94,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "invalid_created_at",
                     "updated_at": None,
                     "version": 1,
@@ -111,7 +111,7 @@ invalid_json_get_all_response = [
         {
             "templates": [
                 {
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": 1,
@@ -128,7 +128,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": 1,
@@ -160,7 +160,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "updated_at": None,
                     "version": 1,
                     "created_by": "someone@test.com",
@@ -176,7 +176,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "version": 1,
                     "created_by": "someone@test.com",
@@ -192,7 +192,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "created_by": "someone@test.com",
@@ -208,7 +208,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": 1,
@@ -224,7 +224,7 @@ invalid_json_get_all_response = [
             "templates": [
                 {
                     "id": str(uuid.uuid4()),
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "version": 1,
@@ -239,7 +239,7 @@ invalid_json_get_all_response = [
         {
             "templates": [
                 {
-                    "type": SMS_TYPE,
+                    "type": TemplateType.SMS,
                     "created_at": "2017-02-10T18:25:43.511Z",
                     "updated_at": None,
                     "created_by": "someone@test.com",
@@ -256,19 +256,19 @@ invalid_json_get_all_response = [
 ]
 
 
-@pytest.mark.parametrize("template_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("template_type", list(TemplateType))
 def test_get_all_template_request_schema_against_no_args_is_valid(template_type):
     data = {}
     assert validate(data, get_all_template_request) == data
 
 
-@pytest.mark.parametrize("template_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("template_type", list(TemplateType))
 def test_get_all_template_request_schema_against_valid_args_is_valid(template_type):
     data = {"type": template_type}
     assert validate(data, get_all_template_request) == data
 
 
-@pytest.mark.parametrize("template_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("template_type", list(TemplateType))
 def test_get_all_template_request_schema_against_invalid_args_is_invalid(template_type):
     data = {"type": "unknown"}
 

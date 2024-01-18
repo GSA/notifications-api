@@ -5,11 +5,11 @@ import pytest
 from freezegun import freeze_time
 
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    SMS_TYPE,
+    NotificationType,
+    TemplateType,
 )
 from tests.app.db import (
     create_ft_notification_status,
@@ -58,7 +58,7 @@ def test_get_template_usage_by_month_returns_two_templates(
 ):
     template_one = create_template(
         sample_service,
-        template_type=SMS_TYPE,
+        template_type=TemplateType.SMS,
         template_name="TEST TEMPLATE",
         hidden=True,
     )
@@ -123,8 +123,11 @@ def test_get_service_notification_statistics(
             today_only=today_only,
         )
 
-    assert set(resp["data"].keys()) == {SMS_TYPE, EMAIL_TYPE}
-    assert resp["data"][SMS_TYPE] == stats
+    assert set(resp["data"].keys()) == {
+        NotificationType.SMS.value,
+        NotificationType.EMAIL.value,
+    }
+    assert resp["data"][NotificationType.SMS.value] == stats
 
 
 def test_get_service_notification_statistics_with_unknown_service(admin_request):
@@ -133,8 +136,8 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
     )
 
     assert resp["data"] == {
-        SMS_TYPE: {"requested": 0, "delivered": 0, "failed": 0},
-        EMAIL_TYPE: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.SMS.value: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.EMAIL.value: {"requested": 0, "delivered": 0, "failed": 0},
     }
 
 
@@ -198,7 +201,7 @@ def test_get_monthly_notification_stats_returns_empty_stats_with_correct_dates(
 def test_get_monthly_notification_stats_returns_stats(admin_request, sample_service):
     sms_t1 = create_template(sample_service)
     sms_t2 = create_template(sample_service)
-    email_template = create_template(sample_service, template_type=EMAIL_TYPE)
+    email_template = create_template(sample_service, template_type=TemplateType.EMAIL)
 
     create_ft_notification_status(datetime(2016, 6, 1), template=sms_t1)
     create_ft_notification_status(datetime(2016, 6, 2), template=sms_t1)

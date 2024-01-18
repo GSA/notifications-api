@@ -9,11 +9,10 @@ from flask import current_app, json
 from app.dao import templates_dao
 from app.dao.service_sms_sender_dao import dao_update_service_sms_sender
 from app.models import (
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
     NOTIFICATION_CREATED,
-    SMS_TYPE,
     Notification,
+    NotificationType,
+    ServicePermissionType,
 )
 from app.schema_validation import validate
 from app.v2.errors import RateLimitError
@@ -529,9 +528,9 @@ def test_post_email_notification_returns_201(
 @pytest.mark.parametrize(
     "recipient, notification_type",
     [
-        ("simulate-delivered@notifications.service.gov.uk", EMAIL_TYPE),
-        ("simulate-delivered-2@notifications.service.gov.uk", EMAIL_TYPE),
-        ("simulate-delivered-3@notifications.service.gov.uk", EMAIL_TYPE),
+        ("simulate-delivered@notifications.service.gov.uk", NotificationType.EMAIL),
+        ("simulate-delivered-2@notifications.service.gov.uk", NotificationType.EMAIL),
+        ("simulate-delivered-3@notifications.service.gov.uk", NotificationType.EMAIL),
         ("+14254147167", "sms"),
         ("+14254147755", "sms"),
     ],
@@ -655,7 +654,7 @@ def test_post_sms_notification_returns_400_if_not_allowed_to_send_int_sms(
     client,
     notify_db_session,
 ):
-    service = create_service(service_permissions=[SMS_TYPE])
+    service = create_service(service_permissions=[ServicePermissionType.SMS])
     template = create_template(service=service)
 
     data = {"phone_number": "+20-12-1234-1234", "template_id": template.id}
@@ -762,7 +761,7 @@ def test_post_sms_notification_returns_400_if_number_not_in_guest_list(
     notify_db_session, client, restricted
 ):
     service = create_service(
-        restricted=restricted, service_permissions=[SMS_TYPE, INTERNATIONAL_SMS_TYPE]
+        restricted=restricted, service_permissions=[ServicePermissionType.SMS, ServicePermissionType.INTERNATIONAL_SMS]
     )
     template = create_template(service=service)
     create_api_key(service=service, key_type="team")
@@ -860,7 +859,7 @@ def test_post_notification_raises_bad_request_if_not_valid_notification_type(
 def test_post_notification_with_wrong_type_of_sender(
     client, sample_template, sample_email_template, notification_type, fake_uuid
 ):
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         template = sample_email_template
         form_label = "sms_sender_id"
         data = {
@@ -868,7 +867,7 @@ def test_post_notification_with_wrong_type_of_sender(
             "template_id": str(sample_email_template.id),
             form_label: fake_uuid,
         }
-    elif notification_type == SMS_TYPE:
+    elif notification_type == ServicePermissionType.SMS:
         template = sample_template
         form_label = "email_reply_to_id"
         data = {
@@ -997,7 +996,7 @@ def test_post_email_notification_with_archived_reply_to_id_returns_400(
 def test_post_notification_with_document_upload(
     client, notify_db_session, mocker, csv_param
 ):
-    service = create_service(service_permissions=[EMAIL_TYPE])
+    service = create_service(service_permissions=[ServicePermissionType.EMAIL])
     service.contact_link = "contact.me@gov.uk"
     template = create_template(
         service=service,
@@ -1055,7 +1054,7 @@ def test_post_notification_with_document_upload(
 def test_post_notification_with_document_upload_simulated(
     client, notify_db_session, mocker
 ):
-    service = create_service(service_permissions=[EMAIL_TYPE])
+    service = create_service(service_permissions=[ServicePermissionType.EMAIL])
     service.contact_link = "contact.me@gov.uk"
     template = create_template(
         service=service, template_type="email", content="Document: ((document))"
@@ -1092,7 +1091,7 @@ def test_post_notification_with_document_upload_simulated(
 def test_post_notification_without_document_upload_permission(
     client, notify_db_session, mocker
 ):
-    service = create_service(service_permissions=[EMAIL_TYPE])
+    service = create_service(service_permissions=[ServicePermissionType.EMAIL])
     template = create_template(
         service=service, template_type="email", content="Document: ((document))"
     )
@@ -1234,7 +1233,7 @@ def test_post_notifications_saves_email_or_sms_to_queue(
         }
         data.update(
             {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == EMAIL_TYPE else data.update(
+        ) if notification_type == NotificationType.EMAIL else data.update(
             {"phone_number": "+447700900855"}
         )
 
@@ -1297,7 +1296,7 @@ def test_post_notifications_saves_email_or_sms_normally_if_saving_to_queue_fails
         }
         data.update(
             {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == EMAIL_TYPE else data.update(
+        ) if notification_type == NotificationType.EMAIL else data.update(
             {"phone_number": "+447700900855"}
         )
 
@@ -1353,7 +1352,7 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
         }
         data.update(
             {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == EMAIL_TYPE else data.update(
+        ) if notification_type == NotificationType.EMAIL else data.update(
             {"phone_number": "+447700900855"}
         )
         response = client.post(

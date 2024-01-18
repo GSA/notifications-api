@@ -8,13 +8,13 @@ from notifications_utils.recipients import InvalidPhoneError
 from app.config import QueueNames
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
-    MOBILE_TYPE,
     PRIORITY,
-    SMS_TYPE,
+    GuestListRecipientType,
     Notification,
+    NotificationType,
     ServiceGuestList,
+    TemplateType,
 )
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import BadRequestError
@@ -69,7 +69,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
     service = create_service()
     template = create_template(
         service=service,
-        template_type=SMS_TYPE,
+        template_type=TemplateType.SMS,
         content="Hello (( Name))\nYour thing is due soon",
     )
 
@@ -88,7 +88,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
         recipient=post_data["to"],
         service=template.service,
         personalisation={"name": "foo"},
-        notification_type=SMS_TYPE,
+        notification_type=NotificationType.SMS,
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         created_by_id=str(service.created_by_id),
@@ -104,7 +104,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_international_sms
     service = create_service(service_permissions=["sms", "international_sms"])
     template = create_template(
         service=service,
-        template_type=SMS_TYPE,
+        template_type=TemplateType.SMS,
     )
 
     post_data = {
@@ -125,7 +125,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
     service = create_service()
     template = create_template(
         service=service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="Test subject",
         content="Hello (( Name))\nYour thing is due soon",
     )
@@ -145,7 +145,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
         recipient=post_data["to"],
         service=template.service,
         personalisation={"name": "foo"},
-        notification_type=EMAIL_TYPE,
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         created_by_id=str(service.created_by_id),
@@ -203,7 +203,7 @@ def test_send_one_off_notification_raises_if_cant_send_to_recipient(
     template = create_template(service=service)
     dao_add_and_commit_guest_list_contacts(
         [
-            ServiceGuestList.from_string(service.id, MOBILE_TYPE, "2028765309"),
+            ServiceGuestList.from_string(service.id, GuestListRecipientType.MOBILE, "2028765309"),
         ]
     )
 
@@ -286,7 +286,7 @@ def test_send_one_off_notification_should_add_email_reply_to_text_for_notificati
 def test_send_one_off_sms_notification_should_use_sms_sender_reply_to_text(
     sample_service, celery_mock
 ):
-    template = create_template(service=sample_service, template_type=SMS_TYPE)
+    template = create_template(service=sample_service, template_type=TemplateType.SMS)
     sms_sender = create_service_sms_sender(
         service=sample_service, sms_sender="2028675309", is_default=False
     )
@@ -310,7 +310,7 @@ def test_send_one_off_sms_notification_should_use_sms_sender_reply_to_text(
 def test_send_one_off_sms_notification_should_use_default_service_reply_to_text(
     sample_service, celery_mock
 ):
-    template = create_template(service=sample_service, template_type=SMS_TYPE)
+    template = create_template(service=sample_service, template_type=TemplateType.SMS)
     sample_service.service_sms_senders[0].is_default = False
     create_service_sms_sender(
         service=sample_service, sms_sender="2028675309", is_default=True

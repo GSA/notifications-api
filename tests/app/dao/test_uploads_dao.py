@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
-from app.models import JOB_STATUS_IN_PROGRESS, LETTER_TYPE
+from app.models import JOB_STATUS_IN_PROGRESS
 from tests.app.db import (
     create_job,
     create_notification,
@@ -29,7 +29,7 @@ def create_uploaded_letter(letter_template, service, status="created", created_a
 def create_uploaded_template(service):
     return create_template(
         service,
-        template_type=LETTER_TYPE,
+        template_type=TemplateType.LETTER,
         template_name="Pre-compiled PDF",
         subject="Pre-compiled PDF",
         content="",

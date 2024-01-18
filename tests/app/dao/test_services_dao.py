@@ -41,12 +41,9 @@ from app.dao.services_dao import (
 )
 from app.dao.users_dao import create_user_code, save_model_user
 from app.models import (
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    SMS_TYPE,
     ApiKey,
     InvitedUser,
     Job,
@@ -56,6 +53,7 @@ from app.models import (
     Permission,
     Service,
     ServicePermission,
+    ServicePermissionType,
     ServiceUser,
     Template,
     TemplateHistory,
@@ -601,9 +599,9 @@ def test_create_service_returns_service_with_default_permissions(notify_db_sessi
     _assert_service_permissions(
         service.permissions,
         (
-            SMS_TYPE,
-            EMAIL_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.SMS,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
         ),
     )
 
@@ -612,17 +610,17 @@ def test_create_service_returns_service_with_default_permissions(notify_db_sessi
     "permission_to_remove, permissions_remaining",
     [
         (
-            SMS_TYPE,
+            ServicePermissionType.SMS,
             (
-                EMAIL_TYPE,
-                INTERNATIONAL_SMS_TYPE,
+                ServicePermissionType.EMAIL,
+                ServicePermissionType.INTERNATIONAL_SMS,
             ),
         ),
         (
-            EMAIL_TYPE,
+            ServicePermissionType.EMAIL,
             (
-                SMS_TYPE,
-                INTERNATIONAL_SMS_TYPE,
+                ServicePermissionType.SMS,
+                ServicePermissionType.INTERNATIONAL_SMS,
             ),
         ),
     ],
@@ -641,10 +639,17 @@ def test_remove_permission_from_service_by_id_returns_service_with_correct_permi
 
 def test_removing_all_permission_returns_service_with_no_permissions(notify_db_session):
     service = create_service()
-    dao_remove_service_permission(service_id=service.id, permission=SMS_TYPE)
-    dao_remove_service_permission(service_id=service.id, permission=EMAIL_TYPE)
     dao_remove_service_permission(
-        service_id=service.id, permission=INTERNATIONAL_SMS_TYPE
+        service_id=service.id,
+        permission=ServicePermissionType.SMS,
+    )
+    dao_remove_service_permission(
+        service_id=service.id,
+        permission=ServicePermissionType.EMAIL,
+    )
+    dao_remove_service_permission(
+        service_id=service.id,
+        permission=ServicePermissionType.INTERNATIONAL_SMS,
     )
 
     service = dao_fetch_service_by_id(service.id)
@@ -734,16 +739,16 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
         service,
         user,
         service_permissions=[
-            SMS_TYPE,
-            # EMAIL_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.SMS,
+            # ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
         ],
     )
 
     assert Service.query.count() == 1
 
     service.permissions.append(
-        ServicePermission(service_id=service.id, permission=EMAIL_TYPE)
+        ServicePermission(service_id=service.id, permission=ServicePermissionType.EMAIL)
     )
     dao_update_service(service)
 
@@ -757,9 +762,9 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
     _assert_service_permissions(
         service.permissions,
         (
-            SMS_TYPE,
-            EMAIL_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.SMS,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
         ),
     )
 
@@ -775,8 +780,8 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
     _assert_service_permissions(
         service.permissions,
         (
-            EMAIL_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
         ),
     )
 
@@ -831,9 +836,9 @@ def test_delete_service_and_associated_objects(notify_db_session):
 
     assert ServicePermission.query.count() == len(
         (
-            SMS_TYPE,
-            EMAIL_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.SMS,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
         )
     )
 

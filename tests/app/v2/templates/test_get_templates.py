@@ -3,7 +3,7 @@ from itertools import product
 import pytest
 from flask import json
 
-from app.models import EMAIL_TYPE, TEMPLATE_TYPES
+from app.models import TemplateType
 from tests import create_service_authorization_header
 from tests.app.db import create_template
 
@@ -13,10 +13,10 @@ def test_get_all_templates_returns_200(client, sample_service):
         create_template(
             sample_service,
             template_type=tmp_type,
-            subject="subject_{}".format(name) if tmp_type == EMAIL_TYPE else "",
+            subject="subject_{}".format(name) if tmp_type == TemplateType.EMAIL else "",
             template_name=name,
         )
-        for name, tmp_type in product(("A", "B", "C"), TEMPLATE_TYPES)
+        for name, tmp_type in product(("A", "B", "C"), TemplateType)
     ]
 
     auth_header = create_service_authorization_header(service_id=sample_service.id)
@@ -37,18 +37,18 @@ def test_get_all_templates_returns_200(client, sample_service):
         assert template["id"] == str(templates[index].id)
         assert template["body"] == templates[index].content
         assert template["type"] == templates[index].template_type
-        if templates[index].template_type == EMAIL_TYPE:
+        if templates[index].template_type == TemplateType.EMAIL:
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("tmp_type", list(TemplateType))
 def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tmp_type):
     templates = [
         create_template(
             sample_service,
             template_type=tmp_type,
             template_name="Template {}".format(i),
-            subject="subject_{}".format(i) if tmp_type == EMAIL_TYPE else "",
+            subject="subject_{}".format(i) if tmp_type == TemplateType.EMAIL else "",
         )
         for i in range(3)
     ]
@@ -71,11 +71,11 @@ def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tm
         assert template["id"] == str(templates[index].id)
         assert template["body"] == templates[index].content
         assert template["type"] == tmp_type
-        if templates[index].template_type == EMAIL_TYPE:
+        if templates[index].template_type == TemplateType.EMAIL:
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("tmp_type", list(TemplateType))
 def test_get_correct_num_templates_for_valid_type_returns_200(
     client, sample_service, tmp_type
 ):
@@ -85,7 +85,7 @@ def test_get_correct_num_templates_for_valid_type_returns_200(
     for _ in range(num_templates):
         templates.append(create_template(sample_service, template_type=tmp_type))
 
-    for other_type in TEMPLATE_TYPES:
+    for other_type in TemplateType:
         if other_type != tmp_type:
             templates.append(create_template(sample_service, template_type=other_type))
 

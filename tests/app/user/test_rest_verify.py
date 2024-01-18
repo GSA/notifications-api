@@ -11,12 +11,11 @@ from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.users_dao import create_user_code
 from app.models import (
-    EMAIL_TYPE,
-    SMS_TYPE,
     USER_AUTH_TYPES,
     Notification,
     User,
     VerifyCode,
+    VerifyCodeType,
 )
 from tests import create_admin_authorization_header
 
@@ -103,7 +102,7 @@ def test_user_verify_code_rejects_good_code_if_too_many_failed_logins(
 
 
 @freeze_time("2020-04-01 12:00")
-@pytest.mark.parametrize("code_type", [EMAIL_TYPE, SMS_TYPE])
+@pytest.mark.parametrize("code_type", [VerifyCodeType.EMAIL, VerifyCodeType.SMS])
 def test_user_verify_code_expired_code_and_increments_failed_login_count(
     code_type, admin_request, sample_user
 ):
@@ -527,7 +526,7 @@ def test_user_verify_email_code(admin_request, sample_user, auth_type):
     sample_user.email_access_validated_at = datetime.utcnow() - timedelta(days=1)
     sample_user.auth_type = auth_type
     magic_code = str(uuid.uuid4())
-    verify_code = create_user_code(sample_user, magic_code, EMAIL_TYPE)
+    verify_code = create_user_code(sample_user, magic_code, VerifyCodeType.EMAIL)
 
     data = {"code_type": "email", "code": magic_code}
 
@@ -544,7 +543,7 @@ def test_user_verify_email_code(admin_request, sample_user, auth_type):
     assert sample_user.current_session_id is not None
 
 
-@pytest.mark.parametrize("code_type", [EMAIL_TYPE, SMS_TYPE])
+@pytest.mark.parametrize("code_type", [VerifyCodeType.EMAIL, VerifyCodeType.SMS])
 @freeze_time("2016-01-01T12:00:00")
 def test_user_verify_email_code_fails_if_code_already_used(
     admin_request, sample_user, code_type

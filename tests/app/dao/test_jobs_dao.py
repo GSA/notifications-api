@@ -18,7 +18,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.models import JOB_STATUS_FINISHED, SMS_TYPE, Job
+from app.models import JOB_STATUS_FINISHED, Job, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -344,7 +344,7 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
     six_days_ago = datetime.utcnow() - timedelta(days=6)
     eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    sms_template = create_template(sample_service, template_type=SMS_TYPE)
+    sms_template = create_template(sample_service, template_type=TemplateType.SMS)
 
     create_job(sms_template, created_at=eight_days_ago)
     create_job(sms_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
@@ -352,7 +352,7 @@ def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
         sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago
     )
 
-    jobs = dao_get_jobs_older_than_data_retention(notification_types=[SMS_TYPE])
+    jobs = dao_get_jobs_older_than_data_retention(notification_types=[NotificationType.SMS])
 
     assert len(jobs) == 2
     assert job_to_remain.id not in [job.id for job in jobs]

@@ -15,23 +15,21 @@ from app.dao.services_dao import dao_add_user_to_service, dao_remove_user_from_s
 from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
 from app.models import (
-    EMAIL_AUTH_TYPE,
-    EMAIL_TYPE,
-    INBOUND_SMS_TYPE,
-    INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    SMS_TYPE,
     AnnualBilling,
     EmailBranding,
     InboundNumber,
     Notification,
+    NotificationType,
     Permission,
     Service,
     ServiceEmailReplyTo,
     ServicePermission,
+    ServicePermissionType,
     ServiceSmsSender,
+    TemplateType,
     User,
 )
 from tests import create_admin_authorization_header
@@ -285,9 +283,9 @@ def test_get_service_list_has_default_permissions(admin_request, service_factory
     assert all(
         set(json["permissions"])
         == {
-            EMAIL_TYPE,
-            SMS_TYPE,
-            INTERNATIONAL_SMS_TYPE,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            ServicePermissionType.INTERNATIONAL_SMS,
         }
         for json in json_resp["data"]
     )
@@ -301,9 +299,9 @@ def test_get_service_by_id_has_default_service_permissions(
     )
 
     assert set(json_resp["data"]["permissions"]) == {
-        EMAIL_TYPE,
-        SMS_TYPE,
-        INTERNATIONAL_SMS_TYPE,
+        ServicePermissionType.EMAIL,
+        ServicePermissionType.SMS,
+        ServicePermissionType.INTERNATIONAL_SMS,
     }
 
 
@@ -769,7 +767,7 @@ def test_update_service_flags(client, sample_service):
     json_resp = resp.json
     assert resp.status_code == 200
     assert json_resp["data"]["name"] == sample_service.name
-    data = {"permissions": [INTERNATIONAL_SMS_TYPE]}
+    data = {"permissions": {ServicePermissionType.INTERNATIONAL_SMS}}
 
     auth_header = create_admin_authorization_header()
 
@@ -780,7 +778,9 @@ def test_update_service_flags(client, sample_service):
     )
     result = resp.json
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == set([INTERNATIONAL_SMS_TYPE])
+    assert set(result["data"]["permissions"]) == {
+        ServicePermissionType.INTERNATIONAL_SMS
+    }
 
 
 @pytest.mark.parametrize(
@@ -854,7 +854,7 @@ def test_update_service_flags_with_service_without_default_service_permissions(
 ):
     auth_header = create_admin_authorization_header()
     data = {
-        "permissions": [INTERNATIONAL_SMS_TYPE],
+        "permissions": {ServicePermissionType.INTERNATIONAL_SMS},
     }
 
     resp = client.post(
@@ -865,7 +865,9 @@ def test_update_service_flags_with_service_without_default_service_permissions(
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == set([INTERNATIONAL_SMS_TYPE])
+    assert set(result["data"]["permissions"]) == {
+        ServicePermissionType.INTERNATIONAL_SMS,
+    }
 
 
 def test_update_service_flags_will_remove_service_permissions(
@@ -874,12 +876,18 @@ def test_update_service_flags_will_remove_service_permissions(
     auth_header = create_admin_authorization_header()
 
     service = create_service(
-        service_permissions=[SMS_TYPE, EMAIL_TYPE, INTERNATIONAL_SMS_TYPE]
+        service_permissions={
+            ServicePermissionType.SMS,
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.INTERNATIONAL_SMS,
+        }
     )
 
-    assert INTERNATIONAL_SMS_TYPE in [p.permission for p in service.permissions]
+    assert ServicePermissionType.INTERNATIONAL_SMS in {
+        p.permission for p in service.permissions
+    }
 
-    data = {"permissions": [SMS_TYPE, EMAIL_TYPE]}
+    data = {"permissions": {ServicePermissionType.SMS, ServicePermissionType.EMAIL}}
 
     resp = client.post(
         "/service/{}".format(service.id),
@@ -889,10 +897,13 @@ def test_update_service_flags_will_remove_service_permissions(
     result = resp.json
 
     assert resp.status_code == 200
-    assert INTERNATIONAL_SMS_TYPE not in result["data"]["permissions"]
+    assert ServicePermissionType.INTERNATIONAL_SMS not in result["data"]["permissions"]
 
     permissions = ServicePermission.query.filter_by(service_id=service.id).all()
-    assert set([p.permission for p in permissions]) == set([SMS_TYPE, EMAIL_TYPE])
+    assert {p.permission for p in permissions} == {
+        ServicePermissionType.SMS,
+        ServicePermissionType.EMAIL,
+    }
 
 
 def test_update_permissions_will_override_permission_flags(
@@ -900,7 +911,7 @@ def test_update_permissions_will_override_permission_flags(
 ):
     auth_header = create_admin_authorization_header()
 
-    data = {"permissions": [INTERNATIONAL_SMS_TYPE]}
+    data = {"permissions": {ServicePermissionType.INTERNATIONAL_SMS}}
 
     resp = client.post(
         "/service/{}".format(service_with_no_permissions.id),
@@ -910,7 +921,9 @@ def test_update_permissions_will_override_permission_flags(
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == set([INTERNATIONAL_SMS_TYPE])
+    assert set(result["data"]["permissions"]) == {
+        ServicePermissionType.INTERNATIONAL_SMS
+    }
 
 
 def test_update_service_permissions_will_add_service_permissions(
@@ -918,7 +931,7 @@ def test_update_service_permissions_will_add_service_permissions(
 ):
     auth_header = create_admin_authorization_header()
 
-    data = {"permissions": [EMAIL_TYPE, SMS_TYPE]}
+    data = {"permissions": {ServicePermissionType.EMAIL, ServicePermissionType.SMS}}
 
     resp = client.post(
         "/service/{}".format(sample_service.id),
@@ -928,17 +941,20 @@ def test_update_service_permissions_will_add_service_permissions(
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == set([SMS_TYPE, EMAIL_TYPE])
+    assert set(result["data"]["permissions"]) == {
+        ServicePermissionType.SMS,
+        ServicePermissionType.EMAIL,
+    }
 
 
 @pytest.mark.parametrize(
     "permission_to_add",
     [
-        (EMAIL_TYPE),
-        (SMS_TYPE),
-        (INTERNATIONAL_SMS_TYPE),
-        (INBOUND_SMS_TYPE),
-        (EMAIL_AUTH_TYPE),
+        ServicePermissionType.EMAIL,
+        ServicePermissionType.SMS,
+        ServicePermissionType.INTERNATIONAL_SMS,
+        ServicePermissionType.INBOUND_SMS,
+        ServicePermissionType.EMAIL_AUTH,
     ],
 )
 def test_add_service_permission_will_add_permission(
@@ -968,7 +984,13 @@ def test_update_permissions_with_an_invalid_permission_will_raise_error(
     auth_header = create_admin_authorization_header()
     invalid_permission = "invalid_permission"
 
-    data = {"permissions": [EMAIL_TYPE, SMS_TYPE, invalid_permission]}
+    data = {
+        "permissions": {
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            invalid_permission,
+        }
+    }
 
     resp = client.post(
         "/service/{}".format(sample_service.id),
@@ -990,7 +1012,13 @@ def test_update_permissions_with_duplicate_permissions_will_raise_error(
 ):
     auth_header = create_admin_authorization_header()
 
-    data = {"permissions": [EMAIL_TYPE, SMS_TYPE, SMS_TYPE]}
+    data = {
+        "permissions": {
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            ServicePermissionType.SMS,
+        }
+    }
 
     resp = client.post(
         "/service/{}".format(sample_service.id),
@@ -1002,7 +1030,7 @@ def test_update_permissions_with_duplicate_permissions_will_raise_error(
     assert resp.status_code == 400
     assert result["result"] == "error"
     assert (
-        "Duplicate Service Permission: ['{}']".format(SMS_TYPE)
+        f"Duplicate Service Permission: ['{ServicePermissionType.SMS}']"
         in result["message"]["permissions"]
     )
 
@@ -1695,7 +1723,7 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     service_2 = create_service(service_name="2")
 
     service_1_sms_template = create_template(service_1)
-    service_1_email_template = create_template(service_1, template_type=EMAIL_TYPE)
+    service_1_email_template = create_template(service_1, template_type=TemplateType.EMAIL)
     service_2_sms_template = create_template(service_2)
 
     returned_notification = create_notification(
@@ -2040,8 +2068,11 @@ def test_get_detailed_service(
     service = resp.json["data"]
     assert service["id"] == str(sample_service.id)
     assert "statistics" in service.keys()
-    assert set(service["statistics"].keys()) == {SMS_TYPE, EMAIL_TYPE}
-    assert service["statistics"][SMS_TYPE] == stats
+    assert set(service["statistics"].keys()) == {
+        NotificationType.SMS.value,
+        NotificationType.EMAIL.value,
+    }
+    assert service["statistics"][NotificationType.SMS.value] == stats
 
 
 def test_get_services_with_detailed_flag(client, sample_template):
@@ -2060,8 +2091,8 @@ def test_get_services_with_detailed_flag(client, sample_template):
     assert data[0]["name"] == "Sample service"
     assert data[0]["id"] == str(notifications[0].service_id)
     assert data[0]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 3},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 3},
     }
 
 
@@ -2083,8 +2114,8 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(
     data = resp.json["data"]
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 2},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 2},
     }
 
 
@@ -2153,13 +2184,13 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 1, "failed": 0, "requested": 3},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 1, "failed": 0, "requested": 3},
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 1},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 1},
     }
 
 
@@ -2182,13 +2213,13 @@ def test_get_detailed_services_includes_services_with_no_notifications(
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 1},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 1},
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 0},
     }
 
 
@@ -2208,8 +2239,8 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
 
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        EMAIL_TYPE: {"delivered": 0, "failed": 0, "requested": 0},
-        SMS_TYPE: {"delivered": 0, "failed": 0, "requested": 3},
+        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 3},
     }
 
 
@@ -2251,12 +2282,12 @@ def test_get_detailed_services_for_date_range(
     )
 
     assert len(data) == 1
-    assert data[0]["statistics"][EMAIL_TYPE] == {
+    assert data[0]["statistics"][NotificationType.EMAIL.value] == {
         "delivered": 0,
         "failed": 0,
         "requested": 0,
     }
-    assert data[0]["statistics"][SMS_TYPE] == {
+    assert data[0]["statistics"][NotificationType.SMS.value] == {
         "delivered": 2,
         "failed": 0,
         "requested": 2,
@@ -2622,7 +2653,7 @@ def test_get_all_notifications_for_service_includes_template_redacted(
 
 # TODO: check whether all hidden templates are also precompiled letters
 # def test_get_all_notifications_for_service_includes_template_hidden(admin_request, sample_service):
-#     letter_template = create_template(sample_service, template_type=LETTER_TYPE)
+#     letter_template = create_template(sample_service, template_type=TemplateType.LETTER)
 
 #     with freeze_time('2000-01-01'):
 #         letter_noti = create_notification(letter_template)

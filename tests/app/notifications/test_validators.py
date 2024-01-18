@@ -5,7 +5,7 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import templates_dao
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, SMS_TYPE
+from app.models import KEY_TYPE_NORMAL, NotificationType, ServicePermissionType, TemplateType
 from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
@@ -89,7 +89,11 @@ def test_check_application_over_retention_limit_fails(
 
 
 @pytest.mark.parametrize(
-    "template_type, notification_type", [(EMAIL_TYPE, EMAIL_TYPE), (SMS_TYPE, SMS_TYPE)]
+    "template_type, notification_type",
+    [
+        (TemplateType.EMAIL, NotificationType.EMAIL),
+        (TemplateType.SMS, NotificationType.SMS),
+    ]
 )
 def test_check_template_is_for_notification_type_pass(template_type, notification_type):
     assert (
@@ -101,7 +105,11 @@ def test_check_template_is_for_notification_type_pass(template_type, notificatio
 
 
 @pytest.mark.parametrize(
-    "template_type, notification_type", [(SMS_TYPE, EMAIL_TYPE), (EMAIL_TYPE, SMS_TYPE)]
+    "template_type, notification_type",
+    [
+        (TemplateType.SMS, NotificationType.EMAIL),
+        (TemplateType.EMAIL, NotificationType.SMS),
+    ]
 )
 def test_check_template_is_for_notification_type_fails_when_template_type_does_not_match_notification_type(
     template_type, notification_type
@@ -548,11 +556,14 @@ def test_validate_and_format_recipient_fails_when_international_number_and_servi
     key_type,
     notify_db_session,
 ):
-    service = create_service(service_permissions=[SMS_TYPE])
+    service = create_service(service_permissions=[ServicePermissionType.SMS])
     service_model = SerialisedService.from_id(service.id)
     with pytest.raises(BadRequestError) as e:
         validate_and_format_recipient(
-            "+20-12-1234-1234", key_type, service_model, SMS_TYPE
+            "+20-12-1234-1234",
+            key_type,
+            service_model,
+            NotificationType.SMS,
         )
     assert e.value.status_code == 400
     assert e.value.message == "Cannot send to international mobile numbers"
@@ -565,14 +576,14 @@ def test_validate_and_format_recipient_succeeds_with_international_numbers_if_se
 ):
     service_model = SerialisedService.from_id(sample_service_full_permissions.id)
     result = validate_and_format_recipient(
-        "+4407513332413", key_type, service_model, SMS_TYPE
+        "+4407513332413", key_type, service_model, NotificationType.SMS
     )
     assert result == "+447513332413"
 
 
 def test_validate_and_format_recipient_fails_when_no_recipient():
     with pytest.raises(BadRequestError) as e:
-        validate_and_format_recipient(None, "key_type", "service", "SMS_TYPE")
+        validate_and_format_recipient(None, "key_type", "service", "NotificationType.SMS")
     assert e.value.status_code == 400
     assert e.value.message == "Recipient can't be empty"
 
@@ -586,7 +597,7 @@ def test_check_service_email_reply_to_where_email_reply_to_is_found(sample_servi
     reply_to_address = create_reply_to_email(sample_service, "test@test.com")
     assert (
         check_service_email_reply_to_id(
-            sample_service.id, reply_to_address.id, EMAIL_TYPE
+            sample_service.id, reply_to_address.id, NotificationType.EMAIL
         )
         == "test@test.com"
     )
@@ -597,7 +608,7 @@ def test_check_service_email_reply_to_id_where_service_id_is_not_found(
 ):
     reply_to_address = create_reply_to_email(sample_service, "test@test.com")
     with pytest.raises(BadRequestError) as e:
-        check_service_email_reply_to_id(fake_uuid, reply_to_address.id, EMAIL_TYPE)
+        check_service_email_reply_to_id(fake_uuid, reply_to_address.id, NotificationType.EMAIL)
     assert e.value.status_code == 400
     assert (
         e.value.message
@@ -611,7 +622,7 @@ def test_check_service_email_reply_to_id_where_reply_to_id_is_not_found(
     sample_service, fake_uuid
 ):
     with pytest.raises(BadRequestError) as e:
-        check_service_email_reply_to_id(sample_service.id, fake_uuid, EMAIL_TYPE)
+        check_service_email_reply_to_id(sample_service.id, fake_uuid, NotificationType.EMAIL)
     assert e.value.status_code == 400
     assert (
         e.value.message
@@ -628,10 +639,11 @@ def test_check_service_sms_sender_id_where_sms_sender_id_is_none(notification_ty
 
 def test_check_service_sms_sender_id_where_sms_sender_id_is_found(sample_service):
     sms_sender = create_service_sms_sender(service=sample_service, sms_sender="123456")
-    assert (
-        check_service_sms_sender_id(sample_service.id, sms_sender.id, SMS_TYPE)
-        == "123456"
-    )
+    assert check_service_sms_sender_id(
+        sample_service.id,
+        sms_sender.id,
+        NotificationType.SMS,
+    ) == "123456"
 
 
 def test_check_service_sms_sender_id_where_service_id_is_not_found(
@@ -639,7 +651,7 @@ def test_check_service_sms_sender_id_where_service_id_is_not_found(
 ):
     sms_sender = create_service_sms_sender(service=sample_service, sms_sender="123456")
     with pytest.raises(BadRequestError) as e:
-        check_service_sms_sender_id(fake_uuid, sms_sender.id, SMS_TYPE)
+        check_service_sms_sender_id(fake_uuid, sms_sender.id, NotificationType.SMS)
     assert e.value.status_code == 400
     assert (
         e.value.message
@@ -653,7 +665,7 @@ def test_check_service_sms_sender_id_where_sms_sender_is_not_found(
     sample_service, fake_uuid
 ):
     with pytest.raises(BadRequestError) as e:
-        check_service_sms_sender_id(sample_service.id, fake_uuid, SMS_TYPE)
+        check_service_sms_sender_id(sample_service.id, fake_uuid, NotificationType.SMS)
     assert e.value.status_code == 400
     assert (
         e.value.message
@@ -671,14 +683,14 @@ def test_check_reply_to_with_empty_reply_to(sample_service, notification_type):
 def test_check_reply_to_email_type(sample_service):
     reply_to_address = create_reply_to_email(sample_service, "test@test.com")
     assert (
-        check_reply_to(sample_service.id, reply_to_address.id, EMAIL_TYPE)
+        check_reply_to(sample_service.id, reply_to_address.id, NotificationType.EMAIL)
         == "test@test.com"
     )
 
 
 def test_check_reply_to_sms_type(sample_service):
     sms_sender = create_service_sms_sender(service=sample_service, sms_sender="123456")
-    assert check_reply_to(sample_service.id, sms_sender.id, SMS_TYPE) == "123456"
+    assert check_reply_to(sample_service.id, sms_sender.id, NotificationType.SMS) == "123456"
 
 
 def test_check_if_service_can_send_files_by_email_raises_if_no_contact_link_set(
