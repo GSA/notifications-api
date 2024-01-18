@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 import itertools
 import uuid
 
@@ -52,7 +53,7 @@ def filter_null_value_fields(obj):
     return dict(filter(lambda x: x[1] is not None, obj.items()))
 
 
-def enum_values(enum_type):
+def enum_values(enum: Enum) -> list[str]:
     """
     Helper function used to persist enum values to the database rather than names.
 
@@ -67,7 +68,7 @@ def enum_values(enum_type):
         uses string values, a callable such as lambda x: [e.value for e in x] is
         sufficient.
     """
-    return [i.value for i in enum_type]
+    return [i.value for i in enum]  # type: ignore[attr-defined]
 
 
 class HistoryModel:
