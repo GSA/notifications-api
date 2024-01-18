@@ -53,7 +53,20 @@ def filter_null_value_fields(obj):
 
 
 def enum_values(enum_type):
-    """Helper function used to persist enum values to the database rather than names."""
+    """
+    Helper function used to persist enum values to the database rather than names.
+
+    See Also:
+        https://docs.sqlalchemy.org/en/14/core/type_basics.html#sqlalchemy.types.Enum
+
+    Notes:
+        In order to persist the values and not the names, the Enum.values_callable
+        parameter may be used. The value of this parameter is a user-supplied callable,
+        which is intended to be used with a PEP-435-compliant enumerated class and
+        returns a list of string values to be persisted. For a simple enumeration that
+        uses string values, a callable such as lambda x: [e.value for e in x] is
+        sufficient.
+    """
     return [i.value for i in enum_type]
 
 
