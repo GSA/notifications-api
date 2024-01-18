@@ -1,7 +1,7 @@
 import datetime
-from enum import Enum
 import itertools
 import uuid
+from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -70,13 +70,14 @@ def enum_values(enum: Enum) -> list[str]:
     """
     return [i.value for i in enum]  # type: ignore[attr-defined]
 
+
 # This has the standard definition for all of the enum columns used throughout the models.
 # This is used in the enum_column() function below.
 _enum_column_types = {
-    AuthType: db.Enum(               # the key should be the Enum class to use.
-        AuthType,                    # The Enum class to use.
-        name="auth_types",           # The name of the type defined in PostgreSQL - should be plural
-        values_callable=enum_values, # Every entry in this dict should contain this, note above.
+    AuthType: db.Enum(  # the key should be the Enum class to use.
+        AuthType,  # The Enum class to use.
+        name="auth_types",  # The name of the type defined in PostgreSQL - should be plural
+        values_callable=enum_values,  # Every entry in this dict should contain this, note above.
     ),
     BrandType: db.Enum(
         BrandType,
@@ -161,8 +162,12 @@ _enum_column_types = {
 }
 
 
-def enum_column(enum_type, **kwargs):
-    return db.Column(_enum_column_types[enum_type], **kwargs)
+def enum_column(enum_type, name=None, **kwargs):
+    if name is None:
+        return db.Column(_enum_column_types[enum_type], **kwargs)
+    else:
+        return db.Column(name, _enum_column_types[enum_type], **kwargs)
+
 
 class HistoryModel:
     @classmethod
@@ -1583,6 +1588,7 @@ class Notification(db.Model):
     )
     status = enum_column(
         NotificationStatus,
+        name="notification_status",
         nullable=True,
         default=NotificationStatus.CREATED,
     )
@@ -1858,6 +1864,7 @@ class NotificationHistory(db.Model, HistoryModel):
     )
     status = enum_column(
         NotificationStatus,
+        name="notification_status",
         nullable=True,
         default=NotificationStatus.CREATED,
     )
