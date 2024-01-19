@@ -7,3 +7,5 @@ s3-fips.us-gov-west-1.amazonaws.com
 sns.us-gov-west-1.amazonaws.com
 gov-collector.newrelic.com
 egress-proxy-notify-api-production.apps.internal
+idp.int.identitysandbox.gov
+secure.login.gov
