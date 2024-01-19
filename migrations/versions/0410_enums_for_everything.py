@@ -6,17 +6,38 @@ Create Date: 2024-01-18 12:34:32.857422
 
 """
 from enum import Enum
+from typing import TypedDict
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from app.enums import AuthType, BrandType, InvitedUserStatus, JobStatus, KeyType, NotificationStatus
+from app.enums import (
+    AuthType,
+    BrandType,
+    CallbackType,
+    InvitedUserStatus,
+    JobStatus,
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    OrganizationType,
+    RecipientType,
+    ServicePermissionType,
+    TemplateProcessType,
+    TemplateType,
+)
 
 revision = "0410_enums_for_everything"
 down_revision = "0409_fix_service_name"
 
-_enum_params = {
-    KeyType: {"values": ["normal, team, test"], "name": "key_types"},
+
+class EnumValues(TypedDict):
+    values: list[str]
+    name: str
+
+
+_enum_params: dict[Enum, EnumValues] = {
+    KeyType: {"values": ["normal", "team", "test"], "name": "key_types"},
     BrandType: {
         "values": ["govuk", "org", "both", "org_banner"],
         "name": "brand_types",
@@ -60,6 +81,37 @@ _enum_params = {
             "virus-scan-failed",
         ],
         "name": "notify_statuses",
+    },
+    NotificationType: {
+        "values": ["sms", "email", "letter"],
+        "name": "notification_types",
+    },
+    OrganizationType: {
+        "values": ["federal", "state", "other"],
+        "name": "organization_types",
+    },
+    CallbackType: {
+        "values": ["delivery_status", "complaint"],
+        "name": "callback_types",
+    },
+    ServicePermissionType: {
+        "values": [
+            "email",
+            "sms",
+            "international_sms",
+            "inbound_sms",
+            "schedule_notifications",
+            "email_auth",
+            "upload_document",
+            "edit_folder_permissions",
+        ],
+        "name": "service_permission_types",
+    },
+    RecipientType: {"values": ["mobile", "email"], "name": "recipient_types"},
+    TemplateType: {"values": ["sms", "email", "letter"], "name": "template_types"},
+    TemplateProcessType: {
+        "values": ["normal", "priority"],
+        "name": "template_process_types"
     },
 }
 
@@ -215,7 +267,7 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -238,7 +290,7 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -248,7 +300,7 @@ def upgrade():
         "organization",
         "organization_type",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum("federal", "state", "other", name="organization_types"),
+        type_=enum_type(OrganizationType),
         existing_nullable=True,
     )
     op.alter_column(
@@ -257,7 +309,7 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -266,7 +318,7 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -282,21 +334,21 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
         "service_callback_api",
         "callback_type",
         existing_type=sa.VARCHAR(),
-        type_=sa.Enum("delivery_status", "complaint", name="callback_types"),
+        type_=enum_type(CallbackType),
         existing_nullable=True,
     )
     op.alter_column(
         "service_callback_api_history",
         "callback_type",
         existing_type=sa.VARCHAR(),
-        type_=sa.Enum("delivery_status", "complaint", name="callback_types"),
+        type_=enum_type(CallbackType),
         existing_nullable=True,
     )
     op.alter_column(
@@ -305,24 +357,14 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "email", "sms", "letter", name="notification_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="notification_types"),
+        type_=enum_type(NotificationType),
         existing_nullable=False,
     )
     op.alter_column(
         "service_permissions",
         "permission",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum(
-            "email",
-            "sms",
-            "international_sms",
-            "inbound_sms",
-            "schedule_notifications",
-            "email_auth",
-            "upload_document",
-            "edit_folder_permissions",
-            name="service_permission_types",
-        ),
+        type_=enum_type(ServicePermissionType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -336,7 +378,7 @@ def upgrade():
         "service_whitelist",
         "recipient_type",
         existing_type=postgresql.ENUM("mobile", "email", name="recipient_type"),
-        type_=sa.Enum("mobile", "email", name="recipient_types"),
+        type_=enum_type(RecipientType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -350,7 +392,7 @@ def upgrade():
         "services",
         "organization_type",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum("federal", "state", "other", name="organization_types"),
+        type_=enum_type(OrganizationType),
         existing_nullable=True,
     )
     op.alter_column(
@@ -367,7 +409,7 @@ def upgrade():
         "services_history",
         "organization_type",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum("federal", "state", "other", name="organization_types"),
+        type_=enum_type(OrganizationType),
         existing_nullable=True,
     )
     op.alter_column(
@@ -376,14 +418,14 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="template_types"),
+        type_=enum_type(TemplateType),
         existing_nullable=False,
     )
     op.alter_column(
         "templates",
         "process_type",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum("normal", "priority", name="template_process_types"),
+        type_=enum_type(TemplateProcessType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -392,14 +434,14 @@ def upgrade():
         existing_type=postgresql.ENUM(
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
-        type_=sa.Enum("sms", "email", "letter", name="template_types"),
+        type_=enum_type(TemplateType),
         existing_nullable=False,
     )
     op.alter_column(
         "templates_history",
         "process_type",
         existing_type=sa.VARCHAR(length=255),
-        type_=sa.Enum("normal", "priority", name="template_process_types"),
+        type_=enum_type(TemplateProcessType),
         existing_nullable=False,
     )
     op.alter_column(
@@ -497,14 +539,14 @@ def downgrade():
     op.alter_column(
         "templates_history",
         "process_type",
-        existing_type=sa.Enum("normal", "priority", name="template_process_types"),
+        existing_type=enum_type(TemplateProcessType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
     )
     op.alter_column(
         "templates_history",
         "template_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="template_types"),
+        existing_type=enum_type(TemplateType),
         type_=postgresql.ENUM(
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
@@ -520,14 +562,14 @@ def downgrade():
     op.alter_column(
         "templates",
         "process_type",
-        existing_type=sa.Enum("normal", "priority", name="template_process_types"),
+        existing_type=enum_type(TemplateProcessType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
     )
     op.alter_column(
         "templates",
         "template_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="template_types"),
+        existing_type=enum_type(TemplateType),
         type_=postgresql.ENUM(
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
@@ -545,7 +587,7 @@ def downgrade():
     op.alter_column(
         "services_history",
         "organization_type",
-        existing_type=sa.Enum("federal", "state", "other", name="organization_types"),
+        existing_type=enum_type(OrganizationType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=True,
     )
@@ -573,7 +615,7 @@ def downgrade():
     op.alter_column(
         "services",
         "organization_type",
-        existing_type=sa.Enum("federal", "state", "other", name="organization_types"),
+        existing_type=enum_type(OrganizationType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=True,
     )
@@ -587,7 +629,7 @@ def downgrade():
     op.alter_column(
         "service_whitelist",
         "recipient_type",
-        existing_type=sa.Enum("mobile", "email", name="recipient_types"),
+        existing_type=enum_type(RecipientType),
         type_=postgresql.ENUM("mobile", "email", name="recipient_type"),
         existing_nullable=False,
     )
@@ -608,31 +650,21 @@ def downgrade():
     op.alter_column(
         "service_permissions",
         "permission",
-        existing_type=sa.Enum(
-            "email",
-            "sms",
-            "international_sms",
-            "inbound_sms",
-            "schedule_notifications",
-            "email_auth",
-            "upload_document",
-            "edit_folder_permissions",
-            name="service_permission_types",
-        ),
+        existing_type=enum_type(ServicePermissionType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
     )
     op.alter_column(
         "service_data_retention",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
     op.alter_column(
         "service_callback_api_history",
         "callback_type",
-        existing_type=sa.Enum("delivery_status", "complaint", name="callback_types"),
+        existing_type=enum_type(CallbackType),
         type_=sa.VARCHAR(),
         existing_nullable=True,
     )
@@ -646,14 +678,14 @@ def downgrade():
     op.alter_column(
         "service_callback_api",
         "callback_type",
-        existing_type=sa.Enum("delivery_status", "complaint", name="callback_types"),
+        existing_type=enum_type(CallbackType),
         type_=sa.VARCHAR(),
         existing_nullable=True,
     )
     op.alter_column(
         "rates",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
@@ -667,14 +699,14 @@ def downgrade():
     op.alter_column(
         "provider_details_history",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
     op.alter_column(
         "provider_details",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
@@ -688,7 +720,7 @@ def downgrade():
     op.alter_column(
         "organization",
         "organization_type",
-        existing_type=sa.Enum("federal", "state", "other", name="organization_types"),
+        existing_type=enum_type(OrganizationType),
         type_=sa.VARCHAR(length=255),
         existing_nullable=True,
     )
@@ -739,7 +771,7 @@ def downgrade():
     op.alter_column(
         "notifications",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
@@ -779,7 +811,7 @@ def downgrade():
     op.alter_column(
         "notification_history",
         "notification_type",
-        existing_type=sa.Enum("sms", "email", "letter", name="notification_types"),
+        existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
     )
