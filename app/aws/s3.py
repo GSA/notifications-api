@@ -158,9 +158,14 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
             return phone_to_return
         else:
             current_app.logger.warning(
-                "Was unable to retrieve phone number from lookup dictionary for job {job_id}"
+                f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
             )
             return "Unknown Phone"
+    else:
+        current_app.logger.error(
+            f"Was unable to construct lookup dictionary for job {job_id}"
+        )
+        return "Unknown Phone"
 
 
 def get_job_metadata_from_s3(service_id, job_id):
