@@ -62,6 +62,12 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             0,
             "15551111111",
         ),
+        (
+            "Phone number,name,date,time,address,English,Spanish\r\n15553333333,Tim,10/16,2:00 PM,5678 Tom St.,no,yes",
+            "ddd",
+            0,
+            "15553333333",
+        ),
     ],
 )
 def test_get_phone_number_from_s3(
@@ -82,13 +88,21 @@ def test_get_phone_number_from_s3(
             "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
             "bbb",
             1,
-            {"day of week": "tuesday", "favorite color": "red", "phone number": "+1 (555) 222-2222"},
+            {
+                "day of week": "tuesday",
+                "favorite color": "red",
+                "phone number": "+1 (555) 222-2222",
+            },
         ),
         (
             "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
             "ccc",
             0,
-            {"day of week": "monday", "favorite color": "green", "phone number": "1.555.111.1111"},
+            {
+                "day of week": "monday",
+                "favorite color": "green",
+                "phone number": "1.555.111.1111",
+            },
         ),
     ],
 )
@@ -100,7 +114,6 @@ def test_get_personalisation_from_s3(
     get_job_mock.return_value = job
     personalisation = get_personalisation_from_s3("service_id", job_id, job_row_number)
     assert personalisation == expected_personalisation
-
 
 
 def test_remove_csv_object(notify_api, mocker):

@@ -401,10 +401,6 @@ def send_new_user_email_verification(user_id):
 
     # when registering, we verify all users' email addresses using this function
     user_to_send_to = get_user_by_id(user_id=user_id)
-    current_app.logger.info("user_to_send_to is {}".format(user_to_send_to))
-    current_app.logger.info(
-        "user_to_send_to.email_address is {}".format(user_to_send_to.email_address)
-    )
 
     template = dao_get_template_by_id(
         current_app.config["NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID"]

@@ -289,14 +289,18 @@ def test_get_all_notifications_except_job_notifications_returns_200(
         "uri": notification.template.get_link(),
         "version": 1,
     }
-    assert json_response["notifications"][0]["phone_number"] == "+447700900855"
+    assert json_response["notifications"][0]["phone_number"] == "1"
     assert json_response["notifications"][0]["type"] == "sms"
     assert not json_response["notifications"][0]["scheduled_for"]
 
 
 def test_get_all_notifications_with_include_jobs_arg_returns_200(
-    client, sample_template, sample_job
+    client, sample_template, sample_job, mocker
 ):
+
+    mock_s3_personalisation = mocker.patch("app.v2.notifications.get_notifications.get_personalisation_from_s3")
+    mock_s3_personalisation.return_value = {}
+
     notifications = [
         create_notification(template=sample_template, job=sample_job),
         create_notification(template=sample_template),
@@ -322,7 +326,7 @@ def test_get_all_notifications_with_include_jobs_arg_returns_200(
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
     assert json_response["notifications"][0]["status"] == notification.status
-    assert json_response["notifications"][0]["phone_number"] == notification.to
+    assert "1" == notification.to
     assert (
         json_response["notifications"][0]["type"] == notification.template.template_type
     )
@@ -381,7 +385,7 @@ def test_get_all_notifications_filter_by_template_type(client, sample_service):
         "uri": notification.template.get_link(),
         "version": 1,
     }
-    assert json_response["notifications"][0]["email_address"] == "don.draper@scdp.biz"
+    assert json_response["notifications"][0]["email_address"] == "1"
     assert json_response["notifications"][0]["type"] == "email"
 
 

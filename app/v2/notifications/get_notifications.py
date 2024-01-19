@@ -53,8 +53,10 @@ def get_notifications():
     for notification in paginated_notifications.items:
         if notification.job_id is not None:
             notification.personalisation = get_personalisation_from_s3(
-                notification.service_id, notification.job_id, notification.job_row_number
-                )
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
 
     def _build_links(notifications):
         _links = {

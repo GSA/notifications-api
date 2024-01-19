@@ -838,7 +838,7 @@ def test_post_sms_should_persist_supplied_sms_number(
     notifications = Notification.query.all()
     assert len(notifications) == 1
     notification_id = notifications[0].id
-    assert "+(44) 77009-00855" == notifications[0].to
+    assert "1" == notifications[0].to
     assert resp_json["id"] == str(notification_id)
     assert mocked.called
 
@@ -986,7 +986,9 @@ def test_post_email_notification_with_archived_reply_to_id_returns_400(
     assert "BadRequestError" in resp_json["errors"][0]["error"]
 
 
-@pytest.mark.skip(reason="We've removed personalization from db, needs refactor if we want to support this")
+@pytest.mark.skip(
+    reason="We've removed personalization from db, needs refactor if we want to support this"
+)
 @pytest.mark.parametrize(
     "csv_param",
     (

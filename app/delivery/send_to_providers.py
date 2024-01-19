@@ -76,7 +76,7 @@ def send_sms_to_provider(notification):
                         notification.job_id,
                         notification.job_row_number,
                     )
-                except BaseException:
+                except Exception:
                     # It is our 2facode, maybe
                     key = f"2facode-{notification.id}".replace(" ", "")
                     recipient = redis_store.raw_get(key)

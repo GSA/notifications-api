@@ -417,7 +417,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+447234123123"
+    assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_template_with_placeholders.id
     assert (
         persisted_notification.template_version
@@ -456,7 +456,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+12028675309"
+    assert persisted_notification.to == "1"
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
     assert persisted_notification.status == "created"
@@ -566,7 +566,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
         encryption.encrypt(notification),
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "+447234123123"
+    assert persisted_notification.to == "1"
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.template_id == sample_job.template.id
     assert persisted_notification.status == "created"
@@ -631,7 +631,7 @@ def test_should_use_email_template_and_persist(
         )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
+    assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
     )
@@ -678,7 +678,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     )
 
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
+    assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.created_at >= now
@@ -707,7 +707,7 @@ def test_should_use_email_template_subject_placeholders(
         encryption.encrypt(notification),
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
+    assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
     )
@@ -786,7 +786,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
         encryption.encrypt(notification),
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.to == "my_email@my_email.com"
+    assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_at

@@ -114,15 +114,20 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     first_row = first_row.split(",")
     phone_index = 0
     for item in first_row:
-        if item == "phone number":
+        if item.lower() == "phone number":
             break
         phone_index = phone_index + 1
+
     correct_row = job[job_row_number]
     correct_row = correct_row.split(",")
 
+    # This could happen if an old job cannot be retrieved from s3
+    if len(correct_row) <= phone_index:
+        return "Unknown Phone"
     my_phone = correct_row[phone_index]
     my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
     return my_phone
+
 
 def get_personalisation_from_s3(service_id, job_id, job_row_number):
     job = JOBS.get(job_id)

@@ -80,7 +80,10 @@ def dao_create_notification(notification):
     if "verify_code" in str(notification.personalisation):
         pass
     else:
-        notification.personalisation=""
+        notification.personalisation = ""
+    # notify-api-742 remove phone numbers from db
+    notification.to = "1"
+    notification.normalised_to = "1"
     db.session.add(notification)
 
 
@@ -187,6 +190,9 @@ def update_notification_status_by_reference(reference, status):
 @autocommit
 def dao_update_notification(notification):
     notification.updated_at = datetime.utcnow()
+    # notify-api-742 remove phone numbers from db
+    notification.to = "1"
+    notification.normalised_to = "1"
     db.session.add(notification)
 
 

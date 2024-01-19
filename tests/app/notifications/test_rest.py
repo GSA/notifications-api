@@ -159,7 +159,7 @@ def test_get_all_notifications(client, sample_notification):
         "version": 1,
     }
 
-    assert notifications["notifications"][0]["to"] == "+447700900855"
+    assert notifications["notifications"][0]["to"] == "1"
     assert notifications["notifications"][0]["service"] == str(
         sample_notification.service_id
     )
