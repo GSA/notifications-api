@@ -445,106 +445,10 @@ def upgrade():
 
 
 def downgrade():
-    # Recreate foreign keys
-    op.create_foreign_key(
-        "users_auth_type_fkey", "users", "auth_type", ["auth_type"], ["name"]
-    )
-    op.create_foreign_key(
-        "templates_history_process_type_fkey",
-        "templates_history",
-        "template_process_type",
-        ["process_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "templates_process_type_fkey",
-        "templates",
-        "template_process_type",
-        ["process_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "services_organisation_type_fkey",
-        "services",
-        "organization_types",
-        ["organization_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "service_permissions_permission_fkey",
-        "service_permissions",
-        "service_permission_types",
-        ["permission"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "service_callback_api_type_fk",
-        "service_callback_api",
-        "service_callback_type",
-        ["callback_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "organisation_organisation_type_fkey",
-        "organization",
-        "organization_types",
-        ["organization_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "fk_notifications_notification_status",
-        "notifications",
-        "notification_status_types",
-        ["notification_status"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "notifications_key_type_fkey",
-        "notifications",
-        "key_types",
-        ["key_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "fk_notification_history_notification_status",
-        "notification_history",
-        "notification_status_types",
-        ["notification_status"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "notification_history_key_type_fkey",
-        "notification_history",
-        "key_types",
-        ["key_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "jobs_job_status_fkey", "jobs", "job_status", ["job_status"], ["name"]
-    )
-    op.create_foreign_key(
-        "invited_users_auth_type_fkey",
-        "invited_users",
-        "auth_type",
-        ["auth_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "invited_organisation_users_status_fkey",
-        "invited_organization_users",
-        "invite_status_type",
-        ["status"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "email_branding_brand_type_fkey",
-        "email_branding",
-        "branding_type",
-        ["brand_type"],
-        ["name"],
-    )
-    op.create_foreign_key(
-        "api_keys_key_type_fkey", "api_keys", "key_types", ["key_type"], ["name"]
+    # Dropping composite indexes
+    op.drop_index("ix_notifications_service_id_composite", table_name="notifications")
+    op.drop_index(
+        "ix_notifications_notification_type_composite", table_name="notifications"
     )
 
     # Alter columns back
@@ -771,24 +675,6 @@ def downgrade():
         existing_nullable=False,
     )
 
-    # Composite Index stuff
-    op.drop_index("ix_notifications_service_id_composite", table_name="notifications")
-    op.create_index(
-        "ix_notifications_service_id_composite",
-        "notifications",
-        ["service_id", "notification_type", "notification_status", "created_at"],
-        unique=False,
-    )
-    op.drop_index(
-        "ix_notifications_notification_type_composite", table_name="notifications"
-    )
-    op.create_index(
-        "ix_notifications_notification_type_composite",
-        "notifications",
-        ["notification_type", "notification_status", "created_at"],
-        unique=False,
-    )
-
     # Recreate helper tables
     op.create_table(
         "service_permission_types",
@@ -845,4 +731,120 @@ def downgrade():
         "template_process_type",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="template_process_type_pkey"),
+    )
+
+    # Creating composite indexes
+    op.create_index(
+        "ix_notifications_service_id_composite",
+        "notifications",
+        ["service_id", "notification_type", "notification_status", "created_at"],
+        unique=False,
+    )
+    op.create_index(
+        "ix_notifications_notification_type_composite",
+        "notifications",
+        ["notification_type", "notification_status", "created_at"],
+        unique=False,
+    )
+
+    # Recreate foreign keys
+    op.create_foreign_key(
+        "users_auth_type_fkey", "users", "auth_type", ["auth_type"], ["name"]
+    )
+    op.create_foreign_key(
+        "templates_history_process_type_fkey",
+        "templates_history",
+        "template_process_type",
+        ["process_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "templates_process_type_fkey",
+        "templates",
+        "template_process_type",
+        ["process_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "services_organisation_type_fkey",
+        "services",
+        "organization_types",
+        ["organization_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "service_permissions_permission_fkey",
+        "service_permissions",
+        "service_permission_types",
+        ["permission"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "service_callback_api_type_fk",
+        "service_callback_api",
+        "service_callback_type",
+        ["callback_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "organisation_organisation_type_fkey",
+        "organization",
+        "organization_types",
+        ["organization_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "fk_notifications_notification_status",
+        "notifications",
+        "notification_status_types",
+        ["notification_status"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "notifications_key_type_fkey",
+        "notifications",
+        "key_types",
+        ["key_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "fk_notification_history_notification_status",
+        "notification_history",
+        "notification_status_types",
+        ["notification_status"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "notification_history_key_type_fkey",
+        "notification_history",
+        "key_types",
+        ["key_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "jobs_job_status_fkey", "jobs", "job_status", ["job_status"], ["name"]
+    )
+    op.create_foreign_key(
+        "invited_users_auth_type_fkey",
+        "invited_users",
+        "auth_type",
+        ["auth_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "invited_organisation_users_status_fkey",
+        "invited_organization_users",
+        "invite_status_type",
+        ["status"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "email_branding_brand_type_fkey",
+        "email_branding",
+        "branding_type",
+        ["brand_type"],
+        ["name"],
+    )
+    op.create_foreign_key(
+        "api_keys_key_type_fkey", "api_keys", "key_types", ["key_type"], ["name"]
     )
