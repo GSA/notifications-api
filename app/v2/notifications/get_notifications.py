@@ -18,6 +18,11 @@ def get_notification_by_id(notification_id):
     notification = notifications_dao.get_notification_with_personalisation(
         authenticated_service.id, notification_id, key_type=None
     )
+    notification.personalisation = get_personalisation_from_s3(
+        notification.service_id,
+        notification.job_id,
+        notification.job_row_number,
+    )
     return jsonify(notification.serialize()), 200
 
 

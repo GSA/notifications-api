@@ -70,11 +70,14 @@ def test_create_invited_user(
 
     assert notification.reply_to_text == invite_from.email_address
 
-    assert len(notification.personalisation.keys()) == 3
-    assert notification.personalisation["service_name"] == "Sample service"
-    assert notification.personalisation["user_name"] == "Test User"
-    assert notification.personalisation["url"].startswith(expected_start_of_invite_url)
-    assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
+    # As part of notify-api-749 we are removing personalisation from the db
+    # The personalisation should have been sent in the notification (see the service_invite code)
+    # it is just not stored in the db.
+    # assert len(notification.personalisation.keys()) == 3
+    # assert notification.personalisation["service_name"] == "Sample service"
+    # assert notification.personalisation["user_name"] == "Test User"
+    # assert notification.personalisation["url"].startswith(expected_start_of_invite_url)
+    # assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
     assert (
         str(notification.template_id)
         == current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]

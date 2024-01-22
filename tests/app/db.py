@@ -316,6 +316,8 @@ def create_notification(
     }
     notification = Notification(**data)
     dao_create_notification(notification)
+    notification.personalisation = personalisation
+
     return notification
 
 

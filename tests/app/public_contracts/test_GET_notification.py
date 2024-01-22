@@ -29,7 +29,11 @@ def _get_notification(client, notification, url):
 # v2
 
 
-def test_get_v2_sms_contract(client, sample_notification):
+def test_get_v2_sms_contract(client, sample_notification, mocker):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
     response_json = return_json_from_response(
         _get_notification(
             client,
@@ -40,7 +44,11 @@ def test_get_v2_sms_contract(client, sample_notification):
     validate(response_json, get_notification_response)
 
 
-def test_get_v2_email_contract(client, sample_email_notification):
+def test_get_v2_email_contract(client, sample_email_notification, mocker):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
     response_json = return_json_from_response(
         _get_notification(
             client,

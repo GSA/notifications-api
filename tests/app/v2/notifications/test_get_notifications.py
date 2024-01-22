@@ -10,8 +10,13 @@ from tests.app.db import create_notification, create_template
     "billable_units, provider", [(1, "sns"), (0, "sns"), (1, None)]
 )
 def test_get_notification_by_id_returns_200(
-    client, billable_units, provider, sample_template
+    client, billable_units, provider, sample_template, mocker
 ):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
+
     sample_notification = create_notification(
         template=sample_template,
         billable_units=billable_units,
@@ -74,8 +79,13 @@ def test_get_notification_by_id_returns_200(
 
 
 def test_get_notification_by_id_with_placeholders_returns_200(
-    client, sample_email_template_with_placeholders
+    client, sample_email_template_with_placeholders, mocker
 ):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {"name": "Bob"}
+
     sample_notification = create_notification(
         template=sample_email_template_with_placeholders,
         personalisation={"name": "Bob"},
@@ -129,10 +139,15 @@ def test_get_notification_by_id_with_placeholders_returns_200(
     assert json_response == expected_response
 
 
-def test_get_notification_by_reference_returns_200(client, sample_template):
+def test_get_notification_by_reference_returns_200(client, sample_template, mocker):
     sample_notification_with_reference = create_notification(
         template=sample_template, client_reference="some-client-reference"
     )
+
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
 
     auth_header = create_service_authorization_header(
         service_id=sample_notification_with_reference.service_id
@@ -157,10 +172,13 @@ def test_get_notification_by_reference_returns_200(client, sample_template):
 
 
 def test_get_notification_by_id_returns_created_by_name_if_notification_created_by_id(
-    client,
-    sample_user,
-    sample_template,
+    client, sample_user, sample_template, mocker
 ):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {"name": "Bob"}
+
     sms_notification = create_notification(template=sample_template)
     sms_notification.created_by_id = sample_user.id
 
@@ -241,8 +259,13 @@ def test_get_notification_by_id_invalid_id(client, sample_notification, id):
 
 @pytest.mark.parametrize("template_type", ["sms", "email"])
 def test_get_notification_doesnt_have_delivery_estimate_for_non_letters(
-    client, sample_service, template_type
+    client, sample_service, template_type, mocker
 ):
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {"name": "Bob"}
+
     template = create_template(service=sample_service, template_type=template_type)
     mocked_notification = create_notification(template=template)
 
@@ -297,8 +320,9 @@ def test_get_all_notifications_except_job_notifications_returns_200(
 def test_get_all_notifications_with_include_jobs_arg_returns_200(
     client, sample_template, sample_job, mocker
 ):
-
-    mock_s3_personalisation = mocker.patch("app.v2.notifications.get_notifications.get_personalisation_from_s3")
+    mock_s3_personalisation = mocker.patch(
+        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
+    )
     mock_s3_personalisation.return_value = {}
 
     notifications = [

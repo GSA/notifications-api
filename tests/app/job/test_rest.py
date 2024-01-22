@@ -453,7 +453,6 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
     mock_s3.return_value = "15555555555"
 
-
     mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
     mock_s3_personalisation.return_value = {}
 
@@ -495,7 +494,6 @@ def test_get_all_notifications_for_job_filtered_by_status(
     mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
     mock_s3.return_value = "15555555555"
 
-
     mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
     mock_s3_personalisation.return_value = {}
 
@@ -515,7 +513,6 @@ def test_get_all_notifications_for_job_returns_correct_format(
 ):
     mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
     mock_s3.return_value = "15555555555"
-
 
     mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
     mock_s3_personalisation.return_value = {}
@@ -838,7 +835,6 @@ def test_get_all_notifications_for_job_returns_csv_format(
 ):
     mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
     mock_s3.return_value = "15555555555"
-
 
     mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
     mock_s3_personalisation.return_value = {}

@@ -10,7 +10,7 @@ from notifications_utils.template import (
 )
 
 from app import create_uuid, db, notification_provider_clients, redis_store
-from app.aws.s3 import get_phone_number_from_s3
+from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
@@ -30,6 +30,15 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
 def send_sms_to_provider(notification):
+    # we no longer store the personalisation in the db,
+    # need to retrieve from s3 before generating content
+    personalisation = get_personalisation_from_s3(
+        notification.service_id,
+        notification.job_id,
+        notification.job_row_number,
+    )
+    notification.personalisation = personalisation
+
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
     if not service.active:
