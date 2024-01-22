@@ -188,7 +188,6 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     for header in first_row:
         personalisation_dict[header] = correct_row[index]
         index = index + 1
-    print(f"get personalisation returns {personalisation_dict}")
     return personalisation_dict
 
 
