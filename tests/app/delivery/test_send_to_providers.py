@@ -95,7 +95,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {"name": "Jo"}
 
     send_to_providers.send_sms_to_provider(db_notification)
@@ -162,9 +164,10 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {"name": "Jo"}
-
 
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_email_to_provider(sample_notification)
@@ -182,7 +185,9 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     with pytest.raises(NotificationTechnicalFailureException) as e:
@@ -206,7 +211,9 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
-    mock_s3_p = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_s3_p = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_s3_p.return_value = {}
 
     mocker.patch("app.aws_sns_client.send_sms")
@@ -257,9 +264,10 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {"name": "Jo"}
-
 
     sample_notification.key_type = KEY_TYPE_TEST
     with pytest.raises(HTTPError):
@@ -275,11 +283,12 @@ def test_should_not_send_to_provider_when_status_is_not_created(
     mocker.patch("app.aws_sns_client.send_sms")
     response_mock = mocker.patch("app.delivery.send_to_providers.send_sms_response")
 
-
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {"name": "Jo"}
 
     send_to_providers.send_sms_to_provider(notification)
@@ -307,8 +316,9 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {"misc": placeholder}
 
     send_to_providers.send_sms_to_provider(db_notification)
@@ -333,7 +343,9 @@ def test_send_sms_should_use_service_sms_sender(
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(
@@ -361,7 +373,9 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
     send_to_providers.send_sms_to_provider(notification)
     app.aws_ses_client.send_email.assert_not_called()
@@ -576,7 +590,9 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification)
@@ -593,11 +609,12 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
     sample_notification.billable_units = 0
     assert sample_notification.sent_by is None
 
-
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     # flake8 no longer likes raises with a generic exception
@@ -628,7 +645,9 @@ def test_should_send_sms_to_international_providers(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "601117224412"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification_international)
@@ -670,7 +689,9 @@ def test_should_handle_sms_sender_and_prefix_message(
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification)
@@ -714,7 +735,9 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "12028675309"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
     send_to_providers.send_sms_to_provider(notification)
     send_mock.assert_called_once_with(
@@ -775,7 +798,9 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "447700900855"
 
-    mock_personalisation = mocker.patch("app.delivery.send_to_providers.get_personalisation_from_s3")
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
     mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification)
