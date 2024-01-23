@@ -188,8 +188,6 @@ class InvitedUserStatus(Enum):
 
 
 class BrandType(Enum):
-    # TODO: Should EmailBranding.branding_type be changed to use this?
-    GOVUK = "govuk"  # Deprecated outside migrations
     ORG = "org"
     BOTH = "both"
     ORG_BANNER = "org_banner"

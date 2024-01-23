@@ -676,32 +676,99 @@ def downgrade():
     )
 
     # Recreate helper tables
-    op.create_table(
+    service_permission_types = op.create_table(
         "service_permission_types",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="service_permission_types_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        service_permission_types,
+        [
+            {"name": "letter"},
+            {"name": "international_sms"},
+            {"name": "sms"},
+            {"name": "email"},
+            {"name": "inbound_sms"},
+            {"name": "schedule_notifications"},
+            {"name": "email_auth"},
+            {"name": "letters_as_pdf"},
+            {"name": "upload_document"},
+            {"name": "edit_folder_permissions"},
+            {"name": "upload_letters"},
+            {"name": "international_letters"},
+            {"name": "broadcast}"},
+        ],
+    )
+    job_status = op.create_table(
         "job_status",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="job_status_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        job_status,
+        [
+            {"name": "pending"},
+            {"name": "in progress"},
+            {"name": "finished"},
+            {"name": "sending limits exceeded"},
+            {"name": "scheduled"},
+            {"name": "cancelled"},
+            {"name": "ready to send"},
+            {"name": "sent to dvla"},
+            {"name": "error"},
+        ],
+    )
+    notification_status_types = op.create_table(
         "notification_status_types",
         sa.Column("name", sa.VARCHAR(), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="notification_status_types_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        notification_status_types,
+        [
+            {"name": "created"},
+            {"name": "pending"},
+            {"name": "temporary-failure"},
+            {"name": "delivered"},
+            {"name": "sent"},
+            {"name": "sending"},
+            {"name": "failed"},
+            {"name": "permanent-failure"},
+            {"name": "technical-failure"},
+            {"name": "pending-virus-check"},
+            {"name": "virus-scan-failed"},
+            {"name": "cancelled"},
+            {"name": "returned-letter"},
+            {"name": "validation-failed"},
+        ],
+    )
+    branding_type = op.create_table(
         "branding_type",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="branding_type_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        branding_type,
+        [
+            {"name": "org"},
+            {"name": "both"},
+            {"name": "org_banner"},
+        ],
+    )
+    invite_status_type = op.create_table(
         "invite_status_type",
         sa.Column("name", sa.VARCHAR(), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="invite_status_type_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        invite_status_type,
+        [
+            {"name": "pending"},
+            {"name": "accepted"},
+            {"name": "cancelled"},
+        ],
+    )
+    organization_types = op.create_table(
         "organization_types",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column(
@@ -712,25 +779,63 @@ def downgrade():
         ),
         sa.PrimaryKeyConstraint("name", name="organisation_types_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        organization_types,
+        [
+            {"name": "other", "annual_free_sms_fragment_limit": 25000},
+            {"name": "state", "annual_free_sms_fragment_limit": 250000},
+            {"name": "federal", "annual_free_sms_fragment_limit": 250000},
+        ],
+    )
+    auth_type = op.create_table(
         "auth_type",
         sa.Column("name", sa.VARCHAR(), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="auth_type_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        auth_type,
+        [
+            {"name": "email_auth"},
+            {"name": "sms_auth"},
+            {"name": "webauthn_auth"},
+        ],
+    )
+    service_callback_type = op.create_table(
         "service_callback_type",
         sa.Column("name", sa.VARCHAR(), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="service_callback_type_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        service_callback_type,
+        [
+            {"name": "delivery_status"},
+            {"name": "complaint"},
+        ],
+    )
+    key_types = op.create_table(
         "key_types",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="key_types_pkey"),
     )
-    op.create_table(
+    op.bulk_insert(
+        key_types,
+        [
+            {"name": "normal"},
+            {"name": "team"},
+            {"name": "test"},
+        ],
+    )
+    template_process_type = op.create_table(
         "template_process_type",
         sa.Column("name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("name", name="template_process_type_pkey"),
+    )
+    op.bulk_insert(
+        template_process_type,
+        [
+            {"name": "normal"},
+            {"name": "priority"},
+        ],
     )
 
     # Creating composite indexes
