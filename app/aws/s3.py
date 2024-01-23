@@ -123,6 +123,21 @@ def extract_phones(job):
     return phones
 
 
+def extract_personalisation(job):
+    job = job.split("\r\n")
+    first_row = job[0]
+    job.pop(0)
+    first_row = first_row.split(",")
+    personalisation = {}
+    job_row = 0
+    for row in job:
+        row = row.split(",")
+        temp = dict(zip(first_row, row))
+        personalisation[job_row] = temp
+        job_row = job_row + 1
+    return personalisation
+
+
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need a phone number.
     # At the same time we don't want to store it in redis or the db
@@ -169,6 +184,9 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
 
 
 def get_personalisation_from_s3(service_id, job_id, job_row_number):
+    # We don't want to constantly pull down a job from s3 every time we need the personalisation.
+    # At the same time we don't want to store it in redis or the db
+    # So this is a little recycling mechanism to reduce the number of downloads.
     job = JOBS.get(job_id)
     if job is None:
         job = get_job_from_s3(service_id, job_id)
@@ -177,18 +195,39 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     else:
         incr_jobs_cache_hits()
 
-    job = job.split("\r\n")
-    first_row = job[0]
-    job.pop(0)
-    first_row = first_row.split(",")
-    correct_row = job[job_row_number]
-    correct_row = correct_row.split(",")
-    personalisation_dict = {}
-    index = 0
-    for header in first_row:
-        personalisation_dict[header] = correct_row[index]
-        index = index + 1
-    return personalisation_dict
+    # If the job is None after our attempt to retrieve it from s3, it
+    # probably means the job is old and has been deleted from s3, in
+    # which case there is nothing we can do.  It's unlikely to run into
+    # this, but it could theoretically happen, especially if we ever
+    # change the task schedules
+    if job is None:
+        current_app.logger.warning(
+            "Couldnt find personalisation for job_id {job_id} row number {job_row_number} because job is missing"
+        )
+        return {}
+
+    # If we look in the JOBS cache for the quick lookup dictionary of personalisations for a given job
+    # and that dictionary is not there, create it
+    if JOBS.get(f"{job_id}_personalisation") is None:
+        JOBS[f"{job_id}_personalisation"] = extract_personalisation(job)
+
+    # If we can find the quick dictionary, use it
+    if JOBS.get(f"{job_id}_personalisation") is not None:
+        personalisation_to_return = JOBS.get(f"{job_id}_personalisation").get(
+            job_row_number
+        )
+        if personalisation_to_return:
+            return personalisation_to_return
+        else:
+            current_app.logger.warning(
+                f"Was unable to retrieve personalisation from lookup dictionary for job {job_id}"
+            )
+            return {}
+    else:
+        current_app.logger.error(
+            f"Was unable to construct lookup dictionary for job {job_id}"
+        )
+        return {}
 
 
 def get_job_metadata_from_s3(service_id, job_id):
