@@ -1,7 +1,10 @@
+import json
+
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     get_invited_org_user as dao_get_invited_org_user,
@@ -69,6 +72,11 @@ def invite_user_to_org(organization_id):
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,
+    )
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=1800,
     )
     saved_notification.personalisation = personalisation
 

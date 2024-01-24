@@ -124,6 +124,13 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
 ):
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "jo.smith@example.com".encode("utf-8")
+    personalisation = {
+        "name": "Jo",
+    }
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     db_notification = create_notification(
         template=sample_email_template_with_html,
@@ -168,6 +175,17 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
     mock_personalisation.return_value = {"name": "Jo"}
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "jo.smith@example.com".encode("utf-8")
+    personalisation = {
+        "name": "Jo",
+    }
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_email_to_provider(sample_notification)
@@ -389,6 +407,14 @@ def test_send_email_should_use_service_reply_to_email(
 
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    email = "foo@bar.com".encode("utf-8")
+    personalisation = {}
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     db_notification = create_notification(
         template=sample_email_template, reply_to_text="foo@bar.com"
@@ -709,7 +735,10 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
     sample_email_template, mocker
 ):
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
-    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+    mock_redis.get.side_effect = [
+        "test@example.com".encode("utf-8"),
+        json.dumps({}).encode("utf-8"),
+    ]
 
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
 
@@ -758,6 +787,15 @@ def test_send_email_to_provider_should_user_normalised_to(
     )
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "test@example.com".encode("utf-8")
+    personalisation = {}
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     send_to_providers.send_email_to_provider(notification)
     send_mock.assert_called_once_with(
@@ -820,8 +858,16 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
 ):
     from app.schemas import service_schema, template_schema
 
-    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
-    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+    # mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    # mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "test@example.com".encode("utf-8")
+    personalisation = {
+        "name": "Jo",
+    }
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    # mock_redis.get.side_effect = [email, personalisation]
 
     service_dict = service_schema.dump(sample_email_template.service)
     template_dict = template_schema.dump(sample_email_template)
@@ -829,6 +875,8 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     mocker.patch(
         "app.redis_store.get",
         side_effect=[
+            email,
+            personalisation,
             json.dumps({"data": service_dict}).encode("utf-8"),
             json.dumps({"data": template_dict}).encode("utf-8"),
         ],

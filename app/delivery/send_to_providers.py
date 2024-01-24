@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from urllib import parse
 
@@ -32,12 +33,15 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 def send_sms_to_provider(notification):
     # we no longer store the personalisation in the db,
     # need to retrieve from s3 before generating content
-    personalisation = get_personalisation_from_s3(
-        notification.service_id,
-        notification.job_id,
-        notification.job_row_number,
-    )
-    notification.personalisation = personalisation
+    # However, we are still sending the initial verify code through personalisation
+    # so if there is some value there, don't overwrite it
+    if not notification.personalisation:
+        personalisation = get_personalisation_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
@@ -123,6 +127,14 @@ def send_sms_to_provider(notification):
 
 
 def send_email_to_provider(notification):
+    # Someone needs an email, possibly new registration
+    recipient = redis_store.get(f"email-address-{notification.id}")
+    recipient = recipient.decode("utf-8")
+    personalisation = redis_store.get(f"email-personalisation-{notification.id}")
+    if personalisation:
+        personalisation = personalisation.decode("utf-8")
+        notification.personalisation = json.loads(personalisation)
+
     service = SerialisedService.from_id(notification.service_id)
     if not service.active:
         technical_failure(notification=notification)
@@ -144,9 +156,7 @@ def send_email_to_provider(notification):
         plain_text_email = PlainTextEmailTemplate(
             template_dict, values=notification.personalisation
         )
-        # Someone needs an email, possibly new registration
-        recipient = redis_store.get(f"email-address-{notification.id}")
-        recipient = recipient.decode("utf-8")
+
         if notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)

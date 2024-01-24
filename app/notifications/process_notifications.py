@@ -9,6 +9,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
+from app import redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
@@ -81,8 +82,6 @@ def persist_notification(
     document_download_count=None,
     updated_at=None,
 ):
-    current_app.logger.info("Persisting notification")
-
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
@@ -123,7 +122,12 @@ def persist_notification(
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == EMAIL_TYPE:
         current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
-        notification.normalised_to = format_email_address(notification.to)
+        # This is typically for something like inviting a user or the 90 day email check
+        redis_store.set(
+            f"email-address-{notification.id}",
+            format_email_address(notification.to),
+            ex=1800,
+        )
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:

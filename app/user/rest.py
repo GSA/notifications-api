@@ -351,7 +351,7 @@ def create_2fa_code(
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=reply_to,
     )
-
+    saved_notification.personalisation = personalisation
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
     redis_store.raw_set(key, recipient, ex=60 * 60)
