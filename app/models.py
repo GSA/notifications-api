@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import uuid
-from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -14,7 +13,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID, ENUM
+from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import validates
