@@ -118,6 +118,19 @@ _enum_params: dict[Enum, EnumValues] = {
     CodeType: {"values": ["email", "sms"], "name": "code_types"},
 }
 
+def enum_create(values: list[str], name: str) -> None:
+    enum_db_type = postgresql.ENUM(*values, name=name)
+    enum_db_type.create(op.get_bind())
+
+
+def enum_drop(values: list[str], name: str) -> None:
+    enum_db_type = postgresql.ENUM(*values, name=name)
+    enum_db_type.drop(op.get_bind())
+
+
+def enum_using(column_name: str, enum: Enum) -> str:
+    return f"{column_name}::{_enum_params[enum]['name']}"
+
 
 def enum_type(enum: Enum) -> sa.Enum:
     return sa.Enum(*_enum_params[enum]["values"], name=_enum_params[enum]["name"])
@@ -188,6 +201,9 @@ def upgrade():
     op.drop_table("job_status")
     op.drop_table("service_permission_types")
 
+    for enum_data in _enum_params.values():
+        enum_create(**enum_data)
+
     # alter existing columns to use new enums
     op.alter_column(
         "api_keys",
@@ -195,6 +211,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(KeyType),
         existing_nullable=False,
+        postgresql_using=enum_using("key_type", KeyType),
     )
     op.alter_column(
         "api_keys_history",
@@ -202,6 +219,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(KeyType),
         existing_nullable=False,
+        postgresql_using=enum_using("key_type", KeyType),
     )
     op.alter_column(
         "email_branding",
@@ -209,6 +227,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(BrandType),
         existing_nullable=False,
+        postgresql_using=enum_using("brand_type", BrandType),
     )
     op.alter_column(
         "invited_organization_users",
@@ -216,6 +235,7 @@ def upgrade():
         existing_type=sa.VARCHAR(),
         type_=enum_type(InvitedUserStatus),
         existing_nullable=False,
+        postgresql_using=enum_using("status", InvitedUserStatus),
     )
     op.alter_column(
         "invited_users",
@@ -229,6 +249,7 @@ def upgrade():
         ),
         type_=enum_type(InvitedUserStatus),
         existing_nullable=False,
+        postgresql_using=enum_using("status", InvitedUserStatus),
     )
     op.alter_column(
         "invited_users",
@@ -237,6 +258,7 @@ def upgrade():
         type_=enum_type(AuthType),
         existing_nullable=False,
         existing_server_default=sa.text("'sms_auth'::character varying"),
+        postgresql_using=enum_using("auth_type", AuthType),
     )
     op.alter_column(
         "jobs",
@@ -244,6 +266,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(JobStatus),
         existing_nullable=False,
+        postgresql_using=enum_using("job_status", JobStatus),
     )
     op.alter_column(
         "notification_history",
@@ -251,6 +274,7 @@ def upgrade():
         existing_type=sa.TEXT(),
         type_=enum_type(NotificationStatus),
         existing_nullable=True,
+        postgresql_using=enum_using("notification_status", NotificationStatus),
     )
     op.alter_column(
         "notification_history",
@@ -258,6 +282,7 @@ def upgrade():
         existing_type=sa.VARCHAR(),
         type_=enum_type(KeyType),
         existing_nullable=False,
+        postgresql_using=enum_using("key_type", KeyType),
     )
     op.alter_column(
         "notification_history",
@@ -267,6 +292,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "notifications",
@@ -274,6 +300,7 @@ def upgrade():
         existing_type=sa.TEXT(),
         type_=enum_type(NotificationStatus),
         existing_nullable=True,
+        postgresql_using=enum_using("notification_status", NotificationStatus),
     )
     op.alter_column(
         "notifications",
@@ -281,6 +308,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(KeyType),
         existing_nullable=False,
+        postgresql_using=enum_using("key_type", KeyType),
     )
     op.alter_column(
         "notifications",
@@ -290,9 +318,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
-    )
-    op.alter_column(
-        "notifications", "international", existing_type=sa.BOOLEAN(), nullable=False
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "organization",
@@ -300,6 +326,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(OrganizationType),
         existing_nullable=True,
+        postgresql_using=enum_using("organization_type", OrganizationType),
     )
     op.alter_column(
         "provider_details",
@@ -309,6 +336,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "provider_details_history",
@@ -318,6 +346,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "rates",
@@ -327,6 +356,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "service_callback_api",
@@ -334,6 +364,7 @@ def upgrade():
         existing_type=sa.VARCHAR(),
         type_=enum_type(CallbackType),
         existing_nullable=True,
+        postgresql_using=enum_using("callback_type", CallbackType),
     )
     op.alter_column(
         "service_callback_api_history",
@@ -341,6 +372,7 @@ def upgrade():
         existing_type=sa.VARCHAR(),
         type_=enum_type(CallbackType),
         existing_nullable=True,
+        postgresql_using=enum_using("callback_type", CallbackType),
     )
     op.alter_column(
         "service_data_retention",
@@ -350,6 +382,7 @@ def upgrade():
         ),
         type_=enum_type(NotificationType),
         existing_nullable=False,
+        postgresql_using=enum_using("notification_type", NotificationType),
     )
     op.alter_column(
         "service_permissions",
@@ -357,6 +390,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(ServicePermissionType),
         existing_nullable=False,
+        postgresql_using=enum_using("permission", ServicePermissionType),
     )
     op.alter_column(
         "service_whitelist",
@@ -364,6 +398,7 @@ def upgrade():
         existing_type=postgresql.ENUM("mobile", "email", name="recipient_type"),
         type_=enum_type(RecipientType),
         existing_nullable=False,
+        postgresql_using=enum_using("recipient_type", RecipientType),
     )
     op.alter_column(
         "services",
@@ -371,6 +406,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(OrganizationType),
         existing_nullable=True,
+        postgresql_using=enum_using("organization_type", OrganizationType),
     )
     op.alter_column(
         "services_history",
@@ -378,6 +414,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(OrganizationType),
         existing_nullable=True,
+        postgresql_using=enum_using("organization_type", OrganizationType),
     )
     op.alter_column(
         "templates",
@@ -387,6 +424,7 @@ def upgrade():
         ),
         type_=enum_type(TemplateType),
         existing_nullable=False,
+        postgresql_using=enum_using("template_type", TemplateType),
     )
     op.alter_column(
         "templates",
@@ -394,6 +432,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(TemplateProcessType),
         existing_nullable=False,
+        postgresql_using=enum_using("process_type", TemplateProcessType),
     )
     op.alter_column(
         "templates_history",
@@ -403,6 +442,7 @@ def upgrade():
         ),
         type_=enum_type(TemplateType),
         existing_nullable=False,
+        postgresql_using=enum_using("template_type", TemplateType),
     )
     op.alter_column(
         "templates_history",
@@ -410,6 +450,7 @@ def upgrade():
         existing_type=sa.VARCHAR(length=255),
         type_=enum_type(TemplateProcessType),
         existing_nullable=False,
+        postgresql_using=enum_using("process_type", TemplateProcessType),
     )
     op.alter_column(
         "users",
@@ -418,6 +459,7 @@ def upgrade():
         type_=enum_type(AuthType),
         existing_nullable=False,
         existing_server_default=sa.text("'sms_auth'::character varying"),
+        postgresql_using=enum_using("auth_type", AuthType),
     )
     op.alter_column(
         "verify_codes",
@@ -425,6 +467,7 @@ def upgrade():
         existing_type=postgresql.ENUM("email", "sms", name="verify_code_types"),
         type_=enum_type(CodeType),
         existing_nullable=False,
+        postgresql_using=enum_using("code_type", CodeType),
     )
 
     # Recreate composite indexes
@@ -458,6 +501,7 @@ def downgrade():
         existing_type=enum_type(CodeType),
         type_=postgresql.ENUM("email", "sms", name="verify_code_types"),
         existing_nullable=False,
+        postgresql_using="code_type::verify_code_types",
     )
     op.alter_column(
         "users",
@@ -482,6 +526,7 @@ def downgrade():
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
         existing_nullable=False,
+        postgresql_using="template_type::template_type",
     )
     op.alter_column(
         "templates",
@@ -498,6 +543,7 @@ def downgrade():
             "sms", "email", "letter", "broadcast", name="template_type"
         ),
         existing_nullable=False,
+        postgresql_using="template_type::template_type",
     )
     op.alter_column(
         "services_history",
@@ -519,6 +565,7 @@ def downgrade():
         existing_type=enum_type(RecipientType),
         type_=postgresql.ENUM("mobile", "email", name="recipient_type"),
         existing_nullable=False,
+        postgresql_using="recipient_type::recipient_type",
     )
     op.alter_column(
         "service_permissions",
@@ -533,6 +580,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "service_callback_api_history",
@@ -554,6 +602,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "provider_details_history",
@@ -561,6 +610,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "provider_details",
@@ -568,6 +618,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "organization",
@@ -589,6 +640,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "notifications",
@@ -610,6 +662,7 @@ def downgrade():
         existing_type=enum_type(NotificationType),
         type_=postgresql.ENUM("email", "sms", "letter", name="notification_type"),
         existing_nullable=False,
+        postgresql_using="notification_type::notification_type",
     )
     op.alter_column(
         "notification_history",
@@ -645,6 +698,7 @@ def downgrade():
             name="invited_users_status_types",
         ),
         existing_nullable=False,
+        postgresql_using="status::invited_user_status_types",
     )
     op.alter_column(
         "invited_organization_users",
@@ -674,6 +728,9 @@ def downgrade():
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
     )
+
+    for enum_data in _enum_params.values():
+        enum_drop(**enum_data)
 
     # Recreate helper tables
     service_permission_types = op.create_table(

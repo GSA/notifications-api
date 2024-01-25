@@ -14,7 +14,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID, ENUM
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import validates
@@ -53,120 +53,35 @@ def filter_null_value_fields(obj):
     return dict(filter(lambda x: x[1] is not None, obj.items()))
 
 
-def enum_values(enum: Enum) -> list[str]:
-    """
-    Helper function used to persist enum values to the database rather than names.
-
-    See Also:
-        https://docs.sqlalchemy.org/en/14/core/type_basics.html#sqlalchemy.types.Enum
-
-    Notes:
-        In order to persist the values and not the names, the Enum.values_callable
-        parameter may be used. The value of this parameter is a user-supplied callable,
-        which is intended to be used with a PEP-435-compliant enumerated class and
-        returns a list of string values to be persisted. For a simple enumeration that
-        uses string values, a callable such as lambda x: [e.value for e in x] is
-        sufficient.
-    """
-    return [i.value for i in enum]  # type: ignore[attr-defined]
-
-
-# This has the standard definition for all of the enum columns used throughout the models.
-# This is used in the enum_column() function below.
-_enum_column_types = {
-    AuthType: db.Enum(  # the key should be the Enum class to use.
-        AuthType,  # The Enum class to use.
-        name="auth_types",  # The name of the type defined in PostgreSQL - should be plural
-        values_callable=enum_values,  # Every entry in this dict should contain this, note above.
-    ),
-    BrandType: db.Enum(
-        BrandType,
-        name="brand_types",
-        values_callable=enum_values,
-    ),
-    OrganizationType: db.Enum(
-        OrganizationType,
-        name="organization_types",
-        values_callable=enum_values,
-    ),
-    ServicePermissionType: db.Enum(
-        ServicePermissionType,
-        name="service_permission_types",
-        values_callable=enum_values,
-    ),
-    RecipientType: db.Enum(
-        RecipientType,
-        name="recipient_types",
-        values_callable=enum_values,
-    ),
-    CallbackType: db.Enum(
-        CallbackType,
-        name="callback_types",
-        values_callable=enum_values,
-    ),
-    KeyType: db.Enum(
-        KeyType,
-        name="key_types",
-        values_callable=enum_values,
-    ),
-    TemplateType: db.Enum(
-        TemplateType,
-        name="template_types",
-        values_callable=enum_values,
-    ),
-    TemplateProcessType: db.Enum(
-        TemplateProcessType,
-        name="template_process_types",
-        values_callable=enum_values,
-    ),
-    NotificationType: db.Enum(
-        NotificationType,
-        name="notification_types",
-        values_callable=enum_values,
-    ),
-    JobStatus: db.Enum(
-        JobStatus,
-        name="job_statuses",
-        values_callable=enum_values,
-    ),
-    CodeType: db.Enum(
-        CodeType,
-        name="code_types",
-        values_callable=enum_values,
-    ),
-    NotificationStatus: db.Enum(
-        NotificationStatus,
-        name="notify_statuses",
-        values_callable=enum_values,
-    ),
-    InvitedUserStatus: db.Enum(
-        InvitedUserStatus,
-        name="invited_user_statuses",
-        values_callable=enum_values,
-    ),
-    PermissionType: db.Enum(
-        PermissionType,
-        name="permission_types",
-        values_callable=enum_values,
-    ),
-    AgreementType: db.Enum(
-        AgreementType,
-        name="agreement_types",
-        values_callable=enum_values,
-    ),
-    AgreementStatus: db.Enum(
-        AgreementStatus,
-        name="agreement_statuses",
-        values_callable=enum_values,
-    ),
+_enum_column_names = {
+    AuthType: "auth_types",
+    BrandType: "brand_types",
+    OrganizationType: "organization_types",
+    ServicePermissionType: "service_permission_types",
+    RecipientType: "recipient_types",
+    CallbackType: "callback_types",
+    KeyType: "key_types",
+    TemplateType: "template_types",
+    TemplateProcessType: "template_process_types",
+    NotificationType: "notification_types",
+    JobStatus: "job_statuses",
+    CodeType: "code_types",
+    NotificationStatus: "notify_statuses",
+    InvitedUserStatus: "invited_user_statuses",
+    PermissionType: "permission_types",
+    AgreementType: "agreement_types",
+    AgreementStatus: "agreement_statuses",
 }
 
 
-def enum_column(enum_type, name=None, **kwargs):
-    if name is None:
-        return db.Column(_enum_column_types[enum_type], **kwargs)
-    else:
-        return db.Column(name, _enum_column_types[enum_type], **kwargs)
+def enum_column(enum_type, **kwargs):
+    return db.Column(
+        db.Enum(
+            *[i.value for i in enum_type],
+            name=_enum_column_names[enum_type]
+        ),
+        **kwargs,
+    )
 
 
 class HistoryModel:
@@ -1591,6 +1506,7 @@ class Notification(db.Model):
         name="notification_status",
         nullable=True,
         default=NotificationStatus.CREATED,
+        key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, index=True, nullable=True)
@@ -1867,6 +1783,7 @@ class NotificationHistory(db.Model, HistoryModel):
         name="notification_status",
         nullable=True,
         default=NotificationStatus.CREATED,
+        key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, nullable=True)
