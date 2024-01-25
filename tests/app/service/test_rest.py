@@ -14,7 +14,7 @@ from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import dao_add_user_to_service, dao_remove_user_from_service
 from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
-from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
+from app.enums import KeyType, NotificationType, OrganizationType, ServicePermissionType, TemplateType
 from app.models import (
     AnnualBilling,
     EmailBranding,
@@ -684,7 +684,7 @@ def test_update_service(client, notify_db_session, sample_service):
         "email_from": "updated.service.name",
         "created_by": str(sample_service.created_by.id),
         "email_branding": str(brand.id),
-        "organization_type": "federal",
+        "organization_type": OrganizationType.FEDERAL,
     }
 
     auth_header = create_admin_authorization_header()
@@ -699,7 +699,7 @@ def test_update_service(client, notify_db_session, sample_service):
     assert result["data"]["name"] == "updated service name"
     assert result["data"]["email_from"] == "updated.service.name"
     assert result["data"]["email_branding"] == str(brand.id)
-    assert result["data"]["organization_type"] == "federal"
+    assert result["data"]["organization_type"] == OrganizationType.FEDERAL
 
 
 def test_cant_update_service_org_type_to_random_value(client, sample_service):

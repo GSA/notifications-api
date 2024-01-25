@@ -8,6 +8,7 @@ from app.dao.annual_billing_dao import (
     set_default_free_allowance_for_service,
 )
 from app.dao.date_util import get_current_calendar_year_start_year
+from app.enums import OrganizationType
 from app.models import AnnualBilling
 from tests.app.db import create_annual_billing, create_service
 
@@ -114,7 +115,7 @@ def test_set_default_free_allowance_for_service_updates_existing_year(sample_ser
     assert annual_billing[0].service_id == sample_service.id
     assert annual_billing[0].free_sms_fragment_limit == 150000
 
-    sample_service.organization_type = "federal"
+    sample_service.organization_type = OrganizationType.FEDERAL
 
     set_default_free_allowance_for_service(service=sample_service, year_start=None)
     annual_billing = AnnualBilling.query.all()

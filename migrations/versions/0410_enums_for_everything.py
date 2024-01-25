@@ -581,7 +581,9 @@ def downgrade():
         )
         enum_create(values=["email", "sms", "letter"], name="notification_type")
         enum_create(values=["mobile", "email"], name="recipient_type")
-        enum_create(values=["sms", "email", "letter", "broadcast"], name="template_type")
+        enum_create(
+            values=["sms", "email", "letter", "broadcast"], name="template_type"
+        )
         enum_create(values=["email", "sms"], name="verify_code_types")
 
         # Alter columns back

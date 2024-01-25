@@ -20,7 +20,7 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
-from app.enums import KeyType, NotificationStatus, NotificationType
+from app.enums import KeyType, NotificationStatus, NotificationType, OrganizationType
 from app.models import (
     AnnualBilling,
     Job,
@@ -251,7 +251,7 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [("federal", 40000), ("state", 40000)]
+    "organization_type, expected_allowance", [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)]
 )
 def test_populate_annual_billing_with_defaults(
     notify_db_session, notify_api, organization_type, expected_allowance
@@ -274,7 +274,7 @@ def test_populate_annual_billing_with_defaults(
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [("federal", 40000), ("state", 40000)]
+    "organization_type, expected_allowance", [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)]
 )
 def test_populate_annual_billing_with_the_previous_years_allowance(
     notify_db_session, notify_api, organization_type, expected_allowance
@@ -328,7 +328,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(
     notify_db_session, notify_api
 ):
-    service = create_service(organization_type="federal")
+    service = create_service(organization_type=OrganizationType.FEDERAL)
     create_annual_billing(
         service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2021
     )
