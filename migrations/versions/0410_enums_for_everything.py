@@ -118,6 +118,7 @@ _enum_params: dict[Enum, EnumValues] = {
     CodeType: {"values": ["email", "sms"], "name": "code_types"},
 }
 
+
 def enum_create(values: list[str], name: str) -> None:
     enum_db_type = postgresql.ENUM(*values, name=name)
     enum_db_type.create(op.get_bind())
@@ -129,11 +130,15 @@ def enum_drop(values: list[str], name: str) -> None:
 
 
 def enum_using(column_name: str, enum: Enum) -> str:
-    return f"{column_name}::{_enum_params[enum]['name']}"
+    return f"{column_name}::text::{_enum_params[enum]['name']}"
 
 
 def enum_type(enum: Enum) -> sa.Enum:
-    return sa.Enum(*_enum_params[enum]["values"], name=_enum_params[enum]["name"])
+    return sa.Enum(
+        *_enum_params[enum]["values"],
+        name=_enum_params[enum]["name"],
+        values_callable=(lambda x: [e.value for e in x]),
+    )
 
 
 def upgrade():
@@ -255,10 +260,18 @@ def upgrade():
         "invited_users",
         "auth_type",
         existing_type=sa.VARCHAR(),
+        type_=sa.VARCHAR(),
+        existing_nullable=False,
+        server_default=None,
+        existing_server_default=sa.text("'sms_auth'::character varying"),
+    )
+    op.alter_column(
+        "invited_users",
+        "auth_type",
+        existing_type=sa.VARCHAR(),
         type_=enum_type(AuthType),
         existing_nullable=False,
-        existing_server_default=sa.text("'sms_auth'::character varying"),
-        postgresql_using=enum_using("auth_type", AuthType),
+        postgresql_using="auth_type::auth_types",
     )
     op.alter_column(
         "jobs",
@@ -456,10 +469,17 @@ def upgrade():
         "users",
         "auth_type",
         existing_type=sa.VARCHAR(),
-        type_=enum_type(AuthType),
+        type_=sa.VARCHAR(),
+        server_default=None,
         existing_nullable=False,
         existing_server_default=sa.text("'sms_auth'::character varying"),
-        postgresql_using=enum_using("auth_type", AuthType),
+    )
+    op.alter_column(
+        "users",
+        "auth_type",
+        existing_type=sa.VARCHAR(),
+        type_=enum_type(AuthType),
+        existing_nullable=False,
     )
     op.alter_column(
         "verify_codes",
@@ -509,7 +529,7 @@ def downgrade():
         existing_type=enum_type(AuthType),
         type_=sa.VARCHAR(),
         existing_nullable=False,
-        existing_server_default=sa.text("'sms_auth'::character varying"),
+        server_default=sa.text("'sms_auth'::character varying"),
     )
     op.alter_column(
         "templates_history",
@@ -684,7 +704,7 @@ def downgrade():
         existing_type=enum_type(AuthType),
         type_=sa.VARCHAR(),
         existing_nullable=False,
-        existing_server_default=sa.text("'sms_auth'::character varying"),
+        server_default=sa.text("'sms_auth'::character varying"),
     )
     op.alter_column(
         "invited_users",

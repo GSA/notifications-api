@@ -78,7 +78,8 @@ def enum_column(enum_type, **kwargs):
     return db.Column(
         db.Enum(
             *[i.value for i in enum_type],
-            name=_enum_column_names[enum_type]
+            name=_enum_column_names[enum_type],
+            values_callable=(lambda x: [i.value for i in x]),
         ),
         **kwargs,
     )
@@ -1449,7 +1450,13 @@ class NotificationAllTimeView(db.Model):
     sent_at = db.Column(db.DateTime)
     sent_by = db.Column(db.String)
     updated_at = db.Column(db.DateTime)
-    status = db.Column("notification_status", db.Text)
+    status = enum_column(
+        NotificationStatus,
+        name="notification_status",
+        nullable=True,
+        default=NotificationStatus.CREATED,
+        key="status",
+    )
     reference = db.Column(db.String)
     client_reference = db.Column(db.String)
     international = db.Column(db.Boolean)
