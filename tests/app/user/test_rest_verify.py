@@ -425,7 +425,7 @@ def test_reset_failed_login_count_returns_404_when_user_does_not_exist(client):
     assert resp.status_code == 404
 
 
-# we send sms_auth users and webauthn_auth users email code to validate their email access
+# we send AuthType.SMS users and AuthType.WEBAUTHN users email code to validate their email access
 @pytest.mark.parametrize("auth_type", AuthType)
 @pytest.mark.parametrize(
     "data, expected_auth_url",
@@ -514,7 +514,7 @@ def test_send_email_code_returns_404_for_bad_input_data(admin_request):
 
 
 @freeze_time("2016-01-01T12:00:00")
-# we send sms_auth and webauthn_auth users email code to validate their email access
+# we send iAuthType.SMS and AuthType.WEBAUTHN users email code to validate their email access
 @pytest.mark.parametrize("auth_type", AuthType)
 def test_user_verify_email_code(admin_request, sample_user, auth_type):
     sample_user.logged_in_at = datetime.utcnow() - timedelta(days=1)

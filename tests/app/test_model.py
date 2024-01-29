@@ -8,6 +8,7 @@ from app import encryption
 from app.enums import (
     AgreementStatus,
     AgreementType,
+    AuthType,
     NotificationStatus,
     RecipientType,
     TemplateType,
@@ -328,7 +329,7 @@ def test_user_can_use_webauthn_if_platform_admin(sample_user, is_platform_admin)
 
 @pytest.mark.parametrize(
     ("auth_type", "can_use_webauthn"),
-    [("email_auth", False), ("sms_auth", False), ("webauthn_auth", True)],
+    [(AuthType.EMAIL, False), (AuthType.SMS, False), (AuthType.WEBAUTHN, True)],
 )
 def test_user_can_use_webauthn_if_they_login_with_it(
     sample_user, auth_type, can_use_webauthn

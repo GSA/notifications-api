@@ -229,7 +229,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     # that user should be the one we added
     user = User.query.filter_by(name="Fake Personson").first()
     assert user.email_address == "somebody@fake.gov"
-    assert user.auth_type == "sms_auth"
+    assert user.auth_type == AuthType.SMS
     assert user.state == "active"
 
 

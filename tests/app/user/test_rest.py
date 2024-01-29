@@ -210,7 +210,7 @@ def test_cannot_create_user_with_sms_auth_and_no_mobile(
 
     assert (
         json_resp["message"]
-        == "Mobile number must be set if auth_type is set to sms_auth"
+        == "Mobile number must be set if auth_type is set to AuthType.SMS"
     )
 
 
@@ -883,15 +883,15 @@ def test_activate_user_fails_if_already_active(admin_request, sample_user):
 
 
 def test_update_user_auth_type(admin_request, sample_user):
-    assert sample_user.auth_type == "sms_auth"
+    assert sample_user.auth_type == AuthType.SMS
     resp = admin_request.post(
         "user.update_user_attribute",
         user_id=sample_user.id,
-        _data={"auth_type": "email_auth"},
+        _data={"auth_type": AuthType.EMAIL},
     )
 
     assert resp["data"]["id"] == str(sample_user.id)
-    assert resp["data"]["auth_type"] == "email_auth"
+    assert resp["data"]["auth_type"] == AuthType.EMAIL
 
 
 def test_can_set_email_auth_and_remove_mobile_at_same_time(admin_request, sample_user):
@@ -922,7 +922,7 @@ def test_cannot_remove_mobile_if_sms_auth(admin_request, sample_user):
 
     assert (
         json_resp["message"]
-        == "Mobile number must be set if auth_type is set to sms_auth"
+        == "Mobile number must be set if auth_type is set to AuthType.SMS"
     )
 
 
