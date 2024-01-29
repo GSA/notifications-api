@@ -73,7 +73,7 @@ def handle_integrity_error(exc):
         return (
             jsonify(
                 result="error",
-                message="Mobile number must be set if auth_type is set to sms_auth",
+                message="Mobile number must be set if auth_type is set to AuthType.SMS",
             ),
             400,
         )

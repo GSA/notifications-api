@@ -169,7 +169,9 @@ def test_update_organization_updates_the_service_org_type_if_org_type_is_provide
     sample_organization.services.append(sample_service)
     db.session.commit()
 
-    dao_update_organization(sample_organization.id, organization_type=OrganizationType.FEDERAL)
+    dao_update_organization(
+        sample_organization.id, organization_type=OrganizationType.FEDERAL
+    )
 
     assert sample_organization.organization_type == OrganizationType.FEDERAL
     assert sample_service.organization_type == OrganizationType.FEDERAL

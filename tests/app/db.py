@@ -26,7 +26,13 @@ from app.dao.service_sms_sender_dao import (
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template, dao_update_template
 from app.dao.users_dao import save_model_user
-from app.enums import KeyType, OrganizationType, RecipientType, ServicePermissionType, TemplateType
+from app.enums import (
+    KeyType,
+    OrganizationType,
+    RecipientType,
+    ServicePermissionType,
+    TemplateType,
+)
 from app.models import (
     AnnualBilling,
     ApiKey,

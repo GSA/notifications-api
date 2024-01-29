@@ -20,7 +20,7 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
-from app.enums import KeyType, NotificationStatus, NotificationType, OrganizationType
+from app.enums import KeyType, NotificationStatus, NotificationType, OrganizationType, TemplateType
 from app.models import (
     AnnualBilling,
     Job,
@@ -91,7 +91,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
 def test_update_jobs_archived_flag(notify_db_session, notify_api):
     service = create_service()
 
-    sms_template = create_template(service=service, template_type="sms")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
     create_job(sms_template)
 
     right_now = datetime.datetime.utcnow()
@@ -251,13 +251,14 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)]
+    "organization_type, expected_allowance",
+    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
 )
 def test_populate_annual_billing_with_defaults(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type, organization_type=organization_type
+        service_name=organization_type.value, organization_type=organization_type
     )
 
     notify_api.test_cli_runner().invoke(
@@ -274,13 +275,14 @@ def test_populate_annual_billing_with_defaults(
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)]
+    "organization_type, expected_allowance",
+    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
 )
 def test_populate_annual_billing_with_the_previous_years_allowance(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type, organization_type=organization_type
+        service_name=organization_type.value, organization_type=organization_type
     )
 
     notify_api.test_cli_runner().invoke(

@@ -14,7 +14,13 @@ from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import dao_add_user_to_service, dao_remove_user_from_service
 from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
-from app.enums import KeyType, NotificationType, OrganizationType, ServicePermissionType, TemplateType
+from app.enums import (
+    KeyType,
+    NotificationType,
+    OrganizationType,
+    ServicePermissionType,
+    TemplateType,
+)
 from app.models import (
     AnnualBilling,
     EmailBranding,

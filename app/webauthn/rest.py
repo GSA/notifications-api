@@ -62,9 +62,10 @@ def delete_webauthn_credential(user_id, webauthn_credential_id):
     user = get_user_by_id(user_id)
 
     if len(user.webauthn_credentials) == 1:
-        # TODO: Only raise an error if user has auth type webauthn_auth
+        # TODO: Only raise an error if user has auth type AuthType.WEBAUTHN
         raise InvalidRequest(
-            "Cannot delete last remaining webauthn credential for user", status_code=400
+            "Cannot delete last remaining webauthn credential for user",
+            status_code=400,
         )
 
     dao_delete_webauthn_credential(webauthn_credential)

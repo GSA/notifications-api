@@ -26,7 +26,9 @@ from tests.app.db import (
 
 
 def test_get_all_organizations(admin_request, notify_db_session):
-    create_organization(name="inactive org", active=False, organization_type=OrganizationType.FEDERAL)
+    create_organization(
+        name="inactive org", active=False, organization_type=OrganizationType.FEDERAL
+    )
     create_organization(name="active org", domains=["example.com"])
 
     response = admin_request.get("organization.get_organizations", _expected_status=200)

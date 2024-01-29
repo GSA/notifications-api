@@ -155,7 +155,7 @@ class User(db.Model):
 
     # either email auth or a mobile number must be provided
     CheckConstraint(
-        "auth_type in ('email_auth', 'webauthn_auth') or mobile_number is not null"
+        "auth_type in (AuthType.EMAIL, AuthType.WEBAUTHN) or mobile_number is not null"
     )
 
     services = db.relationship("Service", secondary="user_to_service", backref="users")
@@ -182,7 +182,7 @@ class User(db.Model):
         if self.platform_admin:
             return True
 
-        if self.auth_type == "webauthn_auth":
+        if self.auth_type == AuthType.WEBAUTHN:
             return True
 
         return any(
