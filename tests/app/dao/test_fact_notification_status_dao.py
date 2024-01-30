@@ -159,27 +159,27 @@ def test_fetch_notification_status_for_service_for_today_and_7_previous_days(
         service=service_1, template_type=TemplateType.EMAIL
     )
 
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(date(2018, 10, 25), "sms", service_1, count=8)
+    create_ft_notification_status(date(2018, 10, 29), NotificationType.SMS, service_1, count=10,)
+    create_ft_notification_status(date(2018, 10, 25), NotificationType.SMS, service_1, count=8,)
     create_ft_notification_status(
-        date(2018, 10, 29), "sms", service_1, notification_status="created"
+        date(2018, 10, 29), NotificationType.SMS, service_1, notification_status=NotificationStatus.CREATED,
     )
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+    create_ft_notification_status(date(2018, 10, 29), NotificationType.EMAIL, service_1, count=3,)
 
     create_notification(sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(sms_template_2, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status=NotificationStatus.DELIVERED,
     )
 
     # too early, shouldn't be included
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 10, 30, 12, 0, 0),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     results = sorted(
@@ -191,16 +191,16 @@ def test_fetch_notification_status_for_service_for_today_and_7_previous_days(
 
     assert len(results) == 3
 
-    assert results[0].notification_type == "email"
-    assert results[0].status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].status == NotificationStatus.DELIVERED
     assert results[0].count == 4
 
-    assert results[1].notification_type == "sms"
-    assert results[1].status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].status == NotificationStatus.CREATED
     assert results[1].count == 3
 
-    assert results[2].notification_type == "sms"
-    assert results[2].status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].status == NotificationStatus.DELIVERED
     assert results[2].count == 19
 
 

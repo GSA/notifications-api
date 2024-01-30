@@ -27,10 +27,14 @@ from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template, dao_update_template
 from app.dao.users_dao import save_model_user
 from app.enums import (
+    JobStatus,
     KeyType,
+    NotificationStatus,
+    NotificationType,
     OrganizationType,
     RecipientType,
     ServicePermissionType,
+    TemplateProcessType,
     TemplateType,
 )
 from app.models import (
@@ -204,7 +208,7 @@ def create_template(
     hidden=False,
     archived=False,
     folder=None,
-    process_type="normal",
+    process_type=TemplateProcessType.NORMAL,
     contact_block_id=None,
 ):
     data = {
@@ -235,7 +239,7 @@ def create_notification(
     job=None,
     job_row_number=None,
     to_field=None,
-    status="created",
+    status=NotificationStatus.CREATED,
     reference=None,
     created_at=None,
     sent_at=None,
@@ -326,7 +330,7 @@ def create_notification_history(
     template=None,
     job=None,
     job_row_number=None,
-    status="created",
+    status=NotificationStatus.CREATED,
     reference=None,
     created_at=None,
     sent_at=None,
@@ -390,7 +394,7 @@ def create_job(
     template,
     notification_count=1,
     created_at=None,
-    job_status="pending",
+    job_status=JobStatus.PENDING,
     scheduled_for=None,
     processing_started=None,
     processing_finished=None,
@@ -681,12 +685,12 @@ def create_ft_billing(
 
 def create_ft_notification_status(
     local_date,
-    notification_type="sms",
+    notification_type=NotificationType.SMS,
     service=None,
     template=None,
     job=None,
-    key_type="normal",
-    notification_status="delivered",
+    key_type=KeyType.NORMAL,
+    notification_status=NotificationStatus.DELIVERED,
     count=1,
 ):
     if job:
@@ -842,7 +846,7 @@ def ses_notification_callback():
 
 
 def create_service_data_retention(
-    service, notification_type="sms", days_of_retention=3
+    service, notification_type=NotificationType.SMS, days_of_retention=3
 ):
     data_retention = insert_service_data_retention(
         service_id=service.id,
@@ -925,7 +929,7 @@ def set_up_usage_data(start_date):
 
     # service with emails only:
     service_with_emails = create_service(service_name="b - emails")
-    email_template = create_template(service=service_with_emails, template_type="email")
+    email_template = create_template(service=service_with_emails, template_type=TemplateType.EMAIL)
     org_2 = create_organization(
         name="Org for {}".format(service_with_emails.name),
     )
@@ -951,7 +955,7 @@ def set_up_usage_data(start_date):
         billing_reference="sms billing reference",
     )
     sms_template = create_template(
-        service=service_with_sms_without_org, template_type="sms"
+        service=service_with_sms_without_org, template_type=TemplateType.SMS
     )
     create_annual_billing(
         service_id=service_with_sms_without_org.id,
@@ -971,7 +975,7 @@ def set_up_usage_data(start_date):
         service_name="e - sms within allowance"
     )
     sms_template_2 = create_template(
-        service=service_with_sms_within_allowance, template_type="sms"
+        service=service_with_sms_within_allowance, template_type=TemplateType.SMS
     )
     create_annual_billing(
         service_id=service_with_sms_within_allowance.id,

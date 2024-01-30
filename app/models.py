@@ -1860,7 +1860,9 @@ class InvitedUser(db.Model):
     )
     permissions = db.Column(db.String, nullable=False)
     auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
-    folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=list)
+    folder_permissions = db.Column(
+        JSONB(none_as_null=True), nullable=False, default=list
+    )
 
     # would like to have used properties for this but haven't found a way to make them
     # play nice with marshmallow yet
