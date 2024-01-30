@@ -7,7 +7,7 @@ locals {
 }
 
 module "database" {
-  source = "github.com/18f/terraform-cloudgov//database?ref=v0.2.0"
+  source = "github.com/18f/terraform-cloudgov//database?ref=v0.7.1"
 
   cf_org_name      = local.cf_org_name
   cf_space_name    = local.cf_space_name
@@ -17,7 +17,7 @@ module "database" {
 }
 
 module "redis" {
-  source = "github.com/18f/terraform-cloudgov//redis?ref=v0.2.0"
+  source = "github.com/18f/terraform-cloudgov//redis?ref=v0.7.1"
 
   cf_org_name      = local.cf_org_name
   cf_space_name    = local.cf_space_name
@@ -27,7 +27,7 @@ module "redis" {
 }
 
 module "csv_upload_bucket" {
-  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.2.0"
+  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.7.1"
 
   cf_org_name      = local.cf_org_name
   cf_space_name    = local.cf_space_name
@@ -78,7 +78,7 @@ module "sns_sms" {
 #     `cf create-domain gsa-tts-benefits-studio api.notify.gov`
 ###########################################################################
 # module "domain" {
-#   source = "github.com/18f/terraform-cloudgov//domain?ref=v0.2.0"
+#   source = "github.com/18f/terraform-cloudgov//domain?ref=v0.7.1"
 #
 #   cf_org_name      = local.cf_org_name
 #   cf_space_name    = local.cf_space_name
