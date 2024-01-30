@@ -31,7 +31,10 @@ def save_user_attribute(usr, update_dict=None):
 
 
 def save_model_user(
-    user, update_dict=None, password=None, validated_email_access=False
+    user,
+    update_dict=None,
+    password=None,
+    validated_email_access=False,
 ):
     if password:
         user.password = password
