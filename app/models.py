@@ -76,9 +76,9 @@ _enum_column_names = {
 def enum_column(enum_type, **kwargs):
     return db.Column(
         db.Enum(
-            *[i.value for i in enum_type],
+            *[i for i in enum_type],
             name=_enum_column_names[enum_type],
-            values_callable=(lambda x: [i.value for i in x]),
+            values_callable=(lambda x: [i for i in x]),
         ),
         **kwargs,
     )
@@ -137,7 +137,7 @@ class User(db.Model):
     state = db.Column(db.String, nullable=False, default="pending")
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
-    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS.value)
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
     email_access_validated_at = db.Column(
         db.DateTime,
         index=False,
@@ -310,7 +310,7 @@ class EmailBranding(db.Model):
         BrandType,
         index=True,
         nullable=False,
-        default=BrandType.ORG.value,
+        default=BrandType.ORG,
     )
 
     def serialize(self):
@@ -1130,7 +1130,7 @@ class TemplateBase(db.Model):
             TemplateProcessType,
             index=True,
             nullable=False,
-            default=TemplateProcessType.NORMAL.value,
+            default=TemplateProcessType.NORMAL,
         )
 
     redact_personalisation = association_proxy(
@@ -1385,7 +1385,7 @@ class Job(db.Model):
         JobStatus,
         index=True,
         nullable=False,
-        default=JobStatus.PENDING.value,
+        default=JobStatus.PENDING,
     )
     archived = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -1453,7 +1453,7 @@ class NotificationAllTimeView(db.Model):
         NotificationStatus,
         name="notification_status",
         nullable=True,
-        default=NotificationStatus.CREATED.value,
+        default=NotificationStatus.CREATED,
         key="status",
     )
     reference = db.Column(db.String)
@@ -1511,7 +1511,7 @@ class Notification(db.Model):
         NotificationStatus,
         name="notification_status",
         nullable=True,
-        default=NotificationStatus.CREATED.value,
+        default=NotificationStatus.CREATED,
         key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
@@ -1788,7 +1788,7 @@ class NotificationHistory(db.Model, HistoryModel):
         NotificationStatus,
         name="notification_status",
         nullable=True,
-        default=NotificationStatus.CREATED.value,
+        default=NotificationStatus.CREATED,
         key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
@@ -1856,10 +1856,10 @@ class InvitedUser(db.Model):
     status = enum_column(
         InvitedUserStatus,
         nullable=False,
-        default=InvitedUserStatus.PENDING.value,
+        default=InvitedUserStatus.PENDING,
     )
     permissions = db.Column(db.String, nullable=False)
-    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS.value)
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
     folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=list)
 
     # would like to have used properties for this but haven't found a way to make them
@@ -1894,7 +1894,7 @@ class InvitedOrganizationUser(db.Model):
     status = enum_column(
         InvitedUserStatus,
         nullable=False,
-        default=InvitedUserStatus.PENDING.value,
+        default=InvitedUserStatus.PENDING,
     )
 
     def serialize(self):

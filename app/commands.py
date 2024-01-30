@@ -238,7 +238,8 @@ def rebuild_ft_billing_for_day(service_id, day):
     "-a",
     "--auth_type",
     required=False,
-    help="The authentication type for the user, AuthType.SMS or AuthType.EMAIL. Defaults to AuthType.SMS if not provided",
+    help="The authentication type for the user, AuthType.SMS or AuthType.EMAIL. "
+    "Defaults to AuthType.SMS if not provided",
 )
 @click.option(
     "-p", "--permissions", required=True, help="Comma separated list of permissions."

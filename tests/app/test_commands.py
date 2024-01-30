@@ -20,7 +20,14 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
-from app.enums import KeyType, NotificationStatus, NotificationType, OrganizationType, TemplateType
+from app.enums import (
+    AuthType,
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    OrganizationType,
+    TemplateType,
+)
 from app.models import (
     AnnualBilling,
     Job,

@@ -1,42 +1,42 @@
-from enum import Enum
+from strenum import StrEnum
 
 
-class TemplateType(Enum):
+class TemplateType(StrEnum):
     SMS = "sms"
     EMAIL = "email"
     LETTER = "letter"
 
 
-class NotificationType(Enum):
+class NotificationType(StrEnum):
     SMS = "sms"
     EMAIL = "email"
     LETTER = "letter"
 
 
-class TemplateProcessType(Enum):
+class TemplateProcessType(StrEnum):
     # TODO: Should Template.process_type be changed to use this?
     NORMAL = "normal"
     PRIORITY = "priority"
 
 
-class AuthType(Enum):
+class AuthType(StrEnum):
     SMS = "sms_auth"
     EMAIL = "email_auth"
     WEBAUTHN = "webauthn_auth"
 
 
-class CallbackType(Enum):
+class CallbackType(StrEnum):
     DELIVERY_STATUS = "delivery_status"
     COMPLAINT = "complaint"
 
 
-class OrganizationType(Enum):
+class OrganizationType(StrEnum):
     FEDERAL = "federal"
     STATE = "state"
     OTHER = "other"
 
 
-class NotificationStatus(Enum):
+class NotificationStatus(StrEnum):
     CANCELLED = "cancelled"
     CREATED = "created"
     SENDING = "sending"
@@ -52,7 +52,7 @@ class NotificationStatus(Enum):
     VIRUS_SCAN_FAILED = "virus-scan-failed"
 
     @classmethod
-    def failed_types(cls) -> tuple["NotificationStatus", ...]:
+    def failed_types(cls) -> tuple[str, ...]:
         return (
             cls.TECHNICAL_FAILURE,
             cls.TEMPORARY_FAILURE,
@@ -62,7 +62,7 @@ class NotificationStatus(Enum):
         )
 
     @classmethod
-    def completed_types(cls) -> tuple["NotificationStatus", ...]:
+    def completed_types(cls) -> tuple[str, ...]:
         return (
             cls.SENT,
             cls.DELIVERED,
@@ -74,11 +74,11 @@ class NotificationStatus(Enum):
         )
 
     @classmethod
-    def success_types(cls) -> tuple["NotificationStatus", ...]:
+    def success_types(cls) -> tuple[str, ...]:
         return (cls.SENT, cls.DELIVERED)
 
     @classmethod
-    def billable_types(cls) -> tuple["NotificationStatus", ...]:
+    def billable_types(cls) -> tuple[str, ...]:
         return (
             cls.SENDING,
             cls.SENT,
@@ -90,7 +90,7 @@ class NotificationStatus(Enum):
         )
 
     @classmethod
-    def billable_sms_types(cls) -> tuple["NotificationStatus", ...]:
+    def billable_sms_types(cls) -> tuple[str, ...]:
         return (
             cls.SENDING,
             cls.SENT,  # internationally
@@ -101,7 +101,7 @@ class NotificationStatus(Enum):
         )
 
     @classmethod
-    def sent_email_types(cls) -> tuple["NotificationStatus", ...]:
+    def sent_email_types(cls) -> tuple[str, ...]:
         return (
             cls.SENDING,
             cls.DELIVERED,
@@ -110,11 +110,11 @@ class NotificationStatus(Enum):
         )
 
     @classmethod
-    def non_billable_types(cls) -> tuple["NotificationStatus", ...]:
-        return tuple({i for i in cls} - set(cls.billable_types()))
+    def non_billable_types(cls) -> tuple[str, ...]:
+        return tuple(set(cls) - set(cls.billable_types()))
 
 
-class PermissionType(Enum):
+class PermissionType(StrEnum):
     MANAGE_USERS = "manage_users"
     MANAGE_TEMPLATES = "manage_templates"
     MANAGE_SETTINGS = "manage_settings"
@@ -125,7 +125,7 @@ class PermissionType(Enum):
     VIEW_ACTIVITY = "view_activity"
 
     @classmethod
-    def defaults(cls) -> tuple["PermissionType", ...]:
+    def defaults(cls) -> tuple[str, ...]:
         return (
             cls.MANAGE_USERS,
             cls.MANAGE_TEMPLATES,
@@ -137,7 +137,7 @@ class PermissionType(Enum):
         )
 
 
-class ServicePermissionType(Enum):
+class ServicePermissionType(StrEnum):
     EMAIL = "email"
     SMS = "sms"
     INTERNATIONAL_SMS = "international_sms"
@@ -147,9 +147,8 @@ class ServicePermissionType(Enum):
     UPLOAD_DOCUMENT = "upload_document"
     EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
 
-    @property
-    def defaults(self) -> tuple["ServicePermissionType", ...]:
-        cls = type(self)
+    @classmethod
+    def defaults(cls) -> tuple[str, ...]:
         return (
             cls.SMS,
             cls.EMAIL,
@@ -157,18 +156,18 @@ class ServicePermissionType(Enum):
         )
 
 
-class RecipientType(Enum):
+class RecipientType(StrEnum):
     MOBILE = "mobile"
     EMAIL = "email"
 
 
-class KeyType(Enum):
+class KeyType(StrEnum):
     NORMAL = "normal"
     TEAM = "team"
     TEST = "test"
 
 
-class JobStatus(Enum):
+class JobStatus(StrEnum):
     PENDING = "pending"
     IN_PROGRESS = "in progress"
     FINISHED = "finished"
@@ -180,29 +179,29 @@ class JobStatus(Enum):
     ERROR = "error"
 
 
-class InvitedUserStatus(Enum):
+class InvitedUserStatus(StrEnum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     CANCELLED = "cancelled"
     EXPIRED = "expired"
 
 
-class BrandType(Enum):
+class BrandType(StrEnum):
     ORG = "org"
     BOTH = "both"
     ORG_BANNER = "org_banner"
 
 
-class CodeType(Enum):
+class CodeType(StrEnum):
     EMAIL = "email"
     SMS = "sms"
 
 
-class AgreementType(Enum):
+class AgreementType(StrEnum):
     MOU = "MOU"
     IAA = "IAA"
 
 
-class AgreementStatus(Enum):
+class AgreementStatus(StrEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
