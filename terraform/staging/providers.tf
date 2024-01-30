@@ -3,7 +3,7 @@ terraform {
   required_providers {
     cloudfoundry = {
       source  = "cloudfoundry-community/cloudfoundry"
-      version = "0.15.5"
+      version = "0.53.0"
     }
   }
 
@@ -12,7 +12,6 @@ terraform {
     key     = "api.tfstate.stage"
     encrypt = "true"
     region  = "us-gov-west-1"
-    profile = "notify-terraform-backend"
   }
 }
 
