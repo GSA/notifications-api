@@ -1,4 +1,4 @@
-from strenum import StrEnum
+from strenum import StrEnum # In 3.11 this is in the enum library.
 
 
 class TemplateType(StrEnum):
