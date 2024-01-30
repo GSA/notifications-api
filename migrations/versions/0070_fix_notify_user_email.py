@@ -10,8 +10,8 @@ Create Date: 2017-03-10 16:15:22.153948
 revision = "0070_fix_notify_user_email"
 down_revision = "0069_add_dvla_job_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

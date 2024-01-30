@@ -11,8 +11,8 @@ from datetime import datetime
 revision = "0376_add_provider_response"
 down_revision = "0375_fix_service_name"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

@@ -5,8 +5,8 @@ Revises: 0295_api_key_constraint
 Create Date: 2019-06-13 16:40:32.982607
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0296_agreement_signed_by_person"
 down_revision = "0295_api_key_constraint"

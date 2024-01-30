@@ -10,8 +10,8 @@ Create Date: 2016-08-01 10:37:41.198070
 revision = "0043_notification_indexes"
 down_revision = "0042_notification_history"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

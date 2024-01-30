@@ -5,8 +5,8 @@ Revises: 0191_ft_billing_pkey
 Create Date: 2018-05-21 15:18:43.871256
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0192_drop_provider_statistics"

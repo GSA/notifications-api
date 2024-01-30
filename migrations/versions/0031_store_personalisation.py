@@ -10,8 +10,8 @@ Create Date: 2016-06-20 10:39:50.892847
 revision = "0031_store_personalisation"
 down_revision = "0030_service_id_not_null"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

@@ -5,8 +5,8 @@ Revises: 0287_drop_branding_domains
 Create Date: 2019-04-15 16:50:22.275673
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0288_add_go_live_user"

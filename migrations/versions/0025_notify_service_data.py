@@ -6,6 +6,8 @@ Create Date: 2016-06-01 14:17:01.963181
 
 """
 
+import uuid
+
 # revision identifiers, used by Alembic.
 from datetime import datetime
 
@@ -13,7 +15,6 @@ from alembic import op
 from sqlalchemy import text
 
 from app.hashing import hashpw
-import uuid
 
 revision = "0025_notify_service_data"
 down_revision = "0024_add_research_mode_defaults"

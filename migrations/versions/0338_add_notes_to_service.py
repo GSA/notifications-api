@@ -5,9 +5,8 @@ Revises: 0337_broadcast_msg_api
 Create Date: 2021-01-13 11:50:06.333369
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0338_add_notes_to_service"
 down_revision = "0337_broadcast_msg_api"

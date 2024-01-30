@@ -10,8 +10,8 @@ Create Date: 2016-10-25 17:37:27.660723
 revision = "0285_default_org_branding"
 down_revision = "0284_0283_retry"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

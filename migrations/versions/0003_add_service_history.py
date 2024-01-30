@@ -10,8 +10,8 @@ Create Date: 2016-04-19 13:01:54.519821
 revision = "0003_add_service_history"
 down_revision = "0002_add_content_char_count"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

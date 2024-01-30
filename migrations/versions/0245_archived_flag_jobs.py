@@ -5,9 +5,8 @@ Revises: 0242_template_folders
 Create Date: 2018-11-22 16:32:01.105803
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0245_archived_flag_jobs"
 down_revision = "0242_template_folders"

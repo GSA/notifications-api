@@ -5,9 +5,8 @@ Revises: 0185_add_is_active_to_reply_tos
 Create Date: 2018-04-27 16:35:41.824981
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0186_rename_is_active_columns"
 down_revision = "0185_add_is_active_to_reply_tos"

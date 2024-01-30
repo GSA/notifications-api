@@ -6,8 +6,8 @@ Create Date: 2016-11-07 16:13:18.961527
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0060_add_letter_template_type"

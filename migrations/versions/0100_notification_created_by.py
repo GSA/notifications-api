@@ -10,8 +10,8 @@ Create Date: 2017-06-13 10:53:25.032202
 revision = "0100_notification_created_by"
 down_revision = "0099_tfl_dar"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

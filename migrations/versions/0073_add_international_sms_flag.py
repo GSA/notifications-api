@@ -10,8 +10,8 @@ Create Date: 2017-10-25 17:37:27.660723
 revision = "0073_add_international_sms_flag"
 down_revision = "0072_add_dvla_orgs"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

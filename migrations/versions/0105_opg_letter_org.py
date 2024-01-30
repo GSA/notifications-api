@@ -10,10 +10,10 @@ Create Date: 2017-06-29 12:44:16.815039
 revision = "0105_opg_letter_org"
 down_revision = "0103_add_historical_redact"
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+from alembic import op
 from flask import current_app
+from sqlalchemy.dialects import postgresql
 
 
 def upgrade():

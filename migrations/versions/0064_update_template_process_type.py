@@ -10,8 +10,8 @@ Create Date: 2017-01-16 11:08:00.520678
 revision = "0064_update_template_process"
 down_revision = "0063_templates_process_type"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

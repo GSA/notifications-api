@@ -5,14 +5,13 @@ Revises: 0138_sms_sender_nullable.py
 Create Date: 2017-11-10 21:42:59.715203
 
 """
-from datetime import datetime
-from alembic import op
 import uuid
+from datetime import datetime
 
+from alembic import op
 from sqlalchemy import text
 
 from app.dao.date_util import get_current_calendar_year_start_year
-
 
 revision = "0139_migrate_sms_allowance_data"
 down_revision = "0138_sms_sender_nullable"

@@ -6,6 +6,7 @@ Create Date: 2020-07-28 08:11:07.666708
 
 """
 import os
+
 from alembic import op
 
 revision = "0327_idx_notification_history"

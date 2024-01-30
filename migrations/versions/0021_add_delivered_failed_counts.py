@@ -12,8 +12,8 @@ from sqlalchemy import text
 revision = "0021_add_delivered_failed_counts"
 down_revision = "0020_template_history_fix"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

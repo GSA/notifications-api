@@ -10,8 +10,8 @@ Create Date: 2017-03-06 17:19:28.492005
 revision = "0068_add_created_by_to_provider"
 down_revision = "0067_service_contact_block"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

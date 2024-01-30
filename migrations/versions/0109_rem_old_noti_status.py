@@ -5,8 +5,8 @@ Revises: 0108_change_logo_not_nullable
 Create Date: 2017-07-10 14:25:15.712055
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0109_rem_old_noti_status"

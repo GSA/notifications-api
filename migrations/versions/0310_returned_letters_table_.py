@@ -5,8 +5,8 @@ Revises: 0309_add_uq_key_row_number
 Create Date: 2019-12-09 12:13:49.432993
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0310_returned_letters_table"

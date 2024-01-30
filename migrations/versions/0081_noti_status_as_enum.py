@@ -10,8 +10,8 @@ Create Date: 2017-05-02 14:50:04.070874
 revision = "0081_noti_status_as_enum"
 down_revision = "0078_sent_notification_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

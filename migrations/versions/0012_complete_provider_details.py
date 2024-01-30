@@ -10,8 +10,8 @@ Create Date: 2016-05-05 09:18:26.926275
 revision = "0012_complete_provider_details"
 down_revision = "0011_ad_provider_details"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import ENUM
 

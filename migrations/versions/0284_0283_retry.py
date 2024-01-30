@@ -10,8 +10,8 @@ Create Date: 2016-10-25 17:37:27.660723
 revision = "0284_0283_retry"
 down_revision = "0283_platform_admin_not_live"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

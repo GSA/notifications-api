@@ -7,6 +7,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -337,6 +338,7 @@ def create_2fa_code(
         reply_to = get_sms_reply_to_for_notify_service(recipient, template)
     elif template.template_type == EMAIL_TYPE:
         reply_to = template.service.get_default_reply_to_email_address()
+
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
@@ -348,6 +350,11 @@ def create_2fa_code(
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=reply_to,
     )
+
+    key = f"2facode-{saved_notification.id}".replace(" ", "")
+    recipient = str(recipient)
+    redis_store.raw_set(key, recipient, ex=60 * 60)
+
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
@@ -394,10 +401,6 @@ def send_new_user_email_verification(user_id):
 
     # when registering, we verify all users' email addresses using this function
     user_to_send_to = get_user_by_id(user_id=user_id)
-    current_app.logger.info("user_to_send_to is {}".format(user_to_send_to))
-    current_app.logger.info(
-        "user_to_send_to.email_address is {}".format(user_to_send_to.email_address)
-    )
 
     template = dao_get_template_by_id(
         current_app.config["NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID"]
@@ -423,6 +426,12 @@ def send_new_user_email_verification(user_id):
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
+    )
+
+    redis_store.set(
+        f"email-address-{saved_notification.id}",
+        str(user_to_send_to.email_address),
+        ex=60 * 60,
     )
     current_app.logger.info("Sending notification to queue")
 

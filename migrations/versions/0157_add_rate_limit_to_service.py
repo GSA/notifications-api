@@ -5,9 +5,8 @@ Revises: 0156_set_temp_letter_contact
 Create Date: 2018-01-08 16:13:25.733336
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0157_add_rate_limit_to_service"
 down_revision = "0156_set_temp_letter_contact"

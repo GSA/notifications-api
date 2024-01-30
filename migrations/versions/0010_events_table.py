@@ -10,8 +10,8 @@ Create Date: 2016-04-26 13:08:42.892813
 revision = "0010_events_table"
 down_revision = "0009_created_by_for_jobs"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

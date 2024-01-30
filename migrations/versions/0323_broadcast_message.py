@@ -5,10 +5,10 @@ Revises: 0322_broadcast_service_perm
 Create Date: 2020-07-02 11:59:38.734650
 
 """
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.sql import column, func
+from alembic import op
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import column, func
 
 revision = "0323_broadcast_message"
 down_revision = "0322_broadcast_service_perm"

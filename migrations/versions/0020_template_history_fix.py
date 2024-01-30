@@ -10,8 +10,8 @@ Create Date: 2016-05-20 15:15:03.850862
 revision = "0020_template_history_fix"
 down_revision = "0019_add_job_row_number"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

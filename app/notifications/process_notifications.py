@@ -9,6 +9,7 @@ from notifications_utils.recipients import (
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
+from app import redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
@@ -87,9 +88,7 @@ def persist_notification(
     if not notification_id:
         notification_id = uuid.uuid4()
 
-    current_app.logger.info(
-        "Persisting notification with id {}".format(notification_id)
-    )
+    current_app.logger.info(f"Persisting notification with id {notification_id}")
 
     notification = Notification(
         id=notification_id,
@@ -124,10 +123,12 @@ def persist_notification(
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == EMAIL_TYPE:
-        current_app.logger.info(
-            "Persisting notification with type: {}".format(EMAIL_TYPE)
+        current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
+        redis_store.set(
+            f"email-address-{notification.id}",
+            format_email_address(notification.to),
+            ex=1800,
         )
-        notification.normalised_to = format_email_address(notification.to)
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
@@ -141,9 +142,7 @@ def persist_notification(
             )
 
         current_app.logger.info(
-            "{} {} created at {}".format(
-                notification_type, notification_id, notification_created_at
-            )
+            f"{notification_type} {notification_id} created at {notification_created_at}"
         )
     return notification
 
@@ -170,15 +169,16 @@ def send_notification_to_queue_detached(
         raise
 
     current_app.logger.debug(
-        "{} {} sent to the {} queue for delivery".format(
-            notification_type, notification_id, queue
-        )
+        f"{notification_type} {notification_id} sent to the {queue} queue for delivery"
     )
 
 
 def send_notification_to_queue(notification, queue=None):
     send_notification_to_queue_detached(
-        notification.key_type, notification.notification_type, notification.id, queue
+        notification.key_type,
+        notification.notification_type,
+        notification.id,
+        queue,
     )
 
 

@@ -9,7 +9,8 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients
+from app import create_uuid, db, notification_provider_clients, redis_store
+from app.aws.s3 import get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
@@ -65,16 +66,44 @@ def send_sms_to_provider(notification):
                 # providers as a slow down of our providers can cause us to run out of DB connections
                 # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
                 # closing the session (as otherwise it would be reopened immediately)
+
+                # We start by trying to get the phone number from a job in s3.  If we fail, we assume
+                # the phone number is for the verification code on login, which is not a job.
+                recipient = None
+                try:
+                    recipient = get_phone_number_from_s3(
+                        notification.service_id,
+                        notification.job_id,
+                        notification.job_row_number,
+                    )
+                except Exception:
+                    # It is our 2facode, maybe
+                    key = f"2facode-{notification.id}".replace(" ", "")
+                    recipient = redis_store.raw_get(key)
+
+                    if recipient:
+                        recipient = recipient.decode("utf-8")
+
+                if recipient is None:
+                    si = notification.service_id
+                    ji = notification.job_id
+                    jrn = notification.job_row_number
+                    raise Exception(
+                        f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                    )
                 send_sms_kwargs = {
-                    "to": notification.normalised_to,
+                    "to": recipient,
                     "content": str(template),
                     "reference": str(notification.id),
                     "sender": notification.reply_to_text,
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
+                current_app.logger.info("sending to sms")
                 message_id = provider.send_sms(**send_sms_kwargs)
+                current_app.logger.info(f"got message_id {message_id}")
             except Exception as e:
+                current_app.logger.error(e)
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
                 raise e
@@ -86,7 +115,6 @@ def send_sms_to_provider(notification):
 
 def send_email_to_provider(notification):
     service = SerialisedService.from_id(notification.service_id)
-
     if not service.active:
         technical_failure(notification=notification)
         return
@@ -101,16 +129,19 @@ def send_email_to_provider(notification):
         html_email = HTMLEmailTemplate(
             template_dict,
             values=notification.personalisation,
-            **get_html_email_options(service)
+            **get_html_email_options(service),
         )
 
         plain_text_email = PlainTextEmailTemplate(
             template_dict, values=notification.personalisation
         )
+        # Someone needs an email, possibly new registration
+        recipient = redis_store.get(f"email-address-{notification.id}")
+        recipient = recipient.decode("utf-8")
         if notification.key_type == KEY_TYPE_TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
-            send_email_response(notification.reference, notification.to)
+            send_email_response(notification.reference, recipient)
         else:
             from_address = '"{}" <{}@{}>'.format(
                 service.name,
@@ -120,7 +151,7 @@ def send_email_to_provider(notification):
 
             reference = provider.send_email(
                 from_address,
-                notification.normalised_to,
+                recipient,
                 plain_text_email.subject,
                 body=str(plain_text_email),
                 html_body=str(html_email),

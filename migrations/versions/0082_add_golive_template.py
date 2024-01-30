@@ -9,10 +9,9 @@ Create Date: 2017-05-10 16:06:04.070874
 # revision identifiers, used by Alembic.
 from datetime import datetime
 
-from flask import current_app
-
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
+from flask import current_app
 from sqlalchemy import text
 
 revision = "0082_add_go_live_template"

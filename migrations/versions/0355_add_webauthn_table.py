@@ -5,8 +5,8 @@ Revises: 0354_government_channel
 Create Date: 2021-05-07 17:04:22.017137
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0355_add_webauthn_table"

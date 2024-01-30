@@ -5,9 +5,8 @@ Revises: 0232_noti_postage_constraint_3
 Create Date: 2018-09-28 14:43:26.100884
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0234_ft_billing_postage"
 down_revision = "0232_noti_postage_constraint_3"

@@ -5,8 +5,8 @@ Revises: 0188_add_ft_notification_status
 Create Date: 2018-05-10 14:57:52.589773
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0189_ft_billing_data_type"
 down_revision = "0188_add_ft_notification_status"

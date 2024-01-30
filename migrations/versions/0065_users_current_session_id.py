@@ -10,8 +10,8 @@ Create Date: 2017-02-17 11:48:40.669235
 revision = "0065_users_current_session_id"
 down_revision = "0064_update_template_process"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

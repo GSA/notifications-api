@@ -10,8 +10,8 @@ Create Date: 2017-05-12 11:29:32.664811
 revision = "0083_add_perm_types_and_svc_perm"
 down_revision = "0082_add_go_live_template"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

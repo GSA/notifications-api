@@ -10,8 +10,8 @@ Create Date: 2016-05-18 09:39:22.512042
 revision = "0018_remove_subject_uniqueness"
 down_revision = "0017_add_failure_types"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

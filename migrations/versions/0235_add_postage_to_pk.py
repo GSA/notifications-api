@@ -5,9 +5,8 @@ Revises: 0234_ft_billing_postage
 Create Date: 2018-09-28 15:39:21.115358
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0235_add_postage_to_pk"
 down_revision = "0234_ft_billing_postage"

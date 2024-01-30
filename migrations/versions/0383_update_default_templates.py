@@ -6,11 +6,12 @@ Create Date: 2023-01-10 11:42:25.633265
 
 """
 import json
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
+from flask import current_app
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
-from flask import current_app
 
 revision = "0383_update_default_templates.py"
 down_revision = "0381_encrypted_column_types"

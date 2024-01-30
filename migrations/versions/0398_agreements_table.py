@@ -10,8 +10,8 @@ Create Date: 2016-04-26 13:08:42.892813
 revision = "0398_agreements_table"
 down_revision = "0397_rename_organisation_2"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

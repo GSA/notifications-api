@@ -557,6 +557,27 @@ def sample_invited_user(notify_db_session):
 
 
 @pytest.fixture(scope="function")
+def sample_expired_user(notify_db_session):
+    service = create_service(check_if_service_exists=True)
+    to_email_address = "expired_user@digital.fake.gov"
+
+    from_user = service.users[0]
+
+    data = {
+        "service": service,
+        "email_address": to_email_address,
+        "from_user": from_user,
+        "permissions": "send_messages,manage_service,manage_api_keys",
+        "folder_permissions": ["folder_1_id", "folder_2_id"],
+        "created_at": datetime.utcnow() - timedelta(days=3),
+        "status": "expired",
+    }
+    expired_user = InvitedUser(**data)
+    save_invited_user(expired_user)
+    return expired_user
+
+
+@pytest.fixture(scope="function")
 def sample_invited_org_user(sample_user, sample_organization):
     return create_invited_org_user(sample_organization, sample_user)
 

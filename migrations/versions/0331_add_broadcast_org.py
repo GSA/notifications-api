@@ -5,9 +5,10 @@ Revises: 0330_broadcast_invite_email
 Create Date: 2020-09-23 10:11:01.094412
 
 """
-from alembic import op
-import sqlalchemy as sa
 import os
+
+import sqlalchemy as sa
+from alembic import op
 
 revision = "0331_add_broadcast_org"
 down_revision = "0330_broadcast_invite_email"

@@ -5,9 +5,8 @@ Revises: 0227_postage_constraints
 Create Date: 2018-09-19 11:42:52.229430
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0228_notification_postage"
 down_revision = "0227_postage_constraints"

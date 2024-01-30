@@ -5,9 +5,8 @@ Revises: 0298_add_mou_signed_receipt
 Create Date: 2019-07-10 16:07:22.019759
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0299_org_types_table"
 down_revision = "0298_add_mou_signed_receipt"

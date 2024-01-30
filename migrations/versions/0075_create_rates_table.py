@@ -14,8 +14,8 @@ from sqlalchemy import text
 revision = "0075_create_rates_table"
 down_revision = "0073_add_international_sms_flag"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

@@ -10,8 +10,8 @@ Create Date: 2016-08-25 15:56:31.779399
 revision = "0054_perform_drop_status_column"
 down_revision = "0053_cancelled_job_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
