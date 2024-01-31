@@ -102,6 +102,7 @@ def extract_phones(job):
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
+    current_app.logger.info(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
         if item.lower() == "phone number":
@@ -111,11 +112,14 @@ def extract_phones(job):
     job_row = 0
     for row in job:
         row = row.split(",")
+        # TODO WHY ARE WE CALCULATING PHONE INDEX IN THE LOOP?
         phone_index = 0
         for item in first_row:
             if item.lower() == "phone number":
                 break
             phone_index = phone_index + 1
+        current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
+        current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         my_phone = row[phone_index]
         my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
         phones[job_row] = my_phone
