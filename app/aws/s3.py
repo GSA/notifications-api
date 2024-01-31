@@ -150,7 +150,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # change the task schedules
     if job is None:
         current_app.logger.warning(
-            "Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+            f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
         )
         return "Unknown Phone"
 
