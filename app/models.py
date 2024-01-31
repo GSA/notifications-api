@@ -1601,7 +1601,7 @@ class Notification(db.Model):
         index=False,
         unique=False,
         nullable=True,
-        onupdate=datetime.datetime.utcnow,
+        # onupdate=datetime.datetime.utcnow,
     )
     status = db.Column(
         "notification_status",
