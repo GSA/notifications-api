@@ -79,12 +79,7 @@ from app.dao.services_dao import (
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    KEY_TYPE_NORMAL,
-    EmailBranding,
-    Permission,
-    Service,
-)
+from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
