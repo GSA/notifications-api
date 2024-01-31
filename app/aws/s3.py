@@ -112,12 +112,6 @@ def extract_phones(job):
     job_row = 0
     for row in job:
         row = row.split(",")
-        # TODO WHY ARE WE CALCULATING PHONE INDEX IN THE LOOP?
-        phone_index = 0
-        for item in first_row:
-            if item.lower() == "phone number":
-                break
-            phone_index = phone_index + 1
         current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         if phone_index >= len(row):
