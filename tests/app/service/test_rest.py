@@ -223,7 +223,13 @@ def test_get_live_services_data(sample_user, admin_request):
     ]
 
 
-def test_get_service_by_id(admin_request, sample_service):
+def test_get_service_by_id(admin_request, sample_service, mocker):
+    delivered_count = mocker.patch("app.service.rest.get_service_delivered_count")
+    delivered_count.return_value = 7
+    failed_count = mocker.patch("app.service.rest.get_service_failed_count")
+    failed_count.return_value = 6
+    pending_count = mocker.patch("app.service.rest.get_service_pending_count")
+    pending_count.return_value = 5
     json_resp = admin_request.get(
         "service.get_service_by_id", service_id=sample_service.id
     )
@@ -231,6 +237,9 @@ def test_get_service_by_id(admin_request, sample_service):
     assert json_resp["data"]["id"] == str(sample_service.id)
     assert json_resp["data"]["email_branding"] is None
     assert json_resp["data"]["prefix_sms"] is True
+    assert json_resp["data"]["delivered_count"] == 7
+    assert json_resp["data"]["failed_count"] == 6
+    assert json_resp["data"]["pending_count"] == 5
 
     assert set(json_resp["data"].keys()) == {
         "active",
@@ -261,6 +270,9 @@ def test_get_service_by_id(admin_request, sample_service):
         "service_callback_api",
         "volume_email",
         "volume_sms",
+        "delivered_count",
+        "failed_count",
+        "pending_count",
     }
 
 

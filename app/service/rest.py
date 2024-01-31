@@ -26,7 +26,7 @@ from app.dao.fact_notification_status_dao import (
     fetch_stats_for_all_services_by_date_range,
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
-from app.dao.notifications_dao import dao_get_notification_count_for_service
+from app.dao.notifications_dao import dao_get_notification_count_for_service, get_service_delivered_count, get_service_failed_count, get_service_pending_count
 from app.dao.organization_dao import dao_get_organization_by_service_id
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
@@ -74,7 +74,12 @@ from app.dao.services_dao import (
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
+from app.models import (
+    KEY_TYPE_NORMAL,
+    EmailBranding,
+    Permission,
+    Service,
+)
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -193,8 +198,13 @@ def get_service_by_id(service_id):
         )
     else:
         fetched = dao_fetch_service_by_id(service_id)
-
+        failed_count = get_service_failed_count(service_id)
+        delivered_count = get_service_delivered_count(service_id)
+        pending_count = get_service_pending_count(service_id)
         data = service_schema.dump(fetched)
+        data["failed_count"] = failed_count
+        data["delivered_count"] = delivered_count
+        data["pending_count"] = pending_count
     return jsonify(data=data)
 
 
