@@ -2138,9 +2138,9 @@ class FactNotificationStatus(db.Model):
         nullable=False,
     )
     job_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False)
-    notification_type = db.Column(db.Text, primary_key=True, nullable=False)
-    key_type = db.Column(db.Text, primary_key=True, nullable=False)
-    notification_status = db.Column(db.Text, primary_key=True, nullable=False)
+    notification_type = enum_column(NotificationType, primary_key=True, nullable=False)
+    key_type = enum_column(KeyType, primary_key=True, nullable=False)
+    notification_status = enum_column(NotificationStatus, primary_key=True, nullable=False)
     notification_count = db.Column(db.Integer(), nullable=False)
     created_at = db.Column(
         db.DateTime,

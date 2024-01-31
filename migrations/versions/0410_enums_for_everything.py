@@ -560,6 +560,30 @@ def upgrade():
             existing_nullable=False,
             postgresql_using=enum_using("code_type", CodeType),
         )
+        op.alter_column(
+            "ft_notification_status",
+            "notification_type",
+            existing_type=sa.TEXT(),
+            type_=enum_type(NotificationType),
+            existing_nullable=False,
+            postgresql_using=enum_using("notification_type", NotificationType),
+        )
+        op.alter_column(
+            "ft_notification_status",
+            "key_type",
+            existing_type=sa.TEXT(),
+            type_=enum_type(KeyType),
+            existing_nullable=False,
+            postgresql_using=enum_using("key_type", KeyType),
+        )
+        op.alter_column(
+            "ft_notification_status",
+            "notification_type",
+            existing_type=sa.TEXT(),
+            type_=enum_type(NotificationStatus),
+            existing_nullable=False,
+            postgresql_using=enum_using("notification_status", NotificationStatus),
+        )
 
         # Drop old enum types.
         enum_drop(
@@ -587,6 +611,30 @@ def downgrade():
         enum_create(values=["email", "sms"], name="verify_code_types")
 
         # Alter columns back
+        op.alter_column(
+            "ft_notification_status",
+            "notification_type",
+            existing_type=enum_type(NotificationStatus),
+            type_=sa.TEXT(),
+            existing_nullable=False,
+            postgresql_using=enum_using("notification_status", NotificationStatus),
+        )
+        op.alter_column(
+            "ft_notification_status",
+            "key_type",
+            erxisting_type=enum_type(KeyType),
+            type_=sa.TEXT(),
+            existing_nullable=False,
+            postgresql_using=enum_using("key_type", KeyType),
+        )
+        op.alter_column(
+            "ft_notification_status",
+            "notification_type",
+            existing_type=enum_type(NotificationType),
+            type_=sa.TEXT(),
+            existing_nullable=False,
+            postgresql_using=enum_using("notification_type", NotificationType),
+        )
         op.alter_column(
             "verify_codes",
             "code_type",
