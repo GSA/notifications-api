@@ -84,7 +84,7 @@ def incr_jobs_cache_misses():
         redis_store.incr(JOBS_CACHE_MISSES)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.info(f"JOBS CACHE MISS hits {hits} misses {misses}")
+    current_app.logger.debug(f"JOBS CACHE MISS hits {hits} misses {misses}")
 
 
 def incr_jobs_cache_hits():
@@ -94,7 +94,7 @@ def incr_jobs_cache_hits():
         redis_store.incr(JOBS_CACHE_HITS)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.info(f"JOBS CACHE HIT hits {hits} misses {misses}")
+    current_app.logger.debug(f"JOBS CACHE HIT hits {hits} misses {misses}")
 
 
 def extract_phones(job):
@@ -120,9 +120,13 @@ def extract_phones(job):
             phone_index = phone_index + 1
         current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
-        my_phone = row[phone_index]
-        my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
-        phones[job_row] = my_phone
+        if phone_index >= len(row):
+            phones[job_row] = "Error: can't retrieve phone number"
+            current_app.logger.error("Corrupt csv file, missing columns job_id {job_id} service_id {service_id}")
+        else:
+            my_phone = row[phone_index]
+            my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
+            phones[job_row] = my_phone
         job_row = job_row + 1
     return phones
 
