@@ -95,10 +95,9 @@ def test_get_public_notify_type_text():
 # This method is used for simulating bulk sends.  We use localstack and run on a developer's machine to do the
 # simulation.  Please see docs->bulk_testing.md for instructions.
 # def test_generate_csv_for_bulk_testing():
-#     f = open("bulktest_999.csv", "w")
+#     f = open("bulktest_1000.csv", "w")
 #     f.write("phone number\n")
-#     for _ in range(0, 333):
-#         f.write("12028675000\n")
-#         f.write("12028675111\n")
-#         f.write("12028675222\n")
+#     for _ in range(0, 500):
+#         f.write("14254147755\n")   # AWS Pinpoint Simulated Success
+#         f.write("14254147167\n")   # AWS Pinpoint Simulated Failure
 #     f.close()
