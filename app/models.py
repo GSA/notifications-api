@@ -1763,6 +1763,7 @@ class Notification(db.Model):
                 "temporary-failure": "Unable to find carrier response -- still looking",
                 "permanent-failure": "Unable to find carrier response.",
                 "delivered": "Delivered",
+                "pending": "Pending",
                 "sending": "Sending",
                 "created": "Sending",
                 "sent": "Sent internationally",

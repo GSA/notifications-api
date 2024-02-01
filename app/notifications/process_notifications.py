@@ -123,6 +123,7 @@ def persist_notification(
     elif notification_type == EMAIL_TYPE:
         current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
         # This is typically for something like inviting a user or the 90 day email check
+
         redis_store.set(
             f"email-address-{notification.id}",
             format_email_address(notification.to),

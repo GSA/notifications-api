@@ -84,7 +84,7 @@ def incr_jobs_cache_misses():
         redis_store.incr(JOBS_CACHE_MISSES)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.info(f"JOBS CACHE MISS hits {hits} misses {misses}")
+    current_app.logger.debug(f"JOBS CACHE MISS hits {hits} misses {misses}")
 
 
 def incr_jobs_cache_hits():
@@ -94,7 +94,7 @@ def incr_jobs_cache_hits():
         redis_store.incr(JOBS_CACHE_HITS)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.info(f"JOBS CACHE HIT hits {hits} misses {misses}")
+    current_app.logger.debug(f"JOBS CACHE HIT hits {hits} misses {misses}")
 
 
 def extract_phones(job):
@@ -102,6 +102,7 @@ def extract_phones(job):
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
+    current_app.logger.info(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
         if item.lower() == "phone number":
@@ -111,14 +112,21 @@ def extract_phones(job):
     job_row = 0
     for row in job:
         row = row.split(",")
+        # TODO WHY ARE WE CALCULATING PHONE INDEX IN THE LOOP?
         phone_index = 0
         for item in first_row:
             if item.lower() == "phone number":
                 break
             phone_index = phone_index + 1
-        my_phone = row[phone_index]
-        my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
-        phones[job_row] = my_phone
+        current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
+        current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
+        if phone_index >= len(row):
+            phones[job_row] = "Error: can't retrieve phone number"
+            current_app.logger.error("Corrupt csv file, missing columns job_id {job_id} service_id {service_id}")
+        else:
+            my_phone = row[phone_index]
+            my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
+            phones[job_row] = my_phone
         job_row = job_row + 1
     return phones
 
@@ -157,7 +165,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # change the task schedules
     if job is None:
         current_app.logger.warning(
-            "Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+            f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
         )
         return "Unknown Phone"
 
