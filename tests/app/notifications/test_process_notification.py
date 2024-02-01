@@ -254,9 +254,8 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
 @pytest.mark.parametrize(
     "to_address, notification_type, expected",
     [
-        ("+12028675000", "sms", True),
-        ("+12028675111", "sms", True),
-        ("+12028675222", "sms", True),
+        ("+14254147755", "sms", True),
+        ("+14254147167", "sms", True),
         ("2028675000", "sms", True),
         ("2028675111", "sms", True),
         ("simulate-delivered@notifications.service.gov.uk", "email", True),
