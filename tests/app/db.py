@@ -929,7 +929,9 @@ def set_up_usage_data(start_date):
 
     # service with emails only:
     service_with_emails = create_service(service_name="b - emails")
-    email_template = create_template(service=service_with_emails, template_type=TemplateType.EMAIL)
+    email_template = create_template(
+        service=service_with_emails, template_type=TemplateType.EMAIL
+    )
     org_2 = create_organization(
         name="Org for {}".format(service_with_emails.name),
     )

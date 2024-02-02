@@ -1973,10 +1973,7 @@ class Rate(db.Model):
     notification_type = enum_column(NotificationType, index=True, nullable=False)
 
     def __str__(self):
-        the_string = "{}".format(self.rate)
-        the_string += " {}".format(self.notification_type)
-        the_string += " {}".format(self.valid_from)
-        return the_string
+        return f"{self.rate} {self.notification_type} {self.valid_from}"
 
 
 class InboundSms(db.Model):
@@ -2140,7 +2137,11 @@ class FactNotificationStatus(db.Model):
     job_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False)
     notification_type = enum_column(NotificationType, primary_key=True, nullable=False)
     key_type = enum_column(KeyType, primary_key=True, nullable=False)
-    notification_status = enum_column(NotificationStatus, primary_key=True, nullable=False)
+    notification_status = enum_column(
+        NotificationStatus,
+        primary_key=True,
+        nullable=False,
+    )
     notification_count = db.Column(db.Integer(), nullable=False)
     created_at = db.Column(
         db.DateTime,

@@ -578,7 +578,7 @@ def upgrade():
         )
         op.alter_column(
             "ft_notification_status",
-            "notification_type",
+            "notification_status",
             existing_type=sa.TEXT(),
             type_=enum_type(NotificationStatus),
             existing_nullable=False,
@@ -613,7 +613,7 @@ def downgrade():
         # Alter columns back
         op.alter_column(
             "ft_notification_status",
-            "notification_type",
+            "notification_status",
             existing_type=enum_type(NotificationStatus),
             type_=sa.TEXT(),
             existing_nullable=False,

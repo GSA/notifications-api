@@ -146,7 +146,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 
     stats_for_today = (
         db.session.query(
-            Notification.notification_type.cast(db.Text),
+            Notification.notification_type,
             Notification.status,
             *([Notification.template_id] if by_template else []),
             func.count().label("count"),
@@ -212,14 +212,14 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
     if start_date <= datetime.utcnow().date() <= end_date:
         stats_for_today = (
             db.session.query(
-                Notification.notification_type.cast(db.Text).label("notification_type"),
+                Notification.notification_type.label("notification_type"),
                 Notification.status,
                 Notification.key_type,
                 func.count().label("count"),
             )
             .filter(Notification.created_at >= today)
             .group_by(
-                Notification.notification_type.cast(db.Text),
+                Notification.notification_type,
                 Notification.status,
                 Notification.key_type,
             )
@@ -297,7 +297,7 @@ def fetch_stats_for_all_services_by_date_range(
         today = get_midnight_in_utc(datetime.utcnow())
         subquery = (
             db.session.query(
-                Notification.notification_type.cast(db.Text).label("notification_type"),
+                Notification.notification_type.label("notification_type"),
                 Notification.status.label("status"),
                 Notification.service_id.label("service_id"),
                 func.count(Notification.id).label("count"),
@@ -450,7 +450,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 def get_total_notifications_for_date_range(start_date, end_date):
     query = (
         db.session.query(
-            FactNotificationStatus.local_date.cast(db.Text).label("local_date"),
+            FactNotificationStatus.local_date.label("local_date"),
             func.sum(
                 case(
                     [
