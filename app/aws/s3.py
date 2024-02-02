@@ -105,24 +105,20 @@ def extract_phones(job):
     current_app.logger.info(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
-        if item.lower() == "phone number":
+        # Note: may contain a BOM and look like \ufeffphone number
+        if "phone number" in item.lower():
             break
         phone_index = phone_index + 1
+
     phones = {}
     job_row = 0
     for row in job:
         row = row.split(",")
-        # TODO WHY ARE WE CALCULATING PHONE INDEX IN THE LOOP?
-        phone_index = 0
-        for item in first_row:
-            if item.lower() == "phone number":
-                break
-            phone_index = phone_index + 1
         current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         if phone_index >= len(row):
             phones[job_row] = "Error: can't retrieve phone number"
-            current_app.logger.error("Corrupt csv file, missing columns job_id {job_id} service_id {service_id}")
+            current_app.logger.error("Corrupt csv file")
         else:
             my_phone = row[phone_index]
             my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
@@ -150,7 +146,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # change the task schedules
     if job is None:
         current_app.logger.warning(
-            "Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+            f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
         )
         return "Unknown Phone"
 
