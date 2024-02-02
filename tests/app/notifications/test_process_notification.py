@@ -256,8 +256,6 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     [
         ("+14254147755", "sms", True),
         ("+14254147167", "sms", True),
-        ("2028675000", "sms", True),
-        ("2028675111", "sms", True),
         ("simulate-delivered@notifications.service.gov.uk", "email", True),
         ("simulate-delivered-2@notifications.service.gov.uk", "email", True),
         ("simulate-delivered-3@notifications.service.gov.uk", "email", True),
@@ -274,7 +272,7 @@ def test_simulated_recipient(notify_api, to_address, notification_type, expected
         'simulate-delivered-2@notifications.service.gov.uk',
         'simulate-delivered-2@notifications.service.gov.uk'
     )
-    SIMULATED_SMS_NUMBERS = ('+12028675000', '+12028675111', '+12028675222')
+    SIMULATED_SMS_NUMBERS = ("+14254147755", "+14254147167")
     """
     formatted_address = None
 
