@@ -123,7 +123,7 @@ def extract_phones(job):
         if phone_index >= len(row):
             phones[job_row] = "Error: can't retrieve phone number"
             current_app.logger.error(
-                "Corrupt csv file, missing columns job_id {job_id} service_id {service_id}"
+                "Corrupt csv file, missing columns or possibly a byte order mark in the file"
             )
         else:
             my_phone = row[phone_index]
