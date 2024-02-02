@@ -105,19 +105,15 @@ def extract_phones(job):
     current_app.logger.info(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
-        if item.lower() == "phone number":
+        # Note: may contain a BOM and look like \ufeffphone number
+        if "phone number" in item.lower():
             break
         phone_index = phone_index + 1
+
     phones = {}
     job_row = 0
     for row in job:
         row = row.split(",")
-        # TODO WHY ARE WE CALCULATING PHONE INDEX IN THE LOOP?
-        phone_index = 0
-        for item in first_row:
-            if item.lower() == "phone number":
-                break
-            phone_index = phone_index + 1
         current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         if phone_index >= len(row):
@@ -125,6 +121,7 @@ def extract_phones(job):
             current_app.logger.error(
                 "Corrupt csv file, missing columns or possibly a byte order mark in the file"
             )
+
         else:
             my_phone = row[phone_index]
             my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
