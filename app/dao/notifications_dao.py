@@ -100,6 +100,7 @@ def _update_notification_status(
         current_status=notification.status, status=status
     )
     notification.status = status
+    notification.sent_at = datetime.utcnow()
     if provider_response:
         notification.provider_response = provider_response
     if carrier:
@@ -325,6 +326,7 @@ def sanitize_successful_notification_by_id(notification_id, carrier, provider_re
         "notification_id": notification_id,
         "carrier": carrier,
         "response": provider_response,
+        "sent_at": datetime.utcnow(),
     }
 
     db.session.execute(update_query, input_params)
