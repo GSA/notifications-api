@@ -881,7 +881,7 @@ def test_should_not_persist_notification_or_send_email_if_simulated_email(
     assert Notification.query.count() == 0
 
 
-@pytest.mark.parametrize("to_sms", ["2028675000", "2028675111", "+12028675222"])
+@pytest.mark.parametrize("to_sms", ["+14254147755", "+14254147167"])
 def test_should_not_persist_notification_or_send_sms_if_simulated_number(
     client, to_sms, sample_template, mocker
 ):
