@@ -319,9 +319,10 @@ def _filter_query(query, filter_dict=None):
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
     update_query = """
     update notifications set provider_response=:response, carrier=:carrier,
-    notification_status='delivered', "to"='1', normalised_to='1'
+    notification_status='delivered', sent_at=:sent_at, "to"='1', normalised_to='1'
     where id=:notification_id
     """
+
     input_params = {
         "notification_id": notification_id,
         "carrier": carrier,
