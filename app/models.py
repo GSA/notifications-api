@@ -76,9 +76,9 @@ _enum_column_names = {
 def enum_column(enum_type, **kwargs):
     return db.Column(
         db.Enum(
-            *[i for i in enum_type],
+            enum_type,
             name=_enum_column_names[enum_type],
-            values_callable=(lambda x: [i for i in x]),
+            values_callable=(lambda x: [i.value for i in x]),
         ),
         **kwargs,
     )
