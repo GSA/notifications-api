@@ -27,6 +27,12 @@ expected outcome(s) is/are from there.  If there are complex implementation
 details within the changes, this is a great place to explain those details using
 plain language.
 
+This should include:
+
+- Links to issues that this PR addresses
+- Screenshots of any visible changes
+- Dependency changes
+
 If there are any caveats, known issues, follow-up items, etc., make a quick note
 of them here as well, though more details are probably warranted in the issue
 itself in this case.
