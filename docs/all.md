@@ -36,17 +36,20 @@
   - [Celery scheduled tasks](#celery-scheduled-tasks)
 - [Notify.gov](#notifygov)
   - [System Description](#system-description)
+- [Code Reviews](#code-reviews)
+  - [For the reviewer](#for-the-reviewer)
+  - [For the reviewee](#for-the-reviewee)
 - [Run Book](#run-book)
-  - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
-  - [ Restaging Apps](#-restaging-apps)
-  - [ Smoke-testing the App](#-smoke-testing-the-app)
-  - [ Simulated bulk send testing](#-simulated-bulk-send-testing)
-  - [ Configuration Management](#-configuration-management)
-  - [ DNS Changes](#-dns-changes)
+  - [Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
+  - [Restaging Apps](#-restaging-apps)
+  - [Smoke-testing the App](#-smoke-testing-the-app)
+  - [Simulated bulk send testing](#-simulated-bulk-send-testing)
+  - [Configuration Management](#-configuration-management)
+  - [DNS Changes](#-dns-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
-  - [ Known Gotchas](#-known-gotchas)
-  - [ User Account Management](#-user-account-management)
-  - [ SMS Phone Number Management](#-sms-phone-number-management)
+  - [Known Gotchas](#-known-gotchas)
+  - [User Account Management](#-user-account-management)
+  - [SMS Phone Number Management](#-sms-phone-number-management)
 - [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
   - [Potential PII Locations](#potential-pii-locations)
   - [Data Retention Policy](#data-retention-policy)
@@ -711,10 +714,6 @@ make run-celery-beat
 ```
 
 
-
-
-
-
 Notify.gov
 =========
 
@@ -753,6 +752,92 @@ Notify.gov also provisions and uses two AWS services via a [supplemental service
 * [SES](https://aws.amazon.com/ses/) for sending email messages
 
 For further details of the system and how it connects to supporting services, see the [application boundary diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
+
+
+Code Reviews
+============
+
+When conducting a code review there are several things to keep in mind to ensure
+a quality and valuable review.  Remember, we're trying to improve Notify.gov as
+best we can; it does us no good if we do not double check that our work meets
+our standards, especially before going out the door!
+
+It also does us no good if we do not treat each other without mutual respect or
+consideration either; if there are mistakes or oversights found in a pull
+request, or even just suggestions for alternative ways of approaching something,
+these become learning opportunities for all parties involved in addition to
+modeling positive behavior and practices for the public and broader open source
+community.
+
+Given this basis of approaching code reviews, here are some general guidelines
+and suggestions for how to approach a code review from the perspectives of both
+the reviewer and the reviewee.
+
+### For the reviewer
+
+When performing a code review, please be curious and critical while also being
+respectful and appreciative of the work submitted.  Code reviews are a chance
+to check that things meet our standards and provide learning opportunities.
+They are not places for belittling or disparaging someone's work or approach to
+a task, and absolutely not the person(s) themselves.
+
+That said, any responses to the code review should also be respectful and
+considerate.  Remember, this is a chance to not only improve our work and the
+state of Notify.gov, it's also a chance to learn something new!
+
+**Note: If a response is condescending, derogatory, disrespectful, etc., please
+do not hesitate to either speak with the author(s) directly about this or reach
+out to a team lead/supervisor for additional help to rectify the issue.  Such
+behavior and lack of professionalism is not acceptable or tolerated.**
+
+When performing a code review, it is helpful to keep the following guidelines in
+mind:
+
+- Be on the lookout for any sensitive information and/or leaked credentials,
+  secrets, PII, etc.
+- Ask and call out things that aren't clear to you; it never hurts to double
+  check your understanding of something!
+- Check that things are named descriptively and appropriately and call out
+  anything that is not.
+- Check that comments are present for complex areas when needed.
+- Make sure the pull request itself is properly prepared - it has a clear
+  description, calls out security concerns, and has the necessary labels, flags,
+  issue link, etc., set on it.
+- Do not be shy about using the suggested changes feature in GitHub pull request
+  comments; this can help save a lot of time!
+- Do not be shy about marking a review with the `Request Changes` status - yes,
+  it looks big and red when it shows up, but this is completely fine and not to
+  be taken as a personal mark against the author(s) of the pull request!
+
+### For the reviewee
+
+When receiving a code review, please remember that someone took the time to look
+over all of your work with a critical eye to make sure our standards are being
+met and that we're producing the best quality work possible.  It's completely
+fine if there are specific changes requested and/or other parts are sent back
+for additional work!
+
+That said, the review should also be respectful, helpful, and a learning
+opportunity where possible.  Remember, this is a chance to not only improve your
+work and the state of Notify.gov, it's also a chance to learn something new!
+
+**Note: If a review is condescending, derogatory, disrespectful, etc., please do
+not hesitate to either speak with the reviewer(s) directly about this or reach
+out to a team lead/supervisor for additional help to rectify the issue.  Such
+behavior and lack of professionalism is not acceptable or tolerated.**
+
+When going over a review, it may be helpful to keep these perspectives in mind:
+
+- Approach the review with an open mind, curiosity, and appreciation.
+- If anything the reviewer(s) mentions is unclear to you, please ask for
+  clarification and engage them in further dialogue!
+- If you disagree with a suggestion or request, please say so and engage in an
+  open and respecful dialogue to come to a mutual understanding of what the
+  appropriate next step(S) should be - accept the change, reject the change,
+  take a different path entirely, etc.
+- If there are no issues with any suggested edits or requested changes, make
+  the necessary adjustments and let the reviewer(s) know when the work is ready
+  for review again.
 
 
 Run Book
