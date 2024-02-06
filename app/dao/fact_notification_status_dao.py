@@ -130,8 +130,10 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     start_date = midnight_n_days_ago(limit_days)
     now = datetime.utcnow()
     stats_for_7_days = db.session.query(
-        FactNotificationStatus.notification_type.label("notification_type"),
-        FactNotificationStatus.notification_status.label("status"),
+        FactNotificationStatus.notification_type.cast(db.Text).label(
+            "notification_type"
+        ),
+        FactNotificationStatus.notification_status.cast(db.Text).label("status"),
         *(
             [FactNotificationStatus.template_id.label("template_id")]
             if by_template
@@ -146,8 +148,8 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 
     stats_for_today = (
         db.session.query(
-            Notification.notification_type,
-            Notification.status,
+            Notification.notification_type.cast(db.Text),
+            Notification.status.cast(db.Text),
             *([Notification.template_id] if by_template else []),
             func.count().label("count"),
         )
@@ -193,9 +195,9 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 def fetch_notification_status_totals_for_all_services(start_date, end_date):
     stats = (
         db.session.query(
-            FactNotificationStatus.notification_type.label("notification_type"),
-            FactNotificationStatus.notification_status.label("status"),
-            FactNotificationStatus.key_type.label("key_type"),
+            FactNotificationStatus.notification_type.cast(db.Text).label("notification_type"),
+            FactNotificationStatus.notification_status.cast(db.Text).label("status"),
+            FactNotificationStatus.key_type.cast(db.Text).label("key_type"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
         .filter(
@@ -212,9 +214,9 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
     if start_date <= datetime.utcnow().date() <= end_date:
         stats_for_today = (
             db.session.query(
-                Notification.notification_type.label("notification_type"),
-                Notification.status,
-                Notification.key_type,
+                Notification.notification_type.cast(db.Text).label("notification_type"),
+                Notification.status.cast(db.Text),
+                Notification.key_type.cast(db.Text),
                 func.count().label("count"),
             )
             .filter(Notification.created_at >= today)
