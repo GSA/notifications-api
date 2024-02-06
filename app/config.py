@@ -283,7 +283,8 @@ class Config(object):
         "simulate-delivered-2@notifications.service.gov.uk",
         "simulate-delivered-3@notifications.service.gov.uk",
     )
-    SIMULATED_SMS_NUMBERS = ("+12028675000", "+12028675111", "+12028675222")
+    # 7755 is success, 7167 is failure
+    SIMULATED_SMS_NUMBERS = ("+14254147755", "+14254147167")
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 

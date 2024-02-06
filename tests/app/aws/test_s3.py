@@ -68,6 +68,13 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             0,
             "15553333333",
         ),
+        (
+            # simulate file saved with utf8withbom
+            "\\ufeffPHONE NUMBER,Name\r\n5555555550,T 1\r\n5555555551,T 5,3/31/2024\r\n5555555552,T 2",
+            "eee",
+            2,
+            "5555555552",
+        ),
     ],
 )
 def test_get_phone_number_from_s3(
