@@ -857,7 +857,7 @@ def test_get_total_notifications_for_date_range(sample_service):
     )
 
     assert len(results) == 1
-    assert results[0] == ("2021-03-01", 15, 20)
+    assert results[0] == (date.fromisoformat("2021-03-01"), 15, 20)
 
 
 @pytest.mark.skip(reason="Need a better way to test variable DST date")

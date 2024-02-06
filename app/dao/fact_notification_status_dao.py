@@ -195,7 +195,9 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 def fetch_notification_status_totals_for_all_services(start_date, end_date):
     stats = (
         db.session.query(
-            FactNotificationStatus.notification_type.cast(db.Text).label("notification_type"),
+            FactNotificationStatus.notification_type.cast(db.Text).label(
+                "notification_type"
+            ),
             FactNotificationStatus.notification_status.cast(db.Text).label("status"),
             FactNotificationStatus.key_type.cast(db.Text).label("key_type"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
@@ -270,8 +272,10 @@ def fetch_stats_for_all_services_by_date_range(
             Service.restricted.label("restricted"),
             Service.active.label("active"),
             Service.created_at.label("created_at"),
-            FactNotificationStatus.notification_type.label("notification_type"),
-            FactNotificationStatus.notification_status.label("status"),
+            FactNotificationStatus.notification_type.cast(db.Text).label(
+                "notification_type"
+            ),
+            FactNotificationStatus.notification_status.cast(db.Text).label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
         .filter(
@@ -321,8 +325,8 @@ def fetch_stats_for_all_services_by_date_range(
             Service.restricted.label("restricted"),
             Service.active.label("active"),
             Service.created_at.label("created_at"),
-            subquery.c.notification_type.label("notification_type"),
-            subquery.c.status.label("status"),
+            subquery.c.notification_type.cast(db.Text).label("notification_type"),
+            subquery.c.status.cast(db.Text).label("status"),
             subquery.c.count.label("count"),
         ).outerjoin(subquery, subquery.c.service_id == Service.id)
 
