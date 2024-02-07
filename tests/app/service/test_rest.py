@@ -768,7 +768,7 @@ def test_update_service_flags(client, sample_service):
     json_resp = resp.json
     assert resp.status_code == 200
     assert json_resp["data"]["name"] == sample_service.name
-    data = {"permissions": {ServicePermissionType.INTERNATIONAL_SMS}}
+    data = {"permissions": [ServicePermissionType.INTERNATIONAL_SMS]}
 
     auth_header = create_admin_authorization_header()
 
@@ -855,7 +855,7 @@ def test_update_service_flags_with_service_without_default_service_permissions(
 ):
     auth_header = create_admin_authorization_header()
     data = {
-        "permissions": {ServicePermissionType.INTERNATIONAL_SMS},
+        "permissions": [ServicePermissionType.INTERNATIONAL_SMS],
     }
 
     resp = client.post(
@@ -888,7 +888,7 @@ def test_update_service_flags_will_remove_service_permissions(
         p.permission for p in service.permissions
     }
 
-    data = {"permissions": {ServicePermissionType.SMS, ServicePermissionType.EMAIL}}
+    data = {"permissions": [ServicePermissionType.SMS, ServicePermissionType.EMAIL]}
 
     resp = client.post(
         "/service/{}".format(service.id),
@@ -912,7 +912,7 @@ def test_update_permissions_will_override_permission_flags(
 ):
     auth_header = create_admin_authorization_header()
 
-    data = {"permissions": {ServicePermissionType.INTERNATIONAL_SMS}}
+    data = {"permissions": [ServicePermissionType.INTERNATIONAL_SMS]}
 
     resp = client.post(
         "/service/{}".format(service_with_no_permissions.id),
@@ -922,9 +922,9 @@ def test_update_permissions_will_override_permission_flags(
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == {
+    assert set(result["data"]["permissions"]) == [
         ServicePermissionType.INTERNATIONAL_SMS
-    }
+    ]
 
 
 def test_update_service_permissions_will_add_service_permissions(
@@ -932,7 +932,7 @@ def test_update_service_permissions_will_add_service_permissions(
 ):
     auth_header = create_admin_authorization_header()
 
-    data = {"permissions": {ServicePermissionType.EMAIL, ServicePermissionType.SMS}}
+    data = {"permissions": [ServicePermissionType.EMAIL, ServicePermissionType.SMS]}
 
     resp = client.post(
         "/service/{}".format(sample_service.id),
@@ -986,11 +986,11 @@ def test_update_permissions_with_an_invalid_permission_will_raise_error(
     invalid_permission = "invalid_permission"
 
     data = {
-        "permissions": {
+        "permissions": [
             ServicePermissionType.EMAIL,
             ServicePermissionType.SMS,
             invalid_permission,
-        }
+        ]
     }
 
     resp = client.post(
@@ -1014,11 +1014,11 @@ def test_update_permissions_with_duplicate_permissions_will_raise_error(
     auth_header = create_admin_authorization_header()
 
     data = {
-        "permissions": {
+        "permissions": [
             ServicePermissionType.EMAIL,
             ServicePermissionType.SMS,
             ServicePermissionType.SMS,
-        }
+        ]
     }
 
     resp = client.post(
