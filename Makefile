@@ -50,6 +50,10 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		--loglevel=INFO \
 		--concurrency=4
 
+.PHONY: run-dependency-check
+run-dependency-check:
+	echo "*** Shows unused dependencies (maybe, doublecheck)"
+	poetry run deptry .
 
 .PHONY: dead-code
 dead-code:
