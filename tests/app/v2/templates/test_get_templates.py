@@ -13,7 +13,7 @@ def test_get_all_templates_returns_200(client, sample_service):
         create_template(
             sample_service,
             template_type=tmp_type,
-            subject="subject_{}".format(name) if tmp_type == TemplateType.EMAIL else "",
+            subject=f"subject_{name}" if tmp_type == TemplateType.EMAIL else "",
             template_name=name,
         )
         for name, tmp_type in product(("A", "B", "C"), TemplateType)
@@ -47,8 +47,8 @@ def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tm
         create_template(
             sample_service,
             template_type=tmp_type,
-            template_name="Template {}".format(i),
-            subject="subject_{}".format(i) if tmp_type == TemplateType.EMAIL else "",
+            template_name=f"Template {i}",
+            subject=f"subject_{i}" if tmp_type == TemplateType.EMAIL else "",
         )
         for i in range(3)
     ]
@@ -56,7 +56,7 @@ def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tm
     auth_header = create_service_authorization_header(service_id=sample_service.id)
 
     response = client.get(
-        path="/v2/templates?type={}".format(tmp_type),
+        path=f"/v2/templates?type={tmp_type}",
         headers=[("Content-Type", "application/json"), auth_header],
     )
 
@@ -92,7 +92,7 @@ def test_get_correct_num_templates_for_valid_type_returns_200(
     auth_header = create_service_authorization_header(service_id=sample_service.id)
 
     response = client.get(
-        path="/v2/templates?type={}".format(tmp_type),
+        path=f"/v2/templates?type={tmp_type}",
         headers=[("Content-Type", "application/json"), auth_header],
     )
 
@@ -109,7 +109,7 @@ def test_get_all_templates_for_invalid_type_returns_400(client, sample_service):
     invalid_type = "coconut"
 
     response = client.get(
-        path="/v2/templates?type={}".format(invalid_type),
+        path=f"/v2/templates?type={invalid_type}",
         headers=[("Content-Type", "application/json"), auth_header],
     )
 
@@ -122,7 +122,7 @@ def test_get_all_templates_for_invalid_type_returns_400(client, sample_service):
         "status_code": 400,
         "errors": [
             {
-                "message": "type coconut is not one of [sms, email]",
+                "message": "type coconut is not one of [sms, email, letter]",
                 "error": "ValidationError",
             }
         ],
