@@ -108,7 +108,9 @@ def test_get_template_usage_by_month_returns_two_templates(
 def test_get_service_notification_statistics(
     admin_request, sample_service, sample_template, today_only, stats
 ):
-    create_ft_notification_status(date(2000, 1, 1), "sms", sample_service, count=1)
+    create_ft_notification_status(
+        date(2000, 1, 1), NotificationType.SMS, sample_service, count=1
+    )
     with freeze_time("2000-01-02T12:00:00"):
         create_notification(sample_template, status="created")
         resp = admin_request.get(

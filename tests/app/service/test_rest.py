@@ -1212,7 +1212,9 @@ def test_default_permissions_are_added_for_user_service(
             ]
             from app.dao.permissions_dao import default_service_permissions
 
-            assert sorted(ServicePermissionType.defaults()) == sorted(service_permissions)
+            assert sorted(ServicePermissionType.defaults()) == sorted(
+                service_permissions
+            )
 
 
 def test_add_existing_user_to_another_service_with_all_permissions(

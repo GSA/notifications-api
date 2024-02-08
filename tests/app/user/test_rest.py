@@ -457,11 +457,7 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
         "user.set_permissions",
         user_id=str(sample_user.id),
         service_id=str(sample_service.id),
-        _data={
-            "permissions": [
-                {"permission": PermissionType.PermissionType.MANAGE_SETTINGS}
-            ]
-        },
+        _data={"permissions": [{"permission": PermissionType.MANAGE_SETTINGS}]},
         _expected_status=204,
     )
 

@@ -1,6 +1,7 @@
 import pytest
 from flask import json, url_for
 
+from app.enums import NotificationType, TemplateType
 from app.utils import DATETIME_FORMAT
 from tests import create_service_authorization_header
 from tests.app.db import create_notification, create_template
@@ -239,7 +240,7 @@ def test_get_notification_by_id_invalid_id(client, sample_notification, id):
     }
 
 
-@pytest.mark.parametrize("template_type", ["sms", "email"])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_get_notification_doesnt_have_delivery_estimate_for_non_letters(
     client, sample_service, template_type
 ):
@@ -290,7 +291,7 @@ def test_get_all_notifications_except_job_notifications_returns_200(
         "version": 1,
     }
     assert json_response["notifications"][0]["phone_number"] == "1"
-    assert json_response["notifications"][0]["type"] == "sms"
+    assert json_response["notifications"][0]["type"] == NotificationType.SMS
     assert not json_response["notifications"][0]["scheduled_for"]
 
 
@@ -348,8 +349,12 @@ def test_get_all_notifications_no_notifications_if_no_notifications(
 
 
 def test_get_all_notifications_filter_by_template_type(client, sample_service):
-    email_template = create_template(service=sample_service, template_type="email")
-    sms_template = create_template(service=sample_service, template_type="sms")
+    email_template = create_template(
+        service=sample_service, template_type=TemplateType.EMAIL
+    )
+    sms_template = create_template(
+        service=sample_service, template_type=TemplateType.SMS
+    )
 
     notification = create_notification(
         template=email_template, to_field="don.draper@scdp.biz"
@@ -382,7 +387,7 @@ def test_get_all_notifications_filter_by_template_type(client, sample_service):
         "version": 1,
     }
     assert json_response["notifications"][0]["email_address"] == "1"
-    assert json_response["notifications"][0]["type"] == "email"
+    assert json_response["notifications"][0]["type"] == NotificationType.EMAIL
 
 
 def test_get_all_notifications_filter_by_template_type_invalid_template_type(
@@ -405,7 +410,7 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(
     assert len(json_response["errors"]) == 1
     assert (
         json_response["errors"][0]["message"]
-        == "template_type orange is not one of [sms, email]"
+        == "template_type orange is not one of [sms, email, letter]"
     )
 
 
@@ -625,7 +630,9 @@ def test_get_all_notifications_filter_multiple_query_parameters(
 
     # wrong status
     create_notification(template=sample_email_template)
-    wrong_template = create_template(sample_email_template.service, template_type="sms")
+    wrong_template = create_template(
+        sample_email_template.service, template_type=TemplateType.SMS
+    )
     # wrong template
     create_notification(template=wrong_template, status="sending")
 
@@ -681,7 +688,10 @@ def test_get_all_notifications_renames_letter_statuses(
     assert response.status_code == 200
 
     for noti in json_response["notifications"]:
-        if noti["type"] == "sms" or noti["type"] == "email":
+        if (
+            noti["type"] == NotificationType.SMS
+            or noti["type"] == NotificationType.EMAIL
+        ):
             assert noti["status"] == "created"
         else:
             pytest.fail()

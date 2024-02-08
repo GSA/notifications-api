@@ -59,7 +59,7 @@ valid_post = [
 ]
 
 
-@pytest.mark.parametrize("tmp_type", TemplateType)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 @pytest.mark.parametrize(
     "subject,content,post_data,expected_subject,expected_content,expected_html",
     valid_post,
@@ -125,7 +125,7 @@ def test_email_templates_not_rendered_into_content(client, sample_service):
     assert resp_json["body"] == template.content
 
 
-@pytest.mark.parametrize("tmp_type", TemplateType)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 def test_invalid_post_template_returns_400(client, sample_service, tmp_type):
     template = create_template(
         sample_service,

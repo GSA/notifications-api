@@ -78,7 +78,7 @@ def format_monthly_template_notification_stats(year, rows):
 def create_zeroed_stats_dicts():
     return {
         template_type: {status: 0 for status in ("requested", "delivered", "failed")}
-        for template_type in TemplateType
+        for template_type in (TemplateType.SMS, TemplateType.EMAIL)
     }
 
 
@@ -103,7 +103,8 @@ def create_empty_monthly_notification_status_stats_dict(year):
     # nested dicts - data[month][template type][status] = count
     return {
         start.strftime("%Y-%m"): {
-            template_type: defaultdict(int) for template_type in TemplateType
+            template_type: defaultdict(int)
+            for template_type in (TemplateType.SMS, TemplateType.EMAIL)
         }
         for start in utc_month_starts
     }
