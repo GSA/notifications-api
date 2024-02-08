@@ -1,6 +1,7 @@
-from strenum import StrEnum  # In 3.11 this is in the enum library. We will not need
-
-# this external library any more.
+from strenum import StrEnum  # type: ignore [import-not-found]
+# In 3.11 this is in the enum library. We will not need this external library any more.
+# The line will simply change from importing from strenum to importing from enum.
+# And the strenum library can then be removed from poetry.
 
 
 class TemplateType(StrEnum):

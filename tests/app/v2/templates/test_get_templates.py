@@ -16,7 +16,7 @@ def test_get_all_templates_returns_200(client, sample_service):
             subject=f"subject_{name}" if tmp_type == TemplateType.EMAIL else "",
             template_name=name,
         )
-        for name, tmp_type in product(("A", "B", "C"), TemplateType)
+        for name, tmp_type in (("A", TemplateType.SMS), ("B", TemplateType.EMAIL))
     ]
 
     auth_header = create_service_authorization_header(service_id=sample_service.id)
@@ -41,7 +41,7 @@ def test_get_all_templates_returns_200(client, sample_service):
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", TemplateType)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tmp_type):
     templates = [
         create_template(
@@ -75,7 +75,7 @@ def test_get_all_templates_for_valid_type_returns_200(client, sample_service, tm
             assert template["subject"] == templates[index].subject
 
 
-@pytest.mark.parametrize("tmp_type", TemplateType)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 def test_get_correct_num_templates_for_valid_type_returns_200(
     client, sample_service, tmp_type
 ):

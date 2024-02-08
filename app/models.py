@@ -1164,8 +1164,10 @@ class TemplateBase(db.Model):
     def _as_utils_template(self):
         if self.template_type == TemplateType.EMAIL:
             return PlainTextEmailTemplate(self.__dict__)
-        if self.template_type == TemplateType.SMS:
+        elif self.template_type == TemplateType.SMS:
             return SMSMessageTemplate(self.__dict__)
+        else:
+            raise ValueError(f"{self.template_type} is an invalid template type.")
 
     def _as_utils_template_with_personalisation(self, values):
         template = self._as_utils_template()
