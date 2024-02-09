@@ -1,4 +1,5 @@
 import json
+from types import CodeType
 import uuid
 from datetime import datetime, timedelta
 
@@ -170,7 +171,7 @@ def service_factory(sample_user):
                 create_template(
                     service,
                     template_name="Template Name",
-                    template_type="sms",
+                    template_type=TemplateType.SMS,
                 )
             return service
 
@@ -203,7 +204,7 @@ def create_code(notify_db_session, code_type):
 
 @pytest.fixture(scope="function")
 def sample_sms_code(notify_db_session):
-    code, txt_code = create_code(notify_db_session, code_type="sms")
+    code, txt_code = create_code(notify_db_session, code_type=CodeType.SMS)
     code.txt_code = txt_code
     return code
 
@@ -252,7 +253,7 @@ def sample_template(sample_user):
 
     data = {
         "name": "Template Name",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "This is a template:\nwith a newline",
         "service": service,
         "created_by": sample_user,
@@ -621,7 +622,7 @@ def sms_code_template(notify_service):
         user=notify_service.users[0],
         template_config_name="SMS_CODE_TEMPLATE_ID",
         content="((verify_code))",
-        template_type="sms",
+        template_type=TemplateType.SMS,
     )
 
 
@@ -723,7 +724,7 @@ def team_member_mobile_edit_template(notify_service):
         user=notify_service.users[0],
         template_config_name="TEAM_MEMBER_EDIT_MOBILE_TEMPLATE_ID",
         content="Your mobile number was changed by ((servicemanagername)).",
-        template_type="sms",
+        template_type=TemplateType.SMS,
     )
 
 

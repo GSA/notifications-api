@@ -17,7 +17,8 @@ from app.celery.nightly_tasks import (
     save_daily_notification_processing_time,
     timeout_notifications,
 )
-from app.models import FactProcessingTime, Job, NotificationType
+from app.enums import NotificationType, TemplateType
+from app.models import FactProcessingTime, Job
 from tests.app.db import (
     create_job,
     create_notification,
@@ -142,7 +143,7 @@ def test_delete_sms_notifications_older_than_retention_calls_child_task(
         "app.celery.nightly_tasks._delete_notifications_older_than_retention_by_type"
     )
     delete_sms_notifications_older_than_retention()
-    mocked.assert_called_once_with("sms")
+    mocked.assert_called_once_with(NotificationType.SMS)
 
 
 def test_delete_email_notifications_older_than_retentions_calls_child_task(
@@ -276,21 +277,21 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_o
     email_service = create_service(service_name="b")
     letter_service = create_service(service_name="c")
 
-    create_service_data_retention(sms_service, notification_type="sms")
-    create_service_data_retention(email_service, notification_type="email")
-    create_service_data_retention(letter_service, notification_type="letter")
+    create_service_data_retention(sms_service, notification_type=NotificationType.SMS)
+    create_service_data_retention(email_service, notification_type=NotificationType.EMAIL)
+    create_service_data_retention(letter_service, notification_type=NotificationType.LETTER)
 
     mock_subtask = mocker.patch(
         "app.celery.nightly_tasks.delete_notifications_for_service_and_type"
     )
 
-    _delete_notifications_older_than_retention_by_type("sms")
+    _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
     mock_subtask.apply_async.assert_called_once_with(
         queue="reporting-tasks",
         kwargs={
             "service_id": sms_service.id,
-            "notification_type": "sms",
+            "notification_type": NotificationType.SMS,
             # three days of retention, its morn of 5th, so we want to keep all messages from 4th, 3rd and 2nd.
             "datetime_to_delete_before": date(2021, 6, 2),
         },
@@ -310,7 +311,7 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_b
         "app.celery.nightly_tasks.delete_notifications_for_service_and_type"
     )
 
-    _delete_notifications_older_than_retention_by_type("sms")
+    _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
     assert mock_subtask.apply_async.call_count == 2
     mock_subtask.apply_async.assert_has_calls(
@@ -320,7 +321,7 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_b
                 queue=ANY,
                 kwargs={
                     "service_id": service_14_days.id,
-                    "notification_type": "sms",
+                    "notification_type": NotificationType.SMS,
                     "datetime_to_delete_before": date(2021, 3, 21),
                 },
             ),
@@ -328,7 +329,7 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_b
                 queue=ANY,
                 kwargs={
                     "service_id": service_3_days.id,
-                    "notification_type": "sms",
+                    "notification_type": NotificationType.SMS,
                     "datetime_to_delete_before": date(2021, 4, 1),
                 },
             ),
@@ -347,7 +348,7 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     create_template(service_will_delete_1)
     create_template(service_will_delete_2)
     nothing_to_delete_sms_template = create_template(
-        service_nothing_to_delete, template_type="sms"
+        service_nothing_to_delete, template_type=TemplateType.SMS
     )
     nothing_to_delete_email_template = create_template(
         service_nothing_to_delete, template_type="email"
@@ -377,7 +378,7 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
         "app.celery.nightly_tasks.delete_notifications_for_service_and_type"
     )
 
-    _delete_notifications_older_than_retention_by_type("sms")
+    _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
     assert mock_subtask.apply_async.call_count == 2
     mock_subtask.apply_async.assert_has_calls(
@@ -387,7 +388,7 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
                 queue=ANY,
                 kwargs={
                     "service_id": service_will_delete_1.id,
-                    "notification_type": "sms",
+                    "notification_type": NotificationType.SMS,
                     "datetime_to_delete_before": date(2021, 3, 26),
                 },
             ),
@@ -395,7 +396,7 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
                 queue=ANY,
                 kwargs={
                     "service_id": service_will_delete_2.id,
-                    "notification_type": "sms",
+                    "notification_type": NotificationType.SMS,
                     "datetime_to_delete_before": date(2021, 3, 26),
                 },
             ),

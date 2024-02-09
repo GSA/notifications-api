@@ -6,6 +6,7 @@ from freezegun import freeze_time
 from app.billing.rest import update_free_sms_fragment_limit_data
 from app.dao.annual_billing_dao import dao_get_free_sms_fragment_limit_for_year
 from app.dao.date_util import get_current_calendar_year_start_year
+from app.enums import NotificationType, TemplateType
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -153,7 +154,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
         service_id=service.id, free_sms_fragment_limit=1, financial_year_start=2016
     )
 
-    sms_template = create_template(service=service, template_type="sms")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
     email_template = create_template(service=service, template_type="email")
 
     for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
@@ -173,10 +174,10 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     email_rows = [row for row in json_response if row["notification_type"] == "email"]
     assert len(email_rows) == 0
 
-    sms_row = next(x for x in json_response if x["notification_type"] == "sms")
+    sms_row = next(x for x in json_response if x["notification_type"] == NotificationType.SMS)
 
     assert sms_row["month"] == "January"
-    assert sms_row["notification_type"] == "sms"
+    assert sms_row["notification_type"] == NotificationType.SMS
     assert sms_row["chargeable_units"] == 1
     assert sms_row["notifications_sent"] == 1
     assert sms_row["rate"] == 0.0162
@@ -216,8 +217,8 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(
         service_id=service.id, free_sms_fragment_limit=1, financial_year_start=2016
     )
 
-    sms_template = create_template(service=service, template_type="sms")
-    email_template = create_template(service=service, template_type="email")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
 
     for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
@@ -233,7 +234,7 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(
 
     assert len(json_response) == 2
 
-    assert json_response[0]["notification_type"] == "email"
+    assert json_response[0]["notification_type"] == NotificationType.EMAIL
     assert json_response[0]["chargeable_units"] == 0
     assert json_response[0]["notifications_sent"] == 3
     assert json_response[0]["rate"] == 0
@@ -241,7 +242,7 @@ def test_get_yearly_billing_usage_summary_from_ft_billing(
     assert json_response[0]["free_allowance_used"] == 0
     assert json_response[0]["charged_units"] == 0
 
-    assert json_response[1]["notification_type"] == "sms"
+    assert json_response[1]["notification_type"] == NotificationType.SMS
     assert json_response[1]["chargeable_units"] == 3
     assert json_response[1]["notifications_sent"] == 3
     assert json_response[1]["rate"] == 0.0162

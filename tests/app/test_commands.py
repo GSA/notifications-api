@@ -358,7 +358,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
     _update_template(
         "299726d2-dba6-42b8-8209-30e1d66ea164",
         "Example text message template!",
-        "sms",
+        TemplateType.SMS,
         [
             "Hi, I’m trying out Notify.gov! Today is ((day of week)) and my favorite color is ((color))."
         ],

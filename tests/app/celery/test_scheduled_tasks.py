@@ -19,7 +19,7 @@ from app.celery.scheduled_tasks import (
 )
 from app.config import QueueNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
-from app.enums import JobStatus
+from app.enums import JobStatus, NotificationStatus, TemplateType
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
 
@@ -101,13 +101,13 @@ def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
 
     one_minute_in_the_past = datetime.utcnow() - timedelta(minutes=1)
     job = create_job(
-        sample_template, job_status="scheduled", scheduled_for=one_minute_in_the_past
+        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=one_minute_in_the_past
     )
 
     run_scheduled_jobs()
 
     updated_job = dao_get_job_by_id(job.id)
-    assert updated_job.job_status == "pending"
+    assert updated_job.job_status == JobStatus.PENDING
     mocked.assert_called_with([str(job.id)], queue="job-tasks")
 
 
@@ -118,22 +118,22 @@ def test_should_update_all_scheduled_jobs_and_put_on_queue(sample_template, mock
     ten_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=10)
     twenty_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=20)
     job_1 = create_job(
-        sample_template, job_status="scheduled", scheduled_for=one_minute_in_the_past
+        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=one_minute_in_the_past,
     )
     job_2 = create_job(
-        sample_template, job_status="scheduled", scheduled_for=ten_minutes_in_the_past
+        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=ten_minutes_in_the_past,
     )
     job_3 = create_job(
         sample_template,
-        job_status="scheduled",
+        job_status=JobStatus.SCHEDULED,
         scheduled_for=twenty_minutes_in_the_past,
     )
 
     run_scheduled_jobs()
 
-    assert dao_get_job_by_id(job_1.id).job_status == "pending"
-    assert dao_get_job_by_id(job_2.id).job_status == "pending"
-    assert dao_get_job_by_id(job_2.id).job_status == "pending"
+    assert dao_get_job_by_id(job_1.id).job_status == JobStatus.PENDING
+    assert dao_get_job_by_id(job_2.id).job_status == JobStatus.PENDING
+    assert dao_get_job_by_id(job_2.id).job_status == JobStatus.PENDING
 
     mocked.assert_has_calls(
         [
@@ -299,36 +299,36 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
         "app.celery.provider_tasks.deliver_sms.apply_async"
     )
 
-    sms_template = create_template(service=sample_service, template_type="sms")
-    email_template = create_template(service=sample_service, template_type="email")
+    sms_template = create_template(service=sample_service, template_type=TemplateType.SMS)
+    email_template = create_template(service=sample_service, template_type=TemplateType.EMAIL)
     older_than = (60 * 60) + (60 * 15)  # 1 hour 15 minutes
     # notifications expected to be resent
     old_sms = create_notification(
         template=sms_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
     old_email = create_notification(
         template=email_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
     # notifications that are not to be resent
     create_notification(
         template=sms_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     create_notification(
         template=email_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        template=sms_template, created_at=datetime.utcnow(), status="created"
+        template=sms_template, created_at=datetime.utcnow(), status=NotificationStatus.CREATED,
     )
     create_notification(
-        template=email_template, created_at=datetime.utcnow(), status="created"
+        template=email_template, created_at=datetime.utcnow(), status=NotificationStatus.CREATED,
     )
 
     replay_created_notifications()

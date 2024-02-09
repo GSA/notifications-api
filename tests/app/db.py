@@ -899,7 +899,7 @@ def set_up_usage_data(start_date):
         billing_reference="service billing reference",
     )
     sms_template_1 = create_template(
-        service=service_1_sms_and_letter, template_type="sms"
+        service=service_1_sms_and_letter, template_type=TemplateType.SMS
     )
     create_annual_billing(
         service_id=service_1_sms_and_letter.id,

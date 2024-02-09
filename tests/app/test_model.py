@@ -10,6 +10,7 @@ from app.enums import (
     AgreementType,
     AuthType,
     NotificationStatus,
+    NotificationType,
     RecipientType,
     TemplateType,
 )
@@ -119,8 +120,8 @@ def test_status_conversion(initial_statuses, expected_statuses):
 @pytest.mark.parametrize(
     "template_type, recipient",
     [
-        ("sms", "+12028675309"),
-        ("email", "foo@bar.com"),
+        (TemplateType.SMS, "+12028675309"),
+        (TemplateType.EMAIL, "foo@bar.com"),
     ],
 )
 def test_notification_for_csv_returns_correct_type(
@@ -147,17 +148,17 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
 @pytest.mark.parametrize(
     "template_type, status, expected_status",
     [
-        ("email", "failed", "Failed"),
-        ("email", "technical-failure", "Technical failure"),
-        ("email", "temporary-failure", "Inbox not accepting messages right now"),
-        ("email", "permanent-failure", "Email address doesn’t exist"),
+        (TemplateType.EMAIL, "failed", "Failed"),
+        (TemplateType.EMAIL, "technical-failure", "Technical failure"),
+        (TemplateType.EMAIL, "temporary-failure", "Inbox not accepting messages right now",),
+        (TemplateType.EMAIL, "permanent-failure", "Email address doesn’t exist"),
         (
-            "sms",
+            TemplateType.SMS,
             "temporary-failure",
             "Unable to find carrier response -- still looking",
         ),
-        ("sms", "permanent-failure", "Unable to find carrier response."),
-        ("sms", "sent", "Sent internationally"),
+        (TemplateType.SMS, "permanent-failure", "Unable to find carrier response."),
+        (TemplateType.SMS, "sent", "Sent internationally"),
     ],
 )
 def test_notification_for_csv_returns_formatted_status(
@@ -419,7 +420,7 @@ def test_notification_history_from_original(sample_notification):
 
 
 def test_rate_str():
-    rate = create_rate("2023-01-01 00:00:00", 1.5, "sms")
+    rate = create_rate("2023-01-01 00:00:00", 1.5, NotificationType.SMS)
 
     assert rate.__str__() == "1.5 sms 2023-01-01 00:00:00"
 
