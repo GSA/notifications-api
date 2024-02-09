@@ -11,13 +11,14 @@ from app.dao.service_data_retention_dao import (
     insert_service_data_retention,
     update_service_data_retention,
 )
+from app.enums import NotificationType
 from app.models import ServiceDataRetention
 from tests.app.db import create_service, create_service_data_retention
 
 
 def test_fetch_service_data_retention(sample_service):
-    email_data_retention = insert_service_data_retention(sample_service.id, "email", 3)
-    sms_data_retention = insert_service_data_retention(sample_service.id, "sms", 5)
+    email_data_retention = insert_service_data_retention(sample_service.id, NotificationType.EMAIL, 3,)
+    sms_data_retention = insert_service_data_retention(sample_service.id, NotificationType.SMS, 5,)
 
     list_of_data_retention = fetch_service_data_retention(sample_service.id)
 
@@ -28,8 +29,8 @@ def test_fetch_service_data_retention(sample_service):
 
 def test_fetch_service_data_retention_only_returns_row_for_service(sample_service):
     another_service = create_service(service_name="Another service")
-    email_data_retention = insert_service_data_retention(sample_service.id, "email", 3)
-    insert_service_data_retention(another_service.id, "sms", 5)
+    email_data_retention = insert_service_data_retention(sample_service.id, NotificationType.EMAIL, 3,)
+    insert_service_data_retention(another_service.id, NotificationType.SMS, 5)
 
     list_of_data_retention = fetch_service_data_retention(sample_service.id)
     assert len(list_of_data_retention) == 1
@@ -45,7 +46,7 @@ def test_fetch_service_data_retention_returns_empty_list_when_no_rows_for_servic
 
 def test_fetch_service_data_retention_by_id(sample_service):
     email_data_retention = insert_service_data_retention(sample_service.id, "email", 3)
-    insert_service_data_retention(sample_service.id, "sms", 13)
+    insert_service_data_retention(sample_service.id, NotificationType.SMS, 13)
     result = fetch_service_data_retention_by_id(
         sample_service.id, email_data_retention.id
     )
@@ -61,7 +62,7 @@ def test_fetch_service_data_retention_by_id_returns_none_if_id_not_for_service(
     sample_service,
 ):
     another_service = create_service(service_name="Another service")
-    email_data_retention = insert_service_data_retention(sample_service.id, "email", 3)
+    email_data_retention = insert_service_data_retention(sample_service.id, NotificationType.EMAIL, 3,)
     result = fetch_service_data_retention_by_id(
         another_service.id, email_data_retention.id
     )
@@ -70,30 +71,30 @@ def test_fetch_service_data_retention_by_id_returns_none_if_id_not_for_service(
 
 def test_insert_service_data_retention(sample_service):
     insert_service_data_retention(
-        service_id=sample_service.id, notification_type="email", days_of_retention=3
+        service_id=sample_service.id, notification_type=NotificationType.EMAIL, days_of_retention=3,
     )
 
     results = ServiceDataRetention.query.all()
     assert len(results) == 1
     assert results[0].service_id == sample_service.id
-    assert results[0].notification_type == "email"
+    assert results[0].notification_type == NotificationType.EMAIL
     assert results[0].days_of_retention == 3
     assert results[0].created_at.date() == datetime.utcnow().date()
 
 
 def test_insert_service_data_retention_throws_unique_constraint(sample_service):
     insert_service_data_retention(
-        service_id=sample_service.id, notification_type="email", days_of_retention=3
+        service_id=sample_service.id, notification_type=NotificationType.EMAIL, days_of_retention=3,
     )
     with pytest.raises(expected_exception=IntegrityError):
         insert_service_data_retention(
-            service_id=sample_service.id, notification_type="email", days_of_retention=5
+            service_id=sample_service.id, notification_type=NotificationType.EMAIL, days_of_retention=5,
         )
 
 
 def test_update_service_data_retention(sample_service):
     data_retention = insert_service_data_retention(
-        service_id=sample_service.id, notification_type="sms", days_of_retention=3
+        service_id=sample_service.id, notification_type=NotificationType.SMS, days_of_retention=3
     )
     updated_count = update_service_data_retention(
         service_data_retention_id=data_retention.id,
@@ -105,7 +106,7 @@ def test_update_service_data_retention(sample_service):
     assert len(results) == 1
     assert results[0].id == data_retention.id
     assert results[0].service_id == sample_service.id
-    assert results[0].notification_type == "sms"
+    assert results[0].notification_type == NotificationType.SMS
     assert results[0].days_of_retention == 5
     assert results[0].created_at.date() == datetime.utcnow().date()
     assert results[0].updated_at.date() == datetime.utcnow().date()
@@ -127,7 +128,7 @@ def test_update_service_data_retention_does_not_update_row_if_data_retention_is_
     sample_service,
 ):
     data_retention = insert_service_data_retention(
-        service_id=sample_service.id, notification_type="email", days_of_retention=3
+        service_id=sample_service.id, notification_type=NotificationType.EMAIL, days_of_retention=3,
     )
     updated_count = update_service_data_retention(
         service_data_retention_id=data_retention.id,
@@ -138,7 +139,7 @@ def test_update_service_data_retention_does_not_update_row_if_data_retention_is_
 
 
 @pytest.mark.parametrize(
-    "notification_type, alternate", [("sms", "email"), ("email", "sms")]
+    "notification_type, alternate", [(NotificationType.SMS, NotificationType.EMAIL), (NotificationType.EMAIL, NotificationType.SMS),],
 )
 def test_fetch_service_data_retention_by_notification_type(
     sample_service, notification_type, alternate
@@ -157,5 +158,5 @@ def test_fetch_service_data_retention_by_notification_type_returns_none_when_no_
     sample_service,
 ):
     assert not fetch_service_data_retention_by_notification_type(
-        sample_service.id, "email"
+        sample_service.id, NotificationType.EMAIL,
     )

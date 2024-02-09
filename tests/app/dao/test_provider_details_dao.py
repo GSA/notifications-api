@@ -14,6 +14,7 @@ from app.dao.provider_details_dao import (
     get_provider_details_by_identifier,
     get_provider_details_by_notification_type,
 )
+from app.enums import NotificationType, TemplateType
 from app.models import ProviderDetails, ProviderDetailsHistory
 from tests.app.db import create_ft_billing, create_service, create_template
 from tests.conftest import set_config
@@ -39,37 +40,37 @@ def set_primary_sms_provider(identifier):
 
 
 def test_can_get_sms_non_international_providers(notify_db_session):
-    sms_providers = get_provider_details_by_notification_type("sms")
+    sms_providers = get_provider_details_by_notification_type(NotificationType.SMS)
     assert len(sms_providers) > 0
-    assert all("sms" == prov.notification_type for prov in sms_providers)
+    assert all(NotificationType.SMS == prov.notification_type for prov in sms_providers)
 
 
 def test_can_get_sms_international_providers(notify_db_session):
-    sms_providers = get_provider_details_by_notification_type("sms", True)
+    sms_providers = get_provider_details_by_notification_type(NotificationType.SMS, True)
     assert len(sms_providers) == 1
-    assert all("sms" == prov.notification_type for prov in sms_providers)
+    assert all(NotificationType.SMS == prov.notification_type for prov in sms_providers)
     assert all(prov.supports_international for prov in sms_providers)
 
 
 def test_can_get_sms_providers_in_order_of_priority(notify_db_session):
-    providers = get_provider_details_by_notification_type("sms", False)
+    providers = get_provider_details_by_notification_type(NotificationType.SMS, False)
     priorities = [provider.priority for provider in providers]
     assert priorities == sorted(priorities)
 
 
 def test_can_get_email_providers_in_order_of_priority(notify_db_session):
-    providers = get_provider_details_by_notification_type("email")
+    providers = get_provider_details_by_notification_type(NotificationType.EMAIL)
 
     assert providers[0].identifier == "ses"
 
 
 def test_can_get_email_providers(notify_db_session):
-    assert len(get_provider_details_by_notification_type("email")) == 1
+    assert len(get_provider_details_by_notification_type(NotificationType.EMAIL)) == 1
     types = [
         provider.notification_type
-        for provider in get_provider_details_by_notification_type("email")
+        for provider in get_provider_details_by_notification_type(NotificationType.EMAIL)
     ]
-    assert all("email" == notification_type for notification_type in types)
+    assert all(NotificationType.EMAIL == notification_type for notification_type in types)
 
 
 def test_should_not_error_if_any_provider_in_code_not_in_database(
@@ -222,8 +223,8 @@ def test_get_sms_providers_for_update_returns_nothing_if_recent_updates(
 def test_dao_get_provider_stats(notify_db_session):
     service_1 = create_service(service_name="1")
     service_2 = create_service(service_name="2")
-    sms_template_1 = create_template(service_1, "sms")
-    sms_template_2 = create_template(service_2, "sms")
+    sms_template_1 = create_template(service_1, TemplateType.SMS)
+    sms_template_2 = create_template(service_2, TemplateType.SMS)
 
     create_ft_billing("2017-06-05", sms_template_2, provider="sns", billable_unit=4)
     create_ft_billing("2018-06-03", sms_template_2, provider="sns", billable_unit=4)
@@ -241,7 +242,7 @@ def test_dao_get_provider_stats(notify_db_session):
     assert ses.current_month_billable_sms == 0
 
     assert sns.display_name == "AWS SNS"
-    assert sns.notification_type == "sms"
+    assert sns.notification_type == NotificationType.SMS
     assert sns.supports_international is True
     assert sns.active is True
     assert sns.current_month_billable_sms == 5
