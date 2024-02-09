@@ -532,9 +532,8 @@ def test_post_email_notification_returns_201(
         ("simulate-delivered@notifications.service.gov.uk", EMAIL_TYPE),
         ("simulate-delivered-2@notifications.service.gov.uk", EMAIL_TYPE),
         ("simulate-delivered-3@notifications.service.gov.uk", EMAIL_TYPE),
-        ("2028675000", "sms"),
-        ("2028675111", "sms"),
-        ("2028675222", "sms"),
+        ("+14254147167", "sms"),
+        ("+14254147755", "sms"),
     ],
 )
 def test_should_not_persist_or_send_notification_if_simulated_recipient(

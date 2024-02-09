@@ -100,6 +100,7 @@ def _update_notification_status(
         current_status=notification.status, status=status
     )
     notification.status = status
+    notification.sent_at = datetime.utcnow()
     if provider_response:
         notification.provider_response = provider_response
     if carrier:
@@ -318,13 +319,15 @@ def _filter_query(query, filter_dict=None):
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
     update_query = """
     update notifications set provider_response=:response, carrier=:carrier,
-    notification_status='delivered', "to"='1', normalised_to='1'
+    notification_status='delivered', sent_at=:sent_at, "to"='1', normalised_to='1'
     where id=:notification_id
     """
+
     input_params = {
         "notification_id": notification_id,
         "carrier": carrier,
         "response": provider_response,
+        "sent_at": datetime.utcnow(),
     }
 
     db.session.execute(update_query, input_params)

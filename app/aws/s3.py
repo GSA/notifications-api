@@ -118,7 +118,10 @@ def extract_phones(job):
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         if phone_index >= len(row):
             phones[job_row] = "Error: can't retrieve phone number"
-            current_app.logger.error("Corrupt csv file")
+            current_app.logger.error(
+                "Corrupt csv file, missing columns or possibly a byte order mark in the file"
+            )
+
         else:
             my_phone = row[phone_index]
             my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
