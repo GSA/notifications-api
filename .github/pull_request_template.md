@@ -5,6 +5,7 @@ have all of the relevant details needed for our work.
 At the minimum, please be sure to fill in all sections found below and also do
 the following:
 
+- Provide an appropriate and descriptive title for the pull request
 - Link the pull request to its corresponding issue (must be done after creating
   the pull request itself)
 - Assign yourself as the author
@@ -13,12 +14,16 @@ the following:
 - Select one or more reviewers from the team or mark the pull request as a draft
   depending on its current state
    - If the pull request is a draft, please be sure to add reviewers once it is
-     ready for review
+     ready for review and mark it ready for review
 
-For each section, please delete the instructions/sample (text that includes this
+For each section, please delete the instructions/sample text (that includes this
 text, though it is wrapped in an HTML comment just in case) and put in your own
 information.  Thank you!
 -->
+
+*A note to PR reviewers: it may be helpful to review our
+[code review documentation](https://github.com/GSA/notifications-api/blob/main/docs/all.md#code-reviews)
+to know what to keep in mind while reviewing pull requests.*
 
 ## Description
 
@@ -30,7 +35,7 @@ plain language.
 This should include:
 
 - Links to issues that this PR addresses
-- Screenshots of any visible changes
+- Screenshots or screen captures of any visible changes, especially for UI work
 - Dependency changes
 
 If there are any caveats, known issues, follow-up items, etc., make a quick note
@@ -64,7 +69,7 @@ Relevant details could include (and are not limited to) the following:
 - Handling of any sensitive information, such as PII
 - Handling of information within log statements or other application monitoring
   services/hooks
-- The inclusion of a new external dependency
+- The inclusion of a new external dependency or the removal of an existing one
 - ... (anything else relevant from a security compliance perspective)
 
 There are some cases where there are no security considerations to be had, e.g.,
