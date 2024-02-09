@@ -194,7 +194,7 @@ def test_should_not_create_save_task_for_empty_file(sample_job, mocker):
         service_id=str(sample_job.service.id), job_id=str(sample_job.id)
     )
     job = jobs_dao.dao_get_job_by_id(sample_job.id)
-    assert job.job_status == "finished"
+    assert job.job_status == JobStatus.FINISHED
     assert tasks.save_sms.apply_async.called is False
 
 
@@ -420,13 +420,13 @@ def test_should_send_template_to_correct_sms_task_and_persist(
         persisted_notification.template_version
         == sample_template_with_placeholders.version
     )
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert persisted_notification.created_at <= datetime.utcnow()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
     assert persisted_notification.personalisation == {"name": "Jo"}
-    assert persisted_notification.notification_type == "sms"
+    assert persisted_notification.notification_type == NotificationType.SMS
     mocked_deliver_sms.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks"
     )
@@ -456,13 +456,13 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert persisted_notification.created_at <= datetime.utcnow()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
     assert not persisted_notification.personalisation
-    assert persisted_notification.notification_type == "sms"
+    assert persisted_notification.notification_type == NotificationType.SMS
     provider_tasks.deliver_sms.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks"
     )
@@ -475,7 +475,7 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(
     create_reply_to_email(
         service=service, email_address="reply_to@digital.fake.gov", is_default=True
     )
-    template = create_template(service=service, template_type="email", subject="Hello")
+    template = create_template(service=service, template_type=TemplateType.EMAIL, subject="Hello",)
 
     notification = _notification_json(template, to="test@example.com")
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
@@ -536,7 +536,7 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 ):
     user = create_user()
     service = create_service(user=user, restricted=True)
-    template = create_template(service=service, template_type="email", subject="Hello")
+    template = create_template(service=service, template_type=TemplateType.EMAIL, subject="Hello",)
     notification = _notification_json(template, to="test@example.com")
 
     notification_id = uuid.uuid4()
@@ -551,7 +551,7 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
     notification = _notification_json(
-        sample_job.template, to="+447234123123", job_id=sample_job.id, row_number=2
+        sample_job.template, to="+447234123123", job_id=sample_job.id, row_number=2,
     )
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
@@ -566,14 +566,14 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
     assert persisted_notification.to == "1"
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.template_id == sample_job.template.id
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert not persisted_notification.sent_at
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_by
     assert persisted_notification.job_row_number == 2
     assert persisted_notification.api_key_id is None
     assert persisted_notification.key_type == KeyType.NORMAL
-    assert persisted_notification.notification_type == "sms"
+    assert persisted_notification.notification_type == NotificationType.SMS
 
     provider_tasks.deliver_sms.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks"
@@ -638,13 +638,13 @@ def test_should_use_email_template_and_persist(
     )
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_at
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert not persisted_notification.sent_by
     assert persisted_notification.job_row_number == 1
     assert persisted_notification.personalisation == {"name": "Jo"}
     assert persisted_notification.api_key_id is None
     assert persisted_notification.key_type == KeyType.NORMAL
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
 
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-email-tasks"
@@ -680,9 +680,9 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_at
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert not persisted_notification.sent_by
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-email-tasks"
     )
@@ -708,12 +708,12 @@ def test_should_use_email_template_subject_placeholders(
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
     )
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_by
     assert persisted_notification.personalisation == {"name": "Jo"}
     assert not persisted_notification.reference
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-email-tasks"
     )
@@ -726,11 +726,11 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
     service = sample_email_template.service
     notification_id = uuid.uuid4()
     service_email_reply_to_dao.add_reply_to_email_address_for_service(
-        service.id, "default@example.com", True
+        service.id, "default@example.com", True,
     )
     other_email_reply_to = (
         service_email_reply_to_dao.add_reply_to_email_address_for_service(
-            service.id, "other@example.com", False
+            service.id, "other@example.com", False,
         )
     )
 
@@ -741,7 +741,7 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
         sender_id=other_email_reply_to.id,
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "other@example.com"
 
 
@@ -754,7 +754,7 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
     service = sample_email_template.service
     notification_id = uuid.uuid4()
     service_email_reply_to_dao.add_reply_to_email_address_for_service(
-        service.id, "default@example.com", True
+        service.id, "default@example.com", True,
     )
 
     save_email(
@@ -764,7 +764,7 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
         sender_id=None,
     )
     persisted_notification = Notification.query.one()
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "default@example.com"
 
 
@@ -787,11 +787,11 @@ def test_should_use_email_template_and_persist_without_personalisation(
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_at
-    assert persisted_notification.status == "created"
+    assert persisted_notification.status == NotificationStatus.CREATED
     assert not persisted_notification.sent_by
     assert not persisted_notification.personalisation
     assert not persisted_notification.reference
-    assert persisted_notification.notification_type == "email"
+    assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-email-tasks"
     )
@@ -925,7 +925,7 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(
     service = create_service_with_defined_sms_sender(sms_sender_value="2028675309")
     template = create_template(service=service)
     new_sender = service_sms_sender_dao.dao_add_sms_sender_for_service(
-        service.id, "new-sender", False
+        service.id, "new-sender", False,
     )
 
     notification = _notification_json(template, to="202-867-5301")
@@ -952,7 +952,7 @@ def test_should_cancel_job_if_service_is_inactive(sample_service, sample_job, mo
     process_job(sample_job.id)
 
     job = jobs_dao.dao_get_job_by_id(sample_job.id)
-    assert job.job_status == "cancelled"
+    assert job.job_status == JobStatus.CANCELLED
     s3.get_job_from_s3.assert_not_called()
     tasks.process_row.assert_not_called()
 
@@ -1377,7 +1377,7 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
 
 
 @freeze_time("2020-03-25 14:30")
-@pytest.mark.parametrize("notification_type", ["sms", "email"])
+@pytest.mark.parametrize("notification_type", [NotificationType.SMS, NotificationType.EMAIL],)
 def test_save_api_email_or_sms(mocker, sample_service, notification_type):
     template = (
         create_template(sample_service)
@@ -1427,7 +1427,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
 
 
 @freeze_time("2020-03-25 14:30")
-@pytest.mark.parametrize("notification_type", ["sms", "email"])
+@pytest.mark.parametrize("notification_type", [NotificationType.SMS, NotificationType.EMAIL])
 def test_save_api_email_dont_retry_if_notification_already_exists(
     sample_service, mocker, notification_type
 ):
@@ -1492,13 +1492,13 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
             save_email,
             "app.celery.provider_tasks.deliver_email.apply_async",
             "test@example.com",
-            {"template_type": "email", "subject": "Hello"},
+            {"template_type": TemplateType.EMAIL, "subject": "Hello"},
         ),
         (
             save_sms,
             "app.celery.provider_tasks.deliver_sms.apply_async",
             "202-867-5309",
-            {"template_type": "sms"},
+            {"template_type": TemplateType.SMS},
         ),
     ),
 )
@@ -1549,8 +1549,8 @@ def test_save_tasks_use_cached_service_and_template(
 @pytest.mark.parametrize(
     "notification_type, task_function, expected_queue, recipient",
     (
-        ("sms", save_api_sms, QueueNames.SEND_SMS, "+447700900855"),
-        ("email", save_api_email, QueueNames.SEND_EMAIL, "jane.citizen@example.com"),
+        (NotificationType.SMS, save_api_sms, QueueNames.SEND_SMS, "+447700900855",),
+        (NotificationType.EMAIL, save_api_email, QueueNames.SEND_EMAIL, "jane.citizen@example.com",),
     ),
 )
 def test_save_api_tasks_use_cache(
