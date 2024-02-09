@@ -40,7 +40,7 @@ def format_admin_stats(statistics):
 
 def create_stats_dict():
     stats_dict = {}
-    for template in TemplateType:
+    for template in (TemplateType.SMS, TemplateType.EMAIL):
         stats_dict[template] = {}
 
         for status in ("total", "test-key"):

@@ -23,8 +23,8 @@ def test_get_service_data_retention(client, sample_service):
     assert response.status_code == 200
     json_response = json.loads(response.get_data(as_text=True))
     assert len(json_response) == 2
-    assert json_response[0] == email_data_retention.serialize()
-    assert json_response[1] == sms_data_retention.serialize()
+    assert json_response[0] == sms_data_retention.serialize()
+    assert json_response[1] == email_data_retention.serialize()
 
 
 def test_get_service_data_retention_returns_empty_list(client, sample_service):

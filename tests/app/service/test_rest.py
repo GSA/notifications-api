@@ -18,6 +18,7 @@ from app.enums import (
     KeyType,
     NotificationType,
     OrganizationType,
+    PermissionType,
     ServicePermissionType,
     TemplateType,
 )
@@ -922,9 +923,9 @@ def test_update_permissions_will_override_permission_flags(
     result = resp.json
 
     assert resp.status_code == 200
-    assert set(result["data"]["permissions"]) == [
+    assert set(result["data"]["permissions"]) == {
         ServicePermissionType.INTERNATIONAL_SMS
-    ]
+    }
 
 
 def test_update_service_permissions_will_add_service_permissions(
@@ -1210,9 +1211,8 @@ def test_default_permissions_are_added_for_user_service(
             service_permissions = json_resp["data"]["permissions"][
                 str(sample_service.id)
             ]
-            from app.dao.permissions_dao import default_service_permissions
 
-            assert sorted(ServicePermissionType.defaults()) == sorted(
+            assert sorted(i.value for i in PermissionType.defaults()) == sorted(
                 service_permissions
             )
 
