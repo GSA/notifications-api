@@ -809,6 +809,11 @@ mind:
   it looks big and red when it shows up, but this is completely fine and not to
   be taken as a personal mark against the author(s) of the pull request!
 
+Additionally, if you find yourself making a lot of comments and/or end up having
+several concerns about the overall approach, it will likely be helpful to
+schedule time to speak with the author(s) directly and talk through everything.
+This can save folks a lot of misunderstanding and back-and-forth!
+
 ### For the reviewee
 
 When receiving a code review, please remember that someone took the time to look
@@ -838,6 +843,11 @@ When going over a review, it may be helpful to keep these perspectives in mind:
 - If there are no issues with any suggested edits or requested changes, make
   the necessary adjustments and let the reviewer(s) know when the work is ready
   for review again.
+
+Additionally, if you find yourself responding to a lot of things and questioning
+the feedback received throughout much of the code review, it will likely be
+helpful to schedule time to speak with the reviewer(s) directly and talk through
+everything.  This can save folks a lot of misunderstanding and back-and-forth!
 
 
 Run Book
