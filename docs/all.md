@@ -38,7 +38,7 @@
   - [System Description](#system-description)
 - [Code Reviews](#code-reviews)
   - [For the reviewer](#for-the-reviewer)
-  - [For the reviewee](#for-the-reviewee)
+  - [For the author](#for-the-author)
 - [Run Book](#run-book)
   - [Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
   - [Restaging Apps](#-restaging-apps)
@@ -771,7 +771,7 @@ community.
 
 Given this basis of approaching code reviews, here are some general guidelines
 and suggestions for how to approach a code review from the perspectives of both
-the reviewer and the reviewee.
+the reviewer and the author.
 
 ### For the reviewer
 
@@ -814,7 +814,7 @@ several concerns about the overall approach, it will likely be helpful to
 schedule time to speak with the author(s) directly and talk through everything.
 This can save folks a lot of misunderstanding and back-and-forth!
 
-### For the reviewee
+### For the author
 
 When receiving a code review, please remember that someone took the time to look
 over all of your work with a critical eye to make sure our standards are being
