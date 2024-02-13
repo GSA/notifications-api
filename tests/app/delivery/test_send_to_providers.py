@@ -225,7 +225,8 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
     sample_notification, mocker
 ):
     mocker.patch(
-        "app.delivery.send_to_providers.send_sms_response", side_effect=HTTPError,
+        "app.delivery.send_to_providers.send_sms_response",
+        side_effect=HTTPError,
     )
 
     sample_notification.key_type = KeyType.TEST
@@ -238,7 +239,10 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
 def test_should_not_send_to_provider_when_status_is_not_created(
     sample_template, mocker
 ):
-    notification = create_notification(template=sample_template, status=NotificationStatus.SENDING,)
+    notification = create_notification(
+        template=sample_template,
+        status=NotificationStatus.SENDING,
+    )
     mocker.patch("app.aws_sns_client.send_sms")
     response_mock = mocker.patch("app.delivery.send_to_providers.send_sms_response")
 
@@ -307,7 +311,9 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
-    notification = create_notification(template=sample_email_template, status=NotificationStatus.SENDING)
+    notification = create_notification(
+        template=sample_email_template, status=NotificationStatus.SENDING
+    )
     mocker.patch("app.aws_ses_client.send_email")
     mocker.patch("app.delivery.send_to_providers.send_email_response")
 
@@ -332,7 +338,12 @@ def test_send_email_should_use_service_reply_to_email(
     send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="foo@bar.com",
+        ANY,
+        ANY,
+        ANY,
+        body=ANY,
+        html_body=ANY,
+        reply_to_address="foo@bar.com",
     )
 
 
@@ -391,7 +402,8 @@ def test_get_html_email_renderer_with_branding_details_and_render_govuk_banner_o
 def test_get_html_email_renderer_prepends_logo_path(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"],
+        "EmailBranding",
+        ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
@@ -415,7 +427,8 @@ def test_get_html_email_renderer_prepends_logo_path(notify_api):
 def test_get_html_email_renderer_handles_email_branding_without_logo(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"],
+        "EmailBranding",
+        ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
@@ -508,7 +521,10 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
     notification = create_notification(
-        template=sample_template, billable_units=0, status=NotificationStatus.CREATED, key_type=key_type,
+        template=sample_template,
+        billable_units=0,
+        status=NotificationStatus.CREATED,
+        key_type=key_type,
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -623,13 +639,19 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
 
     db_notification = create_notification(
-        template=sample_email_template, reply_to_text="test@test.com",
+        template=sample_email_template,
+        reply_to_text="test@test.com",
     )
 
     send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="test@test.com",
+        ANY,
+        ANY,
+        ANY,
+        body=ANY,
+        html_body=ANY,
+        reply_to_address="test@test.com",
     )
 
 

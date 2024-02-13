@@ -9,7 +9,13 @@ from freezegun import freeze_time
 
 import app.celery.tasks
 from app.dao.templates_dao import dao_update_template
-from app.enums import JobStatus, KeyType, NotificationStatus, NotificationType, TemplateType
+from app.enums import (
+    JobStatus,
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    TemplateType,
+)
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_ft_notification_status,
@@ -138,7 +144,9 @@ def test_create_unscheduled_job_with_sender_id_in_metadata(
     assert response.status_code == 201
 
     app.celery.tasks.process_job.apply_async.assert_called_once_with(
-        ([str(fake_uuid)]), {"sender_id": fake_uuid}, queue="job-tasks",
+        ([str(fake_uuid)]),
+        {"sender_id": fake_uuid},
+        queue="job-tasks",
     )
 
 
@@ -486,7 +494,11 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     ],
 )
 def test_get_all_notifications_for_job_filtered_by_status(
-    admin_request, sample_job, expected_notification_count, status_args, mocker,
+    admin_request,
+    sample_job,
+    expected_notification_count,
+    status_args,
+    mocker,
 ):
     mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
     mock_s3.return_value = "15555555555"
@@ -590,19 +602,42 @@ def test_get_job_by_id_should_return_summed_statistics(admin_request, sample_job
     create_notification(job=sample_job, status=NotificationStatus.TEMPORARY_FAILURE)
 
     resp_json = admin_request.get(
-        "job.get_job_by_service_and_job_id", service_id=service_id, job_id=job_id,
+        "job.get_job_by_service_and_job_id",
+        service_id=service_id,
+        job_id=job_id,
     )
 
     assert resp_json["data"]["id"] == job_id
-    assert {"status": NotificationStatus.CREATED, "count": 3,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.SENDING, "count": 1,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.FAILED, "count": 3,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.TECHNICAL_FAILURE, "count": 1,} in resp_json["data"][
-        "statistics"
-    ]
-    assert {"status": NotificationStatus.TEMPORARY_FAILURE, "count": 2,} in resp_json["data"][
-        "statistics"
-    ]
+    assert {
+        "status": NotificationStatus.CREATED,
+        "count": 3,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.SENDING,
+        "count": 1,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.FAILED,
+        "count": 3,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.TECHNICAL_FAILURE,
+        "count": 1,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.TEMPORARY_FAILURE,
+        "count": 2,
+    } in resp_json[
+        "data"
+    ]["statistics"]
     assert resp_json["data"]["created_by"]["name"] == "Test User"
 
 
@@ -641,15 +676,36 @@ def test_get_job_by_id_with_stats_for_old_job_where_notifications_have_been_purg
     )
 
     assert resp_json["data"]["id"] == str(old_job.id)
-    assert {"status": NotificationStatus.CREATED, "count": 3,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.SENDING, "count": 1,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.FAILED, "count": 3,} in resp_json["data"]["statistics"]
-    assert {"status": NotificationStatus.TECHNICAL_FAILURE, "count": 1,} in resp_json["data"][
-        "statistics"
-    ]
-    assert {"status": NotificationStatus.TEMPORARY_FAILURE, "count": 2,} in resp_json["data"][
-        "statistics"
-    ]
+    assert {
+        "status": NotificationStatus.CREATED,
+        "count": 3,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.SENDING,
+        "count": 1,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.FAILED,
+        "count": 3,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.TECHNICAL_FAILURE,
+        "count": 1,
+    } in resp_json[
+        "data"
+    ]["statistics"]
+    assert {
+        "status": NotificationStatus.TEMPORARY_FAILURE,
+        "count": 2,
+    } in resp_json[
+        "data"
+    ]["statistics"]
     assert resp_json["data"]["created_by"]["name"] == "Test User"
 
 
@@ -723,13 +779,24 @@ def test_get_jobs_should_return_statistics(admin_request, sample_template):
 
     assert len(resp_json["data"]) == 2
     assert resp_json["data"][0]["id"] == str(job_2.id)
-    assert {"status": NotificationStatus.SENDING, "count": 3,} in resp_json["data"][0]["statistics"]
+    assert {
+        "status": NotificationStatus.SENDING,
+        "count": 3,
+    } in resp_json["data"][
+        0
+    ]["statistics"]
     assert resp_json["data"][1]["id"] == str(job_1.id)
-    assert {"status": NotificationStatus.CREATED, "count": 3,} in resp_json["data"][1]["statistics"]
+    assert {
+        "status": NotificationStatus.CREATED,
+        "count": 3,
+    } in resp_json["data"][
+        1
+    ]["statistics"]
 
 
 def test_get_jobs_should_return_no_stats_if_no_rows_in_notifications(
-    admin_request, sample_template,
+    admin_request,
+    sample_template,
 ):
     now = datetime.utcnow()
     earlier = datetime.utcnow() - timedelta(days=1)
@@ -876,32 +943,49 @@ def test_get_jobs_should_retrieve_from_ft_notification_status_for_old_jobs(
 
     # some notifications created more than three days ago, some created after the midnight cutoff
     create_ft_notification_status(
-        date(2017, 6, 6), job=job_1, notification_status=NotificationStatus.DELIVERED, count=2,
+        date(2017, 6, 6),
+        job=job_1,
+        notification_status=NotificationStatus.DELIVERED,
+        count=2,
     )
     create_ft_notification_status(
-        date(2017, 6, 7), job=job_1, notification_status=NotificationStatus.DELIVERED, count=4,
+        date(2017, 6, 7),
+        job=job_1,
+        notification_status=NotificationStatus.DELIVERED,
+        count=4,
     )
     # job2's new enough
     create_notification(
-        job=job_2, status=NotificationStatus.CREATED, created_at=not_quite_three_days_ago,
+        job=job_2,
+        status=NotificationStatus.CREATED,
+        created_at=not_quite_three_days_ago,
     )
 
     # this isn't picked up because the job is too new
     create_ft_notification_status(
-        date(2017, 6, 7), job=job_2, notification_status=NotificationStatus.DELIVERED, count=8,
+        date(2017, 6, 7),
+        job=job_2,
+        notification_status=NotificationStatus.DELIVERED,
+        count=8,
     )
     # this isn't picked up - while the job is old, it started in last 3 days so we look at notification table instead
     create_ft_notification_status(
-        date(2017, 6, 7), job=job_3, notification_status=NotificationStatus.DELIVERED, count=16,
+        date(2017, 6, 7),
+        job=job_3,
+        notification_status=NotificationStatus.DELIVERED,
+        count=16,
     )
 
     # this isn't picked up because we're using the ft status table for job_1 as it's old
     create_notification(
-        job=job_1, status=NotificationStatus.CREATED, created_at=not_quite_three_days_ago,
+        job=job_1,
+        status=NotificationStatus.CREATED,
+        created_at=not_quite_three_days_ago,
     )
 
     resp_json = admin_request.get(
-        "job.get_jobs_by_service", service_id=sample_template.service_id,
+        "job.get_jobs_by_service",
+        service_id=sample_template.service_id,
     )
 
     assert resp_json["data"][0]["id"] == str(job_3.id)
@@ -935,26 +1019,38 @@ def test_get_scheduled_job_stats(admin_request):
 
     # Shouldn’t be counted – wrong status
     create_job(
-        service_1_template, job_status=JobStatus.FINISHED, scheduled_for="2017-07-17 07:00",
+        service_1_template,
+        job_status=JobStatus.FINISHED,
+        scheduled_for="2017-07-17 07:00",
     )
     create_job(
-        service_1_template, job_status=JobStatus.IN_PROGRESS, scheduled_for="2017-07-17 08:00",
+        service_1_template,
+        job_status=JobStatus.IN_PROGRESS,
+        scheduled_for="2017-07-17 08:00",
     )
 
     # Should be counted – service 1
     create_job(
-        service_1_template, job_status=JobStatus.SCHEDULED, scheduled_for="2017-07-17 09:00",
+        service_1_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for="2017-07-17 09:00",
     )
     create_job(
-        service_1_template, job_status=JobStatus.SCHEDULED, scheduled_for="2017-07-17 10:00",
+        service_1_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for="2017-07-17 10:00",
     )
     create_job(
-        service_1_template, job_status=JobStatus.SCHEDULED, scheduled_for="2017-07-17 11:00",
+        service_1_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for="2017-07-17 11:00",
     )
 
     # Should be counted – service 2
     create_job(
-        service_2_template, job_status=JobStatus.SCHEDULED, scheduled_for="2017-07-17 11:00",
+        service_2_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for="2017-07-17 11:00",
     )
 
     assert admin_request.get(
