@@ -7,7 +7,7 @@ from app.dao.notifications_dao import (
     insert_notification_history_delete_notifications,
     move_notifications_to_notification_history,
 )
-from app.enums import KeyType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import Notification, NotificationHistory
 from tests.app.db import (
     create_notification,
@@ -23,23 +23,26 @@ def test_move_notifications_does_nothing_if_notification_history_row_already_exi
     notification = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=8),
-        status="temporary-failure",
+        status=NotificationStatus.TEMPORARY_FAILURE,
     )
     create_notification_history(
         id=notification.id,
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=8),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     move_notifications_to_notification_history(
-        "email", sample_email_template.service_id, datetime.utcnow(), 1
+        NotificationType.EMAIL,
+        sample_email_template.service_id,
+        datetime.utcnow(),
+        1,
     )
 
     assert Notification.query.count() == 0
     history = NotificationHistory.query.all()
     assert len(history) == 1
-    assert history[0].status == "delivered"
+    assert history[0].status == NotificationStatus.DELIVERED
 
 
 def test_move_notifications_only_moves_notifications_older_than_provided_timestamp(
@@ -59,7 +62,9 @@ def test_move_notifications_only_moves_notifications_older_than_provided_timesta
     old_notification_id = old_notification.id
 
     result = move_notifications_to_notification_history(
-        "sms", sample_template.service_id, delete_time
+        NotificationType.SMS,
+        sample_template.service_id,
+        delete_time,
     )
     assert result == 1
 
@@ -78,12 +83,15 @@ def test_move_notifications_keeps_calling_until_no_more_to_delete_and_then_retur
     timestamp = datetime(2021, 1, 1)
 
     result = move_notifications_to_notification_history(
-        "sms", service_id, timestamp, qry_limit=5
+        NotificationType.SMS,
+        service_id,
+        timestamp,
+        qry_limit=5,
     )
     assert result == 11
 
     mock_insert.asset_called_with(
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service_id=service_id,
         timestamp_to_delete_backwards_from=timestamp,
         qry_limit=5,
@@ -95,17 +103,19 @@ def test_move_notifications_only_moves_for_given_notification_type(sample_servic
     delete_time = datetime(2020, 6, 1, 12)
     one_second_before = delete_time - timedelta(seconds=1)
 
-    sms_template = create_template(sample_service, "sms")
-    email_template = create_template(sample_service, "email")
+    sms_template = create_template(sample_service, TemplateType.SMS)
+    email_template = create_template(sample_service, TemplateType.EMAIL)
     create_notification(sms_template, created_at=one_second_before)
     create_notification(email_template, created_at=one_second_before)
 
     result = move_notifications_to_notification_history(
-        "sms", sample_service.id, delete_time
+        NotificationType.SMS,
+        sample_service.id,
+        delete_time,
     )
     assert result == 1
-    assert {x.notification_type for x in Notification.query} == {"email"}
-    assert NotificationHistory.query.one().notification_type == "sms"
+    assert {x.notification_type for x in Notification.query} == {NotificationType.EMAIL}
+    assert NotificationHistory.query.one().notification_type == NotificationType.SMS
 
 
 def test_move_notifications_only_moves_for_given_service(notify_db_session):
@@ -115,13 +125,17 @@ def test_move_notifications_only_moves_for_given_service(notify_db_session):
     service = create_service(service_name="service")
     other_service = create_service(service_name="other")
 
-    template = create_template(service, "sms")
-    other_template = create_template(other_service, "sms")
+    template = create_template(service, TemplateType.SMS)
+    other_template = create_template(other_service, TemplateType.SMS)
 
     create_notification(template, created_at=one_second_before)
     create_notification(other_template, created_at=one_second_before)
 
-    result = move_notifications_to_notification_history("sms", service.id, delete_time)
+    result = move_notifications_to_notification_history(
+        NotificationType.SMS,
+        service.id,
+        delete_time,
+    )
     assert result == 1
 
     assert NotificationHistory.query.one().service_id == service.id
@@ -132,17 +146,25 @@ def test_move_notifications_just_deletes_test_key_notifications(sample_template)
     delete_time = datetime(2020, 6, 1, 12)
     one_second_before = delete_time - timedelta(seconds=1)
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KeyType.NORMAL
+        template=sample_template,
+        created_at=one_second_before,
+        key_type=KeyType.NORMAL,
     )
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KeyType.TEAM
+        template=sample_template,
+        created_at=one_second_before,
+        key_type=KeyType.TEAM,
     )
     create_notification(
-        template=sample_template, created_at=one_second_before, key_type=KeyType.TEST
+        template=sample_template,
+        created_at=one_second_before,
+        key_type=KeyType.TEST,
     )
 
     result = move_notifications_to_notification_history(
-        "sms", sample_template.service_id, delete_time
+        NotificationType.SMS,
+        sample_template.service_id,
+        delete_time,
     )
 
     assert result == 2
@@ -163,58 +185,58 @@ def test_insert_notification_history_delete_notifications(sample_email_template)
     n1 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=4),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     n2 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=20),
-        status="permanent-failure",
+        status=NotificationStatus.PERMANENT_FAILURE,
     )
     n3 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=30),
-        status="temporary-failure",
+        status=NotificationStatus.TEMPORARY_FAILURE,
     )
     n4 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=59),
-        status="temporary-failure",
+        status=NotificationStatus.TEMPORARY_FAILURE,
     )
     n5 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, hours=1),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     n6 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=61),
-        status="pending",
+        status=NotificationStatus.PENDING,
     )
     n7 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, hours=1, seconds=1),
-        status="validation-failed",
+        status=NotificationStatus.VALIDATION_FAILED,
     )
     n8 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(days=1, minutes=20),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
     # should NOT be deleted - wrong status
     n9 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(hours=1),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     n10 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(hours=1),
-        status="technical-failure",
+        status=NotificationStatus.TECHNICAL_FAILURE,
     )
     n11 = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() - timedelta(hours=23, minutes=59),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
 
     ids_to_move = sorted([n1.id, n2.id, n3.id, n4.id, n5.id, n6.id, n7.id, n8.id])
@@ -239,17 +261,17 @@ def test_insert_notification_history_delete_notifications_more_notifications_tha
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow() + timedelta(minutes=4),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow() + timedelta(minutes=20),
-        status="permanent-failure",
+        status=NotificationStatus.PERMANENT_FAILURE,
     )
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow() + timedelta(minutes=30),
-        status="temporary-failure",
+        status=NotificationStatus.TEMPORARY_FAILURE,
     )
 
     del_count = insert_notification_history_delete_notifications(
@@ -272,14 +294,16 @@ def test_insert_notification_history_delete_notifications_only_insert_delete_for
     notification_to_move = create_notification(
         template=sample_email_template,
         created_at=datetime.utcnow() + timedelta(minutes=4),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     another_service = create_service(service_name="Another service")
-    another_template = create_template(service=another_service, template_type="email")
+    another_template = create_template(
+        service=another_service, template_type=TemplateType.EMAIL
+    )
     notification_to_stay = create_notification(
         template=another_template,
         created_at=datetime.utcnow() + timedelta(minutes=4),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     del_count = insert_notification_history_delete_notifications(
@@ -303,20 +327,20 @@ def test_insert_notification_history_delete_notifications_insert_for_key_type(
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow() - timedelta(hours=4),
-        status="delivered",
-        key_type="normal",
+        status=NotificationStatus.DELIVERED,
+        key_type=KeyType.NORMAL,
     )
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow() - timedelta(hours=4),
-        status="delivered",
-        key_type="team",
+        status=NotificationStatus.DELIVERED,
+        key_type=KeyType.TEAM,
     )
     with_test_key = create_notification(
         template=sample_template,
         created_at=datetime.utcnow() - timedelta(hours=4),
-        status="delivered",
-        key_type="test",
+        status=NotificationStatus.DELIVERED,
+        key_type=KeyType.TEST,
     )
 
     del_count = insert_notification_history_delete_notifications(

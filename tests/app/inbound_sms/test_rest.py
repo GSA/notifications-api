@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pytest
 from freezegun import freeze_time
 
+from app.enums import NotificationType
 from tests.app.db import (
     create_inbound_sms,
     create_service,
@@ -131,7 +132,7 @@ def test_post_to_get_most_recent_inbound_sms_for_service_limits_to_a_week(
 def test_post_to_get_inbound_sms_for_service_respects_data_retention(
     admin_request, sample_service, days_of_retention, too_old_date, returned_date
 ):
-    create_service_data_retention(sample_service, "sms", days_of_retention)
+    create_service_data_retention(sample_service, NotificationType.SMS, days_of_retention,)
     create_inbound_sms(sample_service, created_at=too_old_date)
     returned_inbound = create_inbound_sms(sample_service, created_at=returned_date)
 

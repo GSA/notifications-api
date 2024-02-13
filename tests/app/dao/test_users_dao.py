@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
+from types import CodeType
 
 import pytest
 from freezegun import freeze_time
@@ -137,7 +138,7 @@ def test_should_not_delete_verification_codes_less_than_one_day_old(sample_user)
 
 def make_verify_code(user, age=None, expiry_age=None, code="12335", code_used=False):
     verify_code = VerifyCode(
-        code_type="sms",
+        code_type=CodeType.SMS,
         _code=code,
         created_at=datetime.utcnow() - (age or timedelta(hours=0)),
         expiry_datetime=datetime.utcnow() - (expiry_age or timedelta(0)),

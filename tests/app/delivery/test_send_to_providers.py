@@ -14,7 +14,7 @@ from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
 from app.delivery.send_to_providers import get_html_email_options, get_logo_url
-from app.enums import BrandType, KeyType
+from app.enums import BrandType, KeyType, NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import EmailBranding, Notification
 from app.serialised_models import SerialisedService
@@ -78,7 +78,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     db_notification = create_notification(
         template=sample_sms_template_with_html,
         personalisation={"name": "Jo"},
-        status="created",
+        status=NotificationStatus.CREATED,
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
     )
 
@@ -99,7 +99,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
 
-    assert notification.status == "sending"
+    assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= datetime.utcnow()
     assert notification.sent_by == "sns"
     assert notification.billable_units == 1
@@ -137,7 +137,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     )
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
-    assert notification.status == "sending"
+    assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= datetime.utcnow()
     assert notification.sent_by == "ses"
     assert notification.personalisation == {"name": "Jo"}
@@ -175,7 +175,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     db_notification = create_notification(
         template=sample_template,
         to_field="2028675309",
-        status="created",
+        status=NotificationStatus.CREATED,
         reply_to_text=sample_template.service.get_default_sms_sender(),
         normalised_to="2028675309",
     )
@@ -217,7 +217,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     assert persisted_notification.template_id == expected_template_id
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.template_version != t.version
-    assert persisted_notification.status == "sending"
+    assert persisted_notification.status == NotificationStatus.SENDING
     assert not persisted_notification.personalisation
 
 
@@ -225,20 +225,20 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
     sample_notification, mocker
 ):
     mocker.patch(
-        "app.delivery.send_to_providers.send_sms_response", side_effect=HTTPError
+        "app.delivery.send_to_providers.send_sms_response", side_effect=HTTPError,
     )
 
     sample_notification.key_type = KeyType.TEST
     with pytest.raises(HTTPError):
         send_to_providers.send_sms_to_provider(sample_notification)
-    assert sample_notification.status == "sending"
+    assert sample_notification.status == NotificationStatus.SENDING
     assert sample_notification.sent_by == "sns"
 
 
 def test_should_not_send_to_provider_when_status_is_not_created(
     sample_template, mocker
 ):
-    notification = create_notification(template=sample_template, status="sending")
+    notification = create_notification(template=sample_template, status=NotificationStatus.SENDING,)
     mocker.patch("app.aws_sns_client.send_sms")
     response_mock = mocker.patch("app.delivery.send_to_providers.send_sms_response")
 
@@ -307,7 +307,7 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
-    notification = create_notification(template=sample_email_template, status="sending")
+    notification = create_notification(template=sample_email_template, status=NotificationStatus.SENDING)
     mocker.patch("app.aws_ses_client.send_email")
     mocker.patch("app.delivery.send_to_providers.send_email_response")
 
@@ -329,12 +329,10 @@ def test_send_email_should_use_service_reply_to_email(
     )
     create_reply_to_email(service=sample_service, email_address="foo@bar.com")
 
-    send_to_providers.send_email_to_provider(
-        db_notification,
-    )
+    send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="foo@bar.com"
+        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="foo@bar.com",
     )
 
 
@@ -393,7 +391,7 @@ def test_get_html_email_renderer_with_branding_details_and_render_govuk_banner_o
 def test_get_html_email_renderer_prepends_logo_path(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"]
+        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
@@ -417,7 +415,7 @@ def test_get_html_email_renderer_prepends_logo_path(notify_api):
 def test_get_html_email_renderer_handles_email_branding_without_logo(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"]
+        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
@@ -473,9 +471,9 @@ def test_get_logo_url_works_for_different_environments(base_url, expected_url):
 @pytest.mark.parametrize(
     "starting_status, expected_status",
     [
-        ("delivered", "delivered"),
-        ("created", "sending"),
-        ("technical-failure", "technical-failure"),
+        (NotificationStatus.DELIVERED, NotificationStatus.DELIVERED),
+        (NotificationStatus.CREATED, NotificationStatus.SENDING),
+        (NotificationStatus.TECHNICAL_FAILURE, NotificationStatus.TECHNICAL_FAILURE),
     ],
 )
 def test_update_notification_to_sending_does_not_update_status_from_a_final_status(
@@ -498,19 +496,19 @@ def __update_notification(notification_to_update, research_mode, expected_status
 @pytest.mark.parametrize(
     "research_mode,key_type, billable_units, expected_status",
     [
-        (True, KeyType.NORMAL, 0, "delivered"),
-        (False, KeyType.NORMAL, 1, "sending"),
-        (False, KeyType.TEST, 0, "sending"),
-        (True, KeyType.TEST, 0, "sending"),
-        (True, KeyType.TEAM, 0, "delivered"),
-        (False, KeyType.TEAM, 1, "sending"),
+        (True, KeyType.NORMAL, 0, NotificationStatus.DELIVERED),
+        (False, KeyType.NORMAL, 1, NotificationStatus.SENDING),
+        (False, KeyType.TEST, 0, NotificationStatus.SENDING),
+        (True, KeyType.TEST, 0, NotificationStatus.SENDING),
+        (True, KeyType.TEAM, 0, NotificationStatus.DELIVERED),
+        (False, KeyType.TEAM, 1, NotificationStatus.SENDING),
     ],
 )
 def test_should_update_billable_units_and_status_according_to_research_mode_and_key_type(
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
     notification = create_notification(
-        template=sample_template, billable_units=0, status="created", key_type=key_type
+        template=sample_template, billable_units=0, status=NotificationStatus.CREATED, key_type=key_type,
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -557,7 +555,7 @@ def test_should_send_sms_to_international_providers(
         template=sample_template,
         to_field="+6011-17224412",
         personalisation={"name": "Jo"},
-        status="created",
+        status=NotificationStatus.CREATED,
         international=True,
         reply_to_text=sample_template.service.get_default_sms_sender(),
         normalised_to="601117224412",
@@ -576,7 +574,7 @@ def test_should_send_sms_to_international_providers(
         international=True,
     )
 
-    assert notification_international.status == "sending"
+    assert notification_international.status == NotificationStatus.SENDING
     assert notification_international.sent_by == "sns"
 
 
@@ -625,15 +623,13 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
 
     db_notification = create_notification(
-        template=sample_email_template, reply_to_text="test@test.com"
+        template=sample_email_template, reply_to_text="test@test.com",
     )
 
-    send_to_providers.send_email_to_provider(
-        db_notification,
-    )
+    send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="test@test.com"
+        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="test@test.com",
     )
 
 

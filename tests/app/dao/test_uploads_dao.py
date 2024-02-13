@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
-from app.enums import JobStatus, TemplateType
+from app.enums import JobStatus, NotificationStatus, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -13,7 +13,12 @@ from tests.app.db import (
 )
 
 
-def create_uploaded_letter(letter_template, service, status="created", created_at=None):
+def create_uploaded_letter(
+    letter_template,
+    service,
+    status=NotificationStatus.CREATED,
+    created_at=None,
+):
     return create_notification(
         template=letter_template,
         to_field="file-name",
@@ -39,7 +44,9 @@ def create_uploaded_template(service):
 
 @freeze_time("2020-02-02 09:00")  # GMT time
 def test_get_uploads_for_service(sample_template):
-    create_service_data_retention(sample_template.service, "sms", days_of_retention=9)
+    create_service_data_retention(
+        sample_template.service, NotificationType.SMS, days_of_retention=9
+    )
     job = create_job(sample_template, processing_started=datetime.utcnow())
 
     other_service = create_service(service_name="other service")
@@ -55,7 +62,7 @@ def test_get_uploads_for_service(sample_template):
         job.id,
         job.original_file_name,
         job.notification_count,
-        "sms",
+        TemplateType.SMS,
         9,
         job.created_at,
         job.scheduled_for,
