@@ -206,10 +206,10 @@ def test_get_inbound_sms_by_id_with_invalid_service_id_returns_404(
 
 
 @pytest.mark.parametrize(
-    "page_given, expected_rows, has_next_link", [(True, 10, False), (False, 50, True)]
+    "page_given, expected_rows, has_next_link", [(True, 10, False), (False, 50, True)],
 )
 def test_get_most_recent_inbound_sms_for_service(
-    admin_request, page_given, sample_service, expected_rows, has_next_link
+    admin_request, page_given, sample_service, expected_rows, has_next_link,
 ):
     for i in range(60):
         create_inbound_sms(
@@ -229,13 +229,13 @@ def test_get_most_recent_inbound_sms_for_service(
 
 @freeze_time("Monday 10th April 2017 12:00")
 def test_get_most_recent_inbound_sms_for_service_respects_data_retention(
-    admin_request, sample_service
+    admin_request, sample_service,
 ):
-    create_service_data_retention(sample_service, "sms", 5)
+    create_service_data_retention(sample_service, NotificationType.SMS, 5)
     for i in range(10):
         created = datetime.utcnow() - timedelta(days=i)
         create_inbound_sms(
-            sample_service, user_number="44770090000{}".format(i), created_at=created
+            sample_service, user_number="44770090000{}".format(i), created_at=created,
         )
 
     response = admin_request.get(
@@ -258,7 +258,7 @@ def test_get_most_recent_inbound_sms_for_service_respects_data_retention(
 def test_get_most_recent_inbound_sms_for_service_respects_data_retention_if_older_than_a_week(
     admin_request, sample_service
 ):
-    create_service_data_retention(sample_service, "sms", 14)
+    create_service_data_retention(sample_service, NotificationType.SMS, 14)
     create_inbound_sms(sample_service, created_at=datetime(2017, 4, 1, 12, 0))
 
     response = admin_request.get(
@@ -274,7 +274,7 @@ def test_get_most_recent_inbound_sms_for_service_respects_data_retention_if_olde
 def test_get_inbound_sms_for_service_respects_data_retention(
     admin_request, sample_service
 ):
-    create_service_data_retention(sample_service, "sms", 5)
+    create_service_data_retention(sample_service, NotificationType.SMS, 5)
     for i in range(10):
         created = datetime.utcnow() - timedelta(days=i)
         create_inbound_sms(
