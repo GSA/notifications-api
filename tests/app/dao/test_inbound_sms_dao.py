@@ -66,10 +66,12 @@ def test_get_all_inbound_sms_filters_on_service(notify_db_session):
 
 def test_get_all_inbound_sms_filters_on_time(sample_service, notify_db_session):
     create_inbound_sms(
-        sample_service, created_at=datetime(2017, 8, 6, 23, 59),
+        sample_service,
+        created_at=datetime(2017, 8, 6, 23, 59),
     )  # sunday evening
     sms_two = create_inbound_sms(
-        sample_service, created_at=datetime(2017, 8, 7, 0, 0),
+        sample_service,
+        created_at=datetime(2017, 8, 7, 0, 0),
     )  # monday (7th) morning
 
     with freeze_time("2017-08-14 12:00"):
@@ -111,13 +113,19 @@ def test_should_delete_inbound_sms_according_to_data_retention(notify_db_session
     services = [short_retention_service, no_retention_service, long_retention_service]
 
     create_service_data_retention(
-        long_retention_service, notification_type=NotificationType.SMS, days_of_retention=30,
+        long_retention_service,
+        notification_type=NotificationType.SMS,
+        days_of_retention=30,
     )
     create_service_data_retention(
-        short_retention_service, notification_type=NotificationType.SMS, days_of_retention=3,
+        short_retention_service,
+        notification_type=NotificationType.SMS,
+        days_of_retention=3,
     )
     create_service_data_retention(
-        short_retention_service, notification_type=NotificationType.EMAIL, days_of_retention=4,
+        short_retention_service,
+        notification_type=NotificationType.EMAIL,
+        days_of_retention=4,
     )
 
     dates = [

@@ -475,7 +475,11 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(
     create_reply_to_email(
         service=service, email_address="reply_to@digital.fake.gov", is_default=True
     )
-    template = create_template(service=service, template_type=TemplateType.EMAIL, subject="Hello",)
+    template = create_template(
+        service=service,
+        template_type=TemplateType.EMAIL,
+        subject="Hello",
+    )
 
     notification = _notification_json(template, to="test@example.com")
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
@@ -536,7 +540,11 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 ):
     user = create_user()
     service = create_service(user=user, restricted=True)
-    template = create_template(service=service, template_type=TemplateType.EMAIL, subject="Hello",)
+    template = create_template(
+        service=service,
+        template_type=TemplateType.EMAIL,
+        subject="Hello",
+    )
     notification = _notification_json(template, to="test@example.com")
 
     notification_id = uuid.uuid4()
@@ -551,7 +559,10 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
     notification = _notification_json(
-        sample_job.template, to="+447234123123", job_id=sample_job.id, row_number=2,
+        sample_job.template,
+        to="+447234123123",
+        job_id=sample_job.id,
+        row_number=2,
     )
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
@@ -726,11 +737,15 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
     service = sample_email_template.service
     notification_id = uuid.uuid4()
     service_email_reply_to_dao.add_reply_to_email_address_for_service(
-        service.id, "default@example.com", True,
+        service.id,
+        "default@example.com",
+        True,
     )
     other_email_reply_to = (
         service_email_reply_to_dao.add_reply_to_email_address_for_service(
-            service.id, "other@example.com", False,
+            service.id,
+            "other@example.com",
+            False,
         )
     )
 
@@ -754,7 +769,9 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
     service = sample_email_template.service
     notification_id = uuid.uuid4()
     service_email_reply_to_dao.add_reply_to_email_address_for_service(
-        service.id, "default@example.com", True,
+        service.id,
+        "default@example.com",
+        True,
     )
 
     save_email(
@@ -925,7 +942,9 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(
     service = create_service_with_defined_sms_sender(sms_sender_value="2028675309")
     template = create_template(service=service)
     new_sender = service_sms_sender_dao.dao_add_sms_sender_for_service(
-        service.id, "new-sender", False,
+        service.id,
+        "new-sender",
+        False,
     )
 
     notification = _notification_json(template, to="202-867-5301")
@@ -1377,7 +1396,10 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
 
 
 @freeze_time("2020-03-25 14:30")
-@pytest.mark.parametrize("notification_type", [NotificationType.SMS, NotificationType.EMAIL],)
+@pytest.mark.parametrize(
+    "notification_type",
+    [NotificationType.SMS, NotificationType.EMAIL],
+)
 def test_save_api_email_or_sms(mocker, sample_service, notification_type):
     template = (
         create_template(sample_service)
@@ -1427,7 +1449,9 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
 
 
 @freeze_time("2020-03-25 14:30")
-@pytest.mark.parametrize("notification_type", [NotificationType.SMS, NotificationType.EMAIL])
+@pytest.mark.parametrize(
+    "notification_type", [NotificationType.SMS, NotificationType.EMAIL]
+)
 def test_save_api_email_dont_retry_if_notification_already_exists(
     sample_service, mocker, notification_type
 ):
@@ -1549,8 +1573,18 @@ def test_save_tasks_use_cached_service_and_template(
 @pytest.mark.parametrize(
     "notification_type, task_function, expected_queue, recipient",
     (
-        (NotificationType.SMS, save_api_sms, QueueNames.SEND_SMS, "+447700900855",),
-        (NotificationType.EMAIL, save_api_email, QueueNames.SEND_EMAIL, "jane.citizen@example.com",),
+        (
+            NotificationType.SMS,
+            save_api_sms,
+            QueueNames.SEND_SMS,
+            "+447700900855",
+        ),
+        (
+            NotificationType.EMAIL,
+            save_api_email,
+            QueueNames.SEND_EMAIL,
+            "jane.citizen@example.com",
+        ),
     ),
 )
 def test_save_api_tasks_use_cache(

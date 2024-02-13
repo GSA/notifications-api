@@ -101,7 +101,9 @@ def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
 
     one_minute_in_the_past = datetime.utcnow() - timedelta(minutes=1)
     job = create_job(
-        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=one_minute_in_the_past
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=one_minute_in_the_past,
     )
 
     run_scheduled_jobs()
@@ -118,10 +120,14 @@ def test_should_update_all_scheduled_jobs_and_put_on_queue(sample_template, mock
     ten_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=10)
     twenty_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=20)
     job_1 = create_job(
-        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=one_minute_in_the_past,
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=one_minute_in_the_past,
     )
     job_2 = create_job(
-        sample_template, job_status=JobStatus.SCHEDULED, scheduled_for=ten_minutes_in_the_past,
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=ten_minutes_in_the_past,
     )
     job_3 = create_job(
         sample_template,
@@ -299,8 +305,12 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
         "app.celery.provider_tasks.deliver_sms.apply_async"
     )
 
-    sms_template = create_template(service=sample_service, template_type=TemplateType.SMS)
-    email_template = create_template(service=sample_service, template_type=TemplateType.EMAIL)
+    sms_template = create_template(
+        service=sample_service, template_type=TemplateType.SMS
+    )
+    email_template = create_template(
+        service=sample_service, template_type=TemplateType.EMAIL
+    )
     older_than = (60 * 60) + (60 * 15)  # 1 hour 15 minutes
     # notifications expected to be resent
     old_sms = create_notification(
@@ -325,10 +335,14 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
         status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        template=sms_template, created_at=datetime.utcnow(), status=NotificationStatus.CREATED,
+        template=sms_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.CREATED,
     )
     create_notification(
-        template=email_template, created_at=datetime.utcnow(), status=NotificationStatus.CREATED,
+        template=email_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.CREATED,
     )
 
     replay_created_notifications()

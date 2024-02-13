@@ -415,25 +415,38 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     first_service = create_service(service_name="First Service")
     first_template = create_template(service=first_service)
     second_service = create_service(service_name="second Service")
-    second_template = create_template(service=second_service, template_type=TemplateType.EMAIL,)
+    second_template = create_template(
+        service=second_service,
+        template_type=TemplateType.EMAIL,
+    )
 
     process_day = datetime.utcnow().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
-        create_notification(template=first_template, status=NotificationStatus.DELIVERED,)
+        create_notification(
+            template=first_template,
+            status=NotificationStatus.DELIVERED,
+        )
         create_notification(template=second_template, status=NotificationStatus.FAILED)
 
         # team API key notifications are included
         create_notification(
-            template=second_template, status=NotificationStatus.SENDING, key_type=KeyType.TEAM,
+            template=second_template,
+            status=NotificationStatus.SENDING,
+            key_type=KeyType.TEAM,
         )
 
         # test notifications are ignored
         create_notification(
-            template=second_template, status=NotificationStatus.SENDING, key_type=KeyType.TEST,
+            template=second_template,
+            status=NotificationStatus.SENDING,
+            key_type=KeyType.TEST,
         )
 
         # historical notifications are included
-        create_notification_history(template=second_template, status=NotificationStatus.DELIVERED,)
+        create_notification_history(
+            template=second_template,
+            status=NotificationStatus.DELIVERED,
+        )
 
     # these created notifications from a different day get ignored
     with freeze_time(
@@ -445,10 +458,14 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
     assert len(FactNotificationStatus.query.all()) == 0
 
     create_nightly_notification_status_for_service_and_day(
-        str(process_day), first_service.id, NotificationType.SMS,
+        str(process_day),
+        first_service.id,
+        NotificationType.SMS,
     )
     create_nightly_notification_status_for_service_and_day(
-        str(process_day), second_service.id, NotificationType.EMAIL,
+        str(process_day),
+        second_service.id,
+        NotificationType.EMAIL,
     )
 
     new_fact_data = FactNotificationStatus.query.order_by(
@@ -501,9 +518,13 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
     process_day = datetime.utcnow().date()
 
     # first run: one notification, expect one row (just one status)
-    notification = create_notification(template=first_template, status=NotificationStatus.SENDING)
+    notification = create_notification(
+        template=first_template, status=NotificationStatus.SENDING
+    )
     create_nightly_notification_status_for_service_and_day(
-        str(process_day), first_service.id, NotificationType.SMS,
+        str(process_day),
+        first_service.id,
+        NotificationType.SMS,
     )
 
     new_fact_data = FactNotificationStatus.query.all()
@@ -516,7 +537,9 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
     notification.status = NotificationStatus.DELIVERED
     create_notification(template=first_template, status=NotificationStatus.CREATED)
     create_nightly_notification_status_for_service_and_day(
-        str(process_day), first_service.id, NotificationType.SMS,
+        str(process_day),
+        first_service.id,
+        NotificationType.SMS,
     )
 
     updated_fact_data = FactNotificationStatus.query.order_by(
@@ -536,22 +559,32 @@ def test_create_nightly_notification_status_for_service_and_day_respects_bst(
     sample_template,
 ):
     create_notification(
-        sample_template, status=NotificationStatus.DELIVERED, created_at=datetime(2019, 4, 2, 5, 0),
+        sample_template,
+        status=NotificationStatus.DELIVERED,
+        created_at=datetime(2019, 4, 2, 5, 0),
     )  # too new
 
     create_notification(
-        sample_template, status=NotificationStatus.CREATED, created_at=datetime(2019, 4, 2, 5, 59),
+        sample_template,
+        status=NotificationStatus.CREATED,
+        created_at=datetime(2019, 4, 2, 5, 59),
     )
     create_notification(
-        sample_template, status=NotificationStatus.CREATED, created_at=datetime(2019, 4, 1, 4, 0),
+        sample_template,
+        status=NotificationStatus.CREATED,
+        created_at=datetime(2019, 4, 1, 4, 0),
     )
 
     create_notification(
-        sample_template, status=NotificationStatus.DELIVERED, created_at=datetime(2019, 3, 21, 17, 59),
+        sample_template,
+        status=NotificationStatus.DELIVERED,
+        created_at=datetime(2019, 3, 21, 17, 59),
     )  # too old
 
     create_nightly_notification_status_for_service_and_day(
-        "2019-04-01", sample_template.service_id, NotificationType.SMS,
+        "2019-04-01",
+        sample_template.service_id,
+        NotificationType.SMS,
     )
 
     noti_status = FactNotificationStatus.query.order_by(

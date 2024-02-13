@@ -1,7 +1,7 @@
 import json
-from types import CodeType
 import uuid
 from datetime import datetime, timedelta
+from types import CodeType
 
 import pytest
 import pytz

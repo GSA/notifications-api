@@ -278,8 +278,12 @@ def test_delete_notifications_task_calls_task_for_services_with_data_retention_o
     letter_service = create_service(service_name="c")
 
     create_service_data_retention(sms_service, notification_type=NotificationType.SMS)
-    create_service_data_retention(email_service, notification_type=NotificationType.EMAIL)
-    create_service_data_retention(letter_service, notification_type=NotificationType.LETTER)
+    create_service_data_retention(
+        email_service, notification_type=NotificationType.EMAIL
+    )
+    create_service_data_retention(
+        letter_service, notification_type=NotificationType.LETTER
+    )
 
     mock_subtask = mocker.patch(
         "app.celery.nightly_tasks.delete_notifications_for_service_and_type"

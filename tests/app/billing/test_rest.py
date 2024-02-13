@@ -174,7 +174,9 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     email_rows = [row for row in json_response if row["notification_type"] == "email"]
     assert len(email_rows) == 0
 
-    sms_row = next(x for x in json_response if x["notification_type"] == NotificationType.SMS)
+    sms_row = next(
+        x for x in json_response if x["notification_type"] == NotificationType.SMS
+    )
 
     assert sms_row["month"] == "January"
     assert sms_row["notification_type"] == NotificationType.SMS

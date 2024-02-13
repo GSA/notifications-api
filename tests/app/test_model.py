@@ -150,7 +150,11 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
     [
         (TemplateType.EMAIL, "failed", "Failed"),
         (TemplateType.EMAIL, "technical-failure", "Technical failure"),
-        (TemplateType.EMAIL, "temporary-failure", "Inbox not accepting messages right now",),
+        (
+            TemplateType.EMAIL,
+            "temporary-failure",
+            "Inbox not accepting messages right now",
+        ),
         (TemplateType.EMAIL, "permanent-failure", "Email address doesn’t exist"),
         (
             TemplateType.SMS,

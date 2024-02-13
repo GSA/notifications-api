@@ -46,7 +46,9 @@ def test_can_get_sms_non_international_providers(notify_db_session):
 
 
 def test_can_get_sms_international_providers(notify_db_session):
-    sms_providers = get_provider_details_by_notification_type(NotificationType.SMS, True)
+    sms_providers = get_provider_details_by_notification_type(
+        NotificationType.SMS, True
+    )
     assert len(sms_providers) == 1
     assert all(NotificationType.SMS == prov.notification_type for prov in sms_providers)
     assert all(prov.supports_international for prov in sms_providers)
@@ -68,9 +70,13 @@ def test_can_get_email_providers(notify_db_session):
     assert len(get_provider_details_by_notification_type(NotificationType.EMAIL)) == 1
     types = [
         provider.notification_type
-        for provider in get_provider_details_by_notification_type(NotificationType.EMAIL)
+        for provider in get_provider_details_by_notification_type(
+            NotificationType.EMAIL
+        )
     ]
-    assert all(NotificationType.EMAIL == notification_type for notification_type in types)
+    assert all(
+        NotificationType.EMAIL == notification_type for notification_type in types
+    )
 
 
 def test_should_not_error_if_any_provider_in_code_not_in_database(
