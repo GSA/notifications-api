@@ -97,7 +97,7 @@ class User(db.Model):
         onupdate=datetime.datetime.utcnow,
     )
     _password = db.Column(db.String, index=False, unique=False, nullable=False)
-    mobile_number = db.Column(db.String, index=False, unique=False, nullable=True)
+    mobile_number = db.Column(db.String, index=False, unique=True, nullable=True)
     password_changed_at = db.Column(
         db.DateTime,
         index=False,
