@@ -11,7 +11,7 @@ from notifications_utils.recipients import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.enums import ServicePermissionType, TemplateType
+from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
 from app.models import Notification, NotificationHistory
 from app.notifications.process_notifications import (
     create_content_for_notification,
@@ -79,7 +79,7 @@ def test_persist_notification_creates_and_save_to_db(
         recipient="+447111111111",
         service=sample_template.service,
         personalisation={},
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
@@ -123,7 +123,7 @@ def test_persist_notification_throws_exception_when_missing_template(sample_api_
             recipient="+447111111111",
             service=sample_api_key.service,
             personalisation=None,
-            notification_type="sms",
+            notification_type=NotificationType.SMS,
             api_key_id=sample_api_key.id,
             key_type=sample_api_key.key_type,
         )
@@ -143,7 +143,7 @@ def test_persist_notification_with_optionals(sample_job, sample_api_key):
         recipient="+12028675309",
         service=sample_job.service,
         personalisation=None,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         created_at=created_at,
@@ -181,7 +181,7 @@ def test_persist_notification_cache_is_not_incremented_on_failure_to_create_noti
             recipient="+447111111111",
             service=sample_api_key.service,
             personalisation=None,
-            notification_type="sms",
+            notification_type=NotificationType.SMS,
             api_key_id=sample_api_key.id,
             key_type=sample_api_key.key_type,
         )
@@ -191,20 +191,38 @@ def test_persist_notification_cache_is_not_incremented_on_failure_to_create_noti
 @pytest.mark.parametrize(
     ("requested_queue, notification_type, key_type, expected_queue, expected_task"),
     [
-        (None, "sms", "normal", "send-sms-tasks", "provider_tasks.deliver_sms"),
-        (None, "email", "normal", "send-email-tasks", "provider_tasks.deliver_email"),
-        (None, "sms", "team", "send-sms-tasks", "provider_tasks.deliver_sms"),
+        (
+            None,
+            NotificationType.SMS,
+            KeyType.NORMAL,
+            "send-sms-tasks",
+            "provider_tasks.deliver_sms",
+        ),
+        (
+            None,
+            NotificationType.EMAIL,
+            KeyType.NORMAL,
+            "send-email-tasks",
+            "provider_tasks.deliver_email",
+        ),
+        (
+            None,
+            NotificationType.SMS,
+            KeyType.TEAM,
+            "send-sms-tasks",
+            "provider_tasks.deliver_sms",
+        ),
         (
             "notify-internal-tasks",
-            "sms",
-            "normal",
+            NotificationType.SMS,
+            KeyType.NORMAL,
             "notify-internal-tasks",
             "provider_tasks.deliver_sms",
         ),
         (
             "notify-internal-tasks",
-            "email",
-            "normal",
+            NotificationType.EMAIL,
+            KeyType.NORMAL,
             "notify-internal-tasks",
             "provider_tasks.deliver_email",
         ),
@@ -245,7 +263,8 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     with pytest.raises(Boto3Error):
         send_notification_to_queue(sample_notification, False)
     mocked.assert_called_once_with(
-        [(str(sample_notification.id))], queue="send-sms-tasks"
+        [(str(sample_notification.id))],
+        queue="send-sms-tasks",
     )
 
     assert Notification.query.count() == 0
@@ -255,13 +274,13 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
 @pytest.mark.parametrize(
     "to_address, notification_type, expected",
     [
-        ("+14254147755", "sms", True),
-        ("+14254147167", "sms", True),
-        ("simulate-delivered@notifications.service.gov.uk", "email", True),
-        ("simulate-delivered-2@notifications.service.gov.uk", "email", True),
-        ("simulate-delivered-3@notifications.service.gov.uk", "email", True),
-        ("2028675309", "sms", False),
-        ("valid_email@test.com", "email", False),
+        ("+14254147755", NotificationType.SMS, True),
+        ("+14254147167", NotificationType.SMS, True),
+        ("simulate-delivered@notifications.service.gov.uk", NotificationType.EMAIL, True),
+        ("simulate-delivered-2@notifications.service.gov.uk", NotificationType.EMAIL, True),
+        ("simulate-delivered-3@notifications.service.gov.uk", NotificationType.EMAIL, True),
+        ("2028675309", NotificationType.SMS, False),
+        ("valid_email@test.com", NotificationType.EMAIL, False),
     ],
 )
 def test_simulated_recipient(notify_api, to_address, notification_type, expected):
@@ -277,7 +296,7 @@ def test_simulated_recipient(notify_api, to_address, notification_type, expected
     """
     formatted_address = None
 
-    if notification_type == "email":
+    if notification_type == NotificationType.EMAIL:
         formatted_address = validate_and_format_email_address(to_address)
     else:
         formatted_address = validate_and_format_phone_number(to_address)
@@ -311,7 +330,7 @@ def test_persist_notification_with_international_info_stores_correct_info(
         recipient=recipient,
         service=sample_job.service,
         personalisation=None,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
@@ -334,7 +353,7 @@ def test_persist_notification_with_international_info_does_not_store_for_email(
         recipient="foo@bar.com",
         service=sample_job.service,
         personalisation=None,
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
@@ -368,7 +387,7 @@ def test_persist_sms_notification_stores_normalised_number(
         recipient=recipient,
         service=sample_job.service,
         personalisation=None,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
@@ -392,7 +411,7 @@ def test_persist_email_notification_stores_normalised_email(
         recipient=recipient,
         service=sample_job.service,
         personalisation=None,
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         api_key_id=sample_api_key.id,
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
@@ -415,7 +434,7 @@ def test_persist_notification_with_billable_units_stores_correct_info(mocker):
         personalisation=None,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type="normal",
+        key_type=KeyType.NORMAL,
         billable_units=3,
     )
     persisted_notification = Notification.query.all()[0]

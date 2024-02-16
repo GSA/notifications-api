@@ -8,19 +8,19 @@ from notifications_python_client.authentication import create_jwt_token
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.templates_dao import dao_update_template
-from app.enums import KeyType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import ApiKey
 from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
-@pytest.mark.parametrize("type", ("email", "sms"))
+@pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))
 def test_get_notification_by_id(
     client, sample_notification, sample_email_notification, type
 ):
-    if type == "email":
+    if type == NotificationType.EMAIL:
         notification_to_get = sample_email_notification
-    if type == "sms":
+    elif type == NotificationType.SMS:
         notification_to_get = sample_notification
 
     auth_header = create_service_authorization_header(
@@ -46,13 +46,13 @@ def test_get_notification_by_id(
 
 
 @pytest.mark.parametrize("id", ["1234-badly-formatted-id-7890", "0"])
-@pytest.mark.parametrize("type", ("email", "sms"))
+@pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))
 def test_get_notification_by_invalid_id(
     client, sample_notification, sample_email_notification, id, type
 ):
-    if type == "email":
+    if type == NotificationType.EMAIL:
         notification_to_get = sample_email_notification
-    if type == "sms":
+    elif type == NotificationType.SMS:
         notification_to_get = sample_notification
     auth_header = create_service_authorization_header(
         service_id=notification_to_get.service_id
@@ -420,7 +420,10 @@ def test_filter_by_template_type(client, sample_template, sample_email_template)
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 1
-    assert notifications["notifications"][0]["template"]["template_type"] == "sms"
+    assert (
+        notifications["notifications"][0]["template"]["template_type"]
+        == TemplateType.SMS
+    )
     assert response.status_code == 200
 
 
@@ -441,13 +444,13 @@ def test_filter_by_multiple_template_types(
     assert response.status_code == 200
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 2
-    assert {"sms", "email"} == set(
+    assert {TemplateType.SMS, TemplateType.EMAIL} == {
         x["template"]["template_type"] for x in notifications["notifications"]
-    )
+    }
 
 
 def test_filter_by_status(client, sample_email_template):
-    create_notification(sample_email_template, status="delivered")
+    create_notification(sample_email_template, status=NotificationStatus.DELIVERED)
     create_notification(sample_email_template)
 
     auth_header = create_service_authorization_header(
@@ -458,13 +461,13 @@ def test_filter_by_status(client, sample_email_template):
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 1
-    assert notifications["notifications"][0]["status"] == "delivered"
+    assert notifications["notifications"][0]["status"] == NotificationStatus.DELIVERED
     assert response.status_code == 200
 
 
 def test_filter_by_multiple_statuses(client, sample_email_template):
-    create_notification(sample_email_template, status="delivered")
-    create_notification(sample_email_template, status="sending")
+    create_notification(sample_email_template, status=NotificationStatus.DELIVERED)
+    create_notification(sample_email_template, status=NotificationStatus.SENDING)
 
     auth_header = create_service_authorization_header(
         service_id=sample_email_template.service_id
@@ -477,9 +480,9 @@ def test_filter_by_multiple_statuses(client, sample_email_template):
     assert response.status_code == 200
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 2
-    assert {"delivered", "sending"} == set(
+    assert {NotificationStatus.DELIVERED, NotificationStatus.SENDING} == {
         x["status"] for x in notifications["notifications"]
-    )
+    }
 
 
 def test_filter_by_status_and_template_type(
@@ -487,7 +490,7 @@ def test_filter_by_status_and_template_type(
 ):
     create_notification(sample_template)
     create_notification(sample_email_template)
-    create_notification(sample_email_template, status="delivered")
+    create_notification(sample_email_template, status=NotificationStatus.DELIVERED)
 
     auth_header = create_service_authorization_header(
         service_id=sample_email_template.service_id
@@ -500,8 +503,11 @@ def test_filter_by_status_and_template_type(
     notifications = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
     assert len(notifications["notifications"]) == 1
-    assert notifications["notifications"][0]["template"]["template_type"] == "email"
-    assert notifications["notifications"][0]["status"] == "delivered"
+    assert (
+        notifications["notifications"][0]["template"]["template_type"]
+        == TemplateType.EMAIL
+    )
+    assert notifications["notifications"][0]["status"] == NotificationStatus.DELIVERED
 
 
 def test_get_notification_by_id_returns_merged_template_content(

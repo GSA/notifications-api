@@ -16,6 +16,7 @@ from app.dao.templates_dao import dao_redact_template
 from app.dao.users_dao import save_model_user
 from app.enums import (
     KeyType,
+    NotificationStatus,
     NotificationType,
     OrganizationType,
     PermissionType,
@@ -136,9 +137,10 @@ def test_find_services_by_name_finds_services(notify_db_session, admin_request, 
         "app.service.rest.get_services_by_partial_name",
         return_value=[service_1, service_2],
     )
-    response = admin_request.get("service.find_services_by_name", service_name="ABC")[
-        "data"
-    ]
+    response = admin_request.get(
+        "service.find_services_by_name",
+        service_name="ABC",
+    )["data"]
     mock_get_services_by_partial_name.assert_called_once_with("ABC")
     assert len(response) == 2
 
@@ -172,11 +174,13 @@ def test_get_live_services_data(sample_user, admin_request):
 
     service = create_service(go_live_user=sample_user, go_live_at=datetime(2018, 1, 1))
     service_2 = create_service(
-        service_name="second", go_live_at=datetime(2019, 1, 1), go_live_user=sample_user
+        service_name="second",
+        go_live_at=datetime(2019, 1, 1),
+        go_live_user=sample_user,
     )
 
     sms_template = create_template(service=service)
-    email_template = create_template(service=service, template_type="email")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
     dao_add_service_to_organization(service=service, organization_id=org.id)
     create_ft_billing(local_date="2019-04-20", template=sms_template)
     create_ft_billing(local_date="2019-04-20", template=email_template)
@@ -269,7 +273,9 @@ def test_get_service_by_id_returns_organization_type(
     admin_request, sample_service, detailed
 ):
     json_resp = admin_request.get(
-        "service.get_service_by_id", service_id=sample_service.id, detailed=detailed
+        "service.get_service_by_id",
+        service_id=sample_service.id,
+        detailed=detailed,
     )
     assert json_resp["data"]["organization_type"] is None
 
@@ -297,7 +303,8 @@ def test_get_service_by_id_has_default_service_permissions(
     admin_request, sample_service
 ):
     json_resp = admin_request.get(
-        "service.get_service_by_id", service_id=sample_service.id
+        "service.get_service_by_id",
+        service_id=sample_service.id,
     )
 
     assert set(json_resp["data"]["permissions"]) == {
@@ -309,7 +316,9 @@ def test_get_service_by_id_has_default_service_permissions(
 
 def test_get_service_by_id_should_404_if_no_service(admin_request, notify_db_session):
     json_resp = admin_request.get(
-        "service.get_service_by_id", service_id=uuid.uuid4(), _expected_status=404
+        "service.get_service_by_id",
+        service_id=uuid.uuid4(),
+        _expected_status=404,
     )
 
     assert json_resp["result"] == "error"
@@ -381,7 +390,9 @@ def test_create_service(
     }
 
     json_resp = admin_request.post(
-        "service.create_service", _data=data, _expected_status=201
+        "service.create_service",
+        _data=data,
+        _expected_status=201,
     )
 
     assert json_resp["data"]["id"]
@@ -452,7 +463,9 @@ def test_create_service_with_domain_sets_organization(
     }
 
     json_resp = admin_request.post(
-        "service.create_service", _data=data, _expected_status=201
+        "service.create_service",
+        _data=data,
+        _expected_status=201,
     )
 
     if expected_org:
@@ -679,7 +692,9 @@ def test_create_service_should_throw_duplicate_key_constraint_for_existing_email
 
 def test_update_service(client, notify_db_session, sample_service):
     brand = EmailBranding(
-        colour="#000000", logo="justice-league.png", name="Justice League"
+        colour="#000000",
+        logo="justice-league.png",
+        name="Justice League",
     )
     notify_db_session.add(brand)
     notify_db_session.commit()
@@ -731,7 +746,9 @@ def test_update_service_remove_email_branding(
     admin_request, notify_db_session, sample_service
 ):
     brand = EmailBranding(
-        colour="#000000", logo="justice-league.png", name="Justice League"
+        colour="#000000",
+        logo="justice-league.png",
+        name="Justice League",
     )
     sample_service.email_branding = brand
     notify_db_session.commit()
@@ -748,7 +765,9 @@ def test_update_service_change_email_branding(
     admin_request, notify_db_session, sample_service
 ):
     brand1 = EmailBranding(
-        colour="#000000", logo="justice-league.png", name="Justice League"
+        colour="#000000",
+        logo="justice-league.png",
+        name="Justice League",
     )
     brand2 = EmailBranding(colour="#111111", logo="avengers.png", name="Avengers")
     notify_db_session.add_all([brand1, brand2])
@@ -1251,13 +1270,13 @@ def test_add_existing_user_to_another_service_with_all_permissions(
 
             data = {
                 "permissions": [
-                    {"permission": "send_emails"},
-                    {"permission": "send_texts"},
-                    {"permission": "manage_users"},
-                    {"permission": "manage_settings"},
-                    {"permission": "manage_api_keys"},
-                    {"permission": "manage_templates"},
-                    {"permission": "view_activity"},
+                    {"permission": PermissionType.SEND_EMAILS},
+                    {"permission": PermissionType.SEND_TEXTS},
+                    {"permission": PermissionType.MANAGE_USERS},
+                    {"permission": PermissionType.MANAGE_SETTINGS},
+                    {"permission": PermissionType.MANAGE_API_KEYS},
+                    {"permission": PermissionType.MANAGE_TEMPLATES},
+                    {"permission": PermissionType.VIEW_ACTIVITY},
                 ],
                 "folder_permissions": [],
             }
@@ -1320,8 +1339,8 @@ def test_add_existing_user_to_another_service_with_send_permissions(
 
             data = {
                 "permissions": [
-                    {"permission": "send_emails"},
-                    {"permission": "send_texts"},
+                    {"permission": PermissionType.SEND_EMAILS},
+                    {"permission": PermissionType.SEND_TEXTS},
                 ],
                 "folder_permissions": [],
             }
@@ -1367,9 +1386,9 @@ def test_add_existing_user_to_another_service_with_manage_permissions(
 
             data = {
                 "permissions": [
-                    {"permission": "manage_users"},
-                    {"permission": "manage_settings"},
-                    {"permission": "manage_templates"},
+                    {"permission": PermissionType.MANAGE_USERS},
+                    {"permission": PermissionType.MANAGE_SETTINGS},
+                    {"permission": PermissionType.MANAGE_TEMPLATES},
                 ]
             }
 
@@ -1395,9 +1414,9 @@ def test_add_existing_user_to_another_service_with_manage_permissions(
 
             permissions = json_resp["data"]["permissions"][str(sample_service.id)]
             expected_permissions = [
-                "manage_users",
-                "manage_settings",
-                "manage_templates",
+                PermissionType.MANAGE_USERS,
+                PermissionType.MANAGE_SETTINGS,
+                PermissionType.MANAGE_TEMPLATES,
             ]
             assert sorted(expected_permissions) == sorted(permissions)
 
@@ -1420,7 +1439,7 @@ def test_add_existing_user_to_another_service_with_folder_permissions(
             folder_2 = create_template_folder(sample_service)
 
             data = {
-                "permissions": [{"permission": "manage_api_keys"}],
+                "permissions": [{"permission": PermissionType.MANAGE_API_KEYS}],
                 "folder_permissions": [str(folder_1.id), str(folder_2.id)],
             }
 
@@ -1457,7 +1476,7 @@ def test_add_existing_user_to_another_service_with_manage_api_keys(
             )
             save_model_user(user_to_add, validated_email_access=True)
 
-            data = {"permissions": [{"permission": "manage_api_keys"}]}
+            data = {"permissions": [{"permission": PermissionType.MANAGE_API_KEYS}]}
 
             auth_header = create_admin_authorization_header()
 
@@ -1748,7 +1767,7 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     auth_header = create_admin_authorization_header()
     data = {
         "page": 1,
-        "template_type": ["sms"],
+        "template_type": [TemplateType.SMS],
         "status": ["created", "sending"],
         "to": "0855",
     }
@@ -2059,7 +2078,9 @@ def test_set_sms_prefixing_for_service_cant_be_none(
 def test_get_detailed_service(
     sample_template, client, sample_service, today_only, stats
 ):
-    create_ft_notification_status(date(2000, 1, 1), "sms", sample_service, count=1)
+    create_ft_notification_status(
+        date(2000, 1, 1), NotificationType.SMS, sample_service, count=1
+    )
     with freeze_time("2000-01-02T12:00:00"):
         create_notification(template=sample_template, status="created")
         resp = client.get(
@@ -2259,21 +2280,23 @@ def test_get_detailed_services_for_date_range(
     create_ft_notification_status(
         local_date=(datetime.utcnow() - timedelta(days=3)).date(),
         service=sample_template.service,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
     )
     create_ft_notification_status(
         local_date=(datetime.utcnow() - timedelta(days=2)).date(),
         service=sample_template.service,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
     )
     create_ft_notification_status(
         local_date=(datetime.utcnow() - timedelta(days=1)).date(),
         service=sample_template.service,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
     )
 
     create_notification(
-        template=sample_template, created_at=datetime.utcnow(), status="delivered"
+        template=sample_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.DELIVERED,
     )
 
     start_date = (datetime.utcnow() - timedelta(days=start_date_delta)).date()
@@ -2337,9 +2360,8 @@ def test_search_for_notification_by_to_field_return_empty_list_if_there_is_no_ma
     create_notification(sample_email_template, to_field="jack@gmail.com")
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            notification1.service_id, "+447700900800", "sms"
-        ),
+        f"/service/{notification1.service_id}/notifications?"
+        f"to={+447700900800}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2368,9 +2390,8 @@ def test_search_for_notification_by_to_field_return_multiple_matches(
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            notification1.service_id, "+447700900855", "sms"
-        ),
+        f"/service/{notification1.service_id}/notifications?"
+        f"to={+447700900855}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2397,9 +2418,8 @@ def test_search_for_notification_by_to_field_returns_next_link_if_more_than_50(
         )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            sample_template.service_id, "+447700900855", "sms"
-        ),
+        f"/service/{sample_template.service_id}/notifications?"
+        f"to={+447700900855}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     assert response.status_code == 200
@@ -2422,9 +2442,8 @@ def test_search_for_notification_by_to_field_returns_no_next_link_if_50_or_less(
         )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            sample_template.service_id, "+447700900855", "sms"
-        ),
+        f"/service/{sample_template.service_id}/notifications?"
+        f"to={+447700900855}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     assert response.status_code == 200
@@ -2447,7 +2466,7 @@ def test_update_service_calls_send_notification_as_service_becomes_live(
 
     auth_header = create_admin_authorization_header()
     resp = client.post(
-        "service/{}".format(restricted_service.id),
+        f"service/{restricted_service.id}",
         data=json.dumps(data),
         headers=[auth_header],
         content_type="application/json",
@@ -2494,7 +2513,7 @@ def test_update_service_does_not_call_send_notification_when_restricted_not_chan
 
     auth_header = create_admin_authorization_header()
     resp = client.post(
-        "service/{}".format(sample_service.id),
+        f"service/{sample_service.id}",
         data=json.dumps(data),
         headers=[auth_header],
         content_type="application/json",
@@ -2522,9 +2541,8 @@ def test_search_for_notification_by_to_field_filters_by_status(client, sample_te
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&status={}&template_type={}".format(
-            notification1.service_id, "+447700900855", "delivered", "sms"
-        ),
+        f"/service/{notification1.service_id}/notifications?to={+447700900855}"
+        f"&status={NotificationStatus.DELIVERED}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2555,9 +2573,9 @@ def test_search_for_notification_by_to_field_filters_by_statuses(
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&status={}&status={}&template_type={}".format(
-            notification1.service_id, "+447700900855", "delivered", "sending", "sms"
-        ),
+        f"/service/{notification1.service_id}/notifications?to={+447700900855}"
+        f"&status={NotificationStatus.DELIVERED}&status={NotificationStatus.SENDING}"
+        f"&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2583,9 +2601,8 @@ def test_search_for_notification_by_to_field_returns_content(
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            sample_template_with_placeholders.service_id, "+447700900855", "sms"
-        ),
+        f"/service/{sample_template_with_placeholders.service_id}/notifications?"
+        f"to={+447700900855}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2689,9 +2706,8 @@ def test_search_for_notification_by_to_field_returns_personlisation(
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            sample_template_with_placeholders.service_id, "+447700900855", "sms"
-        ),
+        f"/service/{sample_template_with_placeholders.service_id}/notifications?"
+        f"to={+447700900855}&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2709,7 +2725,9 @@ def test_search_for_notification_by_to_field_returns_notifications_by_type(
     client, sample_template, sample_email_template
 ):
     sms_notification = create_notification(
-        sample_template, to_field="+447700900855", normalised_to="447700900855"
+        sample_template,
+        to_field="+447700900855",
+        normalised_to="447700900855",
     )
     create_notification(
         sample_email_template,
@@ -2718,9 +2736,8 @@ def test_search_for_notification_by_to_field_returns_notifications_by_type(
     )
 
     response = client.get(
-        "/service/{}/notifications?to={}&template_type={}".format(
-            sms_notification.service_id, "0770", "sms"
-        ),
+        f"/service/{sms_notification.service_id}/notifications?to={'0770'}"
+        f"&template_type={TemplateType.SMS}",
         headers=[create_admin_authorization_header()],
     )
     notifications = json.loads(response.get_data(as_text=True))["notifications"]
@@ -2734,7 +2751,7 @@ def test_get_email_reply_to_addresses_when_there_are_no_reply_to_email_addresses
     client, sample_service
 ):
     response = client.get(
-        "/service/{}/email-reply-to".format(sample_service.id),
+        f"/service/{sample_service.id}/email-reply-to",
         headers=[create_admin_authorization_header()],
     )
 
@@ -2747,7 +2764,7 @@ def test_get_email_reply_to_addresses_with_one_email_address(client, notify_db_s
     create_reply_to_email(service, "test@mail.com")
 
     response = client.get(
-        "/service/{}/email-reply-to".format(service.id),
+        f"/service/{service.id}/email-reply-to",
         headers=[create_admin_authorization_header()],
     )
     json_response = json.loads(response.get_data(as_text=True))
@@ -2768,7 +2785,7 @@ def test_get_email_reply_to_addresses_with_multiple_email_addresses(
     reply_to_b = create_reply_to_email(service, "test_b@mail.com", False)
 
     response = client.get(
-        "/service/{}/email-reply-to".format(service.id),
+        f"/service/{service.id}/email-reply-to",
         headers=[create_admin_authorization_header()],
     )
     json_response = json.loads(response.get_data(as_text=True))
@@ -3065,7 +3082,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_updates_the_only_ex
         "inbound_number_id": str(inbound_number.id),
     }
     response = client.post(
-        "/service/{}/sms-sender".format(service.id),
+        f"/service/{service.id}/sms-sender",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3096,7 +3113,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_inserts_new_sms_sen
         "inbound_number_id": str(inbound_number.id),
     }
     response = client.post(
-        "/service/{}/sms-sender".format(service.id),
+        f"/service/{service.id}/sms-sender",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3122,7 +3139,7 @@ def test_add_service_sms_sender_switches_default(client, notify_db_session):
         "is_default": True,
     }
     response = client.post(
-        "/service/{}/sms-sender".format(service.id),
+        f"/service/{service.id}/sms-sender",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3141,7 +3158,7 @@ def test_add_service_sms_sender_switches_default(client, notify_db_session):
 def test_add_service_sms_sender_return_404_when_service_does_not_exist(client):
     data = {"sms_sender": "12345", "is_default": False}
     response = client.post(
-        "/service/{}/sms-sender".format(uuid.uuid4()),
+        f"/service/{uuid.uuid4()}/sms-sender",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3164,7 +3181,7 @@ def test_update_service_sms_sender(client, notify_db_session):
         "is_default": False,
     }
     response = client.post(
-        "/service/{}/sms-sender/{}".format(service.id, service_sms_sender.id),
+        f"/service/{service.id}/sms-sender/{service_sms_sender.id}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3188,7 +3205,7 @@ def test_update_service_sms_sender_switches_default(client, notify_db_session):
         "is_default": True,
     }
     response = client.post(
-        "/service/{}/sms-sender/{}".format(service.id, service_sms_sender.id),
+        f"/service/{service.id}/sms-sender/{service_sms_sender.id}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3221,7 +3238,7 @@ def test_update_service_sms_sender_does_not_allow_sender_update_for_inbound_numb
         "inbound_number_id": str(inbound_number.id),
     }
     response = client.post(
-        "/service/{}/sms-sender/{}".format(service.id, service_sms_sender.id),
+        f"/service/{service.id}/sms-sender/{service_sms_sender.id}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3234,7 +3251,7 @@ def test_update_service_sms_sender_does_not_allow_sender_update_for_inbound_numb
 def test_update_service_sms_sender_return_404_when_service_does_not_exist(client):
     data = {"sms_sender": "12345", "is_default": False}
     response = client.post(
-        "/service/{}/sms-sender/{}".format(uuid.uuid4(), uuid.uuid4()),
+        f"/service/{uuid.uuid4()}/sms-sender/{uuid.uuid4()}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -3288,9 +3305,7 @@ def test_get_service_sms_sender_by_id(client, notify_db_session):
         service=create_service(), sms_sender="1235", is_default=False
     )
     response = client.get(
-        "/service/{}/sms-sender/{}".format(
-            service_sms_sender.service_id, service_sms_sender.id
-        ),
+        f"/service/{service_sms_sender.service_id}/sms-sender/{service_sms_sender.id}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -3307,7 +3322,7 @@ def test_get_service_sms_sender_by_id_returns_404_when_service_does_not_exist(
         service=create_service(), sms_sender="1235", is_default=False
     )
     response = client.get(
-        "/service/{}/sms-sender/{}".format(uuid.uuid4(), service_sms_sender.id),
+        f"/service/{uuid.uuid4()}/sms-sender/{service_sms_sender.id}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -3321,7 +3336,7 @@ def test_get_service_sms_sender_by_id_returns_404_when_sms_sender_does_not_exist
 ):
     service = create_service()
     response = client.get(
-        "/service/{}/sms-sender/{}".format(service.id, uuid.uuid4()),
+        f"/service/{service.id}/sms-sender/{uuid.uuid4()}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -3335,7 +3350,7 @@ def test_get_service_sms_senders_for_service(client, notify_db_session):
         service=create_service(), sms_sender="second", is_default=False
     )
     response = client.get(
-        "/service/{}/sms-sender".format(service_sms_sender.service_id),
+        f"/service/{service_sms_sender.service_id}/sms-sender",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -3354,7 +3369,7 @@ def test_get_service_sms_senders_for_service_returns_empty_list_when_service_doe
     client,
 ):
     response = client.get(
-        "/service/{}/sms-sender".format(uuid.uuid4()),
+        f"/service/{uuid.uuid4()}/sms-sender",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -3386,15 +3401,15 @@ def test_get_organization_for_service_id_return_empty_dict_if_service_not_in_org
 def test_get_monthly_notification_data_by_service(sample_service, admin_request):
     create_ft_notification_status(
         date(2019, 4, 17),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=sample_service,
-        notification_status="delivered",
+        notification_status=NotificationStatus.DELIVERED,
     )
     create_ft_notification_status(
         date(2019, 3, 5),
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         service=sample_service,
-        notification_status="sending",
+        notification_status=NotificationStatus.SENDING,
         count=4,
     )
     response = admin_request.get(
@@ -3408,7 +3423,7 @@ def test_get_monthly_notification_data_by_service(sample_service, admin_request)
             "2019-03-01",
             str(sample_service.id),
             "Sample service",
-            "email",
+            NotificationType.EMAIL,
             4,
             0,
             0,
@@ -3420,7 +3435,7 @@ def test_get_monthly_notification_data_by_service(sample_service, admin_request)
             "2019-04-01",
             str(sample_service.id),
             "Sample service",
-            "sms",
+            NotificationType.SMS,
             0,
             1,
             0,

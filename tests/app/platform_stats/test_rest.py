@@ -3,7 +3,7 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.enums import TemplateType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.errors import InvalidRequest
 from app.platform_stats.rest import validate_date_range_is_within_a_financial_year
 from tests.app.db import (
@@ -64,17 +64,27 @@ def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
         service=service_1,
         template_type=TemplateType.EMAIL,
     )
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+    create_ft_notification_status(
+        date(2018, 10, 29), NotificationType.SMS, service_1, count=10
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29), NotificationType.EMAIL, service_1, count=3
+    )
 
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0), key_type="test"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 11, 0, 0),
+        key_type=KeyType.TEST,
     )
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 10, 31, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     response = admin_request.get(
