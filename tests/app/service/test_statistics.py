@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from freezegun import freeze_time
 
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.service.statistics import (
     add_monthly_notification_status_stats,
     create_empty_monthly_notification_status_stats_dict,
@@ -26,39 +27,51 @@ NewStatsRow = collections.namedtuple(
     {
         "empty": ([], [0, 0, 0], [0, 0, 0]),
         "always_increment_requested": (
-            [StatsRow("email", "delivered", 1), StatsRow("email", "failed", 1)],
+            [
+                StatsRow(NotificationType.EMAIL, NotificationStatus.DELIVERED, 1),
+                StatsRow(NotificationType.EMAIL, NotificationStatus.FAILED, 1),
+            ],
             [2, 1, 1],
             [0, 0, 0],
         ),
         "dont_mix_template_types": (
             [
-                StatsRow("email", "delivered", 1),
-                StatsRow("sms", "delivered", 1),
+                StatsRow(NotificationType.EMAIL, NotificationStatus.DELIVERED, 1),
+                StatsRow(NotificationType.SMS, NotificationStatus.DELIVERED, 1),
             ],
             [1, 1, 0],
             [1, 1, 0],
         ),
         "convert_fail_statuses_to_failed": (
             [
-                StatsRow("email", "failed", 1),
-                StatsRow("email", "technical-failure", 1),
-                StatsRow("email", "temporary-failure", 1),
-                StatsRow("email", "permanent-failure", 1),
+                StatsRow(NotificationType.EMAIL, NotificationStatus.FAILED, 1),
+                StatsRow(
+                    NotificationType.EMAIL, NotificationStatus.TECHNICAL_FAILURE, 1
+                ),
+                StatsRow(
+                    NotificationType.EMAIL, NotificationStatus.TEMPORARY_FAILURE, 1
+                ),
+                StatsRow(
+                    NotificationType.EMAIL, NotificationStatus.PERMANENT_FAILURE, 1
+                ),
             ],
             [4, 0, 4],
             [0, 0, 0],
         ),
         "convert_sent_to_delivered": (
             [
-                StatsRow("sms", "sending", 1),
-                StatsRow("sms", "delivered", 1),
-                StatsRow("sms", "sent", 1),
+                StatsRow(NotificationType.SMS, NotificationStatus.SENDING, 1),
+                StatsRow(NotificationType.SMS, NotificationStatus.DELIVERED, 1),
+                StatsRow(NotificationType.SMS, NotificationStatus.SENT, 1),
             ],
             [0, 0, 0],
             [3, 2, 0],
         ),
         "handles_none_rows": (
-            [StatsRow("sms", "sending", 1), StatsRow(None, None, None)],
+            [
+                StatsRow(NotificationType.SMS, NotificationStatus.SENDING, 1),
+                StatsRow(None, None, None),
+            ],
             [0, 0, 0],
             [1, 0, 0],
         ),
@@ -67,44 +80,66 @@ NewStatsRow = collections.namedtuple(
 def test_format_statistics(stats, email_counts, sms_counts):
     ret = format_statistics(stats)
 
-    assert ret["email"] == {
+    assert ret[NotificationType.EMAIL] == {
         status: count
-        for status, count in zip(["requested", "delivered", "failed"], email_counts)
+        for status, count in zip(
+            [
+                NotificationStatus.REQUESTED,
+                NotificationStatus.DELIVERED,
+                NotificationStatus.FAILED,
+            ],
+            email_counts,
+        )
     }
 
-    assert ret["sms"] == {
+    assert ret[NotificationType.SMS] == {
         status: count
-        for status, count in zip(["requested", "delivered", "failed"], sms_counts)
+        for status, count in zip(
+            [
+                NotificationStatus.REQUESTED,
+                NotificationStatus.DELIVERED,
+                NotificationStatus.FAILED,
+            ],
+            sms_counts,
+        )
     }
 
 
 def test_create_zeroed_stats_dicts():
     assert create_zeroed_stats_dicts() == {
-        "sms": {"requested": 0, "delivered": 0, "failed": 0},
-        "email": {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.SMS: {
+            NotificationStatus.REQUESTED: 0,
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+        },
+        NotificationType.EMAIL: {
+            NotificationStatus.REQUESTED: 0,
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+        },
     }
 
 
 def test_create_stats_dict():
     assert create_stats_dict() == {
-        "sms": {
+        NotificationType.SMS: {
             "total": 0,
             "test-key": 0,
             "failures": {
-                "technical-failure": 0,
-                "permanent-failure": 0,
-                "temporary-failure": 0,
-                "virus-scan-failed": 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
             },
         },
-        "email": {
+        NotificationType.EMAIL: {
             "total": 0,
             "test-key": 0,
             "failures": {
-                "technical-failure": 0,
-                "permanent-failure": 0,
-                "temporary-failure": 0,
-                "virus-scan-failed": 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
             },
         },
     }
@@ -112,38 +147,89 @@ def test_create_stats_dict():
 
 def test_format_admin_stats_only_includes_test_key_notifications_in_test_key_section():
     rows = [
-        NewStatsRow("email", "technical-failure", "test", 3),
-        NewStatsRow("sms", "permanent-failure", "test", 4),
+        NewStatsRow(
+            NotificationType.EMAIL,
+            NotificationStatus.TECHNICAL_FAILURE,
+            KeyType.TEST,
+            3,
+        ),
+        NewStatsRow(
+            NotificationType.SMS, NotificationType.PERMANENT_FAILURE, KeyType.TEST, 4
+        ),
     ]
     stats_dict = format_admin_stats(rows)
 
-    assert stats_dict["email"]["total"] == 0
-    assert stats_dict["email"]["failures"]["technical-failure"] == 0
-    assert stats_dict["email"]["test-key"] == 3
+    assert stats_dict[NotificationType.EMAIL]["total"] == 0
+    assert (
+        stats_dict[NotificationType.EMAIL]["failures"][
+            NotificationStatus.TECHNICAL_FAILURE
+        ]
+        == 0
+    )
+    assert stats_dict[NotificationType.EMAIL]["test-key"] == 3
 
-    assert stats_dict["sms"]["total"] == 0
-    assert stats_dict["sms"]["failures"]["permanent-failure"] == 0
-    assert stats_dict["sms"]["test-key"] == 4
+    assert stats_dict[NotificationType.SMS]["total"] == 0
+    assert (
+        stats_dict[NotificationType.SMS]["failures"][
+            NotificationStatus.PERMANENT_FAILURE
+        ]
+        == 0
+    )
+    assert stats_dict[NotificationType.SMS]["test-key"] == 4
 
 
 def test_format_admin_stats_counts_non_test_key_notifications_correctly():
     rows = [
-        NewStatsRow("email", "technical-failure", "normal", 1),
-        NewStatsRow("email", "created", "team", 3),
-        NewStatsRow("sms", "temporary-failure", "normal", 6),
-        NewStatsRow("sms", "sent", "normal", 2),
+        NewStatsRow(
+            NotificationType.EMAIL,
+            NotificationStatus.TECHNICAL_FAILURE,
+            KeyType.NORMAL,
+            1,
+        ),
+        NewStatsRow(
+            NotificationType.EMAIL,
+            NotificationStatus.CREATED,
+            KeyType.TEAM,
+            3,
+        ),
+        NewStatsRow(
+            NotificationType.SMS,
+            NotificationStatus.TEMPORARY_FAILURE,
+            KeyType.NORMAL,
+            6,
+        ),
+        NewStatsRow(
+            NotificationType.SMS,
+            NotificationStatus.SENT,
+            KeyType.NORMAL,
+            2,
+        ),
     ]
     stats_dict = format_admin_stats(rows)
 
-    assert stats_dict["email"]["total"] == 4
-    assert stats_dict["email"]["failures"]["technical-failure"] == 1
+    assert stats_dict[NotificationType.EMAIL]["total"] == 4
+    assert (
+        stats_dict[NotificationType.EMAIL]["failures"][
+            NotificationStatus.TECHNICAL_FAILURE
+        ]
+        == 1
+    )
 
-    assert stats_dict["sms"]["total"] == 8
-    assert stats_dict["sms"]["failures"]["permanent-failure"] == 0
+    assert stats_dict[NotificationType.SMS]["total"] == 8
+    assert (
+        stats_dict[NotificationType.SMS]["failures"][
+            NotificationStatus.PERMANENT_FAILURE
+        ]
+        == 0
+    )
 
 
 def _stats(requested, delivered, failed):
-    return {"requested": requested, "delivered": delivered, "failed": failed}
+    return {
+        NotificationStatus.REQUESTED: requested,
+        NotificationStatus.DELIVERED: delivered,
+        NotificationStatus.FAILED: failed,
+    }
 
 
 @pytest.mark.parametrize(
@@ -174,7 +260,7 @@ def test_create_empty_monthly_notification_status_stats_dict(year, expected_year
     output = create_empty_monthly_notification_status_stats_dict(year)
     assert sorted(output.keys()) == expected_years
     for v in output.values():
-        assert v == {"sms": {}, "email": {}}
+        assert v == {NotificationType.SMS: {}, NotificationType.EMAIL: {}}
 
 
 @freeze_time("2018-06-01 04:59:59")
@@ -182,26 +268,26 @@ def test_add_monthly_notification_status_stats():
     row_data = [
         {
             "month": datetime(2018, 4, 1),
-            "notification_type": "sms",
-            "notification_status": "sending",
+            "notification_type": NotificationType.SMS,
+            "notification_status": NotificationStatus.SENDING,
             "count": 1,
         },
         {
             "month": datetime(2018, 4, 1),
-            "notification_type": "sms",
-            "notification_status": "delivered",
+            "notification_type": NotificationType.SMS,
+            "notification_status": NotificationStatus.DELIVERED,
             "count": 2,
         },
         {
             "month": datetime(2018, 4, 1),
-            "notification_type": "email",
-            "notification_status": "sending",
+            "notification_type": NotificationType.EMAIL,
+            "notification_status": NotificationStatus.SENDING,
             "count": 4,
         },
         {
             "month": datetime(2018, 5, 1),
-            "notification_type": "sms",
-            "notification_status": "sending",
+            "notification_type": NotificationType.SMS,
+            "notification_status": NotificationStatus.SENDING,
             "count": 8,
         },
     ]
@@ -214,18 +300,27 @@ def test_add_monthly_notification_status_stats():
 
     data = create_empty_monthly_notification_status_stats_dict(2018)
     # this data won't be affected
-    data["2018-05"]["email"]["sending"] = 32
+    data["2018-05"][NotificationType.EMAIL][NotificationStatus.SENDING] = 32
 
     # this data will get combined with the 8 from row_data
-    data["2018-05"]["sms"]["sending"] = 16
+    data["2018-05"][NotificationType.SMS][NotificationStatus.SENDING] = 16
 
     add_monthly_notification_status_stats(data, rows)
     # first 3 months are empty
     assert data == {
-        "2018-01": {"sms": {}, "email": {}},
-        "2018-02": {"sms": {}, "email": {}},
-        "2018-03": {"sms": {}, "email": {}},
-        "2018-04": {"sms": {"sending": 1, "delivered": 2}, "email": {"sending": 4}},
-        "2018-05": {"sms": {"sending": 24}, "email": {"sending": 32}},
-        "2018-06": {"sms": {}, "email": {}},
+        "2018-01": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
+        "2018-02": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
+        "2018-03": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
+        "2018-04": {
+            NotificationType.SMS: {
+                NotificationStatus.SENDING: 1,
+                NotificationStatus.DELIVERED: 2,
+            },
+            NotificationType.EMAIL: {NotificationStatus.SENDING: 4},
+        },
+        "2018-05": {
+            NotificationType.SMS: {NotificationStatus.SENDING: 24},
+            NotificationType.EMAIL: {NotificationStatus.SENDING: 32},
+        },
+        "2018-06": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
     }

@@ -4,7 +4,7 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.enums import KeyType, NotificationType, TemplateType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from tests.app.db import (
     create_ft_notification_status,
     create_notification,
@@ -112,7 +112,7 @@ def test_get_service_notification_statistics(
         date(2000, 1, 1), NotificationType.SMS, sample_service, count=1
     )
     with freeze_time("2000-01-02T12:00:00"):
-        create_notification(sample_template, status="created")
+        create_notification(sample_template, status=NotificationStatus.CREATED)
         resp = admin_request.get(
             "service.get_service_notification_statistics",
             service_id=sample_template.service_id,
@@ -120,10 +120,10 @@ def test_get_service_notification_statistics(
         )
 
     assert set(resp["data"].keys()) == {
-        NotificationType.SMS.value,
-        NotificationType.EMAIL.value,
+        NotificationType.SMS,
+        NotificationType.EMAIL,
     }
-    assert resp["data"][NotificationType.SMS.value] == stats
+    assert resp["data"][NotificationType.SMS] == stats
 
 
 def test_get_service_notification_statistics_with_unknown_service(admin_request):
@@ -132,8 +132,8 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
     )
 
     assert resp["data"] == {
-        NotificationType.SMS.value: {"requested": 0, "delivered": 0, "failed": 0},
-        NotificationType.EMAIL.value: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.SMS: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.EMAIL: {"requested": 0, "delivered": 0, "failed": 0},
     }
 
 
@@ -238,25 +238,33 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
     admin_request, sample_template
 ):
     create_ft_notification_status(
-        datetime(2016, 5, 1, 12), template=sample_template, count=1
+        datetime(2016, 5, 1, 12),
+        template=sample_template,
+        count=1,
     )
     create_ft_notification_status(
         datetime(2016, 6, 1, 12),
         template=sample_template,
-        notification_status="created",
+        notification_status=NotificationStatus.CREATED,
         count=2,
     )  # noqa
 
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 5, 12), status="created"
+        sample_template,
+        created_at=datetime(2016, 6, 5, 12),
+        status=NotificationStatus.CREATED,
     )
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 5, 12), status="delivered"
+        sample_template,
+        created_at=datetime(2016, 6, 5, 12),
+        status=NotificationStatus.DELIVERED,
     )
 
     # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 4, 12), status="sending"
+        sample_template,
+        created_at=datetime(2016, 6, 4, 12),
+        status=NotificationStatus.SENDING,
     )
 
     response = admin_request.get(
