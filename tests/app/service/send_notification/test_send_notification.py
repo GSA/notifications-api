@@ -35,7 +35,7 @@ def test_create_notification_should_reject_if_missing_required_fields(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             data = {}
             auth_header = create_service_authorization_header(
@@ -43,7 +43,7 @@ def test_create_notification_should_reject_if_missing_required_fields(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -286,7 +286,7 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             template = (
                 sample_template
@@ -302,7 +302,7 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -326,7 +326,7 @@ def test_should_send_notification_if_restricted_and_a_service_user(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
 
             template = (
@@ -348,7 +348,7 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -364,7 +364,7 @@ def test_should_not_allow_template_from_another_service(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             service_1 = service_factory.get(
                 "service 1", user=sample_user, email_from="service.1"
@@ -386,7 +386,7 @@ def test_should_not_allow_template_from_another_service(
             auth_header = create_service_authorization_header(service_id=service_1.id)
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -729,7 +729,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -783,11 +783,11 @@ def test_should_persist_notification(
     )
 
     response = client.post(
-        path="/notifications/{}".format(template_type),
+        path=f"/notifications/{template_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -814,7 +814,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
     queue_name,
 ):
     mocked = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type),
+        f"app.celery.provider_tasks.deliver_{template_type}.apply_async",
         side_effect=Exception("failed to talk to redis"),
     )
     mocker.patch(
@@ -1012,7 +1012,7 @@ def test_should_send_notification_to_guest_list_recipient(
     )
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -1042,7 +1042,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
     data = {"to": to, "template": template.id}
     auth_header = create_service_authorization_header(service_id=template.service_id)
     response = client.post(
-        "/notifications/{}".format(notification_type),
+        f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1051,9 +1051,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
     json_resp = json.loads(response.get_data(as_text=True))
     assert json_resp["result"] == "error"
     assert (
-        "{0} template is not suitable for {1} notification".format(
-            template_type, notification_type
-        )
+        f"{template_type} template is not suitable for {notification_type} notification"
         in json_resp["message"]
     )
 
@@ -1111,9 +1109,7 @@ def test_create_template_raises_invalid_request_when_content_too_large(
             pytest.fail("do not expect an InvalidRequest")
         assert e.message == {
             "content": [
-                "Content has a character count greater than the limit of {}".format(
-                    SMS_CHAR_COUNT_LIMIT
-                )
+                f"Content has a character count greater than the limit of {SMS_CHAR_COUNT_LIMIT}"
             ]
         }
 
