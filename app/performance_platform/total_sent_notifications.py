@@ -26,6 +26,6 @@ def get_total_sent_notifications_for_day(day):
     sms_count = get_total_sent_notifications_for_day_and_type(day, NotificationType.SMS)
 
     return {
-        "email": email_count,
-        "sms": sms_count,
+        NotificationType.EMAIL: email_count,
+        NotificationType.SMS: sms_count,
     }

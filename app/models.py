@@ -1652,26 +1652,26 @@ class Notification(db.Model):
     @property
     def formatted_status(self):
         return {
-            "email": {
-                "failed": "Failed",
-                "technical-failure": "Technical failure",
-                "temporary-failure": "Inbox not accepting messages right now",
-                "permanent-failure": "Email address doesn’t exist",
-                "delivered": "Delivered",
-                "sending": "Sending",
-                "created": "Sending",
-                "sent": "Delivered",
+            NotificationType.EMAIL: {
+                NotificationStatus.FAILED: "Failed",
+                NotificationStatus.TECHNICAL_FAILURE: "Technical failure",
+                NotificationStatus.TEMPORARY_FAILURE: "Inbox not accepting messages right now",
+                NotificationStatus.PERMANENT_FAILURE: "Email address doesn’t exist",
+                NotificationStatus.DELIVERED: "Delivered",
+                NotificationStatus.SENDING: "Sending",
+                NotificationStatus.CREATED: "Sending",
+                NotificationStatus.SENT: "Delivered",
             },
-            "sms": {
-                "failed": "Failed",
-                "technical-failure": "Technical failure",
-                "temporary-failure": "Unable to find carrier response -- still looking",
-                "permanent-failure": "Unable to find carrier response.",
-                "delivered": "Delivered",
-                "pending": "Pending",
-                "sending": "Sending",
-                "created": "Sending",
-                "sent": "Sent internationally",
+            NotificationType.SMS: {
+                NotificationStatus.FAILED: "Failed",
+                NotificationStatus.TECHNICAL_FAILURE: "Technical failure",
+                NotificationStatus.TEMPORARY_FAILURE: "Unable to find carrier response -- still looking",
+                NotificationStatus.PERMANENT_FAILURE: "Unable to find carrier response.",
+                NotificationStatus.DELIVERED: "Delivered",
+                NotificationStatus.PENDING: "Pending",
+                NotificationStatus.SENDING: "Sending",
+                NotificationStatus.CREATED: "Sending",
+                NotificationStatus.SENT: "Sent internationally",
             },
         }[self.template.template_type].get(self.status, self.status)
 
