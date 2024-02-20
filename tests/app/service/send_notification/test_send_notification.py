@@ -942,7 +942,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     )
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
