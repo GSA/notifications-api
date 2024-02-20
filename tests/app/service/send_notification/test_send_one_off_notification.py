@@ -11,6 +11,7 @@ from app.enums import (
     KeyType,
     NotificationType,
     RecipientType,
+    ServicePermissionType,
     TemplateProcessType,
     TemplateType,
 )
@@ -100,7 +101,12 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
 def test_send_one_off_notification_calls_persist_correctly_for_international_sms(
     persist_mock, celery_mock, notify_db_session
 ):
-    service = create_service(service_permissions=["sms", "international_sms"])
+    service = create_service(
+        service_permissions=[
+            ServicePermissionType.SMS,
+            ServicePermissionType.INTERNATIONAL_SMS,
+        ],
+    )
     template = create_template(
         service=service,
         template_type=TemplateType.SMS,
