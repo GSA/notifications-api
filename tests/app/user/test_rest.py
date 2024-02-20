@@ -8,7 +8,7 @@ from flask import current_app
 from freezegun import freeze_time
 
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
-from app.enums import AuthType, PermissionType
+from app.enums import AuthType, NotificationType, PermissionType
 from app.models import Notification, Permission, User
 from tests.app.db import (
     create_organization,
@@ -262,7 +262,7 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
             dict(
                 api_key_id=None,
                 key_type="normal",
-                notification_type="email",
+                notification_type=NotificationType.EMAIL,
                 personalisation={
                     "name": "Test User",
                     "servicemanagername": "Service Manago",
@@ -281,7 +281,7 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
             dict(
                 api_key_id=None,
                 key_type="normal",
-                notification_type="sms",
+                notification_type=NotificationType.SMS,
                 personalisation={
                     "name": "Test User",
                     "servicemanagername": "Service Manago",
