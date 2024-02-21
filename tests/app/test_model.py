@@ -42,7 +42,9 @@ from tests.app.db import (
 @pytest.mark.parametrize("mobile_number", ["+447700900855", "+12348675309"])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", RecipientType.MOBILE, mobile_number,
+        "service_id",
+        RecipientType.MOBILE,
+        mobile_number,
     )
 
     assert service_guest_list.recipient == mobile_number
@@ -51,7 +53,9 @@ def test_should_build_service_guest_list_from_mobile_number(mobile_number):
 @pytest.mark.parametrize("email_address", ["test@example.com"])
 def test_should_build_service_guest_list_from_email_address(email_address):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", RecipientType.EMAIL, email_address,
+        "service_id",
+        RecipientType.EMAIL,
+        email_address,
     )
 
     assert service_guest_list.recipient == email_address

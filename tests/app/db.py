@@ -140,9 +140,7 @@ def create_service(
             else service_name.lower().replace(" ", "."),
             created_by=user
             if user
-            else create_user(
-                email=f"{uuid.uuid4()}@digital.cabinet-office.gov.uk"
-            ),
+            else create_user(email=f"{uuid.uuid4()}@digital.cabinet-office.gov.uk"),
             prefix_sms=prefix_sms,
             organization_type=organization_type,
             organization=organization,
@@ -498,7 +496,11 @@ def create_service_callback_api(
 
 
 def create_email_branding(
-    id=None, colour="blue", logo="test_x2.png", name="test_org_1", text="DisplayName",
+    id=None,
+    colour="blue",
+    logo="test_x2.png",
+    name="test_org_1",
+    text="DisplayName",
 ):
     data = {
         "colour": colour,
@@ -644,7 +646,9 @@ def create_organization(
 
 
 def create_invited_org_user(
-    organization, invited_by, email_address="invite@example.com",
+    organization,
+    invited_by,
+    email_address="invite@example.com",
 ):
     invited_org_user = InvitedOrganizationUser(
         email_address=email_address,
@@ -918,13 +922,22 @@ def set_up_usage_data(start_date):
     )
 
     create_ft_billing(
-        local_date=one_week_earlier, template=sms_template_1, billable_unit=2, rate=0.11,
+        local_date=one_week_earlier,
+        template=sms_template_1,
+        billable_unit=2,
+        rate=0.11,
     )
     create_ft_billing(
-        local_date=start_date, template=sms_template_1, billable_unit=2, rate=0.11,
+        local_date=start_date,
+        template=sms_template_1,
+        billable_unit=2,
+        rate=0.11,
     )
     create_ft_billing(
-        local_date=two_days_later, template=sms_template_1, billable_unit=1, rate=0.11,
+        local_date=two_days_later,
+        template=sms_template_1,
+        billable_unit=1,
+        rate=0.11,
     )
 
     # service with emails only:

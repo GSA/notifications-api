@@ -863,7 +863,10 @@ def sample_inbound_numbers(sample_service):
     inbound_numbers.append(create_inbound_number(number="1", provider="sns"))
     inbound_numbers.append(
         create_inbound_number(
-            number="2", provider="sns", active=False, service_id=service.id,
+            number="2",
+            provider="sns",
+            active=False,
+            service_id=service.id,
         )
     )
     return inbound_numbers

@@ -62,16 +62,20 @@ def test_send_delivery_status_to_service_post_https_request_to_service_with_encr
     assert request_mock.request_history[0].method == "POST"
     assert request_mock.request_history[0].text == json.dumps(mock_data)
     assert request_mock.request_history[0].headers["Content-type"] == "application/json"
-    assert request_mock.request_history[0].headers[
-        "Authorization"
-    ] == f"Bearer {callback_api.bearer_token}"
+    assert (
+        request_mock.request_history[0].headers["Authorization"]
+        == f"Bearer {callback_api.bearer_token}"
+    )
 
 
 def test_send_complaint_to_service_posts_https_request_to_service_with_encrypted_data(
     notify_db_session,
 ):
     with freeze_time("2001-01-01T12:00:00"):
-        callback_api, template = _set_up_test_data(NotificationType.EMAIL, CallbackType.COMPLAINT,)
+        callback_api, template = _set_up_test_data(
+            NotificationType.EMAIL,
+            CallbackType.COMPLAINT,
+        )
 
         notification = create_notification(template=template)
         complaint = create_complaint(
@@ -100,9 +104,10 @@ def test_send_complaint_to_service_posts_https_request_to_service_with_encrypted
             request_mock.request_history[0].headers["Content-type"]
             == "application/json"
         )
-        assert request_mock.request_history[0].headers[
-            "Authorization"
-        ] == f"Bearer {callback_api.bearer_token}"
+        assert (
+            request_mock.request_history[0].headers["Authorization"]
+            == f"Bearer {callback_api.bearer_token}"
+        )
 
 
 @pytest.mark.parametrize(
@@ -113,7 +118,10 @@ def test_send_complaint_to_service_posts_https_request_to_service_with_encrypted
 def test__send_data_to_service_callback_api_retries_if_request_returns_error_code_with_encrypted_data(
     notify_db_session, mocker, notification_type, status_code
 ):
-    callback_api, template = _set_up_test_data(notification_type, CallbackType.DELIVERY_STATUS,)
+    callback_api, template = _set_up_test_data(
+        notification_type,
+        CallbackType.DELIVERY_STATUS,
+    )
     datestr = datetime(2017, 6, 20)
     notification = create_notification(
         template=template,
@@ -143,7 +151,10 @@ def test__send_data_to_service_callback_api_retries_if_request_returns_error_cod
 def test__send_data_to_service_callback_api_does_not_retry_if_request_returns_404_with_encrypted_data(
     notify_db_session, mocker, notification_type
 ):
-    callback_api, template = _set_up_test_data(notification_type, CallbackType.DELIVERY_STATUS,)
+    callback_api, template = _set_up_test_data(
+        notification_type,
+        CallbackType.DELIVERY_STATUS,
+    )
     datestr = datetime(2017, 6, 20)
     notification = create_notification(
         template=template,

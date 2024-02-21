@@ -310,9 +310,7 @@ def test_process_row_sends_letter_task(
     template_type, expected_function, expected_queue, mocker
 ):
     mocker.patch("app.celery.tasks.create_uuid", return_value="noti_uuid")
-    task_mock = mocker.patch(
-        f"app.celery.tasks.{expected_function}.apply_async"
-    )
+    task_mock = mocker.patch(f"app.celery.tasks.{expected_function}.apply_async")
     encrypt_mock = mocker.patch("app.celery.tasks.encryption.encrypt")
     template = Mock(id="template_id", template_type=template_type)
     job = Mock(id="job_id", template_version="temp_vers")
@@ -1039,9 +1037,10 @@ def test_send_inbound_sms_to_service_post_https_request_to_service(
     assert request_mock.request_history[0].method == "POST"
     assert request_mock.request_history[0].text == json.dumps(data)
     assert request_mock.request_history[0].headers["Content-type"] == "application/json"
-    assert request_mock.request_history[0].headers[
-        "Authorization"
-    ] == f"Bearer {inbound_api.bearer_token}"
+    assert (
+        request_mock.request_history[0].headers["Authorization"]
+        == f"Bearer {inbound_api.bearer_token}"
+    )
 
 
 def test_send_inbound_sms_to_service_does_not_send_request_when_inbound_sms_does_not_exist(

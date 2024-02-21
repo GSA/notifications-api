@@ -151,9 +151,10 @@ def test_find_services_by_name_handles_no_results(
     mock_get_services_by_partial_name = mocker.patch(
         "app.service.rest.get_services_by_partial_name", return_value=[]
     )
-    response = admin_request.get("service.find_services_by_name", service_name="ABC",)[
-        "data"
-    ]
+    response = admin_request.get(
+        "service.find_services_by_name",
+        service_name="ABC",
+    )["data"]
     mock_get_services_by_partial_name.assert_called_once_with("ABC")
     assert len(response) == 0
 
@@ -1221,7 +1222,8 @@ def test_default_permissions_are_added_for_user_service(
             assert resp.status_code == 200
             header = create_admin_authorization_header()
             response = client.get(
-                url_for("user.get_user", user_id=sample_user.id), headers=[header],
+                url_for("user.get_user", user_id=sample_user.id),
+                headers=[header],
             )
             assert response.status_code == 200
             json_resp = json.loads(response.get_data(as_text=True))
@@ -1517,7 +1519,14 @@ def test_add_existing_user_to_non_existing_service_returns404(
             incorrect_id = uuid.uuid4()
 
             data = {
-                "permissions": [PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS, PermissionType.MANAGE_USERS, PermissionType.MANAGE_SETTINGS, PermissionType.MANAGE_TEMPLATES, PermissionType.MANAGE_API_KEYS,]
+                "permissions": [
+                    PermissionType.SEND_EMAILS,
+                    PermissionType.SEND_TEXTS,
+                    PermissionType.MANAGE_USERS,
+                    PermissionType.MANAGE_SETTINGS,
+                    PermissionType.MANAGE_TEMPLATES,
+                    PermissionType.MANAGE_API_KEYS,
+                ]
             }
             auth_header = create_admin_authorization_header()
 
@@ -1543,7 +1552,14 @@ def test_add_existing_user_of_service_to_service_returns400(
             existing_user_id = sample_service.users[0].id
 
             data = {
-                "permissions": [PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS, PermissionType.MANAGE_USERS, PermissionType.MANAGE_SETTINGS, PermissionType.MANAGE_TEMPLATES, PermissionType.MANAGE_API_KEYS,]
+                "permissions": [
+                    PermissionType.SEND_EMAILS,
+                    PermissionType.SEND_TEXTS,
+                    PermissionType.MANAGE_USERS,
+                    PermissionType.MANAGE_SETTINGS,
+                    PermissionType.MANAGE_TEMPLATES,
+                    PermissionType.MANAGE_API_KEYS,
+                ]
             }
             auth_header = create_admin_authorization_header()
 
@@ -1572,7 +1588,14 @@ def test_add_unknown_user_to_service_returns404(
             incorrect_id = 9876
 
             data = {
-                "permissions": [PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS, PermissionType.MANAGE_USERS, PermissionType.MANAGE_SETTINGS, PermissionType.MANAGE_TEMPLATES, PermissionType.MANAGE_API_KEYS,]
+                "permissions": [
+                    PermissionType.SEND_EMAILS,
+                    PermissionType.SEND_TEXTS,
+                    PermissionType.MANAGE_USERS,
+                    PermissionType.MANAGE_SETTINGS,
+                    PermissionType.MANAGE_TEMPLATES,
+                    PermissionType.MANAGE_API_KEYS,
+                ]
             }
             auth_header = create_admin_authorization_header()
 
@@ -2206,13 +2229,29 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
-        NotificationType.SMS.value: {NotificationStatus.DELIVERED: 1, NotificationStatus.FAILED: 0, "requested": 3,},
+        NotificationType.EMAIL.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
+        NotificationType.SMS.value: {
+            NotificationStatus.DELIVERED: 1,
+            NotificationStatus.FAILED: 0,
+            "requested": 3,
+        },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        NotificationType.EMAIL.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
-        NotificationType.SMS.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 1,},
+        NotificationType.EMAIL.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
+        NotificationType.SMS.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 1,
+        },
     }
 
 
@@ -2235,13 +2274,29 @@ def test_get_detailed_services_includes_services_with_no_notifications(
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
-        NotificationType.SMS.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 1,},
+        NotificationType.EMAIL.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
+        NotificationType.SMS.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 1,
+        },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        NotificationType.EMAIL.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
-        NotificationType.SMS.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
+        NotificationType.EMAIL.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
+        NotificationType.SMS.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
     }
 
 
@@ -2261,8 +2316,16 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
 
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 0,},
-        NotificationType.SMS.value: {NotificationStatus.DELIVERED: 0, NotificationStatus.FAILED: 0, "requested": 3,},
+        NotificationType.EMAIL.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 0,
+        },
+        NotificationType.SMS.value: {
+            NotificationStatus.DELIVERED: 0,
+            NotificationStatus.FAILED: 0,
+            "requested": 3,
+        },
     }
 
 
@@ -2372,16 +2435,24 @@ def test_search_for_notification_by_to_field_return_multiple_matches(
     client, sample_template, sample_email_template
 ):
     notification1 = create_notification(
-        sample_template, to_field="+447700900855", normalised_to="447700900855",
+        sample_template,
+        to_field="+447700900855",
+        normalised_to="447700900855",
     )
     notification2 = create_notification(
-        sample_template, to_field=" +44 77009 00855 ", normalised_to="447700900855",
+        sample_template,
+        to_field=" +44 77009 00855 ",
+        normalised_to="447700900855",
     )
     notification3 = create_notification(
-        sample_template, to_field="+44770 0900 855", normalised_to="447700900855",
+        sample_template,
+        to_field="+44770 0900 855",
+        normalised_to="447700900855",
     )
     notification4 = create_notification(
-        sample_email_template, to_field="jack@gmail.com", normalised_to="jack@gmail.com",
+        sample_email_template,
+        to_field="jack@gmail.com",
+        normalised_to="jack@gmail.com",
     )
 
     response = client.get(
@@ -2409,7 +2480,9 @@ def test_search_for_notification_by_to_field_returns_next_link_if_more_than_50(
 ):
     for _ in range(51):
         create_notification(
-            sample_template, to_field="+447700900855", normalised_to="447700900855",
+            sample_template,
+            to_field="+447700900855",
+            normalised_to="447700900855",
         )
 
     response = client.get(
@@ -2433,7 +2506,9 @@ def test_search_for_notification_by_to_field_returns_no_next_link_if_50_or_less(
 ):
     for _ in range(50):
         create_notification(
-            sample_template, to_field="+447700900855", normalised_to="447700900855",
+            sample_template,
+            to_field="+447700900855",
+            normalised_to="447700900855",
         )
 
     response = client.get(
