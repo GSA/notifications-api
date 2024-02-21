@@ -170,22 +170,22 @@ def get_aws_responses(ses_message):
         "Permanent": {
             "message": "Hard bounced",
             "success": False,
-            "notification_status": "permanent-failure",
+            "notification_status": NotificationStatus.PERMANENT_FAILURE,
         },
         "Temporary": {
             "message": "Soft bounced",
             "success": False,
-            "notification_status": "temporary-failure",
+            "notification_status": NotificationStatus.TEMPORARY_FAILURE,
         },
         "Delivery": {
             "message": "Delivered",
             "success": True,
-            "notification_status": "delivered",
+            "notification_status": NotificationStatus.DELIVERED,
         },
         "Complaint": {
             "message": "Complaint",
             "success": True,
-            "notification_status": "delivered",
+            "notification_status": NotificationStatus.DELIVERED,
         },
     }[status]
 

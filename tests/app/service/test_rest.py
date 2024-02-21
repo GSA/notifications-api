@@ -21,6 +21,7 @@ from app.enums import (
     OrganizationType,
     PermissionType,
     ServicePermissionType,
+    StatisticsType,
     TemplateType,
 )
 from app.models import (
@@ -1775,10 +1776,14 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     )
 
     create_notification(
-        service_1_sms_template, to_field="+447700900000", normalised_to="447700900000"
+        service_1_sms_template,
+        to_field="+447700900000",
+        normalised_to="447700900000",
     )
     create_notification(
-        service_1_sms_template, status="delivered", normalised_to="447700900855"
+        service_1_sms_template,
+        status=NotificationStatus.DELIVERED,
+        normalised_to="447700900855",
     )
     create_notification(service_1_email_template, normalised_to="447700900855")
     # create notification for service_2
@@ -2089,8 +2094,22 @@ def test_set_sms_prefixing_for_service_cant_be_none(
 @pytest.mark.parametrize(
     "today_only,stats",
     [
-        ("False", {"requested": 2, "delivered": 1, "failed": 0}),
-        ("True", {"requested": 1, "delivered": 0, "failed": 0}),
+        (
+            "False",
+            {
+                StatisticsType.REQUESTED: 2,
+                StatisticsType.DELIVERED: 1,
+                StatisticsType.FAILED: 0,
+            },
+        ),
+        (
+            "True",
+            {
+                StatisticsType.REQUESTED: 1,
+                StatisticsType.DELIVERED: 0,
+                StatisticsType.FAILED: 0,
+            },
+        ),
     ],
     ids=["seven_days", "today"],
 )
@@ -2134,8 +2153,16 @@ def test_get_services_with_detailed_flag(client, sample_template):
     assert data[0]["name"] == "Sample service"
     assert data[0]["id"] == str(notifications[0].service_id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL: {"delivered": 0, "failed": 0, "requested": 0},
-        NotificationType.SMS: {"delivered": 0, "failed": 0, "requested": 3},
+        NotificationType.EMAIL: {
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
+        },
+        NotificationType.SMS: {
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 3,
+        },
     }
 
 
@@ -2157,8 +2184,16 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(
     data = resp.json["data"]
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL: {"delivered": 0, "failed": 0, "requested": 0},
-        NotificationType.SMS: {"delivered": 0, "failed": 0, "requested": 2},
+        NotificationType.EMAIL: {
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
+        },
+        NotificationType.SMS: {
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 2,
+        },
     }
 
 
@@ -2228,27 +2263,27 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
         NotificationType.EMAIL: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
-            "delivered": 1,
-            "failed": 0,
-            "requested": 3,
+            StatisticsType.DELIVERED: 1,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 3,
         },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
         NotificationType.EMAIL: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 1,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 1,
         },
     }
 
@@ -2273,27 +2308,27 @@ def test_get_detailed_services_includes_services_with_no_notifications(
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
         NotificationType.EMAIL: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 1,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 1,
         },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
         NotificationType.EMAIL: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
     }
 
@@ -2315,14 +2350,14 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
     assert len(data) == 1
     assert data[0]["statistics"] == {
         NotificationType.EMAIL: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
-            "delivered": 0,
-            "failed": 0,
-            "requested": 3,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+            StatisticsType.REQUESTED: 3,
         },
     }
 
@@ -2368,14 +2403,14 @@ def test_get_detailed_services_for_date_range(
 
     assert len(data) == 1
     assert data[0]["statistics"][NotificationType.EMAIL] == {
-        "delivered": 0,
-        "failed": 0,
-        "requested": 0,
+        StatisticsType.DELIVERED: 0,
+        StatisticsType.FAILED: 0,
+        StatisticsType.REQUESTED: 0,
     }
     assert data[0]["statistics"][NotificationType.SMS] == {
-        "delivered": 2,
-        "failed": 0,
-        "requested": 2,
+        StatisticsType.DELIVERED: 2,
+        StatisticsType.FAILED: 0,
+        StatisticsType.REQUESTED: 2,
     }
 
 
@@ -2598,13 +2633,13 @@ def test_search_for_notification_by_to_field_filters_by_status(client, sample_te
     notification1 = create_notification(
         sample_template,
         to_field="+447700900855",
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
         normalised_to="447700900855",
     )
     create_notification(
         sample_template,
         to_field="+447700900855",
-        status="sending",
+        status=NotificationStatus.SENDING,
         normalised_to="447700900855",
     )
 
@@ -2630,13 +2665,13 @@ def test_search_for_notification_by_to_field_filters_by_statuses(
     notification1 = create_notification(
         sample_template,
         to_field="+447700900855",
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
         normalised_to="447700900855",
     )
     notification2 = create_notification(
         sample_template,
         to_field="+447700900855",
-        status="sending",
+        status=NotificationStatus.SENDING,
         normalised_to="447700900855",
     )
 

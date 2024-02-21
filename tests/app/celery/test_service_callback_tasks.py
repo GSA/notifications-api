@@ -161,7 +161,7 @@ def test__send_data_to_service_callback_api_does_not_retry_if_request_returns_40
         created_at=datestr,
         updated_at=datestr,
         sent_at=datestr,
-        status="sent",
+        status=NotificationStatus.SENT,
     )
     encrypted_data = _set_up_data_for_status_update(callback_api, notification)
     mocked = mocker.patch(

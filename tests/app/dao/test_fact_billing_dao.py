@@ -116,8 +116,8 @@ def test_fetch_billing_data_for_day_only_calls_query_for_permission_type(
     service = create_service(service_permissions=[notification_type])
     email_template = create_template(service=service, template_type=TemplateType.EMAIL)
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(
         process_day=today.date(), check_permissions=True

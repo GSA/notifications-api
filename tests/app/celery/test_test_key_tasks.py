@@ -36,7 +36,10 @@ def test_make_sns_callback(notify_api, rmock, mocker):
 
     assert rmock.called
     assert rmock.request_history[0].url == endpoint
-    assert json.loads(rmock.request_history[0].text)["status"] == "delivered"
+    assert (
+        json.loads(rmock.request_history[0].text)["status"]
+        == NotificationStatus.DELIVERED
+    )
 
 
 def test_callback_logs_on_api_call_failure(notify_api, rmock, mocker):
@@ -86,5 +89,5 @@ def test_delivered_sns_callback(mocker):
     get_notification_by_id.return_value = n
 
     data = json.loads(sns_callback("1234"))
-    assert data["status"] == "delivered"
+    assert data["status"] == NotificationStatus.DELIVERED
     assert data["CID"] == "1234"

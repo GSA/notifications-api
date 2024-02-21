@@ -4,7 +4,13 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    StatisticsType,
+    TemplateType,
+)
 from tests.app.db import (
     create_ft_notification_status,
     create_notification,
@@ -106,8 +112,22 @@ def test_get_template_usage_by_month_returns_two_templates(
 @pytest.mark.parametrize(
     "today_only, stats",
     [
-        (False, {"requested": 2, "delivered": 1, "failed": 0}),
-        (True, {"requested": 1, "delivered": 0, "failed": 0}),
+        (
+            False,
+            {
+                StatisticsType.REQUESTED: 2,
+                StatisticsType.DELIVERED: 1,
+                StatisticsType.FAILED: 0,
+            },
+        ),
+        (
+            True,
+            {
+                StatisticsType.REQUESTED: 1,
+                StatisticsType.DELIVERED: 0,
+                StatisticsType.FAILED: 0,
+            },
+        ),
     ],
     ids=["seven_days", "today"],
 )
@@ -138,8 +158,16 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
     )
 
     assert resp["data"] == {
-        NotificationType.SMS: {"requested": 0, "delivered": 0, "failed": 0},
-        NotificationType.EMAIL: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.SMS: {
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+        },
+        NotificationType.EMAIL: {
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILED: 0,
+        },
     }
 
 
@@ -237,7 +265,7 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
             NotificationStatus.CREATED: 1,
             NotificationStatus.DELIVERED: 2,
         },
-        NotificationType.EMAIL: {"delivered": 1},
+        NotificationType.EMAIL: {StatisticsType.DELIVERED: 1},
     }
 
 

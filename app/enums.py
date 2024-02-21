@@ -209,3 +209,9 @@ class AgreementType(StrEnum):
 class AgreementStatus(StrEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
+
+
+class StatisticsType(StrEnum):
+    REQUESTED = "requested"
+    DELIVERED = "delivered"
+    FAILURE = "failure"

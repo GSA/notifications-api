@@ -14,9 +14,6 @@ AWS_CLIENT_CONFIG = Config(
     },
     use_fips_endpoint=True,
 )
-STATISTICS_REQUESTED = "requested"
-STATISTICS_DELIVERED = "delivered"
-STATISTICS_FAILURE = "failure"
 
 
 class ClientException(Exception):

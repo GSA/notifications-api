@@ -152,21 +152,29 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
 @pytest.mark.parametrize(
     "template_type, status, expected_status",
     [
-        (TemplateType.EMAIL, "failed", "Failed"),
-        (TemplateType.EMAIL, "technical-failure", "Technical failure"),
+        (TemplateType.EMAIL, NotificationStatus.FAILED, "Failed"),
+        (TemplateType.EMAIL, NotificationStatus.TECHNICAL_FAILURE, "Technical failure"),
         (
             TemplateType.EMAIL,
-            "temporary-failure",
+            NotificationStatus.TEMPORARY_FAILURE,
             "Inbox not accepting messages right now",
         ),
-        (TemplateType.EMAIL, "permanent-failure", "Email address doesn’t exist"),
+        (
+            TemplateType.EMAIL,
+            NotificationStatus.PERMANENT_FAILURE,
+            "Email address doesn’t exist",
+        ),
         (
             TemplateType.SMS,
-            "temporary-failure",
+            NotificationStatus.TEMPORARY_FAILURE,
             "Unable to find carrier response -- still looking",
         ),
-        (TemplateType.SMS, "permanent-failure", "Unable to find carrier response."),
-        (TemplateType.SMS, "sent", "Sent internationally"),
+        (
+            TemplateType.SMS,
+            NotificationStatus.PERMANENT_FAILURE,
+            "Unable to find carrier response.",
+        ),
+        (TemplateType.SMS, NotificationStatus.SENT, "Sent internationally"),
     ],
 )
 def test_notification_for_csv_returns_formatted_status(

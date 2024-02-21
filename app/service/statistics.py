@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import NotificationStatus, TemplateType
+from app.enums import NotificationStatus, StatisticsType, TemplateType
 
 
 def format_statistics(statistics):
@@ -77,16 +77,16 @@ def format_monthly_template_notification_stats(year, rows):
 
 def create_zeroed_stats_dicts():
     return {
-        template_type: {status: 0 for status in ("requested", "delivered", "failed")}
+        template_type: {status: 0 for status in StatisticsType}
         for template_type in (TemplateType.SMS, TemplateType.EMAIL)
     }
 
 
 def _update_statuses_from_row(update_dict, row):
     if row.status != NotificationStatus.CANCELLED:
-        update_dict["requested"] += row.count
+        update_dict[StatisticsType.REQUESTED] += row.count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
-        update_dict["delivered"] += row.count
+        update_dict[StatisticsType.DELIVERED] += row.count
     elif row.status in (
         NotificationStatus.FAILED,
         NotificationStatus.TECHNICAL_FAILURE,
@@ -95,7 +95,7 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VALIDATION_FAILED,
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
-        update_dict["failed"] += row.count
+        update_dict[StatisticsType.FAILED] += row.count
 
 
 def create_empty_monthly_notification_status_stats_dict(year):

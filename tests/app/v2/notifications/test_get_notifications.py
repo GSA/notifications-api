@@ -630,7 +630,8 @@ def test_get_all_notifications_filter_multiple_query_parameters(
     # TODO had to change pending to sending.  Is that correct?
     # this is the notification we are looking for
     older_notification = create_notification(
-        template=sample_email_template, status="sending"
+        template=sample_email_template,
+        status=NotificationStatus.SENDING,
     )
 
     # wrong status
@@ -639,13 +640,16 @@ def test_get_all_notifications_filter_multiple_query_parameters(
         sample_email_template.service, template_type=TemplateType.SMS
     )
     # wrong template
-    create_notification(template=wrong_template, status="sending")
+    create_notification(template=wrong_template, status=NotificationStatus.SENDING)
 
     # we only want notifications created before this one
     newer_notification = create_notification(template=sample_email_template)
 
     # this notification was created too recently
-    create_notification(template=sample_email_template, status="sending")
+    create_notification(
+        template=sample_email_template,
+        status=NotificationStatus.SENDING,
+    )
 
     auth_header = create_service_authorization_header(
         service_id=newer_notification.service_id
