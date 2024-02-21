@@ -5,7 +5,7 @@ get_all_template_request = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "request schema for parameters allowed when getting all templates",
     "type": "object",
-    "properties": {"type": {"enum": [e.value for e in TemplateType]}},
+    "properties": {"type": {"enum": list(TemplateType)}},
     "additionalProperties": False,
 }
 

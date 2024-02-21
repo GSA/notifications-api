@@ -1,7 +1,7 @@
 import pytest
 from flask import json, url_for
 
-from app.enums import NotificationType, TemplateType
+from app.enums import NotificationStatus, NotificationType, TemplateType
 from app.utils import DATETIME_FORMAT
 from tests import create_service_authorization_header
 from tests.app.db import create_notification, create_template
@@ -284,7 +284,7 @@ def test_get_all_notifications_except_job_notifications_returns_200(
     assert len(json_response["notifications"]) == 2
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "created"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.CREATED
     assert json_response["notifications"][0]["template"] == {
         "id": str(notification.template.id),
         "uri": notification.template.get_link(),
@@ -380,7 +380,7 @@ def test_get_all_notifications_filter_by_template_type(client, sample_service):
     assert len(json_response["notifications"]) == 1
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "created"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.CREATED
     assert json_response["notifications"][0]["template"] == {
         "id": str(email_template.id),
         "uri": notification.template.get_link(),
@@ -469,7 +469,11 @@ def test_get_all_notifications_filter_by_status_invalid_status(
 def test_get_all_notifications_filter_by_multiple_statuses(client, sample_template):
     notifications = [
         create_notification(template=sample_template, status=_status)
-        for _status in ["created", "pending", "sending"]
+        for _status in [
+            NotificationStatus.CREATED,
+            NotificationStatus.PENDING,
+            NotificationStatus.SENDING,
+        ]
     ]
     failed_notification = create_notification(
         template=sample_template, status="permanent-failure"
@@ -502,7 +506,8 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
 
 def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     created_notification = create_notification(
-        template=sample_template, status="created"
+        template=sample_template,
+        status=NotificationStatus.CREATED,
     )
     failed_notifications = [
         create_notification(template=sample_template, status="failed")
@@ -692,6 +697,6 @@ def test_get_all_notifications_renames_letter_statuses(
             noti["type"] == NotificationType.SMS
             or noti["type"] == NotificationType.EMAIL
         ):
-            assert noti["status"] == "created"
+            assert noti["status"] == NotificationStatus.CREATED
         else:
             pytest.fail()

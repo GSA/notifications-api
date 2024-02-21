@@ -1231,9 +1231,7 @@ def test_default_permissions_are_added_for_user_service(
                 str(sample_service.id)
             ]
 
-            assert sorted(i.value for i in PermissionType.defaults()) == sorted(
-                service_permissions
-            )
+            assert sorted(PermissionType.defaults()) == sorted(service_permissions)
 
 
 def test_add_existing_user_to_another_service_with_all_permissions(
@@ -1790,7 +1788,7 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     data = {
         "page": 1,
         "template_type": [TemplateType.SMS],
-        "status": ["created", "sending"],
+        "status": [NotificationStatus.CREATED, NotificationStatus.SENDING],
         "to": "0855",
     }
 
@@ -2103,7 +2101,7 @@ def test_get_detailed_service(
         date(2000, 1, 1), NotificationType.SMS, sample_service, count=1
     )
     with freeze_time("2000-01-02T12:00:00"):
-        create_notification(template=sample_template, status="created")
+        create_notification(template=sample_template, status=NotificationStatus.CREATED)
         resp = client.get(
             f"/service/{sample_service.id}?detailed=True&today_only={today_only}",
             headers=[create_admin_authorization_header()],
@@ -2114,10 +2112,10 @@ def test_get_detailed_service(
     assert service["id"] == str(sample_service.id)
     assert "statistics" in service.keys()
     assert set(service["statistics"].keys()) == {
-        NotificationType.SMS.value,
-        NotificationType.EMAIL.value,
+        NotificationType.SMS,
+        NotificationType.EMAIL,
     }
-    assert service["statistics"][NotificationType.SMS.value] == stats
+    assert service["statistics"][NotificationType.SMS] == stats
 
 
 def test_get_services_with_detailed_flag(client, sample_template):
@@ -2136,8 +2134,8 @@ def test_get_services_with_detailed_flag(client, sample_template):
     assert data[0]["name"] == "Sample service"
     assert data[0]["id"] == str(notifications[0].service_id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
-        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 3},
+        NotificationType.EMAIL: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS: {"delivered": 0, "failed": 0, "requested": 3},
     }
 
 
@@ -2159,8 +2157,8 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(
     data = resp.json["data"]
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {"delivered": 0, "failed": 0, "requested": 0},
-        NotificationType.SMS.value: {"delivered": 0, "failed": 0, "requested": 2},
+        NotificationType.EMAIL: {"delivered": 0, "failed": 0, "requested": 0},
+        NotificationType.SMS: {"delivered": 0, "failed": 0, "requested": 2},
     }
 
 
@@ -2229,27 +2227,27 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.EMAIL: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
-        NotificationType.SMS.value: {
-            NotificationStatus.DELIVERED: 1,
-            NotificationStatus.FAILED: 0,
+        NotificationType.SMS: {
+            "delivered": 1,
+            "failed": 0,
             "requested": 3,
         },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        NotificationType.EMAIL.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.EMAIL: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
-        NotificationType.SMS.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.SMS: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 1,
         },
     }
@@ -2274,27 +2272,27 @@ def test_get_detailed_services_includes_services_with_no_notifications(
     assert len(data) == 2
     assert data[0]["id"] == str(service_1.id)
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.EMAIL: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
-        NotificationType.SMS.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.SMS: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 1,
         },
     }
     assert data[1]["id"] == str(service_2.id)
     assert data[1]["statistics"] == {
-        NotificationType.EMAIL.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.EMAIL: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
-        NotificationType.SMS.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.SMS: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
     }
@@ -2316,14 +2314,14 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
 
     assert len(data) == 1
     assert data[0]["statistics"] == {
-        NotificationType.EMAIL.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.EMAIL: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 0,
         },
-        NotificationType.SMS.value: {
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+        NotificationType.SMS: {
+            "delivered": 0,
+            "failed": 0,
             "requested": 3,
         },
     }
@@ -2369,14 +2367,14 @@ def test_get_detailed_services_for_date_range(
     )
 
     assert len(data) == 1
-    assert data[0]["statistics"][NotificationType.EMAIL.value] == {
-        NotificationStatus.DELIVERED: 0,
-        NotificationStatus.FAILED: 0,
+    assert data[0]["statistics"][NotificationType.EMAIL] == {
+        "delivered": 0,
+        "failed": 0,
         "requested": 0,
     }
-    assert data[0]["statistics"][NotificationType.SMS.value] == {
-        NotificationStatus.DELIVERED: 2,
-        NotificationStatus.FAILED: 0,
+    assert data[0]["statistics"][NotificationType.SMS] == {
+        "delivered": 2,
+        "failed": 0,
         "requested": 2,
     }
 

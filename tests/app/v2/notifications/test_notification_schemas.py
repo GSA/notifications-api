@@ -39,7 +39,7 @@ def test_get_notifications_valid_json(input):
         # multiple invalid statuses
         (["elephant", "giraffe", "cheetah"], []),
         # one bad status and one good status
-        (["elephant"], ["created"]),
+        (["elephant"], [NotificationStatus.CREATED]),
     ],
 )
 def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_statuses):

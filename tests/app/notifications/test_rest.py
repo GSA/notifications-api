@@ -272,13 +272,19 @@ def test_only_normal_api_keys_can_return_job_notifications(
     key_type,
 ):
     normal_notification = create_notification(
-        template=sample_template, api_key=sample_api_key, key_type=KeyType.NORMAL
+        template=sample_template,
+        api_key=sample_api_key,
+        key_type=KeyType.NORMAL,
     )
     team_notification = create_notification(
-        template=sample_template, api_key=sample_team_api_key, key_type=KeyType.TEAM
+        template=sample_template,
+        api_key=sample_team_api_key,
+        key_type=KeyType.TEAM,
     )
     test_notification = create_notification(
-        template=sample_template, api_key=sample_test_api_key, key_type=KeyType.TEST
+        template=sample_template,
+        api_key=sample_test_api_key,
+        key_type=KeyType.TEST,
     )
 
     notification_objs = {

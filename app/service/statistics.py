@@ -68,7 +68,7 @@ def format_monthly_template_notification_stats(year, rows):
             stats[formatted_month][str(row.template_id)] = {
                 "name": row.name,
                 "type": row.template_type,
-                "counts": dict.fromkeys([e.value for e in NotificationStatus], 0),
+                "counts": dict.fromkeys(list(NotificationStatus), 0),
             }
         stats[formatted_month][str(row.template_id)]["counts"][row.status] += row.count
 
@@ -83,17 +83,17 @@ def create_zeroed_stats_dicts():
 
 
 def _update_statuses_from_row(update_dict, row):
-    if row.status != "cancelled":
+    if row.status != NotificationStatus.CANCELLED:
         update_dict["requested"] += row.count
-    if row.status in ("delivered", "sent"):
+    if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict["delivered"] += row.count
     elif row.status in (
-        "failed",
-        "technical-failure",
-        "temporary-failure",
-        "permanent-failure",
-        "validation-failed",
-        "virus-scan-failed",
+        NotificationStatus.FAILED,
+        NotificationStatus.TECHNICAL_FAILURE,
+        NotificationStatus.TEMPORARY_FAILURE,
+        NotificationStatus.PERMANENT_FAILURE,
+        NotificationStatus.VALIDATION_FAILED,
+        NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict["failed"] += row.count
 

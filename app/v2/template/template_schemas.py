@@ -17,7 +17,7 @@ get_template_by_id_response = {
     "title": "reponse v2/template",
     "properties": {
         "id": uuid,
-        "type": {"enum": [e.value for e in TemplateType]},
+        "type": {"enum": list(TemplateType)},
         "created_at": {
             "format": "date-time",
             "type": "string",
@@ -62,7 +62,7 @@ post_template_preview_response = {
     "title": "reponse v2/template/{id}/preview",
     "properties": {
         "id": uuid,
-        "type": {"enum": [e.value for e in TemplateType]},
+        "type": {"enum": list(TemplateType)},
         "version": {"type": "integer"},
         "body": {"type": "string"},
         "subject": {"type": ["string", "null"]},

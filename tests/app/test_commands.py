@@ -265,7 +265,8 @@ def test_populate_annual_billing_with_defaults(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type.value, organization_type=organization_type
+        service_name=organization_type,
+        organization_type=organization_type,
     )
 
     notify_api.test_cli_runner().invoke(
@@ -289,7 +290,8 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type.value, organization_type=organization_type
+        service_name=organization_type,
+        organization_type=organization_type,
     )
 
     notify_api.test_cli_runner().invoke(

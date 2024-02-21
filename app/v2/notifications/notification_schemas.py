@@ -41,7 +41,7 @@ get_notification_response = {
         "line_5": {"type": ["string", "null"]},
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
-        "type": {"enum": [e.value for e in TemplateType]},
+        "type": {"enum": list(TemplateType)},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},
@@ -82,11 +82,11 @@ get_notifications_request = {
         "reference": {"type": "string"},
         "status": {
             "type": "array",
-            "items": {"enum": [e.value for e in NotificationStatus]},
+            "items": {"enum": list(NotificationStatus)},
         },
         "template_type": {
             "type": "array",
-            "items": {"enum": [e.value for e in TemplateType]},
+            "items": {"enum": list(TemplateType)},
         },
         "include_jobs": {"enum": ["true", "True"]},
         "older_than": uuid,
