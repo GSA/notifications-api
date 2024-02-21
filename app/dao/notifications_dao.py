@@ -75,6 +75,9 @@ def dao_create_notification(notification):
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
+
+    print(f"****DAO CREATE NOTIFICATION MESSAGE PARTS IS: {notification.message_parts}")
+    print(str(db.session.add(notification)))
     db.session.add(notification)
 
 
@@ -670,3 +673,11 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
             union(notification_table_query, ft_status_table_query).subquery()
         ).distinct()
     }
+
+
+def dao_get_notification_message_parts_by_job_id(job_id):
+    total_message_parts = db.session.query(
+        func.sum(Notification.message_parts.label("message_parts"))
+    ).filter(
+        Notification.job_id == job_id
+    )

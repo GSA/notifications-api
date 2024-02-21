@@ -1596,6 +1596,7 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
+    message_parts = db.Column(db.Integer, nullable=True)
     updated_at = db.Column(
         db.DateTime,
         index=False,
@@ -1833,6 +1834,7 @@ class Notification(db.Model):
             "sent_at": get_dt_string_or_none(self.sent_at),
             "completed_at": self.completed_at(),
             "scheduled_for": None,
+            "message_parts": self.message_parts,
         }
 
         return serialized

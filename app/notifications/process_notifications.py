@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 
 from flask import current_app
 from notifications_utils.recipients import (
@@ -133,6 +134,14 @@ def persist_notification(
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
+        template = dao_get_template_by_id_and_service_id(template_id, service.id)
+        template_object = SMSMessageTemplate(
+            {
+                "content": template.content,
+                "template_type": template.template_type,
+            }
+        )
+        notification.message_parts = template_object.fragment_count
         dao_create_notification(notification)
         if key_type != KEY_TYPE_TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(

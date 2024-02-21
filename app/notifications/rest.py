@@ -200,3 +200,9 @@ def create_template_object_for_notification(template, personalisation):
         errors = {"content": [message]}
         raise InvalidRequest(errors, status_code=400)
     return template_object
+
+
+@notifications.route("/notifications/<uuid:job_id>", methods=["GET"])
+def get_batch_notification_message_parts_by_job_id(job_id):
+    total_message_parts = notifications_dao.dao_get_notification_message_parts_by_job_id(job_id)
+    return total_message_parts
