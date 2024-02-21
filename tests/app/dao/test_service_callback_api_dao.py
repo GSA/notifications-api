@@ -10,6 +10,7 @@ from app.dao.service_callback_api_dao import (
     reset_service_callback_api,
     save_service_callback_api,
 )
+from app.enums import CallbackType
 from app.models import ServiceCallbackApi
 from tests.app.db import create_service_callback_api
 
@@ -65,7 +66,7 @@ def test_update_service_callback_api_unique_constraint(sample_service):
         url="https://some_service/callback_endpoint",
         bearer_token="some_unique_string",
         updated_by_id=sample_service.users[0].id,
-        callback_type="delivery_status",
+        callback_type=CallbackType.DELIVERY_STATUS,
     )
     save_service_callback_api(service_callback_api)
     another = ServiceCallbackApi(
@@ -73,7 +74,7 @@ def test_update_service_callback_api_unique_constraint(sample_service):
         url="https://some_service/another_callback_endpoint",
         bearer_token="different_string",
         updated_by_id=sample_service.users[0].id,
-        callback_type="delivery_status",
+        callback_type=CallbackType.DELIVERY_STATUS,
     )
     with pytest.raises(expected_exception=SQLAlchemyError):
         save_service_callback_api(another)
@@ -85,7 +86,7 @@ def test_update_service_callback_can_add_two_api_of_different_types(sample_servi
         url="https://some_service/callback_endpoint",
         bearer_token="some_unique_string",
         updated_by_id=sample_service.users[0].id,
-        callback_type="delivery_status",
+        callback_type=CallbackType.DELIVERY_STATUS,
     )
     save_service_callback_api(delivery_status)
     complaint = ServiceCallbackApi(
@@ -93,7 +94,7 @@ def test_update_service_callback_can_add_two_api_of_different_types(sample_servi
         url="https://some_service/another_callback_endpoint",
         bearer_token="different_string",
         updated_by_id=sample_service.users[0].id,
-        callback_type="complaint",
+        callback_type=CallbackType.COMPLAINT,
     )
     save_service_callback_api(complaint)
     results = ServiceCallbackApi.query.order_by(ServiceCallbackApi.callback_type).all()

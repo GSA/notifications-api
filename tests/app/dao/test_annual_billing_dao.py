@@ -67,17 +67,17 @@ def test_dao_update_annual_billing_for_future_years(notify_db_session, sample_se
 @pytest.mark.parametrize(
     "org_type, year, expected_default",
     [
-        ("federal", 2021, 150000),
-        ("state", 2021, 150000),
+        (OrganizationType.FEDERAL, 2021, 150000),
+        (OrganizationType.STATE, 2021, 150000),
         (None, 2021, 150000),
-        ("federal", 2020, 250000),
-        ("state", 2020, 250000),
-        ("other", 2020, 250000),
+        (OrganizationType.FEDERAL, 2020, 250000),
+        (OrganizationType.STATE, 2020, 250000),
+        (OrganizationType.OTHER, 2020, 250000),
         (None, 2020, 250000),
-        ("federal", 2019, 250000),
-        ("federal", 2022, 40000),
-        ("state", 2022, 40000),
-        ("federal", 2023, 40000),
+        (OrganizationType.FEDERAL, 2019, 250000),
+        (OrganizationType.FEDERAL, 2022, 40000),
+        (OrganizationType.STATE, 2022, 40000),
+        (OrganizationType.FEDERAL, 2023, 40000),
     ],
 )
 def test_set_default_free_allowance_for_service(

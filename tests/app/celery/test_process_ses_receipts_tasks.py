@@ -16,7 +16,7 @@ from app.celery.test_key_tasks import (
     ses_soft_bounce_callback,
 )
 from app.dao.notifications_dao import get_notification_by_id
-from app.enums import NotificationStatus
+from app.enums import CallbackType, NotificationStatus
 from app.models import Complaint
 from tests.app.conftest import create_sample_notification
 from tests.app.db import (
@@ -407,7 +407,7 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(
     create_service_callback_api(
         service=sample_email_template.service,
         url="https://original_url.com",
-        callback_type="complaint",
+        callback_type=CallbackType.COMPLAINT,
     )
     notification = create_notification(
         template=sample_email_template,

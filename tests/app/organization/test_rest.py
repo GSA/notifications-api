@@ -580,7 +580,7 @@ def test_post_link_service_to_organization(admin_request, sample_service):
         _expected_status=204,
     )
     assert len(organization.services) == 1
-    assert sample_service.organization_type == "federal"
+    assert sample_service.organization_type == OrganizationType.FEDERAL
 
 
 @freeze_time("2021-09-24 13:30")

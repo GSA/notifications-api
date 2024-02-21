@@ -229,7 +229,7 @@ def test_resend_expired_invite(
 
 
 def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
     url = f"/service/{sample_invited_user.service_id}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
@@ -246,7 +246,7 @@ def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user
 def test_update_invited_user_for_wrong_service_returns_404(
     client, sample_invited_user, fake_uuid
 ):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
     url = f"/service/{fake_uuid}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(

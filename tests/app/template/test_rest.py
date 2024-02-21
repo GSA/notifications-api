@@ -798,7 +798,7 @@ def test_update_does_not_create_new_version_when_there_is_no_change(
 
 def test_update_set_process_type_on_template(client, sample_template):
     auth_header = create_admin_authorization_header()
-    data = {"process_type": "priority"}
+    data = {"process_type": TemplateProcessType.PRIORITY}
     resp = client.post(
         f"/service/{sample_template.service_id}/template/{sample_template.id}",
         data=json.dumps(data),
@@ -807,7 +807,7 @@ def test_update_set_process_type_on_template(client, sample_template):
     assert resp.status_code == 200
 
     template = dao_get_template_by_id(sample_template.id)
-    assert template.process_type == "priority"
+    assert template.process_type == TemplateProcessType.PRIORITY
 
 
 @pytest.mark.parametrize(

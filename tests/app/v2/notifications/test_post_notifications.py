@@ -13,6 +13,7 @@ from app.enums import (
     NotificationStatus,
     NotificationType,
     ServicePermissionType,
+    TemplateProcessType,
     TemplateType,
 )
 from app.models import Notification
@@ -580,7 +581,9 @@ def test_send_notification_uses_priority_queue_when_template_is_marked_as_priori
     mocker.patch(f"app.celery.provider_tasks.deliver_{notification_type}.apply_async")
 
     sample = create_template(
-        service=sample_service, template_type=notification_type, process_type="priority"
+        service=sample_service,
+        template_type=notification_type,
+        process_type=TemplateProcessType.PRIORITY,
     )
     mocked = mocker.patch(
         f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"

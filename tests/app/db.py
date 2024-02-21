@@ -27,6 +27,7 @@ from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template, dao_update_template
 from app.dao.users_dao import save_model_user
 from app.enums import (
+    CallbackType,
     JobStatus,
     KeyType,
     NotificationStatus,
@@ -482,7 +483,7 @@ def create_service_callback_api(
     service,
     url="https://something.com",
     bearer_token="some_super_secret",
-    callback_type="delivery_status",
+    callback_type=CallbackType.DELIVERY_STATUS,
 ):
     service_callback_api = ServiceCallbackApi(
         service_id=service.id,

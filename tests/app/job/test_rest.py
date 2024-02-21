@@ -28,7 +28,7 @@ from tests.conftest import set_config
 
 
 def test_get_job_with_invalid_service_id_returns404(client, sample_service):
-    path = "/service/{}/job".format(sample_service.id)
+    path = f"/service/{sample_service.id}/job"
     auth_header = create_admin_authorization_header()
     response = client.get(path, headers=[auth_header])
     assert response.status_code == 200
@@ -38,7 +38,7 @@ def test_get_job_with_invalid_service_id_returns404(client, sample_service):
 
 def test_get_job_with_invalid_job_id_returns404(client, sample_template):
     service_id = sample_template.service.id
-    path = "/service/{}/job/{}".format(service_id, "bad-id")
+    path = f"/service/{service_id}/job/{'bad-id'}"
     auth_header = create_admin_authorization_header()
     response = client.get(path, headers=[auth_header])
     assert response.status_code == 404
@@ -49,7 +49,7 @@ def test_get_job_with_invalid_job_id_returns404(client, sample_template):
 
 def test_get_job_with_unknown_id_returns404(client, sample_template, fake_uuid):
     service_id = sample_template.service.id
-    path = "/service/{}/job/{}".format(service_id, fake_uuid)
+    path = f"/service/{service_id}/job/{fake_uuid}"
     auth_header = create_admin_authorization_header()
     response = client.get(path, headers=[auth_header])
     assert response.status_code == 404
@@ -60,7 +60,7 @@ def test_get_job_with_unknown_id_returns404(client, sample_template, fake_uuid):
 def test_cancel_job(client, sample_scheduled_job):
     job_id = str(sample_scheduled_job.id)
     service_id = sample_scheduled_job.service.id
-    path = "/service/{}/job/{}/cancel".format(service_id, job_id)
+    path = f"/service/{service_id}/job/{job_id}/cancel"
     auth_header = create_admin_authorization_header()
     response = client.post(path, headers=[auth_header])
     assert response.status_code == 200
@@ -73,7 +73,7 @@ def test_cant_cancel_normal_job(client, sample_job, mocker):
     job_id = str(sample_job.id)
     service_id = sample_job.service.id
     mock_update = mocker.patch("app.dao.jobs_dao.dao_update_job")
-    path = "/service/{}/job/{}/cancel".format(service_id, job_id)
+    path = f"/service/{service_id}/job/{job_id}/cancel"
     auth_header = create_admin_authorization_header()
     response = client.post(path, headers=[auth_header])
     assert response.status_code == 404
@@ -95,7 +95,7 @@ def test_create_unscheduled_job(client, sample_template, mocker, fake_uuid):
         "id": fake_uuid,
         "created_by": str(sample_template.created_by.id),
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
 
@@ -136,7 +136,7 @@ def test_create_unscheduled_job_with_sender_id_in_metadata(
         "id": fake_uuid,
         "created_by": str(sample_template.created_by.id),
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
 
@@ -168,7 +168,7 @@ def test_create_scheduled_job(client, sample_template, mocker, fake_uuid):
         "created_by": str(sample_template.created_by.id),
         "scheduled_for": scheduled_date,
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
 
@@ -197,7 +197,7 @@ def test_create_job_returns_403_if_service_is_not_active(
     mock_job_dao = mocker.patch("app.dao.jobs_dao.dao_create_job")
     auth_header = create_admin_authorization_header()
     response = client.post(
-        "/service/{}/job".format(sample_service.id),
+        f"/service/{sample_service.id}/job",
         data="",
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -229,12 +229,12 @@ def test_create_job_returns_400_if_file_is_invalid(
         template_id=str(sample_template.id),
         original_file_name="thisisatest.csv",
         notification_count=1,
-        **extra_metadata
+        **extra_metadata,
     )
     mocker.patch("app.job.rest.get_job_metadata_from_s3", return_value=metadata)
     data = {"id": fake_uuid}
     response = client.post(
-        "/service/{}/job".format(sample_template.service.id),
+        f"/service/{sample_template.service.id}/job",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -266,7 +266,7 @@ def test_should_not_create_scheduled_job_more_then_96_hours_in_the_future(
         "created_by": str(sample_template.created_by.id),
         "scheduled_for": scheduled_date,
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
 
@@ -303,7 +303,7 @@ def test_should_not_create_scheduled_job_in_the_past(
         "created_by": str(sample_template.created_by.id),
         "scheduled_for": scheduled_date,
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
 
@@ -327,7 +327,7 @@ def test_create_job_returns_400_if_missing_id(client, sample_template, mocker):
         },
     )
     data = {}
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
     response = client.post(path, data=json.dumps(data), headers=headers)
@@ -354,7 +354,7 @@ def test_create_job_returns_400_if_missing_data(
         "id": fake_uuid,
         "valid": "True",
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
     response = client.post(path, data=json.dumps(data), headers=headers)
@@ -385,7 +385,7 @@ def test_create_job_returns_404_if_template_does_not_exist(
     data = {
         "id": fake_uuid,
     }
-    path = "/service/{}/job".format(sample_service.id)
+    path = f"/service/{sample_service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
     response = client.post(path, data=json.dumps(data), headers=headers)
@@ -408,7 +408,7 @@ def test_create_job_returns_404_if_missing_service(client, sample_template, mock
     )
     random_id = str(uuid.uuid4())
     data = {}
-    path = "/service/{}/job".format(random_id)
+    path = f"/service/{random_id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
     response = client.post(path, data=json.dumps(data), headers=headers)
@@ -437,7 +437,7 @@ def test_create_job_returns_400_if_archived_template(
         "id": fake_uuid,
         "valid": "True",
     }
-    path = "/service/{}/job".format(sample_template.service.id)
+    path = f"/service/{sample_template.service.id}/job"
     auth_header = create_admin_authorization_header()
     headers = [("Content-Type", "application/json"), auth_header]
     response = client.post(path, data=json.dumps(data), headers=headers)

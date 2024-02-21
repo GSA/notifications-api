@@ -39,7 +39,7 @@ def test_template_history_version(notify_api, sample_user, sample_template):
 def test_previous_template_history_version(notify_api, sample_template):
     old_content = sample_template.content
     sample_template.content = "New content"
-    sample_template.process_type = "priority"
+    sample_template.process_type = TemplateProcessType.PRIORITY
     dao_update_template(sample_template)
     with notify_api.test_request_context():
         with notify_api.test_client() as client:

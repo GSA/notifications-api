@@ -158,7 +158,7 @@ def test_get_invited_user_by_organization_when_user_does_not_belong_to_the_org(
 def test_update_org_invited_user_set_status_to_cancelled(
     admin_request, sample_invited_org_user
 ):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
 
     json_resp = admin_request.post(
         "organization_invite.update_org_invite_status",
@@ -166,13 +166,13 @@ def test_update_org_invited_user_set_status_to_cancelled(
         invited_org_user_id=sample_invited_org_user.id,
         _data=data,
     )
-    assert json_resp["data"]["status"] == "cancelled"
+    assert json_resp["data"]["status"] == InvitedUserStatus.CANCELLED
 
 
 def test_update_org_invited_user_for_wrong_service_returns_404(
     admin_request, sample_invited_org_user, fake_uuid
 ):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
 
     json_resp = admin_request.post(
         "organization_invite.update_org_invite_status",

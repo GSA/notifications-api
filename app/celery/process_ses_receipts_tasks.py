@@ -20,7 +20,7 @@ from app.dao.service_callback_api_dao import (
     get_service_complaint_callback_api_for_service,
     get_service_delivery_status_callback_api_for_service,
 )
-from app.enums import NotificationStatus
+from app.enums import CallbackType, NotificationStatus
 from app.models import Complaint
 
 
@@ -209,7 +209,7 @@ def handle_complaint(ses_message):
         )
         return
     notification = dao_get_notification_history_by_reference(reference)
-    ses_complaint = ses_message.get("complaint", None)
+    ses_complaint = ses_message.get(CallbackType.COMPLAINT, None)
 
     complaint = Complaint(
         notification_id=notification.id,
@@ -241,7 +241,7 @@ def remove_emails_from_bounce(bounce_dict):
 
 def remove_emails_from_complaint(complaint_dict):
     remove_mail_headers(complaint_dict)
-    complaint_dict["complaint"].pop("complainedRecipients")
+    complaint_dict[CallbackType.COMPLAINT].pop("complainedRecipients")
     return complaint_dict["mail"].pop("destination")
 
 
