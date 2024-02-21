@@ -116,7 +116,7 @@ def test_should_process_sms_job(sample_job, mocker):
         queue="database-tasks",
     )
     job = jobs_dao.dao_get_job_by_id(sample_job.id)
-    assert job.job_status == "finished"
+    assert job.job_status == JobStatus.FINISHED
 
 
 def test_should_process_sms_job_with_sender_id(sample_job, mocker, fake_uuid):
@@ -138,7 +138,7 @@ def test_should_process_sms_job_with_sender_id(sample_job, mocker, fake_uuid):
 
 
 def test_should_not_process_job_if_already_pending(sample_template, mocker):
-    job = create_job(template=sample_template, job_status="scheduled")
+    job = create_job(template=sample_template, job_status=JobStatus.SCHEDULED)
 
     mocker.patch("app.celery.tasks.s3.get_job_and_metadata_from_s3")
     mocker.patch("app.celery.tasks.process_row")
@@ -153,7 +153,7 @@ def test_should_process_job_if_send_limits_are_not_exceeded(
     notify_api, notify_db_session, mocker
 ):
     service = create_service(message_limit=10)
-    template = create_template(service=service, template_type="email")
+    template = create_template(service=service, template_type=TemplateType.EMAIL)
     job = create_job(template=template, notification_count=10)
 
     mocker.patch(
@@ -169,7 +169,7 @@ def test_should_process_job_if_send_limits_are_not_exceeded(
         service_id=str(job.service.id), job_id=str(job.id)
     )
     job = jobs_dao.dao_get_job_by_id(job.id)
-    assert job.job_status == "finished"
+    assert job.job_status == JobStatus.FINISHED
     tasks.save_email.apply_async.assert_called_with(
         (
             str(job.service_id),
@@ -238,7 +238,7 @@ def test_should_process_email_job(email_job_with_placeholders, mocker):
         queue="database-tasks",
     )
     job = jobs_dao.dao_get_job_by_id(email_job_with_placeholders.id)
-    assert job.job_status == "finished"
+    assert job.job_status == JobStatus.FINISHED
 
 
 def test_should_process_email_job_with_sender_id(
@@ -293,7 +293,7 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
     }
     assert tasks.save_sms.apply_async.call_count == 10
     job = jobs_dao.dao_get_job_by_id(sample_job_with_placeholdered_template.id)
-    assert job.job_status == "finished"
+    assert job.job_status == JobStatus.FINISHED
 
 
 # -------------- process_row tests -------------- #
@@ -311,7 +311,7 @@ def test_process_row_sends_letter_task(
 ):
     mocker.patch("app.celery.tasks.create_uuid", return_value="noti_uuid")
     task_mock = mocker.patch(
-        "app.celery.tasks.{}.apply_async".format(expected_function)
+        f"app.celery.tasks.{expected_function}.apply_async"
     )
     encrypt_mock = mocker.patch("app.celery.tasks.encryption.encrypt")
     template = Mock(id="template_id", template_type=template_type)
@@ -1041,7 +1041,7 @@ def test_send_inbound_sms_to_service_post_https_request_to_service(
     assert request_mock.request_history[0].headers["Content-type"] == "application/json"
     assert request_mock.request_history[0].headers[
         "Authorization"
-    ] == "Bearer {}".format(inbound_api.bearer_token)
+    ] == f"Bearer {inbound_api.bearer_token}"
 
 
 def test_send_inbound_sms_to_service_does_not_send_request_when_inbound_sms_does_not_exist(

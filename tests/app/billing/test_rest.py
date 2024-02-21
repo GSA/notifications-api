@@ -155,7 +155,7 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
     )
 
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
-    email_template = create_template(service=service, template_type="email")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
 
     for dt in (date(2016, 1, 28), date(2016, 8, 10), date(2016, 12, 26)):
         create_ft_billing(local_date=dt, template=sms_template, rate=0.0162)
@@ -171,7 +171,11 @@ def test_get_yearly_usage_by_monthly_from_ft_billing(admin_request, notify_db_se
 
     assert len(json_response) == 3  # 3 billed months for SMS
 
-    email_rows = [row for row in json_response if row["notification_type"] == "email"]
+    email_rows = [
+        row
+        for row in json_response
+        if row["notification_type"] == NotificationType.EMAIL
+    ]
     assert len(email_rows) == 0
 
     sms_row = next(

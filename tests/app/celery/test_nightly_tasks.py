@@ -104,10 +104,10 @@ def test_will_remove_csv_files_for_jobs_older_than_retention_period(
         days_of_retention=30,
     )
     sms_template_service_1 = create_template(service=service_1)
-    email_template_service_1 = create_template(service=service_1, template_type="email")
+    email_template_service_1 = create_template(service=service_1, template_type=TemplateType.EMAIL,)
 
     sms_template_service_2 = create_template(service=service_2)
-    email_template_service_2 = create_template(service=service_2, template_type="email")
+    email_template_service_2 = create_template(service=service_2, template_type=TemplateType.EMAIL,)
 
     four_days_ago = datetime.utcnow() - timedelta(days=4)
     eight_days_ago = datetime.utcnow() - timedelta(days=8)
@@ -153,7 +153,7 @@ def test_delete_email_notifications_older_than_retentions_calls_child_task(
         "app.celery.nightly_tasks._delete_notifications_older_than_retention_by_type"
     )
     delete_email_notifications_older_than_retention()
-    mocked_notifications.assert_called_once_with("email")
+    mocked_notifications.assert_called_once_with(NotificationType.EMAIL)
 
 
 @freeze_time("2021-12-13T10:00")
@@ -352,10 +352,10 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     create_template(service_will_delete_1)
     create_template(service_will_delete_2)
     nothing_to_delete_sms_template = create_template(
-        service_nothing_to_delete, template_type=TemplateType.SMS
+        service_nothing_to_delete, template_type=TemplateType.SMS,
     )
     nothing_to_delete_email_template = create_template(
-        service_nothing_to_delete, template_type="email"
+        service_nothing_to_delete, template_type=TemplateType.EMAIL,
     )
 
     # will be deleted as service has no custom retention, but past our default 7 days

@@ -19,6 +19,7 @@ from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
 from app.enums import (
+    JobStatus,
     KeyType,
     NotificationStatus,
     RecipientType,
@@ -160,7 +161,7 @@ def service_factory(sample_user):
                 user=user,
                 check_if_service_exists=True,
             )
-            if template_type == "email":
+            if template_type == TemplateType.EMAIL:
                 create_template(
                     service,
                     template_name="Template Name",
@@ -381,7 +382,7 @@ def sample_job(notify_db_session):
         "notification_count": 1,
         "created_at": datetime.utcnow(),
         "created_by": service.created_by,
-        "job_status": "pending",
+        "job_status": JobStatus.PENDING,
         "scheduled_for": None,
         "processing_started": None,
         "archived": False,
@@ -405,7 +406,7 @@ def sample_job_with_placeholdered_template(
 def sample_scheduled_job(sample_template_with_placeholders):
     return create_job(
         sample_template_with_placeholders,
-        job_status="scheduled",
+        job_status=JobStatus.SCHEDULED,
         scheduled_for=(datetime.utcnow() + timedelta(minutes=60)).isoformat(),
     )
 
@@ -420,7 +421,7 @@ def sample_notification_with_job(notify_db_session):
         job=job,
         job_row_number=None,
         to_field=None,
-        status="created",
+        status=NotificationStatus.CREATED,
         reference=None,
         created_at=None,
         sent_at=None,
@@ -525,7 +526,7 @@ def sample_notification_history(notify_db_session, sample_template):
         service=sample_template.service,
         template_id=sample_template.id,
         template_version=sample_template.version,
-        status="created",
+        status=NotificationStatus.CREATED,
         created_at=created_at,
         notification_type=notification_type,
         key_type=KeyType.NORMAL,
@@ -572,7 +573,7 @@ def sample_expired_user(notify_db_session):
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": ["folder_1_id", "folder_2_id"],
         "created_at": datetime.utcnow() - timedelta(days=3),
-        "status": "expired",
+        "status": NotificationStatus.EXPIRED,
     }
     expired_user = InvitedUser(**data)
     save_invited_user(expired_user)
@@ -639,7 +640,7 @@ def email_2fa_code_template(notify_service):
             "((url))"
         ),
         subject="Sign in to GOV.UK Notify",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -650,7 +651,7 @@ def email_verification_template(notify_service):
         user=notify_service.users[0],
         template_config_name="NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID",
         content="((user_name)) use ((url)) to complete registration",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -665,7 +666,7 @@ def invitation_email_template(notify_service):
         template_config_name="INVITATION_EMAIL_TEMPLATE_ID",
         content=content,
         subject="Invitation to ((service_name))",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -677,7 +678,7 @@ def org_invite_email_template(notify_service):
         template_config_name="ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID",
         content="((user_name)) ((organization_name)) ((url))",
         subject="Invitation to ((organization_name))",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -689,7 +690,7 @@ def password_reset_email_template(notify_service):
         template_config_name="PASSWORD_RESET_TEMPLATE_ID",
         content="((user_name)) you can reset password by clicking ((url))",
         subject="Reset your password",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -701,7 +702,7 @@ def verify_reply_to_address_email_template(notify_service):
         template_config_name="REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID",
         content="Hi,This address has been provided as the reply-to email address so we are verifying if it's working",
         subject="Your GOV.UK Notify reply-to email address",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -713,7 +714,7 @@ def team_member_email_edit_template(notify_service):
         template_config_name="TEAM_MEMBER_EDIT_EMAIL_TEMPLATE_ID",
         content="Hi ((name)) ((servicemanagername)) changed your email to ((email address))",
         subject="Your GOV.UK Notify email address has changed",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -737,7 +738,7 @@ def already_registered_template(notify_service):
         user=notify_service.users[0],
         template_config_name="ALREADY_REGISTERED_EMAIL_TEMPLATE_ID",
         content=content,
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -753,7 +754,7 @@ def change_email_confirmation_template(notify_service):
         user=notify_service.users[0],
         template_config_name="CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID",
         content=content,
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
     return template
 
@@ -771,7 +772,7 @@ def mou_signed_templates(notify_service):
             notify_service,
             notify_service.users[0],
             config_name,
-            "email",
+            TemplateType.EMAIL,
             content="\n".join(
                 next(
                     x
@@ -862,7 +863,7 @@ def sample_inbound_numbers(sample_service):
     inbound_numbers.append(create_inbound_number(number="1", provider="sns"))
     inbound_numbers.append(
         create_inbound_number(
-            number="2", provider="sns", active=False, service_id=service.id
+            number="2", provider="sns", active=False, service_id=service.id,
         )
     )
     return inbound_numbers

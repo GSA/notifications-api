@@ -42,7 +42,7 @@ from tests.app.db import (
 @pytest.mark.parametrize("mobile_number", ["+447700900855", "+12348675309"])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", RecipientType.MOBILE, mobile_number
+        "service_id", RecipientType.MOBILE, mobile_number,
     )
 
     assert service_guest_list.recipient == mobile_number
@@ -51,7 +51,7 @@ def test_should_build_service_guest_list_from_mobile_number(mobile_number):
 @pytest.mark.parametrize("email_address", ["test@example.com"])
 def test_should_build_service_guest_list_from_email_address(email_address):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", RecipientType.EMAIL, email_address
+        "service_id", RecipientType.EMAIL, email_address,
     )
 
     assert service_guest_list.recipient == email_address
@@ -220,7 +220,7 @@ def test_notification_subject_is_none_for_sms(sample_service):
     assert notification.subject is None
 
 
-@pytest.mark.parametrize("template_type", ["email"])
+@pytest.mark.parametrize("template_type", [TemplateType.EMAIL])
 def test_notification_subject_fills_in_placeholders(sample_service, template_type):
     template = create_template(
         service=sample_service, template_type=template_type, subject="((name))"

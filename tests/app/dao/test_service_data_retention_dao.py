@@ -57,7 +57,7 @@ def test_fetch_service_data_retention_returns_empty_list_when_no_rows_for_servic
 
 
 def test_fetch_service_data_retention_by_id(sample_service):
-    email_data_retention = insert_service_data_retention(sample_service.id, "email", 3)
+    email_data_retention = insert_service_data_retention(sample_service.id, NotificationType.EMAIL, 3,)
     insert_service_data_retention(sample_service.id, NotificationType.SMS, 13)
     result = fetch_service_data_retention_by_id(
         sample_service.id, email_data_retention.id

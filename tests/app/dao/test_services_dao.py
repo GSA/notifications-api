@@ -511,7 +511,7 @@ def test_dao_fetch_live_services_data(sample_user):
     create_service(service_name="restricted", restricted=True)
     create_service(service_name="not_active", active=False)
     create_service(service_name="not_live", count_as_live=False)
-    email_template = create_template(service=service, template_type="email")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
     dao_add_service_to_organization(service=service, organization_id=org.id)
     # two sms billing records for 1st service within current financial year:
     create_ft_billing(local_date="2019-04-20", template=sms_template)
@@ -1217,8 +1217,8 @@ def test_dao_fetch_todays_stats_for_all_services_only_includes_today(notify_db_s
         stats = dao_fetch_todays_stats_for_all_services()
 
     stats = {row.status: row.count for row in stats}
-    assert "delivered" not in stats
-    assert stats["failed"] == 1
+    assert NotificationStatus.DELIVERED not in stats
+    assert stats[NotificationStatus.FAILED] == 1
 
 
 def test_dao_fetch_todays_stats_for_all_services_groups_correctly(notify_db_session):

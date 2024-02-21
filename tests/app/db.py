@@ -141,7 +141,7 @@ def create_service(
             created_by=user
             if user
             else create_user(
-                email="{}@digital.cabinet-office.gov.uk".format(uuid.uuid4())
+                email=f"{uuid.uuid4()}@digital.cabinet-office.gov.uk"
             ),
             prefix_sms=prefix_sms,
             organization_type=organization_type,
@@ -212,7 +212,7 @@ def create_template(
     contact_block_id=None,
 ):
     data = {
-        "name": template_name or "{} Template Name".format(template_type),
+        "name": template_name or f"{template_type} Template Name",
         "template_type": template_type,
         "content": content,
         "service": service,
@@ -353,7 +353,7 @@ def create_notification_history(
     if created_at is None:
         created_at = datetime.utcnow()
 
-    if status != "created":
+    if status != NotificationStatus.CREATED:
         sent_at = sent_at or datetime.utcnow()
         updated_at = updated_at or datetime.utcnow()
 
@@ -498,7 +498,7 @@ def create_service_callback_api(
 
 
 def create_email_branding(
-    id=None, colour="blue", logo="test_x2.png", name="test_org_1", text="DisplayName"
+    id=None, colour="blue", logo="test_x2.png", name="test_org_1", text="DisplayName",
 ):
     data = {
         "colour": colour,
@@ -529,7 +529,7 @@ def create_rate(start_date, value, notification_type):
 def create_api_key(service, key_type=KeyType.NORMAL, key_name=None):
     id_ = uuid.uuid4()
 
-    name = key_name if key_name else "{} api key {}".format(key_type, id_)
+    name = key_name if key_name else f"{key_type} api key {id_}"
 
     api_key = ApiKey(
         service=service,
@@ -644,7 +644,7 @@ def create_organization(
 
 
 def create_invited_org_user(
-    organization, invited_by, email_address="invite@example.com"
+    organization, invited_by, email_address="invite@example.com",
 ):
     invited_org_user = InvitedOrganizationUser(
         email_address=email_address,
@@ -752,7 +752,7 @@ def create_complaint(service=None, notification=None, created_at=None):
     if not service:
         service = create_service()
     if not notification:
-        template = create_template(service=service, template_type="email")
+        template = create_template(service=service, template_type=TemplateType.EMAIL)
         notification = create_notification(template=template)
 
     complaint = Complaint(
@@ -907,7 +907,7 @@ def set_up_usage_data(start_date):
         financial_year_start=year,
     )
     org_1 = create_organization(
-        name="Org for {}".format(service_1_sms_and_letter.name),
+        name=f"Org for {service_1_sms_and_letter.name}",
         purchase_order_number="org1 purchase order number",
         billing_contact_names="org1 billing contact names",
         billing_contact_email_addresses="org1@billing.contact email@addresses.gov.uk",
@@ -918,13 +918,13 @@ def set_up_usage_data(start_date):
     )
 
     create_ft_billing(
-        local_date=one_week_earlier, template=sms_template_1, billable_unit=2, rate=0.11
+        local_date=one_week_earlier, template=sms_template_1, billable_unit=2, rate=0.11,
     )
     create_ft_billing(
-        local_date=start_date, template=sms_template_1, billable_unit=2, rate=0.11
+        local_date=start_date, template=sms_template_1, billable_unit=2, rate=0.11,
     )
     create_ft_billing(
-        local_date=two_days_later, template=sms_template_1, billable_unit=1, rate=0.11
+        local_date=two_days_later, template=sms_template_1, billable_unit=1, rate=0.11,
     )
 
     # service with emails only:
@@ -933,7 +933,7 @@ def set_up_usage_data(start_date):
         service=service_with_emails, template_type=TemplateType.EMAIL
     )
     org_2 = create_organization(
-        name="Org for {}".format(service_with_emails.name),
+        name=f"Org for {service_with_emails.name}",
     )
     dao_add_service_to_organization(
         service=service_with_emails, organization_id=org_2.id
