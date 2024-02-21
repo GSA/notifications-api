@@ -14,7 +14,7 @@ from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
 from app.delivery.send_to_providers import get_html_email_options, get_logo_url
-from app.enums import BrandType, KeyType, NotificationStatus
+from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import EmailBranding, Notification
 from app.serialised_models import SerialisedService
@@ -53,7 +53,7 @@ def test_provider_to_use_should_only_return_sns_for_international(
     sns = get_provider_details_by_identifier("sns")
     sns.priority = international_provider_priority
 
-    ret = send_to_providers.provider_to_use("sms", international=True)
+    ret = send_to_providers.provider_to_use(NotificationType.SMS, international=True)
 
     assert ret.name == "sns"
 
@@ -66,7 +66,7 @@ def test_provider_to_use_raises_if_no_active_providers(
 
     # flake8 doesn't like raises with a generic exception
     try:
-        send_to_providers.provider_to_use("sms")
+        send_to_providers.provider_to_use(NotificationType.SMS)
         assert 1 == 0
     except Exception:
         assert 1 == 1
@@ -496,7 +496,9 @@ def test_update_notification_to_sending_does_not_update_status_from_a_final_stat
     notification = create_notification(template=template, status=starting_status)
     send_to_providers.update_notification_to_sending(
         notification,
-        notification_provider_clients.get_client_by_name_and_type("sns", "sms"),
+        notification_provider_clients.get_client_by_name_and_type(
+            "sns", NotificationType.SMS
+        ),
     )
     assert notification.status == expected_status
 

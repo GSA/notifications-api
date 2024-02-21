@@ -92,22 +92,22 @@ def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
         start_date=date(2018, 10, 29),
     )
     assert response == {
-        "email": {
+        NotificationType.EMAIL: {
             "failures": {
-                "virus-scan-failed": 0,
-                "temporary-failure": 0,
-                "permanent-failure": 0,
-                "technical-failure": 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
             },
             "total": 4,
             "test-key": 0,
         },
-        "sms": {
+        NotificationType.SMS: {
             "failures": {
-                "virus-scan-failed": 0,
-                "temporary-failure": 0,
-                "permanent-failure": 0,
-                "technical-failure": 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
             },
             "total": 11,
             "test-key": 1,
