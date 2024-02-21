@@ -25,6 +25,7 @@ from app.enums import (
     NotificationStatus,
     NotificationType,
     OrganizationType,
+    PermissionType,
     RecipientType,
     ServicePermissionType,
     TemplateProcessType,

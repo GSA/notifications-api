@@ -214,7 +214,7 @@ def test_get_jobs_for_service_in_processed_at_then_created_at_order(
 
 
 def test_update_job(sample_job):
-    assert sample_job.job_status == "pending"
+    assert sample_job.job_status == JobStatus.PENDING
 
     sample_job.job_status = "in progress"
 
@@ -268,8 +268,8 @@ def test_set_scheduled_jobs_to_pending_updates_rows(sample_template):
     create_job(sample_template, scheduled_for=one_hour_ago, job_status="scheduled")
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 2
-    assert jobs[0].job_status == "pending"
-    assert jobs[1].job_status == "pending"
+    assert jobs[0].job_status == JobStatus.PENDING
+    assert jobs[1].job_status == JobStatus.PENDING
 
 
 def test_get_future_scheduled_job_gets_a_job_yet_to_send(sample_scheduled_job):
@@ -444,7 +444,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
     assert len(results) == 0
 
 
-@pytest.mark.parametrize("status", ["pending", "in progress", "cancelled", "scheduled"])
+@pytest.mark.parametrize("status", [JobStatus.PENDING, JobStatus.IN_PROGRESS, JobStatus.CANCELLED, JobStatus.SCHEDULED,],)
 def test_find_jobs_with_missing_rows_doesnt_return_jobs_that_are_not_finished(
     sample_email_template, status
 ):

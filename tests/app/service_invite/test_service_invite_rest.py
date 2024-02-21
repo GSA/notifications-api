@@ -7,7 +7,7 @@ from flask import current_app
 from freezegun import freeze_time
 from notifications_utils.url_safe_token import generate_token
 
-from app.enums import AuthType
+from app.enums import AuthType, InvitedUserStatus
 from app.models import Notification
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
@@ -224,7 +224,7 @@ def test_resend_expired_invite(
 
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))["data"]
-    assert json_resp["status"] == "pending"
+    assert json_resp["status"] == InvitedUserStatus.PENDING
     assert mock_send.called
 
 
@@ -240,7 +240,7 @@ def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user
 
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))["data"]
-    assert json_resp["status"] == "cancelled"
+    assert json_resp["status"] == InvitedUserStatus.CANCELLED
 
 
 def test_update_invited_user_for_wrong_service_returns_404(

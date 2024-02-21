@@ -849,11 +849,11 @@ def test_get_jobs_accepts_page_parameter(admin_request, sample_template):
 @pytest.mark.parametrize(
     "statuses_filter, expected_statuses",
     [
-        ("", JobStatus),
+        ("", list(JobStatus)),
         ("pending", [JobStatus.PENDING]),
         (
             "pending, in progress, finished, sending limits exceeded, scheduled, cancelled, ready to send, sent to dvla, error",  # noqa
-            JobStatus,
+            list(JobStatus),
         ),
         # bad statuses are accepted, just return no data
         ("foo", []),

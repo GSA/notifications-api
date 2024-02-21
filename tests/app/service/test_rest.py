@@ -1624,7 +1624,7 @@ def test_remove_user_from_service(client, sample_user_service_permission):
             Permission(
                 service_id=service.id,
                 user_id=second_user.id,
-                permission="manage_settings",
+                permission=PermissionType.MANAGE_SETTINGS,
             )
         ],
     )

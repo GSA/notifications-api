@@ -9,7 +9,7 @@ from app import db
 from app.dao.dao_utils import autocommit
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
-from app.enums import AuthType
+from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
 from app.models import User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
@@ -198,7 +198,7 @@ def user_can_be_archived(user):
             return False
 
         if not any(
-            "manage_settings" in user.get_permissions(service.id)
+            PermissionType.MANAGE_SETTINGS in user.get_permissions(service.id)
             for user in other_active_users
         ):
             # no-one else has manage settings

@@ -28,10 +28,10 @@ def format_admin_stats(statistics):
         else:
             counts[row.notification_type]["total"] += row.count
             if row.status in (
-                "technical-failure",
-                "permanent-failure",
-                "temporary-failure",
-                "virus-scan-failed",
+                NotificationStatus.TECHNICAL_FAILURE,
+                NotificationStatus.PERMANENT_FAILURE,
+                NotificationStatus.TEMPORARY_FAILURE,
+                NotificationStatus.VIRUS_SCAN_FAILED,
             ):
                 counts[row.notification_type]["failures"][row.status] += row.count
 
@@ -47,10 +47,10 @@ def create_stats_dict():
             stats_dict[template][status] = 0
 
         stats_dict[template]["failures"] = {
-            "technical-failure": 0,
-            "permanent-failure": 0,
-            "temporary-failure": 0,
-            "virus-scan-failed": 0,
+            NotificationStatus.TECHNICAL_FAILURE: 0,
+            NotificationStatus.PERMANENT_FAILURE: 0,
+            NotificationStatus.TEMPORARY_FAILURE: 0,
+            NotificationStatus.VIRUS_SCAN_FAILED: 0,
         }
     return stats_dict
 

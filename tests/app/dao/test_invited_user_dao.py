@@ -12,7 +12,7 @@ from app.dao.invited_user_dao import (
     get_invited_users_for_service,
     save_invited_user,
 )
-from app.enums import InvitedUserStatus
+from app.enums import InvitedUserStatus, PermissionType
 from app.models import InvitedUser
 from tests.app.db import create_invited_user
 
@@ -109,12 +109,12 @@ def test_save_invited_user_sets_status_to_cancelled(
 ):
     assert InvitedUser.query.count() == 1
     saved = InvitedUser.query.get(sample_invited_user.id)
-    assert saved.status == "pending"
-    saved.status = "cancelled"
+    assert saved.status == InvitedUserStatus.PENDING
+    saved.status = InvitedUserStatus.CANCELLED
     save_invited_user(saved)
     assert InvitedUser.query.count() == 1
     cancelled_invited_user = InvitedUser.query.get(sample_invited_user.id)
-    assert cancelled_invited_user.status == "cancelled"
+    assert cancelled_invited_user.status == InvitedUserStatus.CANCELLED
 
 
 def test_should_delete_all_invitations_more_than_one_day_old(
@@ -195,9 +195,9 @@ def make_invitation(user, service, age=None, email_address="test@test.com"):
         email_address=email_address,
         from_user=user,
         service=service,
-        status="pending",
+        status=InvitedUserStatus.PENDING,
         created_at=datetime.utcnow() - (age or timedelta(hours=0)),
-        permissions="manage_settings",
+        permissions=PermissionType.MANAGE_SETTINGS,
         folder_permissions=[str(uuid.uuid4())],
     )
     db.session.add(verify_code)

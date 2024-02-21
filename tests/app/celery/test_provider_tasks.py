@@ -106,7 +106,7 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_sms_task(
         queue="retry-tasks", countdown=0
     )
 
-    assert sample_notification.status == "temporary-failure"
+    assert sample_notification.status == NotificationStatus.TEMPORARY_FAILURE
     assert mock_logger_exception.called
 
 
@@ -164,7 +164,7 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_email_task
     assert str(sample_notification.id) in str(e.value)
 
     provider_tasks.deliver_email.retry.assert_called_with(queue="retry-tasks")
-    assert sample_notification.status == "technical-failure"
+    assert sample_notification.status == NotificationStatus.TECHNICAL_FAILURE
 
 
 def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableException(
@@ -179,7 +179,7 @@ def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableExceptio
     deliver_email(sample_notification.id)
 
     assert provider_tasks.deliver_email.retry.called is False
-    assert sample_notification.status == "technical-failure"
+    assert sample_notification.status == NotificationStatus.TECHNICAL_FAILURE
 
 
 def test_should_retry_and_log_exception_for_deliver_email_task(

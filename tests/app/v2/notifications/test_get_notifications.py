@@ -415,7 +415,7 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(
 
 
 def test_get_all_notifications_filter_by_single_status(client, sample_template):
-    notification = create_notification(template=sample_template, status="pending")
+    notification = create_notification(template=sample_template, status=NotificationStatus.PENDING,)
     create_notification(template=sample_template)
 
     auth_header = create_service_authorization_header(
@@ -437,7 +437,7 @@ def test_get_all_notifications_filter_by_single_status(client, sample_template):
     assert len(json_response["notifications"]) == 1
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "pending"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.PENDING
 
 
 def test_get_all_notifications_filter_by_status_invalid_status(
@@ -476,7 +476,7 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
         ]
     ]
     failed_notification = create_notification(
-        template=sample_template, status="permanent-failure"
+        template=sample_template, status=NotificationStatus.PERMANENT_FAILURE,
     )
 
     auth_header = create_service_authorization_header(
@@ -510,7 +510,7 @@ def test_get_all_notifications_filter_by_failed_status(client, sample_template):
         status=NotificationStatus.CREATED,
     )
     failed_notifications = [
-        create_notification(template=sample_template, status="failed")
+        create_notification(template=sample_template, status=NotificationStatus.FAILED)
     ]
     auth_header = create_service_authorization_header(
         service_id=created_notification.service_id

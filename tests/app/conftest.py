@@ -22,6 +22,7 @@ from app.enums import (
     JobStatus,
     KeyType,
     NotificationStatus,
+    PermissionType,
     RecipientType,
     ServicePermissionType,
     TemplateType,
@@ -588,7 +589,7 @@ def sample_invited_org_user(sample_user, sample_organization):
 @pytest.fixture(scope="function")
 def sample_user_service_permission(sample_user):
     service = create_service(user=sample_user, check_if_service_exists=True)
-    permission = "manage_settings"
+    permission = PermissionType.MANAGE_SETTINGS
 
     data = {"user": sample_user, "service": service, "permission": permission}
     p_model = Permission.query.filter_by(
