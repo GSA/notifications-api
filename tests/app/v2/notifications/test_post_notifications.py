@@ -535,7 +535,7 @@ def test_should_not_persist_or_send_notification_if_simulated_recipient(
     client, recipient, notification_type, sample_email_template, sample_template, mocker
 ):
     apply_async = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
+        f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
     )
 
     if notification_type == NotificationType.SMS:
@@ -1194,7 +1194,7 @@ def test_post_notification_returns_201_when_content_type_is_missing_but_payload_
     valid_json = {
         "template_id": str(template.id),
     }
-    if notification_type == "email":
+    if notification_type == NotificationType.EMAIL:
         valid_json.update({"email_address": sample_service.users[0].email_address})
     else:
         valid_json.update({"phone_number": "+447700900855"})

@@ -18,7 +18,7 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.enums import JobStatus
+from app.enums import JobStatus, NotificationStatus
 from app.models import Job, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
@@ -31,19 +31,29 @@ from tests.app.db import (
 def test_should_count_of_statuses_for_notifications_associated_with_job(
     sample_template, sample_job
 ):
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="sending")
-    create_notification(sample_template, job=sample_job, status="delivered")
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.SENDING
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.DELIVERED
+    )
 
     results = dao_get_notification_outcomes_for_job(
         sample_template.service_id, sample_job.id
     )
     assert {row.status: row.count for row in results} == {
-        "created": 3,
-        "sending": 1,
-        "delivered": 1,
+        NotificationStatus.CREATED: 3,
+        NotificationStatus.SENDING: 1,
+        NotificationStatus.DELIVERED: 1,
     }
 
 
@@ -60,13 +70,13 @@ def test_should_return_notifications_only_for_this_job(sample_template):
     job_1 = create_job(sample_template)
     job_2 = create_job(sample_template)
 
-    create_notification(sample_template, job=job_1, status="created")
-    create_notification(sample_template, job=job_2, status="sent")
+    create_notification(sample_template, job=job_1, status=NotificationStatus.CREATED)
+    create_notification(sample_template, job=job_2, status=NotificationStatus.SENT)
 
     results = dao_get_notification_outcomes_for_job(
         sample_template.service_id, job_1.id
     )
-    assert {row.status: row.count for row in results} == {"created": 1}
+    assert {row.status: row.count for row in results} == {NotificationStatus.CREATED: 1}
 
 
 def test_should_return_notifications_only_for_this_service(

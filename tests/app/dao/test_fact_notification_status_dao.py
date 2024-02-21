@@ -570,8 +570,8 @@ def test_fetch_notification_statuses_for_job(sample_template):
     )
 
     assert {x.status: x.count for x in fetch_notification_statuses_for_job(j1.id)} == {
-        "created": 5,
-        "delivered": 2,
+        NotificationStatus.CREATED: 5,
+        NotificationStatus.DELIVERED: 2,
     }
 
 

@@ -272,10 +272,10 @@ def create_notification(
         )
 
     if status not in (
-        "created",
-        "validation-failed",
-        "virus-scan-failed",
-        "pending-virus-check",
+        NotificationStatus.CREATED,
+        NotificationStatus.VALIDATION_FAILED,
+        NotificationStatus.VIRUS_SCAN_FAILED,
+        NotificationStatus.PENDING_VIRUS_CHECK,
     ):
         sent_at = sent_at or datetime.utcnow()
         updated_at = updated_at or datetime.utcnow()

@@ -32,7 +32,7 @@ def test_get_notification_by_id(
 
     assert response.status_code == 200
     notification = json.loads(response.get_data(as_text=True))["data"]["notification"]
-    assert notification["status"] == "created"
+    assert notification["status"] == NotificationStatus.CREATED
     assert notification["template"] == {
         "id": str(notification_to_get.template.id),
         "name": notification_to_get.template.name,
@@ -152,7 +152,7 @@ def test_get_all_notifications(client, sample_notification):
 
     notifications = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert notifications["notifications"][0]["status"] == "created"
+    assert notifications["notifications"][0]["status"] == NotificationStatus.CREATED
     assert notifications["notifications"][0]["template"] == {
         "id": str(sample_notification.template.id),
         "name": sample_notification.template.name,

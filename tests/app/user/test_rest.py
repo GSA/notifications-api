@@ -312,7 +312,9 @@ def test_post_user_attribute_with_updated_by(
     mock_persist_notification = mocker.patch("app.user.rest.persist_notification")
     mocker.patch("app.user.rest.send_notification_to_queue")
     json_resp = admin_request.post(
-        "user.update_user_attribute", user_id=sample_user.id, _data=update_dict
+        "user.update_user_attribute",
+        user_id=sample_user.id,
+        _data=update_dict,
     )
     assert json_resp["data"][user_attribute] == user_value
     if arguments:
@@ -329,7 +331,9 @@ def test_post_user_attribute_with_updated_by_sends_notification_to_international
     mocker.patch("app.user.rest.send_notification_to_queue")
 
     admin_request.post(
-        "user.update_user_attribute", user_id=sample_user.id, _data=update_dict
+        "user.update_user_attribute",
+        user_id=sample_user.id,
+        _data=update_dict,
     )
 
     notification = Notification.query.first()
@@ -343,7 +347,9 @@ def test_archive_user(mocker, admin_request, sample_user):
     archive_mock = mocker.patch("app.user.rest.dao_archive_user")
 
     admin_request.post(
-        "user.archive_user", user_id=sample_user.id, _expected_status=204
+        "user.archive_user",
+        user_id=sample_user.id,
+        _expected_status=204,
     )
 
     archive_mock.assert_called_once_with(sample_user)
@@ -363,7 +369,9 @@ def test_archive_user_when_user_cannot_be_archived(mocker, admin_request, sample
     mocker.patch("app.dao.users_dao.user_can_be_archived", return_value=False)
 
     json_resp = admin_request.post(
-        "user.archive_user", user_id=sample_user.id, _expected_status=400
+        "user.archive_user",
+        user_id=sample_user.id,
+        _expected_status=400,
     )
     msg = "User can’t be removed from a service - check all services have another team member with manage_settings"
 
@@ -390,7 +398,9 @@ def test_get_user_by_email(admin_request, sample_service):
 
 def test_get_user_by_email_not_found_returns_404(admin_request, sample_user):
     json_resp = admin_request.get(
-        "user.get_by_email", email="no_user@digital.fake.gov", _expected_status=404
+        "user.get_by_email",
+        email="no_user@digital.fake.gov",
+        _expected_status=404,
     )
     assert json_resp["result"] == "error"
     assert json_resp["message"] == "No result found"

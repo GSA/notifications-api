@@ -1044,9 +1044,9 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today(notify_db_sessio
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert stats["delivered"] == 1
-    assert stats["failed"] == 1
-    assert stats["created"] == 1
+    assert stats[NotificationStatus.DELIVERED] == 1
+    assert stats[NotificationStatus.FAILED] == 1
+    assert stats[NotificationStatus.CREATED] == 1
 
 
 @pytest.mark.skip(reason="Need a better way to test variable DST date")
@@ -1079,11 +1079,11 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_spri
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert "delivered" not in stats
-    assert stats["failed"] == 1
-    assert stats["created"] == 1
-    assert not stats.get("permanent-failure")
-    assert not stats.get("temporary-failure")
+    assert NotificationStatus.DELIVERED not in stats
+    assert stats[NotificationStatus.FAILED] == 1
+    assert stats[NotificationStatus.CREATED] == 1
+    assert not stats.get(NotificationStatus.PERMANENT_FAILURE)
+    assert not stats.get(NotificationStatus.TEMPORARY_FAILURE)
 
 
 def test_dao_fetch_todays_stats_for_service_only_includes_today_during_bst(
@@ -1109,10 +1109,10 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_during_bst(
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert "delivered" not in stats
-    assert stats["failed"] == 1
-    assert stats["created"] == 1
-    assert not stats.get("permanent-failure")
+    assert NotificationStatus.DELIVERED not in stats
+    assert stats[NotificationStatus.FAILED] == 1
+    assert stats[NotificationStatus.CREATED] == 1
+    assert not stats.get(NotificationStatus.PERMANENT_FAILURE)
 
 
 def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_fall_back(
@@ -1139,10 +1139,10 @@ def test_dao_fetch_todays_stats_for_service_only_includes_today_when_clocks_fall
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert "delivered" not in stats
-    assert stats["failed"] == 1
-    assert stats["created"] == 1
-    assert not stats.get("permanent-failure")
+    assert NotificationStatus.DELIVERED not in stats
+    assert stats[NotificationStatus.FAILED] == 1
+    assert stats[NotificationStatus.CREATED] == 1
+    assert not stats.get(NotificationStatus.PERMANENT_FAILURE)
 
 
 def test_dao_fetch_todays_stats_for_service_only_includes_during_utc(notify_db_session):
@@ -1167,10 +1167,10 @@ def test_dao_fetch_todays_stats_for_service_only_includes_during_utc(notify_db_s
         stats = dao_fetch_todays_stats_for_service(template.service_id)
 
     stats = {row.status: row.count for row in stats}
-    assert "delivered" not in stats
-    assert stats["failed"] == 1
-    assert stats["created"] == 1
-    assert not stats.get("permanent-failure")
+    assert NotificationStatus.DELIVERED not in stats
+    assert stats[NotificationStatus.FAILED] == 1
+    assert stats[NotificationStatus.CREATED] == 1
+    assert not stats.get(NotificationStatus.PERMANENT_FAILURE)
 
 
 def test_dao_fetch_todays_stats_for_all_services_includes_all_services(

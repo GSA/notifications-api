@@ -991,9 +991,13 @@ def test_get_jobs_should_retrieve_from_ft_notification_status_for_old_jobs(
     assert resp_json["data"][0]["id"] == str(job_3.id)
     assert resp_json["data"][0]["statistics"] == []
     assert resp_json["data"][1]["id"] == str(job_2.id)
-    assert resp_json["data"][1]["statistics"] == [{"status": "created", "count": 1}]
+    assert resp_json["data"][1]["statistics"] == [
+        {"status": NotificationStatus.CREATED, "count": 1},
+    ]
     assert resp_json["data"][2]["id"] == str(job_1.id)
-    assert resp_json["data"][2]["statistics"] == [{"status": "delivered", "count": 6}]
+    assert resp_json["data"][2]["statistics"] == [
+        {"status": NotificationStatus.DELIVERED, "count": 6},
+    ]
 
 
 @freeze_time("2017-07-17 07:17")

@@ -27,7 +27,7 @@ def send_sms_to_provider(notification):
         technical_failure(notification=notification)
         return
 
-    if notification.status == "created":
+    if notification.status == NotificationStatus.CREATED:
         provider = provider_to_use(NotificationType.SMS, notification.international)
         if not provider:
             technical_failure(notification=notification)
@@ -109,7 +109,7 @@ def send_email_to_provider(notification):
     if not service.active:
         technical_failure(notification=notification)
         return
-    if notification.status == "created":
+    if notification.status == NotificationStatus.CREATED:
         provider = provider_to_use(NotificationType.EMAIL, False)
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id,
@@ -134,10 +134,9 @@ def send_email_to_provider(notification):
             update_notification_to_sending(notification, provider)
             send_email_response(notification.reference, recipient)
         else:
-            from_address = '"{}" <{}@{}>'.format(
-                service.name,
-                service.email_from,
-                current_app.config["NOTIFY_EMAIL_DOMAIN"],
+            from_address = (
+                f'"{service.name}" <{service.email_from}@'
+                f'{current_app.config["NOTIFY_EMAIL_DOMAIN"]}>'
             )
 
             reference = provider.send_email(
@@ -175,10 +174,8 @@ def provider_to_use(notification_type, international=True):
     ]
 
     if not active_providers:
-        current_app.logger.error(
-            "{} failed as no active providers".format(notification_type)
-        )
-        raise Exception("No active {} providers".format(notification_type))
+        current_app.logger.error(f"{notification_type} failed as no active providers")
+        raise Exception(f"No active {notification_type} providers")
 
     # we only have sns
     chosen_provider = active_providers[0]
@@ -240,7 +237,6 @@ def technical_failure(notification):
     notification.status = NotificationStatus.TECHNICAL_FAILURE
     dao_update_notification(notification)
     raise NotificationTechnicalFailureException(
-        "Send {} for notification id {} to provider is not allowed: service {} is inactive".format(
-            notification.notification_type, notification.id, notification.service_id
-        )
+        f"Send {notification.notification_type} for notification id {notification.id} "
+        f"to provider is not allowed: service {notification.service_id} is inactive"
     )

@@ -10,7 +10,9 @@ from tests.app.db import create_service_data_retention
 def test_get_service_data_retention(client, sample_service):
     sms_data_retention = create_service_data_retention(service=sample_service)
     email_data_retention = create_service_data_retention(
-        service=sample_service, notification_type="email", days_of_retention=10
+        service=sample_service,
+        notification_type=NotificationType.EMAIL,
+        days_of_retention=10,
     )
 
     response = client.get(
