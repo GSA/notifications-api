@@ -209,7 +209,12 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     service_1_user = create_user(email="1@test.com")
     service_1.users = [sample_user, service_1_user]
     create_permissions(sample_user, service_1, PermissionType.MANAGE_SETTINGS)
-    create_permissions(service_1_user, service_1, PermissionType.MANAGE_SETTINGS, PermissionType.VIEW_ACTIVITY,)
+    create_permissions(
+        service_1_user,
+        service_1,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.VIEW_ACTIVITY,
+    )
 
     service_2 = create_service(service_name="Service 2")
     service_2_user = create_user(email="2@test.com")
@@ -266,9 +271,18 @@ def test_user_can_be_archived_if_the_other_service_members_have_the_manage_setti
     sample_service.users = [user_1, user_2, user_3]
 
     create_permissions(user_1, sample_service, PermissionType.MANAGE_SETTINGS)
-    create_permissions(user_2, sample_service, PermissionType.MANAGE_SETTINGS, PermissionType.VIEW_ACTIVITY,)
     create_permissions(
-        user_3, sample_service, PermissionType.MANAGE_SETTINGS, PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS,
+        user_2,
+        sample_service,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.VIEW_ACTIVITY,
+    )
+    create_permissions(
+        user_3,
+        sample_service,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.SEND_EMAILS,
+        PermissionType.SEND_TEXTS,
     )
 
     assert len(sample_service.users) == 3
@@ -306,7 +320,12 @@ def test_user_cannot_be_archived_if_the_other_service_members_do_not_have_the_ma
 
     create_permissions(active_user, sample_service, PermissionType.MANAGE_SETTINGS)
     create_permissions(pending_user, sample_service, PermissionType.VIEW_ACTIVITY)
-    create_permissions(inactive_user, sample_service, PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS,)
+    create_permissions(
+        inactive_user,
+        sample_service,
+        PermissionType.SEND_EMAILS,
+        PermissionType.SEND_TEXTS,
+    )
 
     assert len(sample_service.users) == 3
     assert not user_can_be_archived(active_user)

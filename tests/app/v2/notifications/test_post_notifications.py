@@ -1406,7 +1406,8 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
             headers=[
                 ("Content-Type", "application/json"),
                 create_service_authorization_header(
-                    service_id=service.id, key_type="test"
+                    service_id=service.id,
+                    key_type=KeyType.TEST,
                 ),
             ],
         )

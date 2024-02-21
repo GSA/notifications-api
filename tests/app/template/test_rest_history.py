@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import url_for
 
 from app.dao.templates_dao import dao_update_template
+from app.enums import TemplateProcessType
 from tests import create_admin_authorization_header
 
 
@@ -25,7 +26,7 @@ def test_template_history_version(notify_api, sample_user, sample_template):
             assert json_resp["data"]["id"] == str(sample_template.id)
             assert json_resp["data"]["content"] == sample_template.content
             assert json_resp["data"]["version"] == 1
-            assert json_resp["data"]["process_type"] == "normal"
+            assert json_resp["data"]["process_type"] == TemplateProcessType.NORMAL
             assert json_resp["data"]["created_by"]["name"] == sample_user.name
             assert (
                 datetime.strptime(
@@ -57,7 +58,7 @@ def test_previous_template_history_version(notify_api, sample_template):
             assert json_resp["data"]["id"] == str(sample_template.id)
             assert json_resp["data"]["version"] == 1
             assert json_resp["data"]["content"] == old_content
-            assert json_resp["data"]["process_type"] == "normal"
+            assert json_resp["data"]["process_type"] == TemplateProcessType.NORMAL
 
 
 def test_404_missing_template_version(notify_api, sample_template):

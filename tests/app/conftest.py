@@ -25,6 +25,7 @@ from app.enums import (
     PermissionType,
     RecipientType,
     ServicePermissionType,
+    TemplateProcessType,
     TemplateType,
 )
 from app.history_meta import create_history
@@ -261,7 +262,7 @@ def sample_template(sample_user):
         "created_by": sample_user,
         "archived": False,
         "hidden": False,
-        "process_type": "normal",
+        "process_type": TemplateProcessType.NORMAL,
     }
     template = Template(**data)
     dao_create_template(template)

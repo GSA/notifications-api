@@ -153,7 +153,10 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
         send_to_providers.send_email_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
     send_mock.assert_not_called()
-    assert Notification.query.get(sample_notification.id).status == NotificationStatus.TECHNICAL_FAILURE
+    assert (
+        Notification.query.get(sample_notification.id).status
+        == NotificationStatus.TECHNICAL_FAILURE
+    )
 
 
 def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in_tech_failure(
@@ -166,7 +169,10 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
         send_to_providers.send_sms_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
     send_mock.assert_not_called()
-    assert Notification.query.get(sample_notification.id).status == NotificationStatus.TECHNICAL_FAILURE
+    assert (
+        Notification.query.get(sample_notification.id).status
+        == NotificationStatus.TECHNICAL_FAILURE
+    )
 
 
 def test_send_sms_should_use_template_version_from_notification_not_latest(

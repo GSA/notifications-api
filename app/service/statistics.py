@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import NotificationStatus, StatisticsType, TemplateType
+from app.enums import KeyType, NotificationStatus, StatisticsType, TemplateType
 
 
 def format_statistics(statistics):
@@ -23,7 +23,7 @@ def format_admin_stats(statistics):
     counts = create_stats_dict()
 
     for row in statistics:
-        if row.key_type == "test":
+        if row.key_type == KeyType.TEST:
             counts[row.notification_type]["test-key"] += row.count
         else:
             counts[row.notification_type]["total"] += row.count

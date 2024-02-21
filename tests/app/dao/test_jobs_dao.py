@@ -216,13 +216,13 @@ def test_get_jobs_for_service_in_processed_at_then_created_at_order(
 def test_update_job(sample_job):
     assert sample_job.job_status == JobStatus.PENDING
 
-    sample_job.job_status = "in progress"
+    sample_job.job_status = JobStatus.IN_PROGRESS
 
     dao_update_job(sample_job)
 
     job_from_db = Job.query.get(sample_job.id)
 
-    assert job_from_db.job_status == "in progress"
+    assert job_from_db.job_status == JobStatus.IN_PROGRESS
 
 
 def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_now(
@@ -231,10 +231,14 @@ def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_n
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
     job_new = create_job(
-        sample_template, scheduled_for=one_minute_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     job_old = create_job(
-        sample_template, scheduled_for=one_hour_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_hour_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 2
@@ -247,7 +251,9 @@ def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_not_scheduled(
 ):
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     job_scheduled = create_job(
-        sample_template, scheduled_for=one_minute_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 1
@@ -264,8 +270,16 @@ def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_scheduled_in_the_future
 def test_set_scheduled_jobs_to_pending_updates_rows(sample_template):
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
-    create_job(sample_template, scheduled_for=one_minute_ago, job_status="scheduled")
-    create_job(sample_template, scheduled_for=one_hour_ago, job_status="scheduled")
+    create_job(
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
+    )
+    create_job(
+        sample_template,
+        scheduled_for=one_hour_ago,
+        job_status=JobStatus.SCHEDULED,
+    )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 2
     assert jobs[0].job_status == JobStatus.PENDING
@@ -444,7 +458,15 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
     assert len(results) == 0
 
 
-@pytest.mark.parametrize("status", [JobStatus.PENDING, JobStatus.IN_PROGRESS, JobStatus.CANCELLED, JobStatus.SCHEDULED,],)
+@pytest.mark.parametrize(
+    "status",
+    [
+        JobStatus.PENDING,
+        JobStatus.IN_PROGRESS,
+        JobStatus.CANCELLED,
+        JobStatus.SCHEDULED,
+    ],
+)
 def test_find_jobs_with_missing_rows_doesnt_return_jobs_that_are_not_finished(
     sample_email_template, status
 ):

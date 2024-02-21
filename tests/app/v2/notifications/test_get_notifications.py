@@ -415,7 +415,10 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(
 
 
 def test_get_all_notifications_filter_by_single_status(client, sample_template):
-    notification = create_notification(template=sample_template, status=NotificationStatus.PENDING,)
+    notification = create_notification(
+        template=sample_template,
+        status=NotificationStatus.PENDING,
+    )
     create_notification(template=sample_template)
 
     auth_header = create_service_authorization_header(
@@ -476,7 +479,8 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
         ]
     ]
     failed_notification = create_notification(
-        template=sample_template, status=NotificationStatus.PERMANENT_FAILURE,
+        template=sample_template,
+        status=NotificationStatus.PERMANENT_FAILURE,
     )
 
     auth_header = create_service_authorization_header(

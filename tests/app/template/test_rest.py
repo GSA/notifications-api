@@ -587,7 +587,7 @@ def test_should_get_a_single_template(
     assert response.status_code == 200
     assert data["content"] == content
     assert data["subject"] == subject
-    assert data["process_type"] == "normal"
+    assert data["process_type"] == TemplateProcessType.NORMAL
     assert not data["redact_personalisation"]
 
 

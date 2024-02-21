@@ -38,8 +38,8 @@ def test_create_invited_user(notify_db_session, sample_service):
     assert invited_user.from_user == invite_from
     permissions = invited_user.get_permissions()
     assert len(permissions) == 2
-    assert "send_messages" in permissions
-    assert "manage_service" in permissions
+    assert PermissionType.SEND_EMAILS in permissions
+    assert PermissionType.MANAGE_SETTINGS in permissions
     assert invited_user.folder_permissions == []
 
 

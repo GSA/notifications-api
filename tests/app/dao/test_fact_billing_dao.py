@@ -21,7 +21,7 @@ from app.dao.fact_billing_dao import (
     query_organization_sms_usage_for_year,
 )
 from app.dao.organization_dao import dao_add_service_to_organization
-from app.enums import NotificationStatus, NotificationType, TemplateType
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import FactBilling
 from tests.app.db import (
     create_annual_billing,
@@ -94,7 +94,7 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_key_type(
 ):
     service = create_service()
     template = create_template(service=service, template_type=TemplateType.EMAIL)
-    for key_type in ["normal", "test", "team"]:
+    for key_type in [KeyType.NORMAL, KeyType.TEST, KeyType.TEAM]:
         create_notification(
             template=template,
             status=NotificationStatus.DELIVERED,

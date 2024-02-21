@@ -46,6 +46,7 @@ from app.enums import (
     NotificationStatus,
     NotificationType,
     OrganizationType,
+    PermissionType,
     ServicePermissionType,
     TemplateType,
 )
@@ -916,7 +917,7 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
 
     # adding the other_user to service_one should leave all other_user permissions on service_two intact
     permissions = []
-    for p in ["send_emails", "send_texts"]:
+    for p in [PermissionType.SEND_EMAILS, PermissionType.SEND_TEXTS]:
         permissions.append(Permission(permission=p))
 
     dao_add_user_to_service(service_one, other_user, permissions=permissions)
