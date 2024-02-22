@@ -95,7 +95,7 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VALIDATION_FAILED,
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
-        update_dict[StatisticsType.FAILED] += row.count
+        update_dict[StatisticsType.FAILURE] += row.count
 
 
 def create_empty_monthly_notification_status_stats_dict(year):

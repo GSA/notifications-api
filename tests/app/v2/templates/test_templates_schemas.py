@@ -280,7 +280,7 @@ def test_get_all_template_request_schema_against_invalid_args_is_invalid(templat
     assert len(errors["errors"]) == 1
     assert (
         errors["errors"][0]["message"]
-        == "type unknown is not one of [sms, email, letter]"
+        == f"type unknown is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
     )
 
 

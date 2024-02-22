@@ -117,7 +117,7 @@ def test_get_template_usage_by_month_returns_two_templates(
             {
                 StatisticsType.REQUESTED: 2,
                 StatisticsType.DELIVERED: 1,
-                StatisticsType.FAILED: 0,
+                StatisticsType.FAILURE: 0,
             },
         ),
         (
@@ -125,7 +125,7 @@ def test_get_template_usage_by_month_returns_two_templates(
             {
                 StatisticsType.REQUESTED: 1,
                 StatisticsType.DELIVERED: 0,
-                StatisticsType.FAILED: 0,
+                StatisticsType.FAILURE: 0,
             },
         ),
     ],
@@ -161,12 +161,12 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
         NotificationType.SMS: {
             StatisticsType.REQUESTED: 0,
             StatisticsType.DELIVERED: 0,
-            StatisticsType.FAILED: 0,
+            StatisticsType.FAILURE: 0,
         },
         NotificationType.EMAIL: {
             StatisticsType.REQUESTED: 0,
             StatisticsType.DELIVERED: 0,
-            StatisticsType.FAILED: 0,
+            StatisticsType.FAILURE: 0,
         },
     }
 

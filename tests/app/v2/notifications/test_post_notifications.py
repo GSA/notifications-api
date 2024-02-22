@@ -76,7 +76,7 @@ def test_post_sms_notification_returns_201(
     assert resp_json["template"]["version"] == sample_template_with_placeholders.version
     assert (
         f"services/{sample_template_with_placeholders.service_id}/templates/"
-        f"{sample_template_with_placeholders.service_id}"
+        f"{sample_template_with_placeholders.id}"
     ) in resp_json["template"]["uri"]
     assert not resp_json["scheduled_for"]
     assert mocked.called

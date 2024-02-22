@@ -43,12 +43,7 @@ def test_get_notifications_valid_json(input):
     ],
 )
 def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_statuses):
-    partial_error_status = (
-        "is not one of "
-        "[cancelled, created, sending, sent, delivered, pending, failed, "
-        "technical-failure, temporary-failure, permanent-failure, pending-virus-check, "
-        "validation-failed, virus-scan-failed]"
-    )
+    partial_error_status = f"is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in NotificationStatus])}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -75,7 +70,7 @@ def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_stat
 def test_get_notifications_request_invalid_template_types(
     invalid_template_types, valid_template_types
 ):
-    partial_error_template_type = "is not one of [sms, email, letter]"
+    partial_error_template_type = f"is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -108,15 +103,13 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
     error_messages = [error["message"] for error in errors]
     for invalid_status in ["elephant", "giraffe"]:
         assert (
-            f"status {invalid_status} is not one of [cancelled, created, sending, sent, delivered, "
-            "pending, failed, technical-failure, temporary-failure, permanent-failure, "
-            "pending-virus-check, validation-failed, virus-scan-failed]"
+            f"status {invalid_status} is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in NotificationStatus])}]"
             in error_messages
         )
 
     for invalid_template_type in ["orange", "avocado"]:
         assert (
-            f"template_type {invalid_template_type} is not one of [sms, email, letter]"
+            f"template_type {invalid_template_type} is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
             in error_messages
         )
 
