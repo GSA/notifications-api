@@ -129,7 +129,7 @@ def test_create_service_data_retention_returns_400_when_notification_type_is_inv
     assert json_resp["errors"][0]["error"] == "ValidationError"
     assert (
         json_resp["errors"][0]["message"]
-        == "notification_type unknown is not one of [sms, email]"
+        == f"notification_type unknown is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in (NotificationType.SMS, NotificationType.EMAIL)])}]"
     )
 
 

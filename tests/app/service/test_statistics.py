@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 from freezegun import freeze_time
 
-from app.enums import KeyType, NotificationStatus, NotificationType
+from app.enums import KeyType, NotificationStatus, NotificationType, StatisticsType
 from app.service.statistics import (
     add_monthly_notification_status_stats,
     create_empty_monthly_notification_status_stats_dict,
@@ -84,9 +84,9 @@ def test_format_statistics(stats, email_counts, sms_counts):
         status: count
         for status, count in zip(
             [
-                NotificationStatus.REQUESTED,
-                NotificationStatus.DELIVERED,
-                NotificationStatus.FAILED,
+                StatisticsType.REQUESTED,
+                StatisticsType.DELIVERED,
+                StatisticsType.FAILURE,
             ],
             email_counts,
         )
@@ -96,9 +96,9 @@ def test_format_statistics(stats, email_counts, sms_counts):
         status: count
         for status, count in zip(
             [
-                NotificationStatus.REQUESTED,
-                NotificationStatus.DELIVERED,
-                NotificationStatus.FAILED,
+                StatisticsType.REQUESTED,
+                StatisticsType.DELIVERED,
+                StatisticsType.FAILURE,
             ],
             sms_counts,
         )
@@ -108,14 +108,14 @@ def test_format_statistics(stats, email_counts, sms_counts):
 def test_create_zeroed_stats_dicts():
     assert create_zeroed_stats_dicts() == {
         NotificationType.SMS: {
-            NotificationStatus.REQUESTED: 0,
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILURE: 0,
         },
         NotificationType.EMAIL: {
-            NotificationStatus.REQUESTED: 0,
-            NotificationStatus.DELIVERED: 0,
-            NotificationStatus.FAILED: 0,
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILURE: 0,
         },
     }
 
@@ -154,7 +154,7 @@ def test_format_admin_stats_only_includes_test_key_notifications_in_test_key_sec
             3,
         ),
         NewStatsRow(
-            NotificationType.SMS, NotificationType.PERMANENT_FAILURE, KeyType.TEST, 4
+            NotificationType.SMS, NotificationStatus.PERMANENT_FAILURE, KeyType.TEST, 4
         ),
     ]
     stats_dict = format_admin_stats(rows)
@@ -226,9 +226,9 @@ def test_format_admin_stats_counts_non_test_key_notifications_correctly():
 
 def _stats(requested, delivered, failed):
     return {
-        NotificationStatus.REQUESTED: requested,
-        NotificationStatus.DELIVERED: delivered,
-        NotificationStatus.FAILED: failed,
+        StatisticsType.REQUESTED: requested,
+        StatisticsType.DELIVERED: delivered,
+        StatisticsType.FAILURE: failed,
     }
 
 
