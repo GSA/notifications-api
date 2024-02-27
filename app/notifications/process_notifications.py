@@ -135,13 +135,10 @@ def persist_notification(
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
         template = dao_get_template_by_id_and_service_id(template_id, service.id)
-        template_object = SMSMessageTemplate(
-            {
-                "content": template.content,
-                "template_type": template.template_type,
-            }
-        )
+        template_object = create_content_for_notification(template, notification.personalisation)
+
         notification.message_parts = template_object.fragment_count
+
         dao_create_notification(notification)
         if key_type != KEY_TYPE_TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
