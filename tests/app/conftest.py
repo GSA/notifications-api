@@ -1,7 +1,6 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from types import CodeType
 
 import pytest
 import pytz
@@ -19,6 +18,8 @@ from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
 from app.enums import (
+    CodeType,
+    InvitedUserStatus,
     JobStatus,
     KeyType,
     NotificationStatus,
@@ -132,9 +133,9 @@ def create_sample_notification(
         "api_key_id": api_key and api_key.id,
         "key_type": api_key.key_type if api_key else key_type,
         "sent_by": sent_by,
-        "updated_at": created_at
-        if status in NotificationStatus.completed_types()
-        else None,
+        "updated_at": (
+            created_at if status in NotificationStatus.completed_types() else None
+        ),
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
         "normalised_to": normalised_to,
@@ -575,7 +576,7 @@ def sample_expired_user(notify_db_session):
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": ["folder_1_id", "folder_2_id"],
         "created_at": datetime.utcnow() - timedelta(days=3),
-        "status": NotificationStatus.EXPIRED,
+        "status": InvitedUserStatus.EXPIRED,
     }
     expired_user = InvitedUser(**data)
     save_invited_user(expired_user)

@@ -39,7 +39,7 @@ def create_admin_authorization_header():
 def create_internal_authorization_header(client_id):
     secret = current_app.config["INTERNAL_CLIENT_API_KEYS"][client_id][0]
     token = create_jwt_token(secret=secret, client_id=client_id)
-    return "Authorization", "Bearer {}".format(token)
+    return "Authorization", f"Bearer {token}"
 
 
 def unwrap_function(fn):

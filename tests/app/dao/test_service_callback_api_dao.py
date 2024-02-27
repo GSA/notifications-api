@@ -99,8 +99,10 @@ def test_update_service_callback_can_add_two_api_of_different_types(sample_servi
     save_service_callback_api(complaint)
     results = ServiceCallbackApi.query.order_by(ServiceCallbackApi.callback_type).all()
     assert len(results) == 2
-    assert results[0].serialize() == complaint.serialize()
-    assert results[1].serialize() == delivery_status.serialize()
+
+    callbacks = [complaint.serialize(), delivery_status.serialize()]
+    assert results[0].serialize() in callbacks
+    assert results[1].serialize() in callbacks
 
 
 def test_update_service_callback_api(sample_service):

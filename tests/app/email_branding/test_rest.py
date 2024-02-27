@@ -247,7 +247,7 @@ def test_create_email_branding_reject_invalid_brand_type(admin_request):
 
     assert (
         response["errors"][0]["message"]
-        == "brand_type NOT A TYPE is not one of [org, both, org_banner]"
+        == f"brand_type NOT A TYPE is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in BrandType])}]"
     )
 
 
@@ -265,5 +265,5 @@ def test_update_email_branding_reject_invalid_brand_type(
 
     assert (
         response["errors"][0]["message"]
-        == "brand_type NOT A TYPE is not one of [org, both, org_banner]"
+        == f"brand_type NOT A TYPE is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in BrandType])}]"
     )

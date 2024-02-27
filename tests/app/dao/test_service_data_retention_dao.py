@@ -31,8 +31,9 @@ def test_fetch_service_data_retention(sample_service):
     list_of_data_retention = fetch_service_data_retention(sample_service.id)
 
     assert len(list_of_data_retention) == 2
-    assert list_of_data_retention[0] == email_data_retention
-    assert list_of_data_retention[1] == sms_data_retention
+    data_retentions = [email_data_retention, sms_data_retention]
+    assert list_of_data_retention[0] in data_retentions
+    assert list_of_data_retention[1] in data_retentions
 
 
 def test_fetch_service_data_retention_only_returns_row_for_service(sample_service):

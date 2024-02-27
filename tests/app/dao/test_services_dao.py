@@ -1275,7 +1275,7 @@ def test_dao_fetch_todays_stats_for_all_services_groups_correctly(notify_db_sess
         service2.active,
         service2.created_at,
         NotificationType.SMS,
-        NotificationType.CREATED,
+        NotificationStatus.CREATED,
         1,
     ) in stats
 
@@ -1517,7 +1517,7 @@ def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid)
             create_notification(template, status=NotificationStatus.PERMANENT_FAILURE)
             create_notification(template, status=NotificationStatus.DELIVERED)
             create_notification(template, status=NotificationStatus.SENDING)
-            create_notification(template, status=NotificationStatus.TEMPORART_FAILURE)
+            create_notification(template, status=NotificationStatus.TEMPORARY_FAILURE)
 
     service_6 = create_service(service_name="Service 6")
     with freeze_time("2019-11-30 15:00:00.000000"):
@@ -1538,7 +1538,7 @@ def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid)
         )  # test key type is excluded
     create_notification(
         template_2,
-        status=NotificationStatus.PERMANET_FAILURE,
+        status=NotificationStatus.PERMANENT_FAILURE,
     )  # below threshold is excluded
 
     start_date = datetime.utcnow() - timedelta(days=1)

@@ -26,7 +26,7 @@ def test_create_invited_user(notify_db_session, sample_service):
         "service": sample_service,
         "email_address": email_address,
         "from_user": invite_from,
-        "permissions": "send_messages,manage_service",
+        "permissions": "send_emails,manage_settings",
         "folder_permissions": [],
     }
 

@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timedelta
-from types import CodeType
 
 import pytest
 from freezegun import freeze_time
@@ -25,7 +24,7 @@ from app.dao.users_dao import (
     update_user_password,
     user_can_be_archived,
 )
-from app.enums import AuthType, PermissionType
+from app.enums import AuthType, CodeType, PermissionType
 from app.errors import InvalidRequest
 from app.models import User, VerifyCode
 from tests.app.db import (

@@ -505,7 +505,8 @@ def test_check_service_over_api_rate_limit_when_exceed_rate_limit_request_fails_
         )
         assert e.value.status_code == 429
         assert e.value.message == (
-            f"Exceeded rate limit for key type {key_type.upper()} of "
+            f"Exceeded rate limit for key type "
+            f"{key_type.name if key_type != KeyType.NORMAL else 'LIVE'} of "
             f"{sample_service.rate_limit} requests per {60} seconds"
         )
         assert e.value.fields == []
@@ -636,7 +637,7 @@ def test_check_service_email_reply_to_id_where_service_id_is_not_found(
         )
     assert e.value.status_code == 400
     assert e.value.message == (
-        f"email_reply_to_id {reply_to_address.id} does not exist in database for i"
+        f"email_reply_to_id {reply_to_address.id} does not exist in database for "
         f"service id {fake_uuid}"
     )
 
