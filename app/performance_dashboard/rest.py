@@ -32,18 +32,25 @@ def get_performance_dashboard():
     today = str(datetime.utcnow().date())
 
     start_date = datetime.strptime(
-        request.args.get("start_date", today), "%Y-%m-%d",
+        request.args.get("start_date", today),
+        "%Y-%m-%d",
     ).date()
-    end_date = datetime.strptime(request.args.get("end_date", today), "%Y-%m-%d",).date()
+    end_date = datetime.strptime(
+        request.args.get("end_date", today),
+        "%Y-%m-%d",
+    ).date()
     total_for_all_time = get_total_notifications_for_date_range(
-        start_date=None, end_date=None,
+        start_date=None,
+        end_date=None,
     )
     total_notifications, emails, sms = transform_results_into_totals(total_for_all_time)
     totals_for_date_range = get_total_notifications_for_date_range(
-        start_date=start_date, end_date=end_date,
+        start_date=start_date,
+        end_date=end_date,
     )
     processing_time_results = get_processing_time_percentage_for_date_range(
-        start_date=start_date, end_date=end_date,
+        start_date=start_date,
+        end_date=end_date,
     )
     services = get_live_services_with_organization()
     stats = {

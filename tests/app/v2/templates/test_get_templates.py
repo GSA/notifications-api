@@ -116,11 +116,14 @@ def test_get_all_templates_for_invalid_type_returns_400(client, sample_service):
 
     json_response = json.loads(response.get_data(as_text=True))
 
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
     assert json_response == {
         "status_code": 400,
         "errors": [
             {
-                "message": f"type coconut is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]",
+                "message": f"type coconut is not one of [{type_str}]",
                 "error": "ValidationError",
             }
         ],

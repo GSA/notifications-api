@@ -43,7 +43,10 @@ def test_get_notifications_valid_json(input):
     ],
 )
 def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_statuses):
-    partial_error_status = f"is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in NotificationStatus])}]"
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
+    )
+    partial_error_status = f"is not one of [{type_str}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -70,7 +73,10 @@ def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_stat
 def test_get_notifications_request_invalid_template_types(
     invalid_template_types, valid_template_types
 ):
-    partial_error_template_type = f"is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
+    partial_error_template_type = f"is not one of [{type_str}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -101,15 +107,18 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
     assert len(errors) == 4
 
     error_messages = [error["message"] for error in errors]
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
+    )
     for invalid_status in ["elephant", "giraffe"]:
-        assert (
-            f"status {invalid_status} is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in NotificationStatus])}]"
-            in error_messages
-        )
+        assert f"status {invalid_status} is not one of [{type_str}]" in error_messages
 
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
     for invalid_template_type in ["orange", "avocado"]:
         assert (
-            f"template_type {invalid_template_type} is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
+            f"template_type {invalid_template_type} is not one of [{type_str}]"
             in error_messages
         )
 

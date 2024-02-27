@@ -408,9 +408,12 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(
 
     assert json_response["status_code"] == 400
     assert len(json_response["errors"]) == 1
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
     assert (
         json_response["errors"][0]["message"]
-        == f"template_type orange is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in TemplateType])}]"
+        == f"template_type orange is not one of [{type_str}]"
     )
 
 
@@ -461,9 +464,12 @@ def test_get_all_notifications_filter_by_status_invalid_status(
 
     assert json_response["status_code"] == 400
     assert len(json_response["errors"]) == 1
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
+    )
     assert (
         json_response["errors"][0]["message"]
-        == f"status elephant is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in NotificationStatus])}]"
+        == f"status elephant is not one of [{type_str}]"
     )
 
 

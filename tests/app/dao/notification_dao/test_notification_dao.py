@@ -644,7 +644,10 @@ def test_get_all_notifications_for_job_by_status(sample_job):
 
     assert len(notifications(filter_dict={"status": status}).items) == 1
 
-    assert len(notifications(filter_dict={"status": list(NotificationStatus)[:3]}).items) == 3
+    assert (
+        len(notifications(filter_dict={"status": list(NotificationStatus)[:3]}).items)
+        == 3
+    )
 
 
 def test_dao_get_notification_count_for_job_id(notify_db_session):

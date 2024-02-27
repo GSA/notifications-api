@@ -244,10 +244,12 @@ def test_create_email_branding_reject_invalid_brand_type(admin_request):
     response = admin_request.post(
         "email_branding.create_email_branding", _data=data, _expected_status=400
     )
-
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in BrandType]
+    )
     assert (
         response["errors"][0]["message"]
-        == f"brand_type NOT A TYPE is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in BrandType])}]"
+        == f"brand_type NOT A TYPE is not one of [{type_str}]"
     )
 
 
@@ -263,7 +265,10 @@ def test_update_email_branding_reject_invalid_brand_type(
         email_branding_id=email_branding.id,
     )
 
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in BrandType]
+    )
     assert (
         response["errors"][0]["message"]
-        == f"brand_type NOT A TYPE is not one of [{', '.join([f'<{type(e).__name__}.{e.name}: {e.value}>'for e in BrandType])}]"
+        == f"brand_type NOT A TYPE is not one of [{type_str}]"
     )
