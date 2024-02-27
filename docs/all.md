@@ -1161,3 +1161,23 @@ Data Retention Policy
 Seven (7) days by default. Each service can be set with a custom policy via `ServiceDataRetention` by a Platform Admin. The `ServiceDataRetention` setting applies per-service and per-message type and controls both entries in the `notifications` table as well as `csv` contact files uploaded to s3
 
 Data cleanup is controlled by several tasks in the `nightly_tasks.py` file, kicked off by Celery Beat.
+
+
+# API Entry Points for Sending a Message
+
+All of these method calls ultimately invoke send_notification_to_queue(), which will result ultimately in message being sent.
+
+./organization/rest.py:    send_notification_on_mou_signed()
+./organization/invite_rest.py:    invite_user_to_org()
+./service_invite/rest.py:    _create_service_invite()
+./user/rest.py:    create_2fa_code()
+./user/rest.py:    send_user_confirm_new_email()
+./user/rest.py:    send_new_user_email_verification()
+./user/rest.py:    send_already_registered_email()
+./user/rest.py:    send_user_reset_password()
+./v2/notifications/post_notifications.py:    process_sms_or_email_notification()
+./celery/scheduled_tasks.py: replay_created_notifications()
+./service/sender.py:    send_notification_to_service_users(),
+./service/rest.py:    verify_reply_to_email_address(),
+./service/send_notification.py:    send_one_off_notification(),
+./notifications/rest.py:    send_notification(),
