@@ -85,7 +85,8 @@ def transform_results_into_totals(total_notifications_results):
 def transform_into_notification_by_type_json(total_notifications):
     j = []
     for x in total_notifications:
-        j.append({"date": x.local_date, "emails": x.emails, "sms": x.sms})
+        j.append({"date": x.local_date.strftime("%Y-%m-%d"), "emails": x.emails, "sms": x.sms})
+
     return j
 
 
