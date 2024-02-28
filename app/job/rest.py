@@ -127,18 +127,30 @@ def get_jobs_by_service(service_id):
         except ValueError:
             errors = {
                 "limit_days": [
-                    "{} is not an integer".format(request.args["limit_days"])
+                    f"{request.args['limit_days']} is not an integer"
                 ]
             }
             raise InvalidRequest(errors, status_code=400)
     else:
         limit_days = None
 
+    valid_statuses = set(JobStatus)
+    statuses_arg = request.args.get("statuses", "")
+    if statuses_arg == "":
+        statuses = None
+    else:
+        statuses = []
+        for x in statuses_arg.split(","):
+            status = x.strip()
+            if status in valid_statuses:
+                statuses.append(status)
+            else:
+                statuses.append(None)
     return jsonify(
         **get_paginated_jobs(
             service_id,
             limit_days=limit_days,
-            statuses=[x.strip() for x in request.args.get("statuses", "").split(",")],
+            statuses=statuses,
             page=int(request.args.get("page", 1)),
         )
     )
