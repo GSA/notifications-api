@@ -149,10 +149,13 @@ def _stats(requested, delivered, failed):
 @pytest.mark.parametrize(
     "year, expected_years",
     [
-        (2018, ["2018-04", "2018-05", "2018-06"]),
+        (2018, ["2018-01", "2018-02", "2018-03", "2018-04", "2018-05", "2018-06"]),
         (
             2017,
             [
+                "2017-01",
+                "2017-02",
+                "2017-03",
                 "2017-04",
                 "2017-05",
                 "2017-06",
@@ -162,9 +165,6 @@ def _stats(requested, delivered, failed):
                 "2017-10",
                 "2017-11",
                 "2017-12",
-                "2018-01",
-                "2018-02",
-                "2018-03",
             ],
         ),
     ],
@@ -220,8 +220,11 @@ def test_add_monthly_notification_status_stats():
     data["2018-05"]["sms"]["sending"] = 16
 
     add_monthly_notification_status_stats(data, rows)
-
+    # first 3 months are empty
     assert data == {
+        "2018-01": {"sms": {}, "email": {}},
+        "2018-02": {"sms": {}, "email": {}},
+        "2018-03": {"sms": {}, "email": {}},
         "2018-04": {"sms": {"sending": 1, "delivered": 2}, "email": {"sending": 4}},
         "2018-05": {"sms": {"sending": 24}, "email": {"sending": 32}},
         "2018-06": {"sms": {}, "email": {}},

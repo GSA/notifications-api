@@ -177,6 +177,9 @@ def test_get_monthly_notification_stats_returns_empty_stats_with_correct_dates(
     assert len(response["data"]) == 12
 
     keys = [
+        "2016-01",
+        "2016-02",
+        "2016-03",
         "2016-04",
         "2016-05",
         "2016-06",
@@ -186,9 +189,6 @@ def test_get_monthly_notification_stats_returns_empty_stats_with_correct_dates(
         "2016-10",
         "2016-11",
         "2016-12",
-        "2017-01",
-        "2017-02",
-        "2017-03",
     ]
     assert sorted(response["data"].keys()) == keys
     for val in response["data"].values():
@@ -266,7 +266,7 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
         year=2016,
     )
 
-    assert len(response["data"]) == 3  # apr, may, jun
+    assert len(response["data"]) == 6  # January to June
     assert response["data"]["2016-05"] == {"sms": {"delivered": 1}, "email": {}}
     assert response["data"]["2016-06"] == {
         "sms": {
