@@ -741,7 +741,7 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
-    assert resp.status_code == 500
+    assert resp.status_code == 400
 
 
 def test_update_service_remove_email_branding(
