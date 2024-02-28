@@ -144,7 +144,6 @@ def get_jobs_by_service(service_id):
     )
 
 
-
 @job_blueprint.route("", methods=["POST"])
 def create_job(service_id):
     service = dao_fetch_service_by_id(service_id)
@@ -152,7 +151,7 @@ def create_job(service_id):
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
 
     data = request.get_json()
-    original_file_name = data["original_file_name"]
+    original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
@@ -176,7 +175,8 @@ def create_job(service_id):
 
     job = job_schema.load(data)
     # See admin #1148, for whatever reason schema loading doesn't load this
-    job.original_file_name = original_file_name
+    if original_file_name is not None:
+        job.original_file_name = original_file_name
 
     if job.scheduled_for:
         job.job_status = JOB_STATUS_SCHEDULED
