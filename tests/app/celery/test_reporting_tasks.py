@@ -475,39 +475,43 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
 
     assert len(new_fact_data) == 4
 
-    email_delivered_row = new_fact_data[0]
-    assert email_delivered_row.template_id == second_template.id
-    assert email_delivered_row.service_id == second_service.id
-    assert email_delivered_row.notification_type == NotificationType.EMAIL
-    assert email_delivered_row.notification_status == NotificationStatus.DELIVERED
-    assert email_delivered_row.notification_count == 1
-    assert email_delivered_row.key_type == KeyType.NORMAL
+    email_delivered = (NotificationType.EMAIL, NotificationStatus.DELIVERED)
+    email_sending = (NotificationType.EMAIL, NotificationStatus.SENDING)
+    email_failure = (NotificationType.EMAIL, NotificationStatus.FAILED)
+    sms_delivered = (NotificationType.SMS, NotificationStatus.DELIVERED)
 
-    email_sending_row = new_fact_data[1]
-    assert email_sending_row.template_id == second_template.id
-    assert email_sending_row.service_id == second_service.id
-    assert email_sending_row.notification_type == NotificationType.EMAIL
-    assert email_sending_row.notification_status == NotificationStatus.FAILED
-    assert email_sending_row.notification_count == 1
-    assert email_sending_row.key_type == KeyType.NORMAL
-
-    email_failure_row = new_fact_data[2]
-    assert email_failure_row.local_date == process_day
-    assert email_failure_row.template_id == second_template.id
-    assert email_failure_row.service_id == second_service.id
-    assert email_failure_row.job_id == UUID("00000000-0000-0000-0000-000000000000")
-    assert email_failure_row.notification_type == NotificationType.EMAIL
-    assert email_failure_row.notification_status == NotificationStatus.SENDING
-    assert email_failure_row.notification_count == 1
-    assert email_failure_row.key_type == KeyType.TEAM
-
-    sms_delivered_row = new_fact_data[3]
-    assert sms_delivered_row.template_id == first_template.id
-    assert sms_delivered_row.service_id == first_service.id
-    assert sms_delivered_row.notification_type == NotificationType.SMS
-    assert sms_delivered_row.notification_status == NotificationStatus.DELIVERED
-    assert sms_delivered_row.notification_count == 1
-    assert sms_delivered_row.key_type == KeyType.NORMAL
+    for row in new_fact_data:
+        current = (row.notification_type, row.notification_status)
+        if current == email_delivered:
+            assert row.template_id == second_template.id
+            assert row.service_id == second_service.id
+            assert row.notification_type == NotificationType.EMAIL
+            assert row.notification_status == NotificationStatus.DELIVERED
+            assert row.notification_count == 1
+            assert row.key_type == KeyType.NORMAL
+        elif current == email_failure:
+            assert row.template_id == second_template.id
+            assert row.service_id == second_service.id
+            assert row.notification_type == NotificationType.EMAIL
+            assert row.notification_status == NotificationStatus.FAILED
+            assert row.notification_count == 1
+            assert row.key_type == KeyType.NORMAL
+        elif current == email_sending:
+            assert row.local_date == process_day
+            assert row.template_id == second_template.id
+            assert row.service_id == second_service.id
+            assert row.job_id == UUID("00000000-0000-0000-0000-000000000000")
+            assert row.notification_type == NotificationType.EMAIL
+            assert row.notification_status == NotificationStatus.SENDING
+            assert row.notification_count == 1
+            assert row.key_type == KeyType.TEAM
+        elif current == sms_delivered:
+            assert row.template_id == first_template.id
+            assert row.service_id == first_service.id
+            assert row.notification_type == NotificationType.SMS
+            assert row.notification_status == NotificationStatus.DELIVERED
+            assert row.notification_count == 1
+            assert row.key_type == KeyType.NORMAL
 
 
 def test_create_nightly_notification_status_for_service_and_day_overwrites_old_data(

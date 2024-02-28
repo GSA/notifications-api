@@ -125,11 +125,7 @@ def get_jobs_by_service(service_id):
         try:
             limit_days = int(request.args["limit_days"])
         except ValueError:
-            errors = {
-                "limit_days": [
-                    f"{request.args['limit_days']} is not an integer"
-                ]
-            }
+            errors = {"limit_days": [f"{request.args['limit_days']} is not an integer"]}
             raise InvalidRequest(errors, status_code=400)
     else:
         limit_days = None

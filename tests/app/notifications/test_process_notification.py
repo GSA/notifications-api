@@ -276,9 +276,21 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     [
         ("+14254147755", NotificationType.SMS, True),
         ("+14254147167", NotificationType.SMS, True),
-        ("simulate-delivered@notifications.service.gov.uk", NotificationType.EMAIL, True),
-        ("simulate-delivered-2@notifications.service.gov.uk", NotificationType.EMAIL, True),
-        ("simulate-delivered-3@notifications.service.gov.uk", NotificationType.EMAIL, True),
+        (
+            "simulate-delivered@notifications.service.gov.uk",
+            NotificationType.EMAIL,
+            True,
+        ),
+        (
+            "simulate-delivered-2@notifications.service.gov.uk",
+            NotificationType.EMAIL,
+            True,
+        ),
+        (
+            "simulate-delivered-3@notifications.service.gov.uk",
+            NotificationType.EMAIL,
+            True,
+        ),
         ("2028675309", NotificationType.SMS, False),
         ("valid_email@test.com", NotificationType.EMAIL, False),
     ],
