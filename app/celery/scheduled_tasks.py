@@ -35,11 +35,10 @@ from app.dao.services_dao import (
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.delivery.send_to_providers import provider_to_use
 from app.models import (
-    EMAIL_TYPE,
     JOB_STATUS_ERROR,
     JOB_STATUS_IN_PROGRESS,
     JOB_STATUS_PENDING,
-    SMS_TYPE,
+    NotificationType,
     Job,
 )
 from app.notifications.process_notifications import send_notification_to_queue
@@ -160,7 +159,7 @@ def check_db_notification_fails():
         )
     # suppress any spam coming from development tier
     if message and curr_env != "development":
-        provider = provider_to_use(EMAIL_TYPE, False)
+        provider = provider_to_use(NotificationType.EMAIL, False)
         from_address = '"{}" <{}@{}>'.format(
             "Failed Notification Count Alert",
             "test_sender",
@@ -224,7 +223,7 @@ def check_job_status():
 def replay_created_notifications():
     # if the notification has not be send after 1 hour, then try to resend.
     resend_created_notifications_older_than = 60 * 60
-    for notification_type in (EMAIL_TYPE, SMS_TYPE):
+    for notification_type in (NotificationType.EMAIL, NotificationType.SMS):
         notifications_to_resend = notifications_not_yet_sent(
             resend_created_notifications_older_than, notification_type
         )

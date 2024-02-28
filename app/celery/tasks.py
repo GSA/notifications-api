@@ -21,13 +21,12 @@ from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.models import (
-    EMAIL_TYPE,
     JOB_STATUS_CANCELLED,
     JOB_STATUS_FINISHED,
     JOB_STATUS_IN_PROGRESS,
     JOB_STATUS_PENDING,
     KEY_TYPE_NORMAL,
-    SMS_TYPE,
+    NotificationType,
 )
 from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
@@ -129,7 +128,7 @@ def process_row(row, template, job, service, sender_id=None):
         }
     )
 
-    send_fns = {SMS_TYPE: save_sms, EMAIL_TYPE: save_email}
+    send_fns = {NotificationType.SMS: save_sms, NotificationType.EMAIL: save_email}
 
     send_fn = send_fns[template_type]
 
@@ -205,7 +204,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             recipient=notification["to"],
             service=service,
             personalisation=notification.get("personalisation"),
-            notification_type=SMS_TYPE,
+            notification_type=NotificationType.SMS,
             api_key_id=None,
             key_type=KEY_TYPE_NORMAL,
             created_at=datetime.utcnow(),
@@ -265,7 +264,7 @@ def save_email(
             recipient=notification["to"],
             service=service,
             personalisation=notification.get("personalisation"),
-            notification_type=EMAIL_TYPE,
+            notification_type=NotificationType.EMAIL,
             api_key_id=None,
             key_type=KEY_TYPE_NORMAL,
             created_at=datetime.utcnow(),
@@ -307,12 +306,12 @@ def save_api_email_or_sms(self, encrypted_notification):
     service = SerialisedService.from_id(notification["service_id"])
     q = (
         QueueNames.SEND_EMAIL
-        if notification["notification_type"] == EMAIL_TYPE
+        if notification["notification_type"] == NotificationType.EMAIL
         else QueueNames.SEND_SMS
     )
     provider_task = (
         provider_tasks.deliver_email
-        if notification["notification_type"] == EMAIL_TYPE
+        if notification["notification_type"] == NotificationType.EMAIL
         else provider_tasks.deliver_sms
     )
     try:

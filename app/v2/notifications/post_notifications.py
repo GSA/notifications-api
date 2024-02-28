@@ -11,12 +11,11 @@ from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     NOTIFICATION_CREATED,
     PRIORITY,
-    SMS_TYPE,
     Notification,
+    NotificationType,
 )
 from app.notifications.process_notifications import (
     persist_notification,
@@ -52,9 +51,9 @@ from app.v2.utils import get_valid_json
 def post_notification(notification_type):
     request_json = get_valid_json()
 
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         form = validate(request_json, post_email_request)
-    elif notification_type == SMS_TYPE:
+    elif notification_type == NotificationType.SMS:
         form = validate(request_json, post_sms_request)
     else:
         abort(404)
@@ -99,7 +98,7 @@ def process_sms_or_email_notification(
     notification_id = uuid.uuid4()
     form_send_to = (
         form["email_address"]
-        if notification_type == EMAIL_TYPE
+        if notification_type == NotificationType.EMAIL
         else form["phone_number"]
     )
 
@@ -137,7 +136,7 @@ def process_sms_or_email_notification(
     if (
         service.high_volume
         and api_user.key_type == KEY_TYPE_NORMAL
-        and notification_type in [EMAIL_TYPE, SMS_TYPE]
+        and notification_type in {NotificationType.EMAIL, NotificationType.SMS}
     ):
         # Put service with high volumes of notifications onto a queue
         # To take the pressure off the db for API requests put the notification for our high volume service onto a queue
@@ -215,7 +214,7 @@ def save_email_or_sms_to_queue(
         "template_id": str(template.id),
         "template_version": template.version,
         "to": form["email_address"]
-        if notification_type == EMAIL_TYPE
+        if notification_type == NotificationType.EMAIL
         else form["phone_number"],
         "service_id": str(service_id),
         "personalisation": personalisation,
@@ -230,9 +229,9 @@ def save_email_or_sms_to_queue(
     }
     encrypted = encryption.encrypt(data)
 
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         save_api_email.apply_async([encrypted], queue=QueueNames.SAVE_API_EMAIL)
-    elif notification_type == SMS_TYPE:
+    elif notification_type == NotificationType.SMS:
         save_api_sms.apply_async([encrypted], queue=QueueNames.SAVE_API_SMS)
 
     return Notification(**data)
@@ -278,7 +277,7 @@ def process_document_uploads(personalisation_data, service, simulated=False):
 
 def get_reply_to_text(notification_type, form, template):
     reply_to = None
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         service_email_reply_to_id = form.get("email_reply_to_id", None)
         reply_to = (
             check_service_email_reply_to_id(
@@ -289,7 +288,7 @@ def get_reply_to_text(notification_type, form, template):
             or template.reply_to_text
         )
 
-    elif notification_type == SMS_TYPE:
+    elif notification_type == NotificationType.SMS:
         service_sms_sender_id = form.get("sms_sender_id", None)
         sms_sender_id = check_service_sms_sender_id(
             str(authenticated_service.id), service_sms_sender_id, notification_type
@@ -312,12 +311,12 @@ def create_response_for_post_notification(
     reply_to,
     template_with_content,
 ):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         create_resp_partial = functools.partial(
             create_post_sms_response_from_notification,
             from_number=reply_to,
         )
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         create_resp_partial = functools.partial(
             create_post_email_response_from_notification,
             subject=template_with_content.subject,

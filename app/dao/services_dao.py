@@ -14,11 +14,8 @@ from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
 from app.models import (
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_PERMANENT_FAILURE,
-    SMS_TYPE,
     AnnualBilling,
     ApiKey,
     FactBilling,
@@ -27,11 +24,13 @@ from app.models import (
     Job,
     Notification,
     NotificationHistory,
+    NotificationType,
     Organization,
     Permission,
     Service,
     ServiceEmailReplyTo,
     ServicePermission,
+    ServicePermissionType,
     ServiceSmsSender,
     Template,
     TemplateHistory,
@@ -46,9 +45,9 @@ from app.utils import (
 )
 
 DEFAULT_SERVICE_PERMISSIONS = [
-    SMS_TYPE,
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
+    ServicePermissionType.SMS,
+    ServicePermissionType.EMAIL,
+    ServicePermissionType.INTERNATIONAL_SMS,
 ]
 
 
@@ -518,7 +517,7 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
             Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
+            Notification.notification_type == NotificationType.SMS,
             func.substr(Notification.normalised_to, 3, 7) == "7700900",
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
@@ -542,7 +541,7 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
             Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
+            Notification.notification_type == NotificationType.SMS,
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )
@@ -570,7 +569,7 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
             Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
+            Notification.notification_type == NotificationType.SMS,
             Notification.status == NOTIFICATION_PERMANENT_FAILURE,
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa

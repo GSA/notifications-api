@@ -15,7 +15,7 @@ from app.dao.invited_user_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, INVITE_PENDING, KEY_TYPE_NORMAL, Service
+from app.models import INVITE_PENDING, KEY_TYPE_NORMAL, NotificationType, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -44,7 +44,7 @@ def _create_service_invite(invited_user, invite_link_host):
             "service_name": invited_user.service.name,
             "url": invited_user_url(invited_user.id, invite_link_host),
         },
-        notification_type=EMAIL_TYPE,
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=invited_user.from_user.email_address,

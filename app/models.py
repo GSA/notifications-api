@@ -29,29 +29,45 @@ from app.utils import (
     get_dt_string_or_none,
 )
 
-SMS_TYPE = "sms"
-EMAIL_TYPE = "email"
-LETTER_TYPE = "letter"
 
-TEMPLATE_TYPES = [SMS_TYPE, EMAIL_TYPE]
-NOTIFICATION_TYPES = [SMS_TYPE, EMAIL_TYPE]
+class TemplateType(Enum):
+    SMS = "sms"
+    EMAIL = "email"
 
-template_types = db.Enum(*TEMPLATE_TYPES, name="template_type")
+
+class NotificationType(Enum):
+    SMS = "sms"
+    EMAIL = "email"
+    LETTER = "letter"
+
 
 NORMAL = "normal"
 PRIORITY = "priority"
 TEMPLATE_PROCESS_TYPE = [NORMAL, PRIORITY]
+class TemplateProcessType(Enum):
+    # TODO: Should Template.process_type be changed to use this?
+    NORMAL = "normal"
+    PRIORITY = "priority"
 
 
 SMS_AUTH_TYPE = "sms_auth"
 EMAIL_AUTH_TYPE = "email_auth"
 WEBAUTHN_AUTH_TYPE = "webauthn_auth"
 USER_AUTH_TYPES = [SMS_AUTH_TYPE, EMAIL_AUTH_TYPE, WEBAUTHN_AUTH_TYPE]
+class UserAuthType(Enum):
+    # TODO: Should User.auth_type be changed to use this?
+    SMS = "sms_auth"
+    EMAIL = "email_auth"
+    WEBAUTHN = "webauthn_auth"
+
 
 DELIVERY_STATUS_CALLBACK_TYPE = "delivery_status"
 COMPLAINT_CALLBACK_TYPE = "complaint"
 SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
-
+class ServiceCallbackType(Enum):
+    # TODO: Should ServiceCallbackApi.callback_type be changed to use this?
+    DELIVERY_STATUS = "delivery_status"
+    COMPLAINT = "complaint"
 
 def filter_null_value_fields(obj):
     return dict(filter(lambda x: x[1] is not None, obj.items()))
@@ -271,6 +287,13 @@ BRANDING_ORG = "org"
 BRANDING_BOTH = "both"
 BRANDING_ORG_BANNER = "org_banner"
 BRANDING_TYPES = [BRANDING_ORG, BRANDING_BOTH, BRANDING_ORG_BANNER]
+class BrandingType(Enum):
+    # TODO: Should EmailBranding.branding_type be changed to use this?
+    GOVUK = "govuk"  # Deprecated outside migrations
+    ORG = "org"
+    BOTH = "both"
+    ORG_BANNER = "org_banner"
+
 
 
 class BrandingTypes(db.Model):
@@ -326,23 +349,15 @@ service_email_branding = db.Table(
 )
 
 
-INTERNATIONAL_SMS_TYPE = "international_sms"
-INBOUND_SMS_TYPE = "inbound_sms"
-SCHEDULE_NOTIFICATIONS = "schedule_notifications"
-EMAIL_AUTH = "email_auth"
-UPLOAD_DOCUMENT = "upload_document"
-EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
-
-SERVICE_PERMISSION_TYPES = [
-    EMAIL_TYPE,
-    SMS_TYPE,
-    INTERNATIONAL_SMS_TYPE,
-    INBOUND_SMS_TYPE,
-    SCHEDULE_NOTIFICATIONS,
-    EMAIL_AUTH,
-    UPLOAD_DOCUMENT,
-    EDIT_FOLDER_PERMISSIONS,
-]
+class ServicePermissionType(Enum):
+    EMAIL = "email"
+    SMS = "sms"
+    INTERNATIONAL_SMS = "international_sms"
+    INBOUND_SMS = "inbound_sms"
+    SCHEDULE_NOTIFICATIONS = "schedule_notifications"
+    EMAIL_AUTH = "email_auth"
+    UPLOAD_DOCUMENT = "upload_document"
+    EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
 
 
 class ServicePermissionTypes(db.Model):
@@ -787,11 +802,14 @@ class ServicePermission(db.Model):
         )
 
 
-MOBILE_TYPE = "mobile"
-EMAIL_TYPE = "email"
+# MOBILE_TYPE = "mobile"
+# EMAIL_TYPE = "email"
 
-GUEST_LIST_RECIPIENT_TYPE = [MOBILE_TYPE, EMAIL_TYPE]
-guest_list_recipient_types = db.Enum(*GUEST_LIST_RECIPIENT_TYPE, name="recipient_type")
+class GuestListRecipientType(Enum):
+    MOBILE = "mobile"
+    EMAIL = "email"
+
+guest_list_recipient_types = db.Enum(GuestListRecipientType, name="recipient_type")
 
 
 class ServiceGuestList(db.Model):
@@ -811,11 +829,11 @@ class ServiceGuestList(db.Model):
         instance = cls(service_id=service_id, recipient_type=recipient_type)
 
         try:
-            if recipient_type == MOBILE_TYPE:
+            if recipient_type == GuestListRecipientType.MOBILE:
                 instance.recipient = validate_phone_number(
                     recipient, international=True
                 )
-            elif recipient_type == EMAIL_TYPE:
+            elif recipient_type == GuestListRecipientType.EMAIL:
                 instance.recipient = validate_email_address(recipient)
             else:
                 raise ValueError("Invalid recipient type")
@@ -981,6 +999,12 @@ class ApiKey(db.Model, Versioned):
 KEY_TYPE_NORMAL = "normal"
 KEY_TYPE_TEAM = "team"
 KEY_TYPE_TEST = "test"
+class KeyType(Enum):
+    # TODO: Should Key Types be rewritten to use this?
+    NORMAL = "normal"
+    TEAM = "team"
+    TEST = "test"
+
 
 
 class KeyTypes(db.Model):
@@ -1076,7 +1100,7 @@ class TemplateBase(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(255), nullable=False)
-    template_type = db.Column(template_types, nullable=False)
+    template_type = db.Column(db.Enum(TemplateType, name="template_type"), nullable=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.datetime.utcnow
     )
@@ -1131,9 +1155,9 @@ class TemplateBase(db.Model):
             )
 
     def get_reply_to_text(self):
-        if self.template_type == EMAIL_TYPE:
+        if self.template_type == TemplateType.EMAIL:
             return self.service.get_default_reply_to_email_address()
-        elif self.template_type == SMS_TYPE:
+        elif self.template_type == TemplateType.SMS:
             return try_validate_and_format_phone_number(
                 self.service.get_default_sms_sender()
             )
@@ -1141,9 +1165,9 @@ class TemplateBase(db.Model):
             return None
 
     def _as_utils_template(self):
-        if self.template_type == EMAIL_TYPE:
+        if self.template_type == TemplateType.EMAIL:
             return PlainTextEmailTemplate(self.__dict__)
-        if self.template_type == SMS_TYPE:
+        if self.template_type == TemplateType.SMS:
             return SMSMessageTemplate(self.__dict__)
 
     def _as_utils_template_with_personalisation(self, values):
@@ -1160,7 +1184,7 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject if self.template_type == EMAIL_TYPE else None,
+            "subject": self.subject if self.template_type == TemplateType.EMAIL else None,
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1266,8 +1290,9 @@ SES_PROVIDER = "ses"
 SMS_PROVIDERS = [SNS_PROVIDER]
 EMAIL_PROVIDERS = [SES_PROVIDER]
 PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
+# TODO: What about these?
 
-notification_types = db.Enum(*NOTIFICATION_TYPES, name="notification_type")
+notification_types = db.Enum(NotificationType, name="notification_type")
 
 
 class ProviderDetails(db.Model):
@@ -1330,6 +1355,17 @@ JOB_STATUS_TYPES = [
     JOB_STATUS_SENT_TO_DVLA,
     JOB_STATUS_ERROR,
 ]
+class JobStatusType(Enum):
+    # TODO: Should Job.job_status be changed to use this?
+    PENDING = "pending"
+    IN_PROGRESS = "in progress"
+    FINISHED = "finished"
+    SENDING_LIMITS_EXCEEDED = "sending limits exceeded"
+    SCHEDULED = "scheduled"
+    CANCELLED = "cancelled"
+    READY_TO_SEND = "ready to send"
+    SENT_TO_DVLA = "sent to dvla"
+    ERROR = "error"
 
 
 class JobStatus(db.Model):
@@ -1396,7 +1432,9 @@ class Job(db.Model):
     archived = db.Column(db.Boolean, nullable=False, default=False)
 
 
-VERIFY_CODE_TYPES = [EMAIL_TYPE, SMS_TYPE]
+class VerifyCodeType(Enum):
+    EMAIL = "email"
+    SMS = "sms"
 
 
 class VerifyCode(db.Model):
@@ -1409,7 +1447,7 @@ class VerifyCode(db.Model):
     user = db.relationship("User", backref=db.backref("verify_codes", lazy="dynamic"))
     _code = db.Column(db.String, nullable=False)
     code_type = db.Column(
-        db.Enum(*VERIFY_CODE_TYPES, name="verify_code_types"),
+        db.Enum(VerifyCodeType, name="verify_code_types"),
         index=False,
         unique=False,
         nullable=False,
@@ -1812,8 +1850,8 @@ class Notification(db.Model):
         serialized = {
             "id": self.id,
             "reference": self.client_reference,
-            "email_address": self.to if self.notification_type == EMAIL_TYPE else None,
-            "phone_number": self.to if self.notification_type == SMS_TYPE else None,
+            "email_address": self.to if self.notification_type == NotificationType.EMAIL else None,
+            "phone_number": self.to if self.notification_type == NotificationType.SMS else None,
             "line_1": None,
             "line_2": None,
             "line_3": None,

@@ -4,11 +4,10 @@ from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    MOBILE_TYPE,
+    GuestListRecipientType,
     ServiceGuestList,
 )
 
@@ -21,8 +20,8 @@ def get_guest_list_objects(service_id, request_json):
     return [
         ServiceGuestList.from_string(service_id, type, recipient)
         for type, recipient in (
-            get_recipients_from_request(request_json, "phone_numbers", MOBILE_TYPE)
-            + get_recipients_from_request(request_json, "email_addresses", EMAIL_TYPE)
+            get_recipients_from_request(request_json, "phone_numbers", GuestListRecipientType.MOBILE)
+            + get_recipients_from_request(request_json, "email_addresses", GuestListRecipientType.EMAIL)
         )
     ]
 

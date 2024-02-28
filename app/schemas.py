@@ -382,7 +382,7 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
 
     @validates_schema
     def validate_type(self, data, **kwargs):
-        if data.get("template_type") == models.EMAIL_TYPE:
+        if data.get("template_type") == models.TemplateType.EMAIL:
             subject = data.get("subject")
             if not subject or subject.strip() == "":
                 raise ValidationError("Invalid template subject", "subject")
@@ -628,7 +628,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
             in_data["template"], in_data["personalisation"]
         )
         in_data["body"] = template.content_with_placeholders_filled_in
-        if in_data["template"]["template_type"] != models.SMS_TYPE:
+        if in_data["template"]["template_type"] != models.TemplateType.SMS:
             in_data["subject"] = template.subject
             in_data["content_char_count"] = None
         else:

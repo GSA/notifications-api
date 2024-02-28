@@ -6,7 +6,7 @@ from sqlalchemy.orm import aliased
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import (
-    SMS_TYPE,
+    NotificationType,
     InboundSms,
     InboundSmsHistory,
     Service,
@@ -130,7 +130,7 @@ def delete_inbound_sms_older_than_retention():
         ServiceDataRetention.query.join(
             ServiceDataRetention.service, Service.inbound_number
         )
-        .filter(ServiceDataRetention.notification_type == SMS_TYPE)
+        .filter(ServiceDataRetention.notification_type == NotificationType.SMS)
         .all()
     )
 

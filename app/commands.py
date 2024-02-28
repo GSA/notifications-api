@@ -52,7 +52,7 @@ from app.dao.users_dao import (
 from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
-    SMS_TYPE,
+    NotificationType,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -519,7 +519,7 @@ def populate_go_live(file_name):
 @notify_command(name="fix-billable-units")
 def fix_billable_units():
     query = Notification.query.filter(
-        Notification.notification_type == SMS_TYPE,
+        Notification.notification_type == NotificationType.SMS,
         Notification.status != NOTIFICATION_CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,

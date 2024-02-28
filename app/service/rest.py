@@ -633,7 +633,7 @@ def get_detailed_services(
 
 @service_blueprint.route("/<uuid:service_id>/guest-list", methods=["GET"])
 def get_guest_list(service_id):
-    from app.models import EMAIL_TYPE, MOBILE_TYPE
+    from app.models import GuestListRecipientType
 
     service = dao_fetch_service_by_id(service_id)
 
@@ -643,10 +643,10 @@ def get_guest_list(service_id):
     guest_list = dao_fetch_service_guest_list(service.id)
     return jsonify(
         email_addresses=[
-            item.recipient for item in guest_list if item.recipient_type == EMAIL_TYPE
+            item.recipient for item in guest_list if item.recipient_type == GuestListRecipientType.EMAIL
         ],
         phone_numbers=[
-            item.recipient for item in guest_list if item.recipient_type == MOBILE_TYPE
+            item.recipient for item in guest_list if item.recipient_type == GuestListRecipientType.MOBILE
         ],
     )
 

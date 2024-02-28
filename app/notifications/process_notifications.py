@@ -17,17 +17,16 @@ from app.dao.notifications_dao import (
     dao_delete_notifications_by_id,
 )
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
-    SMS_TYPE,
     Notification,
+    NotificationType,
 )
 from app.v2.errors import BadRequestError
 
 
 def create_content_for_notification(template, personalisation):
-    if template.template_type == EMAIL_TYPE:
+    if template.template_type == NotificationType.EMAIL:
         template_object = PlainTextEmailTemplate(
             {
                 "content": template.content,
@@ -36,7 +35,7 @@ def create_content_for_notification(template, personalisation):
             },
             personalisation,
         )
-    if template.template_type == SMS_TYPE:
+    if template.template_type == NotificationType.SMS:
         template_object = SMSMessageTemplate(
             {
                 "content": template.content,
@@ -113,7 +112,7 @@ def persist_notification(
         updated_at=updated_at,
     )
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
         )
@@ -122,8 +121,8 @@ def persist_notification(
         notification.international = recipient_info.international
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
-    elif notification_type == EMAIL_TYPE:
-        current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
+    elif notification_type == NotificationType.EMAIL:
+        current_app.logger.info(f"Persisting notification with type: {NotificationType.EMAIL}")
         redis_store.set(
             f"email-address-{notification.id}",
             format_email_address(notification.to),
@@ -153,11 +152,11 @@ def send_notification_to_queue_detached(
     if key_type == KEY_TYPE_TEST:
         print("send_notification_to_queue_detached key is test key")
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         if not queue:
             queue = QueueNames.SEND_SMS
         deliver_task = provider_tasks.deliver_sms
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         if not queue:
             queue = QueueNames.SEND_EMAIL
         deliver_task = provider_tasks.deliver_email
@@ -183,7 +182,7 @@ def send_notification_to_queue(notification, queue=None):
 
 
 def simulated_recipient(to_address, notification_type):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         formatted_simulated_numbers = [
             validate_and_format_phone_number(number)
             for number in current_app.config["SIMULATED_SMS_NUMBERS"]

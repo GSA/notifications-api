@@ -6,7 +6,7 @@ from sqlalchemy import asc, desc, func
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import (
-    SMS_TYPE,
+    NotificationType,
     FactBilling,
     ProviderDetails,
     ProviderDetailsHistory,
@@ -126,7 +126,7 @@ def dao_get_provider_stats():
             ),
         )
         .filter(
-            FactBilling.notification_type == SMS_TYPE,
+            FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= first_day_of_the_month,
         )
         .group_by(FactBilling.provider)

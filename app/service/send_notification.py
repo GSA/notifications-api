@@ -6,7 +6,7 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, PRIORITY, SMS_TYPE
+from app.models import KEY_TYPE_NORMAL, PRIORITY, NotificationType
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -94,10 +94,10 @@ def get_reply_to_text(notification_type, sender_id, service, template):
     reply_to = None
     if sender_id:
         try:
-            if notification_type == EMAIL_TYPE:
+            if notification_type == NotificationType.EMAIL:
                 message = "Reply to email address not found"
                 reply_to = dao_get_reply_to_by_id(service.id, sender_id).email_address
-            elif notification_type == SMS_TYPE:
+            elif notification_type == NotificationType.SMS:
                 message = "SMS sender not found"
                 reply_to = dao_get_service_sms_senders_by_id(
                     service.id, sender_id

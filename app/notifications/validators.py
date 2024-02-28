@@ -16,12 +16,12 @@ from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.models import (
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
-    SMS_TYPE,
+    NotificationType,
     ServicePermission,
+    ServicePermissionType,
+    TemplateType,
 )
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
@@ -151,13 +151,13 @@ def validate_and_format_recipient(
         send_to, key_type, service, allow_guest_list_recipients
     )
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         international_phone_info = check_if_service_can_send_to_number(service, send_to)
 
         return validate_and_format_phone_number(
             number=send_to, international=international_phone_info.international
         )
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         return validate_and_format_email_address(email_address=send_to)
 
 
@@ -171,7 +171,7 @@ def check_if_service_can_send_to_number(service, number):
 
     if (
         international_phone_info.international
-        and INTERNATIONAL_SMS_TYPE not in permissions
+        and ServicePermissionType.INTERNATIONAL_SMS not in permissions
     ):
         raise BadRequestError(message="Cannot send to international mobile numbers")
     else:
@@ -181,12 +181,12 @@ def check_if_service_can_send_to_number(service, number):
 def check_is_message_too_long(template_with_content):
     if template_with_content.is_message_too_long():
         message = "Your message is too long. "
-        if template_with_content.template_type == SMS_TYPE:
+        if template_with_content.template_type == TemplateType.SMS:
             message += (
                 f"Text messages cannot be longer than {SMS_CHAR_COUNT_LIMIT} characters. "
                 f"Your message is {template_with_content.content_count_without_prefix} characters long."
             )
-        elif template_with_content.template_type == EMAIL_TYPE:
+        elif template_with_content.template_type == TemplateType.EMAIL:
             message += (
                 f"Emails cannot be longer than 2000000 bytes. "
                 f"Your message is {template_with_content.content_size_in_bytes} bytes."
@@ -226,9 +226,9 @@ def validate_template(
 
 
 def check_reply_to(service_id, reply_to_id, type_):
-    if type_ == EMAIL_TYPE:
+    if type_ == NotificationType.EMAIL:
         return check_service_email_reply_to_id(service_id, reply_to_id, type_)
-    elif type_ == SMS_TYPE:
+    elif type_ == NotificationType.SMS:
         return check_service_sms_sender_id(service_id, reply_to_id, type_)
 
 

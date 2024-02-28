@@ -13,7 +13,7 @@ from app.dao.invited_org_user_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, InvitedOrganizationUser
+from app.models import KEY_TYPE_NORMAL, InvitedOrganizationUser, NotificationType
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -64,7 +64,7 @@ def invite_user_to_org(organization_id):
                 data.get("invite_link_host"),
             ),
         },
-        notification_type=EMAIL_TYPE,
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KEY_TYPE_NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,

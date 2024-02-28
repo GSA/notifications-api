@@ -19,12 +19,11 @@ from app.exceptions import NotificationTechnicalFailureException
 from app.models import (
     BRANDING_BOTH,
     BRANDING_ORG_BANNER,
-    EMAIL_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_SENDING,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     NOTIFICATION_TECHNICAL_FAILURE,
-    SMS_TYPE,
+    NotificationType,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
@@ -37,7 +36,7 @@ def send_sms_to_provider(notification):
         return
 
     if notification.status == "created":
-        provider = provider_to_use(SMS_TYPE, notification.international)
+        provider = provider_to_use(NotificationType.SMS, notification.international)
         if not provider:
             technical_failure(notification=notification)
             return
@@ -119,7 +118,7 @@ def send_email_to_provider(notification):
         technical_failure(notification=notification)
         return
     if notification.status == "created":
-        provider = provider_to_use(EMAIL_TYPE, False)
+        provider = provider_to_use(NotificationType.EMAIL, False)
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id,
             service_id=service.id,

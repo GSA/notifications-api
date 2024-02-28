@@ -6,7 +6,7 @@ from app.dao.services_dao import (
     dao_fetch_service_by_id,
 )
 from app.dao.templates_dao import dao_get_template_by_id
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL
+from app.models import KEY_TYPE_NORMAL, TemplateType
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -29,7 +29,7 @@ def send_notification_to_service_users(
             template_id=template.id,
             template_version=template.version,
             recipient=user.email_address
-            if template.template_type == EMAIL_TYPE
+            if template.template_type == TemplateType.EMAIL
             else user.mobile_number,
             service=notify_service,
             personalisation=personalisation,

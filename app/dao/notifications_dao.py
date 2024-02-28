@@ -17,7 +17,6 @@ from werkzeug.datastructures import MultiDict
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
     NOTIFICATION_FAILED,
@@ -27,7 +26,7 @@ from app.models import (
     NOTIFICATION_SENDING,
     NOTIFICATION_SENT,
     NOTIFICATION_TEMPORARY_FAILURE,
-    SMS_TYPE,
+    NotificationType,
     FactNotificationStatus,
     Notification,
     NotificationHistory,
@@ -138,7 +137,7 @@ def update_notification_status_by_id(
         return None
 
     if (
-        notification.notification_type == SMS_TYPE
+        notification.notification_type == NotificationType.SMS
         and notification.international
         and not country_records_delivery(notification.phone_prefix)
     ):
@@ -445,7 +444,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
         Notification.query.filter(
             Notification.created_at < cutoff_time,
             Notification.status.in_(current_statuses),
-            Notification.notification_type.in_([SMS_TYPE, EMAIL_TYPE]),
+            Notification.notification_type.in_([NotificationType.SMS, NotificationType.EMAIL]),
         )
         .limit(limit)
         .all()
@@ -485,7 +484,7 @@ def dao_get_notifications_by_recipient_or_reference(
     page_size=None,
     error_out=True,
 ):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         normalised = try_validate_and_format_phone_number(search_term)
 
         for character in {"(", ")", " ", "-"}:
@@ -493,7 +492,7 @@ def dao_get_notifications_by_recipient_or_reference(
 
         normalised = normalised.lstrip("+0")
 
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         try:
             normalised = validate_and_format_email_address(search_term)
         except InvalidEmailError:
@@ -507,7 +506,7 @@ def dao_get_notifications_by_recipient_or_reference(
         normalised = "".join(search_term.split()).lower()
 
     else:
-        raise TypeError(f"Notification type must be {EMAIL_TYPE}, {SMS_TYPE}, or None")
+        raise TypeError(f"Notification type must be {NotificationType.EMAIL}, {NotificationType.SMS}, or None")
 
     normalised = escape_special_characters(normalised)
     search_term = escape_special_characters(search_term)

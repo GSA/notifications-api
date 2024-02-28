@@ -8,7 +8,7 @@ from app import db
 from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_SCHEDULED,
-    LETTER_TYPE,
+    NotificationType,
     NOTIFICATION_CANCELLED,
     Job,
     Notification,
@@ -90,7 +90,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
 
     letters_query_filter = [
         Notification.service_id == service_id,
-        Notification.notification_type == LETTER_TYPE,
+        Notification.notification_type == NotificationType.LETTER,
         Notification.api_key_id == None,  # noqa
         Notification.status != NOTIFICATION_CANCELLED,
         Template.hidden == True,  # noqa

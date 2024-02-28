@@ -9,12 +9,11 @@ from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
 from app.dao.organization_dao import dao_get_organization_live_services
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     NOTIFICATION_STATUS_TYPES_BILLABLE_SMS,
     NOTIFICATION_STATUS_TYPES_SENT_EMAILS,
-    SMS_TYPE,
+    NotificationType,
     AnnualBilling,
     FactBilling,
     NotificationAllTimeView,
@@ -53,7 +52,7 @@ def fetch_sms_free_allowance_remainder_until_date(end_date):
                 AnnualBilling.service_id == FactBilling.service_id,
                 FactBilling.local_date >= start_of_year,
                 FactBilling.local_date < end_date,
-                FactBilling.notification_type == SMS_TYPE,
+                FactBilling.notification_type == NotificationType.SMS,
             ),
         )
         .filter(
@@ -117,7 +116,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
         .filter(
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
-            FactBilling.notification_type == SMS_TYPE,
+            FactBilling.notification_type == NotificationType.SMS,
         )
         .group_by(
             Organization.name,
@@ -269,7 +268,7 @@ def query_service_email_usage_for_year(service_id, year):
         FactBilling.service_id == service_id,
         FactBilling.local_date >= year_start,
         FactBilling.local_date <= year_end,
-        FactBilling.notification_type == EMAIL_TYPE,
+        FactBilling.notification_type == NotificationType.EMAIL,
     )
 
 
@@ -356,7 +355,7 @@ def query_service_sms_usage_for_year(service_id, year):
             FactBilling.service_id == service_id,
             FactBilling.local_date >= year_start,
             FactBilling.local_date <= year_end,
-            FactBilling.notification_type == SMS_TYPE,
+            FactBilling.notification_type == NotificationType.SMS,
             AnnualBilling.financial_year_start == year,
         )
     )
@@ -386,7 +385,7 @@ def fetch_billing_data_for_day(process_day, service_id=None, check_permissions=F
         services = [Service.query.get(service_id)]
 
     for service in services:
-        for notification_type in (SMS_TYPE, EMAIL_TYPE):
+        for notification_type in (NotificationType.SMS, NotificationType.EMAIL):
             if (not check_permissions) or service.has_permission(notification_type):
                 results = _query_for_billing_data(
                     notification_type=notification_type,
@@ -465,8 +464,8 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
         )
 
     query_funcs = {
-        SMS_TYPE: _sms_query,
-        EMAIL_TYPE: _email_query,
+        NotificationType.SMS: _sms_query,
+        NotificationType.EMAIL: _email_query,
     }
 
     query = query_funcs[notification_type]()
@@ -484,7 +483,7 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
         .filter(
             NotificationHistory.created_at >= start_date,
             NotificationHistory.created_at <= end_date,
-            NotificationHistory.notification_type.in_([SMS_TYPE, EMAIL_TYPE]),
+            NotificationHistory.notification_type.in_([NotificationType.SMS, NotificationType.EMAIL]),
             NotificationHistory.billable_units != 0,
         )
         .distinct()
@@ -495,7 +494,7 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 def get_rate(rates, notification_type, date):
     start_of_day = get_midnight_in_utc(date)
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         return next(
             r.rate
             for r in rates
@@ -576,7 +575,7 @@ def fetch_email_usage_for_organization(organization_id, start_date, end_date):
         .filter(
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
-            FactBilling.notification_type == EMAIL_TYPE,
+            FactBilling.notification_type == NotificationType.EMAIL,
             Service.organization_id == organization_id,
             Service.restricted.is_(False),
         )
@@ -690,7 +689,7 @@ def query_organization_sms_usage_for_year(organization_id, year):
                 Service.id == FactBilling.service_id,
                 FactBilling.local_date >= year_start,
                 FactBilling.local_date <= year_end,
-                FactBilling.notification_type == SMS_TYPE,
+                FactBilling.notification_type == NotificationType.SMS,
             ),
         )
         .filter(
@@ -784,7 +783,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == SMS_TYPE,
+                            FactBilling.notification_type == NotificationType.SMS,
                             FactBilling.notifications_sent,
                         )
                     ],
@@ -795,7 +794,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == SMS_TYPE,
+                            FactBilling.notification_type == NotificationType.SMS,
                             FactBilling.billable_units,
                         )
                     ],
@@ -806,7 +805,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == SMS_TYPE,
+                            FactBilling.notification_type == NotificationType.SMS,
                             FactBilling.billable_units * FactBilling.rate_multiplier,
                         )
                     ],
@@ -817,7 +816,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == EMAIL_TYPE,
+                            FactBilling.notification_type == NotificationType.EMAIL,
                             FactBilling.notifications_sent,
                         )
                     ],
@@ -871,7 +870,7 @@ def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
             ).label("sms_cost"),
         )
         .filter(
-            FactBilling.notification_type == SMS_TYPE,
+            FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
         )
@@ -902,7 +901,7 @@ def fetch_volumes_by_service(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == SMS_TYPE,
+                            FactBilling.notification_type == NotificationType.SMS,
                             FactBilling.notifications_sent,
                         )
                     ],
@@ -913,7 +912,7 @@ def fetch_volumes_by_service(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == SMS_TYPE,
+                            FactBilling.notification_type == NotificationType.SMS,
                             FactBilling.billable_units * FactBilling.rate_multiplier,
                         )
                     ],
@@ -924,7 +923,7 @@ def fetch_volumes_by_service(start_date, end_date):
                 case(
                     [
                         (
-                            FactBilling.notification_type == EMAIL_TYPE,
+                            FactBilling.notification_type == NotificationType.EMAIL,
                             FactBilling.notifications_sent,
                         )
                     ],

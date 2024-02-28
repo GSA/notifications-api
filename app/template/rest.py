@@ -14,7 +14,7 @@ from app.dao.templates_dao import (
     dao_update_template,
 )
 from app.errors import InvalidRequest, register_errors
-from app.models import SMS_TYPE, Template
+from app.models import Template, TemplateType
 from app.notifications.validators import check_reply_to, service_has_permission
 from app.schema_validation import validate
 from app.schemas import (
@@ -36,7 +36,7 @@ register_errors(template_blueprint)
 
 
 def _content_count_greater_than_limit(content, template_type):
-    if template_type == SMS_TYPE:
+    if template_type == TemplateType.SMS:
         template = SMSMessageTemplate(
             {"content": content, "template_type": template_type}
         )

@@ -8,7 +8,7 @@ from app.cronitor import cronitor
 from app.dao.fact_billing_dao import fetch_billing_data_for_day, update_fact_billing
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
-from app.models import EMAIL_TYPE, SMS_TYPE
+from app.models import NotificationType
 
 
 @notify_celery.task(name="create-nightly-billing")
@@ -80,7 +80,7 @@ def create_nightly_notification_status():
 
     yesterday = datetime.utcnow().date() - timedelta(days=1)
 
-    for notification_type in [SMS_TYPE, EMAIL_TYPE]:
+    for notification_type in (NotificationType.SMS, NotificationType.EMAIL):
         days = 4
 
         for i in range(days):
