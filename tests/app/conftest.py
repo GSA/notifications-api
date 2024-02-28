@@ -19,14 +19,13 @@ from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
 from app.history_meta import create_history
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     NOTIFICATION_STATUS_TYPES_COMPLETED,
     SERVICE_PERMISSION_TYPES,
-    SMS_TYPE,
     ApiKey,
+    GuestListRecipientType,
     InvitedUser,
     Job,
     Notification,
@@ -38,8 +37,10 @@ from app.models import (
     Service,
     ServiceEmailReplyTo,
     ServiceGuestList,
+    ServicePermissionType,
     Template,
     TemplateHistory,
+    TemplateType,
 )
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -246,7 +247,7 @@ def _sample_service_full_permissions(notify_db_session):
 @pytest.fixture(scope="function")
 def sample_template(sample_user):
     service = create_service(
-        service_permissions=[EMAIL_TYPE, SMS_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS], check_if_service_exists=True
     )
 
     data = {
@@ -268,9 +269,9 @@ def sample_template(sample_user):
 @pytest.fixture(scope="function")
 def sample_template_without_sms_permission(notify_db_session):
     service = create_service(
-        service_permissions=[EMAIL_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.EMAIL], check_if_service_exists=True
     )
-    return create_template(service, template_type=SMS_TYPE)
+    return create_template(service, template_type=TemplateType.SMS)
 
 
 @pytest.fixture(scope="function")
@@ -293,12 +294,12 @@ def sample_sms_template_with_html(sample_service):
 def sample_email_template(sample_user):
     service = create_service(
         user=sample_user,
-        service_permissions=[EMAIL_TYPE, SMS_TYPE],
+        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS],
         check_if_service_exists=True,
     )
     data = {
         "name": "Email Template Name",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "content": "This is a template",
         "service": service,
         "created_by": sample_user,
@@ -312,16 +313,16 @@ def sample_email_template(sample_user):
 @pytest.fixture(scope="function")
 def sample_template_without_email_permission(notify_db_session):
     service = create_service(
-        service_permissions=[SMS_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.SMS], check_if_service_exists=True
     )
-    return create_template(service, template_type=EMAIL_TYPE)
+    return create_template(service, template_type=TemplateType.EMAIL)
 
 
 @pytest.fixture(scope="function")
 def sample_email_template_with_placeholders(sample_service):
     return create_template(
         sample_service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="((name))",
         content="Hello ((name))\nThis is an email from GOV.UK",
     )
@@ -331,7 +332,7 @@ def sample_email_template_with_placeholders(sample_service):
 def sample_email_template_with_html(sample_service):
     return create_template(
         sample_service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="((name)) <em>some HTML</em>",
         content="Hello ((name))\nThis is an email from GOV.UK with <em>some HTML</em>",
     )
@@ -480,7 +481,7 @@ def sample_notification(notify_db_session):
 def sample_email_notification(notify_db_session):
     created_at = datetime.utcnow()
     service = create_service(check_if_service_exists=True)
-    template = create_template(service, template_type=EMAIL_TYPE)
+    template = create_template(service, template_type=TemplateType.EMAIL)
     job = create_job(template)
 
     notification_id = uuid.uuid4()
@@ -843,7 +844,7 @@ def notify_service(notify_db_session, sample_user):
 def sample_service_guest_list(notify_db_session):
     service = create_service(check_if_service_exists=True)
     guest_list_user = ServiceGuestList.from_string(
-        service.id, EMAIL_TYPE, "guest_list_user@digital.fake.gov"
+        service.id, GuestListRecipientType.EMAIL, "guest_list_user@digital.fake.gov"
     )
 
     notify_db_session.add(guest_list_user)

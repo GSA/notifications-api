@@ -25,7 +25,7 @@ from app.dao.notifications_dao import (
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
-from app.models import NotificationType, FactProcessingTime
+from app.models import FactProcessingTime, NotificationType
 from app.utils import get_midnight_in_utc
 
 

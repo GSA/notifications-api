@@ -13,11 +13,11 @@ from app.models import (
     KEY_TYPE_TEAM,
     NOTIFICATION_STATUS_TYPES_BILLABLE_SMS,
     NOTIFICATION_STATUS_TYPES_SENT_EMAILS,
-    NotificationType,
     AnnualBilling,
     FactBilling,
     NotificationAllTimeView,
     NotificationHistory,
+    NotificationType,
     Organization,
     Rate,
     Service,
@@ -483,7 +483,9 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
         .filter(
             NotificationHistory.created_at >= start_date,
             NotificationHistory.created_at <= end_date,
-            NotificationHistory.notification_type.in_([NotificationType.SMS, NotificationType.EMAIL]),
+            NotificationHistory.notification_type.in_(
+                [NotificationType.SMS, NotificationType.EMAIL]
+            ),
             NotificationHistory.billable_units != 0,
         )
         .distinct()

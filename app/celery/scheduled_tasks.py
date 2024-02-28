@@ -38,8 +38,8 @@ from app.models import (
     JOB_STATUS_ERROR,
     JOB_STATUS_IN_PROGRESS,
     JOB_STATUS_PENDING,
-    NotificationType,
     Job,
+    NotificationType,
 )
 from app.notifications.process_notifications import send_notification_to_queue
 

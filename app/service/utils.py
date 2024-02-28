@@ -20,8 +20,12 @@ def get_guest_list_objects(service_id, request_json):
     return [
         ServiceGuestList.from_string(service_id, type, recipient)
         for type, recipient in (
-            get_recipients_from_request(request_json, "phone_numbers", GuestListRecipientType.MOBILE)
-            + get_recipients_from_request(request_json, "email_addresses", GuestListRecipientType.EMAIL)
+            get_recipients_from_request(
+                request_json, "phone_numbers", GuestListRecipientType.MOBILE
+            )
+            + get_recipients_from_request(
+                request_json, "email_addresses", GuestListRecipientType.EMAIL
+            )
         )
     ]
 

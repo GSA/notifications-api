@@ -8,10 +8,10 @@ from app import db
 from app.models import (
     JOB_STATUS_CANCELLED,
     JOB_STATUS_SCHEDULED,
-    NotificationType,
     NOTIFICATION_CANCELLED,
     Job,
     Notification,
+    NotificationType,
     ServiceDataRetention,
     Template,
 )

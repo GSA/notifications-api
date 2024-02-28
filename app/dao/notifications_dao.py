@@ -26,10 +26,10 @@ from app.models import (
     NOTIFICATION_SENDING,
     NOTIFICATION_SENT,
     NOTIFICATION_TEMPORARY_FAILURE,
-    NotificationType,
     FactNotificationStatus,
     Notification,
     NotificationHistory,
+    NotificationType,
 )
 from app.utils import (
     escape_special_characters,
@@ -444,7 +444,9 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
         Notification.query.filter(
             Notification.created_at < cutoff_time,
             Notification.status.in_(current_statuses),
-            Notification.notification_type.in_([NotificationType.SMS, NotificationType.EMAIL]),
+            Notification.notification_type.in_(
+                [NotificationType.SMS, NotificationType.EMAIL]
+            ),
         )
         .limit(limit)
         .all()
@@ -506,7 +508,9 @@ def dao_get_notifications_by_recipient_or_reference(
         normalised = "".join(search_term.split()).lower()
 
     else:
-        raise TypeError(f"Notification type must be {NotificationType.EMAIL}, {NotificationType.SMS}, or None")
+        raise TypeError(
+            f"Notification type must be {NotificationType.EMAIL}, {NotificationType.SMS}, or None"
+        )
 
     normalised = escape_special_characters(normalised)
     search_term = escape_special_characters(search_term)

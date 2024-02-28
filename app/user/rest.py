@@ -33,7 +33,13 @@ from app.dao.users_dao import (
     use_user_code,
 )
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, Notification, NotificationType, Permission, Service, TemplateType
+from app.models import (
+    KEY_TYPE_NORMAL,
+    NotificationType,
+    Permission,
+    Service,
+    TemplateType,
+)
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,

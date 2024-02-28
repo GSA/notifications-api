@@ -14,15 +14,14 @@ from app.celery.reporting_tasks import (
 from app.config import QueueNames
 from app.dao.fact_billing_dao import get_rate
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
     KEY_TYPE_TEAM,
     KEY_TYPE_TEST,
     NOTIFICATION_TYPES,
-    SMS_TYPE,
     FactBilling,
     FactNotificationStatus,
     Notification,
+    NotificationType,
 )
 from tests.app.db import (
     create_notification,
@@ -36,9 +35,9 @@ from tests.app.db import (
 def mocker_get_rate(
     non_letter_rates, notification_type, local_date, rate_multiplier=None
 ):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         return Decimal(1.33)
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         return Decimal(0)
 
 
@@ -83,7 +82,7 @@ def test_create_nightly_notification_status_triggers_tasks(
         kwargs={
             "service_id": sample_service.id,
             "process_day": "2019-07-31",
-            "notification_type": SMS_TYPE,
+            "notification_type": NotificationType.SMS,
         },
         queue=QueueNames.REPORTING,
     )
@@ -94,8 +93,8 @@ def test_create_nightly_notification_status_triggers_tasks(
     "notification_date, expected_types_aggregated",
     [
         ("2019-08-01", set()),
-        ("2019-07-31", {EMAIL_TYPE, SMS_TYPE}),
-        ("2019-07-28", {EMAIL_TYPE, SMS_TYPE}),
+        ("2019-07-31", {NotificationType.EMAIL, NotificationType.SMS}),
+        ("2019-07-28", {NotificationType.EMAIL, NotificationType.SMS}),
         ("2019-07-21", set()),
     ],
 )
@@ -148,7 +147,7 @@ def test_create_nightly_billing_for_day_checks_history(
     assert len(records) == 1
 
     record = records[0]
-    assert record.notification_type == SMS_TYPE
+    assert record.notification_type == NotificationType.SMS
     assert record.notifications_sent == 2
 
 
@@ -321,14 +320,14 @@ def test_create_nightly_billing_for_day_null_sent_by_sms(
 
 def test_get_rate_for_sms_and_email(notify_db_session):
     non_letter_rates = [
-        create_rate(datetime(2017, 12, 1), 0.15, SMS_TYPE),
-        create_rate(datetime(2017, 12, 1), 0, EMAIL_TYPE),
+        create_rate(datetime(2017, 12, 1), 0.15, NotificationType.SMS),
+        create_rate(datetime(2017, 12, 1), 0, NotificationType.EMAIL),
     ]
 
-    rate = get_rate(non_letter_rates, SMS_TYPE, date(2018, 1, 1))
+    rate = get_rate(non_letter_rates, NotificationType.SMS, date(2018, 1, 1))
     assert rate == Decimal(0.15)
 
-    rate = get_rate(non_letter_rates, EMAIL_TYPE, date(2018, 1, 1))
+    rate = get_rate(non_letter_rates, NotificationType.EMAIL, date(2018, 1, 1))
     assert rate == Decimal(0)
 
 

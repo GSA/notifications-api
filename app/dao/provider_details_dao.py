@@ -6,8 +6,8 @@ from sqlalchemy import asc, desc, func
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import (
-    NotificationType,
     FactBilling,
+    NotificationType,
     ProviderDetails,
     ProviderDetailsHistory,
     User,

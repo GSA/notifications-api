@@ -643,10 +643,14 @@ def get_guest_list(service_id):
     guest_list = dao_fetch_service_guest_list(service.id)
     return jsonify(
         email_addresses=[
-            item.recipient for item in guest_list if item.recipient_type == GuestListRecipientType.EMAIL
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == GuestListRecipientType.EMAIL
         ],
         phone_numbers=[
-            item.recipient for item in guest_list if item.recipient_type == GuestListRecipientType.MOBILE
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == GuestListRecipientType.MOBILE
         ],
     )
 

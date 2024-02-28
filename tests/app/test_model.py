@@ -6,23 +6,22 @@ from sqlalchemy.exc import IntegrityError
 
 from app import encryption
 from app.models import (
-    EMAIL_TYPE,
-    MOBILE_TYPE,
     NOTIFICATION_CREATED,
     NOTIFICATION_FAILED,
     NOTIFICATION_PENDING,
     NOTIFICATION_STATUS_TYPES_FAILED,
     NOTIFICATION_TECHNICAL_FAILURE,
-    SMS_TYPE,
     Agreement,
     AgreementStatus,
     AgreementType,
     AnnualBilling,
+    GuestListRecipientType,
     Notification,
     NotificationHistory,
     Service,
     ServiceGuestList,
     ServicePermission,
+    TemplateType,
     User,
     VerifyCode,
     filter_null_value_fields,
@@ -43,7 +42,7 @@ from tests.app.db import (
 @pytest.mark.parametrize("mobile_number", ["+447700900855", "+12348675309"])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", MOBILE_TYPE, mobile_number
+        "service_id", GuestListRecipientType.MOBILE, mobile_number
     )
 
     assert service_guest_list.recipient == mobile_number
@@ -52,7 +51,7 @@ def test_should_build_service_guest_list_from_mobile_number(mobile_number):
 @pytest.mark.parametrize("email_address", ["test@example.com"])
 def test_should_build_service_guest_list_from_email_address(email_address):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", EMAIL_TYPE, email_address
+        "service_id", GuestListRecipientType.EMAIL, email_address
     )
 
     assert service_guest_list.recipient == email_address
@@ -60,7 +59,11 @@ def test_should_build_service_guest_list_from_email_address(email_address):
 
 @pytest.mark.parametrize(
     "contact, recipient_type",
-    [("", None), ("07700dsadsad", MOBILE_TYPE), ("gmail.com", EMAIL_TYPE)],
+    [
+        ("", None),
+        ("07700dsadsad", GuestListRecipientType.MOBILE),
+        ("gmail.com", GuestListRecipientType.EMAIL),
+    ],
 )
 def test_should_not_build_service_guest_list_from_invalid_contact(
     recipient_type, contact
@@ -201,7 +204,7 @@ def test_notification_personalisation_setter_always_sets_empty_dict(
 
 
 def test_notification_subject_is_none_for_sms(sample_service):
-    template = create_template(service=sample_service, template_type=SMS_TYPE)
+    template = create_template(service=sample_service, template_type=TemplateType.SMS)
     notification = create_notification(template=template)
     assert notification.subject is None
 

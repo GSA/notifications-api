@@ -6,9 +6,9 @@ from sqlalchemy.orm import aliased
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import (
-    NotificationType,
     InboundSms,
     InboundSmsHistory,
+    NotificationType,
     Service,
     ServiceDataRetention,
 )

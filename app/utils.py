@@ -46,9 +46,7 @@ def get_template_instance(template, values):
     return {
         TemplateType.SMS: SMSMessageTemplate,
         TemplateType.EMAIL: HTMLEmailTemplate,
-    }[
-        template["template_type"]
-    ](template, values)
+    }[template["template_type"]](template, values)
 
 
 def get_midnight_in_utc(date):
@@ -80,7 +78,7 @@ def get_month_from_utc_column(column):
 
 
 def get_public_notify_type_text(notify_type, plural=False):
-    from app.models import NotificationType, UPLOAD_DOCUMENT
+    from app.models import UPLOAD_DOCUMENT, NotificationType
 
     notify_type_text = notify_type
     if notify_type == NotificationType.SMS:

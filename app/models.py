@@ -44,6 +44,8 @@ class NotificationType(Enum):
 NORMAL = "normal"
 PRIORITY = "priority"
 TEMPLATE_PROCESS_TYPE = [NORMAL, PRIORITY]
+
+
 class TemplateProcessType(Enum):
     # TODO: Should Template.process_type be changed to use this?
     NORMAL = "normal"
@@ -54,6 +56,8 @@ SMS_AUTH_TYPE = "sms_auth"
 EMAIL_AUTH_TYPE = "email_auth"
 WEBAUTHN_AUTH_TYPE = "webauthn_auth"
 USER_AUTH_TYPES = [SMS_AUTH_TYPE, EMAIL_AUTH_TYPE, WEBAUTHN_AUTH_TYPE]
+
+
 class UserAuthType(Enum):
     # TODO: Should User.auth_type be changed to use this?
     SMS = "sms_auth"
@@ -64,10 +68,13 @@ class UserAuthType(Enum):
 DELIVERY_STATUS_CALLBACK_TYPE = "delivery_status"
 COMPLAINT_CALLBACK_TYPE = "complaint"
 SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
-class ServiceCallbackType(Enum):
-    # TODO: Should ServiceCallbackApi.callback_type be changed to use this?
-    DELIVERY_STATUS = "delivery_status"
-    COMPLAINT = "complaint"
+
+
+# class ServiceCallbackType(Enum):
+#     # TODO: Should ServiceCallbackApi.callback_type be changed to use this?
+#     DELIVERY_STATUS = "delivery_status"
+#     COMPLAINT = "complaint"
+
 
 def filter_null_value_fields(obj):
     return dict(filter(lambda x: x[1] is not None, obj.items()))
@@ -287,13 +294,14 @@ BRANDING_ORG = "org"
 BRANDING_BOTH = "both"
 BRANDING_ORG_BANNER = "org_banner"
 BRANDING_TYPES = [BRANDING_ORG, BRANDING_BOTH, BRANDING_ORG_BANNER]
+
+
 class BrandingType(Enum):
     # TODO: Should EmailBranding.branding_type be changed to use this?
     GOVUK = "govuk"  # Deprecated outside migrations
     ORG = "org"
     BOTH = "both"
     ORG_BANNER = "org_banner"
-
 
 
 class BrandingTypes(db.Model):
@@ -805,9 +813,11 @@ class ServicePermission(db.Model):
 # MOBILE_TYPE = "mobile"
 # EMAIL_TYPE = "email"
 
+
 class GuestListRecipientType(Enum):
     MOBILE = "mobile"
     EMAIL = "email"
+
 
 guest_list_recipient_types = db.Enum(GuestListRecipientType, name="recipient_type")
 
@@ -999,12 +1009,13 @@ class ApiKey(db.Model, Versioned):
 KEY_TYPE_NORMAL = "normal"
 KEY_TYPE_TEAM = "team"
 KEY_TYPE_TEST = "test"
+
+
 class KeyType(Enum):
     # TODO: Should Key Types be rewritten to use this?
     NORMAL = "normal"
     TEAM = "team"
     TEST = "test"
-
 
 
 class KeyTypes(db.Model):
@@ -1100,7 +1111,9 @@ class TemplateBase(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(255), nullable=False)
-    template_type = db.Column(db.Enum(TemplateType, name="template_type"), nullable=False)
+    template_type = db.Column(
+        db.Enum(TemplateType, name="template_type"), nullable=False
+    )
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.datetime.utcnow
     )
@@ -1184,7 +1197,9 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject if self.template_type == TemplateType.EMAIL else None,
+            "subject": self.subject
+            if self.template_type == TemplateType.EMAIL
+            else None,
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1355,6 +1370,8 @@ JOB_STATUS_TYPES = [
     JOB_STATUS_SENT_TO_DVLA,
     JOB_STATUS_ERROR,
 ]
+
+
 class JobStatusType(Enum):
     # TODO: Should Job.job_status be changed to use this?
     PENDING = "pending"
@@ -1850,8 +1867,12 @@ class Notification(db.Model):
         serialized = {
             "id": self.id,
             "reference": self.client_reference,
-            "email_address": self.to if self.notification_type == NotificationType.EMAIL else None,
-            "phone_number": self.to if self.notification_type == NotificationType.SMS else None,
+            "email_address": self.to
+            if self.notification_type == NotificationType.EMAIL
+            else None,
+            "phone_number": self.to
+            if self.notification_type == NotificationType.SMS
+            else None,
             "line_1": None,
             "line_2": None,
             "line_3": None,

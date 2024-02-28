@@ -125,4 +125,6 @@ def fetch_potential_service(inbound_number, provider_name):
 
 def has_inbound_sms_permissions(permissions):
     str_permissions = [p.permission for p in permissions]
-    return {ServicePermissionType.INBOUND_SMS, ServicePermissionType.SMS}.issubset(set(str_permissions))
+    return {ServicePermissionType.INBOUND_SMS, ServicePermissionType.SMS}.issubset(
+        set(str_permissions)
+    )

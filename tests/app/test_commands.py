@@ -23,10 +23,10 @@ from app.dao.users_dao import get_user_by_email
 from app.models import (
     KEY_TYPE_NORMAL,
     NOTIFICATION_DELIVERED,
-    SMS_TYPE,
     AnnualBilling,
     Job,
     Notification,
+    NotificationType,
     Organization,
     Service,
     Template,
@@ -314,7 +314,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
     create_notification(template=sample_template)
     notification = Notification.query.one()
     notification.billable_units = 0
-    notification.notification_type = SMS_TYPE
+    notification.notification_type = NotificationType.SMS
     notification.status = NOTIFICATION_DELIVERED
     notification.sent_at = None
     notification.key_type = KEY_TYPE_NORMAL

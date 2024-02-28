@@ -122,7 +122,9 @@ def persist_notification(
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
     elif notification_type == NotificationType.EMAIL:
-        current_app.logger.info(f"Persisting notification with type: {NotificationType.EMAIL}")
+        current_app.logger.info(
+            f"Persisting notification with type: {NotificationType.EMAIL}"
+        )
         redis_store.set(
             f"email-address-{notification.id}",
             format_email_address(notification.to),

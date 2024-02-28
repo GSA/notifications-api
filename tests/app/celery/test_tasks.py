@@ -30,15 +30,15 @@ from app.celery.tasks import (
 from app.config import QueueNames
 from app.dao import jobs_dao, service_email_reply_to_dao, service_sms_sender_dao
 from app.models import (
-    EMAIL_TYPE,
     JOB_STATUS_ERROR,
     JOB_STATUS_FINISHED,
     JOB_STATUS_IN_PROGRESS,
     KEY_TYPE_NORMAL,
     NOTIFICATION_CREATED,
-    SMS_TYPE,
     Job,
     Notification,
+    NotificationType,
+    TemplateType,
 )
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import DATETIME_FORMAT
@@ -305,8 +305,8 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
 @pytest.mark.parametrize(
     "template_type, expected_function, expected_queue",
     [
-        (SMS_TYPE, "save_sms", "database-tasks"),
-        (EMAIL_TYPE, "save_email", "database-tasks"),
+        (TemplateType.SMS, "save_sms", "database-tasks"),
+        (TemplateType.EMAIL, "save_email", "database-tasks"),
     ],
 )
 def test_process_row_sends_letter_task(
@@ -362,7 +362,7 @@ def test_process_row_when_sender_id_is_provided(mocker, fake_uuid):
     mocker.patch("app.celery.tasks.create_uuid", return_value="noti_uuid")
     task_mock = mocker.patch("app.celery.tasks.save_sms.apply_async")
     encrypt_mock = mocker.patch("app.celery.tasks.encryption.encrypt")
-    template = Mock(id="template_id", template_type=SMS_TYPE)
+    template = Mock(id="template_id", template_type=TemplateType.SMS)
     job = Mock(id="job_id", template_version="temp_vers")
     service = Mock(id="service_id", research_mode=False)
 
@@ -1384,8 +1384,8 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
 def test_save_api_email_or_sms(mocker, sample_service, notification_type):
     template = (
         create_template(sample_service)
-        if notification_type == SMS_TYPE
-        else create_template(sample_service, template_type=EMAIL_TYPE)
+        if notification_type == NotificationType.SMS
+        else create_template(sample_service, template_type=TemplateType.EMAIL)
     )
     mock_provider_task = mocker.patch(
         f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
@@ -1407,7 +1407,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
 
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
@@ -1417,7 +1417,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
     encrypted = encryption.encrypt(data)
 
     assert len(Notification.query.all()) == 0
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
@@ -1436,8 +1436,8 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
 ):
     template = (
         create_template(sample_service)
-        if notification_type == SMS_TYPE
-        else create_template(sample_service, template_type=EMAIL_TYPE)
+        if notification_type == NotificationType.SMS
+        else create_template(sample_service, template_type=TemplateType.EMAIL)
     )
     mock_provider_task = mocker.patch(
         f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
@@ -1459,7 +1459,7 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
     }
 
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
@@ -1469,14 +1469,14 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
     encrypted = encryption.encrypt(data)
     assert len(Notification.query.all()) == 0
 
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
     notifications = Notification.query.all()
     assert len(notifications) == 1
     # call the task again with the same notification
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)

@@ -52,11 +52,11 @@ from app.dao.users_dao import (
 from app.models import (
     KEY_TYPE_TEST,
     NOTIFICATION_CREATED,
-    NotificationType,
     AnnualBilling,
     Domain,
     EmailBranding,
     Notification,
+    NotificationType,
     Organization,
     Service,
     Template,

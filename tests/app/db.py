@@ -27,10 +27,7 @@ from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template, dao_update_template
 from app.dao.users_dao import save_model_user
 from app.models import (
-    EMAIL_TYPE,
     KEY_TYPE_NORMAL,
-    MOBILE_TYPE,
-    SMS_TYPE,
     AnnualBilling,
     ApiKey,
     Complaint,
@@ -39,6 +36,7 @@ from app.models import (
     FactBilling,
     FactNotificationStatus,
     FactProcessingTime,
+    GuestListRecipientType,
     InboundNumber,
     InboundSms,
     InvitedOrganizationUser,
@@ -55,9 +53,11 @@ from app.models import (
     ServiceGuestList,
     ServiceInboundApi,
     ServicePermission,
+    ServicePermissionType,
     ServiceSmsSender,
     Template,
     TemplateFolder,
+    TemplateType,
     User,
     WebauthnCredential,
 )
@@ -193,7 +193,7 @@ def create_service_with_defined_sms_sender(sms_sender_value="1234567", *args, **
 
 def create_template(
     service,
-    template_type=SMS_TYPE,
+    template_type=TemplateType.SMS,
     template_name=None,
     subject="Template subject",
     content="Dear Sir/Madam, Hello. Yours Truly, The Government.",
@@ -215,7 +215,7 @@ def create_template(
         "folder": folder,
         "process_type": process_type,
     }
-    if template_type != SMS_TYPE:
+    if template_type != TemplateType.SMS:
         data["subject"] = subject
     template = Template(**data)
     dao_create_template(template)
@@ -262,7 +262,7 @@ def create_notification(
     if to_field is None:
         to_field = (
             "+447700900855"
-            if template.template_type == SMS_TYPE
+            if template.template_type == TemplateType.SMS
             else "test@example.com"
         )
 
@@ -415,9 +415,10 @@ def create_job(
     return job
 
 
-def create_service_permission(service_id, permission=EMAIL_TYPE):
+def create_service_permission(service_id, permission=ServicePermissionType.EMAIL):
     dao_add_service_permission(
-        service_id if service_id else create_service().id, permission
+        service_id if service_id else create_service().id,
+        permission,
     )
 
     service_permissions = ServicePermission.query.all()
@@ -724,15 +725,15 @@ def create_process_time(
 def create_service_guest_list(service, email_address=None, mobile_number=None):
     if email_address:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, EMAIL_TYPE, email_address
+            service.id, GuestListRecipientType.EMAIL, email_address
         )
     elif mobile_number:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, MOBILE_TYPE, mobile_number
+            service.id, GuestListRecipientType.MOBILE, mobile_number
         )
     else:
         guest_list_user = ServiceGuestList.from_string(
-            service.id, EMAIL_TYPE, "guest_list_user@digital.fake.gov"
+            service.id, GuestListRecipientType.EMAIL, "guest_list_user@digital.fake.gov"
         )
 
     db.session.add(guest_list_user)
