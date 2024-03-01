@@ -299,6 +299,36 @@ brew services start postgresql@15
 brew services start redis
 ```
 
+### Final environment setup
+
+There's one final thing to adjust in the newly created `.env` file.  This
+project has support for end-to-end (E2E) tests and has some additional checks
+for the presence of an E2E test user so that it can be authenticated properly.
+
+In the `.env` file, you should see this section:
+
+```
+#############################################################
+
+# E2E Testing
+
+NOTIFY_E2E_TEST_EMAIL=example@fake.gov
+NOTIFY_E2E_TEST_PASSWORD="don't write secrets to the sample file"
+```
+
+You can leave the email address alone or change it to something else to your
+liking.
+
+**You should absolutely change the `NOTIFY_E2E_TEST_PASSWORD` environment
+variable to something else, preferably a lengthy passphrase.**
+
+With those two environment variable set, the database migrations will run
+properly and an E2E test user will be ready to go for use in the admin project.
+
+_Note:  Whatever you set these two environment variables to, you'll need to
+match their values on the admin side.  Please see the admin README and
+documentation for more details._
+
 ## Running the Project and Routine Maintenance
 
 The first time you run the project you'll need to run the project setup from the
@@ -410,6 +440,7 @@ instructions above for more details.
   - [CI testing](./docs/all.md#ci-testing)
   - [Manual testing](./docs/all.md#manual-testing)
   - [To run a local OWASP scan](./docs/all.md#to-run-a-local-owasp-scan)
+  - [End-to-end testing](./docs/all.md#end-to-end-testing)
 - [Deploying](./docs/all.md#deploying)
   - [Egress Proxy](./docs/all.md#egress-proxy)
   - [Managing environment variables](./docs/all.md#managing-environment-variables)
