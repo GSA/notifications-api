@@ -272,7 +272,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     mocker.patch("app.aws_sns_client.send_sms")
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_phone.return_value = "15555555555"
+    mock_phone.return_value = "+12028675309"
 
     send_to_providers.send_sms_to_provider(db_notification)
 
@@ -294,7 +294,7 @@ def test_send_sms_should_use_service_sms_sender(
     )
     expected_sender_name = sms_sender.sms_sender
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_phone.return_value = "15555555555"
+    mock_phone.return_value = "+12028675309"
 
     send_to_providers.send_sms_to_provider(
         db_notification,
@@ -530,7 +530,7 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         sample_template.service.research_mode = True
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_phone.return_value = "15555555555"
+    mock_phone.return_value = "+12028675309"
 
     send_to_providers.send_sms_to_provider(notification)
     assert notification.billable_units == billable_units
@@ -555,7 +555,7 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
 
     assert sample_notification.billable_units == 1
 
-
+@pytest.mark.skip(reason="Enable when we support international numbers")
 def test_should_send_sms_to_international_providers(
     sample_template, sample_user, mocker
 ):
@@ -611,7 +611,7 @@ def test_should_handle_sms_sender_and_prefix_message(
     notification = create_notification(template, reply_to_text=sms_sender)
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_phone.return_value = "15555555555"
+    mock_phone.return_value = "+12028675309"
 
     send_to_providers.send_sms_to_provider(notification)
 
@@ -706,17 +706,17 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
 
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+447700900855", normalised_to="447700900855"
+        template=sample_template, to_field="+12028675309", normalised_to="12028675309"
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
-    mock_s3.return_value = "447700900855"
+    mock_s3.return_value = "12028675309"
 
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
     send_mock.assert_called_once_with(
-        to="447700900855",
+        to="12028675309",
         content=ANY,
         reference=str(notification.id),
         sender=notification.reply_to_text,

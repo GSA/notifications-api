@@ -188,6 +188,7 @@ def simulated_recipient(to_address, notification_type):
             validate_and_format_phone_number(number)
             for number in current_app.config["SIMULATED_SMS_NUMBERS"]
         ]
+        to_address = validate_and_format_phone_number(to_address)
         return to_address in formatted_simulated_numbers
     else:
         return to_address in current_app.config["SIMULATED_EMAIL_ADDRESSES"]

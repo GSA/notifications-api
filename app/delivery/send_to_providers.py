@@ -26,6 +26,7 @@ from app.models import (
     NOTIFICATION_TECHNICAL_FAILURE,
     SMS_TYPE,
 )
+from app.notifications.process_notifications import simulated_recipient
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
@@ -91,6 +92,13 @@ def send_sms_to_provider(notification):
                     raise Exception(
                         f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
                     )
+
+                if simulated_recipient(recipient, SMS_TYPE):
+                    current_app.logger.warning(
+                        "SKIPPING MESSAGE SEND FOR SIMULATED RECIPIENT"
+                    )
+                    return None
+
                 send_sms_kwargs = {
                     "to": recipient,
                     "content": str(template),

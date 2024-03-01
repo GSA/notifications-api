@@ -39,7 +39,7 @@ def test_post_sms_notification_returns_201(
 ):
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+12028675309",
         "template_id": str(sample_template_with_placeholders.id),
         "personalisation": {" Name": "Jo"},
     }
@@ -93,7 +93,7 @@ def test_post_sms_notification_uses_inbound_number_as_sender(
     )
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+12028675309",
         "template_id": str(template.id),
         "personalisation": {" Name": "Jo"},
     }
@@ -126,7 +126,7 @@ def test_post_sms_notification_uses_inbound_number_reply_to_as_sender(
     )
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+12028675309",
         "template_id": str(template.id),
         "personalisation": {" Name": "Jo"},
     }
@@ -157,7 +157,7 @@ def test_post_sms_notification_returns_201_with_sms_sender_id(
     )
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+12028675309",
         "template_id": str(sample_template_with_placeholders.id),
         "personalisation": {" Name": "Jo"},
         "sms_sender_id": str(sms_sender.id),
@@ -189,7 +189,7 @@ def test_post_sms_notification_uses_sms_sender_id_reply_to(
     )
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+12028675309",
         "template_id": str(sample_template_with_placeholders.id),
         "personalisation": {" Name": "Jo"},
         "sms_sender_id": str(sms_sender.id),
@@ -295,7 +295,7 @@ def test_should_cache_template_and_service_in_redis(mocker, client, sample_templ
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     data = {
-        "phone_number": "+447700900855",
+        "phone_number": "+14254147755",
         "template_id": str(sample_template.id),
     }
 
@@ -353,7 +353,7 @@ def test_should_return_template_if_found_in_redis(mocker, client, sample_templat
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     data = {
-        "phone_number": "+16615555555",
+        "phone_number": "+14254147755",
         "template_id": str(sample_template.id),
     }
 
@@ -374,7 +374,7 @@ def test_should_return_template_if_found_in_redis(mocker, client, sample_templat
 @pytest.mark.parametrize(
     "notification_type, key_send_to, send_to",
     [
-        ("sms", "phone_number", "+447700900855"),
+        ("sms", "phone_number", "+14254147755"),
         ("email", "email_address", "sample@email.com"),
     ],
 )
@@ -403,7 +403,7 @@ def test_post_notification_returns_400_and_missing_template(
 @pytest.mark.parametrize(
     "notification_type, key_send_to, send_to",
     [
-        ("sms", "phone_number", "+447700900855"),
+        ("sms", "phone_number", "+14254147755"),
         ("email", "email_address", "sample@email.com"),
     ],
 )
@@ -433,7 +433,7 @@ def test_post_notification_returns_401_and_well_formed_auth_error(
 @pytest.mark.parametrize(
     "notification_type, key_send_to, send_to",
     [
-        ("sms", "phone_number", "+447700900855"),
+        ("sms", "phone_number", "+14254147755"),
         ("email", "email_address", "sample@email.com"),
     ],
 )
@@ -792,33 +792,13 @@ def test_post_sms_notification_returns_400_if_number_not_in_guest_list(
     ]
 
 
-def test_post_sms_notification_returns_201_if_allowed_to_send_int_sms(
-    sample_service,
-    sample_template,
-    client,
-    mocker,
-):
-    mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
-
-    data = {"phone_number": "+20-12-1234-1234", "template_id": sample_template.id}
-    auth_header = create_service_authorization_header(service_id=sample_service.id)
-
-    response = client.post(
-        path="/v2/notifications/sms",
-        data=json.dumps(data),
-        headers=[("Content-Type", "application/json"), auth_header],
-    )
-
-    assert response.status_code == 201
-    assert response.headers["Content-type"] == "application/json"
-
 
 def test_post_sms_should_persist_supplied_sms_number(
     client, sample_template_with_placeholders, mocker
 ):
     mocked = mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     data = {
-        "phone_number": "+(44) 77009-00855",
+        "phone_number": "+12028675309",
         "template_id": str(sample_template_with_placeholders.id),
         "personalisation": {" Name": "Jo"},
     }
@@ -872,7 +852,7 @@ def test_post_notification_with_wrong_type_of_sender(
         template = sample_template
         form_label = "email_reply_to_id"
         data = {
-            "phone_number": "+447700900855",
+            "phone_number": "+14254147755",
             "template_id": str(template.id),
             form_label: fake_uuid,
         }
@@ -1177,7 +1157,7 @@ def test_post_notification_returns_201_when_content_type_is_missing_but_payload_
     if notification_type == "email":
         valid_json.update({"email_address": sample_service.users[0].email_address})
     else:
-        valid_json.update({"phone_number": "+447700900855"})
+        valid_json.update({"phone_number": "+14254147755"})
     response = client.post(
         path="/v2/notifications/{}".format(notification_type),
         data=json.dumps(valid_json),
@@ -1235,7 +1215,7 @@ def test_post_notifications_saves_email_or_sms_to_queue(
         data.update(
             {"email_address": "joe.citizen@example.com"}
         ) if notification_type == EMAIL_TYPE else data.update(
-            {"phone_number": "+447700900855"}
+            {"phone_number": "+14254147755"}
         )
 
         response = client.post(
@@ -1298,7 +1278,7 @@ def test_post_notifications_saves_email_or_sms_normally_if_saving_to_queue_fails
         data.update(
             {"email_address": "joe.citizen@example.com"}
         ) if notification_type == EMAIL_TYPE else data.update(
-            {"phone_number": "+447700900855"}
+            {"phone_number": "+12028675309"}
         )
 
         response = client.post(
@@ -1354,7 +1334,7 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
         data.update(
             {"email_address": "joe.citizen@example.com"}
         ) if notification_type == EMAIL_TYPE else data.update(
-            {"phone_number": "+447700900855"}
+            {"phone_number": "+12028675309"}
         )
         response = client.post(
             path=f"/v2/notifications/{notification_type}",

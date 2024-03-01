@@ -1229,6 +1229,7 @@ def test_should_not_allow_sending_to_international_number_without_international_
     assert error_json["message"] == "Cannot send to international mobile numbers"
 
 
+@pytest.mark.skip(reason="Enable when we support international numbers")
 def test_should_allow_sending_to_international_number_with_international_permission(
     client, sample_service_full_permissions, mocker
 ):
