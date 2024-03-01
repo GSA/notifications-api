@@ -1249,6 +1249,20 @@ files = [
 tests = ["coverage", "coveralls", "dill", "mock", "nose"]
 
 [[package]]
+name = "faker"
+version = "23.3.0"
+description = "Faker is a Python package that generates fake data for you."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "Faker-23.3.0-py3-none-any.whl", hash = "sha256:117ce1a2805c1bc5ca753b3dc6f9d567732893b2294b827d3164261ee8f20267"},
+    {file = "Faker-23.3.0.tar.gz", hash = "sha256:458d93580de34403a8dec1e8d5e6be2fee96c4deca63b95d71df7a6a80a690de"},
+]
+
+[package.dependencies]
+python-dateutil = ">=2.4"
+
+[[package]]
 name = "fastjsonschema"
 version = "2.19.1"
 description = "Fastest Python implementation of JSON schema"
@@ -4770,4 +4784,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "ccfd855abf7309cf520ea5ca02e77fc9d8ab911819ea9690298fa0549a9d7c42"
+content-hash = "ed0a2c9f32e010a33a24e243a58550c4849d10ee8205f6c459ecdde57d3509ac"
