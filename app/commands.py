@@ -1,7 +1,7 @@
 import csv
 import functools
 import itertools
-import random
+import secrets
 import uuid
 from datetime import datetime, timedelta
 from os import getenv
@@ -900,15 +900,15 @@ def add_test_organization_to_db(generate):
             "Science and Technology",
         ]
 
-        agency = random.choice(agency_names)
-        speciality = random.choice(government_sectors)
+        agency = secrets.choice(agency_names)
+        speciality = secrets.choice(government_sectors)
 
         return f"{fake.word().capitalize()} {speciality} {agency}"
 
     for num in range(1, int(generate) + 1):
         org = create_organization(
             name=generate_gov_agency(),
-            organization_type=random.choice(["federal", "state", "other"]),
+            organization_type=secrets.choice(["federal", "state", "other"]),
         )
         print(f"{num} {org.name} created")
 
