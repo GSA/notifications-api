@@ -117,7 +117,7 @@ def extract_phones(job):
         current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
         current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
         if phone_index >= len(row):
-            phones[job_row] = "Error: can't retrieve phone number"
+            phones[job_row] = "Unavailable"
             current_app.logger.error(
                 "Corrupt csv file, missing columns or possibly a byte order mark in the file"
             )
@@ -166,7 +166,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         current_app.logger.warning(
             f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
         )
-        return "Unknown Phone"
+        return "Unavailable"
 
     # If we look in the JOBS cache for the quick lookup dictionary of phones for a given job
     # and that dictionary is not there, create it
@@ -182,12 +182,12 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
             current_app.logger.warning(
                 f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
             )
-            return "Unknown Phone"
+            return "Unavailable"
     else:
         current_app.logger.error(
             f"Was unable to construct lookup dictionary for job {job_id}"
         )
-        return "Unknown Phone"
+        return "Unavailable"
 
 
 def get_personalisation_from_s3(service_id, job_id, job_row_number):

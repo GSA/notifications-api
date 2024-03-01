@@ -16,17 +16,8 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
+from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    BRANDING_BOTH,
-    BRANDING_ORG_BANNER,
-    EMAIL_TYPE,
-    KEY_TYPE_TEST,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    SMS_TYPE,
-)
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
@@ -49,8 +40,8 @@ def send_sms_to_provider(notification):
         technical_failure(notification=notification)
         return
 
-    if notification.status == "created":
-        provider = provider_to_use(SMS_TYPE, notification.international)
+    if notification.status == NotificationStatus.CREATED:
+        provider = provider_to_use(NotificationType.SMS, notification.international)
         if not provider:
             technical_failure(notification=notification)
             return
@@ -67,7 +58,7 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        if notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KeyType.TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id))
 
@@ -139,8 +130,8 @@ def send_email_to_provider(notification):
     if not service.active:
         technical_failure(notification=notification)
         return
-    if notification.status == "created":
-        provider = provider_to_use(EMAIL_TYPE, False)
+    if notification.status == NotificationStatus.CREATED:
+        provider = provider_to_use(NotificationType.EMAIL, False)
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id,
             service_id=service.id,
@@ -157,15 +148,14 @@ def send_email_to_provider(notification):
             template_dict, values=notification.personalisation
         )
 
-        if notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
             send_email_response(notification.reference, recipient)
         else:
-            from_address = '"{}" <{}@{}>'.format(
-                service.name,
-                service.email_from,
-                current_app.config["NOTIFY_EMAIL_DOMAIN"],
+            from_address = (
+                f'"{service.name}" <{service.email_from}@'
+                f'{current_app.config["NOTIFY_EMAIL_DOMAIN"]}>'
             )
 
             reference = provider.send_email(
@@ -183,8 +173,8 @@ def send_email_to_provider(notification):
 def update_notification_to_sending(notification, provider):
     notification.sent_at = datetime.utcnow()
     notification.sent_by = provider.name
-    if notification.status not in NOTIFICATION_STATUS_TYPES_COMPLETED:
-        notification.status = NOTIFICATION_SENDING
+    if notification.status not in NotificationStatus.completed_types():
+        notification.status = NotificationStatus.SENDING
 
     dao_update_notification(notification)
 
@@ -203,10 +193,8 @@ def provider_to_use(notification_type, international=True):
     ]
 
     if not active_providers:
-        current_app.logger.error(
-            "{} failed as no active providers".format(notification_type)
-        )
-        raise Exception("No active {} providers".format(notification_type))
+        current_app.logger.error(f"{notification_type} failed as no active providers")
+        raise Exception(f"No active {notification_type} providers")
 
     # we only have sns
     chosen_provider = active_providers[0]
@@ -255,8 +243,8 @@ def get_html_email_options(service):
     )
 
     return {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": logo_url,
         "brand_text": branding.text,
@@ -265,10 +253,9 @@ def get_html_email_options(service):
 
 
 def technical_failure(notification):
-    notification.status = NOTIFICATION_TECHNICAL_FAILURE
+    notification.status = NotificationStatus.TECHNICAL_FAILURE
     dao_update_notification(notification)
     raise NotificationTechnicalFailureException(
-        "Send {} for notification id {} to provider is not allowed: service {} is inactive".format(
-            notification.notification_type, notification.id, notification.service_id
-        )
+        f"Send {notification.notification_type} for notification id {notification.id} "
+        f"to provider is not allowed: service {notification.service_id} is inactive"
     )

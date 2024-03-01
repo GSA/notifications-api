@@ -1,7 +1,8 @@
 import pytest
 
 from app.dao.api_key_dao import save_model_api_key
-from app.models import KEY_TYPE_NORMAL, ApiKey
+from app.enums import KeyType
+from app.models import ApiKey
 from app.v2.notifications.notification_schemas import (
     get_notification_response,
     get_notifications_response,
@@ -17,7 +18,7 @@ def _get_notification(client, notification, url):
             service=notification.service,
             name="api_key",
             created_by=notification.service.created_by,
-            key_type=KEY_TYPE_NORMAL,
+            key_type=KeyType.NORMAL,
         )
     )
     auth_header = create_service_authorization_header(

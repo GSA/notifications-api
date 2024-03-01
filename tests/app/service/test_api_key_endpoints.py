@@ -3,7 +3,8 @@ import json
 from flask import url_for
 
 from app.dao.api_key_dao import expire_api_key
-from app.models import KEY_TYPE_NORMAL, ApiKey
+from app.enums import KeyType
+from app.models import ApiKey
 from tests import create_admin_authorization_header
 from tests.app.db import create_api_key, create_service, create_user
 
@@ -14,7 +15,7 @@ def test_api_key_should_create_new_api_key_for_service(notify_api, sample_servic
             data = {
                 "name": "some secret name",
                 "created_by": str(sample_service.created_by.id),
-                "key_type": KEY_TYPE_NORMAL,
+                "key_type": KeyType.NORMAL,
             }
             auth_header = create_admin_authorization_header()
             response = client.post(
@@ -86,7 +87,7 @@ def test_api_key_should_create_multiple_new_api_key_for_service(
             data = {
                 "name": "some secret name",
                 "created_by": str(sample_service.created_by.id),
-                "key_type": KEY_TYPE_NORMAL,
+                "key_type": KeyType.NORMAL,
             }
             auth_header = create_admin_authorization_header()
             response = client.post(

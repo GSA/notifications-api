@@ -16,8 +16,9 @@ from app.dao.invited_user_dao import (
     save_invited_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import InvitedUserStatus, KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, INVITE_PENDING, KEY_TYPE_NORMAL, Service
+from app.models import Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -46,10 +47,14 @@ def _create_service_invite(invited_user, invite_link_host):
         template_version=template.version,
         recipient=invited_user.email_address,
         service=service,
-        personalisation={},
-        notification_type=EMAIL_TYPE,
+        personalisation={
+            "user_name": invited_user.from_user.name,
+            "service_name": invited_user.service.name,
+            "url": invited_user_url(invited_user.id, invite_link_host),
+        },
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
     )
     saved_notification.personalisation = personalisation
@@ -123,7 +128,7 @@ def resend_service_invite(service_id, invited_user_id):
     )
 
     fetched.created_at = datetime.utcnow()
-    fetched.status = INVITE_PENDING
+    fetched.status = InvitedUserStatus.PENDING
 
     current_data = {k: v for k, v in invited_user_schema.dump(fetched).items()}
     update_dict = invited_user_schema.load(current_data)

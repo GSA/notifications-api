@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
-from app.models import JOB_STATUS_IN_PROGRESS, LETTER_TYPE
+from app.enums import JobStatus, NotificationStatus, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -13,7 +13,12 @@ from tests.app.db import (
 )
 
 
-def create_uploaded_letter(letter_template, service, status="created", created_at=None):
+def create_uploaded_letter(
+    letter_template,
+    service,
+    status=NotificationStatus.CREATED,
+    created_at=None,
+):
     return create_notification(
         template=letter_template,
         to_field="file-name",
@@ -29,7 +34,7 @@ def create_uploaded_letter(letter_template, service, status="created", created_a
 def create_uploaded_template(service):
     return create_template(
         service,
-        template_type=LETTER_TYPE,
+        template_type=TemplateType.LETTER,
         template_name="Pre-compiled PDF",
         subject="Pre-compiled PDF",
         content="",
@@ -39,7 +44,9 @@ def create_uploaded_template(service):
 
 @freeze_time("2020-02-02 09:00")  # GMT time
 def test_get_uploads_for_service(sample_template):
-    create_service_data_retention(sample_template.service, "sms", days_of_retention=9)
+    create_service_data_retention(
+        sample_template.service, NotificationType.SMS, days_of_retention=9
+    )
     job = create_job(sample_template, processing_started=datetime.utcnow())
 
     other_service = create_service(service_name="other service")
@@ -55,7 +62,7 @@ def test_get_uploads_for_service(sample_template):
         job.id,
         job.original_file_name,
         job.notification_count,
-        "sms",
+        TemplateType.SMS,
         9,
         job.created_at,
         job.scheduled_for,
@@ -89,13 +96,13 @@ def test_get_uploads_orders_by_processing_started_desc(sample_template):
         sample_template,
         processing_started=datetime.utcnow() - timedelta(days=1),
         created_at=days_ago,
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     upload_2 = create_job(
         sample_template,
         processing_started=datetime.utcnow() - timedelta(days=2),
         created_at=days_ago,
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
 
     results = dao_get_uploads_by_service_id(service_id=sample_template.service_id).items
