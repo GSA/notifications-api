@@ -1,6 +1,7 @@
 import csv
 import functools
 import itertools
+import random
 import uuid
 from datetime import datetime, timedelta
 from os import getenv
@@ -8,6 +9,7 @@ from os import getenv
 import click
 import flask
 from click_datetime import Datetime as click_dt
+from faker import Faker
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
@@ -64,6 +66,14 @@ from app.models import (
     User,
 )
 from app.utils import get_midnight_in_utc
+from tests.app.db import (
+    create_job,
+    create_notification,
+    create_organization,
+    create_service,
+    create_template,
+    create_user,
+)
 
 
 @click.group(name="command", help="Additional commands")
@@ -833,3 +843,147 @@ def purge_csv_bucket():
     print("ABOUT TO RUN PURGE CSV BUCKET")
     s3.purge_bucket(bucket_name, access_key, secret, region)
     print("RAN PURGE CSV BUCKET")
+
+
+"""
+Commands to load test data into the database for
+Orgs, Services, Users, Jobs, Notifications
+
+faker is used to generate some random fields. All
+database commands were used from tests/app/db.py
+where possible to enable better maintainability.
+"""
+fake = Faker(["en_US"])
+
+
+# generate n number of test orgs into the dev DB
+@notify_command(name="add-test-organization-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_organization_to_db(generate):
+    def generate_gov_agency():
+        agency_names = [
+            "Bureau",
+            "Department",
+            "Administration",
+            "Authority",
+            "Commission",
+            "Division",
+            "Office",
+            "Institute",
+            "Agency",
+            "Council",
+            "Board",
+            "Committee",
+            "Corporation",
+            "Service",
+            "Center",
+            "Registry",
+            "Foundation",
+            "Task Force",
+            "Unit",
+        ]
+
+        government_sectors = [
+            "Healthcare",
+            "Education",
+            "Transportation",
+            "Defense",
+            "Law Enforcement",
+            "Environmental Protection",
+            "Housing and Urban Development",
+            "Finance and Economy",
+            "Social Services",
+            "Energy",
+            "Agriculture",
+            "Labor and Employment",
+            "Foreign Affairs",
+            "Trade and Commerce",
+            "Science and Technology",
+        ]
+
+        agency = random.choice(agency_names)
+        speciality = random.choice(government_sectors)
+
+        return f"{fake.word().capitalize()} {speciality} {agency}"
+
+    for num in range(1, int(generate) + 1):
+        org = create_organization(
+            name=generate_gov_agency(),
+            organization_type=random.choice(["federal", "state", "other"]),
+        )
+        print(f"{num} {org.name} created")
+
+
+# generate n number of test services into the dev DB
+@notify_command(name="add-test-service-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_service_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service_name = f"{fake.company()} sample service"
+        service = create_service(service_name=service_name)
+        print(f"{num} {service.name} created")
+
+
+# generate n number of test jobs into the dev DB
+@notify_command(name="add-test-job-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_job_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template)
+        print(f"{num} {job.id} created")
+
+
+# generate n number of notifications into the dev DB
+@notify_command(name="add-test-notification-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_notification_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template=template)
+        notification = create_notification(
+            template=template,
+            job=job,
+        )
+        print(f"{num} {notification.id} created")
+
+
+# generate n number of test users into the dev DB
+@notify_command(name="add-test-users")
+@click.option("-g", "--generate", required=True, prompt=True, default="1")
+@click.option("-s", "--state", default="active")
+@click.option("-d", "--admin", default=False, type=bool)
+def add_test_users(generate, state, admin):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+
+        def fake_email(name):
+            first_name, last_name = name.split(maxsplit=1)
+            username = f"{first_name.lower()}.{last_name.lower()}"
+            return f"{username}@test.gsa.gov"
+
+        name = fake.name()
+        user = create_user(
+            name=name,
+            email=fake_email(name),
+            state=state,
+            platform_admin=admin,
+        )
+        print(f"{num} {user.email_address} created")
