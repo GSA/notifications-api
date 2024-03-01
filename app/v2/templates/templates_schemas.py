@@ -1,11 +1,11 @@
-from app.models import TEMPLATE_TYPES
+from app.enums import TemplateType
 from app.v2.template.template_schemas import get_template_by_id_response as template
 
 get_all_template_request = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "request schema for parameters allowed when getting all templates",
     "type": "object",
-    "properties": {"type": {"enum": TEMPLATE_TYPES}},
+    "properties": {"type": {"enum": list(TemplateType)}},
     "additionalProperties": False,
 }
 

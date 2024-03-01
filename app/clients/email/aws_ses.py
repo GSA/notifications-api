@@ -4,38 +4,39 @@ import botocore
 from boto3 import client
 from flask import current_app
 
-from app.clients import AWS_CLIENT_CONFIG, STATISTICS_DELIVERED, STATISTICS_FAILURE
+from app.clients import AWS_CLIENT_CONFIG
 from app.clients.email import (
     EmailClient,
     EmailClientException,
     EmailClientNonRetryableException,
 )
 from app.cloudfoundry_config import cloud_config
+from app.enums import NotificationStatus, StatisticsType
 
 ses_response_map = {
     "Permanent": {
         "message": "Hard bounced",
         "success": False,
-        "notification_status": "permanent-failure",
-        "notification_statistics_status": STATISTICS_FAILURE,
+        "notification_status": NotificationStatus.PERMANENT_FAILURE,
+        "notification_statistics_status": StatisticsType.FAILURE,
     },
     "Temporary": {
         "message": "Soft bounced",
         "success": False,
-        "notification_status": "temporary-failure",
-        "notification_statistics_status": STATISTICS_FAILURE,
+        "notification_status": NotificationStatus.TEMPORARY_FAILURE,
+        "notification_statistics_status": StatisticsType.FAILURE,
     },
     "Delivery": {
         "message": "Delivered",
         "success": True,
-        "notification_status": "delivered",
-        "notification_statistics_status": STATISTICS_DELIVERED,
+        "notification_status": NotificationStatus.DELIVERED,
+        "notification_statistics_status": StatisticsType.DELIVERED,
     },
     "Complaint": {
         "message": "Complaint",
         "success": True,
-        "notification_status": "delivered",
-        "notification_statistics_status": STATISTICS_DELIVERED,
+        "notification_status": NotificationStatus.DELIVERED,
+        "notification_statistics_status": StatisticsType.DELIVERED,
     },
 }
 

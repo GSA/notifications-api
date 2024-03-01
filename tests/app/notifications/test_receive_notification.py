@@ -5,7 +5,8 @@ from unittest import mock
 import pytest
 from flask import json
 
-from app.models import EMAIL_TYPE, INBOUND_SMS_TYPE, SMS_TYPE, InboundSms
+from app.enums import ServicePermissionType
+from app.models import InboundSms
 from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     fetch_potential_service,
@@ -72,8 +73,8 @@ def test_receive_notification_returns_received_to_sns(
 @pytest.mark.parametrize(
     "permissions",
     [
-        [SMS_TYPE],
-        [INBOUND_SMS_TYPE],
+        [ServicePermissionType.SMS],
+        [ServicePermissionType.INBOUND_SMS],
     ],
 )
 def test_receive_notification_from_sns_without_permissions_does_not_persist(
@@ -139,9 +140,9 @@ def test_receive_notification_without_permissions_does_not_create_inbound_even_w
 @pytest.mark.parametrize(
     "permissions,expected_response",
     [
-        ([SMS_TYPE, INBOUND_SMS_TYPE], True),
-        ([INBOUND_SMS_TYPE], False),
-        ([SMS_TYPE], False),
+        ([ServicePermissionType.SMS, ServicePermissionType.INBOUND_SMS], True),
+        ([ServicePermissionType.INBOUND_SMS], False),
+        ([ServicePermissionType.SMS], False),
     ],
 )
 def test_check_permissions_for_inbound_sms(
@@ -256,12 +257,20 @@ def test_receive_notification_error_if_not_single_matching_service(
     create_service_with_inbound_number(
         inbound_number="dog",
         service_name="a",
-        service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE],
+        service_permissions=[
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            ServicePermissionType.INBOUND_SMS,
+        ],
     )
     create_service_with_inbound_number(
         inbound_number="bar",
         service_name="b",
-        service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE],
+        service_permissions=[
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            ServicePermissionType.INBOUND_SMS,
+        ],
     )
 
     data = {
@@ -303,7 +312,11 @@ def test_sns_inbound_sms_auth(
     create_service_with_inbound_number(
         service_name="b",
         inbound_number="07111111111",
-        service_permissions=[EMAIL_TYPE, SMS_TYPE, INBOUND_SMS_TYPE],
+        service_permissions=[
+            ServicePermissionType.EMAIL,
+            ServicePermissionType.SMS,
+            ServicePermissionType.INBOUND_SMS,
+        ],
     )
 
     data = {

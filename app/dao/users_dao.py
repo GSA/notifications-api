@@ -9,8 +9,9 @@ from app import db
 from app.dao.dao_utils import autocommit
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
+from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
-from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
+from app.models import User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
 
@@ -30,7 +31,10 @@ def save_user_attribute(usr, update_dict=None):
 
 
 def save_model_user(
-    user, update_dict=None, password=None, validated_email_access=False
+    user,
+    update_dict=None,
+    password=None,
+    validated_email_access=False,
 ):
     if password:
         user.password = password
@@ -171,7 +175,7 @@ def dao_archive_user(user):
 
     user.organizations = []
 
-    user.auth_type = EMAIL_AUTH_TYPE
+    user.auth_type = AuthType.EMAIL
     user.email_address = get_archived_db_column_value(user.email_address)
     user.mobile_number = None
     user.password = str(uuid.uuid4())
@@ -194,7 +198,7 @@ def user_can_be_archived(user):
             return False
 
         if not any(
-            "manage_settings" in user.get_permissions(service.id)
+            PermissionType.MANAGE_SETTINGS in user.get_permissions(service.id)
             for user in other_active_users
         ):
             # no-one else has manage settings
