@@ -73,8 +73,9 @@ from app.dao.services_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
+from app.enums import KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
+from app.models import EmailBranding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -633,7 +634,7 @@ def get_detailed_services(
 
 @service_blueprint.route("/<uuid:service_id>/guest-list", methods=["GET"])
 def get_guest_list(service_id):
-    from app.models import EMAIL_TYPE, MOBILE_TYPE
+    from app.enums import RecipientType
 
     service = dao_fetch_service_by_id(service_id)
 
@@ -643,10 +644,14 @@ def get_guest_list(service_id):
     guest_list = dao_fetch_service_guest_list(service.id)
     return jsonify(
         email_addresses=[
-            item.recipient for item in guest_list if item.recipient_type == EMAIL_TYPE
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == RecipientType.EMAIL
         ],
         phone_numbers=[
-            item.recipient for item in guest_list if item.recipient_type == MOBILE_TYPE
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == RecipientType.MOBILE
         ],
     )
 
@@ -778,7 +783,7 @@ def verify_reply_to_email_address(service_id):
         personalisation="",
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=notify_service.get_default_reply_to_email_address(),
     )
 

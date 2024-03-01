@@ -3,6 +3,8 @@ from typing import Protocol
 
 from botocore.config import Config
 
+from app.enums import NotificationType
+
 AWS_CLIENT_CONFIG = Config(
     # This config is required to enable S3 to connect to FIPS-enabled
     # endpoints.  See https://aws.amazon.com/compliance/fips/ for more
@@ -12,9 +14,6 @@ AWS_CLIENT_CONFIG = Config(
     },
     use_fips_endpoint=True,
 )
-STATISTICS_REQUESTED = "requested"
-STATISTICS_DELIVERED = "delivered"
-STATISTICS_FAILURE = "failure"
 
 
 class ClientException(Exception):
@@ -53,10 +52,13 @@ class NotificationProviderClients(object):
         return self.email_clients.get(name)
 
     def get_client_by_name_and_type(self, name, notification_type):
-        assert notification_type in ["email", "sms"]  # nosec B101
+        assert notification_type in {
+            NotificationType.EMAIL,
+            NotificationType.SMS,
+        }  # nosec B101
 
-        if notification_type == "email":
+        if notification_type == NotificationType.EMAIL:
             return self.get_email_client(name)
 
-        if notification_type == "sms":
+        if notification_type == NotificationType.SMS:
             return self.get_sms_client(name)

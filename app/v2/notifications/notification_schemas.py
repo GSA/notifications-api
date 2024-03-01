@@ -1,4 +1,4 @@
-from app.models import NOTIFICATION_STATUS_TYPES, NOTIFICATION_TYPES
+from app.enums import NotificationStatus, TemplateType
 from app.schema_validation.definitions import personalisation, uuid
 
 template = {
@@ -41,7 +41,7 @@ get_notification_response = {
         "line_5": {"type": ["string", "null"]},
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
-        "type": {"enum": ["sms", "email"]},
+        "type": {"enum": list(TemplateType)},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},
@@ -80,8 +80,14 @@ get_notifications_request = {
     "type": "object",
     "properties": {
         "reference": {"type": "string"},
-        "status": {"type": "array", "items": {"enum": NOTIFICATION_STATUS_TYPES}},
-        "template_type": {"type": "array", "items": {"enum": NOTIFICATION_TYPES}},
+        "status": {
+            "type": "array",
+            "items": {"enum": list(NotificationStatus)},
+        },
+        "template_type": {
+            "type": "array",
+            "items": {"enum": list(TemplateType)},
+        },
         "include_jobs": {"enum": ["true", "True"]},
         "older_than": uuid,
     },

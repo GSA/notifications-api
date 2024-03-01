@@ -1,7 +1,7 @@
 import pytest
 from flask import json
 
-from app.models import EMAIL_TYPE, SMS_TYPE, TEMPLATE_TYPES
+from app.enums import TemplateType
 from app.utils import DATETIME_FORMAT
 from tests import create_service_authorization_header
 from tests.app.db import create_template
@@ -12,8 +12,8 @@ valid_version_params = [None, 1]
 @pytest.mark.parametrize(
     "tmp_type, expected_name, expected_subject",
     [
-        (SMS_TYPE, "sms Template Name", None),
-        (EMAIL_TYPE, "email Template Name", "Template subject"),
+        (TemplateType.SMS, "sms Template Name", None),
+        (TemplateType.EMAIL, "email Template Name", "Template subject"),
     ],
 )
 @pytest.mark.parametrize("version", valid_version_params)
@@ -56,7 +56,7 @@ def test_get_template_by_id_returns_200(
     [
         (
             {
-                "template_type": SMS_TYPE,
+                "template_type": TemplateType.SMS,
                 "content": "Hello ((placeholder)) ((conditional??yes))",
             },
             {
@@ -66,7 +66,7 @@ def test_get_template_by_id_returns_200(
         ),
         (
             {
-                "template_type": EMAIL_TYPE,
+                "template_type": TemplateType.EMAIL,
                 "subject": "((subject))",
                 "content": "((content))",
             },
@@ -120,7 +120,7 @@ def test_get_template_with_non_existent_template_id_returns_404(
     }
 
 
-@pytest.mark.parametrize("tmp_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("tmp_type", TemplateType)
 def test_get_template_with_non_existent_version_returns_404(
     client, sample_service, tmp_type
 ):

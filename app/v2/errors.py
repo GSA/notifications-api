@@ -7,6 +7,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.authentication.auth import AuthError
+from app.enums import KeyType
 from app.errors import InvalidRequest
 
 
@@ -35,7 +36,7 @@ class RateLimitError(InvalidRequest):
     def __init__(self, sending_limit, interval, key_type):
         # normal keys are spoken of as "live" in the documentation
         # so using this in the error messaging
-        if key_type == "normal":
+        if key_type == KeyType.NORMAL:
             key_type = "live"
 
         self.message = self.message_template.format(

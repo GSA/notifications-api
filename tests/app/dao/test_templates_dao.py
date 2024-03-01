@@ -12,6 +12,7 @@ from app.dao.templates_dao import (
     dao_redact_template,
     dao_update_template,
 )
+from app.enums import TemplateProcessType, TemplateType
 from app.models import Template, TemplateHistory, TemplateRedacted
 from tests.app.db import create_template
 
@@ -19,8 +20,8 @@ from tests.app.db import create_template
 @pytest.mark.parametrize(
     "template_type, subject",
     [
-        ("sms", None),
-        ("email", "subject"),
+        (TemplateType.SMS, None),
+        (TemplateType.EMAIL, "subject"),
     ],
 )
 def test_create_template(sample_service, sample_user, template_type, subject):
@@ -43,7 +44,8 @@ def test_create_template(sample_service, sample_user, template_type, subject):
         == "Sample Template"
     )
     assert (
-        dao_get_all_templates_for_service(sample_service.id)[0].process_type == "normal"
+        dao_get_all_templates_for_service(sample_service.id)[0].process_type
+        == TemplateProcessType.NORMAL
     )
 
 
@@ -61,7 +63,7 @@ def test_create_template_creates_redact_entry(sample_service):
 def test_update_template(sample_service, sample_user):
     data = {
         "name": "Sample Template",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "Template content",
         "service": sample_service,
         "created_by": sample_user,
@@ -101,19 +103,19 @@ def test_get_all_templates_for_service(service_factory):
     create_template(
         service=service_1,
         template_name="Sample Template 1",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
     )
     create_template(
         service=service_1,
         template_name="Sample Template 2",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
     )
     create_template(
         service=service_2,
         template_name="Sample Template 3",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
     )
 
@@ -125,19 +127,19 @@ def test_get_all_templates_for_service(service_factory):
 def test_get_all_templates_for_service_is_alphabetised(sample_service):
     create_template(
         template_name="Sample Template 1",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
         service=sample_service,
     )
     template_2 = create_template(
         template_name="Sample Template 2",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
         service=sample_service,
     )
     create_template(
         template_name="Sample Template 3",
-        template_type="sms",
+        template_type=TemplateType.SMS,
         content="Template content",
         service=sample_service,
     )
@@ -259,7 +261,7 @@ def test_create_template_creates_a_history_record_with_current_data(
     assert TemplateHistory.query.count() == 0
     data = {
         "name": "Sample Template",
-        "template_type": "email",
+        "template_type": TemplateType.EMAIL,
         "subject": "subject",
         "content": "Template content",
         "service": sample_service,
@@ -288,7 +290,7 @@ def test_update_template_creates_a_history_record_with_current_data(
     assert TemplateHistory.query.count() == 0
     data = {
         "name": "Sample Template",
-        "template_type": "email",
+        "template_type": TemplateType.EMAIL,
         "subject": "subject",
         "content": "Template content",
         "service": sample_service,

@@ -5,16 +5,8 @@ from flask import current_app
 from sqlalchemy import String, and_, desc, func, literal, text
 
 from app import db
-from app.models import (
-    JOB_STATUS_CANCELLED,
-    JOB_STATUS_SCHEDULED,
-    LETTER_TYPE,
-    NOTIFICATION_CANCELLED,
-    Job,
-    Notification,
-    ServiceDataRetention,
-    Template,
-)
+from app.enums import JobStatus, NotificationStatus, NotificationType
+from app.models import Job, Notification, ServiceDataRetention, Template
 from app.utils import midnight_n_days_ago
 
 
@@ -53,7 +45,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         Job.service_id == service_id,
         Job.original_file_name != current_app.config["TEST_MESSAGE_FILENAME"],
         Job.original_file_name != current_app.config["ONE_OFF_MESSAGE_FILENAME"],
-        Job.job_status.notin_([JOB_STATUS_CANCELLED, JOB_STATUS_SCHEDULED]),
+        Job.job_status.notin_([JobStatus.CANCELLED, JobStatus.SCHEDULED]),
         func.coalesce(Job.processing_started, Job.created_at)
         >= today - func.coalesce(ServiceDataRetention.days_of_retention, 7),
     ]
@@ -90,9 +82,9 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
 
     letters_query_filter = [
         Notification.service_id == service_id,
-        Notification.notification_type == LETTER_TYPE,
+        Notification.notification_type == NotificationType.LETTER,
         Notification.api_key_id == None,  # noqa
-        Notification.status != NOTIFICATION_CANCELLED,
+        Notification.status != NotificationStatus.CANCELLED,
         Template.hidden == True,  # noqa
         Notification.created_at
         >= today - func.coalesce(ServiceDataRetention.days_of_retention, 7),

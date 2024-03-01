@@ -17,22 +17,8 @@ from app.dao.fact_notification_status_dao import (
     get_total_notifications_for_date_range,
     update_fact_notification_status,
 )
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    SMS_TYPE,
-    FactNotificationStatus,
-)
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
+from app.models import FactNotificationStatus
 from tests.app.db import (
     create_ft_notification_status,
     create_job,
@@ -46,24 +32,31 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     service_1 = create_service(service_name="service_1")
     service_2 = create_service(service_name="service_2")
 
-    create_ft_notification_status(date(2018, 1, 1), "sms", service_1, count=4)
-    create_ft_notification_status(date(2018, 1, 2), "sms", service_1, count=10)
     create_ft_notification_status(
-        date(2018, 1, 2), "sms", service_1, notification_status="created"
+        date(2018, 1, 1), NotificationType.SMS, service_1, count=4
     )
-    create_ft_notification_status(date(2018, 1, 3), "email", service_1)
+    create_ft_notification_status(
+        date(2018, 1, 2), NotificationType.SMS, service_1, count=10
+    )
+    create_ft_notification_status(
+        date(2018, 1, 2),
+        NotificationType.SMS,
+        service_1,
+        notification_status=NotificationStatus.CREATED,
+    )
+    create_ft_notification_status(date(2018, 1, 3), NotificationType.EMAIL, service_1)
 
-    create_ft_notification_status(date(2018, 2, 2), "sms", service_1)
+    create_ft_notification_status(date(2018, 2, 2), NotificationType.SMS, service_1)
 
     # not included - too early
-    create_ft_notification_status(date(2017, 12, 31), "sms", service_1)
+    create_ft_notification_status(date(2017, 12, 31), NotificationType.SMS, service_1)
     # not included - too late
-    create_ft_notification_status(date(2017, 3, 1), "sms", service_1)
+    create_ft_notification_status(date(2017, 3, 1), NotificationType.SMS, service_1)
     # not included - wrong service
-    create_ft_notification_status(date(2018, 1, 3), "sms", service_2)
+    create_ft_notification_status(date(2018, 1, 3), NotificationType.SMS, service_2)
     # not included - test keys
     create_ft_notification_status(
-        date(2018, 1, 3), "sms", service_1, key_type=KEY_TYPE_TEST
+        date(2018, 1, 3), NotificationType.SMS, service_1, key_type=KeyType.TEST
     )
 
     results = sorted(
@@ -76,23 +69,23 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     assert len(results) == 4
 
     assert results[0].month.date() == date(2018, 1, 1)
-    assert results[0].notification_type == "email"
-    assert results[0].notification_status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].notification_status == NotificationStatus.DELIVERED
     assert results[0].count == 1
 
     assert results[1].month.date() == date(2018, 1, 1)
-    assert results[1].notification_type == "sms"
-    assert results[1].notification_status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].notification_status == NotificationStatus.CREATED
     assert results[1].count == 1
 
     assert results[2].month.date() == date(2018, 1, 1)
-    assert results[2].notification_type == "sms"
-    assert results[2].notification_status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].notification_status == NotificationStatus.DELIVERED
     assert results[2].count == 14
 
     assert results[3].month.date() == date(2018, 2, 1)
-    assert results[3].notification_type == "sms"
-    assert results[3].notification_status == "delivered"
+    assert results[3].notification_type == NotificationType.SMS
+    assert results[3].notification_status == NotificationStatus.DELIVERED
     assert results[3].count == 1
 
 
@@ -118,19 +111,19 @@ def test_fetch_notification_status_for_service_for_day(notify_db_session):
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 6, 1, 12, 0, 0),
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 6, 1, 12, 0, 0),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     # test key
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 6, 1, 12, 0, 0),
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
 
     # wrong service
@@ -152,13 +145,13 @@ def test_fetch_notification_status_for_service_for_day(notify_db_session):
     assert len(results) == 2
 
     assert results[0].month == datetime(2018, 6, 1, 0, 0)
-    assert results[0].notification_type == "sms"
-    assert results[0].notification_status == "created"
+    assert results[0].notification_type == NotificationType.SMS
+    assert results[0].notification_status == NotificationStatus.CREATED
     assert results[0].count == 3
 
     assert results[1].month == datetime(2018, 6, 1, 0, 0)
-    assert results[1].notification_type == "sms"
-    assert results[1].notification_status == "delivered"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].notification_status == NotificationStatus.DELIVERED
     assert results[1].count == 1
 
 
@@ -167,31 +160,55 @@ def test_fetch_notification_status_for_service_for_today_and_7_previous_days(
     notify_db_session,
 ):
     service_1 = create_service(service_name="service_1")
-    sms_template = create_template(service=service_1, template_type=SMS_TYPE)
-    sms_template_2 = create_template(service=service_1, template_type=SMS_TYPE)
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
-
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(date(2018, 10, 25), "sms", service_1, count=8)
-    create_ft_notification_status(
-        date(2018, 10, 29), "sms", service_1, notification_status="created"
+    sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
+    sms_template_2 = create_template(service=service_1, template_type=TemplateType.SMS)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
     )
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        count=10,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 25),
+        NotificationType.SMS,
+        service_1,
+        count=8,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        notification_status=NotificationStatus.CREATED,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.EMAIL,
+        service_1,
+        count=3,
+    )
 
     create_notification(sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(sms_template_2, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 10, 31, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     # too early, shouldn't be included
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 10, 30, 12, 0, 0),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     results = sorted(
@@ -203,16 +220,16 @@ def test_fetch_notification_status_for_service_for_today_and_7_previous_days(
 
     assert len(results) == 3
 
-    assert results[0].notification_type == "email"
-    assert results[0].status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].status == NotificationStatus.DELIVERED
     assert results[0].count == 4
 
-    assert results[1].notification_type == "sms"
-    assert results[1].status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].status == NotificationStatus.CREATED
     assert results[1].count == 3
 
-    assert results[2].notification_type == "sms"
-    assert results[2].status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].status == NotificationStatus.DELIVERED
     assert results[2].count == 19
 
 
@@ -222,56 +239,155 @@ def test_fetch_notification_status_by_template_for_service_for_today_and_7_previ
 ):
     service_1 = create_service(service_name="service_1")
     sms_template = create_template(
-        template_name="sms Template 1", service=service_1, template_type=SMS_TYPE
+        template_name="sms Template 1",
+        service=service_1,
+        template_type=TemplateType.SMS,
     )
     sms_template_2 = create_template(
-        template_name="sms Template 2", service=service_1, template_type=SMS_TYPE
+        template_name="sms Template 2",
+        service=service_1,
+        template_type=TemplateType.SMS,
     )
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
 
     # create unused email template
-    create_template(service=service_1, template_type=EMAIL_TYPE)
+    create_template(service=service_1, template_type=TemplateType.EMAIL)
 
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=11)
-    create_ft_notification_status(date(2018, 10, 25), "sms", service_1, count=8)
     create_ft_notification_status(
-        date(2018, 10, 29), "sms", service_1, notification_status="created"
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        count=10,
     )
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        count=11,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 25),
+        NotificationType.SMS,
+        service_1,
+        count=8,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        notification_status=NotificationStatus.CREATED,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.EMAIL,
+        service_1,
+        count=3,
+    )
 
     create_notification(sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        sms_template_2, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template_2,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 10, 31, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     # too early, shouldn't be included
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 10, 30, 12, 0, 0),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
     results = fetch_notification_status_for_service_for_today_and_7_previous_days(
-        service_1.id, by_template=True
+        service_1.id,
+        by_template=True,
     )
 
     assert [
-        ("email Template Name", False, mock.ANY, "email", "delivered", 1),
-        ("email Template Name", False, mock.ANY, "email", "delivered", 3),
-        ("sms Template 1", False, mock.ANY, "sms", "created", 1),
-        ("sms Template Name", False, mock.ANY, "sms", "created", 1),
-        ("sms Template 1", False, mock.ANY, "sms", "delivered", 1),
-        ("sms Template 2", False, mock.ANY, "sms", "delivered", 1),
-        ("sms Template Name", False, mock.ANY, "sms", "delivered", 8),
-        ("sms Template Name", False, mock.ANY, "sms", "delivered", 10),
-        ("sms Template Name", False, mock.ANY, "sms", "delivered", 11),
+        (
+            "email Template Name",
+            False,
+            mock.ANY,
+            NotificationType.EMAIL,
+            NotificationStatus.DELIVERED,
+            1,
+        ),
+        (
+            "email Template Name",
+            False,
+            mock.ANY,
+            NotificationType.EMAIL,
+            NotificationStatus.DELIVERED,
+            3,
+        ),
+        (
+            "sms Template 1",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.CREATED,
+            1,
+        ),
+        (
+            "sms Template Name",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.CREATED,
+            1,
+        ),
+        (
+            "sms Template 1",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.DELIVERED,
+            1,
+        ),
+        (
+            "sms Template 2",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.DELIVERED,
+            1,
+        ),
+        (
+            "sms Template Name",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.DELIVERED,
+            8,
+        ),
+        (
+            "sms Template Name",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.DELIVERED,
+            10,
+        ),
+        (
+            "sms Template Name",
+            False,
+            mock.ANY,
+            NotificationType.SMS,
+            NotificationStatus.DELIVERED,
+            11,
+        ),
     ] == sorted(
         results, key=lambda x: (x.notification_type, x.status, x.template_name, x.count)
     )
@@ -305,16 +421,16 @@ def test_fetch_notification_status_totals_for_all_services(
 
     assert len(results) == 3
 
-    assert results[0].notification_type == "email"
-    assert results[0].status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].status == NotificationStatus.DELIVERED
     assert results[0].count == expected_email
 
-    assert results[1].notification_type == "sms"
-    assert results[1].status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].status == NotificationStatus.CREATED
     assert results[1].count == expected_created_sms
 
-    assert results[2].notification_type == "sms"
-    assert results[2].status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].status == NotificationStatus.DELIVERED
     assert results[2].count == expected_sms
 
 
@@ -323,23 +439,35 @@ def test_fetch_notification_status_totals_for_all_services_works_in_est(
     notify_db_session,
 ):
     service_1 = create_service(service_name="service_1")
-    sms_template = create_template(service=service_1, template_type=SMS_TYPE)
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
+    sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
 
     create_notification(
-        sms_template, created_at=datetime(2018, 4, 20, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 4, 20, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        sms_template, created_at=datetime(2018, 4, 21, 11, 0, 0), status="created"
+        sms_template,
+        created_at=datetime(2018, 4, 21, 11, 0, 0),
+        status=NotificationStatus.CREATED,
     )
     create_notification(
-        sms_template, created_at=datetime(2018, 4, 21, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 4, 21, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 4, 21, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 4, 21, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 4, 21, 14, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 4, 21, 14, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     results = sorted(
@@ -351,42 +479,63 @@ def test_fetch_notification_status_totals_for_all_services_works_in_est(
 
     assert len(results) == 3
 
-    assert results[0].notification_type == "email"
-    assert results[0].status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].status == NotificationStatus.DELIVERED
     assert results[0].count == 2
 
-    assert results[1].notification_type == "sms"
-    assert results[1].status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].status == NotificationStatus.CREATED
     assert results[1].count == 1
 
-    assert results[2].notification_type == "sms"
-    assert results[2].status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].status == NotificationStatus.DELIVERED
     assert results[2].count == 1
 
 
 def set_up_data():
     service_2 = create_service(service_name="service_2")
     service_1 = create_service(service_name="service_1")
-    sms_template = create_template(service=service_1, template_type=SMS_TYPE)
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
-    create_ft_notification_status(date(2018, 10, 24), "sms", service_1, count=8)
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(
-        date(2018, 10, 29), "sms", service_1, notification_status="created"
+    sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
+    email_template = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
     )
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+    create_ft_notification_status(
+        date(2018, 10, 24),
+        NotificationType.SMS,
+        service_1,
+        count=8,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        count=10,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29),
+        NotificationType.SMS,
+        service_1,
+        notification_status=NotificationStatus.CREATED,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29), NotificationType.EMAIL, service_1, count=3
+    )
 
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 10, 30, 12, 0, 0),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0))
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 10, 31, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     return service_1, service_2
 
@@ -396,21 +545,33 @@ def test_fetch_notification_statuses_for_job(sample_template):
     j2 = create_job(sample_template)
 
     create_ft_notification_status(
-        date(2018, 10, 1), job=j1, notification_status="created", count=1
+        date(2018, 10, 1),
+        job=j1,
+        notification_status=NotificationStatus.CREATED,
+        count=1,
     )
     create_ft_notification_status(
-        date(2018, 10, 1), job=j1, notification_status="delivered", count=2
+        date(2018, 10, 1),
+        job=j1,
+        notification_status=NotificationStatus.DELIVERED,
+        count=2,
     )
     create_ft_notification_status(
-        date(2018, 10, 2), job=j1, notification_status="created", count=4
+        date(2018, 10, 2),
+        job=j1,
+        notification_status=NotificationStatus.CREATED,
+        count=4,
     )
     create_ft_notification_status(
-        date(2018, 10, 1), job=j2, notification_status="created", count=8
+        date(2018, 10, 1),
+        job=j2,
+        notification_status=NotificationStatus.CREATED,
+        count=8,
     )
 
     assert {x.status: x.count for x in fetch_notification_statuses_for_job(j1.id)} == {
-        "created": 5,
-        "delivered": 2,
+        NotificationStatus.CREATED: 5,
+        NotificationStatus.DELIVERED: 2,
     }
 
 
@@ -423,18 +584,18 @@ def test_fetch_stats_for_all_services_by_date_range(notify_db_session):
     assert len(results) == 4
 
     assert results[0].service_id == service_1.id
-    assert results[0].notification_type == "email"
-    assert results[0].status == "delivered"
+    assert results[0].notification_type == NotificationType.EMAIL
+    assert results[0].status == NotificationStatus.DELIVERED
     assert results[0].count == 4
 
     assert results[1].service_id == service_1.id
-    assert results[1].notification_type == "sms"
-    assert results[1].status == "created"
+    assert results[1].notification_type == NotificationType.SMS
+    assert results[1].status == NotificationStatus.CREATED
     assert results[1].count == 2
 
     assert results[2].service_id == service_1.id
-    assert results[2].notification_type == "sms"
-    assert results[2].status == "delivered"
+    assert results[2].notification_type == NotificationType.SMS
+    assert results[2].status == NotificationStatus.DELIVERED
     assert results[2].count == 11
 
     assert results[3].service_id == service_2.id
@@ -446,10 +607,14 @@ def test_fetch_stats_for_all_services_by_date_range(notify_db_session):
 @freeze_time("2018-03-30 14:00")
 def test_fetch_monthly_template_usage_for_service(sample_service):
     template_one = create_template(
-        service=sample_service, template_type="sms", template_name="a"
+        service=sample_service,
+        template_type=TemplateType.SMS,
+        template_name="a",
     )
     template_two = create_template(
-        service=sample_service, template_type="email", template_name="b"
+        service=sample_service,
+        template_type=TemplateType.EMAIL,
+        template_name="b",
     )
 
     create_ft_notification_status(
@@ -521,10 +686,14 @@ def test_fetch_monthly_template_usage_for_service_does_join_to_notifications_if_
     sample_service,
 ):
     template_one = create_template(
-        service=sample_service, template_type="sms", template_name="a"
+        service=sample_service,
+        template_type=TemplateType.SMS,
+        template_name="a",
     )
     template_two = create_template(
-        service=sample_service, template_type="email", template_name="b"
+        service=sample_service,
+        template_type=TemplateType.EMAIL,
+        template_name="b",
     )
     create_ft_notification_status(
         local_date=date(2018, 2, 1),
@@ -573,11 +742,13 @@ def test_fetch_monthly_template_usage_for_service_does_not_include_cancelled_sta
         local_date=date(2018, 3, 1),
         service=sample_template.service,
         template=sample_template,
-        notification_status="cancelled",
+        notification_status=NotificationStatus.CANCELLED,
         count=15,
     )
     create_notification(
-        template=sample_template, created_at=datetime.utcnow(), status="cancelled"
+        template=sample_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.CANCELLED,
     )
     results = fetch_monthly_template_usage_for_service(
         datetime(2018, 1, 1), datetime(2018, 3, 31), sample_template.service_id
@@ -594,18 +765,20 @@ def test_fetch_monthly_template_usage_for_service_does_not_include_test_notifica
         local_date=date(2018, 3, 1),
         service=sample_template.service,
         template=sample_template,
-        notification_status="delivered",
-        key_type="test",
+        notification_status=NotificationStatus.DELIVERED,
+        key_type=KeyType.TEST,
         count=15,
     )
     create_notification(
         template=sample_template,
         created_at=datetime.utcnow(),
-        status="delivered",
-        key_type="test",
+        status=NotificationStatus.DELIVERED,
+        key_type=KeyType.TEST,
     )
     results = fetch_monthly_template_usage_for_service(
-        datetime(2018, 1, 1), datetime(2018, 3, 31), sample_template.service_id
+        datetime(2018, 1, 1),
+        datetime(2018, 3, 31),
+        sample_template.service_id,
     )
 
     assert len(results) == 0
@@ -624,71 +797,71 @@ def test_fetch_monthly_notification_statuses_per_service(notify_db_session):
 
     create_ft_notification_status(
         date(2019, 4, 30),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_one,
-        notification_status=NOTIFICATION_DELIVERED,
+        notification_status=NotificationStatus.DELIVERED,
     )
     create_ft_notification_status(
         date(2019, 3, 1),
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         service=service_one,
-        notification_status=NOTIFICATION_SENDING,
+        notification_status=NotificationStatus.SENDING,
         count=4,
     )
     create_ft_notification_status(
         date(2019, 3, 1),
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         service=service_one,
-        notification_status=NOTIFICATION_PENDING,
+        notification_status=NotificationStatus.PENDING,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 2),
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         service=service_one,
-        notification_status=NOTIFICATION_TECHNICAL_FAILURE,
+        notification_status=NotificationStatus.TECHNICAL_FAILURE,
         count=2,
     )
     create_ft_notification_status(
         date(2019, 3, 7),
-        notification_type="email",
+        notification_type=NotificationType.EMAIL,
         service=service_one,
-        notification_status=NOTIFICATION_FAILED,
+        notification_status=NotificationStatus.FAILED,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 10),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_two,
-        notification_status=NOTIFICATION_PERMANENT_FAILURE,
+        notification_status=NotificationStatus.PERMANENT_FAILURE,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 10),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_two,
-        notification_status=NOTIFICATION_PERMANENT_FAILURE,
+        notification_status=NotificationStatus.PERMANENT_FAILURE,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 3, 13),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_one,
-        notification_status=NOTIFICATION_SENT,
+        notification_status=NotificationStatus.SENT,
         count=1,
     )
     create_ft_notification_status(
         date(2019, 4, 1),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_two,
-        notification_status=NOTIFICATION_TEMPORARY_FAILURE,
+        notification_status=NotificationStatus.TEMPORARY_FAILURE,
         count=10,
     )
     create_ft_notification_status(
         date(2019, 3, 31),
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
         service=service_one,
-        notification_status=NOTIFICATION_DELIVERED,
+        notification_status=NotificationStatus.DELIVERED,
     )
 
     results = fetch_monthly_notification_statuses_per_service(
@@ -698,66 +871,71 @@ def test_fetch_monthly_notification_statuses_per_service(notify_db_session):
     assert len(results) == 5
     # column order: date, service_id, service_name, notifaction_type, count_sending, count_delivered,
     # count_technical_failure, count_temporary_failure, count_permanent_failure, count_sent
-    assert [x for x in results[0]] == [
-        date(2019, 3, 1),
-        service_two.id,
-        "service two",
-        "sms",
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
+    expected = [
+        [
+            date(2019, 3, 1),
+            service_two.id,
+            "service two",
+            NotificationType.SMS,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+        ],
+        [
+            date(2019, 3, 1),
+            service_one.id,
+            "service one",
+            NotificationType.EMAIL,
+            5,
+            0,
+            3,
+            0,
+            0,
+            0,
+        ],
+        [
+            date(2019, 3, 1),
+            service_one.id,
+            "service one",
+            NotificationType.SMS,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+        ],
+        [
+            date(2019, 4, 1),
+            service_two.id,
+            "service two",
+            NotificationType.SMS,
+            0,
+            0,
+            0,
+            10,
+            0,
+            0,
+        ],
+        [
+            date(2019, 4, 1),
+            service_one.id,
+            "service one",
+            NotificationType.SMS,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+        ],
     ]
-    assert [x for x in results[1]] == [
-        date(2019, 3, 1),
-        service_one.id,
-        "service one",
-        "email",
-        5,
-        0,
-        3,
-        0,
-        0,
-        0,
-    ]
-    assert [x for x in results[2]] == [
-        date(2019, 3, 1),
-        service_one.id,
-        "service one",
-        "sms",
-        0,
-        1,
-        0,
-        0,
-        0,
-        1,
-    ]
-    assert [x for x in results[3]] == [
-        date(2019, 4, 1),
-        service_two.id,
-        "service two",
-        "sms",
-        0,
-        0,
-        0,
-        10,
-        0,
-        0,
-    ]
-    assert [x for x in results[4]] == [
-        date(2019, 4, 1),
-        service_one.id,
-        "service one",
-        "sms",
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-    ]
+
+    for row in results:
+        assert [x for x in row] in expected
 
 
 @freeze_time("2019-04-10 14:00")
@@ -772,13 +950,13 @@ def test_fetch_monthly_notification_statuses_per_service_for_rows_that_should_be
     create_ft_notification_status(
         date(2019, 3, 15),
         service=valid_service,
-        notification_status=NOTIFICATION_CREATED,
+        notification_status=NotificationStatus.CREATED,
     )
     # notification created by inactive service
     create_ft_notification_status(date(2019, 3, 15), service=inactive_service)
     # notification created with test key
     create_ft_notification_status(
-        date(2019, 3, 12), service=valid_service, key_type=KEY_TYPE_TEST
+        date(2019, 3, 12), service=valid_service, key_type=KeyType.TEST
     )
     # notification created by trial mode service
     create_ft_notification_status(date(2019, 3, 19), service=restricted_service)
@@ -794,10 +972,14 @@ def test_fetch_monthly_notification_statuses_per_service_for_rows_that_should_be
 
 def test_get_total_notifications_for_date_range(sample_service):
     template_sms = create_template(
-        service=sample_service, template_type="sms", template_name="a"
+        service=sample_service,
+        template_type=TemplateType.SMS,
+        template_name="a",
     )
     template_email = create_template(
-        service=sample_service, template_type="email", template_name="b"
+        service=sample_service,
+        template_type=TemplateType.EMAIL,
+        template_name="b",
     )
     create_ft_notification_status(
         local_date=date(2021, 2, 28),
@@ -830,7 +1012,7 @@ def test_get_total_notifications_for_date_range(sample_service):
     )
 
     assert len(results) == 1
-    assert results[0] == ("2021-03-01", 15, 20)
+    assert results[0] == (date.fromisoformat("2021-03-01"), 15, 20)
 
 
 @pytest.mark.skip(reason="Need a better way to test variable DST date")
@@ -854,7 +1036,9 @@ def test_update_fact_notification_status_respects_gmt_bst(
     expected_count,
 ):
     create_notification(template=sample_template, created_at=created_at_utc)
-    update_fact_notification_status(process_day, SMS_TYPE, sample_service.id)
+    update_fact_notification_status(
+        process_day, NotificationType.SMS, sample_service.id
+    )
 
     assert (
         FactNotificationStatus.query.filter_by(
