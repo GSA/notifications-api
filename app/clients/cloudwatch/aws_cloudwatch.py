@@ -108,6 +108,9 @@ class AwsCloudwatchClient(Client):
         return None
 
     def check_sms(self, message_id, notification_id, created_at):
+        if message_id == "SIMULATED":
+            return ("success", "This was a simulated message", "Simulated Carrier")
+
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)

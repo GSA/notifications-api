@@ -97,7 +97,7 @@ def send_sms_to_provider(notification):
                     current_app.logger.warning(
                         "SKIPPING MESSAGE SEND FOR SIMULATED RECIPIENT"
                     )
-                    return None
+                    return "SIMULATED"
 
                 send_sms_kwargs = {
                     "to": recipient,
