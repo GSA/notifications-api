@@ -49,10 +49,8 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
+from app.enums import AuthType, KeyType, NotificationStatus, NotificationType
 from app.models import (
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    SMS_TYPE,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -240,7 +238,8 @@ def rebuild_ft_billing_for_day(service_id, day):
     "-a",
     "--auth_type",
     required=False,
-    help="The authentication type for the user, sms_auth or email_auth. Defaults to sms_auth if not provided",
+    help="The authentication type for the user, AuthType.SMS or AuthType.EMAIL. "
+    "Defaults to AuthType.SMS if not provided",
 )
 @click.option(
     "-p", "--permissions", required=True, help="Comma separated list of permissions."
@@ -519,11 +518,11 @@ def populate_go_live(file_name):
 @notify_command(name="fix-billable-units")
 def fix_billable_units():
     query = Notification.query.filter(
-        Notification.notification_type == SMS_TYPE,
-        Notification.status != NOTIFICATION_CREATED,
+        Notification.notification_type == NotificationType.SMS,
+        Notification.status != NotificationStatus.CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     )
 
     for notification in query.all():
@@ -705,7 +704,7 @@ def validate_mobile(ctx, param, value):  # noqa
     hide_input=True,
     confirmation_prompt=True,
 )
-@click.option("-a", "--auth_type", default="sms_auth")
+@click.option("-a", "--auth_type", default=AuthType.SMS)
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):

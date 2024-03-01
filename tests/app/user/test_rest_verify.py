@@ -10,14 +10,8 @@ import app.celery.tasks
 from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.users_dao import create_user_code
-from app.models import (
-    EMAIL_TYPE,
-    SMS_TYPE,
-    USER_AUTH_TYPES,
-    Notification,
-    User,
-    VerifyCode,
-)
+from app.enums import AuthType, CodeType
+from app.models import Notification, User, VerifyCode
 from tests import create_admin_authorization_header
 
 
@@ -103,7 +97,7 @@ def test_user_verify_code_rejects_good_code_if_too_many_failed_logins(
 
 
 @freeze_time("2020-04-01 12:00")
-@pytest.mark.parametrize("code_type", [EMAIL_TYPE, SMS_TYPE])
+@pytest.mark.parametrize("code_type", [CodeType.EMAIL, CodeType.SMS])
 def test_user_verify_code_expired_code_and_increments_failed_login_count(
     code_type, admin_request, sample_user
 ):
@@ -215,7 +209,11 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     resp = client.post(
-        url_for("user.send_user_2fa_code", code_type="sms", user_id=sample_user.id),
+        url_for(
+            "user.send_user_2fa_code",
+            code_type=CodeType.SMS,
+            user_id=sample_user.id,
+        ),
         data=json.dumps({}),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -253,7 +251,11 @@ def test_send_user_code_for_sms_with_optional_to_field(
     auth_header = create_admin_authorization_header()
 
     resp = client.post(
-        url_for("user.send_user_2fa_code", code_type="sms", user_id=sample_user.id),
+        url_for(
+            "user.send_user_2fa_code",
+            code_type=CodeType.SMS,
+            user_id=sample_user.id,
+        ),
         data=json.dumps({"to": to_number}),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -271,7 +273,7 @@ def test_send_sms_code_returns_404_for_bad_input_data(client):
     uuid_ = uuid.uuid4()
     auth_header = create_admin_authorization_header()
     resp = client.post(
-        url_for("user.send_user_2fa_code", code_type="sms", user_id=uuid_),
+        url_for("user.send_user_2fa_code", code_type=CodeType.SMS, user_id=uuid_),
         data=json.dumps({}),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -284,7 +286,7 @@ def test_send_sms_code_returns_204_when_too_many_codes_already_created(
 ):
     for _ in range(5):
         verify_code = VerifyCode(
-            code_type="sms",
+            code_type=CodeType.SMS,
             _code=12345,
             created_at=datetime.utcnow() - timedelta(minutes=10),
             expiry_datetime=datetime.utcnow() + timedelta(minutes=40),
@@ -295,7 +297,11 @@ def test_send_sms_code_returns_204_when_too_many_codes_already_created(
     assert VerifyCode.query.count() == 5
     auth_header = create_admin_authorization_header()
     resp = client.post(
-        url_for("user.send_user_2fa_code", code_type="sms", user_id=sample_user.id),
+        url_for(
+            "user.send_user_2fa_code",
+            code_type=CodeType.SMS,
+            user_id=sample_user.id,
+        ),
         data=json.dumps({}),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -431,8 +437,8 @@ def test_reset_failed_login_count_returns_404_when_user_does_not_exist(client):
     assert resp.status_code == 404
 
 
-# we send sms_auth users and webauthn_auth users email code to validate their email access
-@pytest.mark.parametrize("auth_type", USER_AUTH_TYPES)
+# we send AuthType.SMS users and AuthType.WEBAUTHN users email code to validate their email access
+@pytest.mark.parametrize("auth_type", AuthType)
 @pytest.mark.parametrize(
     "data, expected_auth_url",
     (
@@ -469,7 +475,7 @@ def test_send_user_email_code(
 
     admin_request.post(
         "user.send_user_2fa_code",
-        code_type="email",
+        code_type=CodeType.EMAIL,
         user_id=sample_user.id,
         _data=data,
         _expected_status=204,
@@ -499,7 +505,7 @@ def test_send_user_email_code_with_urlencoded_next_param(
     data = {"to": None, "next": "/services"}
     admin_request.post(
         "user.send_user_2fa_code",
-        code_type="email",
+        code_type=CodeType.EMAIL,
         user_id=sample_user.id,
         _data=data,
         _expected_status=204,
@@ -511,7 +517,7 @@ def test_send_user_email_code_with_urlencoded_next_param(
 def test_send_email_code_returns_404_for_bad_input_data(admin_request):
     resp = admin_request.post(
         "user.send_user_2fa_code",
-        code_type="email",
+        code_type=CodeType.EMAIL,
         user_id=uuid.uuid4(),
         _data={},
         _expected_status=404,
@@ -520,16 +526,16 @@ def test_send_email_code_returns_404_for_bad_input_data(admin_request):
 
 
 @freeze_time("2016-01-01T12:00:00")
-# we send sms_auth and webauthn_auth users email code to validate their email access
-@pytest.mark.parametrize("auth_type", USER_AUTH_TYPES)
+# we send iAuthType.SMS and AuthType.WEBAUTHN users email code to validate their email access
+@pytest.mark.parametrize("auth_type", AuthType)
 def test_user_verify_email_code(admin_request, sample_user, auth_type):
     sample_user.logged_in_at = datetime.utcnow() - timedelta(days=1)
     sample_user.email_access_validated_at = datetime.utcnow() - timedelta(days=1)
     sample_user.auth_type = auth_type
     magic_code = str(uuid.uuid4())
-    verify_code = create_user_code(sample_user, magic_code, EMAIL_TYPE)
+    verify_code = create_user_code(sample_user, magic_code, CodeType.EMAIL)
 
-    data = {"code_type": "email", "code": magic_code}
+    data = {"code_type": CodeType.EMAIL, "code": magic_code}
 
     admin_request.post(
         "user.verify_user_code",
@@ -544,7 +550,7 @@ def test_user_verify_email_code(admin_request, sample_user, auth_type):
     assert sample_user.current_session_id is not None
 
 
-@pytest.mark.parametrize("code_type", [EMAIL_TYPE, SMS_TYPE])
+@pytest.mark.parametrize("code_type", [CodeType.EMAIL, CodeType.SMS])
 @freeze_time("2016-01-01T12:00:00")
 def test_user_verify_email_code_fails_if_code_already_used(
     admin_request, sample_user, code_type
@@ -581,7 +587,11 @@ def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     mocker.patch("app.user.rest.send_notification_to_queue")
 
     resp = client.post(
-        url_for("user.send_user_2fa_code", code_type="sms", user_id=sample_user.id),
+        url_for(
+            "user.send_user_2fa_code",
+            code_type=CodeType.SMS,
+            user_id=sample_user.id,
+        ),
         data=json.dumps({}),
         headers=[("Content-Type", "application/json"), auth_header],
     )

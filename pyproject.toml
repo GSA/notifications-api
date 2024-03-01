@@ -49,6 +49,7 @@ pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 sqlalchemy = "==1.4.40"
 werkzeug = "^3.0.1"
+strenum = "^0.4.15"
 
 
 [tool.poetry.group.dev.dependencies]
