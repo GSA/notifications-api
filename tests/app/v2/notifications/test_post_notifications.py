@@ -792,7 +792,6 @@ def test_post_sms_notification_returns_400_if_number_not_in_guest_list(
     ]
 
 
-
 def test_post_sms_should_persist_supplied_sms_number(
     client, sample_template_with_placeholders, mocker
 ):

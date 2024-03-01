@@ -555,6 +555,7 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
 
     assert sample_notification.billable_units == 1
 
+
 @pytest.mark.skip(reason="Enable when we support international numbers")
 def test_should_send_sms_to_international_providers(
     sample_template, sample_user, mocker
