@@ -859,6 +859,9 @@ where possible to enable better maintainability.
 @notify_command(name="add-test-organizations-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
 def add_test_organizations_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
     def generate_gov_agency():
         agency_names = [
             "Bureau",
