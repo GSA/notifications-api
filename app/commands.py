@@ -73,6 +73,8 @@ from tests.app.db import (
     create_user,
 )
 
+#used in add-test-* commands
+fake = Faker(["en_US"])
 
 @click.group(name="command", help="Additional commands")
 def command_group():
@@ -852,8 +854,6 @@ faker is used to generate some random fields. All
 database commands were used from tests/app/db.py
 where possible to enable better maintainability.
 """
-fake = Faker(["en_US"])
-
 
 # generate n number of test orgs into the dev DB
 @notify_command(name="add-test-organizations-to-db")
