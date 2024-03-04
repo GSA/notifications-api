@@ -159,6 +159,7 @@ def create_job(service_id):
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
 
     data = request.get_json()
+    original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
@@ -181,6 +182,9 @@ def create_job(service_id):
     data.update({"template_version": template.version})
 
     job = job_schema.load(data)
+    # See admin #1148, for whatever reason schema loading doesn't load this
+    if original_file_name is not None:
+        job.original_file_name = original_file_name
 
     if job.scheduled_for:
         job.job_status = JobStatus.SCHEDULED
