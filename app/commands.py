@@ -856,9 +856,9 @@ fake = Faker(["en_US"])
 
 
 # generate n number of test orgs into the dev DB
-@notify_command(name="add-test-organization-to-db")
+@notify_command(name="add-test-organizations-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_organization_to_db(generate):
+def add_test_organizations_to_db(generate):
     def generate_gov_agency():
         agency_names = [
             "Bureau",
@@ -914,9 +914,9 @@ def add_test_organization_to_db(generate):
 
 
 # generate n number of test services into the dev DB
-@notify_command(name="add-test-service-to-db")
+@notify_command(name="add-test-services-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_service_to_db(generate):
+def add_test_services_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -928,9 +928,9 @@ def add_test_service_to_db(generate):
 
 
 # generate n number of test jobs into the dev DB
-@notify_command(name="add-test-job-to-db")
+@notify_command(name="add-test-jobs-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_job_to_db(generate):
+def add_test_jobs_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -943,9 +943,9 @@ def add_test_job_to_db(generate):
 
 
 # generate n number of notifications into the dev DB
-@notify_command(name="add-test-notification-to-db")
+@notify_command(name="add-test-notifications-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_notification_to_db(generate):
+def add_test_notifications_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -962,11 +962,11 @@ def add_test_notification_to_db(generate):
 
 
 # generate n number of test users into the dev DB
-@notify_command(name="add-test-users")
+@notify_command(name="add-test-users-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default="1")
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
-def add_test_users(generate, state, admin):
+def add_test_users_to_db(generate, state, admin):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return

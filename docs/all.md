@@ -495,6 +495,18 @@ cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
 
+# Commands for test loading the local dev database
+
+All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
+
+## Test commands list
+- `add-test-organizations-to-db`
+- `add-test-services-to-db`
+- `add-test-jobs-to-db`
+- `add-test-notifications-to-db`
+- `add-test-users-to-db` (extra options include `-s` or `--state` and `-d` or `--admin`)
+
+
 # How messages are queued and sent
 
 There are several ways for notifications to come into the API.
