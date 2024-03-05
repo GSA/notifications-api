@@ -56,7 +56,7 @@ def test_purge_functional_test_data(notify_db_session, notify_api):
             "--email",
             "somebody+7af2cdb0-7cbc-44dc-a5d0-f817fc6ee94e@fake.gov",
             "--mobile_number",
-            "202-555-5555",
+            "202-555-5888",
             "--password",
             "correct horse battery staple",
             "--name",
