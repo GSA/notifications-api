@@ -452,6 +452,7 @@ instructions above for more details.
   - [Migrations](./docs/all.md#migrations)
   - [Purging user data](./docs/all.md#purging-user-data)
 - [One-off tasks](./docs/all.md#one-off-tasks)
+- [Test Loading Commands](./docs/all.md#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](./docs/all.md#how-messages-are-queued-and-sent)
 - [Writing public APIs](./docs/all.md#writing-public-apis)
   - [Overview](./docs/all.md#overview)
