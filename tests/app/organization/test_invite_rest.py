@@ -13,7 +13,7 @@ from tests.app.db import create_invited_org_user
 
 @pytest.mark.parametrize(
     "platform_admin, expected_invited_by",
-    ((True, "The GOV.UK Notify team"), (False, "Test User")),
+    ((True, "The Notify.gov team"), (False, "Test User")),
 )
 @pytest.mark.parametrize(
     "extra_args, expected_start_of_invite_url",
