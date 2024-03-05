@@ -3,8 +3,8 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.errors import InvalidRequest
-from app.models import EMAIL_TYPE, SMS_TYPE
 from app.platform_stats.rest import validate_date_range_is_within_a_financial_year
 from tests.app.db import (
     create_ft_billing,
@@ -59,19 +59,32 @@ def test_get_platform_stats_validates_the_date(admin_request):
 @freeze_time("2018-10-31 14:00")
 def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
     service_1 = create_service(service_name="service_1")
-    sms_template = create_template(service=service_1, template_type=SMS_TYPE)
-    email_template = create_template(service=service_1, template_type=EMAIL_TYPE)
-    create_ft_notification_status(date(2018, 10, 29), "sms", service_1, count=10)
-    create_ft_notification_status(date(2018, 10, 29), "email", service_1, count=3)
+    sms_template = create_template(service=service_1, template_type=TemplateType.SMS)
+    email_template = create_template(
+        service=service_1,
+        template_type=TemplateType.EMAIL,
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29), NotificationType.SMS, service_1, count=10
+    )
+    create_ft_notification_status(
+        date(2018, 10, 29), NotificationType.EMAIL, service_1, count=3
+    )
 
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 11, 0, 0), key_type="test"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 11, 0, 0),
+        key_type=KeyType.TEST,
     )
     create_notification(
-        sms_template, created_at=datetime(2018, 10, 31, 12, 0, 0), status="delivered"
+        sms_template,
+        created_at=datetime(2018, 10, 31, 12, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        email_template, created_at=datetime(2018, 10, 31, 13, 0, 0), status="delivered"
+        email_template,
+        created_at=datetime(2018, 10, 31, 13, 0, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     response = admin_request.get(
@@ -79,22 +92,22 @@ def test_get_platform_stats_with_real_query(admin_request, notify_db_session):
         start_date=date(2018, 10, 29),
     )
     assert response == {
-        "email": {
+        NotificationType.EMAIL: {
             "failures": {
-                "virus-scan-failed": 0,
-                "temporary-failure": 0,
-                "permanent-failure": 0,
-                "technical-failure": 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
             },
             "total": 4,
             "test-key": 0,
         },
-        "sms": {
+        NotificationType.SMS: {
             "failures": {
-                "virus-scan-failed": 0,
-                "temporary-failure": 0,
-                "permanent-failure": 0,
-                "technical-failure": 0,
+                NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                NotificationStatus.TEMPORARY_FAILURE: 0,
+                NotificationStatus.PERMANENT_FAILURE: 0,
+                NotificationStatus.TECHNICAL_FAILURE: 0,
             },
             "total": 11,
             "test-key": 1,

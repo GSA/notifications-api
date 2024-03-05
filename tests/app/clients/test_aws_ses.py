@@ -12,37 +12,38 @@ from app.clients.email.aws_ses import (
     AwsSesClientThrottlingSendRateException,
     get_aws_responses,
 )
+from app.enums import NotificationStatus, StatisticsType
 
 
 def test_should_return_correct_details_for_delivery():
     response_dict = get_aws_responses("Delivery")
     assert response_dict["message"] == "Delivered"
-    assert response_dict["notification_status"] == "delivered"
-    assert response_dict["notification_statistics_status"] == "delivered"
+    assert response_dict["notification_status"] == NotificationStatus.DELIVERED
+    assert response_dict["notification_statistics_status"] == StatisticsType.DELIVERED
     assert response_dict["success"]
 
 
 def test_should_return_correct_details_for_hard_bounced():
     response_dict = get_aws_responses("Permanent")
     assert response_dict["message"] == "Hard bounced"
-    assert response_dict["notification_status"] == "permanent-failure"
-    assert response_dict["notification_statistics_status"] == "failure"
+    assert response_dict["notification_status"] == NotificationStatus.PERMANENT_FAILURE
+    assert response_dict["notification_statistics_status"] == StatisticsType.FAILURE
     assert not response_dict["success"]
 
 
 def test_should_return_correct_details_for_soft_bounced():
     response_dict = get_aws_responses("Temporary")
     assert response_dict["message"] == "Soft bounced"
-    assert response_dict["notification_status"] == "temporary-failure"
-    assert response_dict["notification_statistics_status"] == "failure"
+    assert response_dict["notification_status"] == NotificationStatus.TEMPORARY_FAILURE
+    assert response_dict["notification_statistics_status"] == StatisticsType.FAILURE
     assert not response_dict["success"]
 
 
 def test_should_return_correct_details_for_complaint():
     response_dict = get_aws_responses("Complaint")
     assert response_dict["message"] == "Complaint"
-    assert response_dict["notification_status"] == "delivered"
-    assert response_dict["notification_statistics_status"] == "delivered"
+    assert response_dict["notification_status"] == NotificationStatus.DELIVERED
+    assert response_dict["notification_statistics_status"] == StatisticsType.DELIVERED
     assert response_dict["success"]
 
 

@@ -4,7 +4,7 @@ import pytest
 from flask import json
 from jsonschema.exceptions import ValidationError
 
-from app.models import EMAIL_TYPE, SMS_TYPE, TEMPLATE_TYPES
+from app.enums import TemplateType
 from app.schema_validation import validate
 from app.v2.template.template_schemas import (
     get_template_by_id_request,
@@ -15,7 +15,7 @@ from app.v2.template.template_schemas import (
 
 valid_json_get_response = {
     "id": str(uuid.uuid4()),
-    "type": SMS_TYPE,
+    "type": TemplateType.SMS,
     "created_at": "2017-01-10T18:25:43.511Z",
     "updated_at": None,
     "version": 1,
@@ -26,7 +26,7 @@ valid_json_get_response = {
 
 valid_json_get_response_with_optionals = {
     "id": str(uuid.uuid4()),
-    "type": EMAIL_TYPE,
+    "type": TemplateType.EMAIL,
     "created_at": "2017-01-10T18:25:43.511Z",
     "updated_at": None,
     "version": 1,
@@ -80,14 +80,14 @@ invalid_json_post_args = [
 
 valid_json_post_response = {
     "id": str(uuid.uuid4()),
-    "type": "email",
+    "type": TemplateType.EMAIL,
     "version": 1,
     "body": "some body",
 }
 
 valid_json_post_response_with_optionals = {
     "id": str(uuid.uuid4()),
-    "type": "email",
+    "type": TemplateType.EMAIL,
     "version": 1,
     "body": "some body",
     "subject": "some subject",
@@ -114,7 +114,7 @@ def test_get_template_request_schema_against_invalid_args_is_invalid(
         assert error["message"] in error_message
 
 
-@pytest.mark.parametrize("template_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("template_type", TemplateType)
 @pytest.mark.parametrize(
     "response", [valid_json_get_response, valid_json_get_response_with_optionals]
 )
@@ -149,7 +149,7 @@ def test_post_template_preview_against_invalid_args_is_invalid(args, error_messa
         assert error["message"] in error_messages
 
 
-@pytest.mark.parametrize("template_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("template_type", TemplateType)
 @pytest.mark.parametrize(
     "response", [valid_json_post_response, valid_json_post_response_with_optionals]
 )

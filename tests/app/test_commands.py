@@ -20,10 +20,15 @@ from app.commands import (
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
+from app.enums import (
+    AuthType,
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    OrganizationType,
+    TemplateType,
+)
 from app.models import (
-    KEY_TYPE_NORMAL,
-    NOTIFICATION_DELIVERED,
-    SMS_TYPE,
     AnnualBilling,
     Job,
     Notification,
@@ -93,7 +98,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
 def test_update_jobs_archived_flag(notify_db_session, notify_api):
     service = create_service()
 
-    sms_template = create_template(service=service, template_type="sms")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
     create_job(sms_template)
 
     right_now = datetime.datetime.utcnow()
@@ -231,7 +236,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     # that user should be the one we added
     user = User.query.filter_by(name="Fake Personson").first()
     assert user.email_address == "somebody@fake.gov"
-    assert user.auth_type == "sms_auth"
+    assert user.auth_type == AuthType.SMS
     assert user.state == "active"
 
 
@@ -253,13 +258,15 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [("federal", 40000), ("state", 40000)]
+    "organization_type, expected_allowance",
+    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
 )
 def test_populate_annual_billing_with_defaults(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type, organization_type=organization_type
+        service_name=organization_type,
+        organization_type=organization_type,
     )
 
     notify_api.test_cli_runner().invoke(
@@ -276,13 +283,15 @@ def test_populate_annual_billing_with_defaults(
 
 
 @pytest.mark.parametrize(
-    "organization_type, expected_allowance", [("federal", 40000), ("state", 40000)]
+    "organization_type, expected_allowance",
+    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
 )
 def test_populate_annual_billing_with_the_previous_years_allowance(
     notify_db_session, notify_api, organization_type, expected_allowance
 ):
     service = create_service(
-        service_name=organization_type, organization_type=organization_type
+        service_name=organization_type,
+        organization_type=organization_type,
     )
 
     notify_api.test_cli_runner().invoke(
@@ -314,10 +323,10 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
     create_notification(template=sample_template)
     notification = Notification.query.one()
     notification.billable_units = 0
-    notification.notification_type = SMS_TYPE
-    notification.status = NOTIFICATION_DELIVERED
+    notification.notification_type = NotificationType.SMS
+    notification.status = NotificationStatus.DELIVERED
     notification.sent_at = None
-    notification.key_type = KEY_TYPE_NORMAL
+    notification.key_type = KeyType.NORMAL
 
     notify_db_session.commit()
 
@@ -330,7 +339,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(
     notify_db_session, notify_api
 ):
-    service = create_service(organization_type="federal")
+    service = create_service(organization_type=OrganizationType.FEDERAL)
     create_annual_billing(
         service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2021
     )
@@ -351,7 +360,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
     _update_template(
         "299726d2-dba6-42b8-8209-30e1d66ea164",
         "Example text message template!",
-        "sms",
+        TemplateType.SMS,
         [
             "Hi, I’m trying out Notify.gov! Today is ((day of week)) and my favorite color is ((color))."
         ],

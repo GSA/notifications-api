@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from app.enums import NotificationType
 from app.models import ServiceDataRetention
 from tests import create_admin_authorization_header
 from tests.app.db import create_service_data_retention
@@ -9,11 +10,13 @@ from tests.app.db import create_service_data_retention
 def test_get_service_data_retention(client, sample_service):
     sms_data_retention = create_service_data_retention(service=sample_service)
     email_data_retention = create_service_data_retention(
-        service=sample_service, notification_type="email", days_of_retention=10
+        service=sample_service,
+        notification_type=NotificationType.EMAIL,
+        days_of_retention=10,
     )
 
     response = client.get(
-        "/service/{}/data-retention".format(str(sample_service.id)),
+        f"/service/{sample_service.id!s}/data-retention",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -23,13 +26,13 @@ def test_get_service_data_retention(client, sample_service):
     assert response.status_code == 200
     json_response = json.loads(response.get_data(as_text=True))
     assert len(json_response) == 2
-    assert json_response[0] == email_data_retention.serialize()
-    assert json_response[1] == sms_data_retention.serialize()
+    assert json_response[0] == sms_data_retention.serialize()
+    assert json_response[1] == email_data_retention.serialize()
 
 
 def test_get_service_data_retention_returns_empty_list(client, sample_service):
     response = client.get(
-        "/service/{}/data-retention".format(str(sample_service.id)),
+        f"/service/{sample_service.id!s}/data-retention",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -42,9 +45,8 @@ def test_get_service_data_retention_returns_empty_list(client, sample_service):
 def test_get_data_retention_for_service_notification_type(client, sample_service):
     data_retention = create_service_data_retention(service=sample_service)
     response = client.get(
-        "/service/{}/data-retention/notification-type/{}".format(
-            sample_service.id, "sms"
-        ),
+        f"/service/{sample_service.id}/data-retention/"
+        f"notification-type/{NotificationType.SMS}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -57,15 +59,17 @@ def test_get_data_retention_for_service_notification_type(client, sample_service
 def test_get_service_data_retention_by_id(client, sample_service):
     sms_data_retention = create_service_data_retention(service=sample_service)
     create_service_data_retention(
-        service=sample_service, notification_type="email", days_of_retention=10
+        service=sample_service,
+        notification_type=NotificationType.EMAIL,
+        days_of_retention=10,
     )
     create_service_data_retention(
-        service=sample_service, notification_type="letter", days_of_retention=30
+        service=sample_service,
+        notification_type=NotificationType.LETTER,
+        days_of_retention=30,
     )
     response = client.get(
-        "/service/{}/data-retention/{}".format(
-            str(sample_service.id), sms_data_retention.id
-        ),
+        f"/service/{sample_service.id!s}/data-retention/{sms_data_retention.id}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -79,7 +83,7 @@ def test_get_service_data_retention_by_id_returns_none_when_no_data_retention_ex
     client, sample_service
 ):
     response = client.get(
-        "/service/{}/data-retention/{}".format(str(sample_service.id), uuid.uuid4()),
+        f"/service/{sample_service.id!s}/data-retention/{uuid.uuid4()}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -90,9 +94,9 @@ def test_get_service_data_retention_by_id_returns_none_when_no_data_retention_ex
 
 
 def test_create_service_data_retention(client, sample_service):
-    data = {"notification_type": "sms", "days_of_retention": 3}
+    data = {"notification_type": NotificationType.SMS, "days_of_retention": 3}
     response = client.post(
-        "/service/{}/data-retention".format(str(sample_service.id)),
+        f"/service/{sample_service.id!s}/data-retention",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -113,7 +117,7 @@ def test_create_service_data_retention_returns_400_when_notification_type_is_inv
 ):
     data = {"notification_type": "unknown", "days_of_retention": 3}
     response = client.post(
-        "/service/{}/data-retention".format(str(uuid.uuid4())),
+        f"/service/{uuid.uuid4()!s}/data-retention",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -123,9 +127,15 @@ def test_create_service_data_retention_returns_400_when_notification_type_is_inv
     json_resp = json.loads(response.get_data(as_text=True))
     assert response.status_code == 400
     assert json_resp["errors"][0]["error"] == "ValidationError"
+    type_str = ", ".join(
+        [
+            f"<{type(e).__name__}.{e.name}: {e.value}>"
+            for e in (NotificationType.SMS, NotificationType.EMAIL)
+        ]
+    )
     assert (
         json_resp["errors"][0]["message"]
-        == "notification_type unknown is not one of [sms, email]"
+        == f"notification_type unknown is not one of [{type_str}]"
     )
 
 
@@ -133,9 +143,9 @@ def test_create_service_data_retention_returns_400_when_data_retention_for_notif
     client, sample_service
 ):
     create_service_data_retention(service=sample_service)
-    data = {"notification_type": "sms", "days_of_retention": 3}
+    data = {"notification_type": NotificationType.SMS, "days_of_retention": 3}
     response = client.post(
-        "/service/{}/data-retention".format(str(uuid.uuid4())),
+        f"/service/{uuid.uuid4()!s}/data-retention",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -156,7 +166,7 @@ def test_modify_service_data_retention(client, sample_service):
     data_retention = create_service_data_retention(service=sample_service)
     data = {"days_of_retention": 3}
     response = client.post(
-        "/service/{}/data-retention/{}".format(sample_service.id, data_retention.id),
+        f"/service/{sample_service.id}/data-retention/{data_retention.id}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -172,7 +182,7 @@ def test_modify_service_data_retention_returns_400_when_data_retention_does_not_
 ):
     data = {"days_of_retention": 3}
     response = client.post(
-        "/service/{}/data-retention/{}".format(sample_service.id, uuid.uuid4()),
+        f"/service/{sample_service.id}/data-retention/{uuid.uuid4()}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),
@@ -186,7 +196,7 @@ def test_modify_service_data_retention_returns_400_when_data_retention_does_not_
 def test_modify_service_data_retention_returns_400_when_data_is_invalid(client):
     data = {"bad_key": 3}
     response = client.post(
-        "/service/{}/data-retention/{}".format(uuid.uuid4(), uuid.uuid4()),
+        f"/service/{uuid.uuid4()}/data-retention/{uuid.uuid4()}",
         headers=[
             ("Content-Type", "application/json"),
             create_admin_authorization_header(),

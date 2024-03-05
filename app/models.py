@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import uuid
-from enum import Enum
 
 from flask import current_app, url_for
 from notifications_utils.clients.encryption.encryption_client import EncryptionError
@@ -21,6 +20,25 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
+from app.enums import (
+    AgreementStatus,
+    AgreementType,
+    AuthType,
+    BrandType,
+    CallbackType,
+    CodeType,
+    InvitedUserStatus,
+    JobStatus,
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    OrganizationType,
+    PermissionType,
+    RecipientType,
+    ServicePermissionType,
+    TemplateProcessType,
+    TemplateType,
+)
 from app.hashing import check_hash, hashpw
 from app.history_meta import Versioned
 from app.utils import (
@@ -29,32 +47,41 @@ from app.utils import (
     get_dt_string_or_none,
 )
 
-SMS_TYPE = "sms"
-EMAIL_TYPE = "email"
-LETTER_TYPE = "letter"
-
-TEMPLATE_TYPES = [SMS_TYPE, EMAIL_TYPE]
-NOTIFICATION_TYPES = [SMS_TYPE, EMAIL_TYPE]
-
-template_types = db.Enum(*TEMPLATE_TYPES, name="template_type")
-
-NORMAL = "normal"
-PRIORITY = "priority"
-TEMPLATE_PROCESS_TYPE = [NORMAL, PRIORITY]
-
-
-SMS_AUTH_TYPE = "sms_auth"
-EMAIL_AUTH_TYPE = "email_auth"
-WEBAUTHN_AUTH_TYPE = "webauthn_auth"
-USER_AUTH_TYPES = [SMS_AUTH_TYPE, EMAIL_AUTH_TYPE, WEBAUTHN_AUTH_TYPE]
-
-DELIVERY_STATUS_CALLBACK_TYPE = "delivery_status"
-COMPLAINT_CALLBACK_TYPE = "complaint"
-SERVICE_CALLBACK_TYPES = [DELIVERY_STATUS_CALLBACK_TYPE, COMPLAINT_CALLBACK_TYPE]
-
 
 def filter_null_value_fields(obj):
     return dict(filter(lambda x: x[1] is not None, obj.items()))
+
+
+_enum_column_names = {
+    AuthType: "auth_types",
+    BrandType: "brand_types",
+    OrganizationType: "organization_types",
+    ServicePermissionType: "service_permission_types",
+    RecipientType: "recipient_types",
+    CallbackType: "callback_types",
+    KeyType: "key_types",
+    TemplateType: "template_types",
+    TemplateProcessType: "template_process_types",
+    NotificationType: "notification_types",
+    JobStatus: "job_statuses",
+    CodeType: "code_types",
+    NotificationStatus: "notify_statuses",
+    InvitedUserStatus: "invited_user_statuses",
+    PermissionType: "permission_types",
+    AgreementType: "agreement_types",
+    AgreementStatus: "agreement_statuses",
+}
+
+
+def enum_column(enum_type, **kwargs):
+    return db.Column(
+        db.Enum(
+            enum_type,
+            name=_enum_column_names[enum_type],
+            values_callable=(lambda x: [i.value for i in x]),
+        ),
+        **kwargs,
+    )
 
 
 class HistoryModel:
@@ -110,13 +137,7 @@ class User(db.Model):
     state = db.Column(db.String, nullable=False, default="pending")
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
-    auth_type = db.Column(
-        db.String,
-        db.ForeignKey("auth_type.name"),
-        index=True,
-        nullable=False,
-        default=SMS_AUTH_TYPE,
-    )
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
     email_access_validated_at = db.Column(
         db.DateTime,
         index=False,
@@ -125,17 +146,23 @@ class User(db.Model):
         default=datetime.datetime.utcnow,
     )
     preferred_timezone = db.Column(
-        db.Text, nullable=True, index=False, unique=False, default="US/Eastern"
+        db.Text,
+        nullable=True,
+        index=False,
+        unique=False,
+        default="US/Eastern",
     )
 
     # either email auth or a mobile number must be provided
     CheckConstraint(
-        "auth_type in ('email_auth', 'webauthn_auth') or mobile_number is not null"
+        "auth_type in (AuthType.EMAIL, AuthType.WEBAUTHN) or mobile_number is not null"
     )
 
     services = db.relationship("Service", secondary="user_to_service", backref="users")
     organizations = db.relationship(
-        "Organization", secondary="user_to_organization", backref="users"
+        "Organization",
+        secondary="user_to_organization",
+        backref="users",
     )
 
     @validates("mobile_number")
@@ -155,7 +182,7 @@ class User(db.Model):
         if self.platform_admin:
             return True
 
-        if self.auth_type == "webauthn_auth":
+        if self.auth_type == AuthType.WEBAUTHN:
             return True
 
         return any(
@@ -227,11 +254,17 @@ class ServiceUser(db.Model):
     __tablename__ = "user_to_service"
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), primary_key=True)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), primary_key=True
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        primary_key=True,
     )
 
     __table_args__ = (
-        UniqueConstraint("user_id", "service_id", name="uix_user_to_service"),
+        UniqueConstraint(
+            "user_id",
+            "service_id",
+            name="uix_user_to_service",
+        ),
     )
 
 
@@ -266,18 +299,6 @@ user_folder_permissions = db.Table(
 )
 
 
-BRANDING_GOVUK = "govuk"  # Deprecated outside migrations
-BRANDING_ORG = "org"
-BRANDING_BOTH = "both"
-BRANDING_ORG_BANNER = "org_banner"
-BRANDING_TYPES = [BRANDING_ORG, BRANDING_BOTH, BRANDING_ORG_BANNER]
-
-
-class BrandingTypes(db.Model):
-    __tablename__ = "branding_type"
-    name = db.Column(db.String(255), primary_key=True)
-
-
 class EmailBranding(db.Model):
     __tablename__ = "email_branding"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -285,12 +306,11 @@ class EmailBranding(db.Model):
     logo = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
     text = db.Column(db.String(255), nullable=True)
-    brand_type = db.Column(
-        db.String(255),
-        db.ForeignKey("branding_type.name"),
+    brand_type = enum_column(
+        BrandType,
         index=True,
         nullable=False,
-        default=BRANDING_ORG,
+        default=BrandType.ORG,
     )
 
     def serialize(self):
@@ -326,31 +346,6 @@ service_email_branding = db.Table(
 )
 
 
-INTERNATIONAL_SMS_TYPE = "international_sms"
-INBOUND_SMS_TYPE = "inbound_sms"
-SCHEDULE_NOTIFICATIONS = "schedule_notifications"
-EMAIL_AUTH = "email_auth"
-UPLOAD_DOCUMENT = "upload_document"
-EDIT_FOLDER_PERMISSIONS = "edit_folder_permissions"
-
-SERVICE_PERMISSION_TYPES = [
-    EMAIL_TYPE,
-    SMS_TYPE,
-    INTERNATIONAL_SMS_TYPE,
-    INBOUND_SMS_TYPE,
-    SCHEDULE_NOTIFICATIONS,
-    EMAIL_AUTH,
-    UPLOAD_DOCUMENT,
-    EDIT_FOLDER_PERMISSIONS,
-]
-
-
-class ServicePermissionTypes(db.Model):
-    __tablename__ = "service_permission_types"
-
-    name = db.Column(db.String(255), primary_key=True)
-
-
 class Domain(db.Model):
     __tablename__ = "domain"
     domain = db.Column(db.String(255), primary_key=True)
@@ -362,16 +357,6 @@ class Domain(db.Model):
     )
 
 
-ORGANIZATION_TYPES = ["federal", "state", "other"]
-
-
-class OrganizationTypes(db.Model):
-    __tablename__ = "organization_types"
-
-    name = db.Column(db.String(255), primary_key=True)
-    annual_free_sms_fragment_limit = db.Column(db.BigInteger, nullable=False)
-
-
 class Organization(db.Model):
     __tablename__ = "organization"
     id = db.Column(
@@ -380,10 +365,14 @@ class Organization(db.Model):
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
     agreement_signed = db.Column(db.Boolean, nullable=True)
     agreement_signed_at = db.Column(db.DateTime, nullable=True)
@@ -398,17 +387,10 @@ class Organization(db.Model):
         db.String(255), nullable=True
     )
     agreement_signed_version = db.Column(db.Float, nullable=True)
-    organization_type = db.Column(
-        db.String(255),
-        db.ForeignKey("organization_types.name"),
-        unique=False,
-        nullable=True,
-    )
+    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
     request_to_go_live_notes = db.Column(db.Text)
 
-    domains = db.relationship(
-        "Domain",
-    )
+    domains = db.relationship("Domain")
 
     email_branding = db.relationship("EmailBranding")
     email_branding_id = db.Column(
@@ -515,25 +497,30 @@ class Service(db.Model, Versioned):
         onupdate=datetime.datetime.utcnow,
     )
     active = db.Column(
-        db.Boolean, index=False, unique=False, nullable=False, default=True
+        db.Boolean,
+        index=False,
+        unique=False,
+        nullable=False,
+        default=True,
     )
     message_limit = db.Column(db.BigInteger, index=False, unique=False, nullable=False)
     total_message_limit = db.Column(
-        db.BigInteger, index=False, unique=False, nullable=False
+        db.BigInteger,
+        index=False,
+        unique=False,
+        nullable=False,
     )
     restricted = db.Column(db.Boolean, index=False, unique=False, nullable=False)
     email_from = db.Column(db.Text, index=False, unique=True, nullable=False)
     created_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=False,
     )
     created_by = db.relationship("User", foreign_keys=[created_by_id])
     prefix_sms = db.Column(db.Boolean, nullable=False, default=True)
-    organization_type = db.Column(
-        db.String(255),
-        db.ForeignKey("organization_types.name"),
-        unique=False,
-        nullable=True,
-    )
+    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
     rate_limit = db.Column(db.Integer, index=False, nullable=False, default=3000)
     contact_link = db.Column(db.String(255), nullable=True, unique=False)
     volume_sms = db.Column(db.Integer(), nullable=True, unique=False)
@@ -541,13 +528,18 @@ class Service(db.Model, Versioned):
     consent_to_research = db.Column(db.Boolean, nullable=True)
     count_as_live = db.Column(db.Boolean, nullable=False, default=True)
     go_live_user_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        nullable=True,
     )
     go_live_user = db.relationship("User", foreign_keys=[go_live_user_id])
     go_live_at = db.Column(db.DateTime, nullable=True)
 
     organization_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("organization.id"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("organization.id"),
+        index=True,
+        nullable=True,
     )
     organization = db.relationship("Organization", backref="services")
 
@@ -606,7 +598,10 @@ class Service(db.Model, Versioned):
 class AnnualBilling(db.Model):
     __tablename__ = "annual_billing"
     id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=False,
     )
     service_id = db.Column(
         UUID(as_uuid=True),
@@ -616,22 +611,35 @@ class AnnualBilling(db.Model):
         nullable=False,
     )
     financial_year_start = db.Column(
-        db.Integer, nullable=False, default=True, unique=False
+        db.Integer,
+        nullable=False,
+        default=True,
+        unique=False,
     )
     free_sms_fragment_limit = db.Column(
-        db.Integer, nullable=False, index=False, unique=False
+        db.Integer,
+        nullable=False,
+        index=False,
+        unique=False,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     UniqueConstraint(
-        "financial_year_start", "service_id", name="ix_annual_billing_service_id"
+        "financial_year_start",
+        "service_id",
+        name="ix_annual_billing_service_id",
     )
     service = db.relationship(
-        Service, backref=db.backref("annual_billing", uselist=True)
+        Service,
+        backref=db.backref("annual_billing", uselist=True),
     )
 
     __table_args__ = (
@@ -677,16 +685,25 @@ class InboundNumber(db.Model):
         nullable=True,
     )
     service = db.relationship(
-        Service, backref=db.backref("inbound_number", uselist=False)
+        Service,
+        backref=db.backref("inbound_number", uselist=False),
     )
     active = db.Column(
-        db.Boolean, index=False, unique=False, nullable=False, default=True
+        db.Boolean,
+        index=False,
+        unique=False,
+        nullable=False,
+        default=True,
     )
     created_at = db.Column(
-        db.DateTime, default=datetime.datetime.utcnow, nullable=False
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
     def serialize(self):
@@ -717,7 +734,8 @@ class ServiceSmsSender(db.Model):
         unique=False,
     )
     service = db.relationship(
-        Service, backref=db.backref("service_sms_senders", uselist=True)
+        Service,
+        backref=db.backref("service_sms_senders", uselist=True),
     )
     is_default = db.Column(db.Boolean, nullable=False, default=True)
     archived = db.Column(db.Boolean, nullable=False, default=False)
@@ -729,13 +747,18 @@ class ServiceSmsSender(db.Model):
         nullable=True,
     )
     inbound_number = db.relationship(
-        InboundNumber, backref=db.backref("inbound_number", uselist=False)
+        InboundNumber,
+        backref=db.backref("inbound_number", uselist=False),
     )
     created_at = db.Column(
-        db.DateTime, default=datetime.datetime.utcnow, nullable=False
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
     def get_reply_to_text(self):
@@ -766,19 +789,21 @@ class ServicePermission(db.Model):
         index=True,
         nullable=False,
     )
-    permission = db.Column(
-        db.String(255),
-        db.ForeignKey("service_permission_types.name"),
+    permission = enum_column(
+        ServicePermissionType,
         index=True,
         primary_key=True,
         nullable=False,
     )
     created_at = db.Column(
-        db.DateTime, default=datetime.datetime.utcnow, nullable=False
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
     )
 
     service_permission_types = db.relationship(
-        Service, backref=db.backref("permissions", cascade="all, delete-orphan")
+        Service,
+        backref=db.backref("permissions", cascade="all, delete-orphan"),
     )
 
     def __repr__(self):
@@ -787,22 +812,18 @@ class ServicePermission(db.Model):
         )
 
 
-MOBILE_TYPE = "mobile"
-EMAIL_TYPE = "email"
-
-GUEST_LIST_RECIPIENT_TYPE = [MOBILE_TYPE, EMAIL_TYPE]
-guest_list_recipient_types = db.Enum(*GUEST_LIST_RECIPIENT_TYPE, name="recipient_type")
-
-
 class ServiceGuestList(db.Model):
     __tablename__ = "service_whitelist"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        nullable=False,
     )
     service = db.relationship("Service", backref="guest_list")
-    recipient_type = db.Column(guest_list_recipient_types, nullable=False)
+    recipient_type = enum_column(RecipientType, nullable=False)
     recipient = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -811,11 +832,11 @@ class ServiceGuestList(db.Model):
         instance = cls(service_id=service_id, recipient_type=recipient_type)
 
         try:
-            if recipient_type == MOBILE_TYPE:
+            if recipient_type == RecipientType.MOBILE:
                 instance.recipient = validate_phone_number(
                     recipient, international=True
                 )
-            elif recipient_type == EMAIL_TYPE:
+            elif recipient_type == RecipientType.EMAIL:
                 instance.recipient = validate_email_address(recipient)
             else:
                 raise ValueError("Invalid recipient type")
@@ -844,12 +865,17 @@ class ServiceInboundApi(db.Model, Versioned):
     url = db.Column(db.String(), nullable=False)
     _bearer_token = db.Column("bearer_token", db.String(), nullable=False)
     created_at = db.Column(
-        db.DateTime, default=datetime.datetime.utcnow, nullable=False
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
     )
     updated_at = db.Column(db.DateTime, nullable=True)
     updated_by = db.relationship("User")
     updated_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=False,
     )
 
     @property
@@ -876,26 +902,34 @@ class ServiceCallbackApi(db.Model, Versioned):
     __tablename__ = "service_callback_api"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        nullable=False,
     )
     service = db.relationship("Service", backref="service_callback_api")
     url = db.Column(db.String(), nullable=False)
-    callback_type = db.Column(
-        db.String(), db.ForeignKey("service_callback_type.name"), nullable=True
-    )
+    callback_type = enum_column(CallbackType, nullable=True)
     _bearer_token = db.Column("bearer_token", db.String(), nullable=False)
     created_at = db.Column(
-        db.DateTime, default=datetime.datetime.utcnow, nullable=False
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
     )
     updated_at = db.Column(db.DateTime, nullable=True)
     updated_by = db.relationship("User")
     updated_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=False,
     )
 
     __table_args__ = (
         UniqueConstraint(
-            "service_id", "callback_type", name="uix_service_callback_type"
+            "service_id",
+            "callback_type",
+            name="uix_service_callback_type",
         ),
     )
 
@@ -919,12 +953,6 @@ class ServiceCallbackApi(db.Model, Versioned):
         }
 
 
-class ServiceCallbackType(db.Model):
-    __tablename__ = "service_callback_type"
-
-    name = db.Column(db.String, primary_key=True)
-
-
 class ApiKey(db.Model, Versioned):
     __tablename__ = "api_keys"
 
@@ -932,12 +960,13 @@ class ApiKey(db.Model, Versioned):
     name = db.Column(db.String(255), nullable=False)
     _secret = db.Column("secret", db.String(255), unique=True, nullable=False)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        nullable=False,
     )
     service = db.relationship("Service", backref="api_keys")
-    key_type = db.Column(
-        db.String(255), db.ForeignKey("key_types.name"), index=True, nullable=False
-    )
+    key_type = enum_column(KeyType, index=True, nullable=False)
     expiry_date = db.Column(db.DateTime)
     created_at = db.Column(
         db.DateTime,
@@ -955,7 +984,10 @@ class ApiKey(db.Model, Versioned):
     )
     created_by = db.relationship("User")
     created_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=False,
     )
 
     __table_args__ = (
@@ -978,32 +1010,20 @@ class ApiKey(db.Model, Versioned):
             self._secret = encryption.encrypt(str(secret))
 
 
-KEY_TYPE_NORMAL = "normal"
-KEY_TYPE_TEAM = "team"
-KEY_TYPE_TEST = "test"
-
-
-class KeyTypes(db.Model):
-    __tablename__ = "key_types"
-
-    name = db.Column(db.String(255), primary_key=True)
-
-
-class TemplateProcessTypes(db.Model):
-    __tablename__ = "template_process_type"
-    name = db.Column(db.String(255), primary_key=True)
-
-
 class TemplateFolder(db.Model):
     __tablename__ = "template_folder"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        nullable=False,
     )
     name = db.Column(db.String, nullable=False)
     parent_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("template_folder.id"), nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("template_folder.id"),
+        nullable=True,
     )
 
     service = db.relationship("Service", backref="all_template_folders")
@@ -1076,9 +1096,11 @@ class TemplateBase(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(255), nullable=False)
-    template_type = db.Column(template_types, nullable=False)
+    template_type = enum_column(TemplateType, nullable=False)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(db.DateTime, onupdate=datetime.datetime.utcnow)
     content = db.Column(db.Text, nullable=False)
@@ -1104,12 +1126,11 @@ class TemplateBase(db.Model):
 
     @declared_attr
     def process_type(cls):
-        return db.Column(
-            db.String(255),
-            db.ForeignKey("template_process_type.name"),
+        return enum_column(
+            TemplateProcessType,
             index=True,
             nullable=False,
-            default=NORMAL,
+            default=TemplateProcessType.NORMAL,
         )
 
     redact_personalisation = association_proxy(
@@ -1131,9 +1152,9 @@ class TemplateBase(db.Model):
             )
 
     def get_reply_to_text(self):
-        if self.template_type == EMAIL_TYPE:
+        if self.template_type == TemplateType.EMAIL:
             return self.service.get_default_reply_to_email_address()
-        elif self.template_type == SMS_TYPE:
+        elif self.template_type == TemplateType.SMS:
             return try_validate_and_format_phone_number(
                 self.service.get_default_sms_sender()
             )
@@ -1141,10 +1162,12 @@ class TemplateBase(db.Model):
             return None
 
     def _as_utils_template(self):
-        if self.template_type == EMAIL_TYPE:
+        if self.template_type == TemplateType.EMAIL:
             return PlainTextEmailTemplate(self.__dict__)
-        if self.template_type == SMS_TYPE:
+        elif self.template_type == TemplateType.SMS:
             return SMSMessageTemplate(self.__dict__)
+        else:
+            raise ValueError(f"{self.template_type} is an invalid template type.")
 
     def _as_utils_template_with_personalisation(self, values):
         template = self._as_utils_template()
@@ -1160,7 +1183,9 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject if self.template_type == EMAIL_TYPE else None,
+            "subject": self.subject
+            if self.template_type == TemplateType.EMAIL
+            else None,
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1222,10 +1247,15 @@ class TemplateRedacted(db.Model):
     )
     redact_personalisation = db.Column(db.Boolean, nullable=False, default=False)
     updated_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        nullable=False,
+        index=True,
     )
     updated_by = db.relationship("User")
 
@@ -1260,16 +1290,6 @@ class TemplateHistory(TemplateBase):
         )
 
 
-SNS_PROVIDER = "sns"
-SES_PROVIDER = "ses"
-
-SMS_PROVIDERS = [SNS_PROVIDER]
-EMAIL_PROVIDERS = [SES_PROVIDER]
-PROVIDERS = SMS_PROVIDERS + EMAIL_PROVIDERS
-
-notification_types = db.Enum(*NOTIFICATION_TYPES, name="notification_type")
-
-
 class ProviderDetails(db.Model):
     __tablename__ = "provider_details"
 
@@ -1277,14 +1297,19 @@ class ProviderDetails(db.Model):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = enum_column(NotificationType, nullable=False)
     active = db.Column(db.Boolean, default=False, nullable=False)
     version = db.Column(db.Integer, default=1, nullable=False)
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
     created_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=True,
     )
     created_by = db.relationship("User")
     supports_international = db.Column(db.Boolean, nullable=False, default=False)
@@ -1297,7 +1322,7 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     display_name = db.Column(db.String, nullable=False)
     identifier = db.Column(db.String, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = enum_column(NotificationType, nullable=False)
     active = db.Column(db.Boolean, nullable=False)
     version = db.Column(db.Integer, primary_key=True, nullable=False)
     updated_at = db.Column(
@@ -1308,34 +1333,6 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     )
     created_by = db.relationship("User")
     supports_international = db.Column(db.Boolean, nullable=False, default=False)
-
-
-JOB_STATUS_PENDING = "pending"
-JOB_STATUS_IN_PROGRESS = "in progress"
-JOB_STATUS_FINISHED = "finished"
-JOB_STATUS_SENDING_LIMITS_EXCEEDED = "sending limits exceeded"
-JOB_STATUS_SCHEDULED = "scheduled"
-JOB_STATUS_CANCELLED = "cancelled"
-JOB_STATUS_READY_TO_SEND = "ready to send"
-JOB_STATUS_SENT_TO_DVLA = "sent to dvla"
-JOB_STATUS_ERROR = "error"
-JOB_STATUS_TYPES = [
-    JOB_STATUS_PENDING,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_SENDING_LIMITS_EXCEEDED,
-    JOB_STATUS_SCHEDULED,
-    JOB_STATUS_CANCELLED,
-    JOB_STATUS_READY_TO_SEND,
-    JOB_STATUS_SENT_TO_DVLA,
-    JOB_STATUS_ERROR,
-]
-
-
-class JobStatus(db.Model):
-    __tablename__ = "job_status"
-
-    name = db.Column(db.String(255), primary_key=True)
 
 
 class Job(db.Model):
@@ -1386,17 +1383,13 @@ class Job(db.Model):
         UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=True
     )
     scheduled_for = db.Column(db.DateTime, index=True, unique=False, nullable=True)
-    job_status = db.Column(
-        db.String(255),
-        db.ForeignKey("job_status.name"),
+    job_status = enum_column(
+        JobStatus,
         index=True,
         nullable=False,
-        default="pending",
+        default=JobStatus.PENDING,
     )
     archived = db.Column(db.Boolean, nullable=False, default=False)
-
-
-VERIFY_CODE_TYPES = [EMAIL_TYPE, SMS_TYPE]
 
 
 class VerifyCode(db.Model):
@@ -1408,12 +1401,7 @@ class VerifyCode(db.Model):
     )
     user = db.relationship("User", backref=db.backref("verify_codes", lazy="dynamic"))
     _code = db.Column(db.String, nullable=False)
-    code_type = db.Column(
-        db.Enum(*VERIFY_CODE_TYPES, name="verify_code_types"),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    code_type = enum_column(CodeType, index=False, unique=False, nullable=False)
     expiry_datetime = db.Column(db.DateTime, nullable=False)
     code_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(
@@ -1434,99 +1422,6 @@ class VerifyCode(db.Model):
 
     def check_code(self, cde):
         return check_hash(cde, self._code)
-
-
-NOTIFICATION_CANCELLED = "cancelled"
-NOTIFICATION_CREATED = "created"
-NOTIFICATION_SENDING = "sending"
-NOTIFICATION_SENT = "sent"
-NOTIFICATION_DELIVERED = "delivered"
-NOTIFICATION_PENDING = "pending"
-NOTIFICATION_FAILED = "failed"
-NOTIFICATION_TECHNICAL_FAILURE = "technical-failure"
-NOTIFICATION_TEMPORARY_FAILURE = "temporary-failure"
-NOTIFICATION_PERMANENT_FAILURE = "permanent-failure"
-NOTIFICATION_PENDING_VIRUS_CHECK = "pending-virus-check"
-NOTIFICATION_VALIDATION_FAILED = "validation-failed"
-NOTIFICATION_VIRUS_SCAN_FAILED = "virus-scan-failed"
-
-NOTIFICATION_STATUS_TYPES_FAILED = [
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_VALIDATION_FAILED,
-    NOTIFICATION_VIRUS_SCAN_FAILED,
-]
-
-NOTIFICATION_STATUS_TYPES_COMPLETED = [
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_CANCELLED,
-]
-
-NOTIFICATION_STATUS_SUCCESS = [NOTIFICATION_SENT, NOTIFICATION_DELIVERED]
-
-NOTIFICATION_STATUS_TYPES_BILLABLE = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-NOTIFICATION_STATUS_TYPES_BILLABLE_SMS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,  # internationally
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-# we don't really have a concept of billable emails - however the ft billing table only includes emails that we have
-# actually sent.
-NOTIFICATION_STATUS_TYPES_SENT_EMAILS = [
-    NOTIFICATION_SENDING,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-]
-
-NOTIFICATION_STATUS_TYPES = [
-    NOTIFICATION_CANCELLED,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_PENDING_VIRUS_CHECK,
-    NOTIFICATION_VALIDATION_FAILED,
-    NOTIFICATION_VIRUS_SCAN_FAILED,
-]
-
-NOTIFICATION_STATUS_TYPES_NON_BILLABLE = list(
-    set(NOTIFICATION_STATUS_TYPES) - set(NOTIFICATION_STATUS_TYPES_BILLABLE)
-)
-
-NOTIFICATION_STATUS_TYPES_ENUM = db.Enum(
-    *NOTIFICATION_STATUS_TYPES, name="notify_status_type"
-)
-
-
-class NotificationStatusTypes(db.Model):
-    __tablename__ = "notification_status_types"
-
-    name = db.Column(db.String(), primary_key=True)
 
 
 class NotificationAllTimeView(db.Model):
@@ -1551,12 +1446,18 @@ class NotificationAllTimeView(db.Model):
     api_key_id = db.Column(UUID(as_uuid=True))
     key_type = db.Column(db.String)
     billable_units = db.Column(db.Integer)
-    notification_type = db.Column(notification_types)
+    notification_type = enum_column(NotificationType)
     created_at = db.Column(db.DateTime)
     sent_at = db.Column(db.DateTime)
     sent_by = db.Column(db.String)
     updated_at = db.Column(db.DateTime)
-    status = db.Column("notification_status", db.Text)
+    status = enum_column(
+        NotificationStatus,
+        name="notification_status",
+        nullable=True,
+        default=NotificationStatus.CREATED,
+        key="status",
+    )
     reference = db.Column(db.String)
     client_reference = db.Column(db.String)
     international = db.Column(db.Boolean)
@@ -1573,26 +1474,31 @@ class Notification(db.Model):
     to = db.Column(db.String, nullable=False)
     normalised_to = db.Column(db.String, nullable=True)
     job_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("jobs.id"), index=True, unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("jobs.id"),
+        index=True,
+        unique=False,
     )
     job = db.relationship("Job", backref=db.backref("notifications", lazy="dynamic"))
     job_row_number = db.Column(db.Integer, nullable=True)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        unique=False,
     )
     service = db.relationship("Service")
     template_id = db.Column(UUID(as_uuid=True), index=True, unique=False)
     template_version = db.Column(db.Integer, nullable=False)
     template = db.relationship("TemplateHistory")
     api_key_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("api_keys.id"), unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("api_keys.id"),
+        unique=False,
     )
     api_key = db.relationship("ApiKey")
-    key_type = db.Column(
-        db.String, db.ForeignKey("key_types.name"), unique=False, nullable=False
-    )
+    key_type = enum_column(KeyType, unique=False, nullable=False)
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = enum_column(NotificationType, nullable=False)
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -1603,13 +1509,12 @@ class Notification(db.Model):
         nullable=True,
         onupdate=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        "notification_status",
-        db.Text,
-        db.ForeignKey("notification_status_types.name"),
+    status = enum_column(
+        NotificationStatus,
+        name="notification_status",
         nullable=True,
-        default="created",
-        key="status",  # http://docs.sqlalchemy.org/en/latest/core/metadata.html#sqlalchemy.schema.Column
+        default=NotificationStatus.CREATED,
+        key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, index=True, nullable=True)
@@ -1673,7 +1578,7 @@ class Notification(db.Model):
         self._personalisation = encryption.encrypt(personalisation or {})
 
     def completed_at(self):
-        if self.status in NOTIFICATION_STATUS_TYPES_COMPLETED:
+        if self.status in NotificationStatus.completed_types():
             return self.updated_at.strftime(DATETIME_FORMAT)
 
         return None
@@ -1713,8 +1618,8 @@ class Notification(db.Model):
 
         def _substitute_status_str(_status):
             return (
-                NOTIFICATION_STATUS_TYPES_FAILED
-                if _status == NOTIFICATION_FAILED
+                NotificationStatus.failed_types()
+                if _status == NotificationStatus.FAILED
                 else [_status]
             )
 
@@ -1747,26 +1652,26 @@ class Notification(db.Model):
     @property
     def formatted_status(self):
         return {
-            "email": {
-                "failed": "Failed",
-                "technical-failure": "Technical failure",
-                "temporary-failure": "Inbox not accepting messages right now",
-                "permanent-failure": "Email address doesn’t exist",
-                "delivered": "Delivered",
-                "sending": "Sending",
-                "created": "Sending",
-                "sent": "Delivered",
+            NotificationType.EMAIL: {
+                NotificationStatus.FAILED: "Failed",
+                NotificationStatus.TECHNICAL_FAILURE: "Technical failure",
+                NotificationStatus.TEMPORARY_FAILURE: "Inbox not accepting messages right now",
+                NotificationStatus.PERMANENT_FAILURE: "Email address doesn’t exist",
+                NotificationStatus.DELIVERED: "Delivered",
+                NotificationStatus.SENDING: "Sending",
+                NotificationStatus.CREATED: "Sending",
+                NotificationStatus.SENT: "Delivered",
             },
-            "sms": {
-                "failed": "Failed",
-                "technical-failure": "Technical failure",
-                "temporary-failure": "Unable to find carrier response -- still looking",
-                "permanent-failure": "Unable to find carrier response.",
-                "delivered": "Delivered",
-                "pending": "Pending",
-                "sending": "Sending",
-                "created": "Sending",
-                "sent": "Sent internationally",
+            NotificationType.SMS: {
+                NotificationStatus.FAILED: "Failed",
+                NotificationStatus.TECHNICAL_FAILURE: "Technical failure",
+                NotificationStatus.TEMPORARY_FAILURE: "Unable to find carrier response -- still looking",
+                NotificationStatus.PERMANENT_FAILURE: "Unable to find carrier response.",
+                NotificationStatus.DELIVERED: "Delivered",
+                NotificationStatus.PENDING: "Pending",
+                NotificationStatus.SENDING: "Sending",
+                NotificationStatus.CREATED: "Sending",
+                NotificationStatus.SENT: "Sent internationally",
             },
         }[self.template.template_type].get(self.status, self.status)
 
@@ -1812,8 +1717,12 @@ class Notification(db.Model):
         serialized = {
             "id": self.id,
             "reference": self.client_reference,
-            "email_address": self.to if self.notification_type == EMAIL_TYPE else None,
-            "phone_number": self.to if self.notification_type == SMS_TYPE else None,
+            "email_address": self.to
+            if self.notification_type == NotificationType.EMAIL
+            else None,
+            "phone_number": self.to
+            if self.notification_type == NotificationType.SMS
+            else None,
             "line_1": None,
             "line_2": None,
             "line_3": None,
@@ -1843,25 +1752,30 @@ class NotificationHistory(db.Model, HistoryModel):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     job_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("jobs.id"), index=True, unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("jobs.id"),
+        index=True,
+        unique=False,
     )
     job = db.relationship("Job")
     job_row_number = db.Column(db.Integer, nullable=True)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        unique=False,
     )
     service = db.relationship("Service")
     template_id = db.Column(UUID(as_uuid=True), unique=False)
     template_version = db.Column(db.Integer, nullable=False)
     api_key_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("api_keys.id"), unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("api_keys.id"),
+        unique=False,
     )
     api_key = db.relationship("ApiKey")
-    key_type = db.Column(
-        db.String, db.ForeignKey("key_types.name"), unique=False, nullable=False
-    )
+    key_type = enum_column(KeyType, unique=False, nullable=False)
     billable_units = db.Column(db.Integer, nullable=False, default=0)
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = enum_column(NotificationType, nullable=False)
     created_at = db.Column(db.DateTime, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
@@ -1872,13 +1786,12 @@ class NotificationHistory(db.Model, HistoryModel):
         nullable=True,
         onupdate=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        "notification_status",
-        db.Text,
-        db.ForeignKey("notification_status_types.name"),
+    status = enum_column(
+        NotificationStatus,
+        name="notification_status",
         nullable=True,
-        default="created",
-        key="status",  # http://docs.sqlalchemy.org/en/latest/core/metadata.html#sqlalchemy.schema.Column
+        default=NotificationStatus.CREATED,
+        key="status",
     )
     reference = db.Column(db.String, nullable=True, index=True)
     client_reference = db.Column(db.String, nullable=True)
@@ -1916,35 +1829,23 @@ class NotificationHistory(db.Model, HistoryModel):
         self.status = original.status
 
 
-INVITE_PENDING = "pending"
-INVITE_ACCEPTED = "accepted"
-INVITE_CANCELLED = "cancelled"
-INVITE_EXPIRED = "expired"
-INVITED_USER_STATUS_TYPES = [
-    INVITE_PENDING,
-    INVITE_ACCEPTED,
-    INVITE_CANCELLED,
-    INVITE_EXPIRED,
-]
-
-
-class InviteStatusType(db.Model):
-    __tablename__ = "invite_status_type"
-
-    name = db.Column(db.String, primary_key=True)
-
-
 class InvitedUser(db.Model):
     __tablename__ = "invited_users"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email_address = db.Column(db.String(255), nullable=False)
     user_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
+        nullable=False,
     )
     from_user = db.relationship("User")
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        unique=False,
     )
     service = db.relationship("Service")
     created_at = db.Column(
@@ -1954,20 +1855,16 @@ class InvitedUser(db.Model):
         nullable=False,
         default=datetime.datetime.utcnow,
     )
-    status = db.Column(
-        db.Enum(*INVITED_USER_STATUS_TYPES, name="invited_users_status_types"),
+    status = enum_column(
+        InvitedUserStatus,
         nullable=False,
-        default=INVITE_PENDING,
+        default=InvitedUserStatus.PENDING,
     )
     permissions = db.Column(db.String, nullable=False)
-    auth_type = db.Column(
-        db.String,
-        db.ForeignKey("auth_type.name"),
-        index=True,
-        nullable=False,
-        default=SMS_AUTH_TYPE,
+    auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
+    folder_permissions = db.Column(
+        JSONB(none_as_null=True), nullable=False, default=list
     )
-    folder_permissions = db.Column(JSONB(none_as_null=True), nullable=False, default=[])
 
     # would like to have used properties for this but haven't found a way to make them
     # play nice with marshmallow yet
@@ -1981,22 +1878,27 @@ class InvitedOrganizationUser(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email_address = db.Column(db.String(255), nullable=False)
     invited_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        nullable=False,
     )
     invited_by = db.relationship("User")
     organization_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("organization.id"), nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("organization.id"),
+        nullable=False,
     )
     organization = db.relationship("Organization")
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
 
-    status = db.Column(
-        db.String,
-        db.ForeignKey("invite_status_type.name"),
+    status = enum_column(
+        InvitedUserStatus,
         nullable=False,
-        default=INVITE_PENDING,
+        default=InvitedUserStatus.PENDING,
     )
 
     def serialize(self):
@@ -2008,29 +1910,6 @@ class InvitedOrganizationUser(db.Model):
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "status": self.status,
         }
-
-
-# Service Permissions
-MANAGE_USERS = "manage_users"
-MANAGE_TEMPLATES = "manage_templates"
-MANAGE_SETTINGS = "manage_settings"
-SEND_TEXTS = "send_texts"
-SEND_EMAILS = "send_emails"
-MANAGE_API_KEYS = "manage_api_keys"
-PLATFORM_ADMIN = "platform_admin"
-VIEW_ACTIVITY = "view_activity"
-
-# List of permissions
-PERMISSION_LIST = [
-    MANAGE_USERS,
-    MANAGE_TEMPLATES,
-    MANAGE_SETTINGS,
-    SEND_TEXTS,
-    SEND_EMAILS,
-    MANAGE_API_KEYS,
-    PLATFORM_ADMIN,
-    VIEW_ACTIVITY,
-]
 
 
 class Permission(db.Model):
@@ -2047,15 +1926,13 @@ class Permission(db.Model):
     )
     service = db.relationship("Service")
     user_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=False
-    )
-    user = db.relationship("User")
-    permission = db.Column(
-        db.Enum(*PERMISSION_LIST, name="permission_types"),
-        index=False,
-        unique=False,
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        index=True,
         nullable=False,
     )
+    user = db.relationship("User")
+    permission = enum_column(PermissionType, index=False, unique=False, nullable=False)
     created_at = db.Column(
         db.DateTime,
         index=False,
@@ -2066,7 +1943,10 @@ class Permission(db.Model):
 
     __table_args__ = (
         UniqueConstraint(
-            "service_id", "user_id", "permission", name="uix_service_user_permission"
+            "service_id",
+            "user_id",
+            "permission",
+            name="uix_service_user_permission",
         ),
     )
 
@@ -2092,13 +1972,10 @@ class Rate(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     valid_from = db.Column(db.DateTime, nullable=False)
     rate = db.Column(db.Float(asdecimal=False), nullable=False)
-    notification_type = db.Column(notification_types, index=True, nullable=False)
+    notification_type = enum_column(NotificationType, index=True, nullable=False)
 
     def __str__(self):
-        the_string = "{}".format(self.rate)
-        the_string += " {}".format(self.notification_type)
-        the_string += " {}".format(self.valid_from)
-        return the_string
+        return f"{self.rate} {self.notification_type} {self.valid_from}"
 
 
 class InboundSms(db.Model):
@@ -2106,18 +1983,26 @@ class InboundSms(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        nullable=False,
     )
     service = db.relationship("Service", backref="inbound_sms")
 
     notify_number = db.Column(
-        db.String, nullable=False
+        db.String,
+        nullable=False,
     )  # the service's number, that the msg was sent to
     user_number = db.Column(
-        db.String, nullable=False, index=True
+        db.String,
+        nullable=False,
+        index=True,
     )  # the end user's number, that the msg was sent from
     provider_date = db.Column(db.DateTime)
     provider_reference = db.Column(db.String)
@@ -2148,7 +2033,10 @@ class InboundSmsHistory(db.Model, HistoryModel):
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     service_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("services.id"), index=True, unique=False
+        UUID(as_uuid=True),
+        db.ForeignKey("services.id"),
+        index=True,
+        unique=False,
     )
     service = db.relationship("Service")
     notify_number = db.Column(db.String, nullable=False)
@@ -2175,10 +2063,14 @@ class ServiceEmailReplyTo(db.Model):
     is_default = db.Column(db.Boolean, nullable=False, default=True)
     archived = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
     def serialize(self):
@@ -2193,21 +2085,21 @@ class ServiceEmailReplyTo(db.Model):
         }
 
 
-class AuthType(db.Model):
-    __tablename__ = "auth_type"
-
-    name = db.Column(db.String, primary_key=True)
-
-
 class FactBilling(db.Model):
     __tablename__ = "ft_billing"
 
     local_date = db.Column(db.Date, nullable=False, primary_key=True, index=True)
     template_id = db.Column(
-        UUID(as_uuid=True), nullable=False, primary_key=True, index=True
+        UUID(as_uuid=True),
+        nullable=False,
+        primary_key=True,
+        index=True,
     )
     service_id = db.Column(
-        UUID(as_uuid=True), nullable=False, primary_key=True, index=True
+        UUID(as_uuid=True),
+        nullable=False,
+        primary_key=True,
+        index=True,
     )
     notification_type = db.Column(db.Text, nullable=False, primary_key=True)
     provider = db.Column(db.Text, nullable=False, primary_key=True)
@@ -2217,10 +2109,14 @@ class FactBilling(db.Model):
     billable_units = db.Column(db.Integer(), nullable=True)
     notifications_sent = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
 
@@ -2229,7 +2125,10 @@ class FactNotificationStatus(db.Model):
 
     local_date = db.Column(db.Date, index=True, primary_key=True, nullable=False)
     template_id = db.Column(
-        UUID(as_uuid=True), primary_key=True, index=True, nullable=False
+        UUID(as_uuid=True),
+        primary_key=True,
+        index=True,
+        nullable=False,
     )
     service_id = db.Column(
         UUID(as_uuid=True),
@@ -2238,15 +2137,23 @@ class FactNotificationStatus(db.Model):
         nullable=False,
     )
     job_id = db.Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False)
-    notification_type = db.Column(db.Text, primary_key=True, nullable=False)
-    key_type = db.Column(db.Text, primary_key=True, nullable=False)
-    notification_status = db.Column(db.Text, primary_key=True, nullable=False)
+    notification_type = enum_column(NotificationType, primary_key=True, nullable=False)
+    key_type = enum_column(KeyType, primary_key=True, nullable=False)
+    notification_status = enum_column(
+        NotificationStatus,
+        primary_key=True,
+        nullable=False,
+    )
     notification_count = db.Column(db.Integer(), nullable=False)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
 
@@ -2257,10 +2164,14 @@ class FactProcessingTime(db.Model):
     messages_total = db.Column(db.Integer(), nullable=False)
     messages_within_10_secs = db.Column(db.Integer(), nullable=False)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
 
@@ -2281,7 +2192,9 @@ class Complaint(db.Model):
     complaint_type = db.Column(db.Text, nullable=True)
     complaint_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
 
     def serialize(self):
@@ -2315,13 +2228,17 @@ class ServiceDataRetention(db.Model):
             collection_class=attribute_mapped_collection("notification_type"),
         ),
     )
-    notification_type = db.Column(notification_types, nullable=False)
+    notification_type = enum_column(NotificationType, nullable=False)
     days_of_retention = db.Column(db.Integer, nullable=False)
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
     __table_args__ = (
@@ -2350,7 +2267,10 @@ class WebauthnCredential(db.Model):
     __tablename__ = "webauthn_credential"
 
     id = db.Column(
-        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
+        UUID(as_uuid=True),
+        primary_key=True,
+        nullable=False,
+        default=uuid.uuid4,
     )
 
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False)
@@ -2365,10 +2285,14 @@ class WebauthnCredential(db.Model):
     registration_response = db.Column(db.String, nullable=False)
 
     created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
     )
     updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow
+        db.DateTime,
+        nullable=True,
+        onupdate=datetime.datetime.utcnow,
     )
 
     def serialize(self):
@@ -2382,34 +2306,17 @@ class WebauthnCredential(db.Model):
         }
 
 
-class AgreementType(Enum):
-    MOU = "MOU"
-    IAA = "IAA"
-
-
-class AgreementStatus(Enum):
-    ACTIVE = "active"
-    EXPIRED = "expired"
-
-
 class Agreement(db.Model):
     __tablename__ = "agreements"
     id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
-    )
-    type = db.Column(
-        db.Enum(AgreementType, name="agreement_types"),
-        index=False,
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
         unique=False,
-        nullable=False,
     )
+    type = enum_column(AgreementType, index=False, unique=False, nullable=False)
     partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    status = db.Column(
-        db.Enum(AgreementStatus, name="agreement_statuses"),
-        index=False,
-        unique=False,
-        nullable=False,
-    )
+    status = enum_column(AgreementStatus, index=False, unique=False, nullable=False)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     url = db.Column(db.String(255), nullable=False, unique=True, index=True)

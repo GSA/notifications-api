@@ -11,6 +11,7 @@ from app.clients.email.aws_ses import (
     AwsSesClientThrottlingSendRateException,
 )
 from app.clients.sms import SmsClientResponseException
+from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
 
 
@@ -55,7 +56,7 @@ def test_should_retry_and_log_warning_if_SmsClientResponseException_for_deliver_
     )
     mocker.patch("app.celery.provider_tasks.deliver_sms.retry")
     mock_logger_warning = mocker.patch("app.celery.tasks.current_app.logger.warning")
-    assert sample_notification.status == "created"
+    assert sample_notification.status == NotificationStatus.CREATED
 
     deliver_sms(sample_notification.id)
 
@@ -75,7 +76,7 @@ def test_should_retry_and_log_exception_for_non_SmsClientResponseException_excep
         "app.celery.tasks.current_app.logger.exception"
     )
 
-    assert sample_notification.status == "created"
+    assert sample_notification.status == NotificationStatus.CREATED
     deliver_sms(sample_notification.id)
 
     assert provider_tasks.deliver_sms.retry.called is True
@@ -105,7 +106,7 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_sms_task(
         queue="retry-tasks", countdown=0
     )
 
-    assert sample_notification.status == "temporary-failure"
+    assert sample_notification.status == NotificationStatus.TEMPORARY_FAILURE
     assert mock_logger_exception.called
 
 
@@ -163,7 +164,7 @@ def test_should_go_into_technical_error_if_exceeds_retries_on_deliver_email_task
     assert str(sample_notification.id) in str(e.value)
 
     provider_tasks.deliver_email.retry.assert_called_with(queue="retry-tasks")
-    assert sample_notification.status == "technical-failure"
+    assert sample_notification.status == NotificationStatus.TECHNICAL_FAILURE
 
 
 def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableException(
@@ -178,7 +179,7 @@ def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableExceptio
     deliver_email(sample_notification.id)
 
     assert provider_tasks.deliver_email.retry.called is False
-    assert sample_notification.status == "technical-failure"
+    assert sample_notification.status == NotificationStatus.TECHNICAL_FAILURE
 
 
 def test_should_retry_and_log_exception_for_deliver_email_task(
@@ -204,7 +205,7 @@ def test_should_retry_and_log_exception_for_deliver_email_task(
     deliver_email(sample_notification.id)
 
     assert provider_tasks.deliver_email.retry.called is True
-    assert sample_notification.status == "created"
+    assert sample_notification.status == NotificationStatus.CREATED
     assert mock_logger_exception.called
 
 
@@ -232,6 +233,6 @@ def test_if_ses_send_rate_throttle_then_should_retry_and_log_warning(
     deliver_email(sample_notification.id)
 
     assert provider_tasks.deliver_email.retry.called is True
-    assert sample_notification.status == "created"
+    assert sample_notification.status == NotificationStatus.CREATED
     assert not mock_logger_exception.called
     assert mock_logger_warning.called

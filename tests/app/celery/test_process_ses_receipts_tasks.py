@@ -16,6 +16,7 @@ from app.celery.test_key_tasks import (
     ses_soft_bounce_callback,
 )
 from app.dao.notifications_dao import get_notification_by_id
+from app.enums import CallbackType, NotificationStatus
 from app.models import Complaint
 from tests.app.conftest import create_sample_notification
 from tests.app.db import (
@@ -136,7 +137,7 @@ def test_process_ses_results(sample_email_template):
         sample_email_template,
         reference="ref1",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
 
     assert process_ses_results(response=ses_notification_callback(reference="ref1"))
@@ -147,7 +148,7 @@ def test_process_ses_results_retry_called(sample_email_template, mocker):
         sample_email_template,
         reference="ref1",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     mocker.patch(
         "app.dao.notifications_dao._update_notification_status",
@@ -196,15 +197,20 @@ def test_ses_callback_should_update_notification_status(
             notify_db_session,
             template=sample_email_template,
             reference="ref",
-            status="sending",
+            status=NotificationStatus.SENDING,
             sent_at=datetime.utcnow(),
         )
         create_service_callback_api(
             service=sample_email_template.service, url="https://original_url.com"
         )
-        assert get_notification_by_id(notification.id).status == "sending"
+        assert (
+            get_notification_by_id(notification.id).status == NotificationStatus.SENDING
+        )
         assert process_ses_results(ses_notification_callback(reference="ref"))
-        assert get_notification_by_id(notification.id).status == "delivered"
+        assert (
+            get_notification_by_id(notification.id).status
+            == NotificationStatus.DELIVERED
+        )
         send_mock.assert_called_once_with(
             [str(notification.id), ANY], queue="service-callbacks"
         )
@@ -222,11 +228,15 @@ def test_ses_callback_should_not_update_notification_status_if_already_delivered
         "app.celery.process_ses_receipts_tasks.notifications_dao._update_notification_status"
     )
     notification = create_notification(
-        template=sample_email_template, reference="ref", status="delivered"
+        template=sample_email_template,
+        reference="ref",
+        status=NotificationStatus.DELIVERED,
     )
     assert process_ses_results(ses_notification_callback(reference="ref")) is None
-    assert get_notification_by_id(notification.id).status == "delivered"
-    mock_dup.assert_called_once_with(notification, "delivered")
+    assert (
+        get_notification_by_id(notification.id).status == NotificationStatus.DELIVERED
+    )
+    mock_dup.assert_called_once_with(notification, NotificationStatus.DELIVERED)
     assert mock_upd.call_count == 0
 
 
@@ -283,12 +293,17 @@ def test_ses_callback_does_not_call_send_delivery_status_if_no_db_entry(
             notify_db_session,
             template=sample_email_template,
             reference="ref",
-            status="sending",
+            status=NotificationStatus.SENDING,
             sent_at=datetime.utcnow(),
         )
-        assert get_notification_by_id(notification.id).status == "sending"
+        assert (
+            get_notification_by_id(notification.id).status == NotificationStatus.SENDING
+        )
         assert process_ses_results(ses_notification_callback(reference="ref"))
-        assert get_notification_by_id(notification.id).status == "delivered"
+        assert (
+            get_notification_by_id(notification.id).status
+            == NotificationStatus.DELIVERED
+        )
         send_mock.assert_not_called()
 
 
@@ -304,7 +319,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         template=sample_email_template,
         reference="ref1",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     create_sample_notification(
         _notify_db,
@@ -312,7 +327,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         template=sample_email_template,
         reference="ref2",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     create_sample_notification(
         _notify_db,
@@ -320,7 +335,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         template=sample_email_template,
         reference="ref3",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     create_service_callback_api(
         service=sample_email_template.service, url="https://original_url.com"
@@ -342,15 +357,18 @@ def test_ses_callback_should_set_status_to_temporary_failure(
         notify_db_session,
         template=sample_email_template,
         reference="ref",
-        status="sending",
+        status=NotificationStatus.SENDING,
         sent_at=datetime.utcnow(),
     )
     create_service_callback_api(
         service=notification.service, url="https://original_url.com"
     )
-    assert get_notification_by_id(notification.id).status == "sending"
+    assert get_notification_by_id(notification.id).status == NotificationStatus.SENDING
     assert process_ses_results(ses_soft_bounce_callback(reference="ref"))
-    assert get_notification_by_id(notification.id).status == "temporary-failure"
+    assert (
+        get_notification_by_id(notification.id).status
+        == NotificationStatus.TEMPORARY_FAILURE
+    )
     assert send_mock.called
 
 
@@ -365,15 +383,18 @@ def test_ses_callback_should_set_status_to_permanent_failure(
         notify_db_session,
         template=sample_email_template,
         reference="ref",
-        status="sending",
+        status=NotificationStatus.SENDING,
         sent_at=datetime.utcnow(),
     )
     create_service_callback_api(
         service=sample_email_template.service, url="https://original_url.com"
     )
-    assert get_notification_by_id(notification.id).status == "sending"
+    assert get_notification_by_id(notification.id).status == NotificationStatus.SENDING
     assert process_ses_results(ses_hard_bounce_callback(reference="ref"))
-    assert get_notification_by_id(notification.id).status == "permanent-failure"
+    assert (
+        get_notification_by_id(notification.id).status
+        == NotificationStatus.PERMANENT_FAILURE
+    )
     assert send_mock.called
 
 
@@ -386,13 +407,13 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(
     create_service_callback_api(
         service=sample_email_template.service,
         url="https://original_url.com",
-        callback_type="complaint",
+        callback_type=CallbackType.COMPLAINT,
     )
     notification = create_notification(
         template=sample_email_template,
         reference="ref1",
         sent_at=datetime.utcnow(),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     response = ses_complaint_callback()
     assert process_ses_results(response)

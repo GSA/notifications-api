@@ -11,6 +11,7 @@
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
   - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
+  - [End-to-end testing](#end-to-end-testing)
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
   - [Managing environment variables](#managing-environment-variables)
@@ -306,6 +307,37 @@ The equivalent command if you are running the API locally:
 ```
 docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf -r report.html
 ```
+
+## End-to-end Testing
+
+In order to run end-to-end (E2E) tests, which are managed and handled in the
+admin project, a bit of extra configuration needs to be accounted for here on
+the API side as well.  These instructions are in the README as they are
+necessary for project setup, and they're copied here for reference.
+
+In the `.env` file, you should see this section:
+
+```
+#############################################################
+
+# E2E Testing
+
+NOTIFY_E2E_TEST_EMAIL=example@fake.gov
+NOTIFY_E2E_TEST_PASSWORD="don't write secrets to the sample file"
+```
+
+You can leave the email address alone or change it to something else to your
+liking.
+
+**You should absolutely change the `NOTIFY_E2E_TEST_PASSWORD` environment
+variable to something else, preferably a lengthy passphrase.**
+
+With those two environment variable set, the database migrations will run
+properly and an E2E test user will be ready to go for use in the admin project.
+
+_Note:  Whatever you set these two environment variables to, you'll need to
+match their values on the admin side.  Please see the admin README and
+documentation for more details._
 
 # Deploying
 

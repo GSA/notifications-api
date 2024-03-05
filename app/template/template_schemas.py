@@ -1,4 +1,4 @@
-from app.models import TEMPLATE_PROCESS_TYPE, TEMPLATE_TYPES
+from app.enums import TemplateProcessType, TemplateType
 from app.schema_validation.definitions import nullable_uuid, uuid
 
 post_create_template_schema = {
@@ -8,15 +8,15 @@ post_create_template_schema = {
     "title": "payload for POST /service/<uuid:service_id>/template",
     "properties": {
         "name": {"type": "string"},
-        "template_type": {"enum": TEMPLATE_TYPES},
+        "template_type": {"enum": list(TemplateType)},
         "service": uuid,
-        "process_type": {"enum": TEMPLATE_PROCESS_TYPE},
+        "process_type": {"enum": list(TemplateProcessType)},
         "content": {"type": "string"},
         "subject": {"type": "string"},
         "created_by": uuid,
         "parent_folder_id": uuid,
     },
-    "if": {"properties": {"template_type": {"enum": ["email"]}}},
+    "if": {"properties": {"template_type": {"enum": [TemplateType.EMAIL]}}},
     "then": {"required": ["subject"]},
     "required": ["name", "template_type", "content", "service", "created_by"],
 }
@@ -29,9 +29,9 @@ post_update_template_schema = {
     "properties": {
         "id": uuid,
         "name": {"type": "string"},
-        "template_type": {"enum": TEMPLATE_TYPES},
+        "template_type": {"enum": list(TemplateType)},
         "service": uuid,
-        "process_type": {"enum": TEMPLATE_PROCESS_TYPE},
+        "process_type": {"enum": list(TemplateProcessType)},
         "content": {"type": "string"},
         "subject": {"type": "string"},
         "reply_to": nullable_uuid,
