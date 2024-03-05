@@ -22,6 +22,7 @@
   - [Migrations](#migrations)
   - [Purging user data](#purging-user-data)
 - [One-off tasks](#one-off-tasks)
+- [Test Loading Commands](#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](#how-messages-are-queued-and-sent)
 - [Writing public APIs](#writing-public-apis)
   - [Overview](#overview)
