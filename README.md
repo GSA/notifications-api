@@ -1,3 +1,5 @@
+![notify-logo](https://github.com/GSA/notifications-api/assets/4156602/6b2905d2-a232-4414-8815-25dba6008f17)
+
 # Notify.gov API
 
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
