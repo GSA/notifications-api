@@ -12,8 +12,9 @@ from app.dao.invited_org_user_dao import (
     save_invited_org_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, InvitedOrganizationUser
+from app.models import InvitedOrganizationUser
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -54,7 +55,7 @@ def invite_user_to_org(organization_id):
         service=template.service,
         personalisation={
             "user_name": (
-                "The GOV.UK Notify team"
+                "The Notify.gov team"
                 if invited_org_user.invited_by.platform_admin
                 else invited_org_user.invited_by.name
             ),
@@ -64,9 +65,9 @@ def invite_user_to_org(organization_id):
                 data.get("invite_link_host"),
             ),
         },
-        notification_type=EMAIL_TYPE,
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,
     )
 

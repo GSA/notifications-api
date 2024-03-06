@@ -7,6 +7,7 @@ from app.dao.complaint_dao import (
     fetch_paginated_complaints,
     save_complaint,
 )
+from app.enums import TemplateType
 from app.models import Complaint
 from tests.app.db import (
     create_complaint,
@@ -72,8 +73,8 @@ def test_fetch_complaint_by_service_returns_empty_list(sample_service):
 def test_fetch_complaint_by_service_return_many(notify_db_session):
     service_1 = create_service(service_name="first")
     service_2 = create_service(service_name="second")
-    template_1 = create_template(service=service_1, template_type="email")
-    template_2 = create_template(service=service_2, template_type="email")
+    template_1 = create_template(service=service_1, template_type=TemplateType.EMAIL)
+    template_2 = create_template(service=service_2, template_type=TemplateType.EMAIL)
     notification_1 = create_notification(template=template_1)
     notification_2 = create_notification(template=template_2)
     notification_3 = create_notification(template=template_2)
@@ -138,13 +139,15 @@ def test_fetch_count_of_complaints(sample_email_notification):
     )
 
     count_of_complaints = fetch_count_of_complaints(
-        start_date=datetime(2018, 6, 7), end_date=datetime(2018, 6, 7)
+        start_date=datetime(2018, 6, 7),
+        end_date=datetime(2018, 6, 7),
     )
     assert count_of_complaints == 5
 
 
 def test_fetch_count_of_complaints_returns_zero(notify_db_session):
     count_of_complaints = fetch_count_of_complaints(
-        start_date=datetime(2018, 6, 7), end_date=datetime(2018, 6, 7)
+        start_date=datetime(2018, 6, 7),
+        end_date=datetime(2018, 6, 7),
     )
     assert count_of_complaints == 0

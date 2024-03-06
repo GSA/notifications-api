@@ -21,7 +21,8 @@ from app.dao.fact_billing_dao import (
     query_organization_sms_usage_for_year,
 )
 from app.dao.organization_dao import dao_add_service_to_organization
-from app.models import NOTIFICATION_STATUS_TYPES, FactBilling
+from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
+from app.models import FactBilling
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -38,8 +39,8 @@ from tests.app.db import (
 
 def set_up_yearly_data():
     service = create_service()
-    sms_template = create_template(service=service, template_type="sms")
-    email_template = create_template(service=service, template_type="email")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
 
     # use different rates for adjacent financial years to make sure the query
     # doesn't accidentally bleed over into them
@@ -67,7 +68,7 @@ def set_up_yearly_data():
 
 def set_up_yearly_data_variable_rates():
     service = create_service()
-    sms_template = create_template(service=service, template_type="sms")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
 
     create_ft_billing(local_date="2018-05-16", template=sms_template, rate=0.162)
     create_ft_billing(
@@ -92,9 +93,13 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_key_type(
     notify_db_session,
 ):
     service = create_service()
-    template = create_template(service=service, template_type="email")
-    for key_type in ["normal", "test", "team"]:
-        create_notification(template=template, status="delivered", key_type=key_type)
+    template = create_template(service=service, template_type=TemplateType.EMAIL)
+    for key_type in [KeyType.NORMAL, KeyType.TEST, KeyType.TEAM]:
+        create_notification(
+            template=template,
+            status=NotificationStatus.DELIVERED,
+            key_type=key_type,
+        )
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -102,15 +107,17 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_key_type(
     assert results[0].notifications_sent == 2
 
 
-@pytest.mark.parametrize("notification_type", ["email", "sms"])
+@pytest.mark.parametrize(
+    "notification_type", [NotificationType.EMAIL, NotificationType.SMS]
+)
 def test_fetch_billing_data_for_day_only_calls_query_for_permission_type(
     notify_db_session, notification_type
 ):
     service = create_service(service_permissions=[notification_type])
-    email_template = create_template(service=service, template_type="email")
-    sms_template = create_template(service=service, template_type="sms")
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(
         process_day=today.date(), check_permissions=True
@@ -118,18 +125,22 @@ def test_fetch_billing_data_for_day_only_calls_query_for_permission_type(
     assert len(results) == 1
 
 
-@pytest.mark.parametrize("notification_type", ["email", "sms"])
+@pytest.mark.parametrize(
+    "notification_type",
+    [NotificationType.EMAIL, NotificationType.SMS],
+)
 def test_fetch_billing_data_for_day_only_calls_query_for_all_channels(
     notify_db_session, notification_type
 ):
     service = create_service(service_permissions=[notification_type])
-    email_template = create_template(service=service, template_type="email")
-    sms_template = create_template(service=service, template_type="sms")
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(
-        process_day=today.date(), check_permissions=False
+        process_day=today.date(),
+        check_permissions=False,
     )
     assert len(results) == 2
 
@@ -140,21 +151,30 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_date(
 ):
     process_day = datetime(2018, 4, 1, 13, 30, 0)
     service = create_service()
-    template = create_template(service=service, template_type="email")
-    create_notification(template=template, status="delivered", created_at=process_day)
+    template = create_template(service=service, template_type=TemplateType.EMAIL)
     create_notification(
         template=template,
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
+        created_at=process_day,
+    )
+    create_notification(
+        template=template,
+        status=NotificationStatus.DELIVERED,
         created_at=datetime(2018, 4, 1, 4, 23, 23),
     )
 
     create_notification(
         template=template,
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
         created_at=datetime(2018, 4, 1, 0, 23, 23),
     )
     create_notification(
-        template=template, status="sending", created_at=process_day + timedelta(days=1)
+        template=template,
+        status=NotificationStatus.SENDING,
+        created_at=process_day
+        + timedelta(
+            days=1,
+        ),
     )
 
     day_under_test = process_day
@@ -167,10 +187,10 @@ def test_fetch_billing_data_for_day_is_grouped_by_template_and_notification_type
     notify_db_session,
 ):
     service = create_service()
-    email_template = create_template(service=service, template_type="email")
-    sms_template = create_template(service=service, template_type="sms")
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -184,8 +204,8 @@ def test_fetch_billing_data_for_day_is_grouped_by_service(notify_db_session):
     service_2 = create_service(service_name="Service 2")
     email_template = create_template(service=service_1)
     sms_template = create_template(service=service_2)
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -197,8 +217,16 @@ def test_fetch_billing_data_for_day_is_grouped_by_service(notify_db_session):
 def test_fetch_billing_data_for_day_is_grouped_by_provider(notify_db_session):
     service = create_service()
     template = create_template(service=service)
-    create_notification(template=template, status="delivered", sent_by="sns")
-    create_notification(template=template, status="delivered", sent_by="sns")
+    create_notification(
+        template=template,
+        status=NotificationStatus.DELIVERED,
+        sent_by="sns",
+    )
+    create_notification(
+        template=template,
+        status=NotificationStatus.DELIVERED,
+        sent_by="sns",
+    )
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -210,8 +238,16 @@ def test_fetch_billing_data_for_day_is_grouped_by_provider(notify_db_session):
 def test_fetch_billing_data_for_day_is_grouped_by_rate_mulitplier(notify_db_session):
     service = create_service()
     template = create_template(service=service)
-    create_notification(template=template, status="delivered", rate_multiplier=1)
-    create_notification(template=template, status="delivered", rate_multiplier=2)
+    create_notification(
+        template=template,
+        status=NotificationStatus.DELIVERED,
+        rate_multiplier=1,
+    )
+    create_notification(
+        template=template,
+        status=NotificationStatus.DELIVERED,
+        rate_multiplier=2,
+    )
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -223,8 +259,16 @@ def test_fetch_billing_data_for_day_is_grouped_by_rate_mulitplier(notify_db_sess
 def test_fetch_billing_data_for_day_is_grouped_by_international(notify_db_session):
     service = create_service()
     sms_template = create_template(service=service)
-    create_notification(template=sms_template, status="delivered", international=True)
-    create_notification(template=sms_template, status="delivered", international=False)
+    create_notification(
+        template=sms_template,
+        status=NotificationStatus.DELIVERED,
+        international=True,
+    )
+    create_notification(
+        template=sms_template,
+        status=NotificationStatus.DELIVERED,
+        international=False,
+    )
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -234,13 +278,13 @@ def test_fetch_billing_data_for_day_is_grouped_by_international(notify_db_sessio
 
 def test_fetch_billing_data_for_day_is_grouped_by_notification_type(notify_db_session):
     service = create_service()
-    sms_template = create_template(service=service, template_type="sms")
-    email_template = create_template(service=service, template_type="email")
-    create_notification(template=sms_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
-    create_notification(template=sms_template, status="delivered")
-    create_notification(template=email_template, status="delivered")
-    create_notification(template=email_template, status="delivered")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
+    create_notification(template=email_template, status=NotificationStatus.DELIVERED)
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(today.date())
@@ -258,26 +302,30 @@ def test_fetch_billing_data_for_day_returns_empty_list(notify_db_session):
 def test_fetch_billing_data_for_day_uses_correct_table(notify_db_session):
     service = create_service()
     create_service_data_retention(
-        service, notification_type="email", days_of_retention=3
+        service, notification_type=NotificationType.EMAIL, days_of_retention=3
     )
-    sms_template = create_template(service=service, template_type="sms")
-    email_template = create_template(service=service, template_type="email")
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
 
     five_days_ago = datetime.utcnow() - timedelta(days=5)
     create_notification(
-        template=sms_template, status="delivered", created_at=five_days_ago
+        template=sms_template,
+        status=NotificationStatus.DELIVERED,
+        created_at=five_days_ago,
     )
     create_notification_history(
-        template=email_template, status="delivered", created_at=five_days_ago
+        template=email_template,
+        status=NotificationStatus.DELIVERED,
+        created_at=five_days_ago,
     )
 
     results = fetch_billing_data_for_day(
         process_day=five_days_ago.date(), service_id=service.id
     )
     assert len(results) == 2
-    assert results[0].notification_type == "sms"
+    assert results[0].notification_type == NotificationType.SMS
     assert results[0].notifications_sent == 1
-    assert results[1].notification_type == "email"
+    assert results[1].notification_type == NotificationType.EMAIL
     assert results[1].notifications_sent == 1
 
 
@@ -286,8 +334,8 @@ def test_fetch_billing_data_for_day_returns_list_for_given_service(notify_db_ses
     service_2 = create_service(service_name="Service 2")
     template = create_template(service=service)
     template_2 = create_template(service=service_2)
-    create_notification(template=template, status="delivered")
-    create_notification(template=template_2, status="delivered")
+    create_notification(template=template, status=NotificationStatus.DELIVERED)
+    create_notification(template=template_2, status=NotificationStatus.DELIVERED)
 
     today = datetime.utcnow()
     results = fetch_billing_data_for_day(
@@ -299,9 +347,9 @@ def test_fetch_billing_data_for_day_returns_list_for_given_service(notify_db_ses
 
 def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session):
     service = create_service()
-    sms_template = create_template(service=service, template_type="sms")
-    email_template = create_template(service=service, template_type="email")
-    for status in NOTIFICATION_STATUS_TYPES:
+    sms_template = create_template(service=service, template_type=TemplateType.SMS)
+    email_template = create_template(service=service, template_type=TemplateType.EMAIL)
+    for status in NotificationStatus:
         create_notification(template=sms_template, status=status)
         create_notification(template=email_template, status=status)
     today = datetime.utcnow()
@@ -309,17 +357,25 @@ def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session
         process_day=today.date(), service_id=service.id
     )
 
-    sms_results = [x for x in results if x.notification_type == "sms"]
-    email_results = [x for x in results if x.notification_type == "email"]
+    sms_results = [x for x in results if x.notification_type == NotificationType.SMS]
+    email_results = [
+        x for x in results if x.notification_type == NotificationType.EMAIL
+    ]
     # we expect as many rows as we check for notification types
     assert 6 == sms_results[0].notifications_sent
     assert 4 == email_results[0].notifications_sent
 
 
 def test_get_rates_for_billing(notify_db_session):
-    create_rate(start_date=datetime.utcnow(), value=12, notification_type="email")
-    create_rate(start_date=datetime.utcnow(), value=22, notification_type="sms")
-    create_rate(start_date=datetime.utcnow(), value=33, notification_type="email")
+    create_rate(
+        start_date=datetime.utcnow(), value=12, notification_type=NotificationType.EMAIL
+    )
+    create_rate(
+        start_date=datetime.utcnow(), value=22, notification_type=NotificationType.SMS
+    )
+    create_rate(
+        start_date=datetime.utcnow(), value=33, notification_type=NotificationType.EMAIL
+    )
     rates = get_rates_for_billing()
 
     assert len(rates) == 3
@@ -328,17 +384,25 @@ def test_get_rates_for_billing(notify_db_session):
 @freeze_time("2017-06-01 12:00")
 def test_get_rate(notify_db_session):
     create_rate(
-        start_date=datetime(2017, 5, 30, 23, 0), value=1.2, notification_type="email"
+        start_date=datetime(2017, 5, 30, 23, 0),
+        value=1.2,
+        notification_type=NotificationType.EMAIL,
     )
     create_rate(
-        start_date=datetime(2017, 5, 30, 23, 0), value=2.2, notification_type="sms"
+        start_date=datetime(2017, 5, 30, 23, 0),
+        value=2.2,
+        notification_type=NotificationType.SMS,
     )
     create_rate(
-        start_date=datetime(2017, 5, 30, 23, 0), value=3.3, notification_type="email"
+        start_date=datetime(2017, 5, 30, 23, 0),
+        value=3.3,
+        notification_type=NotificationType.EMAIL,
     )
 
     rates = get_rates_for_billing()
-    rate = get_rate(rates, notification_type="sms", date=date(2017, 6, 1))
+    rate = get_rate(
+        rates, notification_type=NotificationType.SMS, date=date(2017, 6, 1)
+    )
 
     assert rate == 2.2
 
@@ -350,14 +414,18 @@ def test_get_rate_chooses_right_rate_depending_on_date(
     notify_db_session, date, expected_rate
 ):
     create_rate(
-        start_date=datetime(2016, 1, 1, 0, 0), value=1.2, notification_type="sms"
+        start_date=datetime(2016, 1, 1, 0, 0),
+        value=1.2,
+        notification_type=NotificationType.SMS,
     )
     create_rate(
-        start_date=datetime(2018, 9, 30, 23, 0), value=2.2, notification_type="sms"
+        start_date=datetime(2018, 9, 30, 23, 0),
+        value=2.2,
+        notification_type=NotificationType.SMS,
     )
 
     rates = get_rates_for_billing()
-    rate = get_rate(rates, "sms", date)
+    rate = get_rate(rates, NotificationType.SMS, date)
     assert rate == expected_rate
 
 
@@ -372,7 +440,7 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     print(f"RESULTS {results}")
 
     assert str(results[0].month) == "2016-01-01"
-    assert results[0].notification_type == "email"
+    assert results[0].notification_type == NotificationType.EMAIL
     assert results[0].notifications_sent == 2
     assert results[0].chargeable_units == 0
     assert results[0].rate == Decimal("0")
@@ -381,7 +449,7 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     assert results[0].charged_units == 0
 
     assert str(results[1].month) == "2016-01-01"
-    assert results[1].notification_type == "sms"
+    assert results[1].notification_type == NotificationType.SMS
     assert results[1].notifications_sent == 2
     assert results[1].chargeable_units == 2
     assert results[1].rate == Decimal("0.162")
@@ -396,7 +464,9 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
 def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
     service = set_up_yearly_data_variable_rates()
     create_annual_billing(
-        service_id=service.id, free_sms_fragment_limit=6, financial_year_start=2018
+        service_id=service.id,
+        free_sms_fragment_limit=6,
+        financial_year_start=2018,
     )
     results = fetch_monthly_billing_for_year(service.id, 2018)
 
@@ -404,7 +474,7 @@ def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
     assert len(results) == 2
 
     assert str(results[0].month) == "2018-05-01"
-    assert results[0].notification_type == "sms"
+    assert results[0].notification_type == NotificationType.SMS
     assert results[0].notifications_sent == 1
     assert results[0].chargeable_units == 4
     assert results[0].rate == Decimal("0.015")
@@ -414,7 +484,7 @@ def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
     assert results[0].charged_units == 3
 
     assert str(results[1].month) == "2018-05-01"
-    assert results[1].notification_type == "sms"
+    assert results[1].notification_type == NotificationType.SMS
     assert results[1].notifications_sent == 2
     assert results[1].chargeable_units == 5
     assert results[1].rate == Decimal("0.162")
@@ -427,12 +497,12 @@ def test_fetch_monthly_billing_for_year_variable_rates(notify_db_session):
 @freeze_time("2018-08-01 13:30:00")
 def test_fetch_monthly_billing_for_year_adds_data_for_today(notify_db_session):
     service = create_service()
-    template = create_template(service=service, template_type="sms")
+    template = create_template(service=service, template_type=TemplateType.SMS)
 
     create_rate(
         start_date=datetime.utcnow() - timedelta(days=1),
         value=0.158,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
     )
     create_annual_billing(
         service_id=service.id, free_sms_fragment_limit=1000, financial_year_start=2018
@@ -441,7 +511,7 @@ def test_fetch_monthly_billing_for_year_adds_data_for_today(notify_db_session):
     for i in range(1, 32):
         create_ft_billing(local_date="2018-07-{}".format(i), template=template)
 
-    create_notification(template=template, status="delivered")
+    create_notification(template=template, status=NotificationStatus.DELIVERED)
 
     assert db.session.query(FactBilling.local_date).count() == 31
     results = fetch_monthly_billing_for_year(service_id=service.id, year=2018)
@@ -458,7 +528,7 @@ def test_fetch_billing_totals_for_year(notify_db_session):
     results = fetch_billing_totals_for_year(service_id=service.id, year=2016)
 
     assert len(results) == 2
-    assert results[0].notification_type == "email"
+    assert results[0].notification_type == NotificationType.EMAIL
     assert results[0].notifications_sent == 4
     assert results[0].chargeable_units == 0
     assert results[0].rate == Decimal("0")
@@ -466,7 +536,7 @@ def test_fetch_billing_totals_for_year(notify_db_session):
     assert results[0].free_allowance_used == 0
     assert results[0].charged_units == 0
 
-    assert results[1].notification_type == "sms"
+    assert results[1].notification_type == NotificationType.SMS
     assert results[1].notifications_sent == 4
     assert results[1].chargeable_units == 4
     assert results[1].rate == Decimal("0.162")
@@ -487,7 +557,7 @@ def test_fetch_billing_totals_for_year_uses_current_annual_billing(notify_db_ses
     result = next(
         result
         for result in fetch_billing_totals_for_year(service_id=service.id, year=2016)
-        if result.notification_type == "sms"
+        if result.notification_type == NotificationType.SMS
     )
 
     assert result.chargeable_units == 4
@@ -500,13 +570,15 @@ def test_fetch_billing_totals_for_year_uses_current_annual_billing(notify_db_ses
 def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
     service = set_up_yearly_data_variable_rates()
     create_annual_billing(
-        service_id=service.id, free_sms_fragment_limit=6, financial_year_start=2018
+        service_id=service.id,
+        free_sms_fragment_limit=6,
+        financial_year_start=2018,
     )
     results = fetch_billing_totals_for_year(service_id=service.id, year=2018)
 
     assert len(results) == 2
 
-    assert results[0].notification_type == "sms"
+    assert results[0].notification_type == NotificationType.SMS
     assert results[0].notifications_sent == 1
     assert results[0].chargeable_units == 4
     assert results[0].rate == Decimal("0.015")
@@ -515,7 +587,7 @@ def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
     assert results[0].free_allowance_used == 1
     assert results[0].charged_units == 3
 
-    assert results[1].notification_type == "sms"
+    assert results[1].notification_type == NotificationType.SMS
     assert results[1].notifications_sent == 2
     assert results[1].chargeable_units == 5
     assert results[1].rate == Decimal("0.162")
@@ -528,9 +600,9 @@ def test_fetch_billing_totals_for_year_variable_rates(notify_db_session):
 def test_delete_billing_data(notify_db_session):
     service_1 = create_service(service_name="1")
     service_2 = create_service(service_name="2")
-    sms_template = create_template(service_1, "sms")
-    email_template = create_template(service_1, "email")
-    other_service_template = create_template(service_2, "sms")
+    sms_template = create_template(service_1, TemplateType.SMS)
+    email_template = create_template(service_1, TemplateType.EMAIL)
+    other_service_template = create_template(service_2, TemplateType.SMS)
 
     existing_rows_to_delete = [  # noqa
         create_ft_billing("2018-01-01", sms_template, billable_unit=1),
@@ -557,13 +629,21 @@ def test_fetch_sms_free_allowance_remainder_until_date_with_two_services(
     org = create_organization(name="Org for {}".format(service.name))
     dao_add_service_to_organization(service=service, organization_id=org.id)
     create_annual_billing(
-        service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2016
+        service_id=service.id,
+        free_sms_fragment_limit=10,
+        financial_year_start=2016,
     )
     create_ft_billing(
-        template=template, local_date=datetime(2016, 4, 20), billable_unit=2, rate=0.11
+        template=template,
+        local_date=datetime(2016, 4, 20),
+        billable_unit=2,
+        rate=0.11,
     )
     create_ft_billing(
-        template=template, local_date=datetime(2016, 5, 20), billable_unit=3, rate=0.11
+        template=template,
+        local_date=datetime(2016, 5, 20),
+        billable_unit=3,
+        rate=0.11,
     )
 
     service_2 = create_service(service_name="used free allowance")
@@ -692,7 +772,9 @@ def test_fetch_sms_billing_for_all_services_with_remainder(notify_db_session):
     )
 
     service_4 = create_service(service_name="d - email only")
-    email_template = create_template(service=service_4, template_type="email")
+    email_template = create_template(
+        service=service_4, template_type=TemplateType.EMAIL
+    )
     org_4 = create_organization(name="Org for {}".format(service_4.name))
     dao_add_service_to_organization(service=service_4, organization_id=org_4.id)
     create_annual_billing(
@@ -826,13 +908,17 @@ def test_fetch_usage_year_for_organization(notify_db_session):
         financial_year_start=2019,
     )
     dao_add_service_to_organization(
-        service=service_with_emails_for_org, organization_id=fixtures["org_1"].id
+        service=service_with_emails_for_org,
+        organization_id=fixtures["org_1"].id,
     )
     template = create_template(
-        service=service_with_emails_for_org, template_type="email"
+        service=service_with_emails_for_org,
+        template_type=TemplateType.EMAIL,
     )
     create_ft_billing(
-        local_date=datetime(2019, 5, 1), template=template, notifications_sent=1100
+        local_date=datetime(2019, 5, 1),
+        template=template,
+        notifications_sent=1100,
     )
     results = fetch_usage_year_for_organization(fixtures["org_1"].id, 2019)
 
@@ -876,7 +962,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
     create_rate(
         start_date=datetime.utcnow() - timedelta(days=1),
         value=0.65,
-        notification_type="sms",
+        notification_type=NotificationType.SMS,
     )
     new_org = create_organization(name="New organization")
     service = create_service()
@@ -891,7 +977,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
 
     assert FactBilling.query.count() == 0
 
-    create_notification(template=template, status="delivered")
+    create_notification(template=template, status=NotificationStatus.DELIVERED)
 
     results = fetch_usage_year_for_organization(
         organization_id=new_org.id, year=current_year
@@ -1038,8 +1124,12 @@ def test_fetch_usage_year_for_organization_only_returns_data_for_live_services(
     live_service = create_service(restricted=False)
     sms_template = create_template(service=live_service)
     trial_service = create_service(restricted=True, service_name="trial_service")
-    email_template = create_template(service=trial_service, template_type="email")
-    trial_sms_template = create_template(service=trial_service, template_type="sms")
+    email_template = create_template(
+        service=trial_service, template_type=TemplateType.EMAIL
+    )
+    trial_sms_template = create_template(
+        service=trial_service, template_type=TemplateType.SMS
+    )
     dao_add_service_to_organization(service=live_service, organization_id=org.id)
     dao_add_service_to_organization(service=trial_service, organization_id=org.id)
     create_ft_billing(

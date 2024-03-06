@@ -4,12 +4,12 @@ from datetime import date, datetime
 import pytest
 from freezegun import freeze_time
 
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    SMS_TYPE,
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    StatisticsType,
+    TemplateType,
 )
 from tests.app.db import (
     create_ft_notification_status,
@@ -24,7 +24,9 @@ def test_get_template_usage_by_month_returns_correct_data(
     admin_request, sample_template
 ):
     create_ft_notification_status(
-        local_date=date(2017, 4, 2), template=sample_template, count=3
+        local_date=date(2017, 4, 2),
+        template=sample_template,
+        count=3,
     )
     create_notification(sample_template, created_at=datetime.utcnow())
 
@@ -58,15 +60,19 @@ def test_get_template_usage_by_month_returns_two_templates(
 ):
     template_one = create_template(
         sample_service,
-        template_type=SMS_TYPE,
+        template_type=TemplateType.SMS,
         template_name="TEST TEMPLATE",
         hidden=True,
     )
     create_ft_notification_status(
-        local_date=datetime(2017, 4, 2), template=template_one, count=1
+        local_date=datetime(2017, 4, 2),
+        template=template_one,
+        count=1,
     )
     create_ft_notification_status(
-        local_date=datetime(2017, 4, 2), template=sample_template, count=3
+        local_date=datetime(2017, 4, 2),
+        template=sample_template,
+        count=3,
     )
     create_notification(sample_template, created_at=datetime.utcnow())
 
@@ -106,25 +112,44 @@ def test_get_template_usage_by_month_returns_two_templates(
 @pytest.mark.parametrize(
     "today_only, stats",
     [
-        (False, {"requested": 2, "delivered": 1, "failed": 0}),
-        (True, {"requested": 1, "delivered": 0, "failed": 0}),
+        (
+            False,
+            {
+                StatisticsType.REQUESTED: 2,
+                StatisticsType.DELIVERED: 1,
+                StatisticsType.FAILURE: 0,
+            },
+        ),
+        (
+            True,
+            {
+                StatisticsType.REQUESTED: 1,
+                StatisticsType.DELIVERED: 0,
+                StatisticsType.FAILURE: 0,
+            },
+        ),
     ],
     ids=["seven_days", "today"],
 )
 def test_get_service_notification_statistics(
     admin_request, sample_service, sample_template, today_only, stats
 ):
-    create_ft_notification_status(date(2000, 1, 1), "sms", sample_service, count=1)
+    create_ft_notification_status(
+        date(2000, 1, 1), NotificationType.SMS, sample_service, count=1
+    )
     with freeze_time("2000-01-02T12:00:00"):
-        create_notification(sample_template, status="created")
+        create_notification(sample_template, status=NotificationStatus.CREATED)
         resp = admin_request.get(
             "service.get_service_notification_statistics",
             service_id=sample_template.service_id,
             today_only=today_only,
         )
 
-    assert set(resp["data"].keys()) == {SMS_TYPE, EMAIL_TYPE}
-    assert resp["data"][SMS_TYPE] == stats
+    assert set(resp["data"].keys()) == {
+        NotificationType.SMS,
+        NotificationType.EMAIL,
+    }
+    assert resp["data"][NotificationType.SMS] == stats
 
 
 def test_get_service_notification_statistics_with_unknown_service(admin_request):
@@ -133,8 +158,16 @@ def test_get_service_notification_statistics_with_unknown_service(admin_request)
     )
 
     assert resp["data"] == {
-        SMS_TYPE: {"requested": 0, "delivered": 0, "failed": 0},
-        EMAIL_TYPE: {"requested": 0, "delivered": 0, "failed": 0},
+        NotificationType.SMS: {
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILURE: 0,
+        },
+        NotificationType.EMAIL: {
+            StatisticsType.REQUESTED: 0,
+            StatisticsType.DELIVERED: 0,
+            StatisticsType.FAILURE: 0,
+        },
     }
 
 
@@ -192,13 +225,13 @@ def test_get_monthly_notification_stats_returns_empty_stats_with_correct_dates(
     ]
     assert sorted(response["data"].keys()) == keys
     for val in response["data"].values():
-        assert val == {"sms": {}, "email": {}}
+        assert val == {NotificationType.SMS: {}, NotificationType.EMAIL: {}}
 
 
 def test_get_monthly_notification_stats_returns_stats(admin_request, sample_service):
     sms_t1 = create_template(sample_service)
     sms_t2 = create_template(sample_service)
-    email_template = create_template(sample_service, template_type=EMAIL_TYPE)
+    email_template = create_template(sample_service, template_type=TemplateType.EMAIL)
 
     create_ft_notification_status(datetime(2016, 6, 1), template=sms_t1)
     create_ft_notification_status(datetime(2016, 6, 2), template=sms_t1)
@@ -206,7 +239,9 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     create_ft_notification_status(datetime(2016, 7, 1), template=sms_t1)
     create_ft_notification_status(datetime(2016, 7, 1), template=sms_t2)
     create_ft_notification_status(
-        datetime(2016, 7, 1), template=sms_t1, notification_status="created"
+        datetime(2016, 7, 1),
+        template=sms_t1,
+        notification_status=NotificationStatus.CREATED,
     )
     create_ft_notification_status(datetime(2016, 7, 1), template=email_template)
 
@@ -218,19 +253,19 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     assert len(response["data"]) == 12
 
     assert response["data"]["2016-06"] == {
-        "sms": {
+        NotificationType.SMS: {
             # it combines the two days
-            "delivered": 2
+            NotificationStatus.DELIVERED: 2
         },
-        "email": {},
+        NotificationType.EMAIL: {},
     }
     assert response["data"]["2016-07"] == {
         # it combines the two template types
-        "sms": {
-            "created": 1,
-            "delivered": 2,
+        NotificationType.SMS: {
+            NotificationStatus.CREATED: 1,
+            NotificationStatus.DELIVERED: 2,
         },
-        "email": {"delivered": 1},
+        NotificationType.EMAIL: {StatisticsType.DELIVERED: 1},
     }
 
 
@@ -239,25 +274,33 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
     admin_request, sample_template
 ):
     create_ft_notification_status(
-        datetime(2016, 5, 1, 12), template=sample_template, count=1
+        datetime(2016, 5, 1, 12),
+        template=sample_template,
+        count=1,
     )
     create_ft_notification_status(
         datetime(2016, 6, 1, 12),
         template=sample_template,
-        notification_status="created",
+        notification_status=NotificationStatus.CREATED,
         count=2,
     )  # noqa
 
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 5, 12), status="created"
+        sample_template,
+        created_at=datetime(2016, 6, 5, 12),
+        status=NotificationStatus.CREATED,
     )
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 5, 12), status="delivered"
+        sample_template,
+        created_at=datetime(2016, 6, 5, 12),
+        status=NotificationStatus.DELIVERED,
     )
 
     # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
     create_notification(
-        sample_template, created_at=datetime(2016, 6, 4, 12), status="sending"
+        sample_template,
+        created_at=datetime(2016, 6, 4, 12),
+        status=NotificationStatus.SENDING,
     )
 
     response = admin_request.get(
@@ -267,14 +310,17 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
     )
 
     assert len(response["data"]) == 6  # January to June
-    assert response["data"]["2016-05"] == {"sms": {"delivered": 1}, "email": {}}
+    assert response["data"]["2016-05"] == {
+        NotificationType.SMS: {NotificationStatus.DELIVERED: 1},
+        NotificationType.EMAIL: {},
+    }
     assert response["data"]["2016-06"] == {
-        "sms": {
+        NotificationType.SMS: {
             # combines the stats from the historic ft_notification_status and the current notifications
-            "created": 3,
-            "delivered": 1,
+            NotificationStatus.CREATED: 3,
+            NotificationStatus.DELIVERED: 1,
         },
-        "email": {},
+        NotificationType.EMAIL: {},
     }
 
 
@@ -282,13 +328,22 @@ def test_get_monthly_notification_stats_ignores_test_keys(
     admin_request, sample_service
 ):
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_NORMAL, count=1
+        datetime(2016, 6, 1),
+        service=sample_service,
+        key_type=KeyType.NORMAL,
+        count=1,
     )
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_TEAM, count=2
+        datetime(2016, 6, 1),
+        service=sample_service,
+        key_type=KeyType.TEAM,
+        count=2,
     )
     create_ft_notification_status(
-        datetime(2016, 6, 1), service=sample_service, key_type=KEY_TYPE_TEST, count=4
+        datetime(2016, 6, 1),
+        service=sample_service,
+        key_type=KeyType.TEST,
+        count=4,
     )
 
     response = admin_request.get(
@@ -297,20 +352,28 @@ def test_get_monthly_notification_stats_ignores_test_keys(
         year=2016,
     )
 
-    assert response["data"]["2016-06"]["sms"] == {"delivered": 3}
+    assert response["data"]["2016-06"][NotificationType.SMS] == {
+        NotificationStatus.DELIVERED: 3,
+    }
 
 
 def test_get_monthly_notification_stats_checks_dates(admin_request, sample_service):
     t = create_template(sample_service)
     # create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
     create_ft_notification_status(
-        datetime(2016, 4, 2), template=t, notification_status="sending"
+        datetime(2016, 4, 2),
+        template=t,
+        notification_status=NotificationStatus.SENDING,
     )
     create_ft_notification_status(
-        datetime(2017, 3, 31), template=t, notification_status="delivered"
+        datetime(2017, 3, 31),
+        template=t,
+        notification_status=NotificationStatus.DELIVERED,
     )
     create_ft_notification_status(
-        datetime(2017, 4, 11), template=t, notification_status="permanent-failure"
+        datetime(2017, 4, 11),
+        template=t,
+        notification_status=NotificationStatus.PERMANENT_FAILURE,
     )
 
     response = admin_request.get(
@@ -320,8 +383,12 @@ def test_get_monthly_notification_stats_checks_dates(admin_request, sample_servi
     )
     assert "2016-04" in response["data"]
     assert "2017-04" not in response["data"]
-    assert response["data"]["2016-04"]["sms"] == {"sending": 1}
-    assert response["data"]["2016-04"]["sms"] == {"sending": 1}
+    assert response["data"]["2016-04"][NotificationType.SMS] == {
+        NotificationStatus.SENDING: 1,
+    }
+    assert response["data"]["2016-04"][NotificationType.SMS] == {
+        NotificationStatus.SENDING: 1,
+    }
 
 
 def test_get_monthly_notification_stats_only_gets_for_one_service(
@@ -332,14 +399,23 @@ def test_get_monthly_notification_stats_only_gets_for_one_service(
     templates = [create_template(services[0]), create_template(services[1])]
 
     create_ft_notification_status(
-        datetime(2016, 6, 1), template=templates[0], notification_status="created"
+        datetime(2016, 6, 1),
+        template=templates[0],
+        notification_status=NotificationStatus.CREATED,
     )
     create_ft_notification_status(
-        datetime(2016, 6, 1), template=templates[1], notification_status="delivered"
+        datetime(2016, 6, 1),
+        template=templates[1],
+        notification_status=NotificationStatus.DELIVERED,
     )
 
     response = admin_request.get(
-        "service.get_monthly_notification_stats", service_id=services[0].id, year=2016
+        "service.get_monthly_notification_stats",
+        service_id=services[0].id,
+        year=2016,
     )
 
-    assert response["data"]["2016-06"] == {"sms": {"created": 1}, "email": {}}
+    assert response["data"]["2016-06"] == {
+        NotificationType.SMS: {NotificationStatus.CREATED: 1},
+        NotificationType.EMAIL: {},
+    }

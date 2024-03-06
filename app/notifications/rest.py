@@ -4,8 +4,8 @@ from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from app import api_user, authenticated_service
 from app.config import QueueNames
 from app.dao import notifications_dao
+from app.enums import KeyType, NotificationType, TemplateProcessType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_TEAM, PRIORITY, SMS_TYPE
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -84,13 +84,13 @@ def get_all_notifications():
 
 @notifications.route("/notifications/<string:notification_type>", methods=["POST"])
 def send_notification(notification_type):
-    if notification_type not in [SMS_TYPE, EMAIL_TYPE]:
-        msg = "{} notification type is not supported".format(notification_type)
+    if notification_type not in {NotificationType.SMS, NotificationType.EMAIL}:
+        msg = f"{notification_type} notification type is not supported"
         raise InvalidRequest(msg, 400)
 
     notification_form = (
         sms_template_notification_schema
-        if notification_type == SMS_TYPE
+        if notification_type == NotificationType.SMS
         else email_notification_schema
     ).load(request.get_json())
 
@@ -116,7 +116,7 @@ def send_notification(notification_type):
             status_code=400,
         )
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         check_if_service_can_send_to_number(
             authenticated_service, notification_form["to"]
         )
@@ -136,7 +136,11 @@ def send_notification(notification_type):
         reply_to_text=template.reply_to_text,
     )
     if not simulated:
-        queue_name = QueueNames.PRIORITY if template.process_type == PRIORITY else None
+        queue_name = (
+            QueueNames.PRIORITY
+            if template.process_type == TemplateProcessType.PRIORITY
+            else None
+        )
         send_notification_to_queue(notification=notification_model, queue=queue_name)
 
     else:
@@ -170,7 +174,7 @@ def get_notification_return_data(notification_id, notification, template):
 
 def _service_allowed_to_send_to(notification, service):
     if not service_allowed_to_send_to(notification["to"], service, api_user.key_type):
-        if api_user.key_type == KEY_TYPE_TEAM:
+        if api_user.key_type == KeyType.TEAM:
             message = "Can’t send to this recipient using a team-only API key"
         else:
             message = (
@@ -191,7 +195,7 @@ def create_template_object_for_notification(template, personalisation):
         raise InvalidRequest(errors, status_code=400)
 
     if (
-        template_object.template_type == SMS_TYPE
+        template_object.template_type == NotificationType.SMS
         and template_object.is_message_too_long()
     ):
         message = "Content has a character count greater than the limit of {}".format(
