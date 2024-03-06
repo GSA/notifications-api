@@ -437,6 +437,11 @@ def send_new_user_email_verification(user_id):
         str(user_to_send_to.email_address),
         ex=60 * 60,
     )
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     current_app.logger.info("Sending notification to queue")
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)

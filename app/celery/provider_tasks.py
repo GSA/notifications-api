@@ -1,10 +1,11 @@
+import json
 import os
 from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import aws_cloudwatch_client, notify_celery
+from app import aws_cloudwatch_client, notify_celery, redis_store
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
@@ -162,8 +163,12 @@ def deliver_email(self, notification_id):
             "Start sending email for notification id: {}".format(notification_id)
         )
         notification = notifications_dao.get_notification_by_id(notification_id)
+
         if not notification:
             raise NoResultFound()
+        personalisation = redis_store.get(f"email-personalisation-{notification_id}")
+
+        notification.personalisation = json.loads(personalisation)
         send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException as e:
         current_app.logger.exception(
