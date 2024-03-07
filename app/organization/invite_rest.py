@@ -55,7 +55,7 @@ def invite_user_to_org(organization_id):
         service=template.service,
         personalisation={
             "user_name": (
-                "The GOV.UK Notify team"
+                "The Notify.gov team"
                 if invited_org_user.invited_by.platform_admin
                 else invited_org_user.invited_by.name
             ),
