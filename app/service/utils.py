@@ -3,14 +3,8 @@ import itertools
 from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    MOBILE_TYPE,
-    ServiceGuestList,
-)
+from app.enums import KeyType, RecipientType
+from app.models import ServiceGuestList
 
 
 def get_recipients_from_request(request_json, key, type):
@@ -21,8 +15,12 @@ def get_guest_list_objects(service_id, request_json):
     return [
         ServiceGuestList.from_string(service_id, type, recipient)
         for type, recipient in (
-            get_recipients_from_request(request_json, "phone_numbers", MOBILE_TYPE)
-            + get_recipients_from_request(request_json, "email_addresses", EMAIL_TYPE)
+            get_recipients_from_request(
+                request_json, "phone_numbers", RecipientType.MOBILE
+            )
+            + get_recipients_from_request(
+                request_json, "email_addresses", RecipientType.EMAIL
+            )
         )
     ]
 
@@ -30,10 +28,10 @@ def get_guest_list_objects(service_id, request_json):
 def service_allowed_to_send_to(
     recipient, service, key_type, allow_guest_list_recipients=True
 ):
-    if key_type == KEY_TYPE_TEST:
+    if key_type == KeyType.TEST:
         return True
 
-    if key_type == KEY_TYPE_NORMAL and not service.restricted:
+    if key_type == KeyType.NORMAL and not service.restricted:
         return True
 
     # Revert back to the ORM model here so we can get some things which
@@ -47,8 +45,8 @@ def service_allowed_to_send_to(
         member.recipient for member in service.guest_list if allow_guest_list_recipients
     ]
 
-    if (key_type == KEY_TYPE_NORMAL and service.restricted) or (
-        key_type == KEY_TYPE_TEAM
+    if (key_type == KeyType.NORMAL and service.restricted) or (
+        key_type == KeyType.TEAM
     ):
         return allowed_to_send_to(
             recipient, itertools.chain(team_members, guest_list_members)

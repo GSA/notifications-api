@@ -16,22 +16,8 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PENDING_VIRUS_CHECK,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TEMPORARY_FAILURE,
-    SMS_TYPE,
-    FactNotificationStatus,
-    Notification,
-    NotificationHistory,
-)
+from app.enums import KeyType, NotificationStatus, NotificationType
+from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
@@ -45,7 +31,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
         .filter(
             Notification.service_id == service_id,
             Notification.template_id == template_id,
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .scalar()
     )
@@ -57,7 +43,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
         db.session.query(functions.max(FactNotificationStatus.local_date))
         .filter(
             FactNotificationStatus.template_id == template_id,
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
+            FactNotificationStatus.key_type != KeyType.TEST,
         )
         .scalar()
     )
@@ -71,7 +57,7 @@ def dao_create_notification(notification):
         # need to populate defaulted fields before we create the notification history object
         notification.id = create_uuid()
     if not notification.status:
-        notification.status = NOTIFICATION_CREATED
+        notification.status = NotificationStatus.CREATED
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
@@ -86,10 +72,10 @@ def country_records_delivery(phone_prefix):
 def _decide_permanent_temporary_failure(current_status, status):
     # If we go from pending to delivered we need to set failure type as temporary-failure
     if (
-        current_status == NOTIFICATION_PENDING
-        and status == NOTIFICATION_PERMANENT_FAILURE
+        current_status == NotificationStatus.PENDING
+        and status == NotificationStatus.PERMANENT_FAILURE
     ):
-        status = NOTIFICATION_TEMPORARY_FAILURE
+        status = NotificationStatus.TEMPORARY_FAILURE
     return status
 
 
@@ -128,17 +114,17 @@ def update_notification_status_by_id(
         return None
 
     if notification.status not in {
-        NOTIFICATION_CREATED,
-        NOTIFICATION_SENDING,
-        NOTIFICATION_PENDING,
-        NOTIFICATION_SENT,
-        NOTIFICATION_PENDING_VIRUS_CHECK,
+        NotificationStatus.CREATED,
+        NotificationStatus.SENDING,
+        NotificationStatus.PENDING,
+        NotificationStatus.SENT,
+        NotificationStatus.PENDING_VIRUS_CHECK,
     }:
         _duplicate_update_warning(notification, status)
         return None
 
     if (
-        notification.notification_type == SMS_TYPE
+        notification.notification_type == NotificationType.SMS
         and notification.international
         and not country_records_delivery(notification.phone_prefix)
     ):
@@ -172,7 +158,10 @@ def update_notification_status_by_reference(reference, status):
         )
         return None
 
-    if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
+    if notification.status not in {
+        NotificationStatus.SENDING,
+        NotificationStatus.PENDING,
+    }:
         _duplicate_update_warning(notification, status)
         return None
 
@@ -210,7 +199,9 @@ def dao_get_notification_count_for_service(*, service_id):
 
 
 def dao_get_failed_notification_count():
-    failed_count = Notification.query.filter_by(status=NOTIFICATION_FAILED).count()
+    failed_count = Notification.query.filter_by(
+        status=NotificationStatus.FAILED
+    ).count()
     return failed_count
 
 
@@ -278,7 +269,7 @@ def get_notifications_for_service(
     if key_type is not None:
         filters.append(Notification.key_type == key_type)
     elif not include_from_test_key:
-        filters.append(Notification.key_type != KEY_TYPE_TEST)
+        filters.append(Notification.key_type != KeyType.TEST)
 
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
@@ -418,7 +409,7 @@ def move_notifications_to_notification_history(
         Notification.notification_type == notification_type,
         Notification.service_id == service_id,
         Notification.created_at < timestamp_to_delete_backwards_from,
-        Notification.key_type == KEY_TYPE_TEST,
+        Notification.key_type == KeyType.TEST,
     ).delete(synchronize_session=False)
     db.session.commit()
 
@@ -438,14 +429,16 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
     if they're still sending from before the specified cutoff_time.
     """
     updated_at = datetime.utcnow()
-    current_statuses = [NOTIFICATION_SENDING, NOTIFICATION_PENDING]
-    new_status = NOTIFICATION_TEMPORARY_FAILURE
+    current_statuses = [NotificationStatus.SENDING, NotificationStatus.PENDING]
+    new_status = NotificationStatus.TEMPORARY_FAILURE
 
     notifications = (
         Notification.query.filter(
             Notification.created_at < cutoff_time,
             Notification.status.in_(current_statuses),
-            Notification.notification_type.in_([SMS_TYPE, EMAIL_TYPE]),
+            Notification.notification_type.in_(
+                [NotificationType.SMS, NotificationType.EMAIL]
+            ),
         )
         .limit(limit)
         .all()
@@ -485,7 +478,7 @@ def dao_get_notifications_by_recipient_or_reference(
     page_size=None,
     error_out=True,
 ):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         normalised = try_validate_and_format_phone_number(search_term)
 
         for character in {"(", ")", " ", "-"}:
@@ -493,7 +486,7 @@ def dao_get_notifications_by_recipient_or_reference(
 
         normalised = normalised.lstrip("+0")
 
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         try:
             normalised = validate_and_format_email_address(search_term)
         except InvalidEmailError:
@@ -507,7 +500,9 @@ def dao_get_notifications_by_recipient_or_reference(
         normalised = "".join(search_term.split()).lower()
 
     else:
-        raise TypeError(f"Notification type must be {EMAIL_TYPE}, {SMS_TYPE}, or None")
+        raise TypeError(
+            f"Notification type must be {NotificationType.EMAIL}, {NotificationType.SMS}, or None"
+        )
 
     normalised = escape_special_characters(normalised)
     search_term = escape_special_characters(search_term)
@@ -518,7 +513,7 @@ def dao_get_notifications_by_recipient_or_reference(
             Notification.normalised_to.like("%{}%".format(normalised)),
             Notification.client_reference.ilike("%{}%".format(search_term)),
         ),
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     ]
 
     if statuses:
@@ -581,7 +576,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
             Notification.created_at >= start_date,
             Notification.created_at < end_date,
             Notification.api_key_id.isnot(None),
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .one()
     )
@@ -605,7 +600,7 @@ def notifications_not_yet_sent(should_be_sending_after_seconds, notification_typ
     notifications = Notification.query.filter(
         Notification.created_at <= older_than_date,
         Notification.notification_type == notification_type,
-        Notification.status == NOTIFICATION_CREATED,
+        Notification.status == NotificationStatus.CREATED,
     ).all()
     return notifications
 

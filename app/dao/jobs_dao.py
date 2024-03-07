@@ -5,10 +5,8 @@ from flask import current_app
 from sqlalchemy import and_, asc, desc, func
 
 from app import db
+from app.enums import JobStatus
 from app.models import (
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_PENDING,
-    JOB_STATUS_SCHEDULED,
     FactNotificationStatus,
     Job,
     Notification,
@@ -85,7 +83,7 @@ def dao_get_scheduled_job_stats(
         )
         .filter(
             Job.service_id == service_id,
-            Job.job_status == JOB_STATUS_SCHEDULED,
+            Job.job_status == JobStatus.SCHEDULED,
         )
         .one()
     )
@@ -111,7 +109,7 @@ def dao_set_scheduled_jobs_to_pending():
     """
     jobs = (
         Job.query.filter(
-            Job.job_status == JOB_STATUS_SCHEDULED,
+            Job.job_status == JobStatus.SCHEDULED,
             Job.scheduled_for < datetime.utcnow(),
         )
         .order_by(asc(Job.scheduled_for))
@@ -120,7 +118,7 @@ def dao_set_scheduled_jobs_to_pending():
     )
 
     for job in jobs:
-        job.job_status = JOB_STATUS_PENDING
+        job.job_status = JobStatus.PENDING
 
     db.session.add_all(jobs)
     db.session.commit()
@@ -132,7 +130,7 @@ def dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id):
     return Job.query.filter(
         Job.service_id == service_id,
         Job.id == job_id,
-        Job.job_status == JOB_STATUS_SCHEDULED,
+        Job.job_status == JobStatus.SCHEDULED,
         Job.scheduled_for > datetime.utcnow(),
     ).one()
 
@@ -200,7 +198,7 @@ def find_jobs_with_missing_rows():
     jobs_with_rows_missing = (
         db.session.query(Job)
         .filter(
-            Job.job_status == JOB_STATUS_FINISHED,
+            Job.job_status == JobStatus.FINISHED,
             Job.processing_finished < ten_minutes_ago,
             Job.processing_finished > yesterday,
             Job.id == Notification.job_id,

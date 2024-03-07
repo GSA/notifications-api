@@ -5,7 +5,7 @@ from flask import json
 from freezegun import freeze_time
 from jsonschema import ValidationError
 
-from app.models import EMAIL_TYPE, NOTIFICATION_CREATED
+from app.enums import NotificationStatus, TemplateType
 from app.schema_validation import validate
 from app.v2.notifications.notification_schemas import get_notifications_request
 from app.v2.notifications.notification_schemas import (
@@ -19,8 +19,8 @@ valid_get_json = {}
 
 valid_get_with_optionals_json = {
     "reference": "test reference",
-    "status": [NOTIFICATION_CREATED],
-    "template_type": [EMAIL_TYPE],
+    "status": [NotificationStatus.CREATED],
+    "template_type": [TemplateType.EMAIL],
     "include_jobs": "true",
     "older_than": "a5149c32-f03b-4711-af49-ad6993797d45",
 }
@@ -39,16 +39,14 @@ def test_get_notifications_valid_json(input):
         # multiple invalid statuses
         (["elephant", "giraffe", "cheetah"], []),
         # one bad status and one good status
-        (["elephant"], ["created"]),
+        (["elephant"], [NotificationStatus.CREATED]),
     ],
 )
 def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_statuses):
-    partial_error_status = (
-        "is not one of "
-        "[cancelled, created, sending, sent, delivered, pending, failed, "
-        "technical-failure, temporary-failure, permanent-failure, pending-virus-check, "
-        "validation-failed, virus-scan-failed]"
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
     )
+    partial_error_status = f"is not one of [{type_str}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -58,9 +56,7 @@ def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_stat
     errors = json.loads(str(e.value)).get("errors")
     assert len(errors) == len(invalid_statuses)
     for index, value in enumerate(invalid_statuses):
-        assert errors[index]["message"] == "status {} {}".format(
-            value, partial_error_status
-        )
+        assert errors[index]["message"] == f"status {value} {partial_error_status}"
 
 
 @pytest.mark.parametrize(
@@ -71,13 +67,16 @@ def test_get_notifications_request_invalid_statuses(invalid_statuses, valid_stat
         # multiple invalid template_types
         (["orange", "avocado", "banana"], []),
         # one bad template_type and one good template_type
-        (["orange"], ["sms"]),
+        (["orange"], [TemplateType.SMS]),
     ],
 )
 def test_get_notifications_request_invalid_template_types(
     invalid_template_types, valid_template_types
 ):
-    partial_error_template_type = "is not one of [sms, email]"
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
+    partial_error_template_type = f"is not one of [{type_str}]"
 
     with pytest.raises(ValidationError) as e:
         validate(
@@ -88,8 +87,8 @@ def test_get_notifications_request_invalid_template_types(
     errors = json.loads(str(e.value)).get("errors")
     assert len(errors) == len(invalid_template_types)
     for index, value in enumerate(invalid_template_types):
-        assert errors[index]["message"] == "template_type {} {}".format(
-            value, partial_error_template_type
+        assert errors[index]["message"] == (
+            f"template_type {value} {partial_error_template_type}"
         )
 
 
@@ -97,8 +96,8 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
     with pytest.raises(ValidationError) as e:
         validate(
             {
-                "status": ["created", "elephant", "giraffe"],
-                "template_type": ["sms", "orange", "avocado"],
+                "status": [NotificationStatus.CREATED, "elephant", "giraffe"],
+                "template_type": [TemplateType.SMS, "orange", "avocado"],
             },
             get_notifications_request,
         )
@@ -108,19 +107,18 @@ def test_get_notifications_request_invalid_statuses_and_template_types():
     assert len(errors) == 4
 
     error_messages = [error["message"] for error in errors]
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
+    )
     for invalid_status in ["elephant", "giraffe"]:
-        assert (
-            "status {} is not one of [cancelled, created, sending, sent, delivered, "
-            "pending, failed, technical-failure, temporary-failure, permanent-failure, "
-            "pending-virus-check, validation-failed, virus-scan-failed]".format(
-                invalid_status
-            )
-            in error_messages
-        )
+        assert f"status {invalid_status} is not one of [{type_str}]" in error_messages
 
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
     for invalid_template_type in ["orange", "avocado"]:
         assert (
-            "template_type {} is not one of [sms, email]".format(invalid_template_type)
+            f"template_type {invalid_template_type} is not one of [{type_str}]"
             in error_messages
         )
 

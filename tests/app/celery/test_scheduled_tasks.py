@@ -19,12 +19,7 @@ from app.celery.scheduled_tasks import (
 )
 from app.config import QueueNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
-from app.models import (
-    JOB_STATUS_ERROR,
-    JOB_STATUS_FINISHED,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_PENDING,
-)
+from app.enums import JobStatus, NotificationStatus, TemplateType
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
 
@@ -106,13 +101,15 @@ def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
 
     one_minute_in_the_past = datetime.utcnow() - timedelta(minutes=1)
     job = create_job(
-        sample_template, job_status="scheduled", scheduled_for=one_minute_in_the_past
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=one_minute_in_the_past,
     )
 
     run_scheduled_jobs()
 
     updated_job = dao_get_job_by_id(job.id)
-    assert updated_job.job_status == "pending"
+    assert updated_job.job_status == JobStatus.PENDING
     mocked.assert_called_with([str(job.id)], queue="job-tasks")
 
 
@@ -123,22 +120,26 @@ def test_should_update_all_scheduled_jobs_and_put_on_queue(sample_template, mock
     ten_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=10)
     twenty_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=20)
     job_1 = create_job(
-        sample_template, job_status="scheduled", scheduled_for=one_minute_in_the_past
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=one_minute_in_the_past,
     )
     job_2 = create_job(
-        sample_template, job_status="scheduled", scheduled_for=ten_minutes_in_the_past
+        sample_template,
+        job_status=JobStatus.SCHEDULED,
+        scheduled_for=ten_minutes_in_the_past,
     )
     job_3 = create_job(
         sample_template,
-        job_status="scheduled",
+        job_status=JobStatus.SCHEDULED,
         scheduled_for=twenty_minutes_in_the_past,
     )
 
     run_scheduled_jobs()
 
-    assert dao_get_job_by_id(job_1.id).job_status == "pending"
-    assert dao_get_job_by_id(job_2.id).job_status == "pending"
-    assert dao_get_job_by_id(job_2.id).job_status == "pending"
+    assert dao_get_job_by_id(job_1.id).job_status == JobStatus.PENDING
+    assert dao_get_job_by_id(job_2.id).job_status == JobStatus.PENDING
+    assert dao_get_job_by_id(job_2.id).job_status == JobStatus.PENDING
 
     mocked.assert_has_calls(
         [
@@ -156,7 +157,7 @@ def test_check_job_status_task_calls_process_incomplete_jobs(mocker, sample_temp
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     create_notification(template=sample_template, job=job)
     check_job_status()
@@ -174,7 +175,7 @@ def test_check_job_status_task_calls_process_incomplete_jobs_when_scheduled_job_
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
 
@@ -190,7 +191,7 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_pending_schedul
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_PENDING,
+        job_status=JobStatus.PENDING,
     )
 
     check_job_status()
@@ -207,7 +208,7 @@ def test_check_job_status_task_does_not_call_process_incomplete_jobs_for_non_sch
         template=sample_template,
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(hours=2),
-        job_status=JOB_STATUS_PENDING,
+        job_status=JobStatus.PENDING,
     )
     check_job_status()
 
@@ -224,7 +225,7 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_multiple_jobs(
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
@@ -232,7 +233,7 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_multiple_jobs(
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
 
@@ -249,21 +250,21 @@ def test_check_job_status_task_only_sends_old_tasks(mocker, sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=29),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(minutes=50),
         scheduled_for=datetime.utcnow() - timedelta(minutes=29),
-        job_status=JOB_STATUS_PENDING,
+        job_status=JobStatus.PENDING,
     )
     check_job_status()
 
@@ -279,21 +280,21 @@ def test_check_job_status_task_sets_jobs_to_error(mocker, sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=29),
-        job_status=JOB_STATUS_IN_PROGRESS,
+        job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
 
     # job 2 not in celery task
     mock_celery.assert_called_once_with([[str(job.id)]], queue=QueueNames.JOBS)
-    assert job.job_status == JOB_STATUS_ERROR
-    assert job_2.job_status == JOB_STATUS_IN_PROGRESS
+    assert job.job_status == JobStatus.ERROR
+    assert job_2.job_status == JobStatus.IN_PROGRESS
 
 
 def test_replay_created_notifications(notify_db_session, sample_service, mocker):
@@ -304,36 +305,44 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
         "app.celery.provider_tasks.deliver_sms.apply_async"
     )
 
-    sms_template = create_template(service=sample_service, template_type="sms")
-    email_template = create_template(service=sample_service, template_type="email")
+    sms_template = create_template(
+        service=sample_service, template_type=TemplateType.SMS
+    )
+    email_template = create_template(
+        service=sample_service, template_type=TemplateType.EMAIL
+    )
     older_than = (60 * 60) + (60 * 15)  # 1 hour 15 minutes
     # notifications expected to be resent
     old_sms = create_notification(
         template=sms_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
     old_email = create_notification(
         template=email_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="created",
+        status=NotificationStatus.CREATED,
     )
     # notifications that are not to be resent
     create_notification(
         template=sms_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="sending",
+        status=NotificationStatus.SENDING,
     )
     create_notification(
         template=email_template,
         created_at=datetime.utcnow() - timedelta(seconds=older_than),
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
     create_notification(
-        template=sms_template, created_at=datetime.utcnow(), status="created"
+        template=sms_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.CREATED,
     )
     create_notification(
-        template=email_template, created_at=datetime.utcnow(), status="created"
+        template=email_template,
+        created_at=datetime.utcnow(),
+        status=NotificationStatus.CREATED,
     )
 
     replay_created_notifications()
@@ -352,14 +361,14 @@ def test_check_job_status_task_does_not_raise_error(sample_template):
         created_at=datetime.utcnow() - timedelta(hours=2),
         scheduled_for=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
     )
     create_job(
         template=sample_template,
         notification_count=3,
         created_at=datetime.utcnow() - timedelta(minutes=31),
         processing_started=datetime.utcnow() - timedelta(minutes=31),
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
     )
 
     check_job_status()
@@ -389,7 +398,7 @@ def test_check_for_missing_rows_in_completed_jobs_ignores_old_and_new_jobs(
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - offset,
     )
     for i in range(0, 4):
@@ -411,7 +420,7 @@ def test_check_for_missing_rows_in_completed_jobs(mocker, sample_email_template)
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 4):
@@ -438,7 +447,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 4):
@@ -468,7 +477,7 @@ def test_check_for_missing_rows_in_completed_jobs_uses_sender_id(
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 4):

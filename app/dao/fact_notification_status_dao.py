@@ -7,20 +7,8 @@ from sqlalchemy.types import DateTime, Integer
 
 from app import db
 from app.dao.dao_utils import autocommit
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_CANCELLED,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_PERMANENT_FAILURE,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_SENT,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
     FactNotificationStatus,
     Notification,
     NotificationAllTimeView,
@@ -64,7 +52,7 @@ def update_fact_notification_status(process_day, notification_type, service_id):
             NotificationAllTimeView.created_at < end_date,
             NotificationAllTimeView.notification_type == notification_type,
             NotificationAllTimeView.service_id == service_id,
-            NotificationAllTimeView.key_type.in_((KEY_TYPE_NORMAL, KEY_TYPE_TEAM)),
+            NotificationAllTimeView.key_type.in_((KeyType.NORMAL, KeyType.TEAM)),
         )
         .group_by(
             NotificationAllTimeView.template_id,
@@ -104,7 +92,7 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
             FactNotificationStatus.service_id == service_id,
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date < end_date,
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
+            FactNotificationStatus.key_type != KeyType.TEST,
         )
         .group_by(
             func.date_trunc("month", FactNotificationStatus.local_date).label("month"),
@@ -129,7 +117,7 @@ def fetch_notification_status_for_service_for_day(fetch_day, service_id):
             Notification.created_at
             < get_midnight_in_utc(fetch_day + timedelta(days=1)),
             Notification.service_id == service_id,
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .group_by(Notification.notification_type, Notification.status)
         .all()
@@ -142,8 +130,10 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     start_date = midnight_n_days_ago(limit_days)
     now = datetime.utcnow()
     stats_for_7_days = db.session.query(
-        FactNotificationStatus.notification_type.label("notification_type"),
-        FactNotificationStatus.notification_status.label("status"),
+        FactNotificationStatus.notification_type.cast(db.Text).label(
+            "notification_type"
+        ),
+        FactNotificationStatus.notification_status.cast(db.Text).label("status"),
         *(
             [FactNotificationStatus.template_id.label("template_id")]
             if by_template
@@ -153,20 +143,20 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     ).filter(
         FactNotificationStatus.service_id == service_id,
         FactNotificationStatus.local_date >= start_date,
-        FactNotificationStatus.key_type != KEY_TYPE_TEST,
+        FactNotificationStatus.key_type != KeyType.TEST,
     )
 
     stats_for_today = (
         db.session.query(
             Notification.notification_type.cast(db.Text),
-            Notification.status,
+            Notification.status.cast(db.Text),
             *([Notification.template_id] if by_template else []),
             func.count().label("count"),
         )
         .filter(
             Notification.created_at >= get_midnight_in_utc(now),
             Notification.service_id == service_id,
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
         )
         .group_by(
             Notification.notification_type,
@@ -205,9 +195,11 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 def fetch_notification_status_totals_for_all_services(start_date, end_date):
     stats = (
         db.session.query(
-            FactNotificationStatus.notification_type.label("notification_type"),
-            FactNotificationStatus.notification_status.label("status"),
-            FactNotificationStatus.key_type.label("key_type"),
+            FactNotificationStatus.notification_type.cast(db.Text).label(
+                "notification_type"
+            ),
+            FactNotificationStatus.notification_status.cast(db.Text).label("status"),
+            FactNotificationStatus.key_type.cast(db.Text).label("key_type"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
         .filter(
@@ -225,13 +217,13 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
         stats_for_today = (
             db.session.query(
                 Notification.notification_type.cast(db.Text).label("notification_type"),
-                Notification.status,
-                Notification.key_type,
+                Notification.status.cast(db.Text),
+                Notification.key_type.cast(db.Text),
                 func.count().label("count"),
             )
             .filter(Notification.created_at >= today)
             .group_by(
-                Notification.notification_type.cast(db.Text),
+                Notification.notification_type,
                 Notification.status,
                 Notification.key_type,
             )
@@ -280,8 +272,10 @@ def fetch_stats_for_all_services_by_date_range(
             Service.restricted.label("restricted"),
             Service.active.label("active"),
             Service.created_at.label("created_at"),
-            FactNotificationStatus.notification_type.label("notification_type"),
-            FactNotificationStatus.notification_status.label("status"),
+            FactNotificationStatus.notification_type.cast(db.Text).label(
+                "notification_type"
+            ),
+            FactNotificationStatus.notification_status.cast(db.Text).label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
         .filter(
@@ -303,13 +297,13 @@ def fetch_stats_for_all_services_by_date_range(
         )
     )
     if not include_from_test_key:
-        stats = stats.filter(FactNotificationStatus.key_type != KEY_TYPE_TEST)
+        stats = stats.filter(FactNotificationStatus.key_type != KeyType.TEST)
 
     if start_date <= datetime.utcnow().date() <= end_date:
         today = get_midnight_in_utc(datetime.utcnow())
         subquery = (
             db.session.query(
-                Notification.notification_type.cast(db.Text).label("notification_type"),
+                Notification.notification_type.label("notification_type"),
                 Notification.status.label("status"),
                 Notification.service_id.label("service_id"),
                 func.count(Notification.id).label("count"),
@@ -322,7 +316,7 @@ def fetch_stats_for_all_services_by_date_range(
             )
         )
         if not include_from_test_key:
-            subquery = subquery.filter(Notification.key_type != KEY_TYPE_TEST)
+            subquery = subquery.filter(Notification.key_type != KeyType.TEST)
         subquery = subquery.subquery()
 
         stats_for_today = db.session.query(
@@ -331,8 +325,8 @@ def fetch_stats_for_all_services_by_date_range(
             Service.restricted.label("restricted"),
             Service.active.label("active"),
             Service.created_at.label("created_at"),
-            subquery.c.notification_type.label("notification_type"),
-            subquery.c.status.label("status"),
+            subquery.c.notification_type.cast(db.Text).label("notification_type"),
+            subquery.c.status.cast(db.Text).label("status"),
             subquery.c.count.label("count"),
         ).outerjoin(subquery, subquery.c.service_id == Service.id)
 
@@ -384,8 +378,8 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
             FactNotificationStatus.service_id == service_id,
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
-            FactNotificationStatus.notification_status != NOTIFICATION_CANCELLED,
+            FactNotificationStatus.key_type != KeyType.TEST,
+            FactNotificationStatus.notification_status != NotificationStatus.CANCELLED,
         )
         .group_by(
             FactNotificationStatus.template_id,
@@ -421,8 +415,8 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
             .filter(
                 Notification.created_at >= today,
                 Notification.service_id == service_id,
-                Notification.key_type != KEY_TYPE_TEST,
-                Notification.status != NOTIFICATION_CANCELLED,
+                Notification.key_type != KeyType.TEST,
+                Notification.status != NotificationStatus.CANCELLED,
             )
             .group_by(
                 Notification.template_id,
@@ -462,12 +456,13 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 def get_total_notifications_for_date_range(start_date, end_date):
     query = (
         db.session.query(
-            FactNotificationStatus.local_date.cast(db.Text).label("local_date"),
+            FactNotificationStatus.local_date.label("local_date"),
             func.sum(
                 case(
                     [
                         (
-                            FactNotificationStatus.notification_type == "email",
+                            FactNotificationStatus.notification_type
+                            == NotificationType.EMAIL,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -478,7 +473,8 @@ def get_total_notifications_for_date_range(start_date, end_date):
                 case(
                     [
                         (
-                            FactNotificationStatus.notification_type == "sms",
+                            FactNotificationStatus.notification_type
+                            == NotificationType.SMS,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -487,7 +483,7 @@ def get_total_notifications_for_date_range(start_date, end_date):
             ).label("sms"),
         )
         .filter(
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
+            FactNotificationStatus.key_type != KeyType.TEST,
         )
         .group_by(FactNotificationStatus.local_date)
         .order_by(FactNotificationStatus.local_date)
@@ -514,7 +510,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status.in_(
-                                [NOTIFICATION_SENDING, NOTIFICATION_PENDING]
+                                [NotificationStatus.SENDING, NotificationStatus.PENDING]
                             ),
                             FactNotificationStatus.notification_count,
                         )
@@ -527,7 +523,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_DELIVERED,
+                            == NotificationStatus.DELIVERED,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -539,7 +535,10 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status.in_(
-                                [NOTIFICATION_TECHNICAL_FAILURE, NOTIFICATION_FAILED]
+                                [
+                                    NotificationStatus.TECHNICAL_FAILURE,
+                                    NotificationStatus.FAILED,
+                                ]
                             ),
                             FactNotificationStatus.notification_count,
                         )
@@ -552,7 +551,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_TEMPORARY_FAILURE,
+                            == NotificationStatus.TEMPORARY_FAILURE,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -564,7 +563,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_PERMANENT_FAILURE,
+                            == NotificationStatus.PERMANENT_FAILURE,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -576,7 +575,7 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
                     [
                         (
                             FactNotificationStatus.notification_status
-                            == NOTIFICATION_SENT,
+                            == NotificationStatus.SENT,
                             FactNotificationStatus.notification_count,
                         )
                     ],
@@ -586,9 +585,9 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
         )
         .join(Service, FactNotificationStatus.service_id == Service.id)
         .filter(
-            FactNotificationStatus.notification_status != NOTIFICATION_CREATED,
+            FactNotificationStatus.notification_status != NotificationStatus.CREATED,
             Service.active.is_(True),
-            FactNotificationStatus.key_type != KEY_TYPE_TEST,
+            FactNotificationStatus.key_type != KeyType.TEST,
             Service.restricted.is_(False),
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,

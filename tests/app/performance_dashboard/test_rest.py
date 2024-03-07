@@ -1,5 +1,6 @@
 from datetime import date
 
+from app.enums import TemplateType
 from tests.app.db import (
     create_ft_notification_status,
     create_process_time,
@@ -9,10 +10,14 @@ from tests.app.db import (
 
 def test_performance_dashboard(sample_service, admin_request):
     template_sms = create_template(
-        service=sample_service, template_type="sms", template_name="a"
+        service=sample_service,
+        template_type=TemplateType.SMS,
+        template_name="a",
     )
     template_email = create_template(
-        service=sample_service, template_type="email", template_name="b"
+        service=sample_service,
+        template_type=TemplateType.EMAIL,
+        template_name="b",
     )
     create_ft_notification_status(
         local_date=date(2021, 2, 28),

@@ -1,6 +1,7 @@
 import pytest
 from flask import json, url_for
 
+from app.enums import NotificationStatus, NotificationType, TemplateType
 from app.utils import DATETIME_FORMAT
 from tests import create_service_authorization_header
 from tests.app.db import create_notification, create_template
@@ -239,7 +240,7 @@ def test_get_notification_by_id_invalid_id(client, sample_notification, id):
     }
 
 
-@pytest.mark.parametrize("template_type", ["sms", "email"])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_get_notification_doesnt_have_delivery_estimate_for_non_letters(
     client, sample_service, template_type
 ):
@@ -283,14 +284,14 @@ def test_get_all_notifications_except_job_notifications_returns_200(
     assert len(json_response["notifications"]) == 2
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "created"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.CREATED
     assert json_response["notifications"][0]["template"] == {
         "id": str(notification.template.id),
         "uri": notification.template.get_link(),
         "version": 1,
     }
     assert json_response["notifications"][0]["phone_number"] == "1"
-    assert json_response["notifications"][0]["type"] == "sms"
+    assert json_response["notifications"][0]["type"] == NotificationType.SMS
     assert not json_response["notifications"][0]["scheduled_for"]
 
 
@@ -348,8 +349,12 @@ def test_get_all_notifications_no_notifications_if_no_notifications(
 
 
 def test_get_all_notifications_filter_by_template_type(client, sample_service):
-    email_template = create_template(service=sample_service, template_type="email")
-    sms_template = create_template(service=sample_service, template_type="sms")
+    email_template = create_template(
+        service=sample_service, template_type=TemplateType.EMAIL
+    )
+    sms_template = create_template(
+        service=sample_service, template_type=TemplateType.SMS
+    )
 
     notification = create_notification(
         template=email_template, to_field="don.draper@scdp.biz"
@@ -375,14 +380,14 @@ def test_get_all_notifications_filter_by_template_type(client, sample_service):
     assert len(json_response["notifications"]) == 1
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "created"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.CREATED
     assert json_response["notifications"][0]["template"] == {
         "id": str(email_template.id),
         "uri": notification.template.get_link(),
         "version": 1,
     }
     assert json_response["notifications"][0]["email_address"] == "1"
-    assert json_response["notifications"][0]["type"] == "email"
+    assert json_response["notifications"][0]["type"] == NotificationType.EMAIL
 
 
 def test_get_all_notifications_filter_by_template_type_invalid_template_type(
@@ -403,14 +408,20 @@ def test_get_all_notifications_filter_by_template_type_invalid_template_type(
 
     assert json_response["status_code"] == 400
     assert len(json_response["errors"]) == 1
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in TemplateType]
+    )
     assert (
         json_response["errors"][0]["message"]
-        == "template_type orange is not one of [sms, email]"
+        == f"template_type orange is not one of [{type_str}]"
     )
 
 
 def test_get_all_notifications_filter_by_single_status(client, sample_template):
-    notification = create_notification(template=sample_template, status="pending")
+    notification = create_notification(
+        template=sample_template,
+        status=NotificationStatus.PENDING,
+    )
     create_notification(template=sample_template)
 
     auth_header = create_service_authorization_header(
@@ -432,7 +443,7 @@ def test_get_all_notifications_filter_by_single_status(client, sample_template):
     assert len(json_response["notifications"]) == 1
 
     assert json_response["notifications"][0]["id"] == str(notification.id)
-    assert json_response["notifications"][0]["status"] == "pending"
+    assert json_response["notifications"][0]["status"] == NotificationStatus.PENDING
 
 
 def test_get_all_notifications_filter_by_status_invalid_status(
@@ -453,21 +464,27 @@ def test_get_all_notifications_filter_by_status_invalid_status(
 
     assert json_response["status_code"] == 400
     assert len(json_response["errors"]) == 1
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in NotificationStatus]
+    )
     assert (
         json_response["errors"][0]["message"]
-        == "status elephant is not one of [cancelled, created, sending, "
-        "sent, delivered, pending, failed, technical-failure, temporary-failure, permanent-failure, "
-        "pending-virus-check, validation-failed, virus-scan-failed]"
+        == f"status elephant is not one of [{type_str}]"
     )
 
 
 def test_get_all_notifications_filter_by_multiple_statuses(client, sample_template):
     notifications = [
         create_notification(template=sample_template, status=_status)
-        for _status in ["created", "pending", "sending"]
+        for _status in [
+            NotificationStatus.CREATED,
+            NotificationStatus.PENDING,
+            NotificationStatus.SENDING,
+        ]
     ]
     failed_notification = create_notification(
-        template=sample_template, status="permanent-failure"
+        template=sample_template,
+        status=NotificationStatus.PERMANENT_FAILURE,
     )
 
     auth_header = create_service_authorization_header(
@@ -497,10 +514,11 @@ def test_get_all_notifications_filter_by_multiple_statuses(client, sample_templa
 
 def test_get_all_notifications_filter_by_failed_status(client, sample_template):
     created_notification = create_notification(
-        template=sample_template, status="created"
+        template=sample_template,
+        status=NotificationStatus.CREATED,
     )
     failed_notifications = [
-        create_notification(template=sample_template, status="failed")
+        create_notification(template=sample_template, status=NotificationStatus.FAILED)
     ]
     auth_header = create_service_authorization_header(
         service_id=created_notification.service_id
@@ -620,20 +638,26 @@ def test_get_all_notifications_filter_multiple_query_parameters(
     # TODO had to change pending to sending.  Is that correct?
     # this is the notification we are looking for
     older_notification = create_notification(
-        template=sample_email_template, status="sending"
+        template=sample_email_template,
+        status=NotificationStatus.SENDING,
     )
 
     # wrong status
     create_notification(template=sample_email_template)
-    wrong_template = create_template(sample_email_template.service, template_type="sms")
+    wrong_template = create_template(
+        sample_email_template.service, template_type=TemplateType.SMS
+    )
     # wrong template
-    create_notification(template=wrong_template, status="sending")
+    create_notification(template=wrong_template, status=NotificationStatus.SENDING)
 
     # we only want notifications created before this one
     newer_notification = create_notification(template=sample_email_template)
 
     # this notification was created too recently
-    create_notification(template=sample_email_template, status="sending")
+    create_notification(
+        template=sample_email_template,
+        status=NotificationStatus.SENDING,
+    )
 
     auth_header = create_service_authorization_header(
         service_id=newer_notification.service_id
@@ -681,7 +705,10 @@ def test_get_all_notifications_renames_letter_statuses(
     assert response.status_code == 200
 
     for noti in json_response["notifications"]:
-        if noti["type"] == "sms" or noti["type"] == "email":
-            assert noti["status"] == "created"
+        if (
+            noti["type"] == NotificationType.SMS
+            or noti["type"] == NotificationType.EMAIL
+        ):
+            assert noti["status"] == NotificationStatus.CREATED
         else:
             pytest.fail()

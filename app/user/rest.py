@@ -32,8 +32,9 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
+from app.enums import CodeType, KeyType, NotificationType, TemplateType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, SMS_TYPE, Permission, Service
+from app.models import Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -72,7 +73,7 @@ def handle_integrity_error(exc):
         return (
             jsonify(
                 result="error",
-                message="Mobile number must be set if auth_type is set to sms_auth",
+                message="Mobile number must be set if auth_type is set to AuthType.SMS",
             ),
             400,
         )
@@ -133,7 +134,7 @@ def update_user_attribute(user_id):
             },
             notification_type=template.template_type,
             api_key_id=None,
-            key_type=KEY_TYPE_NORMAL,
+            key_type=KeyType.NORMAL,
             reply_to_text=reply_to,
         )
 
@@ -220,7 +221,7 @@ def verify_user_code(user_id):
 
     user_to_verify.current_session_id = str(uuid.uuid4())
     user_to_verify.logged_in_at = datetime.utcnow()
-    if data["code_type"] == "email":
+    if data["code_type"] == CodeType.EMAIL:
         user_to_verify.email_access_validated_at = datetime.utcnow()
     user_to_verify.failed_login_count = 0
     save_model_user(user_to_verify)
@@ -276,10 +277,10 @@ def send_user_2fa_code(user_id, code_type):
         )
     else:
         data = request.get_json()
-        if code_type == SMS_TYPE:
+        if NotificationType(code_type) == NotificationType.SMS:
             validate(data, post_send_user_sms_code_schema)
             send_user_sms_code(user_to_send_to, data)
-        elif code_type == EMAIL_TYPE:
+        elif NotificationType(code_type) == NotificationType.EMAIL:
             validate(data, post_send_user_email_code_schema)
             send_user_email_code(user_to_send_to, data)
         else:
@@ -334,9 +335,9 @@ def create_2fa_code(
     # save the code in the VerifyCode table
     create_user_code(user_to_send_to, secret_code, template.template_type)
     reply_to = None
-    if template.template_type == SMS_TYPE:
+    if template.template_type == TemplateType.SMS:
         reply_to = get_sms_reply_to_for_notify_service(recipient, template)
-    elif template.template_type == EMAIL_TYPE:
+    elif template.template_type == TemplateType.EMAIL:
         reply_to = template.service.get_default_reply_to_email_address()
 
     saved_notification = persist_notification(
@@ -347,7 +348,7 @@ def create_2fa_code(
         personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=reply_to,
     )
 
@@ -386,7 +387,7 @@ def send_user_confirm_new_email(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -424,7 +425,7 @@ def send_new_user_email_verification(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -470,7 +471,7 @@ def send_already_registered_email(user_id):
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
@@ -587,7 +588,7 @@ def send_user_reset_password():
         },
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
 
