@@ -3,9 +3,8 @@
 ###
 
 data "cloudfoundry_space" "space" {
-  delete_recursive_allowed = true
-  org_name                 = var.cf_org_name
-  name                     = var.cf_space_name
+  org_name = var.cf_org_name
+  name     = var.cf_space_name
 }
 
 ###
