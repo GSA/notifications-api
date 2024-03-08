@@ -19,6 +19,7 @@ from app.dao.users_dao import (
     create_secret_code,
     create_user_code,
     dao_archive_user,
+    get_login_gov_user,
     get_user_and_accounts,
     get_user_by_email,
     get_user_by_id,
@@ -526,6 +527,16 @@ def set_permissions(user_id, service_id):
         dao_update_service_user(service_user)
 
     return jsonify({}), 204
+
+
+@user_blueprint.route("/get-login-gov-user", methods=["POST"])
+def get_user_login_gov_user():
+    request_args = request.get_json()
+    login_uuid = request_args["login_uuid"]
+    email = request_args["email"]
+    user = get_login_gov_user(login_uuid, email)
+    result = user.serialize()
+    return jsonify(data=result)
 
 
 @user_blueprint.route("/email", methods=["POST"])
