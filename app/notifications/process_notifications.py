@@ -77,8 +77,6 @@ def persist_notification(
     document_download_count=None,
     updated_at=None,
 ):
-    current_app.logger.info("Persisting notification")
-
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
@@ -117,6 +115,7 @@ def persist_notification(
         notification.international = recipient_info.international
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
+
     elif notification_type == NotificationType.EMAIL:
         current_app.logger.info(
             f"Persisting notification with type: {NotificationType.EMAIL}"

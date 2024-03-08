@@ -16,8 +16,16 @@ from tests.app.db import create_api_key, create_notification
 
 @pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))
 def test_get_notification_by_id(
-    client, sample_notification, sample_email_notification, type
+    client, sample_notification, sample_email_notification, type, mocker
 ):
+    mock_s3 = mocker.patch("app.notifications.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
+    mock_s3_personalisation = mocker.patch(
+        "app.notifications.rest.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
+
     if type == NotificationType.EMAIL:
         notification_to_get = sample_email_notification
     elif type == NotificationType.SMS:
@@ -270,7 +278,16 @@ def test_only_normal_api_keys_can_return_job_notifications(
     sample_team_api_key,
     sample_test_api_key,
     key_type,
+    mocker,
 ):
+    mock_s3 = mocker.patch("app.notifications.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
+    mock_s3_personalisation = mocker.patch(
+        "app.notifications.rest.get_personalisation_from_s3"
+    )
+    mock_s3_personalisation.return_value = {}
+
     normal_notification = create_notification(
         template=sample_template,
         api_key=sample_api_key,
@@ -539,8 +556,10 @@ def test_get_notification_by_id_returns_merged_template_content(
 
 
 def test_get_notification_by_id_returns_merged_template_content_for_email(
-    client, sample_email_template_with_placeholders
+    client, sample_email_template_with_placeholders, mocker
 ):
+    mock_s3 = mocker.patch("app.notifications.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {"name": "foo"}
     sample_notification = create_notification(
         sample_email_template_with_placeholders, personalisation={"name": "world"}
     )
@@ -560,8 +579,10 @@ def test_get_notification_by_id_returns_merged_template_content_for_email(
 
 
 def test_get_notifications_for_service_returns_merged_template_content(
-    client, sample_template_with_placeholders
+    client, sample_template_with_placeholders, mocker
 ):
+    mock_s3 = mocker.patch("app.notifications.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {"name": "foo"}
     with freeze_time("2001-01-01T12:00:00"):
         create_notification(
             sample_template_with_placeholders,
@@ -591,13 +612,16 @@ def test_get_notifications_for_service_returns_merged_template_content(
 
 
 def test_get_notification_selects_correct_template_for_personalisation(
-    client, notify_db_session, sample_template
+    client, notify_db_session, sample_template, mocker
 ):
     create_notification(sample_template)
     original_content = sample_template.content
     sample_template.content = "((name))"
     dao_update_template(sample_template)
     notify_db_session.commit()
+
+    mock_s3 = mocker.patch("app.notifications.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {"name": "foo"}
 
     create_notification(sample_template, personalisation={"name": "foo"})
 
