@@ -11,6 +11,7 @@ data "cloudfoundry_org" "org" {
 ###
 
 resource "cloudfoundry_space" "public_egress" {
+  delete_recursive_allowed = false
   name = "${var.cf_restricted_space_name}-egress"
   org  = data.cloudfoundry_org.org.id
 }
