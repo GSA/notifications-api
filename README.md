@@ -1,12 +1,15 @@
 ![notify-logo](https://github.com/GSA/notifications-api/assets/4156602/6b2905d2-a232-4414-8815-25dba6008f17)
 
 
-![example workflow](https://github.com/GSA/notifications-api/blob/notify-api-395/.github/workflows/checks.yml/badge.svg?branch=notify-api-395)
+![example workflow](https://github.com/GSA/notifications-api/blob/main/.github/workflows/checks.yml/badge.svg)
 
 
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=GSA/notifications-api)](https://dependabot.com)
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/terrazoon/notifications-api/CI?label=build)
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?branch=main)
+
+
 
 # Notify.gov API
 
