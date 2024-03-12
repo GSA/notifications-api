@@ -498,7 +498,7 @@ def test_check_service_over_api_rate_limit_when_exceed_rate_limit_request_fails_
         with pytest.raises(RateLimitError) as e:
             check_service_over_api_rate_limit(serialised_service, serialised_api_key)
 
-        assert app.redis_store.exceeded_rate_limit.called_with(
+        app.redis_store.exceeded_rate_limit.assert_called_with(
             f"{sample_service.id}-{api_key.key_type}",
             sample_service.rate_limit,
             60,
@@ -527,7 +527,7 @@ def test_check_service_over_api_rate_limit_when_rate_limit_has_not_exceeded_limi
         )[0]
 
         check_service_over_api_rate_limit(serialised_service, serialised_api_key)
-        assert app.redis_store.exceeded_rate_limit.called_with(
+        app.redis_store.exceeded_rate_limit.assert_called_with(
             f"{sample_service.id}-{api_key.key_type}",
             3000,
             60,
