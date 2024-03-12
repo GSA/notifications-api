@@ -3,6 +3,11 @@
 
 ![example workflow](https://github.com/GSA/notifications-api/blob/notify-api-395/.github/workflows/checks.yml/badge.svg?branch=notify-api-395)
 
+
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=GSA/notifications-api)](https://dependabot.com)
+
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/terrazoon/notifications-api/CI?label=build)
+
 # Notify.gov API
 
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
