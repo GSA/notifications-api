@@ -19,7 +19,10 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/drift.yml?style=for-the-badge&label=Drift&labelColor=blue)
 
 
+[![Run checks](https://github.com/GSA/notifications-api/actions/workflows/checks.yml/badge.svg)](https://github.com/GSA/notifications-api/actions/workflows/checks.yml)
 
+
+[![Run daily checks](https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml/badge.svg)](https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml)
 
 # Notify.gov API
 
