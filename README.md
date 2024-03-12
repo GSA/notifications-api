@@ -14,9 +14,9 @@
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Checks&labelColor=blue)
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Daily%2CChecks&labelColor=blue)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/daily_checks.yml?style=for-the-badge&label=Daily%2CChecks&labelColor=blue)
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Drift&labelColor=blue)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/drift.yml?style=for-the-badge&label=Drift&labelColor=blue)
 
 
 
