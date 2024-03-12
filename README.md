@@ -11,6 +11,16 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/drift.yml?branch=main)
 
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Checks&labelColor=blue)
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Daily%2CChecks&labelColor=blue)
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?style=for-the-badge&label=Drift&labelColor=blue)
+
+
+
+
 # Notify.gov API
 
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
