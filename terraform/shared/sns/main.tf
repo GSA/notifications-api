@@ -8,6 +8,15 @@ data "cloudfoundry_space" "space" {
 }
 
 ###
+# SNS Space
+###
+resource "cloudfoundry_space" "cf_sns_service_space" {
+  delete_recursive_allowed = var.delete_recursive_allowed
+  name                     = data.cloudfoundry_space.space.name
+  org                      = data.cloudfoundry_org.org.id
+}
+
+###
 # SES instance
 ###
 
