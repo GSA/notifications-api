@@ -6,6 +6,11 @@ data "cloudfoundry_org" "org" {
   name = var.cf_org_name
 }
 
+data "cloudfoundry_space" "space" {
+  org_name = var.cf_org_name
+  name     = var.cf_space_name
+}
+
 ###
 # SES Space
 ###
