@@ -6,9 +6,8 @@ locals {
   delete_recursive_allowed = false
 }
 
-data "cloudfoundry_space" "demo" {
-  org_name = local.cf_org_name
-  name     = local.cf_space_name
+data "cloudfoundry_org" "org" {
+  name = local.cf_org_name
 }
 
 resource "cloudfoundry_space" "notify-demo" {
