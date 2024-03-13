@@ -1,5 +1,6 @@
 import itertools
 
+from flask import current_app
 from notifications_utils.recipients import allowed_to_send_to
 
 from app.dao.services_dao import dao_fetch_service_by_id
@@ -45,6 +46,9 @@ def service_allowed_to_send_to(
         member.recipient for member in service.guest_list if allow_guest_list_recipients
     ]
 
+    # As per discussion we have decided to allow official simulated
+    # numbers to go out in trial mode for development purposes.
+    guest_list_members.extend(current_app.config["SIMULATED_SMS_NUMBERS"])
     if (key_type == KeyType.NORMAL and service.restricted) or (
         key_type == KeyType.TEAM
     ):
