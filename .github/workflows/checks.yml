@@ -57,7 +57,7 @@ jobs:
       run: |
         poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
         poetry run coverage report -m --fail-under=87
-        echo "::set-output name=coverage::$(coverage report -m | grep 'TOTAL' | awk '{print $4}')"
+        echo "::set-output name=coverage::$(poetry run coverage report -m | grep 'TOTAL' | awk '{print $4}')"
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
