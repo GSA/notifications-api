@@ -60,8 +60,14 @@ jobs:
         NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
         NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
-    - name: Run json for badge
-      run: poetry run coverage json
+
+    - name: Upload coverage data
+      uses: codecov/codecov-action@v2
+
+    - name: Generate coverage badge
+      run: echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ github.event_name }}-brightgreen)](https://github.com/${{ github.repository }}/actions)"
+    - name: Part 2
+      run: echo "${{ job.coverage.outputs.coverage }}"
     - name: Check coverage threshold
       # TODO get this back up to 95
       run: poetry run coverage report --fail-under=87
