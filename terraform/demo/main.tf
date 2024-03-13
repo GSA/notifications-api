@@ -58,22 +58,20 @@ module "egress-space" {
 module "ses_email" {
   source = "../shared/ses"
 
-  cf_org_name              = local.cf_org_name
-  cf_space_name            = local.cf_space_name
-  name                     = "${local.app_name}-ses-${local.env}"
-  aws_region               = "us-west-2"
-  email_domain             = "notify.sandbox.10x.gsa.gov"
-  email_receipt_error      = "notify-support@gsa.gov"
-  delete_recursive_allowed = local.delete_recursive_allowed
+  cf_org_name         = local.cf_org_name
+  cf_space_name       = local.cf_space_name
+  name                = "${local.app_name}-ses-${local.env}"
+  aws_region          = "us-west-2"
+  email_domain        = "notify.sandbox.10x.gsa.gov"
+  email_receipt_error = "notify-support@gsa.gov"
 }
 
 module "sns_sms" {
   source = "../shared/sns"
 
-  cf_org_name              = local.cf_org_name
-  cf_space_name            = local.cf_space_name
-  name                     = "${local.app_name}-sns-${local.env}"
-  aws_region               = "us-east-1"
-  monthly_spend_limit      = 25
-  delete_recursive_allowed = local.delete_recursive_allowed
+  cf_org_name         = local.cf_org_name
+  cf_space_name       = local.cf_space_name
+  name                = "${local.app_name}-sns-${local.env}"
+  aws_region          = "us-east-1"
+  monthly_spend_limit = 25
 }

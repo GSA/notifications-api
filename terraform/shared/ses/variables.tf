@@ -34,15 +34,3 @@ variable "mail_from_subdomain" {
   description = "Subdomain of email_domain to set as the mail-from header"
   default     = ""
 }
-
-variable "delete_recursive_allowed" {
-  type        = bool
-  default     = true
-  description = "Flag for allowing resources to be recursively deleted - not recommended in production environments"
-}
-
-variable "allow_ssh" {
-  type        = bool
-  default     = true
-  description = "Flag for allowing SSH access in a space - not recommended in production environments"
-}
