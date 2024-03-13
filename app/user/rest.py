@@ -140,6 +140,11 @@ def update_user_attribute(user_id):
         )
         saved_notification.personalisation = personalisation
 
+        redis_store.set(
+            f"email-personalisation-{saved_notification.id}",
+            json.dumps(personalisation),
+            ex=60 * 60,
+        )
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=user_to_update.serialize()), 200
@@ -361,6 +366,12 @@ def create_2fa_code(
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
+
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 
@@ -394,6 +405,11 @@ def send_user_confirm_new_email(user_id):
     )
     saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
     return jsonify({}), 204
 
@@ -486,6 +502,12 @@ def send_already_registered_email(user_id):
     saved_notification.personalisation = personalisation
 
     current_app.logger.info("Sending notification to queue")
+
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
@@ -614,6 +636,11 @@ def send_user_reset_password():
     )
     saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify({}), 204
