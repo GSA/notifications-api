@@ -1,16 +1,15 @@
 """
 
-Revision ID: 0411_user_mobile_unique
-Revises: 0410_enums_for_everything
+Revision ID: 0412_user_mobile_unique
+Revises: 0411_add_login_uuid
 
 """
-import sqlalchemy as sa
-from alembic import op
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql import column
 
-revision = "04101_user_mobile_unique"
-down_revision = "0410_enums_for_everything"
+from alembic import op
+
+
+revision = "0412_user_mobile_unique"
+down_revision = "0411_add_login_uuid"
 
 
 def upgrade():
