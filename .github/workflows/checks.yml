@@ -53,7 +53,11 @@ jobs:
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+      id: coverage_run
+      run: |
+        poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+        poetry run coverage report -m --fail-under=87
+        echo "::set-output name=coverage::$(coverage report -m | grep 'TOTAL' | awk '{print $4}')"
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
@@ -65,12 +69,11 @@ jobs:
       uses: codecov/codecov-action@v2
 
     - name: Generate coverage badge
-      run: echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ github.event_name }}-brightgreen)](https://github.com/${{ github.repository }}/actions)"
-    - name: Part 2
-      run: echo "${{ job.coverage.outputs.coverage }}"
-    - name: Check coverage threshold
-      # TODO get this back up to 95
-      run: poetry run coverage report --fail-under=87
+      id: badge
+      run: |
+        COVERAGE=$(echo "${{ needs.coverage.outputs.coverage }}")
+        echo "[![Coverage](https://imag.shields.io/badge/Coverage-${{ COVERAGE }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)" < badge.md
+        sed -i '1r badge.md' README.md
 
 
   validate-new-relic-config:
