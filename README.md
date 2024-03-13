@@ -1,3 +1,5 @@
+![notify-logo](https://github.com/GSA/notifications-api/assets/4156602/6b2905d2-a232-4414-8815-25dba6008f17)
+
 # Notify.gov API
 
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
@@ -452,6 +454,7 @@ instructions above for more details.
   - [Migrations](./docs/all.md#migrations)
   - [Purging user data](./docs/all.md#purging-user-data)
 - [One-off tasks](./docs/all.md#one-off-tasks)
+- [Test Loading Commands](./docs/all.md#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](./docs/all.md#how-messages-are-queued-and-sent)
 - [Writing public APIs](./docs/all.md#writing-public-apis)
   - [Overview](./docs/all.md#overview)

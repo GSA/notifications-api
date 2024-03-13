@@ -203,12 +203,13 @@ def send_notifications_on_mou_signed(organization_id):
             template_version=template.version,
             recipient=recipient,
             service=notify_service,
-            personalisation=personalisation,
+            personalisation={},
             notification_type=template.template_type,
             api_key_id=None,
             key_type=KeyType.NORMAL,
             reply_to_text=notify_service.get_default_reply_to_email_address(),
         )
+        saved_notification.personalisation = personalisation
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     personalisation = {

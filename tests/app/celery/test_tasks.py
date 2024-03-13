@@ -423,7 +423,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
-    assert persisted_notification.personalisation == {"name": "Jo"}
+    assert persisted_notification.personalisation == {}
     assert persisted_notification.notification_type == NotificationType.SMS
     mocked_deliver_sms.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks"
@@ -650,7 +650,7 @@ def test_should_use_email_template_and_persist(
     assert persisted_notification.status == NotificationStatus.CREATED
     assert not persisted_notification.sent_by
     assert persisted_notification.job_row_number == 1
-    assert persisted_notification.personalisation == {"name": "Jo"}
+    assert persisted_notification.personalisation == {}
     assert persisted_notification.api_key_id is None
     assert persisted_notification.key_type == KeyType.NORMAL
     assert persisted_notification.notification_type == NotificationType.EMAIL
@@ -720,7 +720,7 @@ def test_should_use_email_template_subject_placeholders(
     assert persisted_notification.status == NotificationStatus.CREATED
     assert persisted_notification.created_at >= now
     assert not persisted_notification.sent_by
-    assert persisted_notification.personalisation == {"name": "Jo"}
+    assert persisted_notification.personalisation == {}
     assert not persisted_notification.reference
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(

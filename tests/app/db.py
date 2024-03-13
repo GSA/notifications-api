@@ -84,7 +84,7 @@ def create_user(
     data = {
         "id": id_ or uuid.uuid4(),
         "name": name,
-        "email_address": email or f"{uuid.uuid4()}@digital.cabinet-office.gov.uk",
+        "email_address": email or f"{uuid.uuid4()}@test.gsa.gov",
         "password": "password",
         "mobile_number": mobile_number,
         "state": state,
@@ -156,7 +156,7 @@ def create_service(
             else service_name.lower().replace(" ", "."),
             created_by=user
             if user
-            else create_user(email=f"{uuid.uuid4()}@digital.cabinet-office.gov.uk"),
+            else create_user(email="{}@test.gsa.gov".format(uuid.uuid4())),
             prefix_sms=prefix_sms,
             organization_type=organization_type,
             organization=organization,
@@ -337,6 +337,8 @@ def create_notification(
     }
     notification = Notification(**data)
     dao_create_notification(notification)
+    notification.personalisation = personalisation
+
     return notification
 
 

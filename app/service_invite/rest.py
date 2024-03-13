@@ -1,9 +1,11 @@
+import json
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
     get_expired_invite_by_service_and_id,
@@ -34,6 +36,11 @@ def _create_service_invite(invited_user, invite_link_host):
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    personalisation = {
+        "user_name": invited_user.from_user.name,
+        "service_name": invited_user.service.name,
+        "url": invited_user_url(invited_user.id, invite_link_host),
+    }
 
     saved_notification = persist_notification(
         template_id=template.id,
@@ -50,7 +57,12 @@ def _create_service_invite(invited_user, invite_link_host):
         key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
     )
-
+    saved_notification.personalisation = personalisation
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=1800,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 

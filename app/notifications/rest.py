@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify, request
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 from app import api_user, authenticated_service
+from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import notifications_dao
 from app.enums import KeyType, NotificationType, TemplateProcessType
@@ -36,6 +37,19 @@ def get_notification_by_id(notification_id):
     notification = notifications_dao.get_notification_with_personalisation(
         str(authenticated_service.id), notification_id, key_type=None
     )
+    if notification.job_id is not None:
+        notification.personalisation = get_personalisation_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        recipient = get_phone_number_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        notification.to = recipient
+        notification.normalised_to = recipient
     return (
         jsonify(
             data={
@@ -67,6 +81,21 @@ def get_all_notifications():
         key_type=api_user.key_type,
         include_jobs=include_jobs,
     )
+    for notification in pagination.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+            recipient = get_phone_number_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+            notification.to = recipient
+            notification.normalised_to = recipient
+
     return (
         jsonify(
             notifications=notification_with_personalisation_schema.dump(

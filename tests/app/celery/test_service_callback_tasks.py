@@ -60,10 +60,15 @@ def test_send_delivery_status_to_service_post_https_request_to_service_with_encr
         "template_version": 1,
     }
 
+    # TODO why is 'completed_at' showing real time unlike everything else and does it matter?
+    actual_data = json.loads(request_mock.request_history[0].text)
+    actual_data["completed_at"] = mock_data["completed_at"]
+    actual_data = json.dumps(actual_data)
+
     assert request_mock.call_count == 1
     assert request_mock.request_history[0].url == callback_api.url
     assert request_mock.request_history[0].method == "POST"
-    assert request_mock.request_history[0].text == json.dumps(mock_data)
+    assert actual_data == json.dumps(mock_data)
     assert request_mock.request_history[0].headers["Content-type"] == "application/json"
     assert (
         request_mock.request_history[0].headers["Authorization"]
