@@ -1,4 +1,4 @@
-from strenum import StrEnum  # type: ignore [import-not-found]
+from enum import StrEnum  # type: ignore [import-not-found]
 
 # In 3.11 this is in the enum library. We will not need this external library any more.
 # The line will simply change from importing from strenum to importing from enum.
