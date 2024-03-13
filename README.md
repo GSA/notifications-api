@@ -2,7 +2,7 @@
 
 
 
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=GSA/notifications-api)](https://dependabot.com)
+<!--[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=GSA/notifications-api)](https://dependabot.com)
 
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/GSA/notifications-api/checks.yml?branch=main)
@@ -24,7 +24,7 @@
 
 [![Run daily checks](https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml/badge.svg)](https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml)
 
-![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2FGSA%2Fnotifications-api%2Fblob%2Fnotify-api-395%2Fcoverage.json&query=%24.totals.percent_covered_display)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2FGSA%2Fnotifications-api%2Fblob%2Fnotify-api-395%2Fcoverage.json&query=%24.totals.percent_covered_display)-->
 
 
 # Notify.gov API
