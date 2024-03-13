@@ -29,7 +29,7 @@ def upgrade():
         values(:service_id, 'test', :provider, now(), null)
     """
     conn = op.get_bind()
-    results = conn.execute(sql)
+    results = conn.execute(text(sql))
     restrictions = results.fetchall()
     for x in restrictions:
         input_params = {"service_id": x.service_id, "provider": x.provider}

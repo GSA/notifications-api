@@ -17,9 +17,9 @@ down_revision = "0307_delete_dm_datetime"
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("DELETE FROM provider_details WHERE identifier = 'loadtesting'")
+    conn.execute(text("DELETE FROM provider_details WHERE identifier = 'loadtesting'"))
     conn.execute(
-        "DELETE FROM provider_details_history WHERE identifier = 'loadtesting'"
+        text("DELETE FROM provider_details_history WHERE identifier = 'loadtesting'")
     )
 
 
@@ -40,5 +40,5 @@ def downgrade():
         (:uuid, 'Loadtesting', 'loadtesting', 100, 'sms', true, 1, false)
         """
         ),
-        uuid=uuid.uuid4(),
+        {"uuid": str(uuid.uuid4())},
     )

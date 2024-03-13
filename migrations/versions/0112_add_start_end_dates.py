@@ -24,7 +24,8 @@ def upgrade():
     op.add_column("monthly_billing", sa.Column("start_date", sa.DateTime))
     op.add_column("monthly_billing", sa.Column("end_date", sa.DateTime))
     conn = op.get_bind()
-    results = conn.execute("Select id, month, year from monthly_billing")
+    query = text("SELECT id, month, year FROM monthly_billing")
+    results = conn.execute(query)
     res = results.fetchall()
     for x in res:
         start_date, end_date = get_month_start_and_end_date_in_utc(

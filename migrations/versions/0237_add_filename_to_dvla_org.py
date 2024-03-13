@@ -48,15 +48,12 @@ def upgrade():
     )
 
     for org_id, org_filename in LOGOS.items():
-        conn.execute(
-            text(
-                """
+        query = text(
+            """
             UPDATE dvla_organisation SET filename = :filename WHERE id = :id
         """
-            ),
-            filename=org_filename,
-            id=org_id,
         )
+        conn.execute(query, {"filename": org_filename, "id": org_id})
 
 
 def downgrade():

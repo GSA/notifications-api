@@ -17,8 +17,7 @@ session events.
 import datetime
 
 from sqlalchemy import Column, ForeignKeyConstraint, Integer, Table, util
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import attributes, mapper, object_mapper
+from sqlalchemy.orm import attributes, class_mapper, object_mapper, registry
 from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
 
 
@@ -103,10 +102,10 @@ def _history_mapper(local_mapper):  # noqa (C901 too complex)
     )
     versioned_cls = type.__new__(type, "%sHistory" % cls.__name__, bases, {})
 
-    m = mapper(
+    m = mapper_registry.map_imperatively(
         versioned_cls,
         table,
-        inherits=super_history_mapper,
+        with_polymorphic=("*", super_history_mapper),
         polymorphic_on=polymorphic_on,
         polymorphic_identity=local_mapper.polymorphic_identity,
         properties=properties,
@@ -170,9 +169,8 @@ def _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper
 
 def _col_copy(col):
     orig = col
-    col = col.copy()
+    col = Column(col.name, col.type, nullable=col.nullable, unique=False)
     orig.info["history_copy"] = col
-    col.unique = False
 
     # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
     # if it's not nullable, however, the default may be relied upon to correctly set values within the database,
@@ -182,15 +180,16 @@ def _col_copy(col):
     return col
 
 
-class Versioned(object):
-    @declared_attr
-    def __mapper_cls__(cls):
-        def map(cls, *arg, **kw):
-            mp = mapper(cls, *arg, **kw)
-            _history_mapper(mp)
-            return mp
+mapper_registry = registry()
 
-        return map
+
+@mapper_registry.mapped
+class Versioned(object):
+    __abstract__ = True
+
+    @classmethod
+    def __declare_last__(cls):
+        _history_mapper(class_mapper(cls))
 
     @classmethod
     def get_history_model(cls):

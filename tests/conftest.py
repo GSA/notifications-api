@@ -94,23 +94,24 @@ def notify_db_session(_notify_db, sms_providers):
     yield _notify_db.session
 
     _notify_db.session.remove()
-    for tbl in reversed(_notify_db.metadata.sorted_tables):
-        if tbl.name not in [
-            "provider_details",
-            "key_types",
-            "branding_type",
-            "job_status",
-            "provider_details_history",
-            "template_process_type",
-            "notifications_all_time_view",
-            "notification_status_types",
-            "organization_types",
-            "service_permission_types",
-            "auth_type",
-            "invite_status_type",
-            "service_callback_type",
-        ]:
-            _notify_db.engine.execute(tbl.delete())
+    with _notify_db.engine.begin() as connection:
+        for tbl in reversed(_notify_db.metadata.sorted_tables):
+            if tbl.name not in [
+                "provider_details",
+                "key_types",
+                "branding_type",
+                "job_status",
+                "provider_details_history",
+                "template_process_type",
+                "notifications_all_time_view",
+                "notification_status_types",
+                "organization_types",
+                "service_permission_types",
+                "auth_type",
+                "invite_status_type",
+                "service_callback_type",
+            ]:
+                connection.execute(tbl.delete())
     _notify_db.session.commit()
 
 

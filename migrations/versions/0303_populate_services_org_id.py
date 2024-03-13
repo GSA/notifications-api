@@ -15,9 +15,8 @@ down_revision = "0302_add_org_id_to_services"
 
 def upgrade():
     conn = op.get_bind()
-    results = conn.execute(
-        "select service_id, organisation_id from organisation_to_service"
-    )
+    query = text("SELECT service_id, organisation_id FROM organisation_to_service")
+    results = conn.execute(query)
     org_to_service = results.fetchall()
     for x in org_to_service:
         sql = """
@@ -27,8 +26,10 @@ def upgrade():
         """
         conn.execute(
             text(sql),
-            service_id=str(x.service_id),
-            organisation_id=str(x.organisation_id),
+            {
+                "service_id": str(x.service_id),
+                "organisation_id": str(x.organisation_id),
+            },
         )
         history_sql = """
             UPDATE services_history
@@ -38,8 +39,10 @@ def upgrade():
         """
         conn.execute(
             text(history_sql),
-            service_id=str(x.service_id),
-            organisation_id=str(x.organisation_id),
+            {
+                "service_id": str(x.service_id),
+                "organisation_id": str(x.organisation_id),
+            },
         )
 
 
@@ -65,8 +68,10 @@ def downgrade():
             """
             conn.execute(
                 text(update_sql),
-                service_id=str(x.id),
-                organisation_id=str(x.organisation_id),
+                {
+                    "service_id": str(x.service_id),
+                    "organisation_id": str(x.organisation_id),
+                },
             )
         elif len(os) == 0:
             insert_sql = """
@@ -74,8 +79,10 @@ def downgrade():
             """
             conn.execute(
                 text(insert_sql),
-                service_id=str(x.id),
-                organisation_id=str(x.organisation_id),
+                {
+                    "service_id": str(x.service_id),
+                    "organisation_id": str(x.organisation_id),
+                },
             )
         else:
             raise Exception(
