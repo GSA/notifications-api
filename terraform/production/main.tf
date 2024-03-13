@@ -4,6 +4,7 @@ locals {
   env                      = "production"
   app_name                 = "notify-api"
   delete_recursive_allowed = false
+  allow_ssh                = false
 }
 
 data "cloudfoundry_space" "production" {
@@ -12,6 +13,7 @@ data "cloudfoundry_space" "production" {
 }
 
 resource "cloudfoundry_space" "notify-production" {
+  allow_ssh                = local.allow_ssh
   delete_recursive_allowed = local.delete_recursive_allowed
   name                     = local.cf_space_name
   org                      = data.cloudfoundry_org.org.id
@@ -46,6 +48,7 @@ module "csv_upload_bucket" {
 module "egress-space" {
   source = "../shared/egress_space"
 
+  allow_ssh                = local.allow_ssh
   cf_org_name              = local.cf_org_name
   cf_restricted_space_name = local.cf_space_name
   delete_recursive_allowed = local.delete_recursive_allowed
@@ -57,6 +60,7 @@ module "egress-space" {
 module "ses_email" {
   source = "../shared/ses"
 
+  allow_ssh                = local.allow_ssh
   cf_org_name              = local.cf_org_name
   cf_space_name            = local.cf_space_name
   name                     = "${local.app_name}-ses-${local.env}"
@@ -70,6 +74,7 @@ module "ses_email" {
 module "sns_sms" {
   source = "../shared/sns"
 
+  allow_ssh                = local.allow_ssh
   cf_org_name              = local.cf_org_name
   cf_space_name            = local.cf_space_name
   name                     = "${local.app_name}-sns-${local.env}"

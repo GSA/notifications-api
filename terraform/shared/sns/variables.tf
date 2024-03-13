@@ -28,3 +28,9 @@ variable "delete_recursive_allowed" {
   default     = true
   description = "Flag for allowing resources to be recursively deleted - not recommended in production environments"
 }
+
+variable "allow_ssh" {
+  type        = bool
+  default     = true
+  description = "Flag for allowing SSH access in a space - not recommended in production environments"
+}
