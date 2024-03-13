@@ -71,7 +71,7 @@ jobs:
     - name: Generate coverage badge
       id: badge
       run: |
-        echo "[![Coverage](https://imag.shields.io/badge/Coverage-${{ needs.coverage.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)" < badge.md
+        echo "[![Coverage](https://imag.shields.io/badge/Coverage-${{ needs.coverage.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)" > badge.md
         sed -i '1r badge.md' README.md
 
 
