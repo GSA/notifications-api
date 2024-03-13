@@ -2,7 +2,8 @@ import json
 import uuid
 
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
-from app.models import EMAIL_TYPE, MOBILE_TYPE, ServiceGuestList
+from app.enums import RecipientType
+from app.models import ServiceGuestList
 from tests import create_admin_authorization_header
 
 
@@ -24,11 +25,17 @@ def test_get_guest_list_separates_emails_and_phones(client, sample_service):
     dao_add_and_commit_guest_list_contacts(
         [
             ServiceGuestList.from_string(
-                sample_service.id, EMAIL_TYPE, "service@example.com"
+                sample_service.id,
+                RecipientType.EMAIL,
+                "service@example.com",
             ),
-            ServiceGuestList.from_string(sample_service.id, MOBILE_TYPE, "2028675309"),
             ServiceGuestList.from_string(
-                sample_service.id, MOBILE_TYPE, "+1800-555-5555"
+                sample_service.id, RecipientType.MOBILE, "2028675309"
+            ),
+            ServiceGuestList.from_string(
+                sample_service.id,
+                RecipientType.MOBILE,
+                "+1800-555-5555",
             ),
         ]
     )

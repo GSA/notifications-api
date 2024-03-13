@@ -1,5 +1,6 @@
 from app.dao import DAOClass
 from app.dao.permissions_dao import permission_dao
+from app.enums import PermissionType
 from tests.app.db import create_service
 
 
@@ -10,13 +11,13 @@ def test_get_permissions_by_user_id_returns_all_permissions(sample_service):
     assert len(permissions) == 7
     assert sorted(
         [
-            "manage_users",
-            "manage_templates",
-            "manage_settings",
-            "send_texts",
-            "send_emails",
-            "manage_api_keys",
-            "view_activity",
+            PermissionType.MANAGE_USERS,
+            PermissionType.MANAGE_TEMPLATES,
+            PermissionType.MANAGE_SETTINGS,
+            PermissionType.SEND_TEXTS,
+            PermissionType.SEND_EMAILS,
+            PermissionType.MANAGE_API_KEYS,
+            PermissionType.VIEW_ACTIVITY,
         ]
     ) == sorted([i.permission for i in permissions])
 

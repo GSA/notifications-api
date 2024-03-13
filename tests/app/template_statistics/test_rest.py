@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from freezegun import freeze_time
 
+from app.enums import NotificationStatus, TemplateType
 from app.utils import DATETIME_FORMAT
 from tests.app.db import create_ft_notification_status, create_notification
 
@@ -48,7 +49,7 @@ def test_get_template_statistics_for_service_by_day_returns_template_info(
     assert json_resp["data"][0]["count"] == 1
     assert json_resp["data"][0]["template_id"] == str(sample_notification.template_id)
     assert json_resp["data"][0]["template_name"] == "sms Template Name"
-    assert json_resp["data"][0]["template_type"] == "sms"
+    assert json_resp["data"][0]["template_type"] == TemplateType.SMS
 
 
 @pytest.mark.parametrize("var_name", ["limit_days", "whole_days"])
@@ -77,7 +78,7 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
                 count=3,
                 template_name=sample_template.name,
                 notification_type=sample_template.template_type,
-                status="created",
+                status=NotificationStatus.CREATED,
             )
         ],
     )
@@ -93,7 +94,7 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
             "count": 3,
             "template_name": sample_template.name,
             "template_type": sample_template.template_type,
-            "status": "created",
+            "status": NotificationStatus.CREATED,
         }
     ]
     # dao only called for 2nd, since redis returned values for first call

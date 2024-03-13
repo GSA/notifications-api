@@ -25,14 +25,15 @@ from app.dao.notifications_dao import (
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention_for_all_services_by_notification_type,
 )
-from app.models import EMAIL_TYPE, SMS_TYPE, FactProcessingTime
+from app.enums import NotificationType
+from app.models import FactProcessingTime
 from app.utils import get_midnight_in_utc
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
 @cronitor("remove_sms_email_jobs")
 def remove_sms_email_csv_files():
-    _remove_csv_files([EMAIL_TYPE, SMS_TYPE])
+    _remove_csv_files([NotificationType.EMAIL, NotificationType.SMS])
 
 
 def _remove_csv_files(job_types):
@@ -69,13 +70,13 @@ def delete_notifications_older_than_retention():
 @notify_celery.task(name="delete-sms-notifications")
 @cronitor("delete-sms-notifications")
 def delete_sms_notifications_older_than_retention():
-    _delete_notifications_older_than_retention_by_type("sms")
+    _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
 
 @notify_celery.task(name="delete-email-notifications")
 @cronitor("delete-email-notifications")
 def delete_email_notifications_older_than_retention():
-    _delete_notifications_older_than_retention_by_type("email")
+    _delete_notifications_older_than_retention_by_type(NotificationType.EMAIL)
 
 
 def _delete_notifications_older_than_retention_by_type(notification_type):

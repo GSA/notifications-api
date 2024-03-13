@@ -9,8 +9,9 @@ from app import db
 from app.dao.dao_utils import autocommit
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
+from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
-from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
+from app.models import User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
 
@@ -24,13 +25,42 @@ def create_secret_code(length=6):
     return "{:0{length}d}".format(random_number, length=length)
 
 
+def get_login_gov_user(login_uuid, email_address):
+    """
+    We want to check to see if the user is registered with login.gov
+    If we can find the login.gov uuid in our user table, then they are.
+
+    Also, because we originally keyed off email address we might have a few
+    older users who registered with login.gov but we don't know what their
+    login.gov uuids are.  Eventually the code that checks by email address
+    should be removed.
+    """
+
+    print(User.query.filter_by(login_uuid=login_uuid).first())
+    user = User.query.filter_by(login_uuid=login_uuid).first()
+    if user:
+        if user.email_address != email_address:
+            save_user_attribute(user, {"email_address": email_address})
+        return user
+    # Remove this 1 July 2025, all users should have login.gov uuids by now
+    user = User.query.filter_by(email_address=email_address).first()
+    if user:
+        save_user_attribute(user, {"login_uuid": login_uuid})
+        return user
+
+    return None
+
+
 def save_user_attribute(usr, update_dict=None):
     db.session.query(User).filter_by(id=usr.id).update(update_dict or {})
     db.session.commit()
 
 
 def save_model_user(
-    user, update_dict=None, password=None, validated_email_access=False
+    user,
+    update_dict=None,
+    password=None,
+    validated_email_access=False,
 ):
     if password:
         user.password = password
@@ -171,7 +201,7 @@ def dao_archive_user(user):
 
     user.organizations = []
 
-    user.auth_type = EMAIL_AUTH_TYPE
+    user.auth_type = AuthType.EMAIL
     user.email_address = get_archived_db_column_value(user.email_address)
     user.mobile_number = None
     user.password = str(uuid.uuid4())
@@ -194,7 +224,7 @@ def user_can_be_archived(user):
             return False
 
         if not any(
-            "manage_settings" in user.get_permissions(service.id)
+            PermissionType.MANAGE_SETTINGS in user.get_permissions(service.id)
             for user in other_active_users
         ):
             # no-one else has manage settings

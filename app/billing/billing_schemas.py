@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from app.enums import NotificationType
+
 create_or_update_free_sms_fragment_limit_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "POST annual billing schema",
@@ -25,7 +27,7 @@ def serialize_ft_billing_remove_emails(rows):
             "charged_units": row.charged_units,
         }
         for row in rows
-        if row.notification_type != "email"
+        if row.notification_type != NotificationType.EMAIL
     ]
 
 

@@ -12,18 +12,9 @@ from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
+from app.enums import KeyType, NotificationType, TemplateProcessType, TemplateType
 from app.errors import InvalidRequest
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    SMS_TYPE,
-    ApiKey,
-    Notification,
-    NotificationHistory,
-    Template,
-)
+from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import RateLimitError
 from tests import create_service_authorization_header
@@ -37,14 +28,14 @@ from tests.app.db import (
 )
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_create_notification_should_reject_if_missing_required_fields(
     notify_api, sample_api_key, mocker, template_type
 ):
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             data = {}
             auth_header = create_service_authorization_header(
@@ -52,7 +43,7 @@ def test_create_notification_should_reject_if_missing_required_fields(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -96,7 +87,11 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
 
 
 @pytest.mark.parametrize(
-    "template_type, to", [(SMS_TYPE, "+447700900855"), (EMAIL_TYPE, "ok@ok.com")]
+    "template_type, to",
+    [
+        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.EMAIL, "ok@ok.com"),
+    ],
 )
 def test_send_notification_invalid_template_id(
     notify_api, sample_template, mocker, fake_uuid, template_type, to
@@ -104,7 +99,7 @@ def test_send_notification_invalid_template_id(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
 
             data = {"to": to, "template": fake_uuid}
@@ -113,7 +108,7 @@ def test_send_notification_invalid_template_id(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -281,8 +276,8 @@ def test_should_not_send_notification_for_archived_template(
 @pytest.mark.parametrize(
     "template_type, to",
     [
-        (SMS_TYPE, "+447700900855"),
-        (EMAIL_TYPE, "not-someone-we-trust@email-address.com"),
+        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.EMAIL, "not-someone-we-trust@email-address.com"),
     ],
 )
 def test_should_not_send_notification_if_restricted_and_not_a_service_user(
@@ -291,10 +286,12 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             template = (
-                sample_template if template_type == SMS_TYPE else sample_email_template
+                sample_template
+                if template_type == TemplateType.SMS
+                else sample_email_template
             )
             template.service.restricted = True
             dao_update_service(template.service)
@@ -305,7 +302,7 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -322,22 +319,24 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
             ] == json_resp["message"]["to"]
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_should_send_notification_if_restricted_and_a_service_user(
     notify_api, sample_template, sample_email_template, template_type, mocker
 ):
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
 
             template = (
-                sample_template if template_type == SMS_TYPE else sample_email_template
+                sample_template
+                if template_type == TemplateType.SMS
+                else sample_email_template
             )
             to = (
                 template.service.created_by.mobile_number
-                if template_type == SMS_TYPE
+                if template_type == TemplateType.SMS
                 else template.service.created_by.email_address
             )
             template.service.restricted = True
@@ -349,7 +348,7 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             )
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -358,14 +357,14 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             assert response.status_code == 201
 
 
-@pytest.mark.parametrize("template_type", [SMS_TYPE, EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.SMS, TemplateType.EMAIL])
 def test_should_not_allow_template_from_another_service(
     notify_api, service_factory, sample_user, mocker, template_type
 ):
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
             mocked = mocker.patch(
-                "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+                f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
             )
             service_1 = service_factory.get(
                 "service 1", user=sample_user, email_from="service.1"
@@ -379,7 +378,7 @@ def test_should_not_allow_template_from_another_service(
             )
             to = (
                 sample_user.mobile_number
-                if template_type == SMS_TYPE
+                if template_type == TemplateType.SMS
                 else sample_user.email_address
             )
             data = {"to": to, "template": service_2_templates[0].id}
@@ -387,7 +386,7 @@ def test_should_not_allow_template_from_another_service(
             auth_header = create_service_authorization_header(service_id=service_1.id)
 
             response = client.post(
-                path="/notifications/{}".format(template_type),
+                path=f"/notifications/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -496,8 +495,8 @@ def test_should_allow_api_call_if_under_day_limit_regardless_of_type(
             mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
             service = create_service(restricted=restricted, message_limit=2)
-            email_template = create_template(service, template_type=EMAIL_TYPE)
-            sms_template = create_template(service, template_type=SMS_TYPE)
+            email_template = create_template(service, template_type=TemplateType.EMAIL)
+            sms_template = create_template(service, template_type=TemplateType.SMS)
             create_notification(template=email_template)
 
             data = {"to": sample_user.mobile_number, "template": str(sms_template.id)}
@@ -518,7 +517,7 @@ def test_should_not_return_html_in_body(notify_api, sample_service, mocker):
         with notify_api.test_client() as client:
             mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
             email_template = create_template(
-                sample_service, template_type=EMAIL_TYPE, content="hello\nthere"
+                sample_service, template_type=TemplateType.EMAIL, content="hello\nthere"
             )
 
             data = {"to": "ok@ok.com", "template": str(email_template.id)}
@@ -549,7 +548,7 @@ def test_should_not_send_email_if_team_api_key_and_not_a_service_user(
     }
 
     auth_header = create_service_authorization_header(
-        service_id=sample_email_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_email_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -579,7 +578,7 @@ def test_should_not_send_sms_if_team_api_key_and_not_a_service_user(
     }
 
     auth_header = create_service_authorization_header(
-        service_id=sample_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -610,7 +609,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
         "template": sample_email_template.id,
     }
     auth_header = create_service_authorization_header(
-        service_id=sample_email_template.service_id, key_type=KEY_TYPE_TEAM
+        service_id=sample_email_template.service_id, key_type=KeyType.TEAM
     )
 
     response = client.post(
@@ -642,7 +641,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         service=sample_template.service,
         name="test_key",
         created_by=sample_template.created_by,
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -654,7 +653,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
@@ -680,7 +679,7 @@ def test_should_send_email_to_anyone_with_test_key(
         service=sample_email_template.service,
         name="test_key",
         created_by=sample_email_template.created_by,
-        key_type=KEY_TYPE_TEST,
+        key_type=KeyType.TEST,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -692,7 +691,7 @@ def test_should_send_email_to_anyone_with_test_key(
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -718,7 +717,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
         service=sample_template.service,
         name="team_key",
         created_by=sample_template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -730,7 +729,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -742,7 +741,10 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
 
 @pytest.mark.parametrize(
     "template_type,queue_name",
-    [(SMS_TYPE, "send-sms-tasks"), (EMAIL_TYPE, "send-email-tasks")],
+    [
+        (TemplateType.SMS, "send-sms-tasks"),
+        (TemplateType.EMAIL, "send-email-tasks"),
+    ],
 )
 def test_should_persist_notification(
     client,
@@ -754,16 +756,18 @@ def test_should_persist_notification(
     queue_name,
 ):
     mocked = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type)
+        f"app.celery.provider_tasks.deliver_{template_type}.apply_async"
     )
     mocker.patch(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == SMS_TYPE else sample_email_template
+    template = (
+        sample_template if template_type == TemplateType.SMS else sample_email_template
+    )
     to = (
         sample_template.service.created_by.mobile_number
-        if template_type == SMS_TYPE
+        if template_type == TemplateType.SMS
         else sample_email_template.service.created_by.email_address
     )
     data = {"to": to, "template": template.id}
@@ -771,7 +775,7 @@ def test_should_persist_notification(
         service=template.service,
         name="team_key",
         created_by=template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -779,11 +783,11 @@ def test_should_persist_notification(
     )
 
     response = client.post(
-        path="/notifications/{}".format(template_type),
+        path=f"/notifications/{template_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -798,7 +802,7 @@ def test_should_persist_notification(
 
 @pytest.mark.parametrize(
     "template_type,queue_name",
-    [(SMS_TYPE, "send-sms-tasks"), (EMAIL_TYPE, "send-email-tasks")],
+    [(TemplateType.SMS, "send-sms-tasks"), (TemplateType.EMAIL, "send-email-tasks")],
 )
 def test_should_delete_notification_and_return_error_if_redis_fails(
     client,
@@ -810,17 +814,19 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
     queue_name,
 ):
     mocked = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(template_type),
+        f"app.celery.provider_tasks.deliver_{template_type}.apply_async",
         side_effect=Exception("failed to talk to redis"),
     )
     mocker.patch(
         "app.notifications.process_notifications.uuid.uuid4", return_value=fake_uuid
     )
 
-    template = sample_template if template_type == SMS_TYPE else sample_email_template
+    template = (
+        sample_template if template_type == TemplateType.SMS else sample_email_template
+    )
     to = (
         sample_template.service.created_by.mobile_number
-        if template_type == SMS_TYPE
+        if template_type == TemplateType.SMS
         else sample_email_template.service.created_by.email_address
     )
     data = {"to": to, "template": template.id}
@@ -828,7 +834,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         service=template.service,
         name="team_key",
         created_by=template.created_by,
-        key_type=KEY_TYPE_TEAM,
+        key_type=KeyType.TEAM,
     )
     save_model_api_key(api_key)
     auth_header = create_jwt_token(
@@ -837,11 +843,11 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
 
     with pytest.raises(expected_exception=Exception) as e:
         client.post(
-            path="/notifications/{}".format(template_type),
+            path=f"/notifications/{template_type}",
             data=json.dumps(data),
             headers=[
                 ("Content-Type", "application/json"),
-                ("Authorization", "Bearer {}".format(auth_header)),
+                ("Authorization", f"Bearer {auth_header}"),
             ],
         )
     assert str(e.value) == "failed to talk to redis"
@@ -904,10 +910,13 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
     assert Notification.query.count() == 0
 
 
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])
 @pytest.mark.parametrize(
     "notification_type, to",
-    [(SMS_TYPE, "2028675300"), (EMAIL_TYPE, "non_guest_list_recipient@mail.com")],
+    [
+        (TemplateType.SMS, "2028675300"),
+        (TemplateType.EMAIL, "non_guest_list_recipient@mail.com"),
+    ],
 )
 def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     client, sample_service_guest_list, notification_type, to, key_type, mocker
@@ -917,7 +926,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     service.message_limit = 2
 
     apply_async = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
+        f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
     )
     template = create_template(service, template_type=notification_type)
     assert sample_service_guest_list.service_id == service.id
@@ -933,11 +942,11 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     )
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -946,7 +955,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
             "Can’t send to this recipient when service is in trial mode "
             "– see https://www.notifications.service.gov.uk/trial-mode"
         )
-        if key_type == KEY_TYPE_NORMAL
+        if key_type == KeyType.NORMAL
         else ("Can’t send to this recipient using a team-only API key")
     )
 
@@ -958,12 +967,12 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
 
 
 @pytest.mark.parametrize("service_restricted", [True, False])
-@pytest.mark.parametrize("key_type", [KEY_TYPE_NORMAL, KEY_TYPE_TEAM])
+@pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])
 @pytest.mark.parametrize(
     "notification_type, to, normalized_to",
     [
-        (SMS_TYPE, "2028675300", "+12028675300"),
-        (EMAIL_TYPE, "guest_list_recipient@mail.com", None),
+        (NotificationType.SMS, "2028675300", "+12028675300"),
+        (NotificationType.EMAIL, "guest_list_recipient@mail.com", None),
     ],
 )
 def test_should_send_notification_to_guest_list_recipient(
@@ -980,12 +989,12 @@ def test_should_send_notification_to_guest_list_recipient(
     sample_service.restricted = service_restricted
 
     apply_async = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
+        f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
     )
     template = create_template(sample_service, template_type=notification_type)
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         service_guest_list = create_service_guest_list(sample_service, mobile_number=to)
-    elif notification_type == EMAIL_TYPE:
+    elif notification_type == NotificationType.EMAIL:
         service_guest_list = create_service_guest_list(sample_service, email_address=to)
 
     assert service_guest_list.service_id == sample_service.id
@@ -1003,11 +1012,11 @@ def test_should_send_notification_to_guest_list_recipient(
     )
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
-            ("Authorization", "Bearer {}".format(auth_header)),
+            ("Authorization", f"Bearer {auth_header}"),
         ],
     )
 
@@ -1022,8 +1031,8 @@ def test_should_send_notification_to_guest_list_recipient(
 @pytest.mark.parametrize(
     "notification_type, template_type, to",
     [
-        (EMAIL_TYPE, SMS_TYPE, "notify@digital.fake.gov"),
-        (SMS_TYPE, EMAIL_TYPE, "+12028675309"),
+        (NotificationType.EMAIL, TemplateType.SMS, "notify@digital.fake.gov"),
+        (NotificationType.SMS, TemplateType.EMAIL, "+12028675309"),
     ],
 )
 def test_should_error_if_notification_type_does_not_match_template_type(
@@ -1033,7 +1042,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
     data = {"to": to, "template": template.id}
     auth_header = create_service_authorization_header(service_id=template.service_id)
     response = client.post(
-        "/notifications/{}".format(notification_type),
+        f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1042,9 +1051,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
     json_resp = json.loads(response.get_data(as_text=True))
     assert json_resp["result"] == "error"
     assert (
-        "{0} template is not suitable for {1} notification".format(
-            template_type, notification_type
-        )
+        f"{template_type} template is not suitable for {notification_type} notification"
         in json_resp["message"]
     )
 
@@ -1070,7 +1077,11 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
 
 
 @pytest.mark.parametrize(
-    "template_type, should_error", [(SMS_TYPE, True), (EMAIL_TYPE, False)]
+    "template_type, should_error",
+    [
+        (TemplateType.SMS, True),
+        (TemplateType.EMAIL, False),
+    ],
 )
 def test_create_template_raises_invalid_request_when_content_too_large(
     sample_service, template_type, should_error
@@ -1098,15 +1109,20 @@ def test_create_template_raises_invalid_request_when_content_too_large(
             pytest.fail("do not expect an InvalidRequest")
         assert e.message == {
             "content": [
-                "Content has a character count greater than the limit of {}".format(
-                    SMS_CHAR_COUNT_LIMIT
-                )
+                f"Content has a character count greater than the limit of {SMS_CHAR_COUNT_LIMIT}"
             ]
         }
 
 
 @pytest.mark.parametrize(
-    "notification_type, send_to", [("sms", "2028675309"), ("email", "sample@email.com")]
+    "notification_type,send_to",
+    [
+        (NotificationType.SMS, "2028675309"),
+        (
+            NotificationType.EMAIL,
+            "sample@email.com",
+        ),
+    ],
 )
 def test_send_notification_uses_priority_queue_when_template_is_marked_as_priority(
     client,
@@ -1116,10 +1132,12 @@ def test_send_notification_uses_priority_queue_when_template_is_marked_as_priori
     send_to,
 ):
     sample = create_template(
-        sample_service, template_type=notification_type, process_type="priority"
+        sample_service,
+        template_type=notification_type,
+        process_type=TemplateProcessType.PRIORITY,
     )
     mocked = mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
+        f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
     )
 
     data = {"to": send_to, "template": str(sample.id)}
@@ -1127,7 +1145,7 @@ def test_send_notification_uses_priority_queue_when_template_is_marked_as_priori
     auth_header = create_service_authorization_header(service_id=sample.service_id)
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1140,7 +1158,14 @@ def test_send_notification_uses_priority_queue_when_template_is_marked_as_priori
 
 
 @pytest.mark.parametrize(
-    "notification_type, send_to", [("sms", "2028675309"), ("email", "sample@email.com")]
+    "notification_type, send_to",
+    [
+        (NotificationType.SMS, "2028675309"),
+        (
+            NotificationType.EMAIL,
+            "sample@email.com",
+        ),
+    ],
 )
 def test_returns_a_429_limit_exceeded_if_rate_limit_exceeded(
     client, sample_service, mocker, notification_type, send_to
@@ -1159,7 +1184,7 @@ def test_returns_a_429_limit_exceeded_if_rate_limit_exceeded(
     auth_header = create_service_authorization_header(service_id=sample.service_id)
 
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1168,9 +1193,9 @@ def test_returns_a_429_limit_exceeded_if_rate_limit_exceeded(
     result = json.loads(response.data)["result"]
     assert response.status_code == 429
     assert result == "error"
-    assert (
-        message
-        == "Exceeded rate limit for key type TYPE of LIMIT requests per INTERVAL seconds"
+    assert message == (
+        "Exceeded rate limit for key type TYPE of LIMIT "
+        "requests per INTERVAL seconds"
     )
 
     assert not persist_mock.called
@@ -1319,7 +1344,7 @@ def test_should_throw_exception_if_notification_type_is_invalid(
 ):
     auth_header = create_service_authorization_header(service_id=sample_service.id)
     response = client.post(
-        path="/notifications/{}".format(notification_type),
+        path=f"/notifications/{notification_type}",
         data={},
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1328,17 +1353,22 @@ def test_should_throw_exception_if_notification_type_is_invalid(
 
 
 @pytest.mark.parametrize(
-    "notification_type, recipient", [("sms", "2028675309"), ("email", "test@gov.uk")]
+    "notification_type, recipient",
+    [
+        (NotificationType.SMS, "2028675309"),
+        (
+            NotificationType.EMAIL,
+            "test@gov.uk",
+        ),
+    ],
 )
 def test_post_notification_should_set_reply_to_text(
     client, sample_service, mocker, notification_type, recipient
 ):
-    mocker.patch(
-        "app.celery.provider_tasks.deliver_{}.apply_async".format(notification_type)
-    )
+    mocker.patch(f"app.celery.provider_tasks.deliver_{notification_type}.apply_async")
     template = create_template(sample_service, template_type=notification_type)
     expected_reply_to = current_app.config["FROM_NUMBER"]
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         expected_reply_to = "reply_to@gov.uk"
         create_reply_to_email(
             service=sample_service, email_address=expected_reply_to, is_default=True
@@ -1346,7 +1376,7 @@ def test_post_notification_should_set_reply_to_text(
 
     data = {"to": recipient, "template": str(template.id)}
     response = client.post(
-        "/notifications/{}".format(notification_type),
+        f"/notifications/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),

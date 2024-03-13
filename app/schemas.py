@@ -13,7 +13,7 @@ from marshmallow import (
     validates,
     validates_schema,
 )
-from marshmallow_sqlalchemy import field_for
+from marshmallow_sqlalchemy import auto_field, field_for
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -24,6 +24,7 @@ from notifications_utils.recipients import (
 
 from app import ma, models
 from app.dao.permissions_dao import permission_dao
+from app.enums import ServicePermissionType, TemplateType
 from app.models import ServicePermission
 from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance
 
@@ -152,7 +153,7 @@ class UserSchema(BaseSchema):
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError("Invalid phone number: {}".format(error))
+            raise ValidationError(f"Invalid phone number: {error}")
 
 
 class UserUpdateAttributeSchema(BaseSchema):
@@ -192,13 +193,13 @@ class UserUpdateAttributeSchema(BaseSchema):
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError("Invalid phone number: {}".format(error))
+            raise ValidationError(f"Invalid phone number: {error}")
 
     @validates_schema(pass_original=True)
     def check_unknown_fields(self, data, original_data, **kwargs):
         for key in original_data:
             if key not in self.fields:
-                raise ValidationError("Unknown field name {}".format(key))
+                raise ValidationError(f"Unknown field name {key}")
 
 
 class UserUpdatePasswordSchema(BaseSchema):
@@ -209,7 +210,7 @@ class UserUpdatePasswordSchema(BaseSchema):
     def check_unknown_fields(self, data, original_data, **kwargs):
         for key in original_data:
             if key not in self.fields:
-                raise ValidationError("Unknown field name {}".format(key))
+                raise ValidationError(f"Unknown field name {key}")
 
 
 class ProviderDetailsSchema(BaseSchema):
@@ -284,12 +285,12 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     def validate_permissions(self, value):
         permissions = [v.permission for v in value]
         for p in permissions:
-            if p not in models.SERVICE_PERMISSION_TYPES:
-                raise ValidationError("Invalid Service Permission: '{}'".format(p))
+            if p not in {e for e in ServicePermissionType}:
+                raise ValidationError(f"Invalid Service Permission: '{p}'")
 
         if len(set(permissions)) != len(permissions):
             duplicates = list(set([x for x in permissions if permissions.count(x) > 1]))
-            raise ValidationError("Duplicate Service Permission: {}".format(duplicates))
+            raise ValidationError(f"Duplicate Service Permission: {duplicates}")
 
     @pre_load()
     def format_for_data_model(self, in_data, **kwargs):
@@ -382,7 +383,7 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
 
     @validates_schema
     def validate_type(self, data, **kwargs):
-        if data.get("template_type") == models.EMAIL_TYPE:
+        if data.get("template_type") == TemplateType.EMAIL:
             subject = data.get("subject")
             if not subject or subject.strip() == "":
                 raise ValidationError("Invalid template subject", "subject")
@@ -463,7 +464,7 @@ class JobSchema(BaseSchema):
     processing_started = FlexibleDateTime()
     processing_finished = FlexibleDateTime()
 
-    job_status = field_for(models.JobStatus, "name", required=False)
+    job_status = auto_field()
 
     scheduled_for = FlexibleDateTime()
     service_name = fields.Nested(
@@ -628,7 +629,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
             in_data["template"], in_data["personalisation"]
         )
         in_data["body"] = template.content_with_placeholders_filled_in
-        if in_data["template"]["template_type"] != models.SMS_TYPE:
+        if in_data["template"]["template_type"] != TemplateType.SMS:
             in_data["subject"] = template.subject
             in_data["content_char_count"] = None
         else:

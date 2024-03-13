@@ -7,6 +7,7 @@ from app.celery.process_ses_receipts_tasks import (
     handle_complaint,
 )
 from app.dao.notifications_dao import get_notification_by_id
+from app.enums import NotificationStatus
 from app.models import Complaint
 from tests.app.db import (
     create_notification,
@@ -23,10 +24,12 @@ def test_ses_callback_should_not_set_status_once_status_is_delivered(
 ):
     notification = create_notification(
         sample_email_template,
-        status="delivered",
+        status=NotificationStatus.DELIVERED,
     )
 
-    assert get_notification_by_id(notification.id).status == "delivered"
+    assert (
+        get_notification_by_id(notification.id).status == NotificationStatus.DELIVERED
+    )
 
 
 def test_process_ses_results_in_complaint(sample_email_template):
