@@ -1,6 +1,7 @@
 ![notify-logo](https://github.com/GSA/notifications-api/assets/4156602/6b2905d2-a232-4414-8815-25dba6008f17)
 
 
+[![Coverage](badge.md)](https://github.com/GSA/notifications-api/actions)
 
 <!--[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=GSA/notifications-api)](https://dependabot.com)
 

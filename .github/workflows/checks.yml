@@ -65,15 +65,11 @@ jobs:
         NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
 
-    - name: Upload coverage data
-      uses: codecov/codecov-action@v2
-
     - name: Generate coverage badge
-      id: badge
       run: |
-        echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ needs.coverage.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)" > badge.md
+        echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ steps.coverage_run.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)" > badge.md
         sed -i '1r badge.md' README.md
-        echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ needs.coverage.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)"
+        echo "[![Coverage](https://img.shields.io/badge/Coverage-${{ steps.coverage_run.outputs.coverage }}%-brightgreen)](https://github.com/${{ github.repository }}/actions)"
 
 
 
