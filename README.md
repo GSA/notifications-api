@@ -26,6 +26,8 @@
 
 ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2FGSA%2Fnotifications-api%2Fblob%2Fnotify-api-395%2Fcoverage.json&query=%24.totals.percent_covered_display)
 
+[![Coverage](https://img.shields.io/badge/Coverage-push-brightgreen)](https://github.com/GSA/notifications-api/actions)
+
 
 # Notify.gov API
 
