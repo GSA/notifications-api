@@ -2657,11 +2657,11 @@ flask = "^2.3.2"
 flask-redis = "^0.4.0"
 geojson = "^3.0.1"
 govuk-bank-holidays = "^0.13"
-idna = "^3.4"
+idna = "^3.6"
 itsdangerous = "^2.1.2"
 jinja2 = "^3.1.3"
 jmespath = "^1.0.1"
-markupsafe = "^2.1.2"
+markupsafe = "^2.1.5"
 mistune = "==0.8.4"
 numpy = "^1.24.2"
 orderedset = "^2.0.3"
@@ -2671,7 +2671,7 @@ python-dateutil = "^2.8.2"
 python-json-logger = "^2.0.7"
 pytz = "^2023.3"
 pyyaml = "^6.0"
-redis = "^5.0.1"
+redis = "^5.0.3"
 regex = "^2023.10.3"
 requests = "^2.31.0"
 s3transfer = "^0.7.0"
@@ -2685,8 +2685,8 @@ werkzeug = "^3.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/GSA/notifications-utils.git"
-reference = "053fe30"
-resolved_reference = "053fe304a1bbc1ae6559869b1fd0a2c3f83981ea"
+reference = "HEAD"
+resolved_reference = "e421fb1936d4bb92294a11fb78fc81b77d3577b2"
 
 [[package]]
 name = "numpy"
@@ -3650,17 +3650,17 @@ full = ["numpy"]
 
 [[package]]
 name = "redis"
-version = "5.0.2"
+version = "5.0.3"
 description = "Python client for Redis database and key-value store"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "redis-5.0.2-py3-none-any.whl", hash = "sha256:4caa8e1fcb6f3c0ef28dba99535101d80934b7d4cd541bbb47f4a3826ee472d1"},
-    {file = "redis-5.0.2.tar.gz", hash = "sha256:3f82cc80d350e93042c8e6e7a5d0596e4dd68715babffba79492733e1f367037"},
+    {file = "redis-5.0.3-py3-none-any.whl", hash = "sha256:5da9b8fe9e1254293756c16c008e8620b3d15fcc6dde6babde9541850e72a32d"},
+    {file = "redis-5.0.3.tar.gz", hash = "sha256:4973bae7444c0fbed64a06b87446f79361cb7e4ec1538c022d696ed7a5015580"},
 ]
 
 [package.dependencies]
-async-timeout = ">=4.0.3"
+async-timeout = {version = ">=4.0.3", markers = "python_full_version < \"3.11.3\""}
 
 [package.extras]
 hiredis = ["hiredis (>=1.0.0)"]
@@ -4785,4 +4785,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "dfa333e33a5f72123b0f8f37d76478d89569a5395c31b052eb867bb9ac40a1b7"
+content-hash = "ed0a2c9f32e010a33a24e243a58550c4849d10ee8205f6c459ecdde57d3509ac"
