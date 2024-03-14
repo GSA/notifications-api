@@ -58,6 +58,15 @@ def dao_create_notification(notification):
         notification.id = create_uuid()
     if not notification.status:
         notification.status = NotificationStatus.CREATED
+
+    # notify-api-749 do not write to db
+    # if we have a verify_code we know this is the authentication notification at login time
+    # and not csv (containing PII) provided by the user, so allow verify_code to continue to exist
+    if "verify_code" in str(notification.personalisation):
+        pass
+    else:
+        notification.personalisation = ""
+
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
