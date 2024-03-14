@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 
 from app.aws.s3 import (
     file_exists,
+    get_personalisation_from_s3,
     get_phone_number_from_s3,
     get_s3_file,
     remove_csv_object,
@@ -84,6 +85,42 @@ def test_get_phone_number_from_s3(
     get_job_mock.return_value = job
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
+
+
+@pytest.mark.parametrize(
+    "job, job_id, job_row_number, expected_personalisation",
+    [
+        ("phone number\r\n+15555555555", "aaa", 0, {"phone number": "+15555555555"}),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "bbb",
+            1,
+            {
+                "day of week": "tuesday",
+                "favorite color": "red",
+                "phone number": "+1 (555) 222-2222",
+            },
+        ),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "ccc",
+            0,
+            {
+                "day of week": "monday",
+                "favorite color": "green",
+                "phone number": "1.555.111.1111",
+            },
+        ),
+    ],
+)
+def test_get_personalisation_from_s3(
+    mocker, job, job_id, job_row_number, expected_personalisation
+):
+    mocker.patch("app.aws.s3.redis_store")
+    get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
+    get_job_mock.return_value = job
+    personalisation = get_personalisation_from_s3("service_id", job_id, job_row_number)
+    assert personalisation == expected_personalisation
 
 
 def test_remove_csv_object(notify_api, mocker):

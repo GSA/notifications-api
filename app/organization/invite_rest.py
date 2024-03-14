@@ -1,7 +1,10 @@
+import json
+
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     get_invited_org_user as dao_get_invited_org_user,
@@ -48,28 +51,35 @@ def invite_user_to_org(organization_id):
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
 
+    personalisation = {
+        "user_name": (
+            "The Notify.gov team"
+            if invited_org_user.invited_by.platform_admin
+            else invited_org_user.invited_by.name
+        ),
+        "organization_name": invited_org_user.organization.name,
+        "url": invited_org_user_url(
+            invited_org_user.id,
+            data.get("invite_link_host"),
+        ),
+    }
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=invited_org_user.email_address,
         service=template.service,
-        personalisation={
-            "user_name": (
-                "The Notify.gov team"
-                if invited_org_user.invited_by.platform_admin
-                else invited_org_user.invited_by.name
-            ),
-            "organization_name": invited_org_user.organization.name,
-            "url": invited_org_user_url(
-                invited_org_user.id,
-                data.get("invite_link_host"),
-            ),
-        },
+        personalisation={},
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KeyType.NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,
     )
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=1800,
+    )
+    saved_notification.personalisation = personalisation
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 

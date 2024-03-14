@@ -468,6 +468,19 @@ def upgrade():
             existing_nullable=False,
             postgresql_using=enum_using("notification_type", NotificationType),
         )
+        # Clobbering bad data here. These are values we don't use any more, and anything with them is unnecessary.
+        op.execute("""
+            delete from
+                service_permissions
+            where
+                permission in (
+                    'letter',
+                    'letters_as_pdf',
+                    'upload_letters',
+                    'international_letters',
+                    'broadcast'
+                );
+        """)
         op.alter_column(
             "service_permissions",
             "permission",

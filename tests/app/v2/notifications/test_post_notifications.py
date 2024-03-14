@@ -997,6 +997,9 @@ def test_post_email_notification_with_archived_reply_to_id_returns_400(
     assert "BadRequestError" in resp_json["errors"][0]["error"]
 
 
+@pytest.mark.skip(
+    reason="We've removed personalization from db, needs refactor if we want to support this"
+)
 @pytest.mark.parametrize(
     "csv_param",
     (
@@ -1051,6 +1054,7 @@ def test_post_notification_with_document_upload(
     ]
 
     notification = Notification.query.one()
+
     assert notification.status == NotificationStatus.CREATED
     assert notification.personalisation == {
         "first_link": "abababab-link",

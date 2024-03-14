@@ -25,6 +25,32 @@ def create_secret_code(length=6):
     return "{:0{length}d}".format(random_number, length=length)
 
 
+def get_login_gov_user(login_uuid, email_address):
+    """
+    We want to check to see if the user is registered with login.gov
+    If we can find the login.gov uuid in our user table, then they are.
+
+    Also, because we originally keyed off email address we might have a few
+    older users who registered with login.gov but we don't know what their
+    login.gov uuids are.  Eventually the code that checks by email address
+    should be removed.
+    """
+
+    print(User.query.filter_by(login_uuid=login_uuid).first())
+    user = User.query.filter_by(login_uuid=login_uuid).first()
+    if user:
+        if user.email_address != email_address:
+            save_user_attribute(user, {"email_address": email_address})
+        return user
+    # Remove this 1 July 2025, all users should have login.gov uuids by now
+    user = User.query.filter_by(email_address=email_address).first()
+    if user:
+        save_user_attribute(user, {"login_uuid": login_uuid})
+        return user
+
+    return None
+
+
 def save_user_attribute(usr, update_dict=None):
     db.session.query(User).filter_by(id=usr.id).update(update_dict or {})
     db.session.commit()
