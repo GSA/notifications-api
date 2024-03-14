@@ -1180,13 +1180,13 @@ pgp = ["gpg"]
 
 [[package]]
 name = "eventlet"
-version = "0.34.3"
+version = "0.35.2"
 description = "Highly concurrent networking library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "eventlet-0.34.3-py3-none-any.whl", hash = "sha256:3093f2822ce2f40792bf9aa7eb8920fe3b90db785d3bea7640c50412969dcfd7"},
-    {file = "eventlet-0.34.3.tar.gz", hash = "sha256:ed2d28a64414a001894b3baf5b650f2c9596b00d57f57d4d7a38f9d3d0c252e8"},
+    {file = "eventlet-0.35.2-py3-none-any.whl", hash = "sha256:8fc1ee60d583f1dd58d6f304bb95fd46d34865ab22f57cb99008a81d61d573db"},
+    {file = "eventlet-0.35.2.tar.gz", hash = "sha256:8d1263e20b7f816a046ac60e1d272f9e5bc503f7a34d9adc789f8a85b14fa57d"},
 ]
 
 [package.dependencies]
@@ -4592,4 +4592,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "1ba9790f353dfa52d780f8c333b976463b7c3b7989c4dee3b9b2819970c59719"
+content-hash = "987a461fe121ac0dab3e65765b8f06461569bd246f5f4b975d9322fc652a0018"
