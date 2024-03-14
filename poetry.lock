@@ -1366,26 +1366,24 @@ Flask = "*"
 
 [[package]]
 name = "flask-marshmallow"
-version = "0.14.0"
+version = "1.2.0"
 description = "Flask + marshmallow for beautiful APIs"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "flask-marshmallow-0.14.0.tar.gz", hash = "sha256:bd01a6372cbe50e36f205cfff0fc5dab0b7b662c4c8b2c4fc06a3151b2950950"},
-    {file = "flask_marshmallow-0.14.0-py2.py3-none-any.whl", hash = "sha256:2adcd782b5a4a6c5ae3c96701f320d8ca6997995a52b2661093c56cc3ed24754"},
+    {file = "flask_marshmallow-1.2.0-py3-none-any.whl", hash = "sha256:ddd2a7c8db5e00a8d56c8ca5f651efae1de7d76b7d821b56ccc2caf09135ad12"},
+    {file = "flask_marshmallow-1.2.0.tar.gz", hash = "sha256:d0f79eb9743f0c530a3d9e848503e1f2228e6b35a819c91e913af02e68421805"},
 ]
 
 [package.dependencies]
-Flask = "*"
-marshmallow = ">=2.0.0"
-six = ">=1.9.0"
+Flask = ">=2.2"
+marshmallow = ">=3.0.0"
 
 [package.extras]
-dev = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pre-commit (>=2.4,<3.0)", "pytest", "tox"]
-docs = ["Sphinx (==3.2.1)", "marshmallow-sqlalchemy (>=0.13.0)", "sphinx-issues (==1.2.0)"]
-lint = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "pre-commit (>=2.4,<3.0)"]
-sqlalchemy = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)"]
-tests = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pytest"]
+dev = ["flask-marshmallow[tests]", "pre-commit (>=3.5,<4.0)", "tox"]
+docs = ["Sphinx (==7.2.6)", "marshmallow-sqlalchemy (>=0.19.0)", "sphinx-issues (==4.0.0)"]
+sqlalchemy = ["flask-sqlalchemy (>=3.0.0)", "marshmallow-sqlalchemy (>=0.29.0)"]
+tests = ["flask-marshmallow[sqlalchemy]", "pytest"]
 
 [[package]]
 name = "flask-migrate"
@@ -4779,4 +4777,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "2d2d43a92e1f61a653f5308d68bee42aea35722f546880f430c2233fd5cf3724"
+content-hash = "3a0d281d1ee77b27d3625f16e97f9b4fc24df74a37c0d7195a27feae2988f073"
