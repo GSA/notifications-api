@@ -31,10 +31,10 @@ from app.v2.errors import TotalRequestsError
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
-    '''
+    """
     We update job status, get the csv data from s3 and begin processing
     csv rows.
-    '''
+    """
     start = datetime.utcnow()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
@@ -114,10 +114,10 @@ def get_recipient_csv_and_template_and_sender_id(job):
 
 
 def process_row(row, template, job, service, sender_id=None):
-    '''
+    """
     The process will branch off based on notification type,
     sms or email.
-    '''
+    """
     template_type = template.template_type
     encrypted = encryption.encrypt(
         {
@@ -175,10 +175,10 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
 
 @notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
-    '''
+    """
     We are persisting the notification to the db here and
     placing notification in queue to send to sns.
-    '''
+    """
     notification = encryption.decrypt(encrypted_notification)
     # SerialisedService and SerialisedTemplate classes are
     # used here to grab the same service and template from the cache
