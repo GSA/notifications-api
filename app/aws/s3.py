@@ -114,8 +114,7 @@ def extract_phones(job):
     job_row = 0
     for row in job:
         row = row.split(",")
-        current_app.logger.info(f"PHONE INDEX IS NOW {phone_index}")
-        current_app.logger.info(f"LENGTH OF ROW IS {len(row)}")
+
         if phone_index >= len(row):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
