@@ -91,6 +91,13 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300
 )
 def deliver_sms(self, notification_id):
+    '''
+    This logic will branch off to the final step in delivering
+    the notification to sns.
+    Logic is in place for delivery receipts.
+    Additional logic to help devs output authentication code to
+    terminal.
+    '''
     try:
         current_app.logger.info(
             "Start sending SMS for notification id: {}".format(notification_id)
@@ -108,7 +115,7 @@ def deliver_sms(self, notification_id):
             current_app.logger.warning(
                 ansi_green + f"AUTHENTICATION CODE: {notification.content}" + ansi_reset
             )
-
+        # Code branches off to send_to_providers.py
         message_id = send_to_providers.send_sms_to_provider(notification)
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
