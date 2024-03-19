@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import pytest
@@ -36,6 +37,7 @@ def test_create_invited_org_user(
     platform_admin,
     expected_invited_by,
 ):
+    os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"] = "http://foo.fake.gov"
     mocked = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@example.com"
     sample_user.platform_admin = platform_admin
