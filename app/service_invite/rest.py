@@ -39,7 +39,7 @@ def _create_service_invite(invited_user, invite_link_host):
     personalisation = {
         "user_name": invited_user.from_user.name,
         "service_name": invited_user.service.name,
-        "url": invited_user_url(invited_user.id, invite_link_host),
+        "url": "https://idp.int.identitysandbox.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:test_notify_gov&nonce=01234567890123456789012345&prompt=select_account&redirect_uri=http://localhost:6012/set-up-your-profile&response_type=code&scope=openid+email&state=abcdefghijklmnopabcdefghijklmnop",  # noqa
     }
 
     saved_notification = persist_notification(
