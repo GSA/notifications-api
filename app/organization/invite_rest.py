@@ -1,4 +1,5 @@
 import json
+import os
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
@@ -58,7 +59,7 @@ def invite_user_to_org(organization_id):
             else invited_org_user.invited_by.name
         ),
         "organization_name": invited_org_user.organization.name,
-        "url": "https://idp.int.identitysandbox.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:test_notify_gov&nonce=01234567890123456789012345&prompt=select_account&redirect_uri=http://localhost:6012/set-up-your-profile&response_type=code&scope=openid+email&state=abcdefghijklmnopabcdefghijklmnop",  # noqa
+        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
     }
     saved_notification = persist_notification(
         template_id=template.id,
