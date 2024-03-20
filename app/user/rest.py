@@ -19,6 +19,7 @@ from app.dao.users_dao import (
     create_secret_code,
     create_user_code,
     dao_archive_user,
+    get_login_gov_user,
     get_user_and_accounts,
     get_user_by_email,
     get_user_by_id,
@@ -139,6 +140,11 @@ def update_user_attribute(user_id):
         )
         saved_notification.personalisation = personalisation
 
+        redis_store.set(
+            f"email-personalisation-{saved_notification.id}",
+            json.dumps(personalisation),
+            ex=60 * 60,
+        )
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=user_to_update.serialize()), 200
@@ -360,6 +366,12 @@ def create_2fa_code(
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
+
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 
@@ -393,6 +405,11 @@ def send_user_confirm_new_email(user_id):
     )
     saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
     return jsonify({}), 204
 
@@ -486,6 +503,12 @@ def send_already_registered_email(user_id):
 
     current_app.logger.info("Sending notification to queue")
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
+
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     current_app.logger.info("Sent notification to queue")
@@ -535,6 +558,16 @@ def set_permissions(user_id, service_id):
         dao_update_service_user(service_user)
 
     return jsonify({}), 204
+
+
+@user_blueprint.route("/get-login-gov-user", methods=["POST"])
+def get_user_login_gov_user():
+    request_args = request.get_json()
+    login_uuid = request_args["login_uuid"]
+    email = request_args["email"]
+    user = get_login_gov_user(login_uuid, email)
+    result = user.serialize()
+    return jsonify(data=result)
 
 
 @user_blueprint.route("/email", methods=["POST"])
@@ -603,6 +636,11 @@ def send_user_reset_password():
     )
     saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify({}), 204

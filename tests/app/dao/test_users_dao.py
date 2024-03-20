@@ -15,6 +15,7 @@ from app.dao.users_dao import (
     dao_archive_user,
     delete_codes_older_created_more_than_a_day_ago,
     delete_model_user,
+    get_login_gov_user,
     get_user_by_email,
     get_user_by_id,
     increment_failed_login_count,
@@ -108,6 +109,12 @@ def test_reset_failed_login_should_set_failed_logins_to_0(sample_user):
 def test_get_user_by_email(sample_user):
     user_from_db = get_user_by_email(sample_user.email_address)
     assert sample_user == user_from_db
+
+
+def test_get_login_gov_user(sample_user):
+    user_from_db = get_login_gov_user("fake_login_gov_uuid", sample_user.email_address)
+    assert sample_user.email_address == user_from_db.email_address
+    assert user_from_db.login_uuid is not None
 
 
 def test_get_user_by_email_is_case_insensitive(sample_user):

@@ -253,7 +253,7 @@ Once all of pre-requisites for the project are installed and you have a
 cloud.gov account, you can now set up the API project and get things running
 locally!
 
-First, clone the respository in the directory of your choosing on your machine:
+First, clone the repository in the directory of your choosing on your machine:
 
 ```sh
 git clone git@github.com:GSA/notifications-api.git
@@ -270,7 +270,7 @@ pyenv virtualenv 3.12.2 notify-api
 pyenv local notify-api
 ```
 
-_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently.You should see the virtual environment name in terminal as 'notify-api'._
+_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently._
 
 Now [log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line)
 in the command line by using this command:
@@ -304,26 +304,27 @@ brew services start redis
 
 ### Switching to different environment
 
-Once all of pre-requisites for the project are installed and to switch to newer environment with newer python version follow the below steps to create new virtual environment.
+Once all of pre-requisites for the project are installed and for first time setup or if you're upgrading an existing project to newer environment with newer python version follow below steps to create new virtual environment.
 
 First install the newer Python version we need with `pyenv`, (say the planned upgrade to 3.15) like so :
 
 ```sh
-pyenv install 3.15
+pyenv install 3.12
 ```
 
 Now go into the project directory (`notifications-api` by default), create a
 virtual environment, and set the local Python version to point to the virtual
-environment (assumes version Python `3.15.2` is what is installed on your
+environment (assumes version Python `3.12.2` is what is installed on your
 machine):
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.15.2 notify-api-upgrade
+pyenv virtualenv 3.12.2 notify-api-upgrade
 pyenv local notify-api-upgrade
 ```
 
-_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently.you can deactivate the current environment by running `source deactivate` or `deactivate`.Close the terminal and reopen a new terminal should see the newer virtual environment name in terminal as 'notify-api-upgrade'. you can the get python version ,executable, and other details for this environment by running `poetry env info`._
+_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently.You can deactivate the current environment by running `source deactivate` or `deactivate`.Close the shell session and reopen a new shell session should show the newer virtual environment._
+_You can get version,executable, and other details for any environment by running `poetry env info`._
 
 
 ### Final environment setup
