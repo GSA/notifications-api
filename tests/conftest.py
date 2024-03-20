@@ -69,7 +69,7 @@ def _notify_db(notify_api):
 
         yield db
 
-        db.session.remove()
+        db.session.close_all()
         db.engine.dispose()
 
 

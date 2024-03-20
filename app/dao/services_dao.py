@@ -206,7 +206,7 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
     query = (
         Service.query.filter(Service.users.any(id=user_id))
         .order_by(asc(Service.created_at))
-        .options(joinedload("users"))
+        .options(joinedload(Service.users))
     )
 
     if only_active:

@@ -17,7 +17,7 @@ session events.
 import datetime
 
 from sqlalchemy import Column, ForeignKeyConstraint, Integer, Table, util
-from sqlalchemy.orm import attributes, class_mapper, object_mapper, registry
+from sqlalchemy.orm import attributes, object_mapper, registry
 from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
 
 
@@ -169,7 +169,9 @@ def _add_version_for_non_super_history_mapper(super_history_mapper, local_mapper
 
 def _col_copy(col):
     orig = col
-    col = Column(col.name, col.type, nullable=col.nullable, unique=False)
+    col = Column(
+        col.name, col.type, nullable=col.nullable, unique=False, default=col.default
+    )
     orig.info["history_copy"] = col
 
     # if the column is nullable, we could end up overwriting an on-purpose null value with a default.
@@ -189,7 +191,8 @@ class Versioned(object):
 
     @classmethod
     def __declare_last__(cls):
-        _history_mapper(class_mapper(cls))
+        if not hasattr(cls, "__history_mapper__"):
+            _history_mapper(cls.__mapper__)
 
     @classmethod
     def get_history_model(cls):

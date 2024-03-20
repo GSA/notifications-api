@@ -7,8 +7,8 @@ Create Date: 2023-05-23 10:03:10.485368
 """
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 
 revision = "0395_remove_intl_letters_perm"
 down_revision = "0394_remove_contact_list"
