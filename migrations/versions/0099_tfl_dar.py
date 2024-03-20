@@ -12,8 +12,8 @@ from sqlalchemy import text
 revision = "0099_tfl_dar"
 down_revision = "0098_service_inbound_api"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 TFL_DAR_ID = "1d70f564-919b-4c68-8bdf-b8520d92516e"

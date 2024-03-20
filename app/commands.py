@@ -1,6 +1,7 @@
 import csv
 import functools
 import itertools
+import secrets
 import uuid
 from datetime import datetime, timedelta
 from os import getenv
@@ -8,6 +9,7 @@ from os import getenv
 import click
 import flask
 from click_datetime import Datetime as click_dt
+from faker import Faker
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
@@ -49,10 +51,8 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
+from app.enums import AuthType, KeyType, NotificationStatus, NotificationType
 from app.models import (
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    SMS_TYPE,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -64,6 +64,17 @@ from app.models import (
     User,
 )
 from app.utils import get_midnight_in_utc
+from tests.app.db import (
+    create_job,
+    create_notification,
+    create_organization,
+    create_service,
+    create_template,
+    create_user,
+)
+
+# used in add-test-* commands
+fake = Faker(["en_US"])
 
 
 @click.group(name="command", help="Additional commands")
@@ -117,9 +128,7 @@ def purge_functional_test_data(user_email_prefix):
         current_app.logger.error("Can only be run in development")
         return
 
-    users = User.query.filter(
-        User.email_address.like("{}%".format(user_email_prefix))
-    ).all()
+    users = User.query.filter(User.email_address.like(f"{user_email_prefix}%")).all()
     for usr in users:
         # Make sure the full email includes a uuid in it
         # Just in case someone decides to use a similar email address.
@@ -127,9 +136,7 @@ def purge_functional_test_data(user_email_prefix):
             uuid.UUID(usr.email_address.split("@")[0].split("+")[1])
         except ValueError:
             print(
-                "Skipping {} as the user email doesn't contain a UUID.".format(
-                    usr.email_address
-                )
+                f"Skipping {usr.email_address} as the user email doesn't contain a UUID."
             )
         else:
             services = dao_fetch_all_services_by_user(usr.id)
@@ -164,7 +171,7 @@ def purge_functional_test_data(user_email_prefix):
 def insert_inbound_numbers_from_file(file_name):
     # TODO maintainability what is the purpose of this command?  Who would use it and why?
 
-    print("Inserting inbound numbers from {}".format(file_name))
+    print(f"Inserting inbound numbers from {file_name}")
     with open(file_name) as file:
         sql = "insert into inbound_numbers values('{}', '{}', 'sns', null, True, now(), null);"
 
@@ -199,9 +206,7 @@ def rebuild_ft_billing_for_day(service_id, day):
     def rebuild_ft_data(process_day, service):
         deleted_rows = delete_billing_data_for_service_for_day(process_day, service)
         current_app.logger.info(
-            "deleted {} existing billing rows for {} on {}".format(
-                deleted_rows, service, process_day
-            )
+            f"deleted {deleted_rows} existing billing rows for {service} on {process_day}"
         )
         transit_data = fetch_billing_data_for_day(
             process_day=process_day, service_id=service
@@ -211,9 +216,7 @@ def rebuild_ft_billing_for_day(service_id, day):
             # upsert existing rows
             update_fact_billing(data, process_day)
         current_app.logger.info(
-            "added/updated {} billing rows for {} on {}".format(
-                len(transit_data), service, process_day
-            )
+            f"added/updated {len(transit_data)} billing rows for {service} on {process_day}"
         )
 
     if service_id:
@@ -248,7 +251,8 @@ def rebuild_ft_billing_for_day(service_id, day):
     "-a",
     "--auth_type",
     required=False,
-    help="The authentication type for the user, sms_auth or email_auth. Defaults to sms_auth if not provided",
+    help="The authentication type for the user, AuthType.SMS or AuthType.EMAIL. "
+    "Defaults to AuthType.SMS if not provided",
 )
 @click.option(
     "-p", "--permissions", required=True, help="Comma separated list of permissions."
@@ -276,7 +280,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
         }
         current_app.logger.info(f"DATA = {data}")
         with current_app.test_request_context(
-            path="/service/{}/invite/".format(service_id),
+            path=f"/service/{service_id}/invite/",
             method="POST",
             data=json.dumps(data),
             headers={"Content-Type": "application/json"},
@@ -286,16 +290,12 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                 current_app.logger.info(f"RESPONSE {response[1]}")
                 if response[1] != 201:
                     print(
-                        "*** ERROR occurred for email address: {}".format(
-                            email_address.strip()
-                        )
+                        f"*** ERROR occurred for email address: {email_address.strip()}"
                     )
                 print(response[0].get_data(as_text=True))
             except Exception as e:
                 print(
-                    "*** ERROR occurred for email address: {}. \n{}".format(
-                        email_address.strip(), e
-                    )
+                    f"*** ERROR occurred for email address: {email_address.strip()}. \n{e}"
                 )
 
     file.close()
@@ -318,7 +318,7 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
 )
 def update_jobs_archived_flag(start_date, end_date):
     current_app.logger.info(
-        "Archiving jobs created between {} to {}".format(start_date, end_date)
+        f"Archiving jobs created between {start_date} to {end_date}"
     )
 
     process_date = start_date
@@ -331,21 +331,20 @@ def update_jobs_archived_flag(start_date, end_date):
                 where
                     created_at >= (date :start + time '00:00:00')
                     and created_at < (date :end + time '00:00:00')
-               """
+        """
         result = db.session.execute(
             sql, {"start": process_date, "end": process_date + timedelta(days=1)}
         )
         db.session.commit()
         current_app.logger.info(
-            "jobs: --- Completed took {}ms. Archived {} jobs for {}".format(
-                datetime.now() - start_time, result.rowcount, process_date
-            )
+            f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived "
+            f"{result.rowcount} jobs for {process_date}"
         )
 
         process_date += timedelta(days=1)
 
         total_updated += result.rowcount
-    current_app.logger.info("Total archived jobs = {}".format(total_updated))
+    current_app.logger.info(f"Total archived jobs = {total_updated}")
 
 
 @notify_command(name="populate-organizations-from-file")
@@ -532,11 +531,11 @@ def populate_go_live(file_name):
 @notify_command(name="fix-billable-units")
 def fix_billable_units():
     query = Notification.query.filter(
-        Notification.notification_type == SMS_TYPE,
-        Notification.status != NOTIFICATION_CREATED,
+        Notification.notification_type == NotificationType.SMS,
+        Notification.status != NotificationStatus.CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     )
 
     for notification in query.all():
@@ -551,9 +550,7 @@ def fix_billable_units():
             show_prefix=notification.service.prefix_sms,
         )
         print(
-            "Updating notification: {} with {} billable_units".format(
-                notification.id, template.fragment_count
-            )
+            f"Updating notification: {notification.id} with {template.fragment_count} billable_units"
         )
 
         Notification.query.filter(Notification.id == notification.id).update(
@@ -586,9 +583,7 @@ def process_row_from_job(job_id, job_row_number):
         if row.index == job_row_number:
             notification_id = process_row(row, template, job, job.service)
             current_app.logger.info(
-                "Process row {} for job {} created notification_id: {}".format(
-                    job_row_number, job_id, notification_id
-                )
+                f"Process row {job_row_number} for job {job_id} created notification_id: {notification_id}"
             )
 
 
@@ -623,9 +618,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
             latest_annual_billing, {"service_id": row.id}
         )
         free_allowance = [x[0] for x in free_allowance_rows]
-        print(
-            "create free limit of {} for service: {}".format(free_allowance[0], row.id)
-        )
+        print(f"create free limit of {free_allowance[0]} for service: {row.id}")
         dao_create_or_update_annual_billing_for_year(
             service_id=row.id,
             free_sms_fragment_limit=free_allowance[0],
@@ -724,7 +717,7 @@ def validate_mobile(ctx, param, value):  # noqa
     hide_input=True,
     confirmation_prompt=True,
 )
-@click.option("-a", "--auth_type", default="sms_auth")
+@click.option("-a", "--auth_type", default=AuthType.SMS)
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
@@ -852,3 +845,150 @@ def purge_csv_bucket():
     print("ABOUT TO RUN PURGE CSV BUCKET")
     s3.purge_bucket(bucket_name, access_key, secret, region)
     print("RAN PURGE CSV BUCKET")
+
+
+"""
+Commands to load test data into the database for
+Orgs, Services, Users, Jobs, Notifications
+
+faker is used to generate some random fields. All
+database commands were used from tests/app/db.py
+where possible to enable better maintainability.
+"""
+
+
+# generate n number of test orgs into the dev DB
+@notify_command(name="add-test-organizations-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_organizations_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    def generate_gov_agency():
+        agency_names = [
+            "Bureau",
+            "Department",
+            "Administration",
+            "Authority",
+            "Commission",
+            "Division",
+            "Office",
+            "Institute",
+            "Agency",
+            "Council",
+            "Board",
+            "Committee",
+            "Corporation",
+            "Service",
+            "Center",
+            "Registry",
+            "Foundation",
+            "Task Force",
+            "Unit",
+        ]
+
+        government_sectors = [
+            "Healthcare",
+            "Education",
+            "Transportation",
+            "Defense",
+            "Law Enforcement",
+            "Environmental Protection",
+            "Housing and Urban Development",
+            "Finance and Economy",
+            "Social Services",
+            "Energy",
+            "Agriculture",
+            "Labor and Employment",
+            "Foreign Affairs",
+            "Trade and Commerce",
+            "Science and Technology",
+        ]
+
+        agency = secrets.choice(agency_names)
+        speciality = secrets.choice(government_sectors)
+
+        return f"{fake.word().capitalize()} {speciality} {agency}"
+
+    for num in range(1, int(generate) + 1):
+        org = create_organization(
+            name=generate_gov_agency(),
+            organization_type=secrets.choice(["federal", "state", "other"]),
+        )
+        print(f"{num} {org.name} created")
+
+
+# generate n number of test services into the dev DB
+@notify_command(name="add-test-services-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_services_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service_name = f"{fake.company()} sample service"
+        service = create_service(service_name=service_name)
+        print(f"{num} {service.name} created")
+
+
+# generate n number of test jobs into the dev DB
+@notify_command(name="add-test-jobs-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_jobs_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template)
+        print(f"{num} {job.id} created")
+
+
+# generate n number of notifications into the dev DB
+@notify_command(name="add-test-notifications-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_notifications_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template=template)
+        notification = create_notification(
+            template=template,
+            job=job,
+        )
+        print(f"{num} {notification.id} created")
+
+
+# generate n number of test users into the dev DB
+@notify_command(name="add-test-users-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default="1")
+@click.option("-s", "--state", default="active")
+@click.option("-d", "--admin", default=False, type=bool)
+def add_test_users_to_db(generate, state, admin):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+
+        def fake_email(name):
+            first_name, last_name = name.split(maxsplit=1)
+            username = f"{first_name.lower()}.{last_name.lower()}"
+            return f"{username}@test.gsa.gov"
+
+        name = fake.name()
+        user = create_user(
+            name=name,
+            email=fake_email(name),
+            state=state,
+            platform_admin=admin,
+        )
+        print(f"{num} {user.email_address} created")

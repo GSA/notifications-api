@@ -10,8 +10,8 @@ Create Date: 2016-09-20 12:12:30.838095
 revision = "0055_service_whitelist"
 down_revision = "0054_perform_drop_status_column"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

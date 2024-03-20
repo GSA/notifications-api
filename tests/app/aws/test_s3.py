@@ -5,7 +5,14 @@ from os import getenv
 import pytest
 from botocore.exceptions import ClientError
 
-from app.aws.s3 import file_exists, get_s3_file, remove_csv_object, remove_s3_object
+from app.aws.s3 import (
+    file_exists,
+    get_personalisation_from_s3,
+    get_phone_number_from_s3,
+    get_s3_file,
+    remove_csv_object,
+    remove_s3_object,
+)
 
 default_access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
 default_secret_key = getenv("CSV_AWS_SECRET_ACCESS_KEY")
@@ -37,6 +44,83 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
         default_secret_key,
         default_region,
     )
+
+
+@pytest.mark.parametrize(
+    "job, job_id, job_row_number, expected_phone_number",
+    [
+        ("phone number\r\n+15555555555", "aaa", 0, "15555555555"),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "bbb",
+            1,
+            "15552222222",
+        ),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "ccc",
+            0,
+            "15551111111",
+        ),
+        (
+            "Phone number,name,date,time,address,English,Spanish\r\n15553333333,Tim,10/16,2:00 PM,5678 Tom St.,no,yes",
+            "ddd",
+            0,
+            "15553333333",
+        ),
+        (
+            # simulate file saved with utf8withbom
+            "\\ufeffPHONE NUMBER,Name\r\n5555555550,T 1\r\n5555555551,T 5,3/31/2024\r\n5555555552,T 2",
+            "eee",
+            2,
+            "5555555552",
+        ),
+    ],
+)
+def test_get_phone_number_from_s3(
+    mocker, job, job_id, job_row_number, expected_phone_number
+):
+    mocker.patch("app.aws.s3.redis_store")
+    get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
+    get_job_mock.return_value = job
+    phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
+    assert phone_number == expected_phone_number
+
+
+@pytest.mark.parametrize(
+    "job, job_id, job_row_number, expected_personalisation",
+    [
+        ("phone number\r\n+15555555555", "aaa", 0, {"phone number": "+15555555555"}),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "bbb",
+            1,
+            {
+                "day of week": "tuesday",
+                "favorite color": "red",
+                "phone number": "+1 (555) 222-2222",
+            },
+        ),
+        (
+            "day of week,favorite color,phone number\r\nmonday,green,1.555.111.1111\r\ntuesday,red,+1 (555) 222-2222",
+            "ccc",
+            0,
+            {
+                "day of week": "monday",
+                "favorite color": "green",
+                "phone number": "1.555.111.1111",
+            },
+        ),
+    ],
+)
+def test_get_personalisation_from_s3(
+    mocker, job, job_id, job_row_number, expected_personalisation
+):
+    mocker.patch("app.aws.s3.redis_store")
+    get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
+    get_job_mock.return_value = job
+    personalisation = get_personalisation_from_s3("service_id", job_id, job_row_number)
+    assert personalisation == expected_personalisation
 
 
 def test_remove_csv_object(notify_api, mocker):

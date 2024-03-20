@@ -6,8 +6,8 @@ Create Date: 2019-01-17 15:45:33.242955
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0252_letter_branding_table"

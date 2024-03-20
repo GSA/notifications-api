@@ -5,9 +5,8 @@ Revises: 0395_add_total_message_limit
 Create Date: 2023-04-27 14:59:39.428607
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0396_rename_organisation"
 down_revision = "0395_remove_intl_letters_perm"

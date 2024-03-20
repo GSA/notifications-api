@@ -10,8 +10,8 @@ Create Date: 2017-06-08 15:46:49.637642
 revision = "0096_update_job_stats"
 down_revision = "0095_migrate_existing_svc_perms"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

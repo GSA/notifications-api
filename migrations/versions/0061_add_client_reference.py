@@ -10,8 +10,8 @@ Create Date: 2016-11-17 13:19:25.820617
 revision = "0061_add_client_reference"
 down_revision = "0060_add_letter_template_type"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

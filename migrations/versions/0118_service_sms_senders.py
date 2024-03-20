@@ -10,8 +10,8 @@ Create Date: 2017-09-05 17:29:38.921045
 revision = "0118_service_sms_senders"
 down_revision = "0117_international_sms_notify"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

@@ -1,9 +1,14 @@
+import json
+from datetime import datetime
+
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
+    get_expired_invite_by_service_and_id,
     get_expired_invited_users_for_service,
     get_invited_user_by_id,
     get_invited_user_by_service_and_id,
@@ -11,8 +16,9 @@ from app.dao.invited_user_dao import (
     save_invited_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import InvitedUserStatus, KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, Service
+from app.models import Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -24,16 +30,17 @@ service_invite = Blueprint("service_invite", __name__)
 register_errors(service_invite)
 
 
-@service_invite.route("/service/<service_id>/invite", methods=["POST"])
-def create_invited_user(service_id):
-    request_json = request.get_json()
-    invited_user = invited_user_schema.load(request_json)
-    save_invited_user(invited_user)
-
+def _create_service_invite(invited_user, invite_link_host):
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
+
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    personalisation = {
+        "user_name": invited_user.from_user.name,
+        "service_name": invited_user.service.name,
+        "url": invited_user_url(invited_user.id, invite_link_host),
+    }
 
     saved_notification = persist_notification(
         template_id=template.id,
@@ -43,18 +50,29 @@ def create_invited_user(service_id):
         personalisation={
             "user_name": invited_user.from_user.name,
             "service_name": invited_user.service.name,
-            "url": invited_user_url(
-                invited_user.id,
-                request_json.get("invite_link_host"),
-            ),
+            "url": invited_user_url(invited_user.id, invite_link_host),
         },
-        notification_type=EMAIL_TYPE,
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
     )
-
+    saved_notification.personalisation = personalisation
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=1800,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
+
+
+@service_invite.route("/service/<service_id>/invite", methods=["POST"])
+def create_invited_user(service_id):
+    request_json = request.get_json()
+    invited_user = invited_user_schema.load(request_json)
+    save_invited_user(invited_user)
+
+    _create_service_invite(invited_user, request_json.get("invite_link_host"))
 
     return jsonify(data=invited_user_schema.dump(invited_user)), 201
 
@@ -89,6 +107,36 @@ def update_invited_user(service_id, invited_user_id):
     current_data.update(request.get_json())
     update_dict = invited_user_schema.load(current_data)
     save_invited_user(update_dict)
+    return jsonify(data=invited_user_schema.dump(fetched)), 200
+
+
+@service_invite.route(
+    "/service/<service_id>/invite/<invited_user_id>/resend", methods=["POST"]
+)
+def resend_service_invite(service_id, invited_user_id):
+    """Resend an expired invite.
+
+    This resets the invited user's created date and status to make it a new invite, and
+    sends the new invite out to the user.
+
+    Note:
+        This ignores the POST data entirely.
+    """
+    fetched = get_expired_invite_by_service_and_id(
+        service_id=service_id,
+        invited_user_id=invited_user_id,
+    )
+
+    fetched.created_at = datetime.utcnow()
+    fetched.status = InvitedUserStatus.PENDING
+
+    current_data = {k: v for k, v in invited_user_schema.dump(fetched).items()}
+    update_dict = invited_user_schema.load(current_data)
+
+    save_invited_user(update_dict)
+
+    _create_service_invite(fetched, current_app.config["ADMIN_BASE_URL"])
+
     return jsonify(data=invited_user_schema.dump(fetched)), 200
 
 

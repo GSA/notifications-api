@@ -10,8 +10,8 @@ Create Date: 2016-06-07 09:51:07.343334
 revision = "0026_rename_notify_service"
 down_revision = "0025_notify_service_data"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

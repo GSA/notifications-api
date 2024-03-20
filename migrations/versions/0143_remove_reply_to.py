@@ -5,9 +5,8 @@ Revises: 0142_validate_constraint
 Create Date: 2017-11-21 10:42:25.045444
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0143_remove_reply_to"
 down_revision = "0142_validate_constraint"

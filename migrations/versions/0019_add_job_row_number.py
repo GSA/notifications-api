@@ -10,8 +10,8 @@ Create Date: 2016-05-18 15:04:24.513071
 revision = "0019_add_job_row_number"
 down_revision = "0018_remove_subject_uniqueness"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

@@ -10,6 +10,12 @@ def fake_client(notify_api):
         def name(self):
             return "fake"
 
+        def init_app(self, current_app, *args, **kwargs):
+            pass
+
+        def send_sms(self, *args, **kwargs):
+            pass
+
     fake_client = FakeSmsClient()
     # fake_client.init_app(notify_api)
     return fake_client

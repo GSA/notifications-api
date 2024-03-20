@@ -5,10 +5,10 @@ Revises: 0260_remove_dvla_organisation
 Create Date: 2019-02-13 13:45:00.782500
 
 """
-from alembic import op
 from itertools import product
-import sqlalchemy as sa
 
+import sqlalchemy as sa
+from alembic import op
 
 revision = "0261_service_volumes"
 down_revision = "0260_remove_dvla_organisation"

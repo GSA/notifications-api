@@ -88,6 +88,8 @@ The below steps rely on you first configuring access to the Terraform state in s
     terraform plan
     ```
 
+    If the `terraform init` command fails, you may need to run `terraform init -upgrade` to make sure new module versions are picked up.
+
 1. Apply changes with `terraform apply`.
 
 1. Remove the space deployer service instance if it doesn't need to be used again, such as when manually running terraform once.

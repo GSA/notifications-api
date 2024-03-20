@@ -1,6 +1,7 @@
 # import pytest
 from datetime import datetime
 
+import pytest
 from flask import current_app
 
 from app import aws_cloudwatch_client
@@ -52,6 +53,27 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
         }
     else:
         return {"events": []}
+
+
+@pytest.mark.parametrize(
+    "response, notify_id, expected_message",
+    [
+        (
+            "Phone has blocked SMS",
+            "abc",
+            "\x1b[31mThe phone number for notification_id abc is OPTED OUT. You need to opt back in\x1b[0m",
+        ),
+        (
+            "Some phone is opted out",
+            "xyz",
+            "\x1b[31mThe phone number for notification_id xyz is OPTED OUT. You need to opt back in\x1b[0m",
+        ),
+        ("Phone is A-OK", "123", None),
+    ],
+)
+def test_warn_if_dev_is_opted_out(response, notify_id, expected_message):
+    result = aws_cloudwatch_client.warn_if_dev_is_opted_out(response, notify_id)
+    assert result == expected_message
 
 
 def test_check_sms_success(notify_api, mocker):

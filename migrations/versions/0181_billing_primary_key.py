@@ -5,8 +5,8 @@ Revises: 0179_billing_primary_const
 Create Date: 2018-03-21 13:41:26.203712
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0181_billing_primary_key"

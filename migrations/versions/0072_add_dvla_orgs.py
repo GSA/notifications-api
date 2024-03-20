@@ -10,8 +10,8 @@ Create Date: 2017-04-19 15:25:45.155886
 revision = "0072_add_dvla_orgs"
 down_revision = "0071_add_job_error_state"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

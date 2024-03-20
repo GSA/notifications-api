@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from urllib import parse
 
@@ -9,34 +10,38 @@ from notifications_utils.template import (
     SMSMessageTemplate,
 )
 
-from app import create_uuid, db, notification_provider_clients
+from app import create_uuid, db, notification_provider_clients, redis_store
+from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
+from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    BRANDING_BOTH,
-    BRANDING_ORG_BANNER,
-    EMAIL_TYPE,
-    KEY_TYPE_TEST,
-    NOTIFICATION_SENDING,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    SMS_TYPE,
-)
 from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
 def send_sms_to_provider(notification):
+    # we no longer store the personalisation in the db,
+    # need to retrieve from s3 before generating content
+    # However, we are still sending the initial verify code through personalisation
+    # so if there is some value there, don't overwrite it
+    if not notification.personalisation:
+        personalisation = get_personalisation_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        notification.personalisation = personalisation
+
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
     if not service.active:
         technical_failure(notification=notification)
         return
 
-    if notification.status == "created":
-        provider = provider_to_use(SMS_TYPE, notification.international)
+    if notification.status == NotificationStatus.CREATED:
+        provider = provider_to_use(NotificationType.SMS, notification.international)
         if not provider:
             technical_failure(notification=notification)
             return
@@ -53,7 +58,7 @@ def send_sms_to_provider(notification):
             prefix=service.name,
             show_prefix=service.prefix_sms,
         )
-        if notification.key_type == KEY_TYPE_TEST:
+        if notification.key_type == KeyType.TEST:
             update_notification_to_sending(notification, provider)
             send_sms_response(provider.name, str(notification.id))
 
@@ -65,16 +70,44 @@ def send_sms_to_provider(notification):
                 # providers as a slow down of our providers can cause us to run out of DB connections
                 # Therefore we pull all the data from our DB models into `send_sms_kwargs`now before
                 # closing the session (as otherwise it would be reopened immediately)
+
+                # We start by trying to get the phone number from a job in s3.  If we fail, we assume
+                # the phone number is for the verification code on login, which is not a job.
+                recipient = None
+                try:
+                    recipient = get_phone_number_from_s3(
+                        notification.service_id,
+                        notification.job_id,
+                        notification.job_row_number,
+                    )
+                except Exception:
+                    # It is our 2facode, maybe
+                    key = f"2facode-{notification.id}".replace(" ", "")
+                    recipient = redis_store.raw_get(key)
+
+                    if recipient:
+                        recipient = recipient.decode("utf-8")
+
+                if recipient is None:
+                    si = notification.service_id
+                    ji = notification.job_id
+                    jrn = notification.job_row_number
+                    raise Exception(
+                        f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                    )
                 send_sms_kwargs = {
-                    "to": notification.normalised_to,
+                    "to": recipient,
                     "content": str(template),
                     "reference": str(notification.id),
                     "sender": notification.reply_to_text,
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
+                current_app.logger.info("sending to sms")
                 message_id = provider.send_sms(**send_sms_kwargs)
+                current_app.logger.info(f"got message_id {message_id}")
             except Exception as e:
+                current_app.logger.error(e)
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
                 raise e
@@ -85,13 +118,20 @@ def send_sms_to_provider(notification):
 
 
 def send_email_to_provider(notification):
-    service = SerialisedService.from_id(notification.service_id)
+    # Someone needs an email, possibly new registration
+    recipient = redis_store.get(f"email-address-{notification.id}")
+    recipient = recipient.decode("utf-8")
+    personalisation = redis_store.get(f"email-personalisation-{notification.id}")
+    if personalisation:
+        personalisation = personalisation.decode("utf-8")
+        notification.personalisation = json.loads(personalisation)
 
+    service = SerialisedService.from_id(notification.service_id)
     if not service.active:
         technical_failure(notification=notification)
         return
-    if notification.status == "created":
-        provider = provider_to_use(EMAIL_TYPE, False)
+    if notification.status == NotificationStatus.CREATED:
+        provider = provider_to_use(NotificationType.EMAIL, False)
         template_dict = SerialisedTemplate.from_id_and_service_id(
             template_id=notification.template_id,
             service_id=service.id,
@@ -101,26 +141,26 @@ def send_email_to_provider(notification):
         html_email = HTMLEmailTemplate(
             template_dict,
             values=notification.personalisation,
-            **get_html_email_options(service)
+            **get_html_email_options(service),
         )
 
         plain_text_email = PlainTextEmailTemplate(
             template_dict, values=notification.personalisation
         )
-        if notification.key_type == KEY_TYPE_TEST:
+
+        if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
-            send_email_response(notification.reference, notification.to)
+            send_email_response(notification.reference, recipient)
         else:
-            from_address = '"{}" <{}@{}>'.format(
-                service.name,
-                service.email_from,
-                current_app.config["NOTIFY_EMAIL_DOMAIN"],
+            from_address = (
+                f'"{service.name}" <{service.email_from}@'
+                f'{current_app.config["NOTIFY_EMAIL_DOMAIN"]}>'
             )
 
             reference = provider.send_email(
                 from_address,
-                notification.normalised_to,
+                recipient,
                 plain_text_email.subject,
                 body=str(plain_text_email),
                 html_body=str(html_email),
@@ -133,8 +173,8 @@ def send_email_to_provider(notification):
 def update_notification_to_sending(notification, provider):
     notification.sent_at = datetime.utcnow()
     notification.sent_by = provider.name
-    if notification.status not in NOTIFICATION_STATUS_TYPES_COMPLETED:
-        notification.status = NOTIFICATION_SENDING
+    if notification.status not in NotificationStatus.completed_types():
+        notification.status = NotificationStatus.SENDING
 
     dao_update_notification(notification)
 
@@ -153,10 +193,8 @@ def provider_to_use(notification_type, international=True):
     ]
 
     if not active_providers:
-        current_app.logger.error(
-            "{} failed as no active providers".format(notification_type)
-        )
-        raise Exception("No active {} providers".format(notification_type))
+        current_app.logger.error(f"{notification_type} failed as no active providers")
+        raise Exception(f"No active {notification_type} providers")
 
     # we only have sns
     chosen_provider = active_providers[0]
@@ -205,8 +243,8 @@ def get_html_email_options(service):
     )
 
     return {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": logo_url,
         "brand_text": branding.text,
@@ -215,10 +253,9 @@ def get_html_email_options(service):
 
 
 def technical_failure(notification):
-    notification.status = NOTIFICATION_TECHNICAL_FAILURE
+    notification.status = NotificationStatus.TECHNICAL_FAILURE
     dao_update_notification(notification)
     raise NotificationTechnicalFailureException(
-        "Send {} for notification id {} to provider is not allowed: service {} is inactive".format(
-            notification.notification_type, notification.id, notification.service_id
-        )
+        f"Send {notification.notification_type} for notification id {notification.id} "
+        f"to provider is not allowed: service {notification.service_id} is inactive"
     )

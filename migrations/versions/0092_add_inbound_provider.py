@@ -10,8 +10,8 @@ Create Date: 2017-06-02 16:07:35.445423
 revision = "0092_add_inbound_provider"
 down_revision = "0090_inbound_sms"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

@@ -5,8 +5,8 @@ Revises: 0143_remove_reply_to
 Create Date: 2017-11-17 15:42:16.401229
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0144_template_service_letter"

@@ -10,8 +10,8 @@ Create Date: 2017-07-27 11:12:34.938086
 revision = "0113_job_created_by_nullable"
 down_revision = "0112_add_start_end_dates"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

@@ -10,8 +10,8 @@ Create Date: 2016-10-04 09:43:42.321138
 revision = "0056_minor_updates"
 down_revision = "0055_service_whitelist"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

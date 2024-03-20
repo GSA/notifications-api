@@ -27,7 +27,8 @@ def upgrade():
     # select_by_val = service_id
     input_params = {"service_id": service_id}
     conn.execute(
-        text("update services set name='Notify.gov' where id =:service_id"), input_params
+        text("update services set name='Notify.gov' where id =:service_id"),
+        input_params,
     )
 
     # table_name = 'services_history'

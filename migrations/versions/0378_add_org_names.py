@@ -5,8 +5,8 @@ Revises: 0377_add_inbound_sms_number
 Create Date: 2022-09-23 20:04:00.766980
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0378_add_org_names"

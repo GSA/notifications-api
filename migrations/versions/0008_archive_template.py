@@ -10,8 +10,8 @@ Create Date: 2016-04-25 14:16:49.787229
 revision = "0008_archive_template"
 down_revision = "0007_template_history"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

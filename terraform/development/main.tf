@@ -1,17 +1,15 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio"
-  cf_space_name    = "notify-local-dev"
-  recursive_delete = true
-  key_name         = "${var.username}-api-dev-key"
+  cf_org_name   = "gsa-tts-benefits-studio"
+  cf_space_name = "notify-local-dev"
+  key_name      = "${var.username}-api-dev-key"
 }
 
 module "csv_upload_bucket" {
-  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.2.0"
+  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.7.1"
 
-  cf_org_name      = local.cf_org_name
-  cf_space_name    = local.cf_space_name
-  recursive_delete = local.recursive_delete
-  name             = "${var.username}-csv-upload-bucket"
+  cf_org_name   = local.cf_org_name
+  cf_space_name = local.cf_space_name
+  name          = "${var.username}-csv-upload-bucket"
 }
 resource "cloudfoundry_service_key" "csv_key" {
   name             = local.key_name

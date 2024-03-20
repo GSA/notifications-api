@@ -5,8 +5,8 @@ Revises: 0183_alter_primary_key
 Create Date: 2018-03-28 16:05:54.648645
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0184_alter_primary_key_1"

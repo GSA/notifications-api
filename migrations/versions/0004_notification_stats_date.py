@@ -10,8 +10,8 @@ Create Date: 2016-04-20 13:59:01.132535
 revision = "0004_notification_stats_date"
 down_revision = "0003_add_service_history"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

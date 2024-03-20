@@ -10,8 +10,8 @@ Create Date: 2017-07-10 14:25:58.494636
 revision = "0107_drop_template_stats"
 down_revision = "0106_null_noti_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

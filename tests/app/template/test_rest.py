@@ -9,7 +9,8 @@ from freezegun import freeze_time
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
-from app.models import EMAIL_TYPE, SMS_TYPE, Template, TemplateHistory
+from app.enums import ServicePermissionType, TemplateProcessType, TemplateType
+from app.models import Template, TemplateHistory
 from tests import create_admin_authorization_header
 from tests.app.db import create_service, create_template, create_template_folder
 
@@ -17,8 +18,8 @@ from tests.app.db import create_service, create_template, create_template_folder
 @pytest.mark.parametrize(
     "template_type, subject",
     [
-        (SMS_TYPE, None),
-        (EMAIL_TYPE, "subject"),
+        (TemplateType.SMS, None),
+        (TemplateType.EMAIL, "subject"),
     ],
 )
 def test_should_create_a_new_template_for_a_service(
@@ -38,7 +39,7 @@ def test_should_create_a_new_template_for_a_service(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(service.id),
+        f"/service/{service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -50,7 +51,7 @@ def test_should_create_a_new_template_for_a_service(
     assert json_resp["data"]["service"] == str(service.id)
     assert json_resp["data"]["id"]
     assert json_resp["data"]["version"] == 1
-    assert json_resp["data"]["process_type"] == "normal"
+    assert json_resp["data"]["process_type"] == TemplateProcessType.NORMAL
     assert json_resp["data"]["created_by"] == str(sample_user.id)
     if subject:
         assert json_resp["data"]["subject"] == "subject"
@@ -70,7 +71,7 @@ def test_create_a_new_template_for_a_service_adds_folder_relationship(
 
     data = {
         "name": "my template",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "template <b>content</b>",
         "service": str(sample_service.id),
         "created_by": str(sample_service.users[0].id),
@@ -80,7 +81,7 @@ def test_create_a_new_template_for_a_service_adds_folder_relationship(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -97,7 +98,7 @@ def test_create_template_should_return_400_if_folder_is_for_a_different_service(
 
     data = {
         "name": "my template",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "template <b>content</b>",
         "service": str(sample_service.id),
         "created_by": str(sample_service.users[0].id),
@@ -107,7 +108,7 @@ def test_create_template_should_return_400_if_folder_is_for_a_different_service(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -123,7 +124,7 @@ def test_create_template_should_return_400_if_folder_does_not_exist(
 ):
     data = {
         "name": "my template",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "template <b>content</b>",
         "service": str(sample_service.id),
         "created_by": str(sample_service.users[0].id),
@@ -133,7 +134,7 @@ def test_create_template_should_return_400_if_folder_does_not_exist(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -149,7 +150,7 @@ def test_should_raise_error_if_service_does_not_exist_on_create(
 ):
     data = {
         "name": "my template",
-        "template_type": SMS_TYPE,
+        "template_type": TemplateType.SMS,
         "content": "template content",
         "service": fake_uuid,
         "created_by": str(sample_user.id),
@@ -158,7 +159,7 @@ def test_should_raise_error_if_service_does_not_exist_on_create(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(fake_uuid),
+        f"/service/{fake_uuid}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -172,14 +173,14 @@ def test_should_raise_error_if_service_does_not_exist_on_create(
     "permissions, template_type, subject, expected_error",
     [
         (
-            [EMAIL_TYPE],
-            SMS_TYPE,
+            [ServicePermissionType.EMAIL],
+            TemplateType.SMS,
             None,
             {"template_type": ["Creating text message templates is not allowed"]},
         ),
         (
-            [SMS_TYPE],
-            EMAIL_TYPE,
+            [ServicePermissionType.SMS],
+            TemplateType.EMAIL,
             "subject",
             {"template_type": ["Creating email templates is not allowed"]},
         ),
@@ -203,7 +204,7 @@ def test_should_raise_error_on_create_if_no_permission(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(service.id),
+        f"/service/{service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -217,13 +218,13 @@ def test_should_raise_error_on_create_if_no_permission(
     "template_type, permissions, expected_error",
     [
         (
-            SMS_TYPE,
-            [EMAIL_TYPE],
+            TemplateType.SMS,
+            [ServicePermissionType.EMAIL],
             {"template_type": ["Updating text message templates is not allowed"]},
         ),
         (
-            EMAIL_TYPE,
-            [SMS_TYPE],
+            TemplateType.EMAIL,
+            [ServicePermissionType.SMS],
             {"template_type": ["Updating email templates is not allowed"]},
         ),
     ],
@@ -244,9 +245,7 @@ def test_should_be_error_on_update_if_no_permission(
     auth_header = create_admin_authorization_header()
 
     update_response = client.post(
-        "/service/{}/template/{}".format(
-            template_without_permission.service_id, template_without_permission.id
-        ),
+        f"/service/{template_without_permission.service_id}/template/{template_without_permission.id}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -261,7 +260,7 @@ def test_should_error_if_created_by_missing(client, sample_user, sample_service)
     service_id = str(sample_service.id)
     data = {
         "name": "my template",
-        "template_type": SMS_TYPE,
+        "template_type": TemplateType.SMS,
         "content": "template content",
         "service": service_id,
     }
@@ -269,7 +268,7 @@ def test_should_error_if_created_by_missing(client, sample_user, sample_service)
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(service_id),
+        f"/service/{service_id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -285,7 +284,7 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template/{}".format(fake_uuid, fake_uuid),
+        f"/service/{fake_uuid}/template/{fake_uuid}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -295,7 +294,7 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert json_resp["message"] == "No result found"
 
 
-@pytest.mark.parametrize("template_type", [EMAIL_TYPE])
+@pytest.mark.parametrize("template_type", [TemplateType.EMAIL])
 def test_must_have_a_subject_on_an_email_template(
     client, sample_user, sample_service, template_type
 ):
@@ -321,7 +320,7 @@ def test_must_have_a_subject_on_an_email_template(
 
 def test_update_should_update_a_template(client, sample_user):
     service = create_service()
-    template = create_template(service, template_type="sms")
+    template = create_template(service, template_type=TemplateType.SMS)
 
     assert template.created_by == service.created_by
     assert template.created_by != sample_user
@@ -334,7 +333,7 @@ def test_update_should_update_a_template(client, sample_user):
     auth_header = create_admin_authorization_header()
 
     update_response = client.post(
-        "/service/{}/template/{}".format(service.id, template.id),
+        f"/service/{service.id}/template/{template.id}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -372,9 +371,7 @@ def test_should_be_able_to_archive_template(client, sample_template):
     auth_header = create_admin_authorization_header()
 
     resp = client.post(
-        "/service/{}/template/{}".format(
-            sample_template.service.id, sample_template.id
-        ),
+        f"/service/{sample_template.service.id}/template/{sample_template.id}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=json_data,
     )
@@ -412,7 +409,7 @@ def test_should_be_able_to_get_all_templates_for_a_service(
 ):
     data = {
         "name": "my template 1",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "subject": "subject 1",
         "content": "template content",
         "service": str(sample_service.id),
@@ -421,7 +418,7 @@ def test_should_be_able_to_get_all_templates_for_a_service(
     data_1 = json.dumps(data)
     data = {
         "name": "my template 2",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "subject": "subject 2",
         "content": "template content",
         "service": str(sample_service.id),
@@ -430,14 +427,14 @@ def test_should_be_able_to_get_all_templates_for_a_service(
     data_2 = json.dumps(data)
     auth_header = create_admin_authorization_header()
     client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data_1,
     )
     auth_header = create_admin_authorization_header()
 
     client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data_2,
     )
@@ -445,7 +442,7 @@ def test_should_be_able_to_get_all_templates_for_a_service(
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        "/service/{}/template".format(sample_service.id), headers=[auth_header]
+        f"/service/{sample_service.id}/template", headers=[auth_header]
     )
 
     assert response.status_code == 200
@@ -466,10 +463,12 @@ def test_should_get_only_templates_for_that_service(admin_request, notify_db_ses
     id_3 = create_template(service_2).id
 
     json_resp_1 = admin_request.get(
-        "template.get_all_templates_for_service", service_id=service_1.id
+        "template.get_all_templates_for_service",
+        service_id=service_1.id,
     )
     json_resp_2 = admin_request.get(
-        "template.get_all_templates_for_service", service_id=service_2.id
+        "template.get_all_templates_for_service",
+        service_id=service_2.id,
     )
 
     assert {template["id"] for template in json_resp_1["data"]} == {
@@ -529,8 +528,8 @@ def test_should_get_return_all_fields_by_default(
 @pytest.mark.parametrize(
     "template_type, expected_content",
     (
-        (EMAIL_TYPE, None),
-        (SMS_TYPE, None),
+        (TemplateType.EMAIL, None),
+        (TemplateType.SMS, None),
     ),
 )
 def test_should_not_return_content_and_subject_if_requested(
@@ -566,9 +565,9 @@ def test_should_not_return_content_and_subject_if_requested(
         (
             "about your ((thing))",
             "hello ((name)) we’ve received your ((thing))",
-            EMAIL_TYPE,
+            TemplateType.EMAIL,
         ),
-        (None, "hello ((name)) we’ve received your ((thing))", SMS_TYPE),
+        (None, "hello ((name)) we’ve received your ((thing))", TemplateType.SMS),
     ],
 )
 def test_should_get_a_single_template(
@@ -579,7 +578,7 @@ def test_should_get_a_single_template(
     )
 
     response = client.get(
-        "/service/{}/template/{}".format(sample_service.id, template.id),
+        f"/service/{sample_service.id}/template/{template.id}",
         headers=[create_admin_authorization_header()],
     )
 
@@ -588,7 +587,7 @@ def test_should_get_a_single_template(
     assert response.status_code == 200
     assert data["content"] == content
     assert data["subject"] == subject
-    assert data["process_type"] == "normal"
+    assert data["process_type"] == TemplateProcessType.NORMAL
     assert not data["redact_personalisation"]
 
 
@@ -640,7 +639,10 @@ def test_should_preview_a_single_template(
     expected_error,
 ):
     template = create_template(
-        sample_service, template_type=EMAIL_TYPE, subject=subject, content=content
+        sample_service,
+        template_type=TemplateType.EMAIL,
+        subject=subject,
+        content=content,
     )
 
     response = client.get(
@@ -663,7 +665,7 @@ def test_should_return_empty_array_if_no_templates_for_service(client, sample_se
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        "/service/{}/template".format(sample_service.id), headers=[auth_header]
+        f"/service/{sample_service.id}/template", headers=[auth_header]
     )
 
     assert response.status_code == 200
@@ -677,7 +679,7 @@ def test_should_return_404_if_no_templates_for_service_with_id(
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        "/service/{}/template/{}".format(sample_service.id, fake_uuid),
+        f"/service/{sample_service.id}/template/{fake_uuid}",
         headers=[auth_header],
     )
 
@@ -687,7 +689,7 @@ def test_should_return_404_if_no_templates_for_service_with_id(
     assert json_resp["message"] == "No result found"
 
 
-@pytest.mark.parametrize("template_type", (SMS_TYPE,))
+@pytest.mark.parametrize("template_type", (TemplateType.SMS,))
 def test_create_400_for_over_limit_content(
     client,
     notify_api,
@@ -711,7 +713,7 @@ def test_create_400_for_over_limit_content(
     auth_header = create_admin_authorization_header()
 
     response = client.post(
-        "/service/{}/template".format(sample_service.id),
+        f"/service/{sample_service.id}/template",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -736,9 +738,7 @@ def test_update_400_for_over_limit_content(
     )
     auth_header = create_admin_authorization_header()
     resp = client.post(
-        "/service/{}/template/{}".format(
-            sample_template.service.id, sample_template.id
-        ),
+        f"/service/{sample_template.service.id}/template/{sample_template.id}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=json_data,
     )
@@ -762,9 +762,7 @@ def test_should_return_all_template_versions_for_service_and_template_id(
 
     auth_header = create_admin_authorization_header()
     resp = client.get(
-        "/service/{}/template/{}/versions".format(
-            sample_template.service_id, sample_template.id
-        ),
+        f"/service/{sample_template.service_id}/template/{sample_template.id}/versions",
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 200
@@ -788,9 +786,7 @@ def test_update_does_not_create_new_version_when_there_is_no_change(
         "content": sample_template.content,
     }
     resp = client.post(
-        "/service/{}/template/{}".format(
-            sample_template.service_id, sample_template.id
-        ),
+        f"/service/{sample_template.service_id}/template/{sample_template.id}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -802,18 +798,16 @@ def test_update_does_not_create_new_version_when_there_is_no_change(
 
 def test_update_set_process_type_on_template(client, sample_template):
     auth_header = create_admin_authorization_header()
-    data = {"process_type": "priority"}
+    data = {"process_type": TemplateProcessType.PRIORITY}
     resp = client.post(
-        "/service/{}/template/{}".format(
-            sample_template.service_id, sample_template.id
-        ),
+        f"/service/{sample_template.service_id}/template/{sample_template.id}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 200
 
     template = dao_get_template_by_id(sample_template.id)
-    assert template.process_type == "priority"
+    assert template.process_type == TemplateProcessType.PRIORITY
 
 
 @pytest.mark.parametrize(

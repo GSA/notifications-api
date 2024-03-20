@@ -5,9 +5,8 @@ Revises: 0259_remove_service_postage
 Create Date: 2019-02-12 17:39:02.517571
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0260_remove_dvla_organisation"
 down_revision = "0259_remove_service_postage"

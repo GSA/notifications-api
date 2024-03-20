@@ -10,8 +10,8 @@ Create Date: 2016-07-07 13:15:35.503107
 revision = "0042_notification_history"
 down_revision = "0039_fix_notifications"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

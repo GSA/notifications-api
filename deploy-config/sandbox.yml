@@ -6,6 +6,7 @@ worker_memory: 512M
 scheduler_memory: 256M
 public_api_route: notify-api-sandbox.app.cloud.gov
 admin_base_url: https://notify-sandbox.app.cloud.gov
+redis_enabled: 1
 default_toll_free_number: "+18885989205"
 ADMIN_CLIENT_SECRET: sandbox-notify-secret-key
 DANGEROUS_SALT: sandbox-notify-salt

@@ -5,8 +5,8 @@ Revises: 0304_remove_org_to_service
 Create Date: 2019-10-08 10:57:54.824807
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0307_delete_dm_datetime"

@@ -10,8 +10,8 @@ Create Date: 2016-06-24 12:02:10.915817
 revision = "0033_api_key_type"
 down_revision = "0032_notification_created_status"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

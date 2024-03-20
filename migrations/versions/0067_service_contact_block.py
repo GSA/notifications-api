@@ -10,8 +10,8 @@ Create Date: 2017-02-28 11:23:40.299110
 revision = "0067_service_contact_block"
 down_revision = "0065_users_current_session_id"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

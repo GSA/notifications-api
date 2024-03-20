@@ -11,7 +11,8 @@ from app.dao.api_key_dao import (
     get_unsigned_secrets,
     save_model_api_key,
 )
-from app.models import KEY_TYPE_NORMAL, ApiKey
+from app.enums import KeyType
+from app.models import ApiKey
 
 
 def test_save_api_key_should_create_new_api_key_and_history(sample_service):
@@ -20,7 +21,7 @@ def test_save_api_key_should_create_new_api_key_and_history(sample_service):
             "service": sample_service,
             "name": sample_service.name,
             "created_by": sample_service.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
         }
     )
     save_model_api_key(api_key)
@@ -92,7 +93,7 @@ def test_should_not_allow_duplicate_key_names_per_service(sample_api_key, fake_u
             "service": sample_api_key.service,
             "name": sample_api_key.name,
             "created_by": sample_api_key.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
         }
     )
     with pytest.raises(IntegrityError):
@@ -105,7 +106,7 @@ def test_save_api_key_can_create_key_with_same_name_if_other_is_expired(sample_s
             "service": sample_service,
             "name": "normal api key",
             "created_by": sample_service.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
             "expiry_date": datetime.utcnow(),
         }
     )
@@ -115,7 +116,7 @@ def test_save_api_key_can_create_key_with_same_name_if_other_is_expired(sample_s
             "service": sample_service,
             "name": "normal api key",
             "created_by": sample_service.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
         }
     )
     save_model_api_key(api_key)
@@ -134,7 +135,7 @@ def test_save_api_key_should_not_create_new_service_history(sample_service):
             "service": sample_service,
             "name": sample_service.name,
             "created_by": sample_service.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
         }
     )
     save_model_api_key(api_key)
@@ -151,7 +152,7 @@ def test_should_not_return_revoked_api_keys_older_than_7_days(
             "service": sample_service,
             "name": sample_service.name,
             "created_by": sample_service.created_by,
-            "key_type": KEY_TYPE_NORMAL,
+            "key_type": KeyType.NORMAL,
             "expiry_date": datetime.utcnow() - timedelta(days=days_old),
         }
     )

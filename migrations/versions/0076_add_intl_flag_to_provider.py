@@ -10,8 +10,8 @@ Create Date: 2017-04-25 09:44:13.194164
 revision = "0076_add_intl_flag_to_provider"
 down_revision = "0075_create_rates_table"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

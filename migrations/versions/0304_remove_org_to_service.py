@@ -5,8 +5,8 @@ Revises: 0303_populate_services_org_id
 Create Date: 2019-08-15 14:49:00.754390
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0304_remove_org_to_service"

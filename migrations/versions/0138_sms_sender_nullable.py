@@ -5,8 +5,8 @@ Revises: 0137_notification_template_hist
 Create Date: 2017-11-06 15:44:59.471977
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0138_sms_sender_nullable"

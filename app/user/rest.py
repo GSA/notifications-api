@@ -7,6 +7,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -18,6 +19,7 @@ from app.dao.users_dao import (
     create_secret_code,
     create_user_code,
     dao_archive_user,
+    get_login_gov_user,
     get_user_and_accounts,
     get_user_by_email,
     get_user_by_id,
@@ -31,8 +33,9 @@ from app.dao.users_dao import (
     update_user_password,
     use_user_code,
 )
+from app.enums import CodeType, KeyType, NotificationType, TemplateType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, KEY_TYPE_NORMAL, SMS_TYPE, Permission, Service
+from app.models import Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -71,7 +74,7 @@ def handle_integrity_error(exc):
         return (
             jsonify(
                 result="error",
-                message="Mobile number must be set if auth_type is set to sms_auth",
+                message="Mobile number must be set if auth_type is set to AuthType.SMS",
             ),
             400,
         )
@@ -119,23 +122,29 @@ def update_user_attribute(user_id):
         else:
             return jsonify(data=user_to_update.serialize()), 200
         service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
-
+        personalisation = {
+            "name": user_to_update.name,
+            "servicemanagername": updated_by.name,
+            "email address": user_to_update.email_address,
+        }
         saved_notification = persist_notification(
             template_id=template.id,
             template_version=template.version,
             recipient=recipient,
             service=service,
-            personalisation={
-                "name": user_to_update.name,
-                "servicemanagername": updated_by.name,
-                "email address": user_to_update.email_address,
-            },
+            personalisation={},
             notification_type=template.template_type,
             api_key_id=None,
-            key_type=KEY_TYPE_NORMAL,
+            key_type=KeyType.NORMAL,
             reply_to_text=reply_to,
         )
+        saved_notification.personalisation = personalisation
 
+        redis_store.set(
+            f"email-personalisation-{saved_notification.id}",
+            json.dumps(personalisation),
+            ex=60 * 60,
+        )
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=user_to_update.serialize()), 200
@@ -219,7 +228,7 @@ def verify_user_code(user_id):
 
     user_to_verify.current_session_id = str(uuid.uuid4())
     user_to_verify.logged_in_at = datetime.utcnow()
-    if data["code_type"] == "email":
+    if data["code_type"] == CodeType.EMAIL:
         user_to_verify.email_access_validated_at = datetime.utcnow()
     user_to_verify.failed_login_count = 0
     save_model_user(user_to_verify)
@@ -275,10 +284,10 @@ def send_user_2fa_code(user_id, code_type):
         )
     else:
         data = request.get_json()
-        if code_type == SMS_TYPE:
+        if NotificationType(code_type) == NotificationType.SMS:
             validate(data, post_send_user_sms_code_schema)
             send_user_sms_code(user_to_send_to, data)
-        elif code_type == EMAIL_TYPE:
+        elif NotificationType(code_type) == NotificationType.EMAIL:
             validate(data, post_send_user_email_code_schema)
             send_user_email_code(user_to_send_to, data)
         else:
@@ -333,10 +342,11 @@ def create_2fa_code(
     # save the code in the VerifyCode table
     create_user_code(user_to_send_to, secret_code, template.template_type)
     reply_to = None
-    if template.template_type == SMS_TYPE:
+    if template.template_type == TemplateType.SMS:
         reply_to = get_sms_reply_to_for_notify_service(recipient, template)
-    elif template.template_type == EMAIL_TYPE:
+    elif template.template_type == TemplateType.EMAIL:
         reply_to = template.service.get_default_reply_to_email_address()
+
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
@@ -345,12 +355,23 @@ def create_2fa_code(
         personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=reply_to,
     )
+    saved_notification.personalisation = personalisation
+    key = f"2facode-{saved_notification.id}".replace(" ", "")
+    recipient = str(recipient)
+    redis_store.raw_set(key, recipient, ex=60 * 60)
+
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
     # admin even if we're doing user research using this service:
+
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 
@@ -364,25 +385,31 @@ def send_user_confirm_new_email(user_id):
         current_app.config["CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID"]
     )
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
-
+    personalisation = {
+        "name": user_to_send_to.name,
+        "url": _create_confirmation_url(
+            user=user_to_send_to, email_address=email["email"]
+        ),
+        "feedback_url": current_app.config["ADMIN_BASE_URL"] + "/support",
+    }
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=email["email"],
         service=service,
-        personalisation={
-            "name": user_to_send_to.name,
-            "url": _create_confirmation_url(
-                user=user_to_send_to, email_address=email["email"]
-            ),
-            "feedback_url": current_app.config["ADMIN_BASE_URL"] + "/support",
-        },
+        personalisation={},
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
+    saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
     return jsonify({}), 204
 
@@ -394,10 +421,6 @@ def send_new_user_email_verification(user_id):
 
     # when registering, we verify all users' email addresses using this function
     user_to_send_to = get_user_by_id(user_id=user_id)
-    current_app.logger.info("user_to_send_to is {}".format(user_to_send_to))
-    current_app.logger.info(
-        "user_to_send_to.email_address is {}".format(user_to_send_to.email_address)
-    )
 
     template = dao_get_template_by_id(
         current_app.config["NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID"]
@@ -406,23 +429,35 @@ def send_new_user_email_verification(user_id):
 
     current_app.logger.info("template.id is {}".format(template.id))
     current_app.logger.info("service.id is {}".format(service.id))
-
+    personalisation = {
+        "name": user_to_send_to.name,
+        "url": _create_verification_url(
+            user_to_send_to,
+            base_url=request_json.get("admin_base_url"),
+        ),
+    }
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=user_to_send_to.email_address,
         service=service,
-        personalisation={
-            "name": user_to_send_to.name,
-            "url": _create_verification_url(
-                user_to_send_to,
-                base_url=request_json.get("admin_base_url"),
-            ),
-        },
+        personalisation={},
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
+    )
+    saved_notification.personalisation = personalisation
+
+    redis_store.set(
+        f"email-address-{saved_notification.id}",
+        str(user_to_send_to.email_address),
+        ex=60 * 60,
+    )
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
     )
     current_app.logger.info("Sending notification to queue")
 
@@ -447,25 +482,32 @@ def send_already_registered_email(user_id):
 
     current_app.logger.info("template.id is {}".format(template.id))
     current_app.logger.info("service.id is {}".format(service.id))
-
+    personalisation = {
+        "signin_url": current_app.config["ADMIN_BASE_URL"] + "/sign-in",
+        "forgot_password_url": current_app.config["ADMIN_BASE_URL"]
+        + "/forgot-password",
+        "feedback_url": current_app.config["ADMIN_BASE_URL"] + "/support",
+    }
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=to["email"],
         service=service,
-        personalisation={
-            "signin_url": current_app.config["ADMIN_BASE_URL"] + "/sign-in",
-            "forgot_password_url": current_app.config["ADMIN_BASE_URL"]
-            + "/forgot-password",
-            "feedback_url": current_app.config["ADMIN_BASE_URL"] + "/support",
-        },
+        personalisation={},
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
+    saved_notification.personalisation = personalisation
 
     current_app.logger.info("Sending notification to queue")
+
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
@@ -518,6 +560,16 @@ def set_permissions(user_id, service_id):
     return jsonify({}), 204
 
 
+@user_blueprint.route("/get-login-gov-user", methods=["POST"])
+def get_user_login_gov_user():
+    request_args = request.get_json()
+    login_uuid = request_args["login_uuid"]
+    email = request_args["email"]
+    user = get_login_gov_user(login_uuid, email)
+    result = user.serialize()
+    return jsonify(data=result)
+
+
 @user_blueprint.route("/email", methods=["POST"])
 def fetch_user_by_email():
     email = email_data_request_schema.load(request.get_json())
@@ -563,25 +615,32 @@ def send_user_reset_password():
     user_to_send_to = get_user_by_email(email["email"])
     template = dao_get_template_by_id(current_app.config["PASSWORD_RESET_TEMPLATE_ID"])
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    personalisation = {
+        "user_name": user_to_send_to.name,
+        "url": _create_reset_password_url(
+            user_to_send_to.email_address,
+            base_url=request_json.get("admin_base_url"),
+            next_redirect=request_json.get("next"),
+        ),
+    }
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=email["email"],
         service=service,
-        personalisation={
-            "user_name": user_to_send_to.name,
-            "url": _create_reset_password_url(
-                user_to_send_to.email_address,
-                base_url=request_json.get("admin_base_url"),
-                next_redirect=request_json.get("next"),
-            ),
-        },
+        personalisation=None,
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
+    saved_notification.personalisation = personalisation
 
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=60 * 60,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify({}), 204

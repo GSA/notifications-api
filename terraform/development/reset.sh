@@ -51,7 +51,7 @@ if [[ ! -s "secrets.auto.tfvars" ]]; then
 fi
 
 echo "Importing terraform state for $username"
-terraform init
+terraform init -upgrade
 
 key_name=$username-api-dev-key
 

@@ -3,11 +3,7 @@ from datetime import date, datetime, time, timedelta
 
 def get_months_for_financial_year(year):
     return [
-        month
-        for month in (
-            get_months_for_year(4, 13, year) + get_months_for_year(1, 4, year + 1)
-        )
-        if month < datetime.now()
+        month for month in (get_months_for_year(1, 13, year)) if month < datetime.now()
     ]
 
 

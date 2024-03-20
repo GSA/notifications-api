@@ -11,6 +11,7 @@
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
   - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
+  - [End-to-end testing](#end-to-end-testing)
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
   - [Managing environment variables](#managing-environment-variables)
@@ -22,6 +23,7 @@
   - [Migrations](#migrations)
   - [Purging user data](#purging-user-data)
 - [One-off tasks](#one-off-tasks)
+- [Test Loading Commands](#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](#how-messages-are-queued-and-sent)
 - [Writing public APIs](#writing-public-apis)
   - [Overview](#overview)
@@ -36,17 +38,20 @@
   - [Celery scheduled tasks](#celery-scheduled-tasks)
 - [Notify.gov](#notifygov)
   - [System Description](#system-description)
+- [Code Reviews](#code-reviews)
+  - [For the reviewer](#for-the-reviewer)
+  - [For the author](#for-the-author)
 - [Run Book](#run-book)
-  - [ Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
-  - [ Restaging Apps](#-restaging-apps)
-  - [ Smoke-testing the App](#-smoke-testing-the-app)
-  - [ Simulated bulk send testing](#-simulated-bulk-send-testing)
-  - [ Configuration Management](#-configuration-management)
-  - [ DNS Changes](#-dns-changes)
+  - [Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
+  - [Restaging Apps](#-restaging-apps)
+  - [Smoke-testing the App](#-smoke-testing-the-app)
+  - [Simulated bulk send testing](#-simulated-bulk-send-testing)
+  - [Configuration Management](#-configuration-management)
+  - [DNS Changes](#-dns-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
-  - [ Known Gotchas](#-known-gotchas)
-  - [ User Account Management](#-user-account-management)
-  - [ SMS Phone Number Management](#-sms-phone-number-management)
+  - [Known Gotchas](#-known-gotchas)
+  - [User Account Management](#-user-account-management)
+  - [SMS Phone Number Management](#-sms-phone-number-management)
 - [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
   - [Potential PII Locations](#potential-pii-locations)
   - [Data Retention Policy](#data-retention-policy)
@@ -304,6 +309,37 @@ The equivalent command if you are running the API locally:
 docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf -r report.html
 ```
 
+## End-to-end Testing
+
+In order to run end-to-end (E2E) tests, which are managed and handled in the
+admin project, a bit of extra configuration needs to be accounted for here on
+the API side as well.  These instructions are in the README as they are
+necessary for project setup, and they're copied here for reference.
+
+In the `.env` file, you should see this section:
+
+```
+#############################################################
+
+# E2E Testing
+
+NOTIFY_E2E_TEST_EMAIL=example@fake.gov
+NOTIFY_E2E_TEST_PASSWORD="don't write secrets to the sample file"
+```
+
+You can leave the email address alone or change it to something else to your
+liking.
+
+**You should absolutely change the `NOTIFY_E2E_TEST_PASSWORD` environment
+variable to something else, preferably a lengthy passphrase.**
+
+With those two environment variable set, the database migrations will run
+properly and an E2E test user will be ready to go for use in the admin project.
+
+_Note:  Whatever you set these two environment variables to, you'll need to
+match their values on the admin side.  Please see the admin README and
+documentation for more details._
+
 # Deploying
 
 The API has 3 deployment environments, all of which deploy to cloud.gov:
@@ -491,6 +527,18 @@ cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR
 ```
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
+
+# Commands for test loading the local dev database
+
+All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
+
+## Test commands list
+- `add-test-organizations-to-db`
+- `add-test-services-to-db`
+- `add-test-jobs-to-db`
+- `add-test-notifications-to-db`
+- `add-test-users-to-db` (extra options include `-s` or `--state` and `-d` or `--admin`)
+
 
 # How messages are queued and sent
 
@@ -711,10 +759,6 @@ make run-celery-beat
 ```
 
 
-
-
-
-
 Notify.gov
 =========
 
@@ -753,6 +797,102 @@ Notify.gov also provisions and uses two AWS services via a [supplemental service
 * [SES](https://aws.amazon.com/ses/) for sending email messages
 
 For further details of the system and how it connects to supporting services, see the [application boundary diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
+
+
+Code Reviews
+============
+
+When conducting a code review there are several things to keep in mind to ensure
+a quality and valuable review.  Remember, we're trying to improve Notify.gov as
+best we can; it does us no good if we do not double check that our work meets
+our standards, especially before going out the door!
+
+It also does us no good if we do not treat each other without mutual respect or
+consideration either; if there are mistakes or oversights found in a pull
+request, or even just suggestions for alternative ways of approaching something,
+these become learning opportunities for all parties involved in addition to
+modeling positive behavior and practices for the public and broader open source
+community.
+
+Given this basis of approaching code reviews, here are some general guidelines
+and suggestions for how to approach a code review from the perspectives of both
+the reviewer and the author.
+
+### For the reviewer
+
+When performing a code review, please be curious and critical while also being
+respectful and appreciative of the work submitted.  Code reviews are a chance
+to check that things meet our standards and provide learning opportunities.
+They are not places for belittling or disparaging someone's work or approach to
+a task, and absolutely not the person(s) themselves.
+
+That said, any responses to the code review should also be respectful and
+considerate.  Remember, this is a chance to not only improve our work and the
+state of Notify.gov, it's also a chance to learn something new!
+
+**Note: If a response is condescending, derogatory, disrespectful, etc., please
+do not hesitate to either speak with the author(s) directly about this or reach
+out to a team lead/supervisor for additional help to rectify the issue.  Such
+behavior and lack of professionalism is not acceptable or tolerated.**
+
+When performing a code review, it is helpful to keep the following guidelines in
+mind:
+
+- Be on the lookout for any sensitive information and/or leaked credentials,
+  secrets, PII, etc.
+- Ask and call out things that aren't clear to you; it never hurts to double
+  check your understanding of something!
+- Check that things are named descriptively and appropriately and call out
+  anything that is not.
+- Check that comments are present for complex areas when needed.
+- Make sure the pull request itself is properly prepared - it has a clear
+  description, calls out security concerns, and has the necessary labels, flags,
+  issue link, etc., set on it.
+- Do not be shy about using the suggested changes feature in GitHub pull request
+  comments; this can help save a lot of time!
+- Do not be shy about marking a review with the `Request Changes` status - yes,
+  it looks big and red when it shows up, but this is completely fine and not to
+  be taken as a personal mark against the author(s) of the pull request!
+
+Additionally, if you find yourself making a lot of comments and/or end up having
+several concerns about the overall approach, it will likely be helpful to
+schedule time to speak with the author(s) directly and talk through everything.
+This can save folks a lot of misunderstanding and back-and-forth!
+
+### For the author
+
+When receiving a code review, please remember that someone took the time to look
+over all of your work with a critical eye to make sure our standards are being
+met and that we're producing the best quality work possible.  It's completely
+fine if there are specific changes requested and/or other parts are sent back
+for additional work!
+
+That said, the review should also be respectful, helpful, and a learning
+opportunity where possible.  Remember, this is a chance to not only improve your
+work and the state of Notify.gov, it's also a chance to learn something new!
+
+**Note: If a review is condescending, derogatory, disrespectful, etc., please do
+not hesitate to either speak with the reviewer(s) directly about this or reach
+out to a team lead/supervisor for additional help to rectify the issue.  Such
+behavior and lack of professionalism is not acceptable or tolerated.**
+
+When going over a review, it may be helpful to keep these perspectives in mind:
+
+- Approach the review with an open mind, curiosity, and appreciation.
+- If anything the reviewer(s) mentions is unclear to you, please ask for
+  clarification and engage them in further dialogue!
+- If you disagree with a suggestion or request, please say so and engage in an
+  open and respecful dialogue to come to a mutual understanding of what the
+  appropriate next step(S) should be - accept the change, reject the change,
+  take a different path entirely, etc.
+- If there are no issues with any suggested edits or requested changes, make
+  the necessary adjustments and let the reviewer(s) know when the work is ready
+  for review again.
+
+Additionally, if you find yourself responding to a lot of things and questioning
+the feedback received throughout much of the code review, it will likely be
+helpful to schedule time to speak with the reviewer(s) directly and talk through
+everything.  This can save folks a lot of misunderstanding and back-and-forth!
 
 
 Run Book
@@ -985,13 +1125,15 @@ Once you have a number, it must be set in the app in one of two ways:
 
 ### Current Production Phone Numbers
 
-* +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number
-* +18447891134 - to be used by Pilot Partner 1
-* +18888402596 - to be used by Pilot Partner 2
-* +18555317292
+* +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number (Also the number for the live service: Federal Test Service)
+* +18447891134 - Montgomery County / Ride On
+* +18888402596 - Norfolk / DHS
+* +18555317292 - Washington State  / DHS
 * +18889046435
 * +18447342791
 * +18447525067
+
+For a full list of phone numbers in trial and production, team members can access a [tracking list here](https://docs.google.com/spreadsheets/d/1lq3Wi_up7EkcKvmwO3oTw30m7kVt1iXvdS3KAp0smh4/edit#gid=0).
 
 
 Data Storage Policies & Procedures

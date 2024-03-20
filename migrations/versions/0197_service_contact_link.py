@@ -5,9 +5,8 @@ Revises: 0196_complaints_table
 Create Date: 2018-05-31 15:01:32.977620
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0197_service_contact_link"
 down_revision = "0196_complaints_table"

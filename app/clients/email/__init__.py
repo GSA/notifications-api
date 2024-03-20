@@ -1,3 +1,5 @@
+from abc import abstractmethod, abstractproperty
+
 from app.clients import Client, ClientException
 
 
@@ -27,9 +29,10 @@ class EmailClient(Client):
     Base Email client for sending emails.
     """
 
+    @abstractmethod
     def send_email(self, *args, **kwargs):
         raise NotImplementedError("TODO Need to implement.")
 
-    @property
+    @abstractproperty
     def name(self):
         raise NotImplementedError("TODO Need to implement.")

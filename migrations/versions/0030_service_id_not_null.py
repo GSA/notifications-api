@@ -13,8 +13,8 @@ from sqlalchemy.dialects import postgresql
 revision = "0030_service_id_not_null"
 down_revision = "0029_fix_email_from"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

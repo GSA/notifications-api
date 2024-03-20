@@ -17,15 +17,20 @@ from app.dao.organization_dao import dao_create_organization
 from app.dao.services_dao import dao_add_user_to_service, dao_create_service
 from app.dao.templates_dao import dao_create_template
 from app.dao.users_dao import create_secret_code, create_user_code
+from app.enums import (
+    CodeType,
+    InvitedUserStatus,
+    JobStatus,
+    KeyType,
+    NotificationStatus,
+    PermissionType,
+    RecipientType,
+    ServicePermissionType,
+    TemplateProcessType,
+    TemplateType,
+)
 from app.history_meta import create_history
 from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    NOTIFICATION_STATUS_TYPES_COMPLETED,
-    SERVICE_PERMISSION_TYPES,
-    SMS_TYPE,
     ApiKey,
     InvitedUser,
     Job,
@@ -69,7 +74,7 @@ def create_sample_notification(
     job=None,
     job_row_number=None,
     to_field=None,
-    status="created",
+    status=NotificationStatus.CREATED,
     provider_response=None,
     reference=None,
     created_at=None,
@@ -77,7 +82,7 @@ def create_sample_notification(
     billable_units=1,
     personalisation=None,
     api_key=None,
-    key_type=KEY_TYPE_NORMAL,
+    key_type=KeyType.NORMAL,
     sent_by=None,
     international=False,
     client_reference=None,
@@ -128,9 +133,9 @@ def create_sample_notification(
         "api_key_id": api_key and api_key.id,
         "key_type": api_key.key_type if api_key else key_type,
         "sent_by": sent_by,
-        "updated_at": created_at
-        if status in NOTIFICATION_STATUS_TYPES_COMPLETED
-        else None,
+        "updated_at": (
+            created_at if status in NotificationStatus.completed_types() else None
+        ),
         "client_reference": client_reference,
         "rate_multiplier": rate_multiplier,
         "normalised_to": normalised_to,
@@ -159,7 +164,7 @@ def service_factory(sample_user):
                 user=user,
                 check_if_service_exists=True,
             )
-            if template_type == "email":
+            if template_type == TemplateType.EMAIL:
                 create_template(
                     service,
                     template_name="Template Name",
@@ -170,7 +175,7 @@ def service_factory(sample_user):
                 create_template(
                     service,
                     template_name="Template Name",
-                    template_type="sms",
+                    template_type=TemplateType.SMS,
                 )
             return service
 
@@ -203,7 +208,7 @@ def create_code(notify_db_session, code_type):
 
 @pytest.fixture(scope="function")
 def sample_sms_code(notify_db_session):
-    code, txt_code = create_code(notify_db_session, code_type="sms")
+    code, txt_code = create_code(notify_db_session, code_type=CodeType.SMS)
     code.txt_code = txt_code
     return code
 
@@ -236,7 +241,7 @@ def sample_service(sample_user):
 def _sample_service_full_permissions(notify_db_session):
     service = create_service(
         service_name="sample service full permissions",
-        service_permissions=set(SERVICE_PERMISSION_TYPES),
+        service_permissions=set(ServicePermissionType),
         check_if_service_exists=True,
     )
     create_inbound_number("12345", service_id=service.id)
@@ -246,18 +251,19 @@ def _sample_service_full_permissions(notify_db_session):
 @pytest.fixture(scope="function")
 def sample_template(sample_user):
     service = create_service(
-        service_permissions=[EMAIL_TYPE, SMS_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS],
+        check_if_service_exists=True,
     )
 
     data = {
         "name": "Template Name",
-        "template_type": "sms",
+        "template_type": TemplateType.SMS,
         "content": "This is a template:\nwith a newline",
         "service": service,
         "created_by": sample_user,
         "archived": False,
         "hidden": False,
-        "process_type": "normal",
+        "process_type": TemplateProcessType.NORMAL,
     }
     template = Template(**data)
     dao_create_template(template)
@@ -268,9 +274,9 @@ def sample_template(sample_user):
 @pytest.fixture(scope="function")
 def sample_template_without_sms_permission(notify_db_session):
     service = create_service(
-        service_permissions=[EMAIL_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.EMAIL], check_if_service_exists=True
     )
-    return create_template(service, template_type=SMS_TYPE)
+    return create_template(service, template_type=TemplateType.SMS)
 
 
 @pytest.fixture(scope="function")
@@ -293,12 +299,12 @@ def sample_sms_template_with_html(sample_service):
 def sample_email_template(sample_user):
     service = create_service(
         user=sample_user,
-        service_permissions=[EMAIL_TYPE, SMS_TYPE],
+        service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS],
         check_if_service_exists=True,
     )
     data = {
         "name": "Email Template Name",
-        "template_type": EMAIL_TYPE,
+        "template_type": TemplateType.EMAIL,
         "content": "This is a template",
         "service": service,
         "created_by": sample_user,
@@ -312,16 +318,16 @@ def sample_email_template(sample_user):
 @pytest.fixture(scope="function")
 def sample_template_without_email_permission(notify_db_session):
     service = create_service(
-        service_permissions=[SMS_TYPE], check_if_service_exists=True
+        service_permissions=[ServicePermissionType.SMS], check_if_service_exists=True
     )
-    return create_template(service, template_type=EMAIL_TYPE)
+    return create_template(service, template_type=TemplateType.EMAIL)
 
 
 @pytest.fixture(scope="function")
 def sample_email_template_with_placeholders(sample_service):
     return create_template(
         sample_service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="((name))",
         content="Hello ((name))\nThis is an email from GOV.UK",
     )
@@ -331,7 +337,7 @@ def sample_email_template_with_placeholders(sample_service):
 def sample_email_template_with_html(sample_service):
     return create_template(
         sample_service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="((name)) <em>some HTML</em>",
         content="Hello ((name))\nThis is an email from GOV.UK with <em>some HTML</em>",
     )
@@ -344,7 +350,7 @@ def sample_api_key(notify_db_session):
         "service": service,
         "name": uuid.uuid4(),
         "created_by": service.created_by,
-        "key_type": KEY_TYPE_NORMAL,
+        "key_type": KeyType.NORMAL,
     }
     api_key = ApiKey(**data)
     save_model_api_key(api_key)
@@ -355,14 +361,14 @@ def sample_api_key(notify_db_session):
 def sample_test_api_key(sample_api_key):
     service = create_service(check_if_service_exists=True)
 
-    return create_api_key(service, key_type=KEY_TYPE_TEST)
+    return create_api_key(service, key_type=KeyType.TEST)
 
 
 @pytest.fixture(scope="function")
 def sample_team_api_key(sample_api_key):
     service = create_service(check_if_service_exists=True)
 
-    return create_api_key(service, key_type=KEY_TYPE_TEAM)
+    return create_api_key(service, key_type=KeyType.TEAM)
 
 
 @pytest.fixture(scope="function")
@@ -379,7 +385,7 @@ def sample_job(notify_db_session):
         "notification_count": 1,
         "created_at": datetime.utcnow(),
         "created_by": service.created_by,
-        "job_status": "pending",
+        "job_status": JobStatus.PENDING,
         "scheduled_for": None,
         "processing_started": None,
         "archived": False,
@@ -403,7 +409,7 @@ def sample_job_with_placeholdered_template(
 def sample_scheduled_job(sample_template_with_placeholders):
     return create_job(
         sample_template_with_placeholders,
-        job_status="scheduled",
+        job_status=JobStatus.SCHEDULED,
         scheduled_for=(datetime.utcnow() + timedelta(minutes=60)).isoformat(),
     )
 
@@ -418,14 +424,14 @@ def sample_notification_with_job(notify_db_session):
         job=job,
         job_row_number=None,
         to_field=None,
-        status="created",
+        status=NotificationStatus.CREATED,
         reference=None,
         created_at=None,
         sent_at=None,
         billable_units=1,
         personalisation=None,
         api_key=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
     )
 
 
@@ -436,10 +442,10 @@ def sample_notification(notify_db_session):
     template = create_template(service=service)
 
     api_key = ApiKey.query.filter(
-        ApiKey.service == template.service, ApiKey.key_type == KEY_TYPE_NORMAL
+        ApiKey.service == template.service, ApiKey.key_type == KeyType.NORMAL
     ).first()
     if not api_key:
-        api_key = create_api_key(template.service, key_type=KEY_TYPE_NORMAL)
+        api_key = create_api_key(template.service, key_type=KeyType.NORMAL)
 
     notification_id = uuid.uuid4()
     to = "+447700900855"
@@ -453,7 +459,7 @@ def sample_notification(notify_db_session):
         "service": service,
         "template_id": template.id,
         "template_version": template.version,
-        "status": "created",
+        "status": NotificationStatus.CREATED,
         "reference": None,
         "created_at": created_at,
         "sent_at": None,
@@ -480,7 +486,7 @@ def sample_notification(notify_db_session):
 def sample_email_notification(notify_db_session):
     created_at = datetime.utcnow()
     service = create_service(check_if_service_exists=True)
-    template = create_template(service, template_type=EMAIL_TYPE)
+    template = create_template(service, template_type=TemplateType.EMAIL)
     job = create_job(template)
 
     notification_id = uuid.uuid4()
@@ -496,14 +502,14 @@ def sample_email_notification(notify_db_session):
         "service": service,
         "template_id": template.id,
         "template_version": template.version,
-        "status": "created",
+        "status": NotificationStatus.CREATED,
         "reference": None,
         "created_at": created_at,
         "billable_units": 0,
         "personalisation": None,
         "notification_type": template.template_type,
         "api_key_id": None,
-        "key_type": KEY_TYPE_NORMAL,
+        "key_type": KeyType.NORMAL,
         "job_row_number": 1,
     }
     notification = Notification(**data)
@@ -516,17 +522,17 @@ def sample_notification_history(notify_db_session, sample_template):
     created_at = datetime.utcnow()
     sent_at = datetime.utcnow()
     notification_type = sample_template.template_type
-    api_key = create_api_key(sample_template.service, key_type=KEY_TYPE_NORMAL)
+    api_key = create_api_key(sample_template.service, key_type=KeyType.NORMAL)
 
     notification_history = NotificationHistory(
         id=uuid.uuid4(),
         service=sample_template.service,
         template_id=sample_template.id,
         template_version=sample_template.version,
-        status="created",
+        status=NotificationStatus.CREATED,
         created_at=created_at,
         notification_type=notification_type,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         api_key=api_key,
         api_key_id=api_key and api_key.id,
         sent_at=sent_at,
@@ -557,6 +563,27 @@ def sample_invited_user(notify_db_session):
 
 
 @pytest.fixture(scope="function")
+def sample_expired_user(notify_db_session):
+    service = create_service(check_if_service_exists=True)
+    to_email_address = "expired_user@digital.fake.gov"
+
+    from_user = service.users[0]
+
+    data = {
+        "service": service,
+        "email_address": to_email_address,
+        "from_user": from_user,
+        "permissions": "send_messages,manage_service,manage_api_keys",
+        "folder_permissions": ["folder_1_id", "folder_2_id"],
+        "created_at": datetime.utcnow() - timedelta(days=3),
+        "status": InvitedUserStatus.EXPIRED,
+    }
+    expired_user = InvitedUser(**data)
+    save_invited_user(expired_user)
+    return expired_user
+
+
+@pytest.fixture(scope="function")
 def sample_invited_org_user(sample_user, sample_organization):
     return create_invited_org_user(sample_organization, sample_user)
 
@@ -564,7 +591,7 @@ def sample_invited_org_user(sample_user, sample_organization):
 @pytest.fixture(scope="function")
 def sample_user_service_permission(sample_user):
     service = create_service(user=sample_user, check_if_service_exists=True)
-    permission = "manage_settings"
+    permission = PermissionType.MANAGE_SETTINGS
 
     data = {"user": sample_user, "service": service, "permission": permission}
     p_model = Permission.query.filter_by(
@@ -599,7 +626,7 @@ def sms_code_template(notify_service):
         user=notify_service.users[0],
         template_config_name="SMS_CODE_TEMPLATE_ID",
         content="((verify_code))",
-        template_type="sms",
+        template_type=TemplateType.SMS,
     )
 
 
@@ -616,7 +643,7 @@ def email_2fa_code_template(notify_service):
             "((url))"
         ),
         subject="Sign in to GOV.UK Notify",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -627,7 +654,7 @@ def email_verification_template(notify_service):
         user=notify_service.users[0],
         template_config_name="NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID",
         content="((user_name)) use ((url)) to complete registration",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -642,7 +669,7 @@ def invitation_email_template(notify_service):
         template_config_name="INVITATION_EMAIL_TEMPLATE_ID",
         content=content,
         subject="Invitation to ((service_name))",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -654,7 +681,7 @@ def org_invite_email_template(notify_service):
         template_config_name="ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID",
         content="((user_name)) ((organization_name)) ((url))",
         subject="Invitation to ((organization_name))",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -666,7 +693,7 @@ def password_reset_email_template(notify_service):
         template_config_name="PASSWORD_RESET_TEMPLATE_ID",
         content="((user_name)) you can reset password by clicking ((url))",
         subject="Reset your password",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -678,7 +705,7 @@ def verify_reply_to_address_email_template(notify_service):
         template_config_name="REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID",
         content="Hi,This address has been provided as the reply-to email address so we are verifying if it's working",
         subject="Your GOV.UK Notify reply-to email address",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -690,7 +717,7 @@ def team_member_email_edit_template(notify_service):
         template_config_name="TEAM_MEMBER_EDIT_EMAIL_TEMPLATE_ID",
         content="Hi ((name)) ((servicemanagername)) changed your email to ((email address))",
         subject="Your GOV.UK Notify email address has changed",
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -701,7 +728,7 @@ def team_member_mobile_edit_template(notify_service):
         user=notify_service.users[0],
         template_config_name="TEAM_MEMBER_EDIT_MOBILE_TEMPLATE_ID",
         content="Your mobile number was changed by ((servicemanagername)).",
-        template_type="sms",
+        template_type=TemplateType.SMS,
     )
 
 
@@ -714,7 +741,7 @@ def already_registered_template(notify_service):
         user=notify_service.users[0],
         template_config_name="ALREADY_REGISTERED_EMAIL_TEMPLATE_ID",
         content=content,
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
 
 
@@ -730,7 +757,7 @@ def change_email_confirmation_template(notify_service):
         user=notify_service.users[0],
         template_config_name="CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID",
         content=content,
-        template_type="email",
+        template_type=TemplateType.EMAIL,
     )
     return template
 
@@ -748,7 +775,7 @@ def mou_signed_templates(notify_service):
             notify_service,
             notify_service.users[0],
             config_name,
-            "email",
+            TemplateType.EMAIL,
             content="\n".join(
                 next(
                     x
@@ -822,7 +849,7 @@ def notify_service(notify_db_session, sample_user):
 def sample_service_guest_list(notify_db_session):
     service = create_service(check_if_service_exists=True)
     guest_list_user = ServiceGuestList.from_string(
-        service.id, EMAIL_TYPE, "guest_list_user@digital.fake.gov"
+        service.id, RecipientType.EMAIL, "guest_list_user@digital.fake.gov"
     )
 
     notify_db_session.add(guest_list_user)
@@ -839,7 +866,10 @@ def sample_inbound_numbers(sample_service):
     inbound_numbers.append(create_inbound_number(number="1", provider="sns"))
     inbound_numbers.append(
         create_inbound_number(
-            number="2", provider="sns", active=False, service_id=service.id
+            number="2",
+            provider="sns",
+            active=False,
+            service_id=service.id,
         )
     )
     return inbound_numbers

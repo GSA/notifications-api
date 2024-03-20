@@ -13,12 +13,13 @@ from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import dao_get_valid_template_folders_by_id
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    ServicePermissionType,
+)
 from app.models import (
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
-    KEY_TYPE_TEST,
-    NOTIFICATION_PERMANENT_FAILURE,
-    SMS_TYPE,
     AnnualBilling,
     ApiKey,
     FactBilling,
@@ -44,12 +45,6 @@ from app.utils import (
     get_archived_db_column_value,
     get_midnight_in_utc,
 )
-
-DEFAULT_SERVICE_PERMISSIONS = [
-    SMS_TYPE,
-    EMAIL_TYPE,
-    INTERNATIONAL_SMS_TYPE,
-]
 
 
 def dao_fetch_all_services(only_active=False):
@@ -107,7 +102,8 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == "email",
+                        this_year_ft_billing.c.notification_type
+                        == NotificationType.EMAIL,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],
@@ -116,7 +112,8 @@ def dao_fetch_live_services_data():
             case(
                 [
                     (
-                        this_year_ft_billing.c.notification_type == "sms",
+                        this_year_ft_billing.c.notification_type
+                        == NotificationType.SMS,
                         func.sum(this_year_ft_billing.c.notifications_sent),
                     )
                 ],
@@ -278,7 +275,7 @@ def dao_create_service(
         raise ValueError("Can't create a service without a user")
 
     if service_permissions is None:
-        service_permissions = DEFAULT_SERVICE_PERMISSIONS
+        service_permissions = ServicePermissionType.defaults()
 
     organization = dao_get_organization_by_email_address(user.email_address)
 
@@ -412,7 +409,7 @@ def dao_fetch_todays_stats_for_service(service_id):
         )
         .filter(
             Notification.service_id == service_id,
-            Notification.key_type != KEY_TYPE_TEST,
+            Notification.key_type != KeyType.TEST,
             Notification.created_at >= start_date,
         )
         .group_by(
@@ -446,7 +443,7 @@ def dao_fetch_todays_stats_for_all_services(
     )
 
     if not include_from_test_key:
-        subquery = subquery.filter(Notification.key_type != KEY_TYPE_TEST)
+        subquery = subquery.filter(Notification.key_type != KeyType.TEST)
 
     subquery = subquery.subquery()
 
@@ -517,8 +514,8 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
-            Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
+            Notification.key_type != KeyType.TEST,
+            Notification.notification_type == NotificationType.SMS,
             func.substr(Notification.normalised_to, 3, 7) == "7700900",
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
@@ -541,8 +538,8 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
-            Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
+            Notification.key_type != KeyType.TEST,
+            Notification.notification_type == NotificationType.SMS,
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )
@@ -569,9 +566,9 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
-            Notification.key_type != KEY_TYPE_TEST,
-            Notification.notification_type == SMS_TYPE,
-            Notification.status == NOTIFICATION_PERMANENT_FAILURE,
+            Notification.key_type != KeyType.TEST,
+            Notification.notification_type == NotificationType.SMS,
+            Notification.status == NotificationStatus.PERMANENT_FAILURE,
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )

@@ -15,6 +15,7 @@ from app.dao.users_dao import (
     dao_archive_user,
     delete_codes_older_created_more_than_a_day_ago,
     delete_model_user,
+    get_login_gov_user,
     get_user_by_email,
     get_user_by_id,
     increment_failed_login_count,
@@ -24,8 +25,9 @@ from app.dao.users_dao import (
     update_user_password,
     user_can_be_archived,
 )
+from app.enums import AuthType, CodeType, PermissionType
 from app.errors import InvalidRequest
-from app.models import EMAIL_AUTH_TYPE, User, VerifyCode
+from app.models import User, VerifyCode
 from tests.app.db import (
     create_permissions,
     create_service,
@@ -109,6 +111,12 @@ def test_get_user_by_email(sample_user):
     assert sample_user == user_from_db
 
 
+def test_get_login_gov_user(sample_user):
+    user_from_db = get_login_gov_user("fake_login_gov_uuid", sample_user.email_address)
+    assert sample_user.email_address == user_from_db.email_address
+    assert user_from_db.login_uuid is not None
+
+
 def test_get_user_by_email_is_case_insensitive(sample_user):
     email = sample_user.email_address
     user_from_db = get_user_by_email(email.upper())
@@ -136,7 +144,7 @@ def test_should_not_delete_verification_codes_less_than_one_day_old(sample_user)
 
 def make_verify_code(user, age=None, expiry_age=None, code="12335", code_used=False):
     verify_code = VerifyCode(
-        code_type="sms",
+        code_type=CodeType.SMS,
         _code=code,
         created_at=datetime.utcnow() - (age or timedelta(hours=0)),
         expiry_datetime=datetime.utcnow() - (expiry_age or timedelta(0)),
@@ -206,14 +214,19 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     service_1 = create_service(service_name="Service 1")
     service_1_user = create_user(email="1@test.com")
     service_1.users = [sample_user, service_1_user]
-    create_permissions(sample_user, service_1, "manage_settings")
-    create_permissions(service_1_user, service_1, "manage_settings", "view_activity")
+    create_permissions(sample_user, service_1, PermissionType.MANAGE_SETTINGS)
+    create_permissions(
+        service_1_user,
+        service_1,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.VIEW_ACTIVITY,
+    )
 
     service_2 = create_service(service_name="Service 2")
     service_2_user = create_user(email="2@test.com")
     service_2.users = [sample_user, service_2_user]
-    create_permissions(sample_user, service_2, "view_activity")
-    create_permissions(service_2_user, service_2, "manage_settings")
+    create_permissions(sample_user, service_2, PermissionType.VIEW_ACTIVITY)
+    create_permissions(service_2_user, service_2, PermissionType.MANAGE_SETTINGS)
 
     # make sample_user an org member
     sample_organization.users = [sample_user]
@@ -229,7 +242,7 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     assert sample_user.get_permissions() == {}
     assert sample_user.services == []
     assert sample_user.organizations == []
-    assert sample_user.auth_type == EMAIL_AUTH_TYPE
+    assert sample_user.auth_type == AuthType.EMAIL
     assert sample_user.email_address == "_archived_2018-07-07_notify@digital.fake.gov"
     assert sample_user.mobile_number is None
     assert sample_user.current_session_id == uuid.UUID(
@@ -263,10 +276,19 @@ def test_user_can_be_archived_if_the_other_service_members_have_the_manage_setti
 
     sample_service.users = [user_1, user_2, user_3]
 
-    create_permissions(user_1, sample_service, "manage_settings")
-    create_permissions(user_2, sample_service, "manage_settings", "view_activity")
+    create_permissions(user_1, sample_service, PermissionType.MANAGE_SETTINGS)
     create_permissions(
-        user_3, sample_service, "manage_settings", "send_emails", "send_texts"
+        user_2,
+        sample_service,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.VIEW_ACTIVITY,
+    )
+    create_permissions(
+        user_3,
+        sample_service,
+        PermissionType.MANAGE_SETTINGS,
+        PermissionType.SEND_EMAILS,
+        PermissionType.SEND_TEXTS,
     )
 
     assert len(sample_service.users) == 3
@@ -302,9 +324,14 @@ def test_user_cannot_be_archived_if_the_other_service_members_do_not_have_the_ma
 
     sample_service.users = [active_user, pending_user, inactive_user]
 
-    create_permissions(active_user, sample_service, "manage_settings")
-    create_permissions(pending_user, sample_service, "view_activity")
-    create_permissions(inactive_user, sample_service, "send_emails", "send_texts")
+    create_permissions(active_user, sample_service, PermissionType.MANAGE_SETTINGS)
+    create_permissions(pending_user, sample_service, PermissionType.VIEW_ACTIVITY)
+    create_permissions(
+        inactive_user,
+        sample_service,
+        PermissionType.SEND_EMAILS,
+        PermissionType.SEND_TEXTS,
+    )
 
     assert len(sample_service.users) == 3
     assert not user_can_be_archived(active_user)

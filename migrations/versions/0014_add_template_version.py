@@ -10,8 +10,8 @@ Create Date: 2016-05-11 16:00:51.478012
 revision = "0014_add_template_version"
 down_revision = "0012_complete_provider_details"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 

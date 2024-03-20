@@ -12,7 +12,8 @@ from app.dao.invited_user_dao import (
     get_invited_users_for_service,
     save_invited_user,
 )
-from app.models import INVITE_EXPIRED, InvitedUser
+from app.enums import InvitedUserStatus, PermissionType
+from app.models import InvitedUser
 from tests.app.db import create_invited_user
 
 
@@ -25,7 +26,7 @@ def test_create_invited_user(notify_db_session, sample_service):
         "service": sample_service,
         "email_address": email_address,
         "from_user": invite_from,
-        "permissions": "send_messages,manage_service",
+        "permissions": "send_emails,manage_settings",
         "folder_permissions": [],
     }
 
@@ -37,8 +38,8 @@ def test_create_invited_user(notify_db_session, sample_service):
     assert invited_user.from_user == invite_from
     permissions = invited_user.get_permissions()
     assert len(permissions) == 2
-    assert "send_messages" in permissions
-    assert "manage_service" in permissions
+    assert PermissionType.SEND_EMAILS in permissions
+    assert PermissionType.MANAGE_SETTINGS in permissions
     assert invited_user.folder_permissions == []
 
 
@@ -108,12 +109,12 @@ def test_save_invited_user_sets_status_to_cancelled(
 ):
     assert InvitedUser.query.count() == 1
     saved = InvitedUser.query.get(sample_invited_user.id)
-    assert saved.status == "pending"
-    saved.status = "cancelled"
+    assert saved.status == InvitedUserStatus.PENDING
+    saved.status = InvitedUserStatus.CANCELLED
     save_invited_user(saved)
     assert InvitedUser.query.count() == 1
     cancelled_invited_user = InvitedUser.query.get(sample_invited_user.id)
-    assert cancelled_invited_user.status == "cancelled"
+    assert cancelled_invited_user.status == InvitedUserStatus.CANCELLED
 
 
 def test_should_delete_all_invitations_more_than_one_day_old(
@@ -122,11 +123,21 @@ def test_should_delete_all_invitations_more_than_one_day_old(
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED).all()) == 2
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 2
     )
     expire_invitations_created_more_than_two_days_ago()
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED).all()) == 0
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 0
     )
 
 
@@ -149,13 +160,34 @@ def test_should_not_delete_invitations_less_than_two_days_old(
     )
 
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED).all()) == 2
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 2
     )
     expire_invitations_created_more_than_two_days_ago()
     assert (
-        len(InvitedUser.query.filter(InvitedUser.status != INVITE_EXPIRED).all()) == 1
+        len(
+            InvitedUser.query.filter(
+                InvitedUser.status != InvitedUserStatus.EXPIRED
+            ).all()
+        )
+        == 1
     )
-    assert InvitedUser.query.first().email_address == "valid@2.com"
+    assert (
+        InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED)
+        .first()
+        .email_address
+        == "valid@2.com"
+    )
+    assert (
+        InvitedUser.query.filter(InvitedUser.status == InvitedUserStatus.EXPIRED)
+        .first()
+        .email_address
+        == "expired@1.com"
+    )
 
 
 def make_invitation(user, service, age=None, email_address="test@test.com"):
@@ -163,9 +195,9 @@ def make_invitation(user, service, age=None, email_address="test@test.com"):
         email_address=email_address,
         from_user=user,
         service=service,
-        status="pending",
+        status=InvitedUserStatus.PENDING,
         created_at=datetime.utcnow() - (age or timedelta(hours=0)),
-        permissions="manage_settings",
+        permissions=PermissionType.MANAGE_SETTINGS,
         folder_permissions=[str(uuid.uuid4())],
     )
     db.session.add(verify_code)

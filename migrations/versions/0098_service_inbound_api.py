@@ -5,8 +5,8 @@ Revises: 0097_notnull_inbound_provider
 Create Date: 2017-06-13 15:02:33.609656
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0098_service_inbound_api"

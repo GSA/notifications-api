@@ -10,8 +10,8 @@ Create Date: 2016-08-24 13:21:51.744526
 revision = "0048_job_scheduled_time"
 down_revision = "0046_organisations_and_branding"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

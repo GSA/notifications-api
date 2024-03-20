@@ -10,8 +10,8 @@ Create Date: 2016-10-25 17:37:27.660723
 revision = "0282_add_count_as_live"
 down_revision = "0281_non_null_folder_permissions"
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def upgrade():

@@ -7,6 +7,7 @@ Create Date: 2019-10-22 17:30
 
 """
 import uuid
+
 from alembic import op
 from sqlalchemy.sql import text
 

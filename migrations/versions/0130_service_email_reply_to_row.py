@@ -14,7 +14,6 @@ down_revision = "0129_add_email_auth_permission"
 
 from alembic import op
 
-
 NOTIFY_SERVICE_ID = "d6aa2c68-a2d9-4437-ab19-3ae8eb202553"
 EMAIL_REPLY_TO_ID = "b3a58d57-2337-662a-4cba-40792a9322f2"
 

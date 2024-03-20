@@ -1,6 +1,9 @@
+import json
+
 from flask import Blueprint, abort, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
 from app.dao.dao_utils import transaction
@@ -20,8 +23,9 @@ from app.dao.organization_dao import (
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
+from app.enums import KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, Organization
+from app.models import Organization
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -202,11 +206,18 @@ def send_notifications_on_mou_signed(organization_id):
             template_version=template.version,
             recipient=recipient,
             service=notify_service,
-            personalisation=personalisation,
+            personalisation={},
             notification_type=template.template_type,
             api_key_id=None,
-            key_type=KEY_TYPE_NORMAL,
+            key_type=KeyType.NORMAL,
             reply_to_text=notify_service.get_default_reply_to_email_address(),
+        )
+        saved_notification.personalisation = personalisation
+
+        redis_store.set(
+            f"email-personalisation-{saved_notification.id}",
+            json.dumps(personalisation),
+            ex=60 * 60,
         )
         send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 

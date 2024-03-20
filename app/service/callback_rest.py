@@ -13,12 +13,9 @@ from app.dao.service_inbound_api_dao import (
     reset_service_inbound_api,
     save_service_inbound_api,
 )
+from app.enums import CallbackType
 from app.errors import InvalidRequest, register_errors
-from app.models import (
-    DELIVERY_STATUS_CALLBACK_TYPE,
-    ServiceCallbackApi,
-    ServiceInboundApi,
-)
+from app.models import ServiceCallbackApi, ServiceInboundApi
 from app.schema_validation import validate
 from app.service.service_callback_api_schema import (
     create_service_callback_api_schema,
@@ -90,7 +87,7 @@ def create_service_callback_api(service_id):
     data = request.get_json()
     validate(data, create_service_callback_api_schema)
     data["service_id"] = service_id
-    data["callback_type"] = DELIVERY_STATUS_CALLBACK_TYPE
+    data["callback_type"] = CallbackType.DELIVERY_STATUS
     callback_api = ServiceCallbackApi(**data)
     try:
         save_service_callback_api(callback_api)
