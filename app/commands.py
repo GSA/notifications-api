@@ -608,7 +608,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
         from annual_billing
         where financial_year_start = :year
     """
-    services_without_annual_billing = db.session.execute(sql, {"year": year})
+    services_without_annual_billing = db.session.execute(text(sql), {"year": year})
     for row in services_without_annual_billing:
         latest_annual_billing = """
             Select free_sms_fragment_limit
@@ -617,7 +617,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
             order by financial_year_start desc limit 1
         """
         free_allowance_rows = db.session.execute(
-            latest_annual_billing, {"service_id": row.id}
+            text(latest_annual_billing), {"service_id": row.id}
         )
         free_allowance = [x[0] for x in free_allowance_rows]
         print(f"create free limit of {free_allowance[0]} for service: {row.id}")
