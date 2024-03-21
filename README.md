@@ -301,30 +301,38 @@ brew services start postgresql@15
 brew services start redis
 ```
 
+#### Upgrading Python in existing projects
 
-### Switching to different environment
+If you're upgrading an existing project to a newer version of Python, you can
+follow these steps to get yourself up-to-date.
 
-Once all of pre-requisites for the project are installed and for first time setup or if you're upgrading an existing project to newer environment with newer python version follow below steps to create new virtual environment.
-
-First install the newer Python version we need with `pyenv`, (say the planned upgrade to 3.15) like so :
+First, use `pyenv` to install the newer version of Python you'd like to use;
+we'll use `3.12` in our example here since we recently upgraded to this version:
 
 ```sh
 pyenv install 3.12
 ```
 
-Now go into the project directory (`notifications-api` by default), create a
-virtual environment, and set the local Python version to point to the virtual
-environment (assumes version Python `3.12.2` is what is installed on your
-machine):
+Next, delete the virtual environment you previously had set up.  If you followed
+the instructions above with the first-time set up, you can do this with `pyenv`:
+
+```sh
+pyenv virtualenv-delete notify-api
+```
+
+Now, make sure you are in your project directory and recreate the same virtual
+environment with the newer version of Python you just installed:
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.12.2 notify-api-upgrade
-pyenv local notify-api-upgrade
+pyenv virtualenv 3.12.2 notify-api
+pyenv local notify-api
 ```
 
-_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently.You can deactivate the current environment by running `source deactivate` or `deactivate`.Close the shell session and reopen a new shell session should show the newer virtual environment._
-_You can get version,executable, and other details for any environment by running `poetry env info`._
+At this point, proceed with the rest of the instructions here in the README and
+you'll be set with an upgraded version of Python.
+
+_If you're not sure about the details of your current virtual environment, you can run `poetry env info` to get more information. If you've been using `pyenv` for everything, you can also see all available virtual environments with `pyenv virtualenvs`._
 
 
 ### Final environment setup

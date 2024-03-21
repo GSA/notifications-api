@@ -2595,7 +2595,7 @@ requests = ">=2.0.0"
 
 [[package]]
 name = "notifications-utils"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 optional = false
 python-versions = "^3.12.2"
@@ -2646,8 +2646,8 @@ werkzeug = "^3.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/GSA/notifications-utils.git"
-reference = "341886d"
-resolved_reference = "341886df778842aaaeefe2a3bad4d7878bb655b9"
+reference = "HEAD"
+resolved_reference = "4cf526bc1fd9532507936c174418dbd3be52c925"
 
 [[package]]
 name = "numpy"
@@ -4695,4 +4695,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "17452ec954f93a8488cf8e34b1a3bba9d8f0a8a234078a5713655955c9e3d247"
+content-hash = "4146fba7b1b851dfdca41511a2e7239ed11999b293fa7312c5d57a296a375fd5"
