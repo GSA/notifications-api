@@ -7,7 +7,7 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = "^3.12.2"
 alembic = "==1.13.1"
 amqp = "==5.2.0"
 beautifulsoup4 = "==4.12.3"
@@ -49,8 +49,8 @@ pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 sqlalchemy = "==1.4.40"
 werkzeug = "^3.0.1"
-strenum = "^0.4.15"
 faker = "^23.3.0"
+setuptools = "^69.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
