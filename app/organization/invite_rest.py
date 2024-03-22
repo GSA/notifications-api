@@ -72,12 +72,22 @@ def invite_user_to_org(organization_id):
         key_type=KeyType.NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,
     )
+
+    saved_notification.personalisation = personalisation
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
         ex=1800,
     )
-    saved_notification.personalisation = personalisation
+
+    # This is for the login.gov path, note 24 hour expiry to match
+    # The expiration of invitations.
+    redis_key = f"organization-invite-{invited_org_user.email_address}"
+    redis_store.set(
+        redis_key,
+        organization_id,
+        ex=3600 * 24,
+    )
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
