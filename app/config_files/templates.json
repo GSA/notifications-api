@@ -23,6 +23,7 @@
       "Click this link to create an account on Notify.gov:",
       "",
       "[Join Service](((url)))",
+      "If you’re new to Notify.gov you will first be directed to Login.gov create an account with us.",
       "",
       "",
       "This invitation will stop working at midnight tomorrow. This is to keep ((service_name)) secure."
