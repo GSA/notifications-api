@@ -7,7 +7,7 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from sqlalchemy import asc, desc, func, or_, union
+from sqlalchemy import asc, desc, or_, select, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -221,7 +221,7 @@ def get_notification_with_personalisation(service_id, notification_id, key_type)
 
     return (
         Notification.query.filter_by(**filter_dict)
-        .options(joinedload("template"))
+        .options(joinedload(Notification.template))
         .one()
     )
 
@@ -286,7 +286,7 @@ def get_notifications_for_service(
     query = Notification.query.filter(*filters)
     query = _filter_query(query, filter_dict)
     if personalisation:
-        query = query.options(joinedload("template"))
+        query = query.options(joinedload(Notification.template))
 
     return query.order_by(desc(Notification.created_at)).paginate(
         page=page,
@@ -572,23 +572,20 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
     under_10_secs = Notification.sent_at - Notification.created_at <= timedelta(
         seconds=10
     )
-    sum_column = functions.coalesce(
-        functions.sum(case([(under_10_secs, 1)], else_=0)), 0
+    sum_column = functions.coalesce(functions.sum(case((under_10_secs, 1), else_=0)), 0)
+
+    stmt = select(
+        functions.count(Notification.id).label("messages_total"),
+        sum_column.label("messages_within_10_secs"),
+    ).where(
+        Notification.created_at >= start_date,
+        Notification.created_at < end_date,
+        Notification.api_key_id.isnot(None),
+        Notification.key_type != KeyType.TEST,
     )
 
-    return (
-        db.session.query(
-            func.count(Notification.id).label("messages_total"),
-            sum_column.label("messages_within_10_secs"),
-        )
-        .filter(
-            Notification.created_at >= start_date,
-            Notification.created_at < end_date,
-            Notification.api_key_id.isnot(None),
-            Notification.key_type != KeyType.TEST,
-        )
-        .one()
-    )
+    result = db.session.execute(stmt)
+    return result.scalar_one()
 
 
 def dao_get_last_notification_added_for_job_id(job_id):
