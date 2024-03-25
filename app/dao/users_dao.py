@@ -178,10 +178,10 @@ def get_user_and_accounts(user_id):
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)
-            joinedload("services"),
-            joinedload("organizations"),
-            joinedload("organizations.services"),
-            joinedload("services.organization"),
+            joinedload(User.services),
+            joinedload(User.organizations),
+            joinedload(User.organizations.services),
+            joinedload(User.services.organization),
         )
         .one()
     )
