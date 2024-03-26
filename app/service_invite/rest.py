@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
@@ -39,7 +40,7 @@ def _create_service_invite(invited_user, invite_link_host):
     personalisation = {
         "user_name": invited_user.from_user.name,
         "service_name": invited_user.service.name,
-        "url": invited_user_url(invited_user.id, invite_link_host),
+        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
     }
 
     saved_notification = persist_notification(
@@ -47,11 +48,7 @@ def _create_service_invite(invited_user, invite_link_host):
         template_version=template.version,
         recipient=invited_user.email_address,
         service=service,
-        personalisation={
-            "user_name": invited_user.from_user.name,
-            "service_name": invited_user.service.name,
-            "url": invited_user_url(invited_user.id, invite_link_host),
-        },
+        personalisation={},
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KeyType.NORMAL,
@@ -62,6 +59,26 @@ def _create_service_invite(invited_user, invite_link_host):
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
         ex=1800,
+    )
+    # The raw permissions are in the form "a,b,c,d"
+    # but need to be in the form ["a", "b", "c", "d"]
+    data = {}
+    permissions = invited_user.permissions
+    permissions = permissions.split(",")
+    permission_list = []
+    for permission in permissions:
+        permission_list.append(f"{permission}")
+    data["from_user_id"] = (str(invited_user.from_user.id),)
+    data["service_id"] = str(invited_user.service.id)
+    data["permissions"] = permission_list
+    data["folder_permissions"] = invited_user.folder_permissions
+
+    # This is for the login.gov service invite on the
+    # "Set Up Your Profile" path.
+    redis_store.set(
+        f"service-invite-{invited_user.email_address}",
+        json.dumps(data),
+        ex=3600 * 24,
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
