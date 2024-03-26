@@ -278,6 +278,7 @@ in the command line by using this command:
 ```sh
 cf login -a api.fr.cloud.gov --sso
 ```
+If you are offered a choice of orgs, select `gsa-tts-benefits-studio`. For the space, choose `notify-local-dev` to start with.
 
 _REMINDER: Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov_
 
