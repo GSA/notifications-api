@@ -91,13 +91,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300
 )
 def deliver_sms(self, notification_id):
-    """
-    This logic will branch off to the final step in delivering
-    the notification to sns.
-    Logic is in place for delivery receipts.
-    Additional logic to help devs output authentication code to
-    terminal.
-    """
+    """Branch off to the final step in delivering the notification to sns and get delivery receipts."""
     try:
         current_app.logger.info(
             "Start sending SMS for notification id: {}".format(notification_id)

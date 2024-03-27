@@ -22,10 +22,10 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
 def send_sms_to_provider(notification):
-    """
-    This is the last step in the message send flow.
-    We get necessary data for recipient, template,
-    notification and send it off to the provider.
+    """Final step in the message send flow.
+
+    Get data for recipient, template,
+    notification and send it to sns.
     """
     # we no longer store the personalisation in the db,
     # need to retrieve from s3 before generating content
