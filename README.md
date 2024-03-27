@@ -289,9 +289,12 @@ cd terraform/development
 ./run.sh
 ```
 
-In addition to some infrastructure setup, this will also create a local `.env`
-file for you in the project's root directory, which will include a handful of
-project-specific environment variables.
+If this runs correctly, Terraform will ask you if you want to create some
+resources. Answer `yes`.
+
+The script will also create a local `.env` file for you in the project's
+root directory, which will include a handful of project-specific environment
+variables.
 
 Lastly, if you didn't already start PostgreSQL and Redis above, be sure to do
 so now:
@@ -384,6 +387,9 @@ Now you can run the web server and background workers for asynchronous jobs:
 ```sh
 make run-procfile
 ```
+
+If it runs correctly, you will be able to visit http://127.0.0.1:6011/ and see
+JSON from the API in your web browser.
 
 This will run all of the services within the same shell session.  If you need to
 run them separately to help with debugging or tracing logs, you can do so by
