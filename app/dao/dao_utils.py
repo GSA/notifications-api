@@ -12,7 +12,7 @@ def autocommit(func):
         try:
             res = func(*args, **kwargs)
 
-            if not db.session.is_active:
+            if not db.session().in_nested_transaction():
                 db.session.commit()
 
             return res
@@ -30,7 +30,7 @@ def transaction():
         yield
         db.session.commit()
 
-        if not db.session.is_active:
+        if not db.session().in_nested_transaction():
             db.session.commit()
     except Exception:
         db.session.rollback()
