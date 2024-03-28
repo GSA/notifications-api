@@ -84,13 +84,13 @@ def invite_user_to_org(organization_id):
     # This is for the login.gov path, note 24 hour expiry to match
     # The expiration of invitations.
     redis_key = f"organization-invite-{invited_org_user.email_address}"
-    redis_store.raw_set(
+    redis_store.set(
         redis_key,
         organization_id,
         ex=3600 * 24,
     )
     current_app.logger.info(
-        hilite(f"STORING THIS ORGANIZATION ID IN REDIS {organization_id}")
+        hilite(f"STORING THIS ORGANIZATION ID IN REDIS {redis_store.get(redis_key)}")
     )
     current_app.logger.info(
         hilite(f"URL: {os.environ['LOGIN_DOT_GOV_REGISTRATION_URL']}")
