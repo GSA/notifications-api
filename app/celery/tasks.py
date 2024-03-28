@@ -31,7 +31,7 @@ from app.v2.errors import TotalRequestsError
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
-    """ Update job status, get csv data from s3, and begin processing csv rows."""
+    """Update job status, get csv data from s3, and begin processing csv rows."""
     start = datetime.utcnow()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
