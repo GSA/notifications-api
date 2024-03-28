@@ -49,7 +49,7 @@ pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 sqlalchemy = "==1.4.40"
 werkzeug = "^3.0.1"
-faker = "^23.3.0"
+faker = "^24.4.0"
 setuptools = "^69.2.0"
 
 
