@@ -123,3 +123,11 @@ def get_reference_from_personalisation(personalisation):
     if personalisation:
         return personalisation.get("reference")
     return None
+
+
+# Function used for debugging.
+# Do print(hilite(message)) while debugging, then remove your print statements
+def hilite(message):
+    ansi_green = "\033[32m"
+    ansi_reset = "\033[0m"
+    return f"{ansi_green}{message}{ansi_reset}"

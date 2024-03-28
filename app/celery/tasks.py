@@ -31,6 +31,7 @@ from app.v2.errors import TotalRequestsError
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
+    """Update job status, get csv data from s3, and begin processing csv rows."""
     start = datetime.utcnow()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
@@ -74,6 +75,7 @@ def process_job(job_id, sender_id=None):
     for row in recipient_csv.get_rows():
         process_row(row, template, job, service, sender_id=sender_id)
 
+    # End point/Exit point for message send flow.
     job_complete(job, start=start)
 
 
@@ -109,6 +111,7 @@ def get_recipient_csv_and_template_and_sender_id(job):
 
 
 def process_row(row, template, job, service, sender_id=None):
+    """Branch off based on notification type, sms or email."""
     template_type = template.template_type
     encrypted = encryption.encrypt(
         {
@@ -121,6 +124,8 @@ def process_row(row, template, job, service, sender_id=None):
         }
     )
 
+    # Both save_sms and save_email have the same general
+    # persist logic.
     send_fns = {NotificationType.SMS: save_sms, NotificationType.EMAIL: save_email}
 
     send_fn = send_fns[template_type]
@@ -130,6 +135,7 @@ def process_row(row, template, job, service, sender_id=None):
         task_kwargs["sender_id"] = sender_id
 
     notification_id = create_uuid()
+    # Kick-off persisting notification in save_sms/save_email.
     send_fn.apply_async(
         (
             str(service.id),
@@ -163,7 +169,11 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
 
 @notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
+    """Persist notification to db and place notification in queue to send to sns."""
     notification = encryption.decrypt(encrypted_notification)
+    # SerialisedService and SerialisedTemplate classes are
+    # used here to grab the same service and template from the cache
+    # to improve performance.
     service = SerialisedService.from_id(service_id)
     template = SerialisedTemplate.from_id_and_service_id(
         notification["template"],
@@ -177,7 +187,8 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         ).sms_sender
     else:
         reply_to_text = template.reply_to_text
-
+    # Return False when trial mode services try sending notifications
+    # to non-team and non-simulated recipients.
     if not service_allowed_to_send_to(notification["to"], service, KeyType.NORMAL):
         current_app.logger.debug(
             "SMS {} failed as restricted service".format(notification_id)
@@ -208,6 +219,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             reply_to_text=reply_to_text,
         )
 
+        # Kick off sns process in provider_tasks.py
         provider_tasks.deliver_sms.apply_async(
             [str(saved_notification.id)], queue=QueueNames.SEND_SMS
         )

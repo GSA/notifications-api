@@ -46,6 +46,7 @@ applications:
       ADMIN_BASE_URL: ((admin_base_url))
       NOTIFY_E2E_TEST_EMAIL: ((NOTIFY_E2E_TEST_EMAIL))
       NOTIFY_E2E_TEST_PASSWORD: ((NOTIFY_E2E_TEST_PASSWORD))
+      LOGIN_DOT_GOV_REGISTRATION_URL: ((LOGIN_DOT_GOV_REGISTRATION_URL))
 
       # Credentials variables
       INTERNAL_CLIENT_API_KEYS: '{"notify-admin":["((ADMIN_CLIENT_SECRET))"]}'
