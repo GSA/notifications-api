@@ -28,6 +28,7 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
+from app.utils import hilite
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
 
@@ -83,12 +84,17 @@ def invite_user_to_org(organization_id):
     # This is for the login.gov path, note 24 hour expiry to match
     # The expiration of invitations.
     redis_key = f"organization-invite-{invited_org_user.email_address}"
-    redis_store.set(
+    redis_store.raw_set(
         redis_key,
         organization_id,
         ex=3600 * 24,
     )
-
+    current_app.logger.info(
+        hilite(f"STORING THIS ORGANIZATION ID IN REDIS {organization_id}")
+    )
+    current_app.logger.info(
+        hilite(f"URL: {os.environ['LOGIN_DOT_GOV_REGISTRATION_URL']}")
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=invited_org_user.serialize()), 201
