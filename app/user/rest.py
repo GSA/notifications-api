@@ -566,6 +566,9 @@ def get_user_login_gov_user():
     login_uuid = request_args["login_uuid"]
     email = request_args["email"]
     user = get_login_gov_user(login_uuid, email)
+
+    if user is None:
+        return jsonify({})
     result = user.serialize()
     return jsonify(data=result)
 
@@ -715,9 +718,9 @@ def get_orgs_and_services(user):
                 "id": service.id,
                 "name": service.name,
                 "restricted": service.restricted,
-                "organization": service.organization.id
-                if service.organization
-                else None,
+                "organization": (
+                    service.organization.id if service.organization else None
+                ),
             }
             for service in user.services
             if service.active
