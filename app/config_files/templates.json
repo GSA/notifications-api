@@ -161,7 +161,7 @@
       "",
       "Open this link to create an account on Notify.gov:",
       "",
-      "((url))",
+      "[Join Organization](((url)))",
       "",
       "",
       "This invitation will stop working at midnight tomorrow. This is to keep ((organization_name)) secure."
