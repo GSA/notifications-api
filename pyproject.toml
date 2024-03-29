@@ -7,13 +7,13 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = "^3.12.2"
 alembic = "==1.13.1"
 amqp = "==5.2.0"
 beautifulsoup4 = "==4.12.3"
 boto3 = "^1.29.6"
 botocore = "^1.32.6"
-cachetools = "==5.3.2"
+cachetools = "==5.3.3"
 celery = {version = "==5.3.6", extras = ["redis"]}
 certifi = ">=2022.12.7"
 cffi = "==1.16.0"
@@ -49,14 +49,14 @@ pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 sqlalchemy = "==2.0.27"
 werkzeug = "^3.0.1"
-strenum = "^0.4.15"
 faker = "^23.3.0"
+setuptools = "^69.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
 awscli = "^1.29.74"
 bandit = "*"
-black = "^23.12.1"
+black = "^24.3.0"
 cloudfoundry-client = "*"
 exceptiongroup = "==1.2.0"
 flake8 = "^7.0.0"
@@ -65,7 +65,7 @@ freezegun = "^1.4.0"
 honcho = "*"
 isort = "^5.13.2"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
-moto = "==4.2.13"
+moto = "==5.0.3"
 pip-audit = "*"
 pre-commit = "^3.6.0"
 pytest = "^7.4.4"

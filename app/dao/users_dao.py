@@ -36,7 +36,6 @@ def get_login_gov_user(login_uuid, email_address):
     should be removed.
     """
 
-    print(User.query.filter_by(login_uuid=login_uuid).first())
     user = User.query.filter_by(login_uuid=login_uuid).first()
     if user:
         if user.email_address != email_address:

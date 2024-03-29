@@ -34,6 +34,7 @@ from app.serialised_models import (
     SerialisedService,
     SerialisedTemplate,
 )
+from app.service.utils import service_allowed_to_send_to
 from app.utils import get_template_instance
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 from tests.app.db import (
@@ -498,7 +499,7 @@ def test_check_service_over_api_rate_limit_when_exceed_rate_limit_request_fails_
         with pytest.raises(RateLimitError) as e:
             check_service_over_api_rate_limit(serialised_service, serialised_api_key)
 
-        assert app.redis_store.exceeded_rate_limit.called_with(
+        app.redis_store.exceeded_rate_limit.assert_called_with(
             f"{sample_service.id}-{api_key.key_type}",
             sample_service.rate_limit,
             60,
@@ -527,7 +528,7 @@ def test_check_service_over_api_rate_limit_when_rate_limit_has_not_exceeded_limi
         )[0]
 
         check_service_over_api_rate_limit(serialised_service, serialised_api_key)
-        assert app.redis_store.exceeded_rate_limit.called_with(
+        app.redis_store.exceeded_rate_limit.assert_called_with(
             f"{sample_service.id}-{api_key.key_type}",
             3000,
             60,
@@ -802,3 +803,21 @@ def test_check_service_over_total_message_limit(mocker, sample_service):
         sample_service,
     )
     assert service_stats == 0
+
+
+def test_service_allowed_to_send_to_simulated_numbers():
+    trial_mode_service = create_service(service_name="trial mode", restricted=True)
+    can_send = service_allowed_to_send_to(
+        "+14254147755",
+        trial_mode_service,
+        KeyType.NORMAL,
+        allow_guest_list_recipients=True,
+    )
+    can_not_send = service_allowed_to_send_to(
+        "+15555555555",
+        trial_mode_service,
+        KeyType.NORMAL,
+        allow_guest_list_recipients=True,
+    )
+    assert can_send is True
+    assert can_not_send is False

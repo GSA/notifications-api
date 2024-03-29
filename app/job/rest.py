@@ -166,6 +166,7 @@ def get_jobs_by_service(service_id):
 
 @job_blueprint.route("", methods=["POST"])
 def create_job(service_id):
+    """Entry point from UI for one-off messages as well as CSV uploads."""
     service = dao_fetch_service_by_id(service_id)
     if not service.active:
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
@@ -204,7 +205,7 @@ def create_job(service_id):
     dao_create_job(job)
 
     sender_id = data.get("sender_id")
-
+    # Kick off job in tasks.py
     if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS

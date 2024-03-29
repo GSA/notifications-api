@@ -542,19 +542,24 @@ All commands use the `-g` or `--generate` to determine how many instances to loa
 
 # How messages are queued and sent
 
+Services used during message-send flow:
+1. AWS S3
+2. AWS SNS
+3. AWS Cloudwatch
+4. Redis
+5. PostgreSQL
+
 There are several ways for notifications to come into the API.
 
 - Messages sent through the API enter through `app/notifications/post_notifications.py`
-- One-off messages sent from the UI enter through `create_one_off_notification` in `app/service/rest.py`
-- CSV uploads enter through `app/job/rest.py`
+- One-off messages and CSV uploads both enter from the UI through `app/job/rest.py:create_job`
 
-API messages and one-off UI messages come in one at a time, and take slightly-separate routes
-that both end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
+API messages come in one at a time, and end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
 which enqueues the sending.
 
-For CSV uploads, the CSV is first stored in S3 and queued as a `Job`. When the job runs, it iterates
-through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and
-`provider_tasks.deliver_sms`.
+One-off messages and batch messages both upload a CSV, which are then first stored in S3 and queued as a `Job`. When the job runs, it iterates
+through the rows from `tasks.py:process_row`, running `tasks.py:save_sms` (email notifications branch off through `tasks.py:save_email`) to write to the db with `persist_notification` and begin the process of delivering the notification to the provider
+through `provider_tasks.deliver_sms`. The exit point to the provider is in `send_to_providers.py:send_sms`.
 
 # Writing public APIs
 
