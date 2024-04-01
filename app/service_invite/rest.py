@@ -25,7 +25,6 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
-from app.utils import hilite
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -80,9 +79,6 @@ def _create_service_invite(invited_user, invite_link_host):
         f"service-invite-{invited_user.email_address}",
         json.dumps(data),
         ex=3600 * 24,
-    )
-    current_app.logger.info(
-        hilite(f"STORING ALL THIS IN REDIS FOR SERVICE INVITE {json.dumps(data)}")
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
