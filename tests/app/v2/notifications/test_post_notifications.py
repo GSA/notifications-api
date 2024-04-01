@@ -1271,10 +1271,10 @@ def test_post_notifications_saves_email_or_sms_to_queue(
             "template_id": template.id,
             "personalisation": {"message": "Dear citizen, have a nice day"},
         }
-        data.update(
-            {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == NotificationType.EMAIL else data.update(
-            {"phone_number": "+447700900855"}
+        (
+            data.update({"email_address": "joe.citizen@example.com"})
+            if notification_type == NotificationType.EMAIL
+            else data.update({"phone_number": "+447700900855"})
         )
 
         response = client.post(
@@ -1340,10 +1340,10 @@ def test_post_notifications_saves_email_or_sms_normally_if_saving_to_queue_fails
             "template_id": template.id,
             "personalisation": {"message": "Dear citizen, have a nice day"},
         }
-        data.update(
-            {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == NotificationType.EMAIL else data.update(
-            {"phone_number": "+447700900855"}
+        (
+            data.update({"email_address": "joe.citizen@example.com"})
+            if notification_type == NotificationType.EMAIL
+            else data.update({"phone_number": "+447700900855"})
         )
 
         response = client.post(
@@ -1402,10 +1402,10 @@ def test_post_notifications_doesnt_use_save_queue_for_test_notifications(
             "template_id": template.id,
             "personalisation": {"message": "Dear citizen, have a nice day"},
         }
-        data.update(
-            {"email_address": "joe.citizen@example.com"}
-        ) if notification_type == NotificationType.EMAIL else data.update(
-            {"phone_number": "+447700900855"}
+        (
+            data.update({"email_address": "joe.citizen@example.com"})
+            if notification_type == NotificationType.EMAIL
+            else data.update({"phone_number": "+447700900855"})
         )
         response = client.post(
             path=f"/v2/notifications/{notification_type}",

@@ -5,6 +5,7 @@ Revises: 0381_encrypted_column_types
 Create Date: 2023-01-10 11:42:25.633265
 
 """
+
 import json
 
 import sqlalchemy as sa

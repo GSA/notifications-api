@@ -5,6 +5,7 @@ Revises: 0374_fix_reg_template_history
 Create Date: 2022-08-29 11:04:15.888017
 
 """
+
 from sqlalchemy import text
 
 revision = "0375_fix_service_name"

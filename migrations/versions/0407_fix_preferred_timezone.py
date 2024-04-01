@@ -3,6 +3,7 @@
 Revises: 0406_adjust_agreement_model
 
 """
+
 from alembic import op
 
 down_revision = "0406_adjust_agreement_model"

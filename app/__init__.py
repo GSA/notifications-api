@@ -359,9 +359,9 @@ def setup_sqlalchemy_events(app):
                     connection_record.info["request_data"] = {
                         "method": request.method,
                         "host": request.host,
-                        "url_rule": request.url_rule.rule
-                        if request.url_rule
-                        else "No endpoint",
+                        "url_rule": (
+                            request.url_rule.rule if request.url_rule else "No endpoint"
+                        ),
                     }
                 # celery apps
                 elif current_task:

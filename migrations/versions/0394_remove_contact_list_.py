@@ -5,6 +5,7 @@ Revises: 0393_remove_crown
 Create Date: 2023-04-12 13:12:12.683257
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

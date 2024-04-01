@@ -715,9 +715,9 @@ def get_orgs_and_services(user):
                 "id": service.id,
                 "name": service.name,
                 "restricted": service.restricted,
-                "organization": service.organization.id
-                if service.organization
-                else None,
+                "organization": (
+                    service.organization.id if service.organization else None
+                ),
             }
             for service in user.services
             if service.active

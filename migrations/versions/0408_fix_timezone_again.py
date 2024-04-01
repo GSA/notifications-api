@@ -3,6 +3,7 @@
 Revises: 0407_fix_preferred_timezone
 
 """
+
 from alembic import op
 
 down_revision = "0407_fix_preferred_timezone"

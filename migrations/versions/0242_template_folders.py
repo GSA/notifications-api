@@ -5,6 +5,7 @@ Revises: 0240_dvla_org_non_nullable
 Create Date: 2018-10-26 16:00:40.173840
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

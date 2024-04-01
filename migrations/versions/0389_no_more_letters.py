@@ -5,6 +5,7 @@ Revises: 0388_no_serv_letter_contact
 Create Date: 2023-02-28 08:58:38.310095
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
