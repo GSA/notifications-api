@@ -812,6 +812,7 @@ def _clear_templates_from_cache():
     ]
 
     num_deleted = sum(redis_store.delete_by_pattern(pattern) for pattern in CACHE_KEYS)
+    current_app.logger.info(f"Number of templates deleted from cache {num_deleted}")
 
 
 @notify_command(name="create-new-service")
