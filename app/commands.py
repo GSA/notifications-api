@@ -812,7 +812,6 @@ def _clear_templates_from_cache():
                 ]
 
 
-    count1 = redis_store.delete_by_pattern(CACHE_KEYS[1])
     num_deleted = sum(
         redis_store.delete_by_pattern(pattern) for pattern in CACHE_KEYS
     )
