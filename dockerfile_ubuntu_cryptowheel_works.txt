@@ -1,0 +1,35 @@
+FROM ubuntu:22.04
+
+
+# install build dependencies and needed tools
+RUN apt-get update && apt-get install -y \
+    curl wget gcc make zlib1g-dev libffi-dev libssl-dev libc-dev build-essential python3 python3-pip python3-venv rustc cargo
+
+
+
+RUN set -e
+
+ARG OPENSSL_VERSION="3.0.8"
+ARG CWD=$(pwd)
+
+
+# Have to do --break-system-packages to avoid need for virtual env
+# RUN virtualenv env
+# RUN . env/bin/activate
+RUN python3 -m venv /opt/venv
+# Enable venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip3 install -U setuptools
+RUN pip3 install -U wheel pip
+RUN curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+RUN tar xvf openssl-${OPENSSL_VERSION}.tar.gz
+
+WORKDIR "/openssl-3.0.8"
+RUN ./config no-shared no-ssl2 no-ssl3 -fPIC --prefix=/openssl-3.0.8/openssl
+RUN make && make install
+WORKDIR "/"
+ARG OPENSSL_DIR="/openssl-3.0.8/openssl"
+# ARG CFLAGS="-I/openssl-3.0.8/include"
+# ARG LDFLAGS="-L/openssl-3.0.8/lib"
+RUN pip wheel --no-cache-dir --no-binary cryptography cryptography
