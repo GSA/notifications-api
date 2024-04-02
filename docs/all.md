@@ -254,6 +254,9 @@ We do not maintain any hooks in this repository.
 # install dependencies, etc.
 make bootstrap
 
+# Create test database
+createdb test_notification_api
+
 make test
 ```
 
@@ -261,8 +264,6 @@ This will run:
 - flake8 for code styling
 - isort for import styling
 - pytest for the test suite
-
-If you see an error about a missing test database, run `createdb test_notification_api`.
 
 On GitHub, in addition to these tests, we run:
 - bandit for code security
