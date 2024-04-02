@@ -16,6 +16,7 @@ from app.commands import (
     populate_organizations_from_file,
     promote_user_to_platform_admin,
     purge_functional_test_data,
+    show_users,
     update_jobs_archived_flag,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
@@ -440,3 +441,11 @@ def test_promote_user_to_platform_admin_no_result_found(
     )
     assert "NoResultFound" in str(result)
     assert sample_user.platform_admin is False
+
+
+def test_show_users(notify_db_session, notify_api, sample_user):
+    result = notify_api.test_cli_runner().invoke(
+        show_users,
+        [],
+    )
+    assert "Name,Email address,Mobile number,Service name" in str(result)

@@ -1006,3 +1006,23 @@ def add_test_users_to_db(generate, state, admin):
             platform_admin=admin,
         )
         print(f"{num} {user.email_address} created")
+
+
+@notify_command(name="show-users")
+def show_users():
+
+    sql = """
+
+    select users.name, users.email_address, users.mobile_number, services.name as service_name
+    from users
+    inner join user_to_service on users.id=user_to_service.user_id
+    inner join services on services.id=user_to_service.service_id
+    order by services.name asc, users.name asc
+    """
+    users = db.session.execute(sql)
+    report = "Name,Email address,Mobile number,Service name"
+    print(report)
+    for row in users:
+        print(f"{row.name},{row.email_address},{row.mobile_number},{row.service_name}")
+        report = f"{report}\n{row.name},{row.email_address},{row.mobile_number},{row.service_name}"
+    return report
