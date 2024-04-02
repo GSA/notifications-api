@@ -52,6 +52,15 @@ def invite_user_to_org(organization_id):
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
 
+    token = generate_token(
+        str(invited_org_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": (
             "The Notify.gov team"
@@ -59,7 +68,7 @@ def invite_user_to_org(organization_id):
             else invited_org_user.invited_by.name
         ),
         "organization_name": invited_org_user.organization.name,
-        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
+        "url": url,
     }
     saved_notification = persist_notification(
         template_id=template.id,

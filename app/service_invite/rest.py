@@ -37,10 +37,20 @@ def _create_service_invite(invited_user, invite_link_host):
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+
+    token = generate_token(
+        str(invited_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": invited_user.from_user.name,
         "service_name": invited_user.service.name,
-        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
+        "url": url,
     }
 
     saved_notification = persist_notification(
