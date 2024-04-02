@@ -214,12 +214,12 @@ def handle_complaint(ses_message):
     complaint = Complaint(
         notification_id=notification.id,
         service_id=notification.service_id,
-        ses_feedback_id=ses_complaint.get("feedbackId", None)
-        if ses_complaint
-        else None,
-        complaint_type=ses_complaint.get("complaintFeedbackType", None)
-        if ses_complaint
-        else None,
+        ses_feedback_id=(
+            ses_complaint.get("feedbackId", None) if ses_complaint else None
+        ),
+        complaint_type=(
+            ses_complaint.get("complaintFeedbackType", None) if ses_complaint else None
+        ),
         complaint_date=ses_complaint.get("timestamp", None) if ses_complaint else None,
     )
     save_complaint(complaint)

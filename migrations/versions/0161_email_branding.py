@@ -5,6 +5,7 @@ Revises: 0159_add_historical_redact
 Create Date: 2018-01-30 15:35:12.016574
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

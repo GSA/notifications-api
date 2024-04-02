@@ -5,6 +5,7 @@ Revises: 0189_ft_billing_data
 Create Date: 2018-05-21 14:24:27.229511
 
 """
+
 from alembic import op
 
 revision = "0191_ft_billing_pkey"

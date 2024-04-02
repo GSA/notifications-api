@@ -4,6 +4,7 @@ Revision ID: 0403_add_carrier
 Revises: 0402_total_message_limit_default
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from flask import current_app

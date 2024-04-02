@@ -59,7 +59,9 @@ def get_last_used_datetime_for_template(service_id, template_id):
     )
 
     return jsonify(
-        last_date_used=last_date_used.strftime(DATETIME_FORMAT)
-        if last_date_used
-        else last_date_used
+        last_date_used=(
+            last_date_used.strftime(DATETIME_FORMAT)
+            if last_date_used
+            else last_date_used
+        )
     )

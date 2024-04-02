@@ -5,6 +5,7 @@ Revises: 0224_returned_letter_status
 Create Date: 2018-09-13 16:23:59.168877
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
