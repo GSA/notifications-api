@@ -262,6 +262,8 @@ This will run:
 - isort for import styling
 - pytest for the test suite
 
+If you see an error about a missing test database, run `createdb test_notification_api`.
+
 On GitHub, in addition to these tests, we run:
 - bandit for code security
 - pip-audit for dependency vulnerabilities
