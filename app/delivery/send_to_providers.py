@@ -22,6 +22,11 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 
 
 def send_sms_to_provider(notification):
+    """Final step in the message send flow.
+
+    Get data for recipient, template,
+    notification and send it to sns.
+    """
     # we no longer store the personalisation in the db,
     # need to retrieve from s3 before generating content
     # However, we are still sending the initial verify code through personalisation
@@ -41,6 +46,7 @@ def send_sms_to_provider(notification):
         return
 
     if notification.status == NotificationStatus.CREATED:
+        # We get the provider here (which is only aws sns)
         provider = provider_to_use(NotificationType.SMS, notification.international)
         if not provider:
             technical_failure(notification=notification)

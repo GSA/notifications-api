@@ -28,9 +28,11 @@ def send_notification_to_service_users(
         notification = persist_notification(
             template_id=template.id,
             template_version=template.version,
-            recipient=user.email_address
-            if template.template_type == TemplateType.EMAIL
-            else user.mobile_number,
+            recipient=(
+                user.email_address
+                if template.template_type == TemplateType.EMAIL
+                else user.mobile_number
+            ),
             service=notify_service,
             personalisation=personalisation,
             notification_type=template.template_type,

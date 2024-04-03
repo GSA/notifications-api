@@ -772,9 +772,9 @@ class ServiceSmsSender(db.Model):
             "service_id": str(self.service_id),
             "is_default": self.is_default,
             "archived": self.archived,
-            "inbound_number_id": str(self.inbound_number_id)
-            if self.inbound_number_id
-            else None,
+            "inbound_number_id": (
+                str(self.inbound_number_id) if self.inbound_number_id else None
+            ),
             "created_at": self.created_at.strftime(DATETIME_FORMAT),
             "updated_at": get_dt_string_or_none(self.updated_at),
         }
@@ -1184,9 +1184,9 @@ class TemplateBase(db.Model):
             "created_by": self.created_by.email_address,
             "version": self.version,
             "body": self.content,
-            "subject": self.subject
-            if self.template_type == TemplateType.EMAIL
-            else None,
+            "subject": (
+                self.subject if self.template_type == TemplateType.EMAIL else None
+            ),
             "name": self.name,
             "personalisation": {
                 key: {
@@ -1690,9 +1690,9 @@ class Notification(db.Model):
 
     def serialize_for_csv(self):
         serialized = {
-            "row_number": ""
-            if self.job_row_number is None
-            else self.job_row_number + 1,
+            "row_number": (
+                "" if self.job_row_number is None else self.job_row_number + 1
+            ),
             "recipient": self.to,
             "client_reference": self.client_reference or "",
             "template_name": self.template.name,
@@ -1718,12 +1718,12 @@ class Notification(db.Model):
         serialized = {
             "id": self.id,
             "reference": self.client_reference,
-            "email_address": self.to
-            if self.notification_type == NotificationType.EMAIL
-            else None,
-            "phone_number": self.to
-            if self.notification_type == NotificationType.SMS
-            else None,
+            "email_address": (
+                self.to if self.notification_type == NotificationType.EMAIL else None
+            ),
+            "phone_number": (
+                self.to if self.notification_type == NotificationType.SMS else None
+            ),
             "line_1": None,
             "line_2": None,
             "line_3": None,

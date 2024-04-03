@@ -5,6 +5,7 @@ Revises: 0409_fix_service_name
 Create Date: 2024-01-18 12:34:32.857422
 
 """
+
 from contextlib import contextmanager
 from enum import Enum
 from re import I
@@ -469,7 +470,8 @@ def upgrade():
             postgresql_using=enum_using("notification_type", NotificationType),
         )
         # Clobbering bad data here. These are values we don't use any more, and anything with them is unnecessary.
-        op.execute("""
+        op.execute(
+            """
             delete from
                 service_permissions
             where
@@ -480,7 +482,8 @@ def upgrade():
                     'international_letters',
                     'broadcast'
                 );
-        """)
+        """
+        )
         op.alter_column(
             "service_permissions",
             "permission",

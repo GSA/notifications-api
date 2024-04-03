@@ -5,6 +5,7 @@ Revises: 0387_remove_letter_perms_
 Create Date: 2023-02-17 14:42:52.679425
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

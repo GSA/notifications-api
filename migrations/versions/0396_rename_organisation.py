@@ -5,6 +5,7 @@ Revises: 0395_add_total_message_limit
 Create Date: 2023-04-27 14:59:39.428607
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 

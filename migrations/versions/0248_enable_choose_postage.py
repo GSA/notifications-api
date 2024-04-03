@@ -5,6 +5,7 @@ Revises: 0246_notifications_index
 Create Date: 2018-12-14 12:09:31.375634
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
