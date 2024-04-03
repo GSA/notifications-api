@@ -294,11 +294,6 @@ class Config(object):
 
     HIGH_VOLUME_SERVICE = json.loads(getenv("HIGH_VOLUME_SERVICE", "[]"))
 
-    TEMPLATE_PREVIEW_API_HOST = getenv(
-        "TEMPLATE_PREVIEW_API_HOST", "http://localhost:6013"
-    )
-    TEMPLATE_PREVIEW_API_KEY = getenv("TEMPLATE_PREVIEW_API_KEY", "my-secret-key")
-
     DOCUMENT_DOWNLOAD_API_HOST = getenv(
         "DOCUMENT_DOWNLOAD_API_HOST", "http://localhost:7000"
     )
@@ -355,8 +350,6 @@ class Test(Development):
         **Config.CELERY,
         "broker_url": "you-forgot-to-mock-celery-in-your-tests://",
     }
-
-    TEMPLATE_PREVIEW_API_HOST = "http://localhost:9999"
 
 
 class Production(Config):
