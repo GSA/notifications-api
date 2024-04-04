@@ -1926,11 +1926,6 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
     sample_template,
     mocker,
 ):
-    mock_s3 = mocker.patch("app.service.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "1"
-
-    mock_s3 = mocker.patch("app.service.rest.get_personalisation_from_s3")
-    mock_s3.return_value = {}
 
     # notification from_test_api_key
     create_notification(sample_template, key_type=KeyType.TEST)
@@ -1946,9 +1941,17 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
     )
 
     resp = json.loads(response.get_data(as_text=True))
+    print(resp["notifications"])
     assert len(resp["notifications"]) == expected_count_of_notifications
-    assert resp["notifications"][0]["to"] == sample_notification_with_job.to
-    assert resp["notifications"][1]["to"] == sample_notification.to
+    if resp["notifications"][0]["job"] is None:
+        actual_notification = resp["notifications"][0]
+        actual_notification_with_job = resp["notifications"][1]
+    else:
+        actual_notification = resp["notifications"][1]
+        actual_notification_with_job = resp["notifications"][0]
+
+    assert actual_notification_with_job["to"] == sample_notification_with_job.to
+    assert actual_notification["to"] == sample_notification.to
     assert response.status_code == 200
 
 

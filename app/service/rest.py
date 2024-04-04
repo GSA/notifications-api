@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
@@ -429,16 +428,20 @@ def get_all_notifications_for_service(service_id):
 
     for notification in pagination.items:
         if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
-            recipient = get_phone_number_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
+            # This is the 7 day report
+            # Remove for performance and PII issues
+            # notification.personalisation = get_personalisation_from_s3(
+            #    notification.service_id,
+            #    notification.job_id,
+            #    notification.job_row_number,
+            # )
+            # recipient = get_phone_number_from_s3(
+            #    notification.service_id,
+            #    notification.job_id,
+            #    notification.job_row_number,
+            # )
+            notification.personalisation = {}
+            recipient = "private"
             notification.to = recipient
             notification.normalised_to = recipient
         else:
