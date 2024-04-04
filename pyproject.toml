@@ -38,7 +38,7 @@ iso8601 = "==2.1.0"
 jsonschema = {version = "==4.20.0", extras = ["format"]}
 lxml = "==5.1.0"
 marshmallow = "==3.20.2"
-marshmallow-sqlalchemy = "==0.30.0"
+marshmallow-sqlalchemy = "==1.0.0"
 newrelic = "*"
 notifications-python-client = "==9.0.0"
 notifications-utils = {git = "https://github.com/GSA/notifications-utils.git"}
