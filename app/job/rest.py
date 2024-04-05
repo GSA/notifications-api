@@ -90,6 +90,14 @@ def get_all_notifications_for_service_job(service_id, job_id):
             notification.to = recipient
             notification.normalised_to = recipient
 
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
     notifications = None
     if data.get("format_for_csv"):
         notifications = [
@@ -100,14 +108,6 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
-
-    for notification in paginated_notifications.items:
-        if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
 
     return (
         jsonify(
