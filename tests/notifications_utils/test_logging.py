@@ -48,4 +48,4 @@ def test_base_json_formatter_contains_service_id():
         json.loads(logging.BaseJSONFormatter().format(record))["message"]
         == "message to log"
     )
-    assert service_id_filter.filter(record).service_id == "no-service-id"
+    assert service_id_filter.filter(record).service_id == "notify-admin"
