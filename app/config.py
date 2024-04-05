@@ -2,10 +2,10 @@ import json
 from datetime import timedelta
 from os import getenv, path
 
-import notifications_utils
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
+import notifications_utils
 from app.cloudfoundry_config import cloud_config
 
 

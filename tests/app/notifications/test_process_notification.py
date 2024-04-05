@@ -5,10 +5,6 @@ from collections import namedtuple
 import pytest
 from boto3.exceptions import Boto3Error
 from freezegun import freeze_time
-from notifications_utils.recipients import (
-    validate_and_format_email_address,
-    validate_and_format_phone_number,
-)
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
@@ -21,6 +17,10 @@ from app.notifications.process_notifications import (
 )
 from app.serialised_models import SerialisedTemplate
 from app.v2.errors import BadRequestError
+from notifications_utils.recipients import (
+    validate_and_format_email_address,
+    validate_and_format_phone_number,
+)
 from tests.app.db import create_service, create_template
 
 

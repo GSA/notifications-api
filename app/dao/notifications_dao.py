@@ -1,12 +1,6 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
-from notifications_utils.recipients import (
-    InvalidEmailError,
-    try_validate_and_format_phone_number,
-    validate_and_format_email_address,
-)
 from sqlalchemy import asc, desc, func, or_, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
@@ -22,6 +16,12 @@ from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
     midnight_n_days_ago,
+)
+from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
+from notifications_utils.recipients import (
+    InvalidEmailError,
+    try_validate_and_format_phone_number,
+    validate_and_format_email_address,
 )
 
 

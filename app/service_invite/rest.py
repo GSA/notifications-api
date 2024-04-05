@@ -4,7 +4,6 @@ from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
-from notifications_utils.url_safe_token import check_token, generate_token
 
 from app import redis_store
 from app.config import QueueNames
@@ -25,6 +24,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
+from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)
 

@@ -4,7 +4,6 @@ from unittest import mock
 from unittest.mock import ANY, call
 
 import pytest
-from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
@@ -20,6 +19,7 @@ from app.celery.scheduled_tasks import (
 from app.config import QueueNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
 from app.enums import JobStatus, NotificationStatus, TemplateType
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
 
