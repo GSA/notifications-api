@@ -6,17 +6,17 @@ Prerequisite: install the `jq` JSON processor: `brew install jq`
 
 ## Initial setup
 
-These instructions were used for deploying the project for the first time, years ago. We should not have to perfrom these steps again. They are provided here for reference.
+These instructions were used for deploying the project for the first time, years ago. We should not have to perform these steps again. They are provided here for reference.
 
-1. Manually run the bootstrap module following instructions under `Terraform State Credentials`
+1. Manually run the bootstrap module following instructions under [Terraform State Credentials](#terraform-state-credentials)
 1. Setup CI/CD Pipeline to run Terraform
     1. Copy bootstrap credentials to your CI/CD secrets using the instructions in the base README
-    1. Create a cloud.gov SpaceDeployer by following the instructions under `SpaceDeployers`
+    1. Create a cloud.gov SpaceDeployer by following the instructions under [SpaceDeployers](#spacedeployers)
     1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
 1. Manually Running Terraform
-    1. Follow instructions under `Set up a new environment` to create your infrastructure
+    1. Follow instructions under [Set up a new environment manually](#set-up-a-new-environment-manually) to create your infrastructure
 
-## Terraform State Credentials
+## Terraform state credentials
 
 The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in.
 
@@ -25,7 +25,7 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
 1. Run `terraform init`
 1. Run `./run.sh plan` to verify that the changes are what you expect
 1. Run `./run.sh apply` to set up the bucket and retrieve credentials
-1. Follow instructions under `Use bootstrap credentials`
+1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
 1. Ensure that `import.sh` includes a line and correct IDs for any resources created
 1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
 1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
