@@ -26,6 +26,7 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
 1. Follow instructions under `Use bootstrap credentials`
 1. Ensure that `import.sh` includes a line and correct IDs for any resources created
 1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
+1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
 
 ### To make changes to the bootstrap module
 
@@ -40,6 +41,7 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
 
 ### Retrieving existing bucket credentials
 
+1. Run `./import.sh` to pull existing terraform state into the local state
 1. Run `./run.sh show`
 1. Follow instructions under `Use bootstrap credentials`
 
@@ -51,8 +53,6 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
     aws_access_key_id = <access_key_id from bucket_credentials>
     aws_secret_access_key = <secret_access_key from bucket_credentials>
     ```
-
-1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
 
 ## SpaceDeployers
 
