@@ -6,13 +6,15 @@ Prerequisite: install the `jq` JSON processor: `brew install jq`
 
 ## Initial setup
 
+These instructions were used for deploying the project for the first time, years ago. We should not have to perfrom these steps again. They are provided here for reference.
+
 1. Manually run the bootstrap module following instructions under `Terraform State Credentials`
 1. Setup CI/CD Pipeline to run Terraform
-  1. Copy bootstrap credentials to your CI/CD secrets using the instructions in the base README
-  1. Create a cloud.gov SpaceDeployer by following the instructions under `SpaceDeployers`
-  1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
+    1. Copy bootstrap credentials to your CI/CD secrets using the instructions in the base README
+    1. Create a cloud.gov SpaceDeployer by following the instructions under `SpaceDeployers`
+    1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
 1. Manually Running Terraform
-  1. Follow instructions under `Set up a new environment` to create your infrastructure
+    1. Follow instructions under `Set up a new environment` to create your infrastructure
 
 ## Terraform State Credentials
 
