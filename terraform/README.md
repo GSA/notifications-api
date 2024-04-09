@@ -1,12 +1,10 @@
 # Terraform
 
-This directory holds the terraform modules for maintaining your complete persistent infrastructure.
-
-Prerequisite: install the `jq` JSON processor: `brew install jq`
+This directory holds the Terraform modules for maintaining Notify.gov's infrastructure. You can [read about the structure](#structure) or [get set up to develop](#retrieving-existing-bucket-credentials).
 
 ## Retrieving existing bucket credentials
 
-Assuming [initial setup](#initial-setup) is complete, new developers start here!
+:green_book: Assuming [initial setup](#initial-setup) is complete, new developers start here!
 
 1. Enter the bootstrap module with `cd bootstrap`
 1. Run `./import.sh` to pull existing terraform state into the local state
@@ -35,11 +33,11 @@ These instructions were used for deploying the project for the first time, years
 1. Manually Running Terraform
     1. Follow instructions under [Set up a new environment manually](#set-up-a-new-environment-manually) to create your infrastructure
 
-## Terraform state credentials
+### Terraform state credentials
 
 The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in.
 
-### Bootstrapping the state storage s3 buckets for the first time
+#### Bootstrapping the state storage s3 buckets for the first time
 
 1. Within the `bootstrap` directory, run `terraform init`
 1. Run `./run.sh plan` to verify that the changes are what you expect
@@ -49,7 +47,7 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
 1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
 1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
 
-### To make changes to the bootstrap module
+#### To make changes to the bootstrap module
 
 *This should not be necessary in most cases*
 
@@ -106,7 +104,13 @@ The below steps rely on you first configuring access to the Terraform state in s
 
 ## Structure
 
-Each environment has its own module, which relies on a shared module for everything except the providers code and environment specific variables and settings.
+The `terraform` directory contains sub-directories (`staging`, `production`, etc.) named for deployment environments. Each of these is a *module*, which is just Terraform's word for a directory with some .tf files in it. Each module governs the infrastructure of the environment for which it is named. This directory structure forms "[bulkheads](https://blog.gruntwork.io/how-to-manage-terraform-state-28f5697e68fa)" which isolate Terraform commands to a single environment, limiting accidental damage.
+
+The `development` module is rather different from the other environment modules. While the other environments can be used to create (or destroy) cloud resources, the development module mostly just sets up access to pre-existing resources needed for local software development.
+
+The `bootstrap` directory is not an environment module. Instead, it sets up infrastructure needed to deploy Terraform in any of the environments. If you are new to the project, [this is where you should start](#retrieving-existing-bucket-credentials). Similarly, `shared` is not an environment; this module lends code to all the environments.
+
+Files within these directories look like this:
 
 ```
 - bootstrap/
