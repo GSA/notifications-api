@@ -4,7 +4,9 @@ This directory holds the Terraform modules for maintaining Notify.gov's infrastr
 
 ## Retrieving existing bucket credentials
 
-:green_book: Assuming [initial setup](#initial-setup) is complete, new developers start here!
+:green_book: new developers start here!
+
+Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a remote backend. If you are going to be developing Terraform, you'll need to hook up to this backend:
 
 1. Enter the bootstrap module with `cd bootstrap`
 1. Run `./import.sh` to pull existing terraform state into the local state
@@ -20,6 +22,8 @@ This directory holds the Terraform modules for maintaining Notify.gov's infrastr
     aws_access_key_id = <access_key_id from bucket_credentials>
     aws_secret_access_key = <secret_access_key from bucket_credentials>
     ```
+
+These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files.
 
 ## Initial setup
 
