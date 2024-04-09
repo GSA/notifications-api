@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime, timedelta
 from secrets import randbelow
 
+import sqlalchemy
+from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
@@ -39,7 +41,17 @@ def get_login_gov_user(login_uuid, email_address):
     user = User.query.filter_by(login_uuid=login_uuid).first()
     if user:
         if user.email_address != email_address:
-            save_user_attribute(user, {"email_address": email_address})
+            try:
+                save_user_attribute(user, {"email_address": email_address})
+            except sqlalchemy.exc.IntegrityError as ie:
+                # We are trying to change the email address as a courtesy,
+                # based on the assumption that the user has somehow changed their
+                # address in login.gov.
+                # But if we cannot change the email address, at least we don't
+                # want to fail here, otherwise the user will be locked out.
+                current_app.logger.error(ie)
+                db.session.rollback()
+
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
     user = User.query.filter_by(email_address=email_address).first()

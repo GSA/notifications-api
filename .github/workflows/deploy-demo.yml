@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: demo
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 2
 
@@ -57,7 +57,7 @@ jobs:
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
-        LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=01234567890123456789012345&prompt=select_account&redirect_uri=https://notify-demo.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=abcdefghijklmnopabcdefghijklmnop"
+        LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-demo.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE"
 
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
