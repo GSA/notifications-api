@@ -4,6 +4,25 @@ This directory holds the terraform modules for maintaining your complete persist
 
 Prerequisite: install the `jq` JSON processor: `brew install jq`
 
+## Retrieving existing bucket credentials
+
+Assuming [initial setup](#initial-setup) is complete, new developers start here!
+
+1. Enter the bootstrap module with `cd bootstrap`
+1. Run `./import.sh` to pull existing terraform state into the local state
+1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
+
+### Use bootstrap credentials
+
+1. Run `./run.sh show -json`.
+1. In the output, locate `access_key_id` and `secret_access_key` within `bucket_credentials`. These values are secret, so, don't share them with anyone or copy them to anywhere online.
+1. Add the following to `~/.aws/credentials`:
+    ```
+    [notify-terraform-backend]
+    aws_access_key_id = <access_key_id from bucket_credentials>
+    aws_secret_access_key = <secret_access_key from bucket_credentials>
+    ```
+
 ## Initial setup
 
 These instructions were used for deploying the project for the first time, years ago. We should not have to perform these steps again. They are provided here for reference.
@@ -22,9 +41,9 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
 
 ### Bootstrapping the state storage s3 buckets for the first time
 
-1. Run `terraform init`
+1. Within the `bootstrap` directory, run `terraform init`
 1. Run `./run.sh plan` to verify that the changes are what you expect
-1. Run `./run.sh apply` to set up the bucket and retrieve credentials
+1. Run `./run.sh apply` to set up the bucket
 1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
 1. Ensure that `import.sh` includes a line and correct IDs for any resources created
 1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
@@ -40,21 +59,6 @@ The bootstrap module is used to create an s3 bucket for later terraform runs to 
     1. optionally run `./run.sh apply` to include the existing outputs in the state file
 1. Make your changes
 1. Continue from step 2 of the boostrapping instructions
-
-### Retrieving existing bucket credentials
-
-1. Run `./import.sh` to pull existing terraform state into the local state
-1. Run `./run.sh show`
-1. Follow instructions under `Use bootstrap credentials`
-
-#### Use bootstrap credentials
-
-1. Add the following to `~/.aws/credentials`
-    ```
-    [notify-terraform-backend]
-    aws_access_key_id = <access_key_id from bucket_credentials>
-    aws_secret_access_key = <secret_access_key from bucket_credentials>
-    ```
 
 ## SpaceDeployers
 
