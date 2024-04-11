@@ -1355,26 +1355,24 @@ Flask = "*"
 
 [[package]]
 name = "flask-marshmallow"
-version = "0.14.0"
+version = "1.2.1"
 description = "Flask + marshmallow for beautiful APIs"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "flask-marshmallow-0.14.0.tar.gz", hash = "sha256:bd01a6372cbe50e36f205cfff0fc5dab0b7b662c4c8b2c4fc06a3151b2950950"},
-    {file = "flask_marshmallow-0.14.0-py2.py3-none-any.whl", hash = "sha256:2adcd782b5a4a6c5ae3c96701f320d8ca6997995a52b2661093c56cc3ed24754"},
+    {file = "flask_marshmallow-1.2.1-py3-none-any.whl", hash = "sha256:10b5048ecfaa26f7c8d0aed7d81083164450e6be8e81c04b3d4a586b3f7b6678"},
+    {file = "flask_marshmallow-1.2.1.tar.gz", hash = "sha256:00ee96399ed664963afff3b5d6ee518640b0f91dbc2aace2b5abcf32f40ef23a"},
 ]
 
 [package.dependencies]
-Flask = "*"
-marshmallow = ">=2.0.0"
-six = ">=1.9.0"
+Flask = ">=2.2"
+marshmallow = ">=3.0.0"
 
 [package.extras]
-dev = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pre-commit (>=2.4,<3.0)", "pytest", "tox"]
-docs = ["Sphinx (==3.2.1)", "marshmallow-sqlalchemy (>=0.13.0)", "sphinx-issues (==1.2.0)"]
-lint = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "pre-commit (>=2.4,<3.0)"]
-sqlalchemy = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)"]
-tests = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pytest"]
+dev = ["flask-marshmallow[tests]", "pre-commit (>=3.5,<4.0)", "tox"]
+docs = ["Sphinx (==7.2.6)", "marshmallow-sqlalchemy (>=0.19.0)", "sphinx-issues (==4.0.0)"]
+sqlalchemy = ["flask-sqlalchemy (>=3.0.0)", "marshmallow-sqlalchemy (>=0.29.0)"]
+tests = ["flask-marshmallow[sqlalchemy]", "pytest"]
 
 [[package]]
 name = "flask-migrate"
@@ -4802,4 +4800,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "dcbbd4dd7bd9336e8c13f171c9dfe7e54194254c87d10711b1cd7748d38ce19c"
+content-hash = "4dbbfae9e5aa2748944a1de9f265148c4602579e283ca2115e6dbcffd2ba5a42"
