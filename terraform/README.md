@@ -74,7 +74,8 @@ deploy the application from the CI/CD pipeline. Create a new account by running:
 
 These are the steps for developing Terraform code for our deployed environment modules (`sandbox`, `demo`, `staging` and `production`) locally on your laptop. Or for setting up a new deployment environment, or otherwise for running Terraform manually in any module that uses remote state. You don't need to do all this to run code in the `development` module, because it is not a deployed environment and it does not use remote state.
 
-:skull: Note that there is one risky step below (`apply`) which is safe only in the `sandbox` environment and **should not** be run in any other deployed environment.
+> [!CAUTION]
+> There is one risky step below (`apply`) which is safe only in the `sandbox` environment and **should not** be run in any other deployed environment.
 
 These steps assume shared [Terraform state credentials](#terraform-state-credentials) exist in s3, and that you are [Using those credentials](#use-bootstrap-credentials).
 
@@ -113,8 +114,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
 1. **Only if it is safe to do so**, apply your changes.
 
-    > [!WARNING]
-    > Applying changes in the wrong directory can mess up a deployed environment that people are relying on
+    :skull: Applying changes in the wrong directory can mess up a deployed environment that people are relying on
 
     Double-check what directory you are in, like with the `pwd` command. You should probably only apply while in the `sandbox` directory / environment.
 
