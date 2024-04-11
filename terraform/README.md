@@ -72,7 +72,7 @@ deploy the application from the CI/CD pipeline. Create a new account by running:
 
 ## Workflow for deployed environments
 
-These are the steps for developing Terraform code for our deployed environment modules (`sandbox`, `demo`, `staging` and `production`) locally on your laptop. Or for setting a new deployment environment, or otherwise for running Terraform manually in any module that uses remote state. You don't need to do all this to run code in the `development` module, because it is not a deployed environment and it does not use remote state.
+These are the steps for developing Terraform code for our deployed environment modules (`sandbox`, `demo`, `staging` and `production`) locally on your laptop. Or for setting up a new deployment environment, or otherwise for running Terraform manually in any module that uses remote state. You don't need to do all this to run code in the `development` module, because it is not a deployed environment and it does not use remote state.
 
 :skull: Note that there is one risky step below (`apply`) which is safe only in the `sandbox` environment and **should not** be run in any other deployed environment.
 
@@ -92,7 +92,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
     The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. Read more in the [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/). Then, the command uses the redirection operator (`>`) to write that output to the `secrets.auto.tfvars` file. Terraform will find the username and password there, and use them as input variables.
 
-1. While till in an environment directory, initialize Terraform:
+1. While still in an environment directory, initialize Terraform:
     ```bash
     terraform init
     ```
@@ -104,7 +104,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     terraform plan
     ```
 
-    This will show you any pending changes that Terraform is ready to make. Now is the time to write any code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop.
+    This will show you any pending changes that Terraform is ready to make. Now is the time to write any HCL code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop.
 
 1. **Only if it is safe to do so**, apply your changes.
 
@@ -118,7 +118,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     terraform apply
     ```
 
-    This command *will deploy your changes* to the cloud. This is a healthy part of testing your code in the sandbox, or if you are creating a new environment. **Do not** apply in enviornments that people are relying upon.
+    This command *will deploy your changes* to the cloud. This is a healthy part of testing your code in the sandbox, or if you are creating a new environment (a new directory). **Do not** apply in environments that people are relying upon.
 
 1. Remove the space deployer service instance when you are done manually running Terraform.
     ```bash
@@ -134,7 +134,12 @@ The `terraform` directory contains sub-directories (`staging`, `production`, etc
 
 The `development` module is rather different from the other environment modules. While the other environments can be used to create (or destroy) cloud resources, the development module mostly just sets up access to pre-existing resources needed for local software development.
 
-The `bootstrap` directory is not an environment module. Instead, it sets up infrastructure needed to deploy Terraform in any of the environments. If you are new to the project, [this is where you should start](#retrieving-existing-bucket-credentials). Similarly, `shared` is not an environment; this module lends code to all the environments.
+The `bootstrap` directory is not an environment module. Instead, it sets up infrastructure needed to deploy Terraform in any of the environments. If you are new to the project, [this is where you should start](#retrieving-existing-bucket-credentials).
+
+Similarly, `shared` is not an environment. It is a module that lends code to all the environments. Please note that changes to `shared` codebase will be applied to all envrionments the next time CI/CD (or a user) runs Terraform in that environment.
+
+> [!WARNING]
+> Editing `shared` code is risky because it will be applied to production
 
 Files within these directories look like this:
 
