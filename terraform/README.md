@@ -9,7 +9,7 @@ This directory holds the Terraform modules for maintaining Notify.gov's infrastr
 Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a shared remote backend. If you are going to be writing Terraform for any of our deployment environments you'll need to hook up to this backend. (You don't need to do this if you are just writing code for the `development` module, becase it stores state locally on your laptop.)
 
 1. Enter the bootstrap module with `cd bootstrap`
-1. Run `./import.sh` to pull existing terraform state into the local state
+1. Run `./import.sh` to import the bucket containing remote terraform state into your local state
 1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
 
 ### Use bootstrap credentials
@@ -24,7 +24,7 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
     ```
 1. Check which AWS profile you are using with `aws configure list`. If needed, use `export AWS_PROFILE=notify-terraform-backend` to change to profile and credentials you just added.
 
-These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files.
+These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files. Now you are ready to develop Terraform using the [Workflow for deployed environments](#workflow-for-deployed-environments).
 
 ## Initial setup
 
@@ -36,11 +36,11 @@ These instructions were used for deploying the project for the first time, years
     1. Create a cloud.gov SpaceDeployer by following the instructions under [SpaceDeployers](#spacedeployers)
     1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
 1. Manually Running Terraform
-    1. Follow instructions under [Set up a new environment manually](#set-up-a-new-environment-manually) to create your infrastructure
+    1. Follow instructions under [Workflow for deployed environments](#workflow-for-deployed-environments) to create your infrastructure
 
 ### Terraform state credentials
 
-The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in.
+The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in. (If the bucket is already created, you should [Use bootstrap credentials](#use-bootstrap-credentials))
 
 #### Bootstrapping the state storage s3 buckets for the first time
 
@@ -70,42 +70,63 @@ deploy the application from the CI/CD pipeline. Create a new account by running:
 
 `./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
 
-## Set up a new environment manually
+## Workflow for deployed environments
 
-The below steps rely on you first configuring access to the Terraform state in s3 as described in [Terraform State Credentials](#terraform-state-credentials).
+These are the steps for developing Terraform code for our deployed environment modules (`sandbox`, `demo`, `staging` and `production`) locally on your laptop. Or for setting a new deployment environment, or otherwise for running Terraform manually in any module that uses remote state. You don't need to do all this to run code in the `development` module, because it is not a deployed environment and it does not use remote state.
 
-1. `cd` to the environment you are working in
+:skull: Note that there is one risky step below (`apply`) which is safe only in the `sandbox` environment and **should not** be run in any other deployed environment.
 
-1. Set up a SpaceDeployer
+These steps assume shared [Terraform state credentials](#terraform-state-credentials) exist in s3, and that you are [Using those credentials](#use-bootstrap-credentials).
+
+1. `cd` to the environment you plan to work in. When developing new features/resources, try out your code in `sandbox`. Only once the code is proven should you copy-and-paste it to each higher environment.
+
+1. Run `cf spaces` and, from the output, copy the space name for the environment you are working in, such as `notify-sandbox`.
+
+1. Next you will set up a SpaceDeployer. Prepare to fill in these values:
+   * `<SPACE_NAME>` will be the string you copied from the prior step
+   * `<ACCOUNT_NAME>` can be anything, although we recommend something that communicates the purpose of the deployer. For example: "circleci-deployer" for the credentials CircleCI uses to deploy the application, or "sandbox-<your_name>" for credentials to run terraform manually.
+   Put those two values into this command:
     ```bash
-    # create a space deployer service instance that can log in with just a username and password
-    # the value of < SPACE_NAME > should be `staging` or `prod` depending on where you are working
-    # the value for < ACCOUNT_NAME > can be anything, although we recommend
-    # something that communicates the purpose of the deployer
-    # for example: circleci-deployer for the credentials CircleCI uses to
-    # deploy the application or <your_name>-terraform for credentials to run terraform manually
     ./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME> > secrets.auto.tfvars
     ```
 
-    The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. Read more in the [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/).
+    The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. Read more in the [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/). Then, the command uses the redirection operator (`>`) to write that output to the `secrets.auto.tfvars` file. Terraform will find the username and password there, and use them as input variables.
 
-    The easiest way to use this script is to redirect the output directly to the `secrets.auto.tfvars` file it needs to be used in
-
-1. Run terraform from your new environment directory with
+1. While till in an environment directory, initialize Terraform:
     ```bash
     terraform init
+    ```
+
+    If this command fails, you may need to run `terraform init -upgrade` to make sure new module versions are picked up. Or, `terraform init -migrate-state` to bump the remote backend.
+
+1. Then, run Terraform in a non-destructive way:
+    ```bash
     terraform plan
     ```
 
-    If the `terraform init` command fails, you may need to run `terraform init -upgrade` to make sure new module versions are picked up.
+    This will show you any pending changes that Terraform is ready to make. Now is the time to write any code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop.
 
-1. Apply changes with `terraform apply`.
+1. **Only if it is safe to do so**, apply your changes.
 
-1. Remove the space deployer service instance if it doesn't need to be used again, such as when manually running terraform once.
+    > [!CAUTION]
+    > Applying changes in the wrong directory can mess up a deployed environment that people are relying on
+
+    Double-check what directory you are in, like with the `pwd` command. You should probably only apply while in the `sandbox` directory / environment.
+
+    Once you are sure it is safe, run:
+    ```bash
+    terraform apply
+    ```
+
+    This command *will deploy your changes* to the cloud. This is a healthy part of testing your code in the sandbox, or if you are creating a new environment. **Do not** apply in enviornments that people are relying upon.
+
+1. Remove the space deployer service instance when you are done manually running Terraform.
     ```bash
     # <SPACE_NAME> and <ACCOUNT_NAME> have the same values as used above.
     ./destroy_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>
     ```
+
+    Optionally, you can also `rm secrets.auto.tfvars`
 
 ## Structure
 
