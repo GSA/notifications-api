@@ -22,7 +22,7 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
     aws_access_key_id = <access_key_id>
     aws_secret_access_key = <secret_access_key>
     ```
-1. Check which AWS profile you are using with `aws configure list`. If needed, use `export AWS_PROFILE=notify-terraform-backend` to change to profile and credentials you just added.
+1. Check which AWS profile you are using with `aws configure list`. If needed, use `export AWS_PROFILE=notify-terraform-backend` to change to the profile and credentials you just added.
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files. Now you are ready to develop Terraform using the [Workflow for deployed environments](#workflow-for-deployed-environments).
 
@@ -85,12 +85,15 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 1. Next you will set up a SpaceDeployer. Prepare to fill in these values:
    * `<SPACE_NAME>` will be the string you copied from the prior step
    * `<ACCOUNT_NAME>` can be anything, although we recommend something that communicates the purpose of the deployer. For example: "circleci-deployer" for the credentials CircleCI uses to deploy the application, or "sandbox-<your_name>" for credentials to run terraform manually.
+
    Put those two values into this command:
     ```bash
     ./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME> > secrets.auto.tfvars
     ```
 
-    The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. Read more in the [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/). Then, the command uses the redirection operator (`>`) to write that output to the `secrets.auto.tfvars` file. Terraform will find the username and password there, and use them as input variables.
+    The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. The [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/) has more information.
+
+    The command uses the redirection operator (`>`) to write that output to the `secrets.auto.tfvars` file. Terraform will find the username and password there, and use them as input variables.
 
 1. While still in an environment directory, initialize Terraform:
     ```bash
@@ -104,11 +107,13 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     terraform plan
     ```
 
-    This will show you any pending changes that Terraform is ready to make. Now is the time to write any HCL code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop.
+    This will show you any pending changes that Terraform is ready to make.
+
+    :pencil: Now is the time to write any HCL code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop. Keep in mind that any changes to the codebase that you commit will be run by the CI/CD pipeline.
 
 1. **Only if it is safe to do so**, apply your changes.
 
-    > [!CAUTION]
+    > [!WARNING]
     > Applying changes in the wrong directory can mess up a deployed environment that people are relying on
 
     Double-check what directory you are in, like with the `pwd` command. You should probably only apply while in the `sandbox` directory / environment.
