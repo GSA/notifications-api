@@ -22,6 +22,7 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
     aws_access_key_id = <access_key_id>
     aws_secret_access_key = <secret_access_key>
     ```
+1. Check which AWS profile you are using with `aws configure list`. If needed, use `export AWS_PROFILE=notify-terraform-backend` to change to profile and credentials you just added.
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files.
 
