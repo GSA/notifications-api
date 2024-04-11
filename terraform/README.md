@@ -4,9 +4,9 @@ This directory holds the Terraform modules for maintaining Notify.gov's infrastr
 
 ## Retrieving existing bucket credentials
 
-:green_book: new developers start here!
+:green_book: New developers start here!
 
-Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a remote backend. If you are going to be developing Terraform, you'll need to hook up to this backend:
+Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a shared remote backend. If you are going to be writing Terraform for any of our deployment environments you'll need to hook up to this backend. (You don't need to do this if you are just writing code for the `development` module, becase it stores state locally on your laptop.)
 
 1. Enter the bootstrap module with `cd bootstrap`
 1. Run `./import.sh` to pull existing terraform state into the local state
@@ -15,12 +15,12 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
 ### Use bootstrap credentials
 
 1. Run `./run.sh show -json`.
-1. In the output, locate `access_key_id` and `secret_access_key` within `bucket_credentials`. These values are secret, so, don't share them with anyone or copy them to anywhere online.
+1. In the output, locate `access_key_id` and `secret_access_key` within the `bucket_creds` resource. These values are secret, so, don't share them with anyone or copy them to anywhere online.
 1. Add the following to `~/.aws/credentials`:
     ```
     [notify-terraform-backend]
-    aws_access_key_id = <access_key_id from bucket_credentials>
-    aws_secret_access_key = <secret_access_key from bucket_credentials>
+    aws_access_key_id = <access_key_id>
+    aws_secret_access_key = <secret_access_key>
     ```
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files.
@@ -144,3 +144,16 @@ In the bootstrap module:
 - `run.sh` Helper script to set up a space deployer and run terraform. The terraform action (`show`/`plan`/`apply`/`destroy`) is passed as an argument
 - `teardown_creds.sh` Helper script to remove the space deployer setup as part of `run.sh`
 - `import.sh` Helper script to create a new local state file in case terraform changes are needed
+
+## Troubleshooting
+
+### Expired token
+
+```
+The token expired, was revoked, or the token ID is incorrect. Please log back in to re-authenticate.
+```
+You need to re-authenticate with the Cloud Foundry CLI
+```
+cf login -a api.fr.cloud.gov --sso
+```
+You may also need to log in again to the Cloud.gov website.
