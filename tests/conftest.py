@@ -5,7 +5,7 @@ import pytest
 from alembic.command import upgrade
 from alembic.config import Config
 from flask import Flask
-from sqlalchemy_utils import database_exists, create_database, drop_database
+from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app import create_app
 from app.dao.provider_details_dao import get_provider_details_by_identifier
