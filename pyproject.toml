@@ -52,6 +52,7 @@ sqlalchemy = "==1.4.40"
 werkzeug = "^3.0.2"
 faker = "^24.4.0"
 setuptools = "^69.2.0"
+sqlalchemy-utils = "^0.41.2"
 
 
 [tool.poetry.group.dev.dependencies]
