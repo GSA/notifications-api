@@ -10,7 +10,7 @@ The Admin app repo [has its own terraform directory](https://github.com/GSA/noti
 
 :green_book: New developers start here!
 
-Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a shared remote backend. If you are going to be writing Terraform for any of our deployment environments you'll need to hook up to this backend. (You don't need to do this if you are just writing code for the `development` module, becase it stores state locally on your laptop.)
+Assuming [initial setup](#initial-setup) is complete &mdash; which it should be if Notify.gov is online &mdash; Terraform state is stored in a shared remote backend. If you are going to be writing Terraform for any of our deployment environments you'll need to hook up to this backend. (You don't need to do this if you are just writing code for the `development` module, because it stores state locally on your laptop.)
 
 1. Enter the bootstrap module with `cd bootstrap`
 1. Run `./import.sh` to import the bucket containing remote terraform state into your local state
