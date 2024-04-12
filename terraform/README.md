@@ -1,6 +1,6 @@
 # Terraform
 
-This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You can might want to:
+This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
 * [read about the directory structure](#structure), or
 * [get set up to develop HCL code](#retrieving-existing-bucket-credentials).
 
