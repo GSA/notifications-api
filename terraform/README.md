@@ -19,7 +19,7 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
 ### Use bootstrap credentials
 
 1. Run `./run.sh show -json`.
-1. In the output, locate `access_key_id` and `secret_access_key` within the `bucket_creds` resource. These values are secret, so, don't share them with anyone or copy them to anywhere online.
+1. In the output, locate `access_key_id` and `secret_access_key` within the `bucket_creds` resource. These values are secret, so don't share them with anyone or copy them to anywhere online.
 1. Add the following to `~/.aws/credentials`:
     ```
     [notify-terraform-backend]
