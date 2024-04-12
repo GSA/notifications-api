@@ -1,6 +1,10 @@
 # Terraform
 
-This directory holds the Terraform modules for maintaining Notify.gov's infrastructure. You can [read about the structure](#structure) or [get set up to develop](#retrieving-existing-bucket-credentials).
+This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You can might want to:
+* [read about the directory structure](#structure), or
+* [get set up to develop HCL code](#retrieving-existing-bucket-credentials).
+
+The Admin app repo [has its own terraform directory](https://github.com/GSA/notifications-admin/tree/main/terraform) but a lot of the below instructions apply to both apps.
 
 ## Retrieving existing bucket credentials
 
@@ -69,6 +73,8 @@ A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) ac
 deploy the application from the CI/CD pipeline. Create a new account by running:
 
 `./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
+
+SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [the next section](#workflow-for-deployed-environments).
 
 ## Workflow for deployed environments
 
