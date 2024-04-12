@@ -200,10 +200,10 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
     """
     notify_service = dao_fetch_service_by_id(current_app.config["NOTIFY_SERVICE_ID"])
 
-    mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
+    mock_redis_get = mocker.patch("app.user.rest.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-    mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
+    mocker.patch("app.user.rest.redis_store.raw_set")
     auth_header = create_admin_authorization_header()
     mocked = mocker.patch("app.user.rest.create_secret_code", return_value="11111")
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
@@ -241,10 +241,10 @@ def test_send_user_code_for_sms_with_optional_to_field(
     Tests POST endpoint /user/<user_id>/sms-code with optional to field
     """
 
-    mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
+    mock_redis_get = mocker.patch("app.user.rest.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-    mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
+    mocker.patch("app.user.rest.redis_store.raw_set")
     to_number = "+447119876757"
     mocked = mocker.patch("app.user.rest.create_secret_code", return_value="11111")
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
@@ -468,10 +468,10 @@ def test_send_user_email_code(
     deliver_email = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     sample_user.auth_type = auth_type
 
-    mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
+    mock_redis_get = mocker.patch("app.user.rest.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-    mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
+    mocker.patch("app.user.rest.redis_store.raw_set")
 
     admin_request.post(
         "user.send_user_2fa_code",
@@ -584,10 +584,10 @@ def test_user_verify_email_code_fails_if_code_already_used(
 def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     client, sample_user, mocker, sms_code_template
 ):
-    mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
+    mock_redis_get = mocker.patch("app.user.rest.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-    mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
+    mocker.patch("app.user.rest.redis_store.raw_set")
 
     sample_user.mobile_number = "+601117224412"
     auth_header = create_admin_authorization_header()

@@ -74,6 +74,16 @@ jobs:
           --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
 
+    - name: Check for changes to templates.json
+      id: changed-templates
+      uses: tj-actions/changed-files@v41
+      with:
+        files: |
+          app/config_files/templates.json
+    - name: Update templates
+      if: steps.changed-templates.outputs.any_changed == 'true'
+      run: cf run-task notify-api-demo --command "flask command update-templates"
+
     - name: Check for changes to egress config
       id: changed-egress-config
       uses: tj-actions/changed-files@v41

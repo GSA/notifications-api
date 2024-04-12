@@ -34,7 +34,7 @@
     "name": "Notify SMS verify code",
     "type": "sms",
     "subject": "",
-    "content": ["((verify_code)) is your Notify.gov authentication code"]
+    "content": ["((verify_code)) is your Notify.gov authentication code."]
   },
   {
     "id": "474e9242-823b-4f99-813d-ed392e7f1201",
