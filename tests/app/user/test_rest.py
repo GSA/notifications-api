@@ -237,7 +237,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
     [
         ("name", "New User"),
         ("email_address", "newuser@mail.com"),
-        ("mobile_number", "+4407700900460"),
+        ("mobile_number", "+14254147755"),
     ],
 )
 def test_post_user_attribute(admin_request, sample_user, user_attribute, user_value):
@@ -273,13 +273,13 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
         ),
         (
             "mobile_number",
-            "+4407700900460",
+            "+14254147755",
             dict(
                 api_key_id=None,
                 key_type=KeyType.NORMAL,
                 notification_type=NotificationType.SMS,
                 personalisation={},
-                recipient="+4407700900460",
+                recipient="+14254147755",
                 reply_to_text="testing",
                 service=mock.ANY,
                 template_id=uuid.UUID("8a31520f-4751-4789-8ea1-fe54496725eb"),
@@ -315,6 +315,7 @@ def test_post_user_attribute_with_updated_by(
         mock_persist_notification.assert_not_called()
 
 
+@pytest.mark.skip("We don't support international at the moment")
 def test_post_user_attribute_with_updated_by_sends_notification_to_international_from_number(
     admin_request, mocker, sample_user, team_member_mobile_edit_template
 ):
