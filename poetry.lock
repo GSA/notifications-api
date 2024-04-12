@@ -204,17 +204,17 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "awscli"
-version = "1.32.79"
+version = "1.32.83"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "awscli-1.32.79-py3-none-any.whl", hash = "sha256:0d74c5aac7531094ec99cf9d15fe571b8bf1c7a8e08e5a9b611d283d1ad8fd84"},
-    {file = "awscli-1.32.79.tar.gz", hash = "sha256:865179b663fafabd774128644ae102dfcfea751211d3054a336eea956cf43b22"},
+    {file = "awscli-1.32.83-py3-none-any.whl", hash = "sha256:2fa897df5f1f150fa1d1c146b8acaf11963356dd9efcd6d201a1c77ad898b2ad"},
+    {file = "awscli-1.32.83.tar.gz", hash = "sha256:c7e480ee911df228f98b284fb4d01e2bd1fe13a18998aecb4525f3a1993eabba"},
 ]
 
 [package.dependencies]
-botocore = "1.34.79"
+botocore = "1.34.83"
 colorama = ">=0.2.5,<0.4.5"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -403,17 +403,17 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.34.79"
+version = "1.34.83"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.79-py3-none-any.whl", hash = "sha256:265b0b4865e8c07e27abb32a31d2bd9129bb009b1d89ca0783776ec084886123"},
-    {file = "boto3-1.34.79.tar.gz", hash = "sha256:139dd2d94eaa0e3213ff37ba7cf4cb2e3823269178fe8f3e33c965f680a9ddde"},
+    {file = "boto3-1.34.83-py3-none-any.whl", hash = "sha256:33cf93f6de5176f1188c923f4de1ae149ed723b89ed12e434f2b2f628491769e"},
+    {file = "boto3-1.34.83.tar.gz", hash = "sha256:9733ce811bd82feab506ad9309e375a79cabe8c6149061971c17754ce8997551"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.79,<1.35.0"
+botocore = ">=1.34.83,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.79"
+version = "1.34.83"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.79-py3-none-any.whl", hash = "sha256:a42a014d3dbaa9ef123810592af69f9e55b456c5be3ac9efc037325685519e83"},
-    {file = "botocore-1.34.79.tar.gz", hash = "sha256:6b59b0f7de219d383a2a633f6718c2600642ebcb707749dc6c67a6a436474b7a"},
+    {file = "botocore-1.34.83-py3-none-any.whl", hash = "sha256:0a3fbbe018416aeefa8978454fb0b8129adbaf556647b72269bf02e4bf1f4161"},
+    {file = "botocore-1.34.83.tar.gz", hash = "sha256:0f302aa76283d4df62b4fbb6d3d20115c1a8957fc02171257fc93904d69d5636"},
 ]
 
 [package.dependencies]
@@ -1708,13 +1708,13 @@ license = ["ukkonen"]
 
 [[package]]
 name = "idna"
-version = "3.6"
+version = "3.7"
 description = "Internationalized Domain Names in Applications (IDNA)"
 optional = false
 python-versions = ">=3.5"
 files = [
-    {file = "idna-3.6-py3-none-any.whl", hash = "sha256:c05567e9c24a6b9faaa835c4821bad0590fbb9d5779e7caa6e1cc4978e7eb24f"},
-    {file = "idna-3.6.tar.gz", hash = "sha256:9ecdbbd083b06798ae1e86adcbfe8ab1479cf864e4ee30fe4e46a003d12491ca"},
+    {file = "idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0"},
+    {file = "idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc"},
 ]
 
 [[package]]
@@ -2675,7 +2675,7 @@ requests = ">=2.0.0"
 
 [[package]]
 name = "notifications-utils"
-version = "0.4.5"
+version = "0.4.6"
 description = ""
 optional = false
 python-versions = "^3.12.2"
@@ -2686,8 +2686,8 @@ develop = false
 async-timeout = "^4.0.2"
 bleach = "^6.1.0"
 blinker = "^1.6.2"
-boto3 = "^1.34.77"
-botocore = "^1.34.79"
+boto3 = "^1.34.83"
+botocore = "^1.34.83"
 cachetools = "^5.3.0"
 certifi = "^2024.2.2"
 cffi = "^1.16.0"
@@ -2698,7 +2698,7 @@ flask = "^2.3.2"
 flask-redis = "^0.4.0"
 geojson = "^3.0.1"
 govuk-bank-holidays = "^0.14"
-idna = "^3.6"
+idna = "^3.7"
 itsdangerous = "^2.1.2"
 jinja2 = "^3.1.3"
 jmespath = "^1.0.1"
@@ -2727,7 +2727,7 @@ werkzeug = "^3.0.1"
 type = "git"
 url = "https://github.com/GSA/notifications-utils.git"
 reference = "HEAD"
-resolved_reference = "7d1d2e9bb3791316231e97433c71da6a70c4d2ab"
+resolved_reference = "d0db6073406bd160d2007edb9d00e41c9d5d44b7"
 
 [[package]]
 name = "numpy"
