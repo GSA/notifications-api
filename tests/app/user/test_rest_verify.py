@@ -245,7 +245,7 @@ def test_send_user_code_for_sms_with_optional_to_field(
     mock_redis_get.return_value = "foo"
 
     mocker.patch("app.user.rest.redis_store.raw_set")
-    to_number = "+447119876757"
+    to_number = "+14254147755"
     mocked = mocker.patch("app.user.rest.create_secret_code", return_value="11111")
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
     auth_header = create_admin_authorization_header()
@@ -581,6 +581,7 @@ def test_user_verify_email_code_fails_if_code_already_used(
     assert sample_user.current_session_id is None
 
 
+@pytest.mark.skip("We don't support international at the moment")
 def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     client, sample_user, mocker, sms_code_template
 ):

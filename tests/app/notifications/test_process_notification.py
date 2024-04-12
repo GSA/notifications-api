@@ -76,7 +76,7 @@ def test_persist_notification_creates_and_save_to_db(
     notification = persist_notification(
         template_id=sample_template.id,
         template_version=sample_template.version,
-        recipient="+447111111111",
+        recipient="+14254147755",
         service=sample_template.service,
         personalisation={},
         notification_type=NotificationType.SMS,
@@ -120,7 +120,7 @@ def test_persist_notification_throws_exception_when_missing_template(sample_api_
         persist_notification(
             template_id=None,
             template_version=None,
-            recipient="+447111111111",
+            recipient="+14254147755",
             service=sample_api_key.service,
             personalisation=None,
             notification_type=NotificationType.SMS,
@@ -178,7 +178,7 @@ def test_persist_notification_cache_is_not_incremented_on_failure_to_create_noti
         persist_notification(
             template_id=None,
             template_version=None,
-            recipient="+447111111111",
+            recipient="+14254147755",
             service=sample_api_key.service,
             personalisation=None,
             notification_type=NotificationType.SMS,
@@ -321,9 +321,9 @@ def test_simulated_recipient(notify_api, to_address, notification_type, expected
 @pytest.mark.parametrize(
     "recipient, expected_international, expected_prefix, expected_units",
     [
-        ("+447900900123", True, "44", 1),  # UK
-        ("+73122345678", True, "7", 1),  # Russia
-        ("+360623400400", True, "36", 1),  # Hungary
+        # ("+447900900123", True, "44", 1),  # UK
+        # ("+73122345678", True, "7", 1),  # Russia
+        # ("+360623400400", True, "36", 1),  # Hungary
         ("2028675309", False, "1", 1),
     ],  # USA
 )
@@ -382,7 +382,7 @@ def test_persist_notification_with_international_info_does_not_store_for_email(
 @pytest.mark.parametrize(
     "recipient, expected_recipient_normalised",
     [
-        ("+4407900900123", "+447900900123"),
+        # ("+4407900900123", "+447900900123"),
         ("202-867-5309", "+12028675309"),
         ("1 202-867-5309", "+12028675309"),
         ("+1 (202) 867-5309", "+12028675309"),
