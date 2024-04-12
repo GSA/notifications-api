@@ -100,14 +100,14 @@ def test_should_process_sms_job(sample_job, mocker):
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(sample_job.service.id), job_id=str(sample_job.id)
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123123"
+    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
     assert encryption.encrypt.call_args[0][0]["template"] == str(sample_job.template.id)
     assert (
         encryption.encrypt.call_args[0][0]["template_version"]
         == sample_job.template.version
     )
     assert encryption.encrypt.call_args[0][0]["personalisation"] == {
-        "phonenumber": "+441234123123"
+        "phonenumber": "+14254147755"
     }
     assert encryption.encrypt.call_args[0][0]["row_number"] == 0
     tasks.save_sms.apply_async.assert_called_once_with(
@@ -279,7 +279,7 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
         service_id=str(sample_job_with_placeholdered_template.service.id),
         job_id=str(sample_job_with_placeholdered_template.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123120"
+    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
     assert encryption.encrypt.call_args[0][0]["template"] == str(
         sample_job_with_placeholdered_template.template.id
     )
@@ -288,7 +288,7 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
         == sample_job_with_placeholdered_template.template.version
     )  # noqa
     assert encryption.encrypt.call_args[0][0]["personalisation"] == {
-        "phonenumber": "+441234123120",
+        "phonenumber": "+14254147755",
         "name": "chris",
     }
     assert tasks.save_sms.apply_async.call_count == 10
@@ -397,7 +397,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
 ):
     notification = _notification_json(
         sample_template_with_placeholders,
-        to="+447234123123",
+        to="+14254147755",
         personalisation={"name": "Jo"},
     )
 
@@ -558,7 +558,7 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
     notification = _notification_json(
         sample_job.template,
-        to="+447234123123",
+        to="+14254147755",
         job_id=sample_job.id,
         row_number=2,
     )
@@ -813,7 +813,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
 
 
 def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, mocker):
-    notification = _notification_json(sample_template, "+447234123123")
+    notification = _notification_json(sample_template, "+14254147755")
 
     expected_exception = SQLAlchemyError()
 
@@ -1017,7 +1017,7 @@ def test_send_inbound_sms_to_service_post_https_request_to_service(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1063,7 +1063,7 @@ def test_send_inbound_sms_to_service_does_not_sent_request_when_inbound_api_does
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1084,7 +1084,7 @@ def test_send_inbound_sms_to_service_retries_if_request_returns_500(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1109,7 +1109,7 @@ def test_send_inbound_sms_to_service_retries_if_request_throws_unknown(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1134,7 +1134,7 @@ def test_send_inbound_sms_to_service_does_not_retries_if_request_returns_404(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1429,7 +1429,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
-        data.update({"to": "+447700900855"})
+        data.update({"to": "+14254147755"})
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
@@ -1483,7 +1483,7 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
-        data.update({"to": "+447700900855"})
+        data.update({"to": "+14254147755"})
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
@@ -1576,7 +1576,7 @@ def test_save_tasks_use_cached_service_and_template(
             NotificationType.SMS,
             save_api_sms,
             QueueNames.SEND_SMS,
-            "+447700900855",
+            "+14254147755",
         ),
         (
             NotificationType.EMAIL,
