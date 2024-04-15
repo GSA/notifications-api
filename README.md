@@ -141,10 +141,10 @@ Terraform installations. This is great, but you still need to install Terraform
 itself, which can be done with this command:
 
 ```sh
-tfenv install latest:^1.4.0
+tfenv install "latest:^1.8.0"
 ```
 
-_NOTE: This project currently uses the latest `1.4.x release of Terraform._
+_NOTE: This project currently uses the latest `1.8.x release of Terraform._
 
 #### Python Installation
 
