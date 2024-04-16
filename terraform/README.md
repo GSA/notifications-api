@@ -208,3 +208,9 @@ Error: You are not authorized to perform the requested action
 This error indicates that the Cloud Foundry user account (or service account) needs OrgManager permissions to take the action.
 * When you create a SpaceDeployer service account, use the `-m` flag when running the `./create_service_account.sh` script
 * Your own CF user may may also require OrgManager permissions to run the script
+
+### Services limit
+```
+You have exceeded your organization's services limit.
+```
+Too many Cloud Foundry services have been created without being destroyed. Perhaps Terraform developers have forgotten to delete their SpaceDeployers after they finish with them. List `cf services` to see.
