@@ -721,8 +721,8 @@ def validate_mobile(ctx, param, value):  # noqa
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
-    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development")
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test", "staging"]:
+        current_app.logger.error("Can only be run in development, test, staging")
         return
 
     data = {
