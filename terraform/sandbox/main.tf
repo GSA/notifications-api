@@ -6,6 +6,17 @@ locals {
   recursive_delete = true
 }
 
+data "cloudfoundry_org" "org" {
+  name = local.cf_org_name
+}
+
+# This resource imported in imports.tf
+resource "cloudfoundry_space" "notify-sandbox" {
+  delete_recursive_allowed = true
+  name                     = local.cf_space_name
+  org                      = data.cloudfoundry_org.org.id
+}
+
 module "database" {
   source = "github.com/18f/terraform-cloudgov//database?ref=v0.7.1"
 
