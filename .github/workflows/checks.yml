@@ -89,8 +89,6 @@ jobs:
       - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
-          ignore-vulns: |
-            GHSA-w3h3-4rj7-4ph4
 
   static-scan:
     runs-on: ubuntu-latest
