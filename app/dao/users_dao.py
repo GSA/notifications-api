@@ -55,7 +55,7 @@ def get_login_gov_user(login_uuid, email_address):
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
     user = User.query.filter(User.email_address.ilike(email_address)).first()
-    print(f"USER IS {user.email_address}")
+
     if user:
         save_user_attribute(user, {"login_uuid": login_uuid})
         return user
