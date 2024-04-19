@@ -13,8 +13,9 @@ resource "cloudfoundry_space" "notify-management" {
   name                     = local.cf_space_name
   org                      = data.cloudfoundry_org.org.id
   asgs                     = [
-    "71d5aa70-fdce-46fa-8494-aabdb8cae381",
-    "c70d6061-4da3-4cbb-bd8e-c9982a5e8b22",
+    "71d5aa70-fdce-46fa-8494-aabdb8cae381", # trusted_local_networks_egress
+    "c70d6061-4da3-4cbb-bd8e-c9982a5e8b22", # public_networks_egress
+    # Public egress is needed for service brokers's Terraform to reach AWS APIs
   ]
   lifecycle {
     # Never delete the bucket that holds Terraform state nor the other
