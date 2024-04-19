@@ -14,6 +14,9 @@ resource "cloudfoundry_space" "notify-sandbox" {
   delete_recursive_allowed = true
   name                     = local.cf_space_name
   org                      = data.cloudfoundry_org.org.id
+  asgs                     = [
+    "71d5aa70-fdce-46fa-8494-aabdb8cae381" # trusted_local_networks_egress
+  ]
   lifecycle {
     prevent_destroy = false # sandbox is ephemeral; delete and destroy OK
   }
