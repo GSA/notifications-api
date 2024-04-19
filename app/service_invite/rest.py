@@ -223,3 +223,14 @@ def validate_service_invitation_token(token):
 
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=invited_user_schema.dump(invited_user)), 200
+
+
+@service_invite.route("/service/invite/redis/<redis_key>", methods=["GET"])
+def get_redis_data(redis_key):
+    service_invite_data = redis_store.raw_get(redis_key)
+    # We can't log this because key may contain PII (email address)
+    if service_invite_data is None:
+        raise Exception("No service invite data")
+    else:
+        service_invite_data = service_invite_data.decode("utf8")
+    return jsonify(json.dumps(service_invite_data)), 200
