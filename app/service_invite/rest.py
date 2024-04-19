@@ -25,6 +25,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
+from app.utils import hilite
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -32,6 +33,10 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
+    # TODO REMOVE DEBUG
+    print(hilite("ENTER _create_service_invite"))
+    # END DEBUG
+
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
@@ -85,11 +90,15 @@ def _create_service_invite(invited_user, invite_link_host):
 
     # This is for the login.gov service invite on the
     # "Set Up Your Profile" path.
+    redis_key = f"service-invite-{invited_user.email_address}"
     redis_store.set(
-        f"service-invite-{invited_user.email_address}",
+        redis_key,
         json.dumps(data),
         ex=3600 * 24,
     )
+    # TODO REMOVE DEBUG
+    print(hilite(f"Save this data {data} with this redis_key {redis_key}"))
+    # END DEBUG
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 
