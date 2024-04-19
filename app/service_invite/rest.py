@@ -233,4 +233,4 @@ def get_redis_data(redis_key):
         raise Exception("No service invite data")
     else:
         service_invite_data = service_invite_data.decode("utf8")
-    return jsonify(json.dumps(service_invite_data)), 200
+    return jsonify(service_invite_data), 200
