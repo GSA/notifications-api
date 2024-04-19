@@ -324,7 +324,6 @@ def add_user_to_service(service_id, user_id):
     data = request.get_json()
     validate(data, post_set_permissions_schema)
 
-
     permissions = [
         Permission(service_id=service_id, user_id=user_id, permission=p["permission"])
         for p in data["permissions"]
