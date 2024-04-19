@@ -91,13 +91,15 @@ def _create_service_invite(invited_user, invite_link_host):
     # This is for the login.gov service invite on the
     # "Set Up Your Profile" path.
     redis_key = f"service-invite-{invited_user.email_address}"
-    redis_store.set(
+    redis_store.raw_set(
         redis_key,
         json.dumps(data),
         ex=3600 * 24,
     )
     # TODO REMOVE DEBUG
     print(hilite(f"Save this data {data} with this redis_key {redis_key}"))
+    did_we_save_it = redis_store.raw_get(redis_key)
+    print(hilite(f"Did we save the data successfully? {did_we_save_it}"))
     # END DEBUG
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
