@@ -226,7 +226,7 @@ def validate_service_invitation_token(token):
 
 
 @service_invite.route("/service/invite/redis/<redis_key>", methods=["GET"])
-def get_redis_data(redis_key):
+def get_service_invite_data(redis_key):
     service_invite_data = redis_store.raw_get(redis_key)
     # We can't log this because key may contain PII (email address)
     if service_invite_data is None:
