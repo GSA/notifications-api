@@ -400,33 +400,32 @@ def test_get_invited_user_404s_if_invite_doesnt_exist(
     assert json_resp["result"] == "error"
 
 
-def test_get_service_invite_data_with_invite(
-    admin_request,
-    mocker
-):
-    redis_key =  "service-invite-j.k@fake.gov"
-    expected_user_data = b'{"from_user_id": ["7480cdcf-fa31-42b8-a4bf-2cd4d7a9b4f4"], "service_id": "721b0aa6-2447-4bcd-91fc-26d576f2bbff", "permissions": ["manage_api_keys"], "folder_permissions": []}' # noqa
+def test_get_service_invite_data_with_invite(admin_request, mocker):
+    redis_key = "service-invite-j.k@fake.gov"
+    expected_user_data = b'{"from_user_id": ["7480cdcf-fa31-42b8-a4bf-2cd4d7a9b4f4"], "service_id": "721b0aa6-2447-4bcd-91fc-26d576f2bbff", "permissions": ["manage_api_keys"], "folder_permissions": []}'  # noqa
     expected_status = 200
 
-    mocker.patch("app.service_invite.rest.redis_store.raw_get", return_value=expected_user_data)
-    json_resp = json.loads(admin_request.get(
-        "service_invite.get_service_invite_data",
-        redis_key=redis_key,
-        _expected_status=expected_status,
-    ))
+    mocker.patch(
+        "app.service_invite.rest.redis_store.raw_get", return_value=expected_user_data
+    )
+    json_resp = json.loads(
+        admin_request.get(
+            "service_invite.get_service_invite_data",
+            redis_key=redis_key,
+            _expected_status=expected_status,
+        )
+    )
     assert json_resp["permissions"] == ["manage_api_keys"]
 
 
-def test_get_service_invite_data_without_invite(
-    admin_request,
-    mocker
-):
-    redis_key =  "service-invite-j.k@fake.gov"
-
+def test_get_service_invite_data_without_invite(admin_request, mocker):
+    redis_key = "service-invite-j.k@fake.gov"
 
     mocker.patch("app.service_invite.rest.redis_store.raw_get", return_value=None)
-    with pytest.raises(Exception):
-        json_resp = json.loads(admin_request.get(
-            "service_invite.get_service_invite_data",
-            redis_key=redis_key,
-        ))
+    with pytest.raises(BaseException, match="No service invite data"):
+        json.loads(
+            admin_request.get(
+                "service_invite.get_service_invite_data",
+                redis_key=redis_key,
+            )
+        )
