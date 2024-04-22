@@ -5,6 +5,7 @@ Revises: 0396_rename_organisation
 Create Date: 2023-07-13 09:33:52.455290
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

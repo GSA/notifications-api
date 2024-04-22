@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
@@ -24,6 +25,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
+from app.utils import hilite
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -31,15 +33,29 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
+    # TODO REMOVE DEBUG
+    print(hilite("ENTER _create_service_invite"))
+    # END DEBUG
+
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+
+    token = generate_token(
+        str(invited_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": invited_user.from_user.name,
         "service_name": invited_user.service.name,
-        "url": invited_user_url(invited_user.id, invite_link_host),
+        "url": url,
     }
 
     saved_notification = persist_notification(
@@ -47,11 +63,7 @@ def _create_service_invite(invited_user, invite_link_host):
         template_version=template.version,
         recipient=invited_user.email_address,
         service=service,
-        personalisation={
-            "user_name": invited_user.from_user.name,
-            "service_name": invited_user.service.name,
-            "url": invited_user_url(invited_user.id, invite_link_host),
-        },
+        personalisation={},
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KeyType.NORMAL,
@@ -63,6 +75,32 @@ def _create_service_invite(invited_user, invite_link_host):
         json.dumps(personalisation),
         ex=1800,
     )
+    # The raw permissions are in the form "a,b,c,d"
+    # but need to be in the form ["a", "b", "c", "d"]
+    data = {}
+    permissions = invited_user.permissions
+    permissions = permissions.split(",")
+    permission_list = []
+    for permission in permissions:
+        permission_list.append(f"{permission}")
+    data["from_user_id"] = (str(invited_user.from_user.id),)
+    data["service_id"] = str(invited_user.service.id)
+    data["permissions"] = permission_list
+    data["folder_permissions"] = invited_user.folder_permissions
+
+    # This is for the login.gov service invite on the
+    # "Set Up Your Profile" path.
+    redis_key = f"service-invite-{invited_user.email_address}"
+    redis_store.raw_set(
+        redis_key,
+        json.dumps(data),
+        ex=3600 * 24,
+    )
+    # TODO REMOVE DEBUG
+    print(hilite(f"Save this data {data} with this redis_key {redis_key}"))
+    did_we_save_it = redis_store.raw_get(redis_key)
+    print(hilite(f"Did we save the data successfully? {did_we_save_it}"))
+    # END DEBUG
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 

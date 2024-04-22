@@ -90,6 +90,14 @@ def get_all_notifications_for_service_job(service_id, job_id):
             notification.to = recipient
             notification.normalised_to = recipient
 
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
     notifications = None
     if data.get("format_for_csv"):
         notifications = [
@@ -100,14 +108,6 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
-
-    for notification in paginated_notifications.items:
-        if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
 
     return (
         jsonify(
@@ -166,6 +166,7 @@ def get_jobs_by_service(service_id):
 
 @job_blueprint.route("", methods=["POST"])
 def create_job(service_id):
+    """Entry point from UI for one-off messages as well as CSV uploads."""
     service = dao_fetch_service_by_id(service_id)
     if not service.active:
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
@@ -204,7 +205,7 @@ def create_job(service_id):
     dao_create_job(job)
 
     sender_id = data.get("sender_id")
-
+    # Kick off job in tasks.py
     if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS

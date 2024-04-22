@@ -180,12 +180,12 @@ def volumes_by_service_report():
             {
                 "service_name": row.service_name,
                 "service_id": str(row.service_id),
-                "organization_name": row.organization_name
-                if row.organization_name
-                else "",
-                "organization_id": str(row.organization_id)
-                if row.organization_id
-                else "",
+                "organization_name": (
+                    row.organization_name if row.organization_name else ""
+                ),
+                "organization_id": (
+                    str(row.organization_id) if row.organization_id else ""
+                ),
                 "free_allowance": int(row.free_allowance),
                 "sms_notifications": int(row.sms_notifications),
                 "sms_chargeable_units": int(row.sms_chargeable_units),

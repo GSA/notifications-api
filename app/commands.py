@@ -18,7 +18,7 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import db
+from app import db, redis_store
 from app.aws import s3
 from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import process_row
@@ -721,8 +721,8 @@ def validate_mobile(ctx, param, value):  # noqa
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
-    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development")
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test", "staging"]:
+        current_app.logger.error("Can only be run in development, test, staging")
         return
 
     data = {
@@ -799,6 +799,20 @@ def update_templates():
         data = json.load(f)
         for d in data:
             _update_template(d["id"], d["name"], d["type"], d["content"], d["subject"])
+    _clear_templates_from_cache()
+
+
+def _clear_templates_from_cache():
+    # When we update-templates in the db, we need to make sure to delete them
+    # from redis, otherwise the old versions will stick around forever.
+    CACHE_KEYS = [
+        "service-????????-????-????-????-????????????-templates",
+        "service-????????-????-????-????-????????????-template-????????-????-????-????-????????????-version-*",  # noqa
+        "service-????????-????-????-????-????????????-template-????????-????-????-????-????????????-versions",  # noqa
+    ]
+
+    num_deleted = sum(redis_store.delete_by_pattern(pattern) for pattern in CACHE_KEYS)
+    current_app.logger.info(f"Number of templates deleted from cache {num_deleted}")
 
 
 @notify_command(name="create-new-service")

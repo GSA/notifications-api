@@ -136,12 +136,14 @@ def create_service(
             message_limit=message_limit,
             total_message_limit=total_message_limit,
             restricted=restricted,
-            email_from=email_from
-            if email_from
-            else service_name.lower().replace(" ", "."),
-            created_by=user
-            if user
-            else create_user(email="{}@test.gsa.gov".format(uuid.uuid4())),
+            email_from=(
+                email_from if email_from else service_name.lower().replace(" ", ".")
+            ),
+            created_by=(
+                user
+                if user
+                else create_user(email="{}@test.gsa.gov".format(uuid.uuid4()))
+            ),
             prefix_sms=prefix_sms,
             organization_type=organization_type,
             organization=organization,

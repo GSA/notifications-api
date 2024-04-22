@@ -5,6 +5,7 @@ Revises: 0213_brand_colour_domain_
 Create Date: 2018-08-23 11:48:00.800968
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 

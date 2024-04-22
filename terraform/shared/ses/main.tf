@@ -16,9 +16,10 @@ data "cloudfoundry_service" "ses" {
 }
 
 resource "cloudfoundry_service_instance" "ses" {
-  name         = var.name
-  space        = data.cloudfoundry_space.space.id
-  service_plan = data.cloudfoundry_service.ses.service_plans["base"]
+  name             = var.name
+  space            = data.cloudfoundry_space.space.id
+  service_plan     = data.cloudfoundry_service.ses.service_plans["base"]
+  recursive_delete = var.recursive_delete
   json_params = jsonencode({
     region                        = var.aws_region
     domain                        = var.email_domain

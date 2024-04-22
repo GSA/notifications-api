@@ -36,7 +36,7 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ./.github/actions/setup-project
     - name: Install application dependencies
       run: make bootstrap
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install poetry packages
         run: poetry install
@@ -82,18 +82,18 @@ jobs:
   pip-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
         run: poetry export --without-hashes --format=requirements.txt > requirements.txt
-      - uses: pypa/gh-action-pip-audit@v1.0.6
+      - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
 
   static-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install bandit
         run: pip install bandit
@@ -118,7 +118,7 @@ jobs:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install application dependencies
         run: make bootstrap

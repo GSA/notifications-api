@@ -254,6 +254,9 @@ We do not maintain any hooks in this repository.
 # install dependencies, etc.
 make bootstrap
 
+# Create test database
+createdb test_notification_api
+
 make test
 ```
 
@@ -528,6 +531,16 @@ cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
 
+# Commonly run commands
+
+(Note: to obtain the CLOUD_GOV_APP name, run `cf apps` and find the name of the app for the tier you are targeting)
+
+To promote a user to platform admin:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command promote-user-to-platform-admin --user-email-address=<user email address>"
+
+To update templates:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command update-templates"
+
 # Commands for test loading the local dev database
 
 All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
@@ -542,19 +555,24 @@ All commands use the `-g` or `--generate` to determine how many instances to loa
 
 # How messages are queued and sent
 
+Services used during message-send flow:
+1. AWS S3
+2. AWS SNS
+3. AWS Cloudwatch
+4. Redis
+5. PostgreSQL
+
 There are several ways for notifications to come into the API.
 
 - Messages sent through the API enter through `app/notifications/post_notifications.py`
-- One-off messages sent from the UI enter through `create_one_off_notification` in `app/service/rest.py`
-- CSV uploads enter through `app/job/rest.py`
+- One-off messages and CSV uploads both enter from the UI through `app/job/rest.py:create_job`
 
-API messages and one-off UI messages come in one at a time, and take slightly-separate routes
-that both end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
+API messages come in one at a time, and end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
 which enqueues the sending.
 
-For CSV uploads, the CSV is first stored in S3 and queued as a `Job`. When the job runs, it iterates
-through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and
-`provider_tasks.deliver_sms`.
+One-off messages and batch messages both upload a CSV, which are then first stored in S3 and queued as a `Job`. When the job runs, it iterates
+through the rows from `tasks.py:process_row`, running `tasks.py:save_sms` (email notifications branch off through `tasks.py:save_email`) to write to the db with `persist_notification` and begin the process of delivering the notification to the provider
+through `provider_tasks.deliver_sms`. The exit point to the provider is in `send_to_providers.py:send_sms`.
 
 # Writing public APIs
 

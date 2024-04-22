@@ -60,7 +60,7 @@ def test_notification_schema_has_correct_status(sample_notification, schema_name
     [
         ("name", "New User"),
         ("email_address", "newuser@mail.com"),
-        ("mobile_number", "+4407700900460"),
+        ("mobile_number", "+14254147755"),
     ],
 )
 def test_user_update_schema_accepts_valid_attribute_pairs(user_attribute, user_value):

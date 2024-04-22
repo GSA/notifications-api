@@ -5,6 +5,7 @@ Revises: 0379_remove_broadcasts
 Create Date: 2022-11-21 11:35:51.987539
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
