@@ -168,8 +168,9 @@ def deliver_email(self, notification_id):
         if not notification:
             raise NoResultFound()
         personalisation = redis_store.get(f"email-personalisation-{notification_id}")
-
-        notification.personalisation = json.loads(personalisation)
+        # TODO is None legit
+        if personalisation is not None:
+            notification.personalisation = json.loads(personalisation)
         send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException as e:
         current_app.logger.exception(
