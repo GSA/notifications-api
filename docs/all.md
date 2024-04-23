@@ -531,6 +531,16 @@ cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
 
+# Commonly run commands
+
+(Note: to obtain the CLOUD_GOV_APP name, run `cf apps` and find the name of the app for the tier you are targeting)
+
+To promote a user to platform admin:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command promote-user-to-platform-admin --user-email-address=<user email address>"
+
+To update templates:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command update-templates"
+
 # Commands for test loading the local dev database
 
 All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.

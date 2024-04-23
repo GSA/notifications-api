@@ -31,6 +31,9 @@ def test_create_invited_user(
     extra_args,
     expected_start_of_invite_url,
 ):
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
+
     mocked = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -92,6 +95,9 @@ def test_create_invited_user(
 def test_create_invited_user_without_auth_type(
     admin_request, sample_service, mocker, invitation_email_template
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -213,6 +219,9 @@ def test_resend_expired_invite(
     invitation_email_template,
     mocker,
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
     mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
     mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
