@@ -1,3 +1,4 @@
+import base64
 import json
 import uuid
 from functools import partial
@@ -9,6 +10,7 @@ from notifications_utils.url_safe_token import generate_token
 
 from app.enums import AuthType, InvitedUserStatus
 from app.models import Notification
+from app.service_invite.rest import get_user_data_url_safe
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
@@ -429,3 +431,25 @@ def test_get_service_invite_data_without_invite(admin_request, mocker):
                 redis_key=redis_key,
             )
         )
+
+
+def test_get_user_data_url_safe():
+    data = {
+        "from_user_id": "aaa",
+        "service_id": "bbb",
+        "permissions": ["manage_things"],
+        "folder_permissions": [],
+    }
+
+    result = get_user_data_url_safe(data)
+
+    assert (
+        result
+        == "eyJmcm9tX3VzZXJfaWQiOiAiYWFhIiwgInNlcnZpY2VfaWQiOiAiYmJiIiwgInBlcm1pc3Npb25zIjogWyJtYW5hZ2VfdGhpbmdzIl0sICJmb2xkZXJfcGVybWlzc2lvbnMiOiBbXX0="  # noqa
+    )
+    result = base64.b64decode(result)
+    result = json.loads(result)
+    assert result["from_user_id"] == "aaa"
+    assert result["service_id"] == "bbb"
+    assert result["permissions"] == ["manage_things"]
+    assert result["folder_permissions"] == []
