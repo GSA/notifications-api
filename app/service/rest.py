@@ -102,7 +102,7 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import get_prev_next_pagination_links
+from app.utils import get_prev_next_pagination_links, hilite
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -314,7 +314,9 @@ def get_users_for_service(service_id):
 def add_user_to_service(service_id, user_id):
     service = dao_fetch_service_by_id(service_id)
     user = get_user_by_id(user_id=user_id)
-
+    # TODO REMOVE DEBUG
+    print(hilite(f"GOING TO ADD {user.name} to service {service.name}"))
+    # END DEBUG
     if user in service.users:
         error = "User id: {} already part of service id: {}".format(user_id, service_id)
         raise InvalidRequest(error, status_code=400)
@@ -329,6 +331,10 @@ def add_user_to_service(service_id, user_id):
     folder_permissions = data.get("folder_permissions", [])
 
     dao_add_user_to_service(service, user, permissions, folder_permissions)
+    # TODO REMOVE DEBUG
+    print(hilite(f"ADDED {user.name} to service {service.name}"))
+    # END DEBUG
+
     data = service_schema.dump(service)
     return jsonify(data=data), 201
 
@@ -479,14 +485,16 @@ def get_all_notifications_for_service(service_id):
         jsonify(
             notifications=notifications,
             page_size=page_size,
-            links=get_prev_next_pagination_links(
-                page,
-                len(next_page_of_pagination.items),
-                ".get_all_notifications_for_service",
-                **kwargs,
-            )
-            if count_pages
-            else {},
+            links=(
+                get_prev_next_pagination_links(
+                    page,
+                    len(next_page_of_pagination.items),
+                    ".get_all_notifications_for_service",
+                    **kwargs,
+                )
+                if count_pages
+                else {}
+            ),
         ),
         200,
     )

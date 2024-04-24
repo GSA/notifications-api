@@ -33,15 +33,29 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
+    # TODO REMOVE DEBUG
+    print(hilite("ENTER _create_service_invite"))
+    # END DEBUG
+
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+
+    token = generate_token(
+        str(invited_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": invited_user.from_user.name,
         "service_name": invited_user.service.name,
-        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
+        "url": url,
     }
 
     saved_notification = persist_notification(
@@ -76,14 +90,17 @@ def _create_service_invite(invited_user, invite_link_host):
 
     # This is for the login.gov service invite on the
     # "Set Up Your Profile" path.
-    redis_store.set(
-        f"service-invite-{invited_user.email_address}",
+    redis_key = f"service-invite-{invited_user.email_address}"
+    redis_store.raw_set(
+        redis_key,
         json.dumps(data),
         ex=3600 * 24,
     )
-    current_app.logger.info(
-        hilite(f"STORING ALL THIS IN REDIS FOR SERVICE INVITE {json.dumps(data)}")
-    )
+    # TODO REMOVE DEBUG
+    print(hilite(f"Save this data {data} with this redis_key {redis_key}"))
+    did_we_save_it = redis_store.raw_get(redis_key)
+    print(hilite(f"Did we save the data successfully? {did_we_save_it}"))
+    # END DEBUG
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 

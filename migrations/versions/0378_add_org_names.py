@@ -5,6 +5,7 @@ Revises: 0377_add_inbound_sms_number
 Create Date: 2022-09-23 20:04:00.766980
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

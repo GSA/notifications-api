@@ -5,6 +5,7 @@ Revises: 0340_stub_training_broadcasts
 Create Date: 2021-01-28 21:30:23.102340
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

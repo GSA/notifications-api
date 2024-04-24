@@ -28,7 +28,6 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
-from app.utils import hilite
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
 
@@ -53,6 +52,15 @@ def invite_user_to_org(organization_id):
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
 
+    token = generate_token(
+        str(invited_org_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": (
             "The Notify.gov team"
@@ -60,7 +68,7 @@ def invite_user_to_org(organization_id):
             else invited_org_user.invited_by.name
         ),
         "organization_name": invited_org_user.organization.name,
-        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
+        "url": url,
     }
     saved_notification = persist_notification(
         template_id=template.id,
@@ -88,12 +96,6 @@ def invite_user_to_org(organization_id):
         redis_key,
         organization_id,
         ex=3600 * 24,
-    )
-    current_app.logger.info(
-        hilite(f"STORING THIS ORGANIZATION ID IN REDIS {redis_store.get(redis_key)}")
-    )
-    current_app.logger.info(
-        hilite(f"URL: {os.environ['LOGIN_DOT_GOV_REGISTRATION_URL']}")
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 

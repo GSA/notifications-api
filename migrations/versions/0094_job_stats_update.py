@@ -5,6 +5,7 @@ Revises: 0092_add_inbound_provider
 Create Date: 2017-06-06 14:37:30.051647
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 

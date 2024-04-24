@@ -5,6 +5,7 @@ Revises: 0390_drop_dvla_provider
 Create Date: 2023-03-01 12:36:38.226954
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from flask import current_app

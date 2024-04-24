@@ -5,6 +5,7 @@ Revises: 0378_add_org_names
 Create Date: 2022-10-25 14:41:29.429928
 
 """
+
 import psycopg2
 import sqlalchemy as sa
 from alembic import op

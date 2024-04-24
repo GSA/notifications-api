@@ -212,9 +212,11 @@ def save_email_or_sms_to_queue(
         "id": notification_id,
         "template_id": str(template.id),
         "template_version": template.version,
-        "to": form["email_address"]
-        if notification_type == NotificationType.EMAIL
-        else form["phone_number"],
+        "to": (
+            form["email_address"]
+            if notification_type == NotificationType.EMAIL
+            else form["phone_number"]
+        ),
         "service_id": str(service_id),
         "personalisation": personalisation,
         "notification_type": notification_type,

@@ -19,7 +19,7 @@ jobs:
       run: exit 0
 
     - name: checkout main branch
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: main
         ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}

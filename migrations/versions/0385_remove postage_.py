@@ -5,6 +5,7 @@ Revises: 0384_remove_letter_branding_
 Create Date: 2023-02-10 12:20:39.411493
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
