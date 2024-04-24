@@ -7,7 +7,7 @@ from notifications_utils.recipients import (
     try_validate_and_format_phone_number,
     validate_and_format_email_address,
 )
-from sqlalchemy import asc, desc, or_, select, union
+from sqlalchemy import asc, desc, or_, select, text, union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -386,15 +386,15 @@ def insert_notification_history_delete_notifications(
         "qry_limit": qry_limit,
     }
 
-    db.session.execute(select_into_temp_table, input_params)
+    db.session.execute(text(select_into_temp_table), input_params)
 
-    result = db.session.execute("select count(*) from NOTIFICATION_ARCHIVE").fetchone()[
-        0
-    ]
+    result = db.session.execute(
+        text("select count(*) from NOTIFICATION_ARCHIVE")
+    ).fetchone()[0]
 
-    db.session.execute(insert_query)
+    db.session.execute(text(insert_query))
 
-    db.session.execute(delete_query)
+    db.session.execute(text(delete_query))
 
     return result
 
@@ -585,7 +585,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
     )
 
     result = db.session.execute(stmt)
-    return result.scalar_one()
+    return result.one()
 
 
 def dao_get_last_notification_added_for_job_id(job_id):

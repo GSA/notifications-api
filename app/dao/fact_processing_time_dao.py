@@ -40,19 +40,17 @@ def get_processing_time_percentage_for_date_range(start_date, end_date):
             FactProcessingTime.messages_total,
             FactProcessingTime.messages_within_10_secs,
             case(
-                [
+                (
+                    FactProcessingTime.messages_total > 0,
                     (
-                        FactProcessingTime.messages_total > 0,
                         (
-                            (
-                                FactProcessingTime.messages_within_10_secs
-                                / FactProcessingTime.messages_total.cast(db.Float)
-                            )
-                            * 100
-                        ),
+                            FactProcessingTime.messages_within_10_secs
+                            / FactProcessingTime.messages_total.cast(db.Float)
+                        )
+                        * 100
                     ),
-                    (FactProcessingTime.messages_total == 0, 100.0),
-                ]
+                ),
+                (FactProcessingTime.messages_total == 0, 100.0),
             ).label("percentage"),
         )
         .filter(

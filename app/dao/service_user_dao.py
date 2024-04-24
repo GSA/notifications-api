@@ -4,7 +4,12 @@ from app.models import ServiceUser, User
 
 
 def dao_get_service_user(user_id, service_id):
-    return ServiceUser.query.filter_by(user_id=user_id, service_id=service_id).one()
+    # TODO: This has been changed to account for the test case failure
+    # that used this method but have any service user to return. Somehow, this
+    # started to throw an error with one() method in sqlalchemy 2.0 unlike 1.4
+    return ServiceUser.query.filter_by(
+        user_id=user_id, service_id=service_id
+    ).one_or_none()
 
 
 def dao_get_active_service_users(service_id):
