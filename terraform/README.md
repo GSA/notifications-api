@@ -89,16 +89,18 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
 1. Run `cf spaces` and, from the output, copy the space name for the environment you are working in, such as `notify-sandbox`.
 
-1. Next you will set up a SpaceDeployer. Prepare to fill in these values:
-   * `<SPACE_NAME>` will be the string you copied from the prior step
-   * `<ACCOUNT_NAME>` can be anything, although we recommend something that communicates the purpose of the deployer. For example: "circleci-deployer" for the credentials CircleCI uses to deploy the application, or "sandbox-<your_name>" for credentials to run terraform manually.
+1. Next you will set up a SpaceDeployer service account instance. This is something like a stub user account, just for deployment. Note these two values which you will use both to create and destroy the account:
+    1. `<SPACE_NAME>` will be the string you copied from the prior step
+    1. `<ACCOUNT_NAME>` can be anything, although we recommend something that communicates the purpose of the deployer. For example: "circleci-deployer" for the credentials CircleCI uses to deploy the application, or "sandbox-<your_name>" for credentials to run terraform manually.
 
-   Put those two values into this command:
+    Put those two values into this command:
     ```bash
-    ./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME> > secrets.auto.tfvars
+    ../create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME> > secrets.auto.tfvars
     ```
 
     The script will output the `username` (as `cf_user`) and `password` (as `cf_password`) for your `<ACCOUNT_NAME>`. The [cloud.gov service account documentation](https://cloud.gov/docs/services/cloud-gov-service-account/) has more information.
+
+    Some resources you might work on require a SpaceDeployer account with higher permissions. Add the `-m` flag to the command to get this.
 
     The command uses the redirection operator (`>`) to write that output to the `secrets.auto.tfvars` file. Terraform will find the username and password there, and use them as input variables.
 
@@ -136,6 +138,8 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     # <SPACE_NAME> and <ACCOUNT_NAME> have the same values as used above.
     ./destroy_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>
     ```
+
+    List `cf services` if you are unsure which space deployer service instances still exist
 
     Optionally, you can also `rm secrets.auto.tfvars`
 
@@ -195,3 +199,18 @@ You need to re-authenticate with the Cloud Foundry CLI
 cf login -a api.fr.cloud.gov --sso
 ```
 You may also need to log in again to the Cloud.gov website.
+
+### CF account not authorized
+
+```
+Error: You are not authorized to perform the requested action
+```
+This error indicates that the Cloud Foundry user account (or service account) needs OrgManager permissions to take the action.
+* When you create a SpaceDeployer service account, use the `-m` flag when running the `./create_service_account.sh` script
+* Your own CF user may may also require OrgManager permissions to run the script
+
+### Services limit
+```
+You have exceeded your organization's services limit.
+```
+Too many Cloud Foundry services have been created without being destroyed. Perhaps Terraform developers have forgotten to delete their SpaceDeployers after they finish with them. List `cf services` to see.
