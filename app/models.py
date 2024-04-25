@@ -2332,8 +2332,8 @@ class Agreement(db.Model):
 
 
     @hybrid_property
-    def status(self):
-        current_time = datetime.utcnow()
+    def status(self) -> AgreementStatus:
+        current_time = datetime.datetime.now(datetime.UTC)
         if self.start_time and self.end_time:
             if current_time < self.start_time:
                 return AgreementStatus.WAITING
@@ -2341,7 +2341,8 @@ class Agreement(db.Model):
                 return AgreementStatus.EXPIRED
             else:
                 return AgreementStatus.ACTIVE
-        return None
+        # Likely one or both are None.
+        return AgreementStatus.UNKNOWN
 
 
     def serialize(self):

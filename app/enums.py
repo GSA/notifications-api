@@ -206,6 +206,7 @@ class AgreementStatus(StrEnum):
     WAITING = "waiting"
     ACTIVE = "active"
     EXPIRED = "expired"
+    UNKNOWN = "unknown"
 
 
 class StatisticsType(StrEnum):
