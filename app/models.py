@@ -1,5 +1,6 @@
 import datetime
 import itertools
+from re import I
 import uuid
 
 from flask import current_app, url_for
@@ -16,6 +17,7 @@ from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -2317,9 +2319,8 @@ class Agreement(db.Model):
     )
     type = enum_column(AgreementType, index=False, unique=False, nullable=False)
     partner_name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    status = enum_column(AgreementStatus, index=False, unique=False, nullable=False)
-    start_time = db.Column(db.DateTime, nullable=True)
-    end_time = db.Column(db.DateTime, nullable=True)
+    start_time = db.Column(db.DateTime, nullable=True, index=True)
+    end_time = db.Column(db.DateTime, nullable=True, index=True)
     url = db.Column(db.String(255), nullable=False, unique=True, index=True)
     budget_amount = db.Column(db.Float, nullable=True)
     organization_id = db.Column(
@@ -2328,6 +2329,20 @@ class Agreement(db.Model):
         nullable=True,
     )
     organization = db.relationship("Organization", backref="agreements")
+
+
+    @hybrid_property
+    def status(self):
+        current_time = datetime.utcnow()
+        if self.start_time and self.end_time:
+            if current_time < self.start_time:
+                return AgreementStatus.WAITING
+            elif current_time > self.end_time:
+                return AgreementStatus.EXPIRED
+            else:
+                return AgreementStatus.ACTIVE
+        return None
+
 
     def serialize(self):
         return {

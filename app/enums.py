@@ -203,6 +203,7 @@ class AgreementType(StrEnum):
 
 
 class AgreementStatus(StrEnum):
+    WAITING = "waiting"
     ACTIVE = "active"
     EXPIRED = "expired"
 
