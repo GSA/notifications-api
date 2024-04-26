@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from datetime import datetime
@@ -25,6 +26,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
+from app.utils import hilite
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -32,6 +34,10 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
+    # TODO REMOVE DEBUG
+    print(hilite("ENTER _create_service_invite"))
+    # END DEBUG
+
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
@@ -43,9 +49,25 @@ def _create_service_invite(invited_user, invite_link_host):
         current_app.config["SECRET_KEY"],
         current_app.config["DANGEROUS_SALT"],
     )
+
+    # The raw permissions are in the form "a,b,c,d"
+    # but need to be in the form ["a", "b", "c", "d"]
+    data = {}
+    permissions = invited_user.permissions
+    permissions = permissions.split(",")
+    data["from_user_id"] = (str(invited_user.from_user.id))
+    data["service_id"] = str(invited_user.service.id)
+    data["permissions"] = permissions
+    data["folder_permissions"] = invited_user.folder_permissions
+    data["invited_user_id"] = str(invited_user.id)
+    data["invited_user_email"] = invited_user.email_address
+
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
     url = url.replace("NONCE", token)
-    url = url.replace("STATE", token)
+
+    user_data_url_safe = get_user_data_url_safe(data)
+
+    url = url.replace("STATE", user_data_url_safe)
 
     personalisation = {
         "user_name": invited_user.from_user.name,
@@ -69,26 +91,6 @@ def _create_service_invite(invited_user, invite_link_host):
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
         ex=1800,
-    )
-    # The raw permissions are in the form "a,b,c,d"
-    # but need to be in the form ["a", "b", "c", "d"]
-    data = {}
-    permissions = invited_user.permissions
-    permissions = permissions.split(",")
-    permission_list = []
-    for permission in permissions:
-        permission_list.append(f"{permission}")
-    data["from_user_id"] = (str(invited_user.from_user.id),)
-    data["service_id"] = str(invited_user.service.id)
-    data["permissions"] = permission_list
-    data["folder_permissions"] = invited_user.folder_permissions
-
-    # This is for the login.gov service invite on the
-    # "Set Up Your Profile" path.
-    redis_store.set(
-        f"service-invite-{invited_user.email_address}",
-        json.dumps(data),
-        ex=3600 * 24,
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
@@ -212,3 +214,9 @@ def validate_service_invitation_token(token):
 
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=invited_user_schema.dump(invited_user)), 200
+
+
+def get_user_data_url_safe(data):
+    data = json.dumps(data)
+    data = base64.b64encode(data.encode("utf8"))
+    return data.decode("utf8")
