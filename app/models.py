@@ -370,12 +370,12 @@ class Organization(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.datetime.utcnow,
+        default=datetime.datetime.now(datetime.UTC),
     )
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        onupdate=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
     agreement_signed = db.Column(db.Boolean, nullable=True)
     agreement_signed_at = db.Column(db.DateTime, nullable=True)
@@ -423,13 +423,12 @@ class Organization(db.Model):
     @property
     def agreement(self):
         try:
-            active_agreements = [
+            return next(
                 agreement
                 for agreement in self.agreements
                 if agreement.status == AgreementStatus.ACTIVE
-            ]
-            return active_agreements[0]
-        except IndexError:
+            )
+        except StopIteration:
             return None
 
     @property
@@ -2333,16 +2332,16 @@ class Agreement(db.Model):
 
     @hybrid_property
     def status(self) -> AgreementStatus:
+        """Calculated status for the agreement, based on start_time and end_time."""
         current_time = datetime.datetime.now(datetime.UTC)
-        if self.start_time and self.end_time:
-            if current_time < self.start_time:
-                return AgreementStatus.WAITING
-            elif current_time > self.end_time:
-                return AgreementStatus.EXPIRED
-            else:
-                return AgreementStatus.ACTIVE
-        # Likely one or both are None.
-        return AgreementStatus.UNKNOWN
+        if self.start_time is None or self.end_time is None:
+            return AgreementStatus.UNKNOWN
+        elif current_time > self.end_time:
+            return AgreementStatus.EXPIRED
+        elif current_time >= self.start_time:
+            return AgreementStatus.ACTIVE
+        else:
+            return AgreementStatus.WAITING
 
 
     def serialize(self):
