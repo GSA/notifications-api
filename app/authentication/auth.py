@@ -12,10 +12,10 @@ from notifications_python_client.errors import (
     TokenExpiredError,
     TokenIssuerError,
 )
-from notifications_utils import request_helper
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.serialised_models import SerialisedService
+from notifications_utils import request_helper
 
 # stvnrlly - this is silly, but bandit has a multiline string bug (https://github.com/PyCQA/bandit/issues/658)
 # and flake8 wants a multiline quote here. TODO: check on bug status and restore sanity once possible

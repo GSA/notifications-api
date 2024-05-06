@@ -1,9 +1,4 @@
 from flask import current_app
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.clients.redis import (
-    rate_limit_cache_key,
-    total_limit_cache_key,
-)
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
@@ -22,6 +17,11 @@ from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
+from notifications_utils.clients.redis import (
+    rate_limit_cache_key,
+    total_limit_cache_key,
+)
 
 
 def check_service_over_api_rate_limit(service, api_key):
