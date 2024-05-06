@@ -5,6 +5,7 @@ import pytest
 from flask import current_app, json
 from freezegun import freeze_time
 from notifications_python_client.authentication import create_jwt_token
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import notifications_dao
@@ -16,7 +17,6 @@ from app.errors import InvalidRequest
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import RateLimitError
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests import create_service_authorization_header
 from tests.app.db import (
     create_api_key,

@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.recipients import InvalidPhoneError
 
 from app.config import QueueNames
@@ -17,7 +18,6 @@ from app.enums import (
 from app.models import Notification, ServiceGuestList
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import BadRequestError
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests.app.db import (
     create_reply_to_email,
     create_service,
