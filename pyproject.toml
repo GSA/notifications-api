@@ -48,7 +48,7 @@ psycopg2-binary = "==2.9.9"
 pyjwt = "==2.8.0"
 python-dotenv = "==1.0.0"
 sqlalchemy = "==1.4.40"
-werkzeug = "^3.0.2"
+werkzeug = "^3.0.3"
 faker = "^24.4.0"
 
 
