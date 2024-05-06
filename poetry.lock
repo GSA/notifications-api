@@ -4514,13 +4514,13 @@ test = ["websockets"]
 
 [[package]]
 name = "werkzeug"
-version = "3.0.2"
+version = "3.0.3"
 description = "The comprehensive WSGI web application library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "werkzeug-3.0.2-py3-none-any.whl", hash = "sha256:3aac3f5da756f93030740bc235d3e09449efcf65f2f55e3602e1d851b8f48795"},
-    {file = "werkzeug-3.0.2.tar.gz", hash = "sha256:e39b645a6ac92822588e7b39a692e7828724ceae0b0d702ef96701f90e70128d"},
+    {file = "werkzeug-3.0.3-py3-none-any.whl", hash = "sha256:fc9645dc43e03e4d630d23143a04a7f947a9a3b5727cd535fdfe155a17cc48c8"},
+    {file = "werkzeug-3.0.3.tar.gz", hash = "sha256:097e5bfda9f0aba8da6b8545146def481d06aa7d3266e7448e2cccf67dd8bd18"},
 ]
 
 [package.dependencies]
@@ -4798,4 +4798,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "62ad876016d96cb47abff37be04026fea97a988290e537d500f1cebe99c5a84a"
+content-hash = "7fc5c245fed278c8ee32c21513a3c80f5cef785b3708ec6d7f2182a2ed99b30c"
