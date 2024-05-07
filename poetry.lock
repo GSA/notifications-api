@@ -832,23 +832,23 @@ testing = ["pytest (>=7.2.1)", "pytest-cov (>=4.0.0)", "tox (>=4.4.3)"]
 
 [[package]]
 name = "cloudfoundry-client"
-version = "1.36.0"
+version = "1.37.1"
 description = "A client library for CloudFoundry"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cloudfoundry-client-1.36.0.tar.gz", hash = "sha256:9d087ad114ee68b2153917a03a7a724513f17a3c1299f2957a4ace109b1665bd"},
-    {file = "cloudfoundry_client-1.36.0-py3-none-any.whl", hash = "sha256:790396326d6af17728a69495a1921865bf5cdf91bac173ec2157a1a02e774e96"},
+    {file = "cloudfoundry-client-1.37.1.tar.gz", hash = "sha256:2802ec0e87ab62950a345b8d16a79a27050bb3f18e0548869a36a3c60171e84d"},
+    {file = "cloudfoundry_client-1.37.1-py3-none-any.whl", hash = "sha256:210fcf76bfbc3e56d70cbed2b3ef1626ec103ab34d36f470d594f31d5a4249ed"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.0"
 oauth2-client = "1.4.2"
 polling2 = "0.5.0"
-protobuf = ">=3.20.0,<5.0.0dev"
+protobuf = ">=3.20.0,<6.0.0"
 PyYAML = ">=6.0"
 requests = ">=2.5.0"
-websocket-client = ">=1.7.0,<1.8.0"
+websocket-client = ">=1.8.0,<1.9.0"
 
 [[package]]
 name = "colorama"
@@ -4498,17 +4498,17 @@ files = [
 
 [[package]]
 name = "websocket-client"
-version = "1.7.0"
+version = "1.8.0"
 description = "WebSocket client for Python with low level API options"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "websocket-client-1.7.0.tar.gz", hash = "sha256:10e511ea3a8c744631d3bd77e61eb17ed09304c413ad42cf6ddfa4c7787e8fe6"},
-    {file = "websocket_client-1.7.0-py3-none-any.whl", hash = "sha256:f4c3d22fec12a2461427a29957ff07d35098ee2d976d3ba244e688b8b4057588"},
+    {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
+    {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
 ]
 
 [package.extras]
-docs = ["Sphinx (>=6.0)", "sphinx-rtd-theme (>=1.1.0)"]
+docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx-rtd-theme (>=1.1.0)"]
 optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
 
