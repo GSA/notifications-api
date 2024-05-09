@@ -82,8 +82,8 @@ def incr_jobs_cache_misses():
         redis_store.set(JOBS_CACHE_MISSES, 1)
     else:
         redis_store.incr(JOBS_CACHE_MISSES)
-    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
-    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
+    redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
+    redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
 
 
 def incr_jobs_cache_hits():
@@ -91,8 +91,8 @@ def incr_jobs_cache_hits():
         redis_store.set(JOBS_CACHE_HITS, 1)
     else:
         redis_store.incr(JOBS_CACHE_HITS)
-    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
-    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
+    redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
+    redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
 
 
 def extract_phones(job):

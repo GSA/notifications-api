@@ -55,7 +55,7 @@ def _create_service_invite(invited_user, invite_link_host):
     data = {}
     permissions = invited_user.permissions
     permissions = permissions.split(",")
-    data["from_user_id"] = (str(invited_user.from_user.id))
+    data["from_user_id"] = str(invited_user.from_user.id)
     data["service_id"] = str(invited_user.service.id)
     data["permissions"] = permissions
     data["folder_permissions"] = invited_user.folder_permissions
