@@ -84,7 +84,6 @@ def incr_jobs_cache_misses():
         redis_store.incr(JOBS_CACHE_MISSES)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.debug(f"JOBS CACHE MISS hits {hits} misses {misses}")
 
 
 def incr_jobs_cache_hits():
@@ -94,7 +93,6 @@ def incr_jobs_cache_hits():
         redis_store.incr(JOBS_CACHE_HITS)
     hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
     misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.debug(f"JOBS CACHE HIT hits {hits} misses {misses}")
 
 
 def extract_phones(job):
@@ -102,7 +100,6 @@ def extract_phones(job):
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
-    current_app.logger.debug(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
         # Note: may contain a BOM and look like \ufeffphone number
