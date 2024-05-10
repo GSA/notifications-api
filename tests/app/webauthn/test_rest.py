@@ -89,7 +89,7 @@ def test_create_webauthn_credential_returns_201(admin_request, sample_user):
             "name None is not of type string",
         ),
         # name is empty
-        ({"name": "", "credential_data": "ABC123"}, "name  is too short"),
+        ({"name": "", "credential_data": "ABC123"}, "name  should be non-empty"),
     ],
 )
 def test_create_webauthn_credential_errors_if_schema_violation(
@@ -131,7 +131,7 @@ def test_update_webauthn_credential_returns_200(admin_request, sample_user):
         # name is null
         ({"name": None}, "name None is not of type string"),
         # name is empty
-        ({"name": ""}, "name  is too short"),
+        ({"name": ""}, "name  should be non-empty"),
     ],
 )
 def test_update_webauthn_credential_errors_if_schema_violation(
