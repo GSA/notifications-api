@@ -90,23 +90,39 @@ class AwsCloudwatchClient(Client):
         account_number = ses_domain_arn.split(":")
         return account_number
 
+    def warn_if_dev_is_opted_out(self, provider_response, notification_id):
+        if (
+            "is opted out" in provider_response.lower()
+            or "has blocked sms" in provider_response.lower()
+        ):
+            if os.getenv("NOTIFY_ENVIRONMENT") in ["development", "test"]:
+                ansi_red = "\033[31m"
+                ansi_reset = "\033[0m"
+                logline = (
+                    ansi_red
+                    + f"The phone number for notification_id {notification_id} is OPTED OUT. You need to opt back in"
+                    + ansi_reset
+                )
+                current_app.logger.warning(logline)
+                return logline
+        return None
+
     def check_sms(self, message_id, notification_id, created_at):
-        current_app.logger.info(f"CREATED AT = {created_at}")
         region = cloud_config.sns_region
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
         time_now = datetime.utcnow()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
-        current_app.logger.info(
-            f"Log group name: {log_group_name} message id: {message_id}"
-        )
         filter_pattern = '{$.notification.messageId="XXXXX"}'
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
         all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_log_events and len(all_log_events) > 0:
             event = all_log_events[0]
             message = json.loads(event["message"])
+            self.warn_if_dev_is_opted_out(
+                message["delivery"]["providerResponse"], notification_id
+            )
             return (
                 "success",
                 message["delivery"]["providerResponse"],
@@ -116,13 +132,13 @@ class AwsCloudwatchClient(Client):
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
-        current_app.logger.info(f"Failure log group name: {log_group_name}")
         all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
         if all_failed_events and len(all_failed_events) > 0:
-            current_app.logger.info("SHOULD RETURN FAILED BECAUSE WE FOUND A FAILURE")
             event = all_failed_events[0]
             message = json.loads(event["message"])
-            current_app.logger.info(f"MESSAGE {message}")
+            self.warn_if_dev_is_opted_out(
+                message["delivery"]["providerResponse"], notification_id
+            )
             return (
                 "failure",
                 message["delivery"]["providerResponse"],

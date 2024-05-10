@@ -18,7 +18,8 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.models import JOB_STATUS_FINISHED, SMS_TYPE, Job
+from app.enums import JobStatus, NotificationStatus
+from app.models import Job, NotificationType, TemplateType
 from tests.app.db import (
     create_job,
     create_notification,
@@ -30,19 +31,29 @@ from tests.app.db import (
 def test_should_count_of_statuses_for_notifications_associated_with_job(
     sample_template, sample_job
 ):
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="created")
-    create_notification(sample_template, job=sample_job, status="sending")
-    create_notification(sample_template, job=sample_job, status="delivered")
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.CREATED
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.SENDING
+    )
+    create_notification(
+        sample_template, job=sample_job, status=NotificationStatus.DELIVERED
+    )
 
     results = dao_get_notification_outcomes_for_job(
         sample_template.service_id, sample_job.id
     )
     assert {row.status: row.count for row in results} == {
-        "created": 3,
-        "sending": 1,
-        "delivered": 1,
+        NotificationStatus.CREATED: 3,
+        NotificationStatus.SENDING: 1,
+        NotificationStatus.DELIVERED: 1,
     }
 
 
@@ -59,13 +70,13 @@ def test_should_return_notifications_only_for_this_job(sample_template):
     job_1 = create_job(sample_template)
     job_2 = create_job(sample_template)
 
-    create_notification(sample_template, job=job_1, status="created")
-    create_notification(sample_template, job=job_2, status="sent")
+    create_notification(sample_template, job=job_1, status=NotificationStatus.CREATED)
+    create_notification(sample_template, job=job_2, status=NotificationStatus.SENT)
 
     results = dao_get_notification_outcomes_for_job(
         sample_template.service_id, job_1.id
     )
-    assert {row.status: row.count for row in results} == {"created": 1}
+    assert {row.status: row.count for row in results} == {NotificationStatus.CREATED: 1}
 
 
 def test_should_return_notifications_only_for_this_service(
@@ -203,15 +214,15 @@ def test_get_jobs_for_service_in_processed_at_then_created_at_order(
 
 
 def test_update_job(sample_job):
-    assert sample_job.job_status == "pending"
+    assert sample_job.job_status == JobStatus.PENDING
 
-    sample_job.job_status = "in progress"
+    sample_job.job_status = JobStatus.IN_PROGRESS
 
     dao_update_job(sample_job)
 
     job_from_db = Job.query.get(sample_job.id)
 
-    assert job_from_db.job_status == "in progress"
+    assert job_from_db.job_status == JobStatus.IN_PROGRESS
 
 
 def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_now(
@@ -220,10 +231,14 @@ def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_n
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
     job_new = create_job(
-        sample_template, scheduled_for=one_minute_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     job_old = create_job(
-        sample_template, scheduled_for=one_hour_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_hour_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 2
@@ -236,7 +251,9 @@ def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_not_scheduled(
 ):
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     job_scheduled = create_job(
-        sample_template, scheduled_for=one_minute_ago, job_status="scheduled"
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
     )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 1
@@ -253,12 +270,20 @@ def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_scheduled_in_the_future
 def test_set_scheduled_jobs_to_pending_updates_rows(sample_template):
     one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
     one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
-    create_job(sample_template, scheduled_for=one_minute_ago, job_status="scheduled")
-    create_job(sample_template, scheduled_for=one_hour_ago, job_status="scheduled")
+    create_job(
+        sample_template,
+        scheduled_for=one_minute_ago,
+        job_status=JobStatus.SCHEDULED,
+    )
+    create_job(
+        sample_template,
+        scheduled_for=one_hour_ago,
+        job_status=JobStatus.SCHEDULED,
+    )
     jobs = dao_set_scheduled_jobs_to_pending()
     assert len(jobs) == 2
-    assert jobs[0].job_status == "pending"
-    assert jobs[1].job_status == "pending"
+    assert jobs[0].job_status == JobStatus.PENDING
+    assert jobs[1].job_status == JobStatus.PENDING
 
 
 def test_get_future_scheduled_job_gets_a_job_yet_to_send(sample_scheduled_job):
@@ -344,7 +369,7 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
     six_days_ago = datetime.utcnow() - timedelta(days=6)
     eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    sms_template = create_template(sample_service, template_type=SMS_TYPE)
+    sms_template = create_template(sample_service, template_type=TemplateType.SMS)
 
     create_job(sms_template, created_at=eight_days_ago)
     create_job(sms_template, created_at=eight_days_ago, scheduled_for=eight_days_ago)
@@ -352,7 +377,9 @@ def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
         sms_template, created_at=eight_days_ago, scheduled_for=six_days_ago
     )
 
-    jobs = dao_get_jobs_older_than_data_retention(notification_types=[SMS_TYPE])
+    jobs = dao_get_jobs_older_than_data_retention(
+        notification_types=[NotificationType.SMS]
+    )
 
     assert len(jobs) == 2
     assert job_to_remain.id not in [job.id for job in jobs]
@@ -377,7 +404,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
     healthy_job = create_job(
         template=sample_email_template,
         notification_count=3,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 3):
@@ -385,7 +412,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
     job_with_missing_rows = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=20),
     )
     for i in range(0, 4):
@@ -403,7 +430,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_less_th
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=9),
     )
     for i in range(0, 4):
@@ -420,7 +447,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(days=1),
     )
     for i in range(0, 4):
@@ -431,7 +458,15 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
     assert len(results) == 0
 
 
-@pytest.mark.parametrize("status", ["pending", "in progress", "cancelled", "scheduled"])
+@pytest.mark.parametrize(
+    "status",
+    [
+        JobStatus.PENDING,
+        JobStatus.IN_PROGRESS,
+        JobStatus.CANCELLED,
+        JobStatus.SCHEDULED,
+    ],
+)
 def test_find_jobs_with_missing_rows_doesnt_return_jobs_that_are_not_finished(
     sample_email_template, status
 ):
@@ -453,7 +488,7 @@ def test_find_missing_row_for_job(sample_email_template):
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
@@ -470,7 +505,7 @@ def test_find_missing_row_for_job_more_than_one_missing_row(sample_email_templat
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
@@ -489,7 +524,7 @@ def test_find_missing_row_for_job_return_none_when_row_isnt_missing(
     job = create_job(
         template=sample_email_template,
         notification_count=5,
-        job_status=JOB_STATUS_FINISHED,
+        job_status=JobStatus.FINISHED,
         processing_finished=datetime.utcnow() - timedelta(minutes=11),
     )
     for i in range(0, 5):

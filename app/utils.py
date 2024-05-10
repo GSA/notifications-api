@@ -41,14 +41,12 @@ def url_with_token(data, url, config, base_url=None):
 
 
 def get_template_instance(template, values):
-    from app.models import EMAIL_TYPE, SMS_TYPE
+    from app.enums import TemplateType
 
     return {
-        SMS_TYPE: SMSMessageTemplate,
-        EMAIL_TYPE: HTMLEmailTemplate,
-    }[
-        template["template_type"]
-    ](template, values)
+        TemplateType.SMS: SMSMessageTemplate,
+        TemplateType.EMAIL: HTMLEmailTemplate,
+    }[template["template_type"]](template, values)
 
 
 def get_midnight_in_utc(date):
@@ -80,12 +78,12 @@ def get_month_from_utc_column(column):
 
 
 def get_public_notify_type_text(notify_type, plural=False):
-    from app.models import SMS_TYPE, UPLOAD_DOCUMENT
+    from app.enums import NotificationType, ServicePermissionType
 
     notify_type_text = notify_type
-    if notify_type == SMS_TYPE:
+    if notify_type == NotificationType.SMS:
         notify_type_text = "text message"
-    elif notify_type == UPLOAD_DOCUMENT:
+    elif notify_type == ServicePermissionType.UPLOAD_DOCUMENT:
         notify_type_text = "document"
 
     return "{}{}".format(notify_type_text, "s" if plural else "")
@@ -125,3 +123,11 @@ def get_reference_from_personalisation(personalisation):
     if personalisation:
         return personalisation.get("reference")
     return None
+
+
+# Function used for debugging.
+# Do print(hilite(message)) while debugging, then remove your print statements
+def hilite(message):
+    ansi_green = "\033[32m"
+    ansi_reset = "\033[0m"
+    return f"{ansi_green}{message}{ansi_reset}"

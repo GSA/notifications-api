@@ -4,6 +4,7 @@ Revision ID: 0405_add_preferred_timezone
 Revises: 0404_expire_invites
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from flask import current_app

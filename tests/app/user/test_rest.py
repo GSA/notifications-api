@@ -7,17 +7,9 @@ import pytest
 from flask import current_app
 from freezegun import freeze_time
 
-from app.dao.permissions_dao import default_service_permissions
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
-from app.models import (
-    EMAIL_AUTH_TYPE,
-    MANAGE_SETTINGS,
-    MANAGE_TEMPLATES,
-    SMS_AUTH_TYPE,
-    Notification,
-    Permission,
-    User,
-)
+from app.enums import AuthType, KeyType, NotificationType, PermissionType
+from app.models import Notification, Permission, User
 from tests.app.db import (
     create_organization,
     create_service,
@@ -35,7 +27,7 @@ def test_get_user_list(admin_request, sample_service):
     # it may have the notify user in the DB still :weary:
     assert len(json_resp["data"]) >= 1
     sample_user = sample_service.users[0]
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = next(x for x in json_resp["data"] if x["id"] == str(sample_user.id))
 
     assert sample_user.name == fetched["name"]
@@ -63,7 +55,7 @@ def test_get_user(admin_request, sample_service, sample_organization):
     sample_user.organizations = [sample_organization]
     json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = json_resp["data"]
 
     assert fetched["id"] == str(sample_user.id)
@@ -71,7 +63,7 @@ def test_get_user(admin_request, sample_service, sample_organization):
     assert fetched["mobile_number"] == sample_user.mobile_number
     assert fetched["email_address"] == sample_user.email_address
     assert fetched["state"] == sample_user.state
-    assert fetched["auth_type"] == SMS_AUTH_TYPE
+    assert fetched["auth_type"] == AuthType.SMS
     assert fetched["permissions"].keys() == {str(sample_service.id)}
     assert fetched["services"] == [str(sample_service.id)]
     assert fetched["organizations"] == [str(sample_organization.id)]
@@ -117,7 +109,7 @@ def test_post_user(admin_request, notify_db_session):
         "state": "active",
         "failed_login_count": 0,
         "permissions": {},
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
@@ -125,7 +117,7 @@ def test_post_user(admin_request, notify_db_session):
     assert user.check_password("password")
     assert json_resp["data"]["email_address"] == user.email_address
     assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == EMAIL_AUTH_TYPE
+    assert user.auth_type == AuthType.EMAIL
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
@@ -142,7 +134,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     user = User.query.filter_by(email_address="user@digital.fake.gov").first()
     assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == SMS_AUTH_TYPE
+    assert user.auth_type == AuthType.SMS
 
 
 def test_post_user_missing_attribute_email(admin_request, notify_db_session):
@@ -194,12 +186,12 @@ def test_can_create_user_with_email_auth_and_no_mobile(
         "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": None,
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    assert json_resp["data"]["auth_type"] == EMAIL_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.EMAIL
     assert json_resp["data"]["mobile_number"] is None
 
 
@@ -211,14 +203,14 @@ def test_cannot_create_user_with_sms_auth_and_no_mobile(
         "email_address": "user@digital.fake.gov",
         "password": "password",
         "mobile_number": None,
-        "auth_type": SMS_AUTH_TYPE,
+        "auth_type": AuthType.SMS,
     }
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
 
     assert (
         json_resp["message"]
-        == "Mobile number must be set if auth_type is set to sms_auth"
+        == "Mobile number must be set if auth_type is set to AuthType.SMS"
     )
 
 
@@ -228,7 +220,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
         "email_address": "",
         "password": "password",
         "mobile_number": "",
-        "auth_type": EMAIL_AUTH_TYPE,
+        "auth_type": AuthType.EMAIL,
     }
     resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
     assert resp["message"] == {
@@ -245,7 +237,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
     [
         ("name", "New User"),
         ("email_address", "newuser@mail.com"),
-        ("mobile_number", "+4407700900460"),
+        ("mobile_number", "+14254147755"),
     ],
 )
 def test_post_user_attribute(admin_request, sample_user, user_attribute, user_value):
@@ -269,13 +261,9 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
             "newuser@mail.com",
             dict(
                 api_key_id=None,
-                key_type="normal",
-                notification_type="email",
-                personalisation={
-                    "name": "Test User",
-                    "servicemanagername": "Service Manago",
-                    "email address": "newuser@mail.com",
-                },
+                key_type=KeyType.NORMAL,
+                notification_type=NotificationType.EMAIL,
+                personalisation={},
                 recipient="newuser@mail.com",
                 reply_to_text="notify@gov.uk",
                 service=mock.ANY,
@@ -285,17 +273,13 @@ def test_post_user_attribute(admin_request, sample_user, user_attribute, user_va
         ),
         (
             "mobile_number",
-            "+4407700900460",
+            "+14254147755",
             dict(
                 api_key_id=None,
-                key_type="normal",
-                notification_type="sms",
-                personalisation={
-                    "name": "Test User",
-                    "servicemanagername": "Service Manago",
-                    "email address": "notify@digital.fake.gov",
-                },
-                recipient="+4407700900460",
+                key_type=KeyType.NORMAL,
+                notification_type=NotificationType.SMS,
+                personalisation={},
+                recipient="+14254147755",
                 reply_to_text="testing",
                 service=mock.ANY,
                 template_id=uuid.UUID("8a31520f-4751-4789-8ea1-fe54496725eb"),
@@ -320,7 +304,9 @@ def test_post_user_attribute_with_updated_by(
     mock_persist_notification = mocker.patch("app.user.rest.persist_notification")
     mocker.patch("app.user.rest.send_notification_to_queue")
     json_resp = admin_request.post(
-        "user.update_user_attribute", user_id=sample_user.id, _data=update_dict
+        "user.update_user_attribute",
+        user_id=sample_user.id,
+        _data=update_dict,
     )
     assert json_resp["data"][user_attribute] == user_value
     if arguments:
@@ -329,6 +315,7 @@ def test_post_user_attribute_with_updated_by(
         mock_persist_notification.assert_not_called()
 
 
+@pytest.mark.skip("We don't support international at the moment")
 def test_post_user_attribute_with_updated_by_sends_notification_to_international_from_number(
     admin_request, mocker, sample_user, team_member_mobile_edit_template
 ):
@@ -337,7 +324,9 @@ def test_post_user_attribute_with_updated_by_sends_notification_to_international
     mocker.patch("app.user.rest.send_notification_to_queue")
 
     admin_request.post(
-        "user.update_user_attribute", user_id=sample_user.id, _data=update_dict
+        "user.update_user_attribute",
+        user_id=sample_user.id,
+        _data=update_dict,
     )
 
     notification = Notification.query.first()
@@ -351,7 +340,9 @@ def test_archive_user(mocker, admin_request, sample_user):
     archive_mock = mocker.patch("app.user.rest.dao_archive_user")
 
     admin_request.post(
-        "user.archive_user", user_id=sample_user.id, _expected_status=204
+        "user.archive_user",
+        user_id=sample_user.id,
+        _expected_status=204,
     )
 
     archive_mock.assert_called_once_with(sample_user)
@@ -371,7 +362,9 @@ def test_archive_user_when_user_cannot_be_archived(mocker, admin_request, sample
     mocker.patch("app.dao.users_dao.user_can_be_archived", return_value=False)
 
     json_resp = admin_request.post(
-        "user.archive_user", user_id=sample_user.id, _expected_status=400
+        "user.archive_user",
+        user_id=sample_user.id,
+        _expected_status=400,
     )
     msg = "User can’t be removed from a service - check all services have another team member with manage_settings"
 
@@ -383,7 +376,7 @@ def test_get_user_by_email(admin_request, sample_service):
 
     json_resp = admin_request.get("user.get_by_email", email=sample_user.email_address)
 
-    expected_permissions = default_service_permissions
+    expected_permissions = PermissionType.defaults()
     fetched = json_resp["data"]
 
     assert str(sample_user.id) == fetched["id"]
@@ -398,7 +391,9 @@ def test_get_user_by_email(admin_request, sample_service):
 
 def test_get_user_by_email_not_found_returns_404(admin_request, sample_user):
     json_resp = admin_request.get(
-        "user.get_by_email", email="no_user@digital.fake.gov", _expected_status=404
+        "user.get_by_email",
+        email="no_user@digital.fake.gov",
+        _expected_status=404,
     )
     assert json_resp["result"] == "error"
     assert json_resp["message"] == "No result found"
@@ -465,21 +460,23 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
         "user.set_permissions",
         user_id=str(sample_user.id),
         service_id=str(sample_service.id),
-        _data={"permissions": [{"permission": MANAGE_SETTINGS}]},
+        _data={"permissions": [{"permission": PermissionType.MANAGE_SETTINGS}]},
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(permission=MANAGE_SETTINGS).first()
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_SETTINGS
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_SETTINGS
+    assert permission.permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_permissions_multiple(admin_request, sample_user, sample_service):
     data = {
         "permissions": [
-            {"permission": MANAGE_SETTINGS},
-            {"permission": MANAGE_TEMPLATES},
+            {"permission": PermissionType.MANAGE_SETTINGS},
+            {"permission": PermissionType.MANAGE_TEMPLATES},
         ]
     }
     admin_request.post(
@@ -490,18 +487,22 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(permission=MANAGE_SETTINGS).first()
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_SETTINGS
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_SETTINGS
-    permission = Permission.query.filter_by(permission=MANAGE_TEMPLATES).first()
+    assert permission.permission == PermissionType.MANAGE_SETTINGS
+    permission = Permission.query.filter_by(
+        permission=PermissionType.MANAGE_TEMPLATES
+    ).first()
     assert permission.user == sample_user
     assert permission.service == sample_service
-    assert permission.permission == MANAGE_TEMPLATES
+    assert permission.permission == PermissionType.MANAGE_TEMPLATES
 
 
 def test_set_user_permissions_remove_old(admin_request, sample_user, sample_service):
-    data = {"permissions": [{"permission": MANAGE_SETTINGS}]}
+    data = {"permissions": [{"permission": PermissionType.MANAGE_SETTINGS}]}
 
     admin_request.post(
         "user.set_permissions",
@@ -513,7 +514,7 @@ def test_set_user_permissions_remove_old(admin_request, sample_user, sample_serv
 
     query = Permission.query.filter_by(user=sample_user)
     assert query.count() == 1
-    assert query.first().permission == MANAGE_SETTINGS
+    assert query.first().permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_folder_permissions(admin_request, sample_user, sample_service):
@@ -881,35 +882,35 @@ def test_activate_user_fails_if_already_active(admin_request, sample_user):
 
 
 def test_update_user_auth_type(admin_request, sample_user):
-    assert sample_user.auth_type == "sms_auth"
+    assert sample_user.auth_type == AuthType.SMS
     resp = admin_request.post(
         "user.update_user_attribute",
         user_id=sample_user.id,
-        _data={"auth_type": "email_auth"},
+        _data={"auth_type": AuthType.EMAIL},
     )
 
     assert resp["data"]["id"] == str(sample_user.id)
-    assert resp["data"]["auth_type"] == "email_auth"
+    assert resp["data"]["auth_type"] == AuthType.EMAIL
 
 
 def test_can_set_email_auth_and_remove_mobile_at_same_time(admin_request, sample_user):
-    sample_user.auth_type = SMS_AUTH_TYPE
+    sample_user.auth_type = AuthType.SMS
 
     admin_request.post(
         "user.update_user_attribute",
         user_id=sample_user.id,
         _data={
             "mobile_number": None,
-            "auth_type": EMAIL_AUTH_TYPE,
+            "auth_type": AuthType.EMAIL,
         },
     )
 
     assert sample_user.mobile_number is None
-    assert sample_user.auth_type == EMAIL_AUTH_TYPE
+    assert sample_user.auth_type == AuthType.EMAIL
 
 
 def test_cannot_remove_mobile_if_sms_auth(admin_request, sample_user):
-    sample_user.auth_type = SMS_AUTH_TYPE
+    sample_user.auth_type = AuthType.SMS
 
     json_resp = admin_request.post(
         "user.update_user_attribute",
@@ -920,12 +921,12 @@ def test_cannot_remove_mobile_if_sms_auth(admin_request, sample_user):
 
     assert (
         json_resp["message"]
-        == "Mobile number must be set if auth_type is set to sms_auth"
+        == "Mobile number must be set if auth_type is set to AuthType.SMS"
     )
 
 
 def test_can_remove_mobile_if_email_auth(admin_request, sample_user):
-    sample_user.auth_type = EMAIL_AUTH_TYPE
+    sample_user.auth_type = AuthType.EMAIL
 
     admin_request.post(
         "user.update_user_attribute",
@@ -939,7 +940,7 @@ def test_can_remove_mobile_if_email_auth(admin_request, sample_user):
 def test_cannot_update_user_with_mobile_number_as_empty_string(
     admin_request, sample_user
 ):
-    sample_user.auth_type = EMAIL_AUTH_TYPE
+    sample_user.auth_type = AuthType.EMAIL
 
     resp = admin_request.post(
         "user.update_user_attribute",

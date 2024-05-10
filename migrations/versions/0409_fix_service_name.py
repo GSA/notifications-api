@@ -5,6 +5,7 @@ Revises: 0408_fix_timezone_again
 Create Date: 2023-12-13 11:38:01.314057
 
 """
+
 from sqlalchemy import text
 
 revision = "0409_fix_service_name"

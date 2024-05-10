@@ -5,7 +5,8 @@ from app.dao.service_guest_list_dao import (
     dao_fetch_service_guest_list,
     dao_remove_service_guest_list,
 )
-from app.models import EMAIL_TYPE, ServiceGuestList
+from app.enums import RecipientType
+from app.models import ServiceGuestList
 from tests.app.db import create_service
 
 
@@ -21,7 +22,7 @@ def test_fetch_service_guest_list_ignores_other_service(sample_service_guest_lis
 
 def test_add_and_commit_guest_list_contacts_saves_data(sample_service):
     guest_list = ServiceGuestList.from_string(
-        sample_service.id, EMAIL_TYPE, "foo@example.com"
+        sample_service.id, RecipientType.EMAIL, "foo@example.com"
     )
 
     dao_add_and_commit_guest_list_contacts([guest_list])
@@ -37,10 +38,10 @@ def test_remove_service_guest_list_only_removes_for_my_service(notify_db_session
     dao_add_and_commit_guest_list_contacts(
         [
             ServiceGuestList.from_string(
-                service_1.id, EMAIL_TYPE, "service1@example.com"
+                service_1.id, RecipientType.EMAIL, "service1@example.com"
             ),
             ServiceGuestList.from_string(
-                service_2.id, EMAIL_TYPE, "service2@example.com"
+                service_2.id, RecipientType.EMAIL, "service2@example.com"
             ),
         ]
     )

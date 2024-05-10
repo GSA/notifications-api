@@ -7,7 +7,8 @@ from flask import current_app
 from freezegun import freeze_time
 from notifications_utils.url_safe_token import generate_token
 
-from app.models import EMAIL_AUTH_TYPE, SMS_AUTH_TYPE, Notification
+from app.enums import AuthType, InvitedUserStatus
+from app.models import Notification
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
@@ -30,6 +31,9 @@ def test_create_invited_user(
     extra_args,
     expected_start_of_invite_url,
 ):
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
+
     mocked = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -39,7 +43,7 @@ def test_create_invited_user(
         email_address=email_address,
         from_user=str(invite_from.id),
         permissions="send_messages,manage_service,manage_api_keys",
-        auth_type=EMAIL_AUTH_TYPE,
+        auth_type=AuthType.EMAIL,
         folder_permissions=["folder_1", "folder_2", "folder_3"],
         **extra_args,
     )
@@ -58,7 +62,7 @@ def test_create_invited_user(
         json_resp["data"]["permissions"]
         == "send_messages,manage_service,manage_api_keys"
     )
-    assert json_resp["data"]["auth_type"] == EMAIL_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.EMAIL
     assert json_resp["data"]["id"]
     assert json_resp["data"]["folder_permissions"] == [
         "folder_1",
@@ -70,11 +74,14 @@ def test_create_invited_user(
 
     assert notification.reply_to_text == invite_from.email_address
 
-    assert len(notification.personalisation.keys()) == 3
-    assert notification.personalisation["service_name"] == "Sample service"
-    assert notification.personalisation["user_name"] == "Test User"
-    assert notification.personalisation["url"].startswith(expected_start_of_invite_url)
-    assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
+    # As part of notify-api-749 we are removing personalisation from the db
+    # The personalisation should have been sent in the notification (see the service_invite code)
+    # it is just not stored in the db.
+    # assert len(notification.personalisation.keys()) == 3
+    # assert notification.personalisation["service_name"] == "Sample service"
+    # assert notification.personalisation["user_name"] == "Test User"
+    # assert notification.personalisation["url"].startswith(expected_start_of_invite_url)
+    # assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
     assert (
         str(notification.template_id)
         == current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
@@ -88,6 +95,9 @@ def test_create_invited_user(
 def test_create_invited_user_without_auth_type(
     admin_request, sample_service, mocker, invitation_email_template
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -107,7 +117,7 @@ def test_create_invited_user_without_auth_type(
         _expected_status=201,
     )
 
-    assert json_resp["data"]["auth_type"] == SMS_AUTH_TYPE
+    assert json_resp["data"]["auth_type"] == AuthType.SMS
 
 
 def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_uuid):
@@ -161,7 +171,7 @@ def test_get_all_invited_users_by_service(client, notify_db_session, sample_serv
     for invite in json_resp["data"]:
         assert invite["service"] == str(sample_service.id)
         assert invite["from_user"] == str(invite_from.id)
-        assert invite["auth_type"] == SMS_AUTH_TYPE
+        assert invite["auth_type"] == AuthType.SMS
         assert invite["id"]
 
 
@@ -209,6 +219,9 @@ def test_resend_expired_invite(
     invitation_email_template,
     mocker,
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
     mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
     mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
@@ -223,12 +236,12 @@ def test_resend_expired_invite(
 
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))["data"]
-    assert json_resp["status"] == "pending"
+    assert json_resp["status"] == InvitedUserStatus.PENDING
     assert mock_send.called
 
 
 def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
     url = f"/service/{sample_invited_user.service_id}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
@@ -239,13 +252,13 @@ def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user
 
     assert response.status_code == 200
     json_resp = json.loads(response.get_data(as_text=True))["data"]
-    assert json_resp["status"] == "cancelled"
+    assert json_resp["status"] == InvitedUserStatus.CANCELLED
 
 
 def test_update_invited_user_for_wrong_service_returns_404(
     client, sample_invited_user, fake_uuid
 ):
-    data = {"status": "cancelled"}
+    data = {"status": InvitedUserStatus.CANCELLED}
     url = f"/service/{fake_uuid}/invite/{sample_invited_user.id}"
     auth_header = create_admin_authorization_header()
     response = client.post(

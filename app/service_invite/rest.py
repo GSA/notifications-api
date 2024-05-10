@@ -1,9 +1,13 @@
+import base64
+import json
+import os
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 from notifications_utils.url_safe_token import check_token, generate_token
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
     get_expired_invite_by_service_and_id,
@@ -14,13 +18,15 @@ from app.dao.invited_user_dao import (
     save_invited_user,
 )
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import InvitedUserStatus, KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
-from app.models import EMAIL_TYPE, INVITE_PENDING, KEY_TYPE_NORMAL, Service
+from app.models import Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
+from app.utils import hilite
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -28,28 +34,64 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
+    # TODO REMOVE DEBUG
+    print(hilite("ENTER _create_service_invite"))
+    # END DEBUG
+
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
 
+    token = generate_token(
+        str(invited_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+
+    # The raw permissions are in the form "a,b,c,d"
+    # but need to be in the form ["a", "b", "c", "d"]
+    data = {}
+    permissions = invited_user.permissions
+    permissions = permissions.split(",")
+    data["from_user_id"] = (str(invited_user.from_user.id))
+    data["service_id"] = str(invited_user.service.id)
+    data["permissions"] = permissions
+    data["folder_permissions"] = invited_user.folder_permissions
+    data["invited_user_id"] = str(invited_user.id)
+    data["invited_user_email"] = invited_user.email_address
+
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+
+    user_data_url_safe = get_user_data_url_safe(data)
+
+    url = url.replace("STATE", user_data_url_safe)
+
+    personalisation = {
+        "user_name": invited_user.from_user.name,
+        "service_name": invited_user.service.name,
+        "url": url,
+    }
+
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=invited_user.email_address,
         service=service,
-        personalisation={
-            "user_name": invited_user.from_user.name,
-            "service_name": invited_user.service.name,
-            "url": invited_user_url(invited_user.id, invite_link_host),
-        },
-        notification_type=EMAIL_TYPE,
+        personalisation={},
+        notification_type=NotificationType.EMAIL,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
     )
-
+    saved_notification.personalisation = personalisation
+    redis_store.set(
+        f"email-personalisation-{saved_notification.id}",
+        json.dumps(personalisation),
+        ex=1800,
+    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
 
@@ -115,7 +157,7 @@ def resend_service_invite(service_id, invited_user_id):
     )
 
     fetched.created_at = datetime.utcnow()
-    fetched.status = INVITE_PENDING
+    fetched.status = InvitedUserStatus.PENDING
 
     current_data = {k: v for k, v in invited_user_schema.dump(fetched).items()}
     update_dict = invited_user_schema.load(current_data)
@@ -172,3 +214,9 @@ def validate_service_invitation_token(token):
 
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=invited_user_schema.dump(invited_user)), 200
+
+
+def get_user_data_url_safe(data):
+    data = json.dumps(data)
+    data = base64.b64encode(data.encode("utf8"))
+    return data.decode("utf8")

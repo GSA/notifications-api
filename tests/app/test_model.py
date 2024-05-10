@@ -5,18 +5,17 @@ from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
 from app import encryption
-from app.models import (
-    EMAIL_TYPE,
-    MOBILE_TYPE,
-    NOTIFICATION_CREATED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_PENDING,
-    NOTIFICATION_STATUS_TYPES_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    SMS_TYPE,
-    Agreement,
+from app.enums import (
     AgreementStatus,
     AgreementType,
+    AuthType,
+    NotificationStatus,
+    NotificationType,
+    RecipientType,
+    TemplateType,
+)
+from app.models import (
+    Agreement,
     AnnualBilling,
     Notification,
     NotificationHistory,
@@ -40,10 +39,12 @@ from tests.app.db import (
 )
 
 
-@pytest.mark.parametrize("mobile_number", ["+447700900855", "+12348675309"])
+@pytest.mark.parametrize("mobile_number", ["+14254147755", "+12348675309"])
 def test_should_build_service_guest_list_from_mobile_number(mobile_number):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", MOBILE_TYPE, mobile_number
+        "service_id",
+        RecipientType.MOBILE,
+        mobile_number,
     )
 
     assert service_guest_list.recipient == mobile_number
@@ -52,7 +53,9 @@ def test_should_build_service_guest_list_from_mobile_number(mobile_number):
 @pytest.mark.parametrize("email_address", ["test@example.com"])
 def test_should_build_service_guest_list_from_email_address(email_address):
     service_guest_list = ServiceGuestList.from_string(
-        "service_id", EMAIL_TYPE, email_address
+        "service_id",
+        RecipientType.EMAIL,
+        email_address,
     )
 
     assert service_guest_list.recipient == email_address
@@ -60,7 +63,11 @@ def test_should_build_service_guest_list_from_email_address(email_address):
 
 @pytest.mark.parametrize(
     "contact, recipient_type",
-    [("", None), ("07700dsadsad", MOBILE_TYPE), ("gmail.com", EMAIL_TYPE)],
+    [
+        ("", None),
+        ("07700dsadsad", RecipientType.MOBILE),
+        ("gmail.com", RecipientType.EMAIL),
+    ],
 )
 def test_should_not_build_service_guest_list_from_invalid_contact(
     recipient_type, contact
@@ -73,30 +80,37 @@ def test_should_not_build_service_guest_list_from_invalid_contact(
     "initial_statuses, expected_statuses",
     [
         # passing in single statuses as strings
-        (NOTIFICATION_FAILED, NOTIFICATION_STATUS_TYPES_FAILED),
-        (NOTIFICATION_CREATED, [NOTIFICATION_CREATED]),
-        (NOTIFICATION_TECHNICAL_FAILURE, [NOTIFICATION_TECHNICAL_FAILURE]),
+        (NotificationStatus.FAILED, NotificationStatus.failed_types()),
+        (NotificationStatus.CREATED, [NotificationStatus.CREATED]),
+        (NotificationStatus.TECHNICAL_FAILURE, [NotificationStatus.TECHNICAL_FAILURE]),
         # passing in lists containing single statuses
-        ([NOTIFICATION_FAILED], NOTIFICATION_STATUS_TYPES_FAILED),
-        ([NOTIFICATION_CREATED], [NOTIFICATION_CREATED]),
-        ([NOTIFICATION_TECHNICAL_FAILURE], [NOTIFICATION_TECHNICAL_FAILURE]),
+        ([NotificationStatus.FAILED], NotificationStatus.failed_types()),
+        ([NotificationStatus.CREATED], [NotificationStatus.CREATED]),
+        (
+            [NotificationStatus.TECHNICAL_FAILURE],
+            [NotificationStatus.TECHNICAL_FAILURE],
+        ),
         # passing in lists containing multiple statuses
         (
-            [NOTIFICATION_FAILED, NOTIFICATION_CREATED],
-            NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_CREATED],
+            [NotificationStatus.FAILED, NotificationStatus.CREATED],
+            list(NotificationStatus.failed_types()) + [NotificationStatus.CREATED],
         ),
         (
-            [NOTIFICATION_CREATED, NOTIFICATION_PENDING],
-            [NOTIFICATION_CREATED, NOTIFICATION_PENDING],
+            [NotificationStatus.CREATED, NotificationStatus.PENDING],
+            [NotificationStatus.CREATED, NotificationStatus.PENDING],
         ),
         (
-            [NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
-            [NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
+            [NotificationStatus.CREATED, NotificationStatus.TECHNICAL_FAILURE],
+            [NotificationStatus.CREATED, NotificationStatus.TECHNICAL_FAILURE],
         ),
         # checking we don't end up with duplicates
         (
-            [NOTIFICATION_FAILED, NOTIFICATION_CREATED, NOTIFICATION_TECHNICAL_FAILURE],
-            NOTIFICATION_STATUS_TYPES_FAILED + [NOTIFICATION_CREATED],
+            [
+                NotificationStatus.FAILED,
+                NotificationStatus.CREATED,
+                NotificationStatus.TECHNICAL_FAILURE,
+            ],
+            list(NotificationStatus.failed_types()) + [NotificationStatus.CREATED],
         ),
     ],
 )
@@ -110,8 +124,8 @@ def test_status_conversion(initial_statuses, expected_statuses):
 @pytest.mark.parametrize(
     "template_type, recipient",
     [
-        ("sms", "+12028675309"),
-        ("email", "foo@bar.com"),
+        (TemplateType.SMS, "+12028675309"),
+        (TemplateType.EMAIL, "foo@bar.com"),
     ],
 )
 def test_notification_for_csv_returns_correct_type(
@@ -138,17 +152,29 @@ def test_notification_for_csv_returns_correct_job_row_number(sample_job):
 @pytest.mark.parametrize(
     "template_type, status, expected_status",
     [
-        ("email", "failed", "Failed"),
-        ("email", "technical-failure", "Technical failure"),
-        ("email", "temporary-failure", "Inbox not accepting messages right now"),
-        ("email", "permanent-failure", "Email address doesn’t exist"),
+        (TemplateType.EMAIL, NotificationStatus.FAILED, "Failed"),
+        (TemplateType.EMAIL, NotificationStatus.TECHNICAL_FAILURE, "Technical failure"),
         (
-            "sms",
-            "temporary-failure",
+            TemplateType.EMAIL,
+            NotificationStatus.TEMPORARY_FAILURE,
+            "Inbox not accepting messages right now",
+        ),
+        (
+            TemplateType.EMAIL,
+            NotificationStatus.PERMANENT_FAILURE,
+            "Email address doesn’t exist",
+        ),
+        (
+            TemplateType.SMS,
+            NotificationStatus.TEMPORARY_FAILURE,
             "Unable to find carrier response -- still looking",
         ),
-        ("sms", "permanent-failure", "Unable to find carrier response."),
-        ("sms", "sent", "Sent internationally"),
+        (
+            TemplateType.SMS,
+            NotificationStatus.PERMANENT_FAILURE,
+            "Unable to find carrier response.",
+        ),
+        (TemplateType.SMS, NotificationStatus.SENT, "Sent internationally"),
     ],
 )
 def test_notification_for_csv_returns_formatted_status(
@@ -201,12 +227,12 @@ def test_notification_personalisation_setter_always_sets_empty_dict(
 
 
 def test_notification_subject_is_none_for_sms(sample_service):
-    template = create_template(service=sample_service, template_type=SMS_TYPE)
+    template = create_template(service=sample_service, template_type=TemplateType.SMS)
     notification = create_notification(template=template)
     assert notification.subject is None
 
 
-@pytest.mark.parametrize("template_type", ["email"])
+@pytest.mark.parametrize("template_type", [TemplateType.EMAIL])
 def test_notification_subject_fills_in_placeholders(sample_service, template_type):
     template = create_template(
         service=sample_service, template_type=template_type, subject="((name))"
@@ -320,7 +346,7 @@ def test_user_can_use_webauthn_if_platform_admin(sample_user, is_platform_admin)
 
 @pytest.mark.parametrize(
     ("auth_type", "can_use_webauthn"),
-    [("email_auth", False), ("sms_auth", False), ("webauthn_auth", True)],
+    [(AuthType.EMAIL, False), (AuthType.SMS, False), (AuthType.WEBAUTHN, True)],
 )
 def test_user_can_use_webauthn_if_they_login_with_it(
     sample_user, auth_type, can_use_webauthn
@@ -410,7 +436,7 @@ def test_notification_history_from_original(sample_notification):
 
 
 def test_rate_str():
-    rate = create_rate("2023-01-01 00:00:00", 1.5, "sms")
+    rate = create_rate("2023-01-01 00:00:00", 1.5, NotificationType.SMS)
 
     assert rate.__str__() == "1.5 sms 2023-01-01 00:00:00"
 

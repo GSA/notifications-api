@@ -14,6 +14,7 @@ bootstrap: ## Set up everything to run the app
 	make generate-version-file
 	poetry self update
 	poetry self add poetry-dotenv-plugin
+	poetry lock --no-update
 	poetry install --sync --no-root
 	poetry run pre-commit install
 	createdb notification_api || true
@@ -79,7 +80,7 @@ test: ## Run tests and create coverage report
 	poetry run black .
 	poetry run flake8 .
 	poetry run isort --check-only ./app ./tests
-	poetry run coverage run -m pytest -vv --maxfail=10
+	poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
 	poetry run coverage report -m --fail-under=95
 	poetry run coverage html -d .coverage_cache
 

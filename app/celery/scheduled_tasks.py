@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 from flask import current_app
@@ -6,7 +5,7 @@ from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTick
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, redis_store, zendesk_client
+from app import notify_celery, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -24,24 +23,14 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import (
-    dao_get_failed_notification_count,
-    notifications_not_yet_sent,
-)
+from app.dao.notifications_dao import notifications_not_yet_sent
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
-from app.delivery.send_to_providers import provider_to_use
-from app.models import (
-    EMAIL_TYPE,
-    JOB_STATUS_ERROR,
-    JOB_STATUS_IN_PROGRESS,
-    JOB_STATUS_PENDING,
-    SMS_TYPE,
-    Job,
-)
+from app.enums import JobStatus, NotificationType
+from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
 
 MAX_NOTIFICATION_FAILS = 10000
@@ -98,82 +87,6 @@ def expire_or_delete_invitations():
         raise
 
 
-# TODO THIS IS ACTUALLY DEPRECATED, WE ARE REMOVING PHONE NUMBERS FROM THE DB
-# SO THERE WILL BE NO REASON TO KEEP TRACK OF THIS COUNT
-@notify_celery.task(name="check-db-notification-fails")
-def check_db_notification_fails():
-    """
-    We are going to use redis to keep track of the previous fail count.
-
-    If the number of fails is more than 100% of the limit, we want to send an alert every time this
-    runs, because it is urgent to fix it.
-
-    If the number is more than 25%, 50% or 75% of the limit, we only want to send an alert
-    on a breach.  I.e., if the last number was at 23% and the current number is 27%, send an email.
-    But if the last number was 26% and the current is 27%, don't.
-    """
-    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
-    if not last_value:
-        last_value = 0
-    else:
-        last_value = int(last_value.decode("utf-8"))
-
-    failed_count = dao_get_failed_notification_count()
-    if failed_count > last_value:
-        redis_store.set("LAST_DB_NOTIFICATION_COUNT", failed_count)
-    message = ""
-    curr_env = os.getenv("ENVIRONMENT")
-    if failed_count >= MAX_NOTIFICATION_FAILS:
-        message = f"We are over 100% in the db for failed notifications on {curr_env}"
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.9
-        and last_value < MAX_NOTIFICATION_FAILS * 0.9
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 90% in the db for failed notifications on {curr_env}",
-        )
-
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.75
-        and last_value < MAX_NOTIFICATION_FAILS * 0.75
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 75% in the db for failed notifications on {curr_env}",
-        )
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.5
-        and last_value < MAX_NOTIFICATION_FAILS * 0.5
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 50% in the db for failed notifications on {curr_env}",
-        )
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.25
-        and last_value < MAX_NOTIFICATION_FAILS * 0.25
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 25% in the db for failed notifications on {curr_env}",
-        )
-    # suppress any spam coming from development tier
-    if message and curr_env != "development":
-        provider = provider_to_use(EMAIL_TYPE, False)
-        from_address = '"{}" <{}@{}>'.format(
-            "Failed Notification Count Alert",
-            "test_sender",
-            current_app.config["NOTIFY_EMAIL_DOMAIN"],
-        )
-        provider.send_email(
-            from_address,
-            "tts-notify-alerts@gsa.gov",
-            "DB Notification Failures Level Breached",
-            body=str(message),
-        )
-
-
 @notify_celery.task(name="check-job-status")
 def check_job_status():
     """
@@ -192,11 +105,11 @@ def check_job_status():
     thirty_five_minutes_ago = datetime.utcnow() - timedelta(minutes=35)
 
     incomplete_in_progress_jobs = Job.query.filter(
-        Job.job_status == JOB_STATUS_IN_PROGRESS,
+        Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
     incomplete_pending_jobs = Job.query.filter(
-        Job.job_status == JOB_STATUS_PENDING,
+        Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
@@ -211,7 +124,7 @@ def check_job_status():
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_30_minutes:
-        job.job_status = JOB_STATUS_ERROR
+        job.job_status = JobStatus.ERROR
         dao_update_job(job)
         job_ids.append(str(job.id))
 
@@ -224,7 +137,7 @@ def check_job_status():
 def replay_created_notifications():
     # if the notification has not be send after 1 hour, then try to resend.
     resend_created_notifications_older_than = 60 * 60
-    for notification_type in (EMAIL_TYPE, SMS_TYPE):
+    for notification_type in (NotificationType.EMAIL, NotificationType.SMS):
         notifications_to_resend = notifications_not_yet_sent(
             resend_created_notifications_older_than, notification_type
         )

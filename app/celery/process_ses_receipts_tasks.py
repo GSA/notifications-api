@@ -20,7 +20,8 @@ from app.dao.service_callback_api_dao import (
     get_service_complaint_callback_api_for_service,
     get_service_delivery_status_callback_api_for_service,
 )
-from app.models import NOTIFICATION_PENDING, NOTIFICATION_SENDING, Complaint
+from app.enums import CallbackType, NotificationStatus
+from app.models import Complaint
 
 
 @notify_celery.task(
@@ -76,7 +77,10 @@ def process_ses_results(self, response):
                 f"SES bounce for notification ID {notification.id}: {bounce_message}"
             )
 
-        if notification.status not in {NOTIFICATION_SENDING, NOTIFICATION_PENDING}:
+        if notification.status not in {
+            NotificationStatus.SENDING,
+            NotificationStatus.PENDING,
+        }:
             notifications_dao._duplicate_update_warning(
                 notification, notification_status
             )
@@ -166,22 +170,22 @@ def get_aws_responses(ses_message):
         "Permanent": {
             "message": "Hard bounced",
             "success": False,
-            "notification_status": "permanent-failure",
+            "notification_status": NotificationStatus.PERMANENT_FAILURE,
         },
         "Temporary": {
             "message": "Soft bounced",
             "success": False,
-            "notification_status": "temporary-failure",
+            "notification_status": NotificationStatus.TEMPORARY_FAILURE,
         },
         "Delivery": {
             "message": "Delivered",
             "success": True,
-            "notification_status": "delivered",
+            "notification_status": NotificationStatus.DELIVERED,
         },
         "Complaint": {
             "message": "Complaint",
             "success": True,
-            "notification_status": "delivered",
+            "notification_status": NotificationStatus.DELIVERED,
         },
     }[status]
 
@@ -205,17 +209,17 @@ def handle_complaint(ses_message):
         )
         return
     notification = dao_get_notification_history_by_reference(reference)
-    ses_complaint = ses_message.get("complaint", None)
+    ses_complaint = ses_message.get(CallbackType.COMPLAINT, None)
 
     complaint = Complaint(
         notification_id=notification.id,
         service_id=notification.service_id,
-        ses_feedback_id=ses_complaint.get("feedbackId", None)
-        if ses_complaint
-        else None,
-        complaint_type=ses_complaint.get("complaintFeedbackType", None)
-        if ses_complaint
-        else None,
+        ses_feedback_id=(
+            ses_complaint.get("feedbackId", None) if ses_complaint else None
+        ),
+        complaint_type=(
+            ses_complaint.get("complaintFeedbackType", None) if ses_complaint else None
+        ),
         complaint_date=ses_complaint.get("timestamp", None) if ses_complaint else None,
     )
     save_complaint(complaint)
@@ -237,7 +241,7 @@ def remove_emails_from_bounce(bounce_dict):
 
 def remove_emails_from_complaint(complaint_dict):
     remove_mail_headers(complaint_dict)
-    complaint_dict["complaint"].pop("complainedRecipients")
+    complaint_dict[CallbackType.COMPLAINT].pop("complainedRecipients")
     return complaint_dict["mail"].pop("destination")
 
 

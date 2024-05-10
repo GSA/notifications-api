@@ -5,6 +5,7 @@ Revises: 0232_noti_postage_constraint_3
 Create Date: 2018-09-28 14:43:26.100884
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 

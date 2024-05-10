@@ -1,7 +1,7 @@
 import pytest
 from flask import json
 
-from app.models import EMAIL_TYPE, TEMPLATE_TYPES
+from app.models import TemplateType
 from tests import create_service_authorization_header
 from tests.app.db import create_template
 
@@ -59,7 +59,7 @@ valid_post = [
 ]
 
 
-@pytest.mark.parametrize("tmp_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 @pytest.mark.parametrize(
     "subject,content,post_data,expected_subject,expected_content,expected_html",
     valid_post,
@@ -93,7 +93,7 @@ def test_valid_post_template_returns_200(
 
     assert resp_json["id"] == str(template.id)
 
-    if tmp_type == EMAIL_TYPE:
+    if tmp_type == TemplateType.EMAIL:
         assert expected_subject in resp_json["subject"]
         assert resp_json["html"] == expected_html
     else:
@@ -105,7 +105,7 @@ def test_valid_post_template_returns_200(
 def test_email_templates_not_rendered_into_content(client, sample_service):
     template = create_template(
         sample_service,
-        template_type=EMAIL_TYPE,
+        template_type=TemplateType.EMAIL,
         subject="Test",
         content=("Hello\n" "\r\n" "\r\n" "\n" "# This is a heading\n" "\n" "Paragraph"),
     )
@@ -125,7 +125,7 @@ def test_email_templates_not_rendered_into_content(client, sample_service):
     assert resp_json["body"] == template.content
 
 
-@pytest.mark.parametrize("tmp_type", TEMPLATE_TYPES)
+@pytest.mark.parametrize("tmp_type", (TemplateType.SMS, TemplateType.EMAIL))
 def test_invalid_post_template_returns_400(client, sample_service, tmp_type):
     template = create_template(
         sample_service,

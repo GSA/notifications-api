@@ -17,7 +17,7 @@ jobs:
 
     environment: staging
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 2
 
@@ -62,6 +62,8 @@ jobs:
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-staging.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE"
+
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
         cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
@@ -75,6 +77,17 @@ jobs:
           --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
           --var NOTIFY_E2E_TEST_EMAIL="$NOTIFY_E2E_TEST_EMAIL"
           --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
+          --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
+
+    - name: Check for changes to templates.json
+      id: changed-templates
+      uses: tj-actions/changed-files@v41
+      with:
+        files: |
+          app/config_files/templates.json
+    - name: Update templates
+      if: steps.changed-templates.outputs.any_changed == 'true'
+      run: cf run-task notify-api-staging --command "flask command update-templates"
 
     - name: Check for changes to egress config
       id: changed-egress-config

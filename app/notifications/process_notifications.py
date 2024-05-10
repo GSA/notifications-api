@@ -17,18 +17,13 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
-from app.models import (
-    EMAIL_TYPE,
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    SMS_TYPE,
-    Notification,
-)
+from app.enums import KeyType, NotificationStatus, NotificationType
+from app.models import Notification
 from app.v2.errors import BadRequestError
 
 
 def create_content_for_notification(template, personalisation):
-    if template.template_type == EMAIL_TYPE:
+    if template.template_type == NotificationType.EMAIL:
         template_object = PlainTextEmailTemplate(
             {
                 "content": template.content,
@@ -37,7 +32,7 @@ def create_content_for_notification(template, personalisation):
             },
             personalisation,
         )
-    if template.template_type == SMS_TYPE:
+    if template.template_type == NotificationType.SMS:
         template_object = SMSMessageTemplate(
             {
                 "content": template.content,
@@ -77,14 +72,12 @@ def persist_notification(
     notification_id=None,
     simulated=False,
     created_by_id=None,
-    status=NOTIFICATION_CREATED,
+    status=NotificationStatus.CREATED,
     reply_to_text=None,
     billable_units=None,
     document_download_count=None,
     updated_at=None,
 ):
-    current_app.logger.info("Persisting notification")
-
     notification_created_at = created_at or datetime.utcnow()
     if not notification_id:
         notification_id = uuid.uuid4()
@@ -114,7 +107,7 @@ def persist_notification(
         updated_at=updated_at,
     )
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
         )
@@ -123,8 +116,11 @@ def persist_notification(
         notification.international = recipient_info.international
         notification.phone_prefix = recipient_info.country_prefix
         notification.rate_multiplier = recipient_info.billable_units
-    elif notification_type == EMAIL_TYPE:
-        current_app.logger.info(f"Persisting notification with type: {EMAIL_TYPE}")
+
+    elif notification_type == NotificationType.EMAIL:
+        current_app.logger.info(
+            f"Persisting notification with type: {NotificationType.EMAIL}"
+        )
         redis_store.set(
             f"email-address-{notification.id}",
             format_email_address(notification.to),
@@ -140,7 +136,7 @@ def persist_notification(
         notification.message_parts = template_object.fragment_count
 
         dao_create_notification(notification)
-        if key_type != KEY_TYPE_TEST and current_app.config["REDIS_ENABLED"]:
+        if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
                 "Redis enabled, querying cache key for service id: {}".format(
                     service.id
@@ -156,14 +152,14 @@ def persist_notification(
 def send_notification_to_queue_detached(
     key_type, notification_type, notification_id, queue=None
 ):
-    if key_type == KEY_TYPE_TEST:
+    if key_type == KeyType.TEST:
         print("send_notification_to_queue_detached key is test key")
 
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         if not queue:
             queue = QueueNames.SEND_SMS
         deliver_task = provider_tasks.deliver_sms
-    if notification_type == EMAIL_TYPE:
+    if notification_type == NotificationType.EMAIL:
         if not queue:
             queue = QueueNames.SEND_EMAIL
         deliver_task = provider_tasks.deliver_email
@@ -189,7 +185,7 @@ def send_notification_to_queue(notification, queue=None):
 
 
 def simulated_recipient(to_address, notification_type):
-    if notification_type == SMS_TYPE:
+    if notification_type == NotificationType.SMS:
         formatted_simulated_numbers = [
             validate_and_format_phone_number(number)
             for number in current_app.config["SIMULATED_SMS_NUMBERS"]

@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app.aws.s3 import get_phone_number_from_s3
+from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
@@ -73,8 +73,9 @@ from app.dao.services_dao import (
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
+from app.enums import KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import KEY_TYPE_NORMAL, EmailBranding, Permission, Service
+from app.models import EmailBranding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -101,7 +102,7 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import get_prev_next_pagination_links
+from app.utils import get_prev_next_pagination_links, hilite
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -313,7 +314,9 @@ def get_users_for_service(service_id):
 def add_user_to_service(service_id, user_id):
     service = dao_fetch_service_by_id(service_id)
     user = get_user_by_id(user_id=user_id)
-
+    # TODO REMOVE DEBUG
+    print(hilite(f"GOING TO ADD {user.name} to service {service.name}"))
+    # END DEBUG
     if user in service.users:
         error = "User id: {} already part of service id: {}".format(user_id, service_id)
         raise InvalidRequest(error, status_code=400)
@@ -328,6 +331,10 @@ def add_user_to_service(service_id, user_id):
     folder_permissions = data.get("folder_permissions", [])
 
     dao_add_user_to_service(service, user, permissions, folder_permissions)
+    # TODO REMOVE DEBUG
+    print(hilite(f"ADDED {user.name} to service {service.name}"))
+    # END DEBUG
+
     data = service_schema.dump(service)
     return jsonify(data=data), 201
 
@@ -428,6 +435,11 @@ def get_all_notifications_for_service(service_id):
 
     for notification in pagination.items:
         if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
             recipient = get_phone_number_from_s3(
                 notification.service_id,
                 notification.job_id,
@@ -473,14 +485,16 @@ def get_all_notifications_for_service(service_id):
         jsonify(
             notifications=notifications,
             page_size=page_size,
-            links=get_prev_next_pagination_links(
-                page,
-                len(next_page_of_pagination.items),
-                ".get_all_notifications_for_service",
-                **kwargs,
-            )
-            if count_pages
-            else {},
+            links=(
+                get_prev_next_pagination_links(
+                    page,
+                    len(next_page_of_pagination.items),
+                    ".get_all_notifications_for_service",
+                    **kwargs,
+                )
+                if count_pages
+                else {}
+            ),
         ),
         200,
     )
@@ -633,7 +647,7 @@ def get_detailed_services(
 
 @service_blueprint.route("/<uuid:service_id>/guest-list", methods=["GET"])
 def get_guest_list(service_id):
-    from app.models import EMAIL_TYPE, MOBILE_TYPE
+    from app.enums import RecipientType
 
     service = dao_fetch_service_by_id(service_id)
 
@@ -643,10 +657,14 @@ def get_guest_list(service_id):
     guest_list = dao_fetch_service_guest_list(service.id)
     return jsonify(
         email_addresses=[
-            item.recipient for item in guest_list if item.recipient_type == EMAIL_TYPE
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == RecipientType.EMAIL
         ],
         phone_numbers=[
-            item.recipient for item in guest_list if item.recipient_type == MOBILE_TYPE
+            item.recipient
+            for item in guest_list
+            if item.recipient_type == RecipientType.MOBILE
         ],
     )
 
@@ -778,7 +796,7 @@ def verify_reply_to_email_address(service_id):
         personalisation="",
         notification_type=template.template_type,
         api_key_id=None,
-        key_type=KEY_TYPE_NORMAL,
+        key_type=KeyType.NORMAL,
         reply_to_text=notify_service.get_default_reply_to_email_address(),
     )
 

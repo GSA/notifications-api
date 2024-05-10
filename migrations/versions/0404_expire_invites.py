@@ -5,6 +5,7 @@ Revises: 0403_add_carrier
 Create Date: 2023-11-10 15:52:07.348485
 
 """
+
 from re import I
 
 import sqlalchemy as sa

@@ -5,6 +5,7 @@ Revises: 0186_rename_is_active_columns
 Create Date: 2018-05-03 10:10:41.824981
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

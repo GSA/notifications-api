@@ -11,6 +11,7 @@
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
   - [To run a local OWASP scan](#to-run-a-local-owasp-scan)
+  - [End-to-end testing](#end-to-end-testing)
 - [Deploying](#deploying)
   - [Egress Proxy](#egress-proxy)
   - [Managing environment variables](#managing-environment-variables)
@@ -22,6 +23,7 @@
   - [Migrations](#migrations)
   - [Purging user data](#purging-user-data)
 - [One-off tasks](#one-off-tasks)
+- [Test Loading Commands](#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](#how-messages-are-queued-and-sent)
 - [Writing public APIs](#writing-public-apis)
   - [Overview](#overview)
@@ -252,6 +254,9 @@ We do not maintain any hooks in this repository.
 # install dependencies, etc.
 make bootstrap
 
+# Create test database
+createdb test_notification_api
+
 make test
 ```
 
@@ -306,6 +311,37 @@ The equivalent command if you are running the API locally:
 ```
 docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t http://host.docker.internal:6011/docs/openapi.yml -f openapi -c zap.conf -r report.html
 ```
+
+## End-to-end Testing
+
+In order to run end-to-end (E2E) tests, which are managed and handled in the
+admin project, a bit of extra configuration needs to be accounted for here on
+the API side as well.  These instructions are in the README as they are
+necessary for project setup, and they're copied here for reference.
+
+In the `.env` file, you should see this section:
+
+```
+#############################################################
+
+# E2E Testing
+
+NOTIFY_E2E_TEST_EMAIL=example@fake.gov
+NOTIFY_E2E_TEST_PASSWORD="don't write secrets to the sample file"
+```
+
+You can leave the email address alone or change it to something else to your
+liking.
+
+**You should absolutely change the `NOTIFY_E2E_TEST_PASSWORD` environment
+variable to something else, preferably a lengthy passphrase.**
+
+With those two environment variable set, the database migrations will run
+properly and an E2E test user will be ready to go for use in the admin project.
+
+_Note:  Whatever you set these two environment variables to, you'll need to
+match their values on the admin side.  Please see the admin README and
+documentation for more details._
 
 # Deploying
 
@@ -495,21 +531,48 @@ cf run-task CLOUD-GOV-APP --command "flask command update-templates" --name YOUR
 
 [Here's more documentation](https://docs.cloudfoundry.org/devguide/using-tasks.html) about Cloud Foundry tasks.
 
+# Commonly run commands
+
+(Note: to obtain the CLOUD_GOV_APP name, run `cf apps` and find the name of the app for the tier you are targeting)
+
+To promote a user to platform admin:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command promote-user-to-platform-admin --user-email-address=<user email address>"
+
+To update templates:
+cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command update-templates"
+
+# Commands for test loading the local dev database
+
+All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
+
+## Test commands list
+- `add-test-organizations-to-db`
+- `add-test-services-to-db`
+- `add-test-jobs-to-db`
+- `add-test-notifications-to-db`
+- `add-test-users-to-db` (extra options include `-s` or `--state` and `-d` or `--admin`)
+
+
 # How messages are queued and sent
+
+Services used during message-send flow:
+1. AWS S3
+2. AWS SNS
+3. AWS Cloudwatch
+4. Redis
+5. PostgreSQL
 
 There are several ways for notifications to come into the API.
 
 - Messages sent through the API enter through `app/notifications/post_notifications.py`
-- One-off messages sent from the UI enter through `create_one_off_notification` in `app/service/rest.py`
-- CSV uploads enter through `app/job/rest.py`
+- One-off messages and CSV uploads both enter from the UI through `app/job/rest.py:create_job`
 
-API messages and one-off UI messages come in one at a time, and take slightly-separate routes
-that both end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
+API messages come in one at a time, and end up at `persist_notification`, which writes to the database, and `provider_tasks.deliver_sms`,
 which enqueues the sending.
 
-For CSV uploads, the CSV is first stored in S3 and queued as a `Job`. When the job runs, it iterates
-through the rows, running `process_job.save_sms` to send notifications through `persist_notification` and
-`provider_tasks.deliver_sms`.
+One-off messages and batch messages both upload a CSV, which are then first stored in S3 and queued as a `Job`. When the job runs, it iterates
+through the rows from `tasks.py:process_row`, running `tasks.py:save_sms` (email notifications branch off through `tasks.py:save_email`) to write to the db with `persist_notification` and begin the process of delivering the notification to the provider
+through `provider_tasks.deliver_sms`. The exit point to the provider is in `send_to_providers.py:send_sms`.
 
 # Writing public APIs
 

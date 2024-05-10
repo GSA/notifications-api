@@ -1,6 +1,7 @@
 import pytest
 
-from app.models import BRANDING_ORG, EmailBranding
+from app.enums import BrandType
+from app.models import EmailBranding
 from tests.app.db import create_email_branding
 
 
@@ -59,7 +60,7 @@ def test_post_create_email_branding(admin_request, notify_db_session):
         "name": "test email_branding",
         "colour": "#0000ff",
         "logo": "/images/test_x2.png",
-        "brand_type": BRANDING_ORG,
+        "brand_type": BrandType.ORG,
     }
     response = admin_request.post(
         "email_branding.create_email_branding", _data=data, _expected_status=201
@@ -82,7 +83,7 @@ def test_post_create_email_branding_without_brand_type_defaults(
     response = admin_request.post(
         "email_branding.create_email_branding", _data=data, _expected_status=201
     )
-    assert BRANDING_ORG == response["data"]["brand_type"]
+    assert BrandType.ORG == response["data"]["brand_type"]
 
 
 def test_post_create_email_branding_without_logo_is_ok(
@@ -243,10 +244,12 @@ def test_create_email_branding_reject_invalid_brand_type(admin_request):
     response = admin_request.post(
         "email_branding.create_email_branding", _data=data, _expected_status=400
     )
-
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in BrandType]
+    )
     assert (
         response["errors"][0]["message"]
-        == "brand_type NOT A TYPE is not one of [org, both, org_banner]"
+        == f"brand_type NOT A TYPE is not one of [{type_str}]"
     )
 
 
@@ -262,7 +265,10 @@ def test_update_email_branding_reject_invalid_brand_type(
         email_branding_id=email_branding.id,
     )
 
+    type_str = ", ".join(
+        [f"<{type(e).__name__}.{e.name}: {e.value}>" for e in BrandType]
+    )
     assert (
         response["errors"][0]["message"]
-        == "brand_type NOT A TYPE is not one of [org, both, org_banner]"
+        == f"brand_type NOT A TYPE is not one of [{type_str}]"
     )

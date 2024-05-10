@@ -14,17 +14,9 @@ from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
 from app.delivery.send_to_providers import get_html_email_options, get_logo_url
+from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    BRANDING_BOTH,
-    BRANDING_ORG,
-    BRANDING_ORG_BANNER,
-    KEY_TYPE_NORMAL,
-    KEY_TYPE_TEAM,
-    KEY_TYPE_TEST,
-    EmailBranding,
-    Notification,
-)
+from app.models import EmailBranding, Notification
 from app.serialised_models import SerialisedService
 from tests.app.db import (
     create_email_branding,
@@ -61,7 +53,7 @@ def test_provider_to_use_should_only_return_sns_for_international(
     sns = get_provider_details_by_identifier("sns")
     sns.priority = international_provider_priority
 
-    ret = send_to_providers.provider_to_use("sms", international=True)
+    ret = send_to_providers.provider_to_use(NotificationType.SMS, international=True)
 
     assert ret.name == "sns"
 
@@ -74,7 +66,7 @@ def test_provider_to_use_raises_if_no_active_providers(
 
     # flake8 doesn't like raises with a generic exception
     try:
-        send_to_providers.provider_to_use("sms")
+        send_to_providers.provider_to_use(NotificationType.SMS)
         assert 1 == 0
     except Exception:
         assert 1 == 1
@@ -85,8 +77,8 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 ):
     db_notification = create_notification(
         template=sample_sms_template_with_html,
-        personalisation={"name": "Jo"},
-        status="created",
+        personalisation={},
+        status=NotificationStatus.CREATED,
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
     )
 
@@ -94,6 +86,11 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {"name": "Jo"}
 
     send_to_providers.send_sms_to_provider(db_notification)
 
@@ -107,7 +104,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
 
-    assert notification.status == "sending"
+    assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= datetime.utcnow()
     assert notification.sent_by == "sns"
     assert notification.billable_units == 1
@@ -118,17 +115,21 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     sample_email_template_with_html, mocker
 ):
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
-    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
-
+    utf8_encoded_email = "jo.smith@example.com".encode("utf-8")
+    mock_redis.get.return_value = utf8_encoded_email
+    email = utf8_encoded_email
+    personalisation = {
+        "name": "Jo",
+    }
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
     db_notification = create_notification(
         template=sample_email_template_with_html,
-        personalisation={"name": "Jo"},
     )
-
+    db_notification.personalisation = {"name": "Jo"}
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
-
     send_to_providers.send_email_to_provider(db_notification)
-
     app.aws_ses_client.send_email.assert_called_once_with(
         f'"Sample service" <sample.service@{cloud_config.ses_email_domain}>',
         "jo.smith@example.com",
@@ -145,7 +146,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     )
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
-    assert notification.status == "sending"
+    assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= datetime.utcnow()
     assert notification.sent_by == "ses"
     assert notification.personalisation == {"name": "Jo"}
@@ -156,12 +157,33 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
 ):
     sample_service.active = False
     send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {"name": "Jo"}
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "jo.smith@example.com".encode("utf-8")
+    personalisation = {
+        "name": "Jo",
+    }
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_email_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
     send_mock.assert_not_called()
-    assert Notification.query.get(sample_notification.id).status == "technical-failure"
+    assert (
+        Notification.query.get(sample_notification.id).status
+        == NotificationStatus.TECHNICAL_FAILURE
+    )
 
 
 def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in_tech_failure(
@@ -170,11 +192,22 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
     sample_service.active = False
     send_mock = mocker.patch("app.aws_sns_client.send_sms", return_value="reference")
 
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
+
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_sms_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
     send_mock.assert_not_called()
-    assert Notification.query.get(sample_notification.id).status == "technical-failure"
+    assert (
+        Notification.query.get(sample_notification.id).status
+        == NotificationStatus.TECHNICAL_FAILURE
+    )
 
 
 def test_send_sms_should_use_template_version_from_notification_not_latest(
@@ -183,13 +216,18 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     db_notification = create_notification(
         template=sample_template,
         to_field="2028675309",
-        status="created",
+        status=NotificationStatus.CREATED,
         reply_to_text=sample_template.service.get_default_sms_sender(),
         normalised_to="2028675309",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
+
+    mock_s3_p = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_s3_p.return_value = {}
 
     mocker.patch("app.aws_sns_client.send_sms")
 
@@ -225,7 +263,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     assert persisted_notification.template_id == expected_template_id
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.template_version != t.version
-    assert persisted_notification.status == "sending"
+    assert persisted_notification.status == NotificationStatus.SENDING
     assert not persisted_notification.personalisation
 
 
@@ -233,22 +271,42 @@ def test_should_have_sending_status_if_fake_callback_function_fails(
     sample_notification, mocker
 ):
     mocker.patch(
-        "app.delivery.send_to_providers.send_sms_response", side_effect=HTTPError
+        "app.delivery.send_to_providers.send_sms_response",
+        side_effect=HTTPError,
     )
 
-    sample_notification.key_type = KEY_TYPE_TEST
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
+
+    sample_notification.key_type = KeyType.TEST
     with pytest.raises(HTTPError):
         send_to_providers.send_sms_to_provider(sample_notification)
-    assert sample_notification.status == "sending"
+    assert sample_notification.status == NotificationStatus.SENDING
     assert sample_notification.sent_by == "sns"
 
 
 def test_should_not_send_to_provider_when_status_is_not_created(
     sample_template, mocker
 ):
-    notification = create_notification(template=sample_template, status="sending")
+    notification = create_notification(
+        template=sample_template,
+        status=NotificationStatus.SENDING,
+    )
     mocker.patch("app.aws_sns_client.send_sms")
     response_mock = mocker.patch("app.delivery.send_to_providers.send_sms_response")
+
+    mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_s3.return_value = "2028675309"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification)
 
@@ -266,13 +324,19 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     service = create_service(service_name="Łódź Housing Service")
     template = create_template(service, content=msg)
     db_notification = create_notification(
-        template=template, personalisation={"misc": placeholder}
+        template=template,
     )
+    db_notification.personalisation = {"misc": placeholder}
 
     mocker.patch("app.aws_sns_client.send_sms")
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {"misc": placeholder}
 
     send_to_providers.send_sms_to_provider(db_notification)
 
@@ -296,6 +360,11 @@ def test_send_sms_should_use_service_sms_sender(
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
+
     send_to_providers.send_sms_to_provider(
         db_notification,
     )
@@ -315,10 +384,18 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
-    notification = create_notification(template=sample_email_template, status="sending")
+    notification = create_notification(
+        template=sample_email_template, status=NotificationStatus.SENDING
+    )
     mocker.patch("app.aws_ses_client.send_email")
     mocker.patch("app.delivery.send_to_providers.send_email_response")
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
 
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
     send_to_providers.send_sms_to_provider(notification)
     app.aws_ses_client.send_email.assert_not_called()
     app.delivery.send_to_providers.send_email_response.assert_not_called()
@@ -332,17 +409,28 @@ def test_send_email_should_use_service_reply_to_email(
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
 
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    email = "foo@bar.com".encode("utf-8")
+    personalisation = {}
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
+
     db_notification = create_notification(
         template=sample_email_template, reply_to_text="foo@bar.com"
     )
     create_reply_to_email(service=sample_service, email_address="foo@bar.com")
 
-    send_to_providers.send_email_to_provider(
-        db_notification,
-    )
+    send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="foo@bar.com"
+        ANY,
+        ANY,
+        ANY,
+        body=ANY,
+        html_body=ANY,
+        reply_to_address="foo@bar.com",
     )
 
 
@@ -357,7 +445,7 @@ def test_get_html_email_renderer_should_return_for_normal_service(sample_service
 
 @pytest.mark.parametrize(
     "branding_type, govuk_banner",
-    [(BRANDING_ORG, False), (BRANDING_BOTH, True), (BRANDING_ORG_BANNER, False)],
+    [(BrandType.ORG, False), (BrandType.BOTH, True), (BrandType.ORG_BANNER, False)],
 )
 def test_get_html_email_renderer_with_branding_details(
     branding_type, govuk_banner, notify_db_session, sample_service
@@ -380,7 +468,7 @@ def test_get_html_email_renderer_with_branding_details(
     assert options["brand_text"] == "League of Justice"
     assert options["brand_name"] == "Justice League"
 
-    if branding_type == BRANDING_ORG_BANNER:
+    if branding_type == BrandType.ORG_BANNER:
         assert options["brand_banner"] is True
     else:
         assert options["brand_banner"] is False
@@ -401,11 +489,12 @@ def test_get_html_email_renderer_with_branding_details_and_render_govuk_banner_o
 def test_get_html_email_renderer_prepends_logo_path(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"]
+        "EmailBranding",
+        ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
-        brand_type=BRANDING_ORG,
+        brand_type=BrandType.ORG,
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -425,11 +514,12 @@ def test_get_html_email_renderer_prepends_logo_path(notify_api):
 def test_get_html_email_renderer_handles_email_branding_without_logo(notify_api):
     Service = namedtuple("Service", ["email_branding"])
     EmailBranding = namedtuple(
-        "EmailBranding", ["brand_type", "colour", "name", "logo", "text"]
+        "EmailBranding",
+        ["brand_type", "colour", "name", "logo", "text"],
     )
 
     email_branding = EmailBranding(
-        brand_type=BRANDING_ORG_BANNER,
+        brand_type=BrandType.ORG_BANNER,
         colour="#000000",
         logo=None,
         name="Justice League",
@@ -481,9 +571,9 @@ def test_get_logo_url_works_for_different_environments(base_url, expected_url):
 @pytest.mark.parametrize(
     "starting_status, expected_status",
     [
-        ("delivered", "delivered"),
-        ("created", "sending"),
-        ("technical-failure", "technical-failure"),
+        (NotificationStatus.DELIVERED, NotificationStatus.DELIVERED),
+        (NotificationStatus.CREATED, NotificationStatus.SENDING),
+        (NotificationStatus.TECHNICAL_FAILURE, NotificationStatus.TECHNICAL_FAILURE),
     ],
 )
 def test_update_notification_to_sending_does_not_update_status_from_a_final_status(
@@ -493,32 +583,37 @@ def test_update_notification_to_sending_does_not_update_status_from_a_final_stat
     notification = create_notification(template=template, status=starting_status)
     send_to_providers.update_notification_to_sending(
         notification,
-        notification_provider_clients.get_client_by_name_and_type("sns", "sms"),
+        notification_provider_clients.get_client_by_name_and_type(
+            "sns", NotificationType.SMS
+        ),
     )
     assert notification.status == expected_status
 
 
 def __update_notification(notification_to_update, research_mode, expected_status):
-    if research_mode or notification_to_update.key_type == KEY_TYPE_TEST:
+    if research_mode or notification_to_update.key_type == KeyType.TEST:
         notification_to_update.status = expected_status
 
 
 @pytest.mark.parametrize(
     "research_mode,key_type, billable_units, expected_status",
     [
-        (True, KEY_TYPE_NORMAL, 0, "delivered"),
-        (False, KEY_TYPE_NORMAL, 1, "sending"),
-        (False, KEY_TYPE_TEST, 0, "sending"),
-        (True, KEY_TYPE_TEST, 0, "sending"),
-        (True, KEY_TYPE_TEAM, 0, "delivered"),
-        (False, KEY_TYPE_TEAM, 1, "sending"),
+        (True, KeyType.NORMAL, 0, NotificationStatus.DELIVERED),
+        (False, KeyType.NORMAL, 1, NotificationStatus.SENDING),
+        (False, KeyType.TEST, 0, NotificationStatus.SENDING),
+        (True, KeyType.TEST, 0, NotificationStatus.SENDING),
+        (True, KeyType.TEAM, 0, NotificationStatus.DELIVERED),
+        (False, KeyType.TEAM, 1, NotificationStatus.SENDING),
     ],
 )
 def test_should_update_billable_units_and_status_according_to_research_mode_and_key_type(
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
     notification = create_notification(
-        template=sample_template, billable_units=0, status="created", key_type=key_type
+        template=sample_template,
+        billable_units=0,
+        status=NotificationStatus.CREATED,
+        key_type=key_type,
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -531,6 +626,11 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification)
     assert notification.billable_units == billable_units
@@ -545,6 +645,14 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
 
     sample_notification.billable_units = 0
     assert sample_notification.sent_by is None
+
+    mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+    mock_phone.return_value = "15555555555"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
 
     # flake8 no longer likes raises with a generic exception
     try:
@@ -565,7 +673,7 @@ def test_should_send_sms_to_international_providers(
         template=sample_template,
         to_field="+6011-17224412",
         personalisation={"name": "Jo"},
-        status="created",
+        status=NotificationStatus.CREATED,
         international=True,
         reply_to_text=sample_template.service.get_default_sms_sender(),
         normalised_to="601117224412",
@@ -573,6 +681,11 @@ def test_should_send_sms_to_international_providers(
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "601117224412"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
 
     send_to_providers.send_sms_to_provider(notification_international)
 
@@ -584,7 +697,7 @@ def test_should_send_sms_to_international_providers(
         international=True,
     )
 
-    assert notification_international.status == "sending"
+    assert notification_international.status == NotificationStatus.SENDING
     assert notification_international.sent_by == "sns"
 
 
@@ -613,6 +726,11 @@ def test_should_handle_sms_sender_and_prefix_message(
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
+
     send_to_providers.send_sms_to_provider(notification)
 
     aws_sns_client.send_sms.assert_called_once_with(
@@ -628,20 +746,27 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
     sample_email_template, mocker
 ):
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
-    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+    mock_redis.get.side_effect = [
+        "test@example.com".encode("utf-8"),
+        json.dumps({}).encode("utf-8"),
+    ]
 
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
 
     db_notification = create_notification(
-        template=sample_email_template, reply_to_text="test@test.com"
+        template=sample_email_template,
+        reply_to_text="test@test.com",
     )
 
-    send_to_providers.send_email_to_provider(
-        db_notification,
-    )
+    send_to_providers.send_email_to_provider(db_notification)
 
     app.aws_ses_client.send_email.assert_called_once_with(
-        ANY, ANY, ANY, body=ANY, html_body=ANY, reply_to_address="test@test.com"
+        ANY,
+        ANY,
+        ANY,
+        body=ANY,
+        html_body=ANY,
+        reply_to_address="test@test.com",
     )
 
 
@@ -653,6 +778,11 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "12028675309"
+
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
     send_to_providers.send_sms_to_provider(notification)
     send_mock.assert_called_once_with(
         to="12028675309",
@@ -672,6 +802,15 @@ def test_send_email_to_provider_should_user_normalised_to(
     )
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
+
+    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "test@example.com".encode("utf-8")
+    personalisation = {}
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    mock_redis.get.side_effect = [email, personalisation]
 
     send_to_providers.send_email_to_provider(notification)
     send_mock.assert_called_once_with(
@@ -712,6 +851,11 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "447700900855"
 
+    mock_personalisation = mocker.patch(
+        "app.delivery.send_to_providers.get_personalisation_from_s3"
+    )
+    mock_personalisation.return_value = {}
+
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
@@ -729,8 +873,16 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
 ):
     from app.schemas import service_schema, template_schema
 
-    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
-    mock_redis.get.return_value = "test@example.com".encode("utf-8")
+    # mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    # mock_redis.get.return_value = "jo.smith@example.com".encode("utf-8")
+    email = "test@example.com".encode("utf-8")
+    personalisation = {
+        "name": "Jo",
+    }
+
+    personalisation = json.dumps(personalisation)
+    personalisation = personalisation.encode("utf-8")
+    # mock_redis.get.side_effect = [email, personalisation]
 
     service_dict = service_schema.dump(sample_email_template.service)
     template_dict = template_schema.dump(sample_email_template)
@@ -738,6 +890,8 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     mocker.patch(
         "app.redis_store.get",
         side_effect=[
+            email,
+            personalisation,
             json.dumps({"data": service_dict}).encode("utf-8"),
             json.dumps({"data": template_dict}).encode("utf-8"),
         ],
@@ -773,8 +927,8 @@ def test_get_html_email_options_return_email_branding_from_serialised_service(
     email_options = get_html_email_options(service)
     assert email_options is not None
     assert email_options == {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": get_logo_url(current_app.config["ADMIN_BASE_URL"], branding.logo),
         "brand_text": branding.text,
@@ -788,8 +942,8 @@ def test_get_html_email_options_add_email_branding_from_service(sample_service):
     email_options = get_html_email_options(sample_service)
     assert email_options is not None
     assert email_options == {
-        "govuk_banner": branding.brand_type == BRANDING_BOTH,
-        "brand_banner": branding.brand_type == BRANDING_ORG_BANNER,
+        "govuk_banner": branding.brand_type == BrandType.BOTH,
+        "brand_banner": branding.brand_type == BrandType.ORG_BANNER,
         "brand_colour": branding.colour,
         "brand_logo": get_logo_url(current_app.config["ADMIN_BASE_URL"], branding.logo),
         "brand_text": branding.text,

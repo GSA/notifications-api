@@ -1,3 +1,5 @@
+![notify-logo](https://github.com/GSA/notifications-api/assets/4156602/6b2905d2-a232-4414-8815-25dba6008f17)
+
 # Notify.gov API
 
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
@@ -39,7 +41,7 @@ You will need the following items:
 This project currently works with these major versions of the following main
 components:
 
-- Python 3.9.x
+- Python 3.12.x
 - PostgreSQL 15.x (version 12.x is used in the hosted environments)
 
 These instructions will walk you through how to set your machine up with all of
@@ -139,10 +141,9 @@ Terraform installations. This is great, but you still need to install Terraform
 itself, which can be done with this command:
 
 ```sh
-tfenv install latest:^1.4.0
+tfenv install "latest:^1.7"
+tfenv use 1.7.x # x = the patch version installed
 ```
-
-_NOTE: This project currently uses the latest `1.4.x release of Terraform._
 
 #### Python Installation
 
@@ -173,12 +174,12 @@ session to make the changes take effect.
 Now we're ready to install the Python version we need with `pyenv`, like so:
 
 ```sh
-pyenv install 3.9
+pyenv install 3.12
 ```
 
-This will install the latest version of Python 3.9.
+This will install the latest version of Python 3.12.
 
-_NOTE: This project currently runs on Python 3.9.x._
+_NOTE: This project currently runs on Python 3.12.x._
 
 #### Python Dependency Installation
 
@@ -251,7 +252,7 @@ Once all of pre-requisites for the project are installed and you have a
 cloud.gov account, you can now set up the API project and get things running
 locally!
 
-First, clone the respository in the directory of your choosing on your machine:
+First, clone the repository in the directory of your choosing on your machine:
 
 ```sh
 git clone git@github.com:GSA/notifications-api.git
@@ -259,12 +260,12 @@ git clone git@github.com:GSA/notifications-api.git
 
 Now go into the project directory (`notifications-api` by default), create a
 virtual environment, and set the local Python version to point to the virtual
-environment (assumes version Python `3.9.18` is what is installed on your
+environment (assumes version Python `3.12.2` is what is installed on your
 machine):
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.9.18 notify-api
+pyenv virtualenv 3.12.2 notify-api
 pyenv local notify-api
 ```
 
@@ -276,6 +277,9 @@ in the command line by using this command:
 ```sh
 cf login -a api.fr.cloud.gov --sso
 ```
+If you are offered a choice of orgs, select `gsa-tts-benefits-studio`.
+For the space, choose `notify-local-dev` to start with (assuming you are
+setting up local development).
 
 _REMINDER: Ensure you have access to the `notify-local-dev` and `notify-staging` spaces in cloud.gov_
 
@@ -287,9 +291,12 @@ cd terraform/development
 ./run.sh
 ```
 
-In addition to some infrastructure setup, this will also create a local `.env`
-file for you in the project's root directory, which will include a handful of
-project-specific environment variables.
+If this runs correctly, Terraform will ask you if you want to create some
+resources. Answer `yes`.
+
+The script will also create a local `.env` file for you in the project's
+root directory, which will include a handful of project-specific environment
+variables.
 
 Lastly, if you didn't already start PostgreSQL and Redis above, be sure to do
 so now:
@@ -298,6 +305,70 @@ so now:
 brew services start postgresql@15
 brew services start redis
 ```
+
+#### Upgrading Python in existing projects
+
+If you're upgrading an existing project to a newer version of Python, you can
+follow these steps to get yourself up-to-date.
+
+First, use `pyenv` to install the newer version of Python you'd like to use;
+we'll use `3.12` in our example here since we recently upgraded to this version:
+
+```sh
+pyenv install 3.12
+```
+
+Next, delete the virtual environment you previously had set up.  If you followed
+the instructions above with the first-time set up, you can do this with `pyenv`:
+
+```sh
+pyenv virtualenv-delete notify-api
+```
+
+Now, make sure you are in your project directory and recreate the same virtual
+environment with the newer version of Python you just installed:
+
+```sh
+cd notifications-api
+pyenv virtualenv 3.12.2 notify-api
+pyenv local notify-api
+```
+
+At this point, proceed with the rest of the instructions here in the README and
+you'll be set with an upgraded version of Python.
+
+_If you're not sure about the details of your current virtual environment, you can run `poetry env info` to get more information. If you've been using `pyenv` for everything, you can also see all available virtual environments with `pyenv virtualenvs`._
+
+
+### Final environment setup
+
+There's one final thing to adjust in the newly created `.env` file.  This
+project has support for end-to-end (E2E) tests and has some additional checks
+for the presence of an E2E test user so that it can be authenticated properly.
+
+In the `.env` file, you should see this section:
+
+```
+#############################################################
+
+# E2E Testing
+
+NOTIFY_E2E_TEST_EMAIL=example@fake.gov
+NOTIFY_E2E_TEST_PASSWORD="don't write secrets to the sample file"
+```
+
+You can leave the email address alone or change it to something else to your
+liking.
+
+**You should absolutely change the `NOTIFY_E2E_TEST_PASSWORD` environment
+variable to something else, preferably a lengthy passphrase.**
+
+With those two environment variable set, the database migrations will run
+properly and an E2E test user will be ready to go for use in the admin project.
+
+_Note:  Whatever you set these two environment variables to, you'll need to
+match their values on the admin side.  Please see the admin README and
+documentation for more details._
 
 ## Running the Project and Routine Maintenance
 
@@ -318,6 +389,9 @@ Now you can run the web server and background workers for asynchronous jobs:
 ```sh
 make run-procfile
 ```
+
+If it runs correctly, you will be able to visit http://127.0.0.1:6011/ and see
+JSON from the API in your web browser.
 
 This will run all of the services within the same shell session.  If you need to
 run them separately to help with debugging or tracing logs, you can do so by
@@ -410,6 +484,7 @@ instructions above for more details.
   - [CI testing](./docs/all.md#ci-testing)
   - [Manual testing](./docs/all.md#manual-testing)
   - [To run a local OWASP scan](./docs/all.md#to-run-a-local-owasp-scan)
+  - [End-to-end testing](./docs/all.md#end-to-end-testing)
 - [Deploying](./docs/all.md#deploying)
   - [Egress Proxy](./docs/all.md#egress-proxy)
   - [Managing environment variables](./docs/all.md#managing-environment-variables)
@@ -421,6 +496,7 @@ instructions above for more details.
   - [Migrations](./docs/all.md#migrations)
   - [Purging user data](./docs/all.md#purging-user-data)
 - [One-off tasks](./docs/all.md#one-off-tasks)
+- [Test Loading Commands](./docs/all.md#commands-for-test-loading-the-local-dev-database)
 - [How messages are queued and sent](./docs/all.md#how-messages-are-queued-and-sent)
 - [Writing public APIs](./docs/all.md#writing-public-apis)
   - [Overview](./docs/all.md#overview)

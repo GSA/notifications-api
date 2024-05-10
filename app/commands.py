@@ -1,6 +1,7 @@
 import csv
 import functools
 import itertools
+import secrets
 import uuid
 from datetime import datetime, timedelta
 from os import getenv
@@ -8,6 +9,7 @@ from os import getenv
 import click
 import flask
 from click_datetime import Datetime as click_dt
+from faker import Faker
 from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
@@ -16,7 +18,7 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import db
+from app import db, redis_store
 from app.aws import s3
 from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import process_row
@@ -49,10 +51,8 @@ from app.dao.users_dao import (
     delete_user_verify_codes,
     get_user_by_email,
 )
+from app.enums import AuthType, KeyType, NotificationStatus, NotificationType
 from app.models import (
-    KEY_TYPE_TEST,
-    NOTIFICATION_CREATED,
-    SMS_TYPE,
     AnnualBilling,
     Domain,
     EmailBranding,
@@ -64,6 +64,17 @@ from app.models import (
     User,
 )
 from app.utils import get_midnight_in_utc
+from tests.app.db import (
+    create_job,
+    create_notification,
+    create_organization,
+    create_service,
+    create_template,
+    create_user,
+)
+
+# used in add-test-* commands
+fake = Faker(["en_US"])
 
 
 @click.group(name="command", help="Additional commands")
@@ -240,7 +251,8 @@ def rebuild_ft_billing_for_day(service_id, day):
     "-a",
     "--auth_type",
     required=False,
-    help="The authentication type for the user, sms_auth or email_auth. Defaults to sms_auth if not provided",
+    help="The authentication type for the user, AuthType.SMS or AuthType.EMAIL. "
+    "Defaults to AuthType.SMS if not provided",
 )
 @click.option(
     "-p", "--permissions", required=True, help="Comma separated list of permissions."
@@ -519,11 +531,11 @@ def populate_go_live(file_name):
 @notify_command(name="fix-billable-units")
 def fix_billable_units():
     query = Notification.query.filter(
-        Notification.notification_type == SMS_TYPE,
-        Notification.status != NOTIFICATION_CREATED,
+        Notification.notification_type == NotificationType.SMS,
+        Notification.status != NotificationStatus.CREATED,
         Notification.sent_at == None,  # noqa
         Notification.billable_units == 0,
-        Notification.key_type != KEY_TYPE_TEST,
+        Notification.key_type != KeyType.TEST,
     )
 
     for notification in query.all():
@@ -705,12 +717,12 @@ def validate_mobile(ctx, param, value):  # noqa
     hide_input=True,
     confirmation_prompt=True,
 )
-@click.option("-a", "--auth_type", default="sms_auth")
+@click.option("-a", "--auth_type", default=AuthType.SMS)
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
-    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development")
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test", "staging"]:
+        current_app.logger.error("Can only be run in development, test, staging")
         return
 
     data = {
@@ -787,6 +799,20 @@ def update_templates():
         data = json.load(f)
         for d in data:
             _update_template(d["id"], d["name"], d["type"], d["content"], d["subject"])
+    _clear_templates_from_cache()
+
+
+def _clear_templates_from_cache():
+    # When we update-templates in the db, we need to make sure to delete them
+    # from redis, otherwise the old versions will stick around forever.
+    CACHE_KEYS = [
+        "service-????????-????-????-????-????????????-templates",
+        "service-????????-????-????-????-????????????-template-????????-????-????-????-????????????-version-*",  # noqa
+        "service-????????-????-????-????-????????????-template-????????-????-????-????-????????????-versions",  # noqa
+    ]
+
+    num_deleted = sum(redis_store.delete_by_pattern(pattern) for pattern in CACHE_KEYS)
+    current_app.logger.info(f"Number of templates deleted from cache {num_deleted}")
 
 
 @notify_command(name="create-new-service")
@@ -833,3 +859,150 @@ def purge_csv_bucket():
     print("ABOUT TO RUN PURGE CSV BUCKET")
     s3.purge_bucket(bucket_name, access_key, secret, region)
     print("RAN PURGE CSV BUCKET")
+
+
+"""
+Commands to load test data into the database for
+Orgs, Services, Users, Jobs, Notifications
+
+faker is used to generate some random fields. All
+database commands were used from tests/app/db.py
+where possible to enable better maintainability.
+"""
+
+
+# generate n number of test orgs into the dev DB
+@notify_command(name="add-test-organizations-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_organizations_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    def generate_gov_agency():
+        agency_names = [
+            "Bureau",
+            "Department",
+            "Administration",
+            "Authority",
+            "Commission",
+            "Division",
+            "Office",
+            "Institute",
+            "Agency",
+            "Council",
+            "Board",
+            "Committee",
+            "Corporation",
+            "Service",
+            "Center",
+            "Registry",
+            "Foundation",
+            "Task Force",
+            "Unit",
+        ]
+
+        government_sectors = [
+            "Healthcare",
+            "Education",
+            "Transportation",
+            "Defense",
+            "Law Enforcement",
+            "Environmental Protection",
+            "Housing and Urban Development",
+            "Finance and Economy",
+            "Social Services",
+            "Energy",
+            "Agriculture",
+            "Labor and Employment",
+            "Foreign Affairs",
+            "Trade and Commerce",
+            "Science and Technology",
+        ]
+
+        agency = secrets.choice(agency_names)
+        speciality = secrets.choice(government_sectors)
+
+        return f"{fake.word().capitalize()} {speciality} {agency}"
+
+    for num in range(1, int(generate) + 1):
+        org = create_organization(
+            name=generate_gov_agency(),
+            organization_type=secrets.choice(["federal", "state", "other"]),
+        )
+        print(f"{num} {org.name} created")
+
+
+# generate n number of test services into the dev DB
+@notify_command(name="add-test-services-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_services_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service_name = f"{fake.company()} sample service"
+        service = create_service(service_name=service_name)
+        print(f"{num} {service.name} created")
+
+
+# generate n number of test jobs into the dev DB
+@notify_command(name="add-test-jobs-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_jobs_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template)
+        print(f"{num} {job.id} created")
+
+
+# generate n number of notifications into the dev DB
+@notify_command(name="add-test-notifications-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default=1)
+def add_test_notifications_to_db(generate):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+        service = create_service(check_if_service_exists=True)
+        template = create_template(service=service)
+        job = create_job(template=template)
+        notification = create_notification(
+            template=template,
+            job=job,
+        )
+        print(f"{num} {notification.id} created")
+
+
+# generate n number of test users into the dev DB
+@notify_command(name="add-test-users-to-db")
+@click.option("-g", "--generate", required=True, prompt=True, default="1")
+@click.option("-s", "--state", default="active")
+@click.option("-d", "--admin", default=False, type=bool)
+def add_test_users_to_db(generate, state, admin):
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+
+    for num in range(1, int(generate) + 1):
+
+        def fake_email(name):
+            first_name, last_name = name.split(maxsplit=1)
+            username = f"{first_name.lower()}.{last_name.lower()}"
+            return f"{username}@test.gsa.gov"
+
+        name = fake.name()
+        user = create_user(
+            name=name,
+            email=fake_email(name),
+            state=state,
+            platform_admin=admin,
+        )
+        print(f"{num} {user.email_address} created")

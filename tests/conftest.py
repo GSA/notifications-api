@@ -5,6 +5,7 @@ import pytest
 from alembic.command import upgrade
 from alembic.config import Config
 from flask import Flask
+from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app import create_app
 from app.dao.provider_details_dao import get_provider_details_by_identifier
@@ -52,9 +53,10 @@ def _notify_db(notify_api):
     """
     with notify_api.app_context() as app_context:
         db = app_context.app.extensions["sqlalchemy"]
-        assert (
-            "test_notification_api" in db.engine.url.database
-        ), "dont run tests against main db"
+
+        # Check if test_notification_api exists, if not, create
+        if not database_exists(db.engine.url):
+            create_database(db.engine.url)
 
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
         ALEMBIC_CONFIG = os.path.join(BASE_DIR, "migrations")
@@ -70,6 +72,9 @@ def _notify_db(notify_api):
         yield db
 
         db.session.remove()
+        # Check if test_notification_api exists, if so, drop
+        if database_exists(db.engine.url):
+            drop_database(db.engine.url)
         db.engine.dispose()
 
 

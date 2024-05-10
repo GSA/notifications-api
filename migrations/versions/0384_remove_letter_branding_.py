@@ -5,6 +5,7 @@ Revises: 0383_update_default_templates.py
 Create Date: 2023-02-09 22:24:07.187569
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

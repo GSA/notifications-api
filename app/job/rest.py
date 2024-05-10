@@ -2,7 +2,11 @@ import dateutil
 import pytz
 from flask import Blueprint, current_app, jsonify, request
 
-from app.aws.s3 import get_job_metadata_from_s3, get_phone_number_from_s3
+from app.aws.s3 import (
+    get_job_metadata_from_s3,
+    get_personalisation_from_s3,
+    get_phone_number_from_s3,
+)
 from app.celery.tasks import process_job
 from app.config import QueueNames
 from app.dao.fact_notification_status_dao import fetch_notification_statuses_for_job
@@ -21,8 +25,8 @@ from app.dao.notifications_dao import (
 )
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
+from app.enums import JobStatus
 from app.errors import InvalidRequest, register_errors
-from app.models import JOB_STATUS_CANCELLED, JOB_STATUS_PENDING, JOB_STATUS_SCHEDULED
 from app.schemas import (
     job_schema,
     notification_with_template_schema,
@@ -53,7 +57,7 @@ def get_job_by_service_and_job_id(service_id, job_id):
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])
 def cancel_job(service_id, job_id):
     job = dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id)
-    job.job_status = JOB_STATUS_CANCELLED
+    job.job_status = JobStatus.CANCELLED
     dao_update_job(job)
 
     return get_job_by_service_and_job_id(service_id, job_id)
@@ -85,6 +89,14 @@ def get_all_notifications_for_service_job(service_id, job_id):
             )
             notification.to = recipient
             notification.normalised_to = recipient
+
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
 
     notifications = None
     if data.get("format_for_csv"):
@@ -125,20 +137,28 @@ def get_jobs_by_service(service_id):
         try:
             limit_days = int(request.args["limit_days"])
         except ValueError:
-            errors = {
-                "limit_days": [
-                    "{} is not an integer".format(request.args["limit_days"])
-                ]
-            }
+            errors = {"limit_days": [f"{request.args['limit_days']} is not an integer"]}
             raise InvalidRequest(errors, status_code=400)
     else:
         limit_days = None
 
+    valid_statuses = set(JobStatus)
+    statuses_arg = request.args.get("statuses", "")
+    if statuses_arg == "":
+        statuses = None
+    else:
+        statuses = []
+        for x in statuses_arg.split(","):
+            status = x.strip()
+            if status in valid_statuses:
+                statuses.append(status)
+            else:
+                statuses.append(None)
     return jsonify(
         **get_paginated_jobs(
             service_id,
             limit_days=limit_days,
-            statuses=[x.strip() for x in request.args.get("statuses", "").split(",")],
+            statuses=statuses,
             page=int(request.args.get("page", 1)),
         )
     )
@@ -146,11 +166,13 @@ def get_jobs_by_service(service_id):
 
 @job_blueprint.route("", methods=["POST"])
 def create_job(service_id):
+    """Entry point from UI for one-off messages as well as CSV uploads."""
     service = dao_fetch_service_by_id(service_id)
     if not service.active:
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
 
     data = request.get_json()
+    original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
@@ -173,15 +195,18 @@ def create_job(service_id):
     data.update({"template_version": template.version})
 
     job = job_schema.load(data)
+    # See admin #1148, for whatever reason schema loading doesn't load this
+    if original_file_name is not None:
+        job.original_file_name = original_file_name
 
     if job.scheduled_for:
-        job.job_status = JOB_STATUS_SCHEDULED
+        job.job_status = JobStatus.SCHEDULED
 
     dao_create_job(job)
 
     sender_id = data.get("sender_id")
-
-    if job.job_status == JOB_STATUS_PENDING:
+    # Kick off job in tasks.py
+    if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS
         )

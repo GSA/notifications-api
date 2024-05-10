@@ -5,13 +5,8 @@ from sqlalchemy import asc, desc, func
 
 from app import db
 from app.dao.dao_utils import autocommit
-from app.models import (
-    SMS_TYPE,
-    FactBilling,
-    ProviderDetails,
-    ProviderDetailsHistory,
-    User,
-)
+from app.enums import NotificationType
+from app.models import FactBilling, ProviderDetails, ProviderDetailsHistory, User
 
 
 def get_provider_details_by_id(provider_details_id):
@@ -62,7 +57,8 @@ def _get_sms_providers_for_update(time_threshold):
     # get current priority of both providers
     q = (
         ProviderDetails.query.filter(
-            ProviderDetails.notification_type == "sms", ProviderDetails.active
+            ProviderDetails.notification_type == NotificationType.SMS,
+            ProviderDetails.active,
         )
         .with_for_update()
         .all()
@@ -126,7 +122,7 @@ def dao_get_provider_stats():
             ),
         )
         .filter(
-            FactBilling.notification_type == SMS_TYPE,
+            FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= first_day_of_the_month,
         )
         .group_by(FactBilling.provider)

@@ -3,15 +3,16 @@ import secrets
 import string
 import time
 import uuid
+from contextlib import contextmanager
 from time import monotonic
 
-from celery import current_task
+from celery import Celery, Task, current_task
 from flask import current_app, g, has_request_context, jsonify, make_response, request
+from flask.ctx import has_app_context
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from notifications_utils import logging, request_helper
-from notifications_utils.celery import NotifyCelery
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
@@ -25,6 +26,25 @@ from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.clients.sms.aws_sns import AwsSnsClient
+
+
+class NotifyCelery(Celery):
+    def init_app(self, app):
+        self.task_cls = make_task(app)
+
+        # Configure Celery app with options from the main app config.
+        self.config_from_object(app.config["CELERY"])
+
+    def send_task(self, name, args=None, kwargs=None, **other_kwargs):
+        other_kwargs["headers"] = other_kwargs.get("headers") or {}
+
+        if has_request_context() and hasattr(request, "request_id"):
+            other_kwargs["headers"]["notify_request_id"] = request.request_id
+
+        elif has_app_context() and "request_id" in g:
+            other_kwargs["headers"]["notify_request_id"] = g.request_id
+
+        return super().send_task(name, args, kwargs, **other_kwargs)
 
 
 class SQLAlchemy(_SQLAlchemy):
@@ -339,9 +359,9 @@ def setup_sqlalchemy_events(app):
                     connection_record.info["request_data"] = {
                         "method": request.method,
                         "host": request.host,
-                        "url_rule": request.url_rule.rule
-                        if request.url_rule
-                        else "No endpoint",
+                        "url_rule": (
+                            request.url_rule.rule if request.url_rule else "No endpoint"
+                        ),
                     }
                 # celery apps
                 elif current_task:
@@ -366,3 +386,58 @@ def setup_sqlalchemy_events(app):
         @event.listens_for(db.engine, "checkin")
         def checkin(dbapi_connection, connection_record):  # noqa
             pass
+
+
+def make_task(app):
+    class NotifyTask(Task):
+        abstract = True
+        start = None
+
+        @property
+        def queue_name(self):
+            delivery_info = self.request.delivery_info or {}
+            return delivery_info.get("routing_key", "none")
+
+        @property
+        def request_id(self):
+            # Note that each header is a direct attribute of the
+            # task context (aka "request").
+            return self.request.get("notify_request_id")
+
+        @contextmanager
+        def app_context(self):
+            with app.app_context():
+                # Add 'request_id' to 'g' so that it gets logged.
+                g.request_id = self.request_id
+                yield
+
+        def on_success(self, retval, task_id, args, kwargs):  # noqa
+            # enables request id tracing for these logs
+            with self.app_context():
+                elapsed_time = time.monotonic() - self.start
+
+                app.logger.info(
+                    "Celery task {task_name} (queue: {queue_name}) took {time}".format(
+                        task_name=self.name,
+                        queue_name=self.queue_name,
+                        time="{0:.4f}".format(elapsed_time),
+                    )
+                )
+
+        def on_failure(self, exc, task_id, args, kwargs, einfo):  # noqa
+            # enables request id tracing for these logs
+            with self.app_context():
+                app.logger.exception(
+                    "Celery task {task_name} (queue: {queue_name}) failed".format(
+                        task_name=self.name,
+                        queue_name=self.queue_name,
+                    )
+                )
+
+        def __call__(self, *args, **kwargs):
+            # ensure task has flask context to access config, logger, etc
+            with self.app_context():
+                self.start = time.monotonic()
+                return super().__call__(*args, **kwargs)
+
+    return NotifyTask

@@ -1,10 +1,11 @@
+import json
 import os
 from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import aws_cloudwatch_client, notify_celery
+from app import aws_cloudwatch_client, notify_celery, redis_store
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
@@ -15,13 +16,8 @@ from app.dao.notifications_dao import (
     update_notification_status_by_id,
 )
 from app.delivery import send_to_providers
+from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import (
-    NOTIFICATION_DELIVERED,
-    NOTIFICATION_FAILED,
-    NOTIFICATION_TECHNICAL_FAILURE,
-    NOTIFICATION_TEMPORARY_FAILURE,
-)
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
@@ -67,12 +63,12 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
             raise self.retry(exc=ntfe)
 
     if status == "success":
-        status = NOTIFICATION_DELIVERED
+        status = NotificationStatus.DELIVERED
     elif status == "failure":
-        status = NOTIFICATION_FAILED
+        status = NotificationStatus.FAILED
     # if status is not success or failure the client raised an exception and this method will retry
 
-    if status == NOTIFICATION_DELIVERED:
+    if status == NotificationStatus.DELIVERED:
         sanitize_successful_notification_by_id(
             notification_id, carrier=carrier, provider_response=provider_response
         )
@@ -95,6 +91,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     bind=True, name="deliver_sms", max_retries=48, default_retry_delay=300
 )
 def deliver_sms(self, notification_id):
+    """Branch off to the final step in delivering the notification to sns and get delivery receipts."""
     try:
         current_app.logger.info(
             "Start sending SMS for notification id: {}".format(notification_id)
@@ -112,7 +109,7 @@ def deliver_sms(self, notification_id):
             current_app.logger.warning(
                 ansi_green + f"AUTHENTICATION CODE: {notification.content}" + ansi_reset
             )
-
+        # Code branches off to send_to_providers.py
         message_id = send_to_providers.send_sms_to_provider(notification)
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
@@ -126,7 +123,8 @@ def deliver_sms(self, notification_id):
         )
     except Exception as e:
         update_notification_status_by_id(
-            notification_id, NOTIFICATION_TEMPORARY_FAILURE
+            notification_id,
+            NotificationStatus.TEMPORARY_FAILURE,
         )
         if isinstance(e, SmsClientResponseException):
             current_app.logger.warning(
@@ -151,7 +149,8 @@ def deliver_sms(self, notification_id):
                 )
             )
             update_notification_status_by_id(
-                notification_id, NOTIFICATION_TECHNICAL_FAILURE
+                notification_id,
+                NotificationStatus.TECHNICAL_FAILURE,
             )
             raise NotificationTechnicalFailureException(message)
 
@@ -165,8 +164,12 @@ def deliver_email(self, notification_id):
             "Start sending email for notification id: {}".format(notification_id)
         )
         notification = notifications_dao.get_notification_by_id(notification_id)
+
         if not notification:
             raise NoResultFound()
+        personalisation = redis_store.get(f"email-personalisation-{notification_id}")
+
+        notification.personalisation = json.loads(personalisation)
         send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException as e:
         current_app.logger.exception(
@@ -194,6 +197,7 @@ def deliver_email(self, notification_id):
                 )
             )
             update_notification_status_by_id(
-                notification_id, NOTIFICATION_TECHNICAL_FAILURE
+                notification_id,
+                NotificationStatus.TECHNICAL_FAILURE,
             )
             raise NotificationTechnicalFailureException(message)
