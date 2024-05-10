@@ -14,7 +14,7 @@ from flask import current_app, json
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -173,13 +173,15 @@ def insert_inbound_numbers_from_file(file_name):
 
     print(f"Inserting inbound numbers from {file_name}")
     with open(file_name) as file:
-        sql = "insert into inbound_numbers values('{}', '{}', 'sns', null, True, now(), null);"
+        sql = text(
+            "insert into inbound_numbers values(:uuid, :line, 'sns', null, True, now(), null);"
+        )
 
         for line in file:
             line = line.strip()
             if line:
                 print(line)
-                db.session.execute(sql.format(uuid.uuid4(), line))
+                db.session.execute(sql, {"uuid": str(uuid.uuid4()), "line": line})
                 db.session.commit()
 
 
@@ -333,7 +335,7 @@ def update_jobs_archived_flag(start_date, end_date):
                     and created_at < (date :end + time '00:00:00')
         """
         result = db.session.execute(
-            sql, {"start": process_date, "end": process_date + timedelta(days=1)}
+            text(sql), {"start": process_date, "end": process_date + timedelta(days=1)}
         )
         db.session.commit()
         current_app.logger.info(
@@ -606,7 +608,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
         from annual_billing
         where financial_year_start = :year
     """
-    services_without_annual_billing = db.session.execute(sql, {"year": year})
+    services_without_annual_billing = db.session.execute(text(sql), {"year": year})
     for row in services_without_annual_billing:
         latest_annual_billing = """
             Select free_sms_fragment_limit
@@ -615,7 +617,7 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
             order by financial_year_start desc limit 1
         """
         free_allowance_rows = db.session.execute(
-            latest_annual_billing, {"service_id": row.id}
+            text(latest_annual_billing), {"service_id": row.id}
         )
         free_allowance = [x[0] for x in free_allowance_rows]
         print(f"create free limit of {free_allowance[0]} for service: {row.id}")

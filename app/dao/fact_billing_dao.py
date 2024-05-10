@@ -779,45 +779,37 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
             FactBilling.local_date,
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("sms_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragment_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units * FactBilling.rate_multiplier,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units * FactBilling.rate_multiplier,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragments_times_multiplier"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.EMAIL,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.EMAIL,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("email_totals"),
@@ -897,34 +889,28 @@ def fetch_volumes_by_service(start_date, end_date):
             FactBilling.service_id,
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("sms_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units * FactBilling.rate_multiplier,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units * FactBilling.rate_multiplier,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragments_times_multiplier"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.EMAIL,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.EMAIL,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("email_totals"),

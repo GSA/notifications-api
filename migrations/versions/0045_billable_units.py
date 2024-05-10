@@ -34,11 +34,12 @@ def upgrade():
     # caveats
     # only adjusts notifications for services that have never been in research mode. On live, research mode was
     # limited to only services that we have set up ourselves so deemed this acceptable.
-    billable_services = conn.execute(
+    billable_services_query = text(
         """
-        SELECT id FROM services_history WHERE id not in (select id from services_history where research_mode)
+        SELECT id FROM services_history WHERE id NOT IN (SELECT id FROM services_history WHERE research_mode)
     """
     )
+    billable_services = conn.execute(billable_services_query)
     # set to 'null' if there are no billable services so we don't get a syntax error in the update statement
     service_ids = ",".join(f"{service.id}" for service in billable_services) or "null"
 
@@ -73,11 +74,11 @@ def upgrade():
     query = text(update_statement_n).bindparams(
         bindparam("service_ids", expanding=False)
     )
-    conn.execute(query, service_ids=service_ids)
+    conn.execute(query, {"service_ids": service_ids})
     query = text(update_statement_nh).bindparams(
         bindparam("service_ids", expanding=False)
     )
-    conn.execute(query, service_ids=service_ids)
+    conn.execute(query, {"service_ids": service_ids})
     op.drop_column("notifications", "content_char_count")
     op.drop_column("notification_history", "content_char_count")
 
@@ -130,11 +131,11 @@ def downgrade():
     query = text(update_statement_n).bindparams(
         bindparam("service_ids", expanding=False)
     )
-    conn.execute(query, service_ids=service_ids)
+    conn.execute(query, {"service_ids": service_ids})
     query = text(update_statement_nh).bindparams(
         bindparam("service_ids", expanding=False)
     )
-    conn.execute(query, service_ids=service_ids)
+    conn.execute(query, {"service_ids": service_ids})
 
     op.drop_column("notifications", "billable_units")
     op.drop_column("notification_history", "billable_units")

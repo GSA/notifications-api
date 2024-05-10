@@ -26,14 +26,16 @@ def upgrade():
 
     # modify subject of verification email in templates
     conn.execute(
-        "update templates set subject='Confirm US Notify registration' "
-        "where name = 'Notify email verification code'"
+        text(
+            "UPDATE templates SET subject='Confirm US Notify registration' WHERE name = 'Notify email verification code'"
+        )
     )
 
     # modify subject of verification email in templates_history
     conn.execute(
-        "update templates_history set subject='Confirm US Notify registration' "
-        "where name = 'Notify email verification code'"
+        text(
+            "UPDATE templates_history SET subject='Confirm US Notify registration' WHERE name = 'Notify email verification code'"
+        )
     )
 
     val = """Hi ((name)),\n\nTo complete your registration for US Notify please click the link below\n\n((url))"""

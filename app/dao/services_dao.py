@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from flask import current_app
-from sqlalchemy import Float, cast
+from sqlalchemy import Float, cast, select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
@@ -48,7 +48,9 @@ from app.utils import (
 
 
 def dao_fetch_all_services(only_active=False):
-    query = Service.query.order_by(asc(Service.created_at)).options(joinedload("users"))
+    query = Service.query.order_by(asc(Service.created_at)).options(
+        joinedload(Service.users)
+    )
 
     if only_active:
         query = query.filter(Service.active)
@@ -100,23 +102,17 @@ def dao_fetch_live_services_data():
             Service.volume_sms.label("sms_volume_intent"),
             Service.volume_email.label("email_volume_intent"),
             case(
-                [
-                    (
-                        this_year_ft_billing.c.notification_type
-                        == NotificationType.EMAIL,
-                        func.sum(this_year_ft_billing.c.notifications_sent),
-                    )
-                ],
+                (
+                    this_year_ft_billing.c.notification_type == NotificationType.EMAIL,
+                    func.sum(this_year_ft_billing.c.notifications_sent),
+                ),
                 else_=0,
             ).label("email_totals"),
             case(
-                [
-                    (
-                        this_year_ft_billing.c.notification_type
-                        == NotificationType.SMS,
-                        func.sum(this_year_ft_billing.c.notifications_sent),
-                    )
-                ],
+                (
+                    this_year_ft_billing.c.notification_type == NotificationType.SMS,
+                    func.sum(this_year_ft_billing.c.notifications_sent),
+                ),
                 else_=0,
             ).label("sms_totals"),
             AnnualBilling.free_sms_fragment_limit,
@@ -174,12 +170,17 @@ def dao_fetch_live_services_data():
 
 
 def dao_fetch_service_by_id(service_id, only_active=False):
-    query = Service.query.filter_by(id=service_id).options(joinedload("users"))
+    stmt = (
+        select(Service)
+        .where(Service.id == service_id)
+        .options(joinedload(Service.users))
+    )
 
     if only_active:
-        query = query.filter(Service.active)
+        stmt = stmt.where(Service.active)
 
-    return query.one()
+    result = db.session.execute(stmt)
+    return result.unique().scalars().one()
 
 
 def dao_fetch_service_by_inbound_number(number):
@@ -194,7 +195,7 @@ def dao_fetch_service_by_inbound_number(number):
 
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
-    query = Service.query.filter_by(id=service_id).options(joinedload("api_keys"))
+    query = Service.query.filter_by(id=service_id).options(joinedload(Service.api_keys))
 
     if only_active:
         query = query.filter(Service.active)
@@ -206,7 +207,7 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
     query = (
         Service.query.filter(Service.users.any(id=user_id))
         .order_by(asc(Service.created_at))
-        .options(joinedload("users"))
+        .options(joinedload(Service.users))
     )
 
     if only_active:
@@ -234,9 +235,8 @@ def dao_archive_service(service_id):
     # to ensure that db.session still contains the models when it comes to creating history objects
     service = (
         Service.query.options(
-            joinedload("templates"),
-            joinedload("templates.template_redacted"),
-            joinedload("api_keys"),
+            joinedload(Service.templates).subqueryload(Template.template_redacted),
+            joinedload(Service.api_keys),
         )
         .filter(Service.id == service_id)
         .one()
@@ -258,7 +258,7 @@ def dao_archive_service(service_id):
 def dao_fetch_service_by_id_and_user(service_id, user_id):
     return (
         Service.query.filter(Service.users.any(id=user_id), Service.id == service_id)
-        .options(joinedload("users"))
+        .options(joinedload(Service.users))
         .one()
     )
 
@@ -322,7 +322,12 @@ def dao_add_user_to_service(service, user, permissions=None, folder_permissions=
     try:
         from app.dao.permissions_dao import permission_dao
 
-        service.users.append(user)
+        # As per SQLAlchemy 2.0, we need to add the user to the service only if the user is not already added;
+        # otherwise it throws sqlalchemy.exc.IntegrityError:
+        # (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uix_user_to_service"
+        service_user = dao_get_service_user(user.id, service.id)
+        if service_user is None:
+            service.users.append(user)
         permission_dao.set_user_service_permission(
             user, service, permissions, _commit=False
         )
@@ -478,7 +483,7 @@ def dao_suspend_service(service_id):
     # to ensure that db.session still contains the models when it comes to creating history objects
     service = (
         Service.query.options(
-            joinedload("api_keys"),
+            joinedload(Service.api_keys),
         )
         .filter(Service.id == service_id)
         .one()
