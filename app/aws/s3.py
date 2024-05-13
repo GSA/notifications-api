@@ -10,8 +10,9 @@ from app.clients import AWS_CLIENT_CONFIG
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
-
-JOBS = ExpiringDict(max_len=1000, max_age_seconds=3600 * 4)
+# Temporarily extend cache to 7 days
+ttl = 60 * 60 * 24 * 7
+JOBS = ExpiringDict(max_len=1000, max_age_seconds=ttl)
 
 
 JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
