@@ -20,14 +20,13 @@
       "Notify.gov makes it easy to keep people updated by helping you send text messages.",
       "",
       "",
+      "Click this link to create an account on Notify.gov:",
+      "",
       "[Join Service](((url)))",
       "If you’re new to Notify.gov you will first be directed to Login.gov create an account with us.",
       "",
       "",
-      "This invitation will stop working at midnight tomorrow. This is to keep ((service_name)) secure.",
-      "",
-      "",
-      "Notify.gov uses Login.gov to allow you to sign in safely. Login.gov is a secure sign in service to help you access participating government agencies' digital touchpoints."
+      "This invitation will stop working at midnight tomorrow. This is to keep ((service_name)) secure."
     ]
   },
   {
