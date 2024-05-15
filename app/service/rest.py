@@ -389,10 +389,12 @@ def get_service_history(service_id):
 
 @service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
 def get_all_notifications_for_service(service_id):
-    current_app.logger.debug(f"enter get_all_notifications_for_service")
+    current_app.logger.debug("enter get_all_notifications_for_service")
     if request.method == "GET":
         data = notifications_filter_schema.load(request.args)
-        current_app.logger.debug(f"use GET, request.args {request.args} and data {data}")
+        current_app.logger.debug(
+            f"use GET, request.args {request.args} and data {data}"
+        )
     elif request.method == "POST":
         # Must transform request.get_json() to MultiDict as NotificationsFilterSchema expects a MultiDict.
         # Unlike request.args, request.get_json() does not return a MultiDict but instead just a dict.
@@ -424,8 +426,10 @@ def get_all_notifications_for_service(service_id):
     # for whether to show pagination links
     count_pages = data.get("count_pages", True)
 
-    current_app.logger.debug(f"get pagination with {service_id} service_id filters {data} \
-                             limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}")
+    current_app.logger.debug(
+        f"get pagination with {service_id} service_id filters {data} \
+                             limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}"
+    )
     pagination = notifications_dao.get_notifications_for_service(
         service_id,
         filter_dict=data,
