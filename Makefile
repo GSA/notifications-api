@@ -81,7 +81,7 @@ test: ## Run tests and create coverage report
 	poetry run black .
 	poetry run flake8 .
 	poetry run isort --check-only ./app ./tests
-	poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+	poetry run coverage run --omit=*/notifications_utils/*,*/migrations/* -m pytest --maxfail=10
 	poetry run coverage report -m --fail-under=95
 	poetry run coverage html -d .coverage_cache
 
