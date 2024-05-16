@@ -19,7 +19,6 @@ This repo contains:
 Our other repositories are:
 
 - [notifications-admin](https://github.com/GSA/notifications-admin)
-- [notifications-utils](https://github.com/GSA/notifications-utils)
 - [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
 - [notify-python-demo](https://github.com/GSA/notify-python-demo)
 
