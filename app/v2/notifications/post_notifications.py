@@ -4,7 +4,6 @@ from datetime import datetime
 
 import botocore
 from flask import abort, current_app, jsonify, request
-from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app import api_user, authenticated_service, document_download_client, encryption
 from app.celery.tasks import save_api_email, save_api_sms
@@ -40,6 +39,7 @@ from app.v2.notifications.notification_schemas import (
     post_sms_request,
 )
 from app.v2.utils import get_valid_json
+from notifications_utils.recipients import try_validate_and_format_phone_number
 
 
 @v2_notification_blueprint.route("/<notification_type>", methods=["POST"])

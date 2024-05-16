@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 
 from flask import url_for
-from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 from sqlalchemy import func
+
+from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
