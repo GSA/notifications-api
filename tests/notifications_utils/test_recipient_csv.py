@@ -43,8 +43,8 @@ def _index_rows(rows):
 
 
 @pytest.mark.parametrize(
-    "template_type, expected",
-    (
+    ("template_type", "expected"),
+    [
         ("email", ["email address"]),
         ("sms", ["phone number"]),
         (
@@ -60,7 +60,7 @@ def _index_rows(rows):
                 "address line 7",
             ],
         ),
-    ),
+    ],
 )
 def test_recipient_column_headers(template_type, expected):
     recipients = RecipientCSV("", template=_sample_template(template_type))
@@ -72,7 +72,7 @@ def test_recipient_column_headers(template_type, expected):
 
 
 @pytest.mark.parametrize(
-    "file_contents,template_type,expected",
+    ("file_contents", "template_type", "expected"),
     [
         (
             "",
@@ -275,7 +275,7 @@ def test_get_rows_only_iterates_over_file_once(mocker):
 
 
 @pytest.mark.parametrize(
-    "file_contents,template_type,expected",
+    ("file_contents", "template_type", "expected"),
     [
         (
             """
@@ -341,7 +341,7 @@ def test_get_rows_with_errors():
 
 
 @pytest.mark.parametrize(
-    "template_type, row_count, header, filler, row_with_error",
+    ("template_type", "row_count", "header", "filler", "row_with_error"),
     [
         (
             "email",
@@ -370,7 +370,7 @@ def test_big_list_validates_right_through(
 
 
 @pytest.mark.parametrize(
-    "template_type, row_count, header, filler",
+    ("template_type", "row_count", "header", "filler"),
     [
         ("email", 50, "email address\n", "test@example.com\n"),
         ("sms", 50, "phone number\n", "07900900123\n"),
@@ -456,7 +456,7 @@ def test_empty_column_names():
 
 
 @pytest.mark.parametrize(
-    "file_contents,template,expected_recipients,expected_personalisation",
+    ("file_contents", "template", "expected_recipients", "expected_personalisation"),
     [
         (
             """
@@ -504,7 +504,7 @@ def test_get_recipient(
 
 
 @pytest.mark.parametrize(
-    "file_contents,template,expected_recipients,expected_personalisation",
+    ("file_contents", "template", "expected_recipients", "expected_personalisation"),
     [
         (
             """
@@ -539,7 +539,7 @@ def test_get_recipient_respects_order(
 
 
 @pytest.mark.parametrize(
-    "file_contents,template_type,expected,expected_missing",
+    ("file_contents", "template_type", "expected", "expected_missing"),
     [
         ("", "sms", [], set(["phone number", "name"])),
         (
@@ -612,7 +612,7 @@ def test_column_headers(file_contents, template_type, expected, expected_missing
     ],
 )
 @pytest.mark.parametrize(
-    "file_contents,template_type",
+    ("file_contents", "template_type"),
     [
         pytest.param("", "sms", marks=pytest.mark.xfail),
         pytest.param("name", "sms", marks=pytest.mark.xfail),
@@ -660,7 +660,12 @@ def test_recipient_column(content, file_contents, template_type):
 
 
 @pytest.mark.parametrize(
-    "file_contents,template_type,rows_with_bad_recipients,rows_with_missing_data",
+    (
+        "file_contents",
+        "template_type",
+        "rows_with_bad_recipients",
+        "rows_with_missing_data",
+    ),
     [
         (
             """
@@ -761,7 +766,7 @@ def test_bad_or_missing_data(
 
 
 @pytest.mark.parametrize(
-    "file_contents,rows_with_bad_recipients",
+    ("file_contents", "rows_with_bad_recipients"),
     [
         (
             """
@@ -811,7 +816,7 @@ def test_errors_when_too_many_rows():
 
 
 @pytest.mark.parametrize(
-    "file_contents,template_type,guestlist,count_of_rows_with_errors",
+    ("file_contents", "template_type", "guestlist", "count_of_rows_with_errors"),
     [
         (
             """
@@ -938,7 +943,7 @@ def test_detects_rows_which_result_in_empty_messages():
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    ("key", "expected"),
     sum(
         [
             [(key, expected) for key in group]
@@ -1002,8 +1007,8 @@ def test_ignores_spaces_and_case_in_placeholders(key, expected):
 
 
 @pytest.mark.parametrize(
-    "character, name",
-    (
+    ("character", "name"),
+    [
         (" ", "SPACE"),
         # these ones don’t have unicode names
         ("\n", None),  # newline
@@ -1017,7 +1022,7 @@ def test_ignores_spaces_and_case_in_placeholders(key, expected):
         ("\uFEFF", "ZERO WIDTH NO-BREAK SPACE"),
         # all the things
         (" \n\r\t\u000A\u000D\u180E\u200B\u200C\u200D\u2060\uFEFF", None),
-    ),
+    ],
 )
 def test_ignores_leading_whitespace_in_file(character, name):
     if name is not None:
@@ -1061,7 +1066,7 @@ def test_dont_error_if_too_many_recipients_not_specified():
 
 
 @pytest.mark.parametrize(
-    "index, expected_row",
+    ("index", "expected_row"),
     [
         (
             0,
@@ -1106,7 +1111,7 @@ def test_recipients_can_be_accessed_by_index(index, expected_row):
         assert recipients[index][key].data == value
 
 
-@pytest.mark.parametrize("international_sms", (True, False))
+@pytest.mark.parametrize("international_sms", [True, False])
 def test_multiple_sms_recipient_columns(international_sms):
     recipients = RecipientCSV(
         """
@@ -1131,13 +1136,13 @@ def test_multiple_sms_recipient_columns(international_sms):
 
 @pytest.mark.parametrize(
     "column_name",
-    (
+    [
         "phone_number",
         "phonenumber",
         "phone number",
         "phone-number",
         "p h o n e  n u m b e r",
-    ),
+    ],
 )
 def test_multiple_sms_recipient_columns_with_missing_data(column_name):
     recipients = RecipientCSV(
@@ -1257,12 +1262,12 @@ def test_multi_line_placeholders_work():
 
 
 @pytest.mark.parametrize(
-    "extra_args, expected_errors, expected_bad_rows",
-    (
+    ("extra_args", "expected_errors", "expected_bad_rows"),
+    [
         ({}, True, {0}),
         ({"allow_international_letters": False}, True, {0}),
         ({"allow_international_letters": True}, False, set()),
-    ),
+    ],
 )
 def test_accepts_international_addresses_when_allowed(
     extra_args, expected_errors, expected_bad_rows

@@ -50,7 +50,7 @@ def test_missing_data():
     ],
 )
 @pytest.mark.parametrize(
-    "key, should_be_present",
+    ("key", "should_be_present"),
     [
         ("foo", True),
         ("f_o_o", True),

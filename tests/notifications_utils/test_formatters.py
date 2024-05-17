@@ -25,7 +25,7 @@ from notifications_utils.template import (
 
 
 @pytest.mark.parametrize(
-    "url, expected_html",
+    ("url", "expected_html"),
     [
         (
             """https://example.com/"onclick="alert('hi')""",
@@ -78,7 +78,7 @@ def test_escaping_govuk_in_email_templates():
 
 
 @pytest.mark.parametrize(
-    "template_content,expected",
+    ("template_content", "expected"),
     [
         # Cases that we add the breaking space
         ("GOV.UK", "GOV.\u200BUK"),
@@ -136,7 +136,7 @@ def test_unlink_govuk_escaped(template_content, expected):
 
 
 @pytest.mark.parametrize(
-    "prefix, body, expected",
+    ("prefix", "body", "expected"),
     [
         ("a", "b", "a: b"),
         (None, "b", "b"),
@@ -173,7 +173,7 @@ def test_sms_encode(mocker):
 
 
 @pytest.mark.parametrize(
-    "items, kwargs, expected_output",
+    ("items", "kwargs", "expected_output"),
     [
         ([1], {}, "‘1’"),
         ([1, 2], {}, "‘1’ and ‘2’"),
@@ -205,8 +205,8 @@ def test_bleach_doesnt_try_to_make_valid_html_before_cleaning():
 
 
 @pytest.mark.parametrize(
-    "content, expected_escaped",
-    (
+    ("content", "expected_escaped"),
+    [
         ("&?a;", "&amp;?a;"),
         ("&>a;", "&amp;&gt;a;"),
         ("&*a;", "&amp;*a;"),
@@ -234,7 +234,7 @@ def test_bleach_doesnt_try_to_make_valid_html_before_cleaning():
         # We let users use &lpar; and &rpar; because otherwise it’s
         # impossible to put brackets in the body of conditional placeholders
         ("((var??&lpar;in brackets&rpar;))", "((var??&lpar;in brackets&rpar;))"),
-    ),
+    ],
 )
 def test_escaping_html_entities(
     content,
@@ -244,7 +244,7 @@ def test_escaping_html_entities(
 
 
 @pytest.mark.parametrize(
-    "dirty, clean",
+    ("dirty", "clean"),
     [
         (
             "Hello ((name)) ,\n\nThis is a message",
@@ -262,7 +262,7 @@ def test_removing_whitespace_before_commas(dirty, clean):
 
 
 @pytest.mark.parametrize(
-    "dirty, clean",
+    ("dirty", "clean"),
     [
         (
             "Hello ((name)) .\n\nThis is a message",
@@ -280,7 +280,7 @@ def test_removing_whitespace_before_full_stops(dirty, clean):
 
 
 @pytest.mark.parametrize(
-    "dumb, smart",
+    ("dumb", "smart"),
     [
         (
             """And I said, "what about breakfast at Tiffany's"?""",
@@ -301,7 +301,7 @@ def test_smart_quotes(dumb, smart):
 
 
 @pytest.mark.parametrize(
-    "nasty, nice",
+    ("nasty", "nice"),
     [
         (
             (
@@ -436,8 +436,8 @@ def test_normalise_whitespace(value):
 
 
 @pytest.mark.parametrize(
-    "content, expected_html",
-    (
+    ("content", "expected_html"),
+    [
         (
             "http://example.com",
             '<a href="http://example.com">http://example.com</a>',
@@ -545,15 +545,15 @@ def test_normalise_whitespace(value):
             "with-subdomain@test.example.com",
             "with-subdomain@test.example.com",
         ),
-    ),
+    ],
 )
 def test_autolink_urls_matches_correctly(content, expected_html):
     assert autolink_urls(content) == expected_html
 
 
 @pytest.mark.parametrize(
-    "extra_kwargs, expected_html",
-    (
+    ("extra_kwargs", "expected_html"),
+    [
         (
             {},
             '<a href="http://example.com">http://example.com</a>',
@@ -564,14 +564,14 @@ def test_autolink_urls_matches_correctly(content, expected_html):
             },
             '<a class="govuk-link" href="http://example.com">http://example.com</a>',
         ),
-    ),
+    ],
 )
 def test_autolink_urls_applies_correct_attributes(extra_kwargs, expected_html):
     assert autolink_urls("http://example.com", **extra_kwargs) == expected_html
 
 
 @pytest.mark.parametrize(
-    "content", ("without link", "with link to https://example.com")
+    "content", ["without link", "with link to https://example.com"]
 )
 def test_autolink_urls_returns_markup(content):
     assert isinstance(autolink_urls(content), Markup)

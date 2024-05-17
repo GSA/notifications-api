@@ -153,7 +153,7 @@ def test_detect_us_phone_numbers(phone_number):
 
 
 @pytest.mark.parametrize(
-    "phone_number, expected_info",
+    ("phone_number", "expected_info"),
     [
         # (
         #    "+4407900900123",
@@ -285,13 +285,12 @@ def test_valid_us_phone_number_can_be_formatted_consistently(phone_number):
 
 
 @pytest.mark.parametrize(
-    "phone_number, expected_formatted",
+    ("phone_number", "expected_formatted"),
     [
         # ("+44071234567890", "+4471234567890"),
         ("1-202-555-0104", "+12025550104"),
         ("+12025550104", "+12025550104"),
         ("12025550104", "+12025550104"),
-        ("+12025550104", "+12025550104"),
         # ("+23051234567", "+23051234567"),
     ],
 )
@@ -304,7 +303,7 @@ def test_valid_international_phone_number_can_be_formatted_consistently(
     )
 
 
-@pytest.mark.parametrize("phone_number, error_message", invalid_us_phone_numbers)
+@pytest.mark.parametrize(("phone_number", "error_message"), invalid_us_phone_numbers)
 @pytest.mark.parametrize(
     "extra_args",
     [
@@ -318,7 +317,7 @@ def test_phone_number_rejects_invalid_values(extra_args, phone_number, error_mes
     assert error_message == str(e.value)
 
 
-@pytest.mark.parametrize("phone_number, error_message", invalid_phone_numbers)
+@pytest.mark.parametrize(("phone_number", "error_message"), invalid_phone_numbers)
 def test_phone_number_rejects_invalid_international_values(phone_number, error_message):
     with pytest.raises(InvalidPhoneError) as e:
         validate_phone_number(phone_number, international=True)
@@ -384,7 +383,7 @@ def test_validates_against_guestlist_of_email_addresses(email_address):
 
 
 @pytest.mark.parametrize(
-    "phone_number, expected_formatted",
+    ("phone_number", "expected_formatted"),
     [
         # ("+4407900900123", "+44 7900 900123"),  # UK
         # ("+44(0)7900900123", "+44 7900 900123"),  # UK
@@ -403,7 +402,7 @@ def test_format_us_and_international_phone_numbers(phone_number, expected_format
 
 
 @pytest.mark.parametrize(
-    "recipient, expected_formatted",
+    ("recipient", "expected_formatted"),
     [
         (True, ""),
         (False, ""),

@@ -5,7 +5,7 @@ from notifications_utils.request_helper import NotifyRequest, _check_proxy_heade
 
 
 @pytest.mark.parametrize(
-    "header,secrets,expected",
+    ("header", "secrets", "expected"),
     [
         (
             {"X-Custom-Forwarder": "right_key"},
@@ -48,7 +48,7 @@ def test_request_header_authorization(header, secrets, expected):
 
 
 @pytest.mark.parametrize(
-    "secrets,expected",
+    ("secrets", "expected"),
     [
         (["old_key", "right_key"], (False, "Header missing")),
     ],

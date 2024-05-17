@@ -7,7 +7,7 @@ from notifications_utils.safe_string import (
 
 
 @pytest.mark.parametrize(
-    "unsafe_string, expected_safe",
+    ("unsafe_string", "expected_safe"),
     [
         ("name with spaces", "name.with.spaces"),
         ("singleword", "singleword"),
@@ -26,7 +26,7 @@ def test_email_safe_return_dot_separated_email_local_part(unsafe_string, expecte
 
 
 @pytest.mark.parametrize(
-    "unsafe_string, expected_safe",
+    ("unsafe_string", "expected_safe"),
     [
         ("name with spaces", "name-with-spaces"),
         ("singleword", "singleword"),

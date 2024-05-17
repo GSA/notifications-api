@@ -8,17 +8,17 @@ from freezegun import freeze_time
 from notifications_utils.clients.redis.redis_client import RedisClient, prepare_value
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def mocked_redis_pipeline():
     return Mock()
 
 
-@pytest.fixture
+@pytest.fixture()
 def delete_mock():
     return Mock(return_value=4)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def mocked_redis_client(app, mocked_redis_pipeline, delete_mock, mocker):
     app.config["REDIS_ENABLED"] = True
 
@@ -46,14 +46,16 @@ def mocked_redis_client(app, mocked_redis_pipeline, delete_mock, mocker):
     return redis_client
 
 
-@pytest.fixture
+@pytest.fixture()
 def failing_redis_client(mocked_redis_client, delete_mock):
-    mocked_redis_client.redis_store.get.side_effect = Exception("get failed")
-    mocked_redis_client.redis_store.set.side_effect = Exception("set failed")
-    mocked_redis_client.redis_store.incr.side_effect = Exception("incr failed")
-    mocked_redis_client.redis_store.pipeline.side_effect = Exception("pipeline failed")
-    mocked_redis_client.redis_store.delete.side_effect = Exception("delete failed")
-    delete_mock.side_effect = Exception("delete by pattern failed")
+    # nota bene: using KeyError because flake8 thinks Exception
+    # and BaseException are too broad
+    mocked_redis_client.redis_store.get.side_effect = KeyError("get failed")
+    mocked_redis_client.redis_store.set.side_effect = KeyError("set failed")
+    mocked_redis_client.redis_store.incr.side_effect = KeyError("incr failed")
+    mocked_redis_client.redis_store.pipeline.side_effect = KeyError("pipeline failed")
+    mocked_redis_client.redis_store.delete.side_effect = KeyError("delete failed")
+    delete_mock.side_effect = KeyError("delete by pattern failed")
     return mocked_redis_client
 
 
@@ -85,29 +87,29 @@ def test_should_raise_exception_if_raise_set_to_true(
     app,
     failing_redis_client,
 ):
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.get("test", raise_exception=True)
-    assert str(e.value) == "get failed"
+    assert str(e.value) == "'get failed'"
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.set("test", "test", raise_exception=True)
-    assert str(e.value) == "set failed"
+    assert str(e.value) == "'set failed'"
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.incr("test", raise_exception=True)
-    assert str(e.value) == "incr failed"
+    assert str(e.value) == "'incr failed'"
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.exceeded_rate_limit("test", 100, 200, raise_exception=True)
-    assert str(e.value) == "pipeline failed"
+    assert str(e.value) == "'pipeline failed'"
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.delete("test", raise_exception=True)
-    assert str(e.value) == "delete failed"
+    assert str(e.value) == "'delete failed'"
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(KeyError) as e:
         failing_redis_client.delete_by_pattern("pattern", raise_exception=True)
-    assert str(e.value) == "delete by pattern failed"
+    assert str(e.value) == "'delete by pattern failed'"
 
 
 def test_should_not_call_if_not_enabled(mocked_redis_client, delete_mock):
@@ -198,7 +200,7 @@ def test_delete_multi(mocked_redis_client):
 
 
 @pytest.mark.parametrize(
-    "input,output",
+    ("input", "output"),
     [
         (b"asdf", b"asdf"),
         ("asdf", "asdf"),

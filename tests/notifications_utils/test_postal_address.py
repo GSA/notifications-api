@@ -17,8 +17,8 @@ def test_raw_address():
 
 
 @pytest.mark.parametrize(
-    "address, expected_country",
-    (
+    ("address", "expected_country"),
+    [
         (
             """
         123 Example Street
@@ -51,15 +51,15 @@ def test_raw_address():
         """,
             Country("Germany"),
         ),
-    ),
+    ],
 )
 def test_country(address, expected_country):
     assert PostalAddress(address).country == expected_country
 
 
 @pytest.mark.parametrize(
-    "address, enough_lines_expected",
-    (
+    ("address", "enough_lines_expected"),
+    [
         (
             "",
             False,
@@ -102,15 +102,15 @@ def test_country(address, expected_country):
         """,
             True,
         ),
-    ),
+    ],
 )
 def test_has_enough_lines(address, enough_lines_expected):
     assert PostalAddress(address).has_enough_lines is enough_lines_expected
 
 
 @pytest.mark.parametrize(
-    "address, too_many_lines_expected",
-    (
+    ("address", "too_many_lines_expected"),
+    [
         (
             "",
             False,
@@ -171,15 +171,15 @@ def test_has_enough_lines(address, enough_lines_expected):
         """,
             True,
         ),
-    ),
+    ],
 )
 def test_has_too_many_lines(address, too_many_lines_expected):
     assert PostalAddress(address).has_too_many_lines is too_many_lines_expected
 
 
 @pytest.mark.parametrize(
-    "address, expected_postcode",
-    (
+    ("address", "expected_postcode"),
+    [
         (
             "",
             None,
@@ -215,7 +215,7 @@ def test_has_too_many_lines(address, too_many_lines_expected):
         """,
             None,
         ),
-    ),
+    ],
 )
 def test_postcode(address, expected_postcode):
     assert PostalAddress(address).has_valid_postcode is bool(expected_postcode)
@@ -223,7 +223,7 @@ def test_postcode(address, expected_postcode):
 
 
 @pytest.mark.parametrize(
-    "address, expected_result",
+    ("address", "expected_result"),
     [
         (
             "",
@@ -276,8 +276,8 @@ def test_has_invalid_characters(address, expected_result):
 
 
 @pytest.mark.parametrize(
-    "address, expected_international",
-    (
+    ("address", "expected_international"),
+    [
         (
             "",
             False,
@@ -313,15 +313,15 @@ def test_has_invalid_characters(address, expected_result):
         """,
             True,
         ),
-    ),
+    ],
 )
 def test_international(address, expected_international):
     assert PostalAddress(address).international is expected_international
 
 
 @pytest.mark.parametrize(
-    "address, expected_normalised, expected_as_single_line",
-    (
+    ("address", "expected_normalised", "expected_as_single_line"),
+    [
         (
             "",
             "",
@@ -357,7 +357,7 @@ def test_international(address, expected_international):
             ("123 Example Straße\n" "Germany"),
             ("123 Example Straße, Germany"),
         ),
-    ),
+    ],
 )
 def test_normalised(address, expected_normalised, expected_as_single_line):
     assert PostalAddress(address).normalised == expected_normalised
@@ -365,8 +365,8 @@ def test_normalised(address, expected_normalised, expected_as_single_line):
 
 
 @pytest.mark.parametrize(
-    "address, expected_postage",
-    (
+    ("address", "expected_postage"),
+    [
         (
             "",
             Postage.UK,
@@ -401,7 +401,7 @@ def test_normalised(address, expected_normalised, expected_as_single_line):
         """,
             Postage.REST_OF_WORLD,
         ),
-    ),
+    ],
 )
 def test_postage(address, expected_postage):
     assert PostalAddress(address).postage == expected_postage
@@ -409,7 +409,7 @@ def test_postage(address, expected_postage):
 
 @pytest.mark.parametrize(
     "personalisation",
-    (
+    [
         {
             "address_line_1": "123 Example Street",
             "address_line_3": "City of Town",
@@ -440,7 +440,7 @@ def test_postage(address, expected_postage):
                 "Address-Line-7": "Sw1a  1aa",
             }
         ),
-    ),
+    ],
 )
 def test_from_personalisation(personalisation):
     assert PostalAddress.from_personalisation(personalisation).normalised == (
@@ -461,8 +461,8 @@ def test_from_personalisation_handles_int():
 
 
 @pytest.mark.parametrize(
-    "address, expected_personalisation",
-    (
+    ("address", "expected_personalisation"),
+    [
         (
             "",
             {
@@ -515,27 +515,27 @@ def test_from_personalisation_handles_int():
                 "postcode": "Eight",
             },
         ),
-    ),
+    ],
 )
 def test_as_personalisation(address, expected_personalisation):
     assert PostalAddress(address).as_personalisation == expected_personalisation
 
 
 @pytest.mark.parametrize(
-    "address, expected_bool",
-    (
+    ("address", "expected_bool"),
+    [
         ("", False),
         (" ", False),
         ("\n\n  \n", False),
         ("a", True),
-    ),
+    ],
 )
 def test_bool(address, expected_bool):
     assert bool(PostalAddress(address)) is expected_bool
 
 
 @pytest.mark.parametrize(
-    "postcode, normalised_postcode",
+    ("postcode", "normalised_postcode"),
     [
         ("SW1 3EF", "SW13EF"),
         ("SW13EF", "SW13EF"),
@@ -550,7 +550,7 @@ def test_normalise_postcode(postcode, normalised_postcode):
 
 
 @pytest.mark.parametrize(
-    "postcode, result",
+    ("postcode", "result"),
     [
         # real standard UK poscodes
         ("SW1 3EF", True),
@@ -592,7 +592,7 @@ def test_if_postcode_is_a_real_uk_postcode_normalises_before_checking_postcode(m
 
 
 @pytest.mark.parametrize(
-    "postcode, postcode_with_space",
+    ("postcode", "postcode_with_space"),
     [
         ("SW13EF", "SW1 3EF"),
         ("SW1 3EF", "SW1 3EF"),
@@ -615,8 +615,8 @@ def test_format_postcode_for_printing(postcode, postcode_with_space):
 
 
 @pytest.mark.parametrize(
-    "address, international, expected_valid",
-    (
+    ("address", "international", "expected_valid"),
+    [
         (
             """
             UK address
@@ -703,7 +703,7 @@ def test_format_postcode_for_printing(postcode, postcode_with_space):
             False,
             False,
         ),
-    ),
+    ],
 )
 def test_valid_with_international_parameter(address, international, expected_valid):
     postal_address = PostalAddress(
@@ -716,7 +716,7 @@ def test_valid_with_international_parameter(address, international, expected_val
 
 @pytest.mark.parametrize(
     "address",
-    (
+    [
         """
         Too short, valid postcode
         SW1A 1AA
@@ -745,7 +745,7 @@ def test_valid_with_international_parameter(address, international, expected_val
         7
         Bhutan
     """,
-    ),
+    ],
 )
 def test_valid_last_line_too_short_too_long(address):
     postal_address = PostalAddress(address, allow_international_letters=True)
@@ -759,11 +759,11 @@ def test_valid_with_invalid_characters():
 
 
 @pytest.mark.parametrize(
-    "international, expected_valid",
-    (
+    ("international", "expected_valid"),
+    [
         (False, False),
         (True, True),
-    ),
+    ],
 )
 def test_valid_from_personalisation_with_international_parameter(
     international, expected_valid

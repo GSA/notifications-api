@@ -9,7 +9,7 @@ from notifications_utils.clients.zendesk.zendesk_client import (
 )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def zendesk_client(app):
     client = ZendeskClient()
 
@@ -67,8 +67,8 @@ def test_zendesk_client_send_ticket_to_zendesk_error(
 
 
 @pytest.mark.parametrize(
-    "p1_arg, expected_tags, expected_priority",
-    (
+    ("p1_arg", "expected_tags", "expected_priority"),
+    [
         (
             {},
             ["govuk_notify_support"],
@@ -88,7 +88,7 @@ def test_zendesk_client_send_ticket_to_zendesk_error(
             ["govuk_notify_emergency"],
             "urgent",
         ),
-    ),
+    ],
 )
 def test_notify_support_ticket_request_data(p1_arg, expected_tags, expected_priority):
     notify_ticket_form = NotifySupportTicket("subject", "message", "question", **p1_arg)
@@ -126,7 +126,7 @@ def test_notify_support_ticket_request_data_with_message_hidden_from_requester()
 
 
 @pytest.mark.parametrize(
-    "name, zendesk_name", [("Name", "Name"), (None, "(no name supplied)")]
+    ("name", "zendesk_name"), [("Name", "Name"), (None, "(no name supplied)")]
 )
 def test_notify_support_ticket_request_data_with_user_name_and_email(
     name, zendesk_name
@@ -145,7 +145,14 @@ def test_notify_support_ticket_request_data_with_user_name_and_email(
 
 
 @pytest.mark.parametrize(
-    "custom_fields, tech_ticket_tag, categories, org_id, org_type, service_id",
+    (
+        "custom_fields",
+        "tech_ticket_tag",
+        "categories",
+        "org_id",
+        "org_type",
+        "service_id",
+    ),
     [
         (
             {"technical_ticket": True},

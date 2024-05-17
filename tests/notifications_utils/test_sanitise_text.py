@@ -42,7 +42,7 @@ params, ids = zip(
 )
 
 
-@pytest.mark.parametrize("char, expected", params, ids=ids)
+@pytest.mark.parametrize(("char", "expected"), params, ids=ids)
 @pytest.mark.parametrize("cls", [SanitiseSMS, SanitiseASCII])
 def test_encode_chars_the_same_for_ascii_and_sms(char, expected, cls):
     assert cls.encode_char(char) == expected
@@ -64,7 +64,7 @@ params, ids = zip(
 )
 
 
-@pytest.mark.parametrize("char, expected_sms, expected_ascii", params, ids=ids)
+@pytest.mark.parametrize(("char", "expected_sms", "expected_ascii"), params, ids=ids)
 def test_encode_chars_different_between_ascii_and_sms(
     char, expected_sms, expected_ascii
 ):
@@ -73,7 +73,7 @@ def test_encode_chars_different_between_ascii_and_sms(
 
 
 @pytest.mark.parametrize(
-    "codepoint, char",
+    ("codepoint", "char"),
     [
         ("0041", "A"),
         ("0061", "a"),
@@ -87,12 +87,12 @@ def test_get_unicode_char_from_codepoint(codepoint, char):
     "bad_input", ["", "GJ", "00001", '0001";import sys;sys.exit(0)"']
 )
 def test_get_unicode_char_from_codepoint_rejects_bad_input(bad_input):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa PT011
         SanitiseText.get_unicode_char_from_codepoint(bad_input)
 
 
 @pytest.mark.parametrize(
-    "content, expected",
+    ("content", "expected"),
     [
         ("Łōdź", "?odz"),
         (
@@ -107,7 +107,7 @@ def test_encode_string(content, expected):
 
 
 @pytest.mark.parametrize(
-    "content, cls, expected",
+    ("content", "cls", "expected"),
     [
         ("The quick brown fox jumps over the lazy dog", SanitiseSMS, set()),
         (
@@ -132,7 +132,7 @@ def test_sms_encoding_get_non_compatible_characters(content, cls, expected):
 
 
 @pytest.mark.parametrize(
-    "content, expected",
+    ("content", "expected"),
     [
         ("이것은 테스트입니다", True),  # Korean
         ("Αυτό είναι ένα τεστ", True),  # Greek
@@ -285,7 +285,7 @@ def test_sms_supporting_additional_languages(content, expected):
 
 
 @pytest.mark.parametrize(
-    "content, expected",
+    ("content", "expected"),
     [
         ("이것은 테스트입니다", set()),  # Korean
         ("Αυτό είναι ένα τεστ", set()),  # Greek

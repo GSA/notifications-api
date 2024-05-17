@@ -9,7 +9,7 @@ class FakeService:
     id = "1234"
 
 
-@pytest.fixture
+@pytest.fixture()
 def app():
     flask_app = Flask(__name__)
     ctx = flask_app.app_context()
@@ -20,7 +20,7 @@ def app():
     ctx.pop()
 
 
-@pytest.fixture
+@pytest.fixture()
 def celery_app(mocker):
     app = Flask(__name__)
     app.config["CELERY"] = {"broker_url": "foo"}
@@ -39,7 +39,7 @@ def sample_service():
     return FakeService()
 
 
-@pytest.fixture
+@pytest.fixture()
 def rmock():
     with requests_mock.mock() as rmock:
         yield rmock

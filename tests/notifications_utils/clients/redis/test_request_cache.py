@@ -4,7 +4,7 @@ from notifications_utils.clients.redis import RequestCache
 from notifications_utils.clients.redis.redis_client import RedisClient
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def mocked_redis_client(app):
     app.config["REDIS_ENABLED"] = True
     redis_client = RedisClient()
@@ -12,19 +12,19 @@ def mocked_redis_client(app):
     return redis_client
 
 
-@pytest.fixture
+@pytest.fixture()
 def cache(mocked_redis_client):
     return RequestCache(mocked_redis_client)
 
 
 @pytest.mark.parametrize(
-    "args, kwargs, expected_cache_key",
-    (
+    ("args", "kwargs", "expected_cache_key"),
+    [
         ([1, 2, 3], {}, "1-2-3-None-None-None"),
         ([1, 2, 3, 4, 5, 6], {}, "1-2-3-4-5-6"),
         ([1, 2, 3], {"x": 4, "y": 5, "z": 6}, "1-2-3-4-5-6"),
         ([1, 2, 3, 4], {"y": 5}, "1-2-3-4-5-None"),
-    ),
+    ],
 )
 def test_set(
     mocker,
@@ -60,13 +60,13 @@ def test_set(
 
 
 @pytest.mark.parametrize(
-    "cache_set_call, expected_redis_client_ttl",
-    (
+    ("cache_set_call", "expected_redis_client_ttl"),
+    [
         (0, 0),
         (1, 1),
         (1.111, 1),
         ("2000", 2_000),
-    ),
+    ],
 )
 def test_set_with_custom_ttl(
     mocker,

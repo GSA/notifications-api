@@ -80,7 +80,7 @@ def test_matches_keys_to_placeholder_names():
 
 
 @pytest.mark.parametrize(
-    "template_content, template_subject, expected",
+    ("template_content", "template_subject", "expected"),
     [
         ("the quick brown fox", "jumps", []),
         ("the quick ((colour)) fox", "jumps", ["colour"]),

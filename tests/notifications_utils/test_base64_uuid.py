@@ -38,7 +38,7 @@ def test_base64_converter_to_url(python_val):
 
 
 @pytest.mark.parametrize(
-    "url_val,expectation",
+    ("url_val", "expectation"),
     [
         (
             "this_is_valid_base64_but_is_too_long_to_be_a_uuid",

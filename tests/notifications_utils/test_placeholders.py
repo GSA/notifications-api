@@ -6,7 +6,7 @@ from notifications_utils.field import Placeholder
 
 
 @pytest.mark.parametrize(
-    "body, expected",
+    ("body", "expected"),
     [
         ("((with-brackets))", "with-brackets"),
         ("without-brackets", "without-brackets"),
@@ -17,7 +17,7 @@ def test_placeholder_returns_name(body, expected):
 
 
 @pytest.mark.parametrize(
-    "body, is_conditional",
+    ("body", "is_conditional"),
     [
         ("not a conditional", False),
         ("not? a conditional", False),
@@ -29,7 +29,7 @@ def test_placeholder_identifies_conditional(body, is_conditional):
 
 
 @pytest.mark.parametrize(
-    "body, conditional_text",
+    ("body", "conditional_text"),
     [
         ("a??b", "b"),
         ("a?? b ", " b "),
@@ -41,12 +41,12 @@ def test_placeholder_gets_conditional_text(body, conditional_text):
 
 
 def test_placeholder_raises_if_accessing_conditional_text_on_non_conditional():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa, flake8 says ValueError not specific enough
         Placeholder("hello").conditional_text
 
 
 @pytest.mark.parametrize(
-    "body, value, result",
+    ("body", "value", "result"),
     [
         ("a??b", "Yes", "b"),
         ("a??b", "No", ""),
@@ -57,7 +57,7 @@ def test_placeholder_gets_conditional_body(body, value, result):
 
 
 def test_placeholder_raises_if_getting_conditional_body_on_non_conditional():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa, flake8 says ValueError not specific enough
         Placeholder("hello").get_conditional_body("Yes")
 
 

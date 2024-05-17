@@ -4,7 +4,13 @@ from notifications_utils.field import Field
 
 
 @pytest.mark.parametrize(
-    "content, values, expected_stripped, expected_escaped, expected_passthrough",
+    (
+        "content",
+        "values",
+        "expected_stripped",
+        "expected_escaped",
+        "expected_passthrough",
+    ),
     [
         (
             "string <em>with</em> html",

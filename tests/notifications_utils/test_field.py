@@ -23,7 +23,7 @@ def test_returns_a_string_without_placeholders(content):
 
 
 @pytest.mark.parametrize(
-    "template_content,data,expected",
+    ("template_content", "data", "expected"),
     [
         ("((colour))", {"colour": "red"}, "red"),
         ("the quick ((colour)) fox", {"colour": "brown"}, "the quick brown fox"),
@@ -111,7 +111,7 @@ def test_replacement_of_placeholders(template_content, data, expected):
 
 
 @pytest.mark.parametrize(
-    "template_content,data,expected",
+    ("template_content", "data", "expected"),
     [
         (
             "((code)) is your security code",
@@ -142,7 +142,7 @@ def test_optional_redacting_of_missing_values(template_content, data, expected):
 
 
 @pytest.mark.parametrize(
-    "content,expected",
+    ("content", "expected"),
     [
         ("((colour))", "<span class='placeholder'>((colour))</span>"),
         (
@@ -189,7 +189,7 @@ def test_formatting_of_placeholders(content, expected):
 
 
 @pytest.mark.parametrize(
-    "content, values, expected",
+    ("content", "values", "expected"),
     [
         (
             "((name)) ((colour))",
@@ -244,7 +244,7 @@ def test_what_will_trigger_conditional_placeholder(value):
 
 
 @pytest.mark.parametrize(
-    "values, expected, expected_as_markdown",
+    ("values", "expected", "expected_as_markdown"),
     [
         (
             {"placeholder": []},

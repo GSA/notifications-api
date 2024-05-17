@@ -11,8 +11,8 @@ def _country_not_found(*test_case):
 
 
 @pytest.mark.parametrize(
-    "alpha_2, expected_name",
-    (
+    ("alpha_2", "expected_name"),
+    [
         ("AF", "Afghanistan"),
         ("AL", "Albania"),
         ("DZ", "Algeria"),
@@ -262,15 +262,15 @@ def _country_not_found(*test_case):
         ("ZM", "Zambia"),
         ("ZW", "Zimbabwe"),
         ("AX", "Åland Islands"),
-    ),
+    ],
 )
 def test_iso_alpha_2_country_codes(alpha_2, expected_name):
     assert Country(alpha_2).canonical_name == expected_name
 
 
 @pytest.mark.parametrize(
-    "alpha_3, expected_name",
-    (
+    ("alpha_3", "expected_name"),
+    [
         _country_not_found("AFG", "Afghanistan"),
         _country_not_found("ALB", "Albania"),
         _country_not_found("DZA", "Algeria"),
@@ -520,7 +520,7 @@ def test_iso_alpha_2_country_codes(alpha_2, expected_name):
         _country_not_found("ZMB", "Zambia"),
         _country_not_found("ZWE", "Zimbabwe"),
         _country_not_found("ALA", "Åland Islands"),
-    ),
+    ],
 )
 def test_iso_alpha_3_country_codes(alpha_3, expected_name):
     assert Country(alpha_3).canonical_name == expected_name

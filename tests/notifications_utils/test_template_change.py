@@ -6,7 +6,7 @@ from .test_base_template import ConcreteTemplate
 
 
 @pytest.mark.parametrize(
-    "old_template, new_template, should_differ",
+    ("old_template", "new_template", "should_differ"),
     [
         (
             ConcreteTemplate({"content": "((1)) ((2)) ((3))"}),
@@ -50,7 +50,7 @@ def test_checking_for_difference_between_templates(
 
 
 @pytest.mark.parametrize(
-    "old_template, new_template, placeholders_added",
+    ("old_template", "new_template", "placeholders_added"),
     [
         (
             ConcreteTemplate({"content": "((1)) ((2)) ((3))"}),
@@ -87,7 +87,7 @@ def test_placeholders_added(old_template, new_template, placeholders_added):
 
 
 @pytest.mark.parametrize(
-    "old_template, new_template, placeholders_removed",
+    ("old_template", "new_template", "placeholders_removed"),
     [
         (
             ConcreteTemplate({"content": "((1)) ((2)) ((3))"}),

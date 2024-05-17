@@ -87,10 +87,10 @@ def test_cant_override_custom_property_from_dict():
 
 @pytest.mark.parametrize(
     "json_response",
-    (
+    [
         {},
         {"foo": "bar"},  # Should still raise an exception
-    ),
+    ],
 )
 def test_model_raises_for_unknown_attributes(json_response):
     class Custom(SerialisedModel):
@@ -118,10 +118,10 @@ def test_model_raises_keyerror_if_item_missing_from_dict():
 
 @pytest.mark.parametrize(
     "json_response",
-    (
+    [
         {},
         {"foo": "bar"},  # Should be ignored
-    ),
+    ],
 )
 def test_model_doesnt_swallow_attribute_errors(json_response):
     class Custom(SerialisedModel):

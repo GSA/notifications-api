@@ -12,7 +12,7 @@ def test_international_billing_rates_exists():
 
 
 @pytest.mark.parametrize(
-    "country_prefix, values", sorted(INTERNATIONAL_BILLING_RATES.items())
+    ("country_prefix", "values"), sorted(INTERNATIONAL_BILLING_RATES.items())
 )
 def test_international_billing_rates_are_in_correct_format(country_prefix, values):
     assert isinstance(country_prefix, str)
@@ -38,7 +38,7 @@ def test_country_codes():
 
 
 @pytest.mark.parametrize(
-    "number, expected",
+    ("number", "expected"),
     [
         ("+48123654789", False),  # Poland alpha: Yes
         ("+1-403-123-5687", True),  # Canada alpha: No

@@ -12,7 +12,14 @@ from notifications_utils.letter_timings import (
 
 @freeze_time("2017-07-14 13:59:59")  # Friday, before print deadline (3PM EST)
 @pytest.mark.parametrize(
-    "upload_time, expected_print_time, is_printed, first_class, expected_earliest, expected_latest",
+    (
+        "upload_time",
+        "expected_print_time",
+        "is_printed",
+        "first_class",
+        "expected_earliest",
+        "expected_latest",
+    ),
     [
         # EST
         # ==================================================================
