@@ -14,6 +14,12 @@ from marshmallow import (
     validates_schema,
 )
 from marshmallow_sqlalchemy import auto_field, field_for
+
+from app import ma, models
+from app.dao.permissions_dao import permission_dao
+from app.enums import ServicePermissionType, TemplateType
+from app.models import ServicePermission
+from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -21,12 +27,6 @@ from notifications_utils.recipients import (
     validate_email_address,
     validate_phone_number,
 )
-
-from app import ma, models
-from app.dao.permissions_dao import permission_dao
-from app.enums import ServicePermissionType, TemplateType
-from app.models import ServicePermission
-from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance
 
 
 def _validate_positive_number(value, msg="Not a positive integer"):

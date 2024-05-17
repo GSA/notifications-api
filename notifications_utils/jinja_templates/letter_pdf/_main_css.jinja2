@@ -1,0 +1,197 @@
+{% set line_height = '16.0pt' %}
+<style media="print">
+  @page {
+    size: A4 portrait;
+    margin: 15mm 10mm 15mm 15mm;
+  }
+  @page :first {
+    margin-top: 10mm;
+  }
+  @page {
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: 'Nimbus Sans L';
+      font-size: 10pt;
+      text-align: right;
+      vertical-align: top;
+    }
+  }
+  body {
+    font-family: 'Nimbus Sans L', 'FreeSans', sans-serif;
+    font-size: 12.5pt;
+    line-height: {{ line_height }};
+    letter-spacing: 0.01em;
+    word-spacing: -0.04em;
+    margin: 0;
+    padding: 94mm 50mm 0 0;
+  }
+  #logo {
+    height: 18mm;
+    width: 70mm;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  #logo img.png {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  #logo img.svg {
+      display: block;
+      width: auto;
+      height: 100%;
+      max-width: 100%;
+  }
+  #to,
+  #from {
+    position: absolute;
+  }
+  #to {
+    width: 85mm;
+    max-height: 26.7mm;
+    left: 9.6mm;
+    bottom: 215.8mm;
+    font-size: 8pt;
+    line-height: 8.5pt;
+    text-transform: uppercase;
+  }
+  #to ul {
+    margin: 0;
+    padding: 0;
+  }
+  #to li {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  #from {
+    bottom: 199.8mm;
+    right: 0mm;
+    width: 71.2mm;
+    max-height: 132pt;
+    font-size: 10pt;
+    line-height: 12pt;
+  }
+  #mdi {
+    font-size: 6pt;
+  }
+  #barcode {
+    position: absolute;
+    top: 61mm;
+    left: 9.6mm;
+    width: 85mm; /* not width constrained */
+    height: 8.1mm;
+    background: url({{admin_base_url}}/static/images/letter-template/type29.png);
+    background-repeat: no-repeat;
+    background-size: auto 110%;
+  }
+  #qrcode {
+    position: absolute;
+    top: 26.9mm;
+    left: -10.6mm;
+    width: 6.7mm;
+    height: 6.7mm;
+    background: url({{admin_base_url}}/static/images/letter-template/qr1.png);
+    background-size: 100% 100%;
+  }
+  #content {
+    width: 137.5mm;
+  }
+  h1 {
+    font-size: 20pt;
+    line-height: 23.4pt;
+    font-weight: bold;
+    margin: 18.16pt 0 7.68pt 0;
+  }
+  h2 {
+    font-size: 14pt;
+    line-height: 17.4pt;
+    font-weight: bold;
+    margin: 0 0 {{ line_height }} 0;
+  }
+  h1 + h2 {
+    margin-top: 8.35pt;
+  }
+  p {
+    font-size: 12.5pt;
+    line-height: {{ line_height }};
+    margin: 0 0 {{ line_height }} 0;
+    orphans: 4;
+  }
+  #content ul,
+  #content ol {
+    font-size: 12.5pt;
+    line-height: {{ line_height }};
+    margin: 0 0 {{ line_height }} 0;
+    padding: 0 0 0 0.8em;
+  }
+  #content ol {
+    padding-left: 1.4em;
+  }
+  #content li {
+    margin: 0;
+    padding: 0;
+  }
+  #content ol ul,
+  #content ul ul {
+    margin: {{ line_height }} 0 0 0;
+    padding-left: 0;
+    list-style-type: disc;
+  }
+  #content ol ul {
+    margin-left: -0.6em;
+  }
+  #content *:last-child {
+    margin-bottom: 0;
+  }
+
+  .page‑break {
+    page-break-after: always;
+    height: 0;
+  }
+
+  .placeholder {
+    display: inline;
+    background-color: #FD0;
+    background-image: url({{admin_base_url}}/static/images/letter-template/placeholder-mask-left.svg), url({{admin_base_url}}/static/images/letter-template/placeholder-mask-right.svg);
+    background-size: auto 150%, auto 150%;
+    background-position: 0 -0.17em, right -0.17em;
+    color: #000;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    border-radius: 1.05em;
+  }
+
+  .placeholder-no-brackets {
+    display: inline;
+    background: #FD0;
+    color: #000;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 1px;
+    text-transform: none;
+  }
+
+  .placeholder-conditional {
+    display: inline;
+    background: #FD0;
+    background-image: url({{admin_base_url}}/static/images/letter-template/placeholder-mask-left.svg), url({{admin_base_url}}/static/images/letter-template/placeholder-mask-right-conditional.svg);
+    background-size: auto 115%, 5mm 100%;
+    background-position: 0 -0.05em, right 0;
+    background-repeat: no-repeat, no-repeat;
+    color: #000;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    border-radius: 1.05em;
+  }
+
+</style>

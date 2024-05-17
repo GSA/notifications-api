@@ -1,5 +1,4 @@
 from flask import Blueprint, current_app, jsonify, request
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 from app import api_user, authenticated_service
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
@@ -26,6 +25,7 @@ from app.schemas import (
 )
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text, pagination_links
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 notifications = Blueprint("notifications", __name__)
 
