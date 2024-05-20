@@ -18,6 +18,7 @@ bootstrap: ## Set up everything to run the app
 	poetry install --sync --no-root
 	poetry run pre-commit install
 	createdb notification_api || true
+	createdb test_notification_api || true
 	(poetry run flask db upgrade) || true
 
 .PHONY: bootstrap-with-docker

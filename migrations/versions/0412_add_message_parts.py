@@ -1,15 +1,16 @@
 """
 
-Revision ID: 0410_add_message_parts
-Revises: 0409_fix_service_name
+Revision ID: 0412_add_message_parts
+Revises: 0411_add_login_uuid
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from flask import current_app
 
-down_revision = "0409_fix_service_name"
-revision = "0410_add_message_parts"
+down_revision = "0411_add_login_uuid"
+revision = "0412_add_message_parts"
 
 
 def upgrade():

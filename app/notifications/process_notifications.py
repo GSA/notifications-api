@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 
 from flask import current_app
 from notifications_utils.recipients import (
@@ -17,8 +16,10 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
+from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
+from app.utils import hilite
 from app.v2.errors import BadRequestError
 
 
@@ -131,10 +132,13 @@ def persist_notification(
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
         template = dao_get_template_by_id_and_service_id(template_id, service.id)
-        template_object = create_content_for_notification(template, notification.personalisation)
+        template_object = create_content_for_notification(
+            template, notification.personalisation
+        )
 
         notification.message_parts = template_object.fragment_count
 
+        current_app.logger.info(f"Message parts? {notification.message_parts}")
         dao_create_notification(notification)
         if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(

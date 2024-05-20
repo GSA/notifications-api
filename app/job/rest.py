@@ -108,7 +108,6 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
-
     return (
         jsonify(
             notifications=notifications,
@@ -204,17 +203,23 @@ def create_job(service_id):
 
     dao_create_job(job)
 
+    job_json = job_schema.dump(job)
+    job_json["statistics"] = []
+
+    return jsonify(data=job_json), 201
+
+
+@job_blueprint.route("/<job_id>/start-job", methods=["POST"])
+def start_job(service_id, job_id):
+    job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
+    data = request.get_json()
     sender_id = data.get("sender_id")
     # Kick off job in tasks.py
     if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS
         )
-
-    job_json = job_schema.dump(job)
-    job_json["statistics"] = []
-
-    return jsonify(data=job_json), 201
+    return {}, 201
 
 
 @job_blueprint.route("/scheduled-job-stats", methods=["GET"])

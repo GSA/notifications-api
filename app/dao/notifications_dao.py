@@ -682,6 +682,5 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
 def dao_get_notification_message_parts_by_job_id(job_id):
     total_message_parts = db.session.query(
         func.sum(Notification.message_parts.label("message_parts"))
-    ).filter(
-        Notification.job_id == job_id
-    )
+    ).filter(Notification.job_id == job_id)
+    return total_message_parts
