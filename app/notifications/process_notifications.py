@@ -2,12 +2,6 @@ import uuid
 from datetime import datetime
 
 from flask import current_app
-from notifications_utils.recipients import (
-    format_email_address,
-    get_international_phone_info,
-    validate_and_format_phone_number,
-)
-from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 from app import redis_store
 from app.celery import provider_tasks
@@ -21,6 +15,12 @@ from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
 from app.utils import hilite
 from app.v2.errors import BadRequestError
+from notifications_utils.recipients import (
+    format_email_address,
+    get_international_phone_info,
+    validate_and_format_phone_number,
+)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 
 def create_content_for_notification(template, personalisation):

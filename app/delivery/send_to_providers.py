@@ -4,11 +4,6 @@ from urllib import parse
 
 from cachetools import TTLCache, cached
 from flask import current_app
-from notifications_utils.template import (
-    HTMLEmailTemplate,
-    PlainTextEmailTemplate,
-    SMSMessageTemplate,
-)
 
 from app import create_uuid, db, notification_provider_clients, redis_store
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
@@ -19,6 +14,11 @@ from app.dao.provider_details_dao import get_provider_details_by_notification_ty
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
+from notifications_utils.template import (
+    HTMLEmailTemplate,
+    PlainTextEmailTemplate,
+    SMSMessageTemplate,
+)
 
 
 def send_sms_to_provider(notification):

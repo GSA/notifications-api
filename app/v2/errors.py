@@ -2,13 +2,13 @@ import json
 
 from flask import current_app, jsonify, request
 from jsonschema import ValidationError as JsonSchemaValidationError
-from notifications_utils.recipients import InvalidEmailError
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.authentication.auth import AuthError
 from app.enums import KeyType
 from app.errors import InvalidRequest
+from notifications_utils.recipients import InvalidEmailError
 
 
 class TooManyRequestsError(InvalidRequest):

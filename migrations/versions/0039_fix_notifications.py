@@ -26,7 +26,9 @@ def upgrade():
         "sms_requested = 0, sms_delivered = 0, sms_failed=0 where day > '2016-06-30'"
     )
     op.execute(reset_counts)
-    all_notifications = "select * from notifications where date(created_at) > '2016-06-30' order by created_at;"
+    all_notifications = text(
+        "select * from notifications where date(created_at) > '2016-06-30' order by created_at;"
+    )
 
     results = conn.execute(all_notifications)
     res = results.fetchall()

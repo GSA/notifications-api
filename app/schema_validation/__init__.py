@@ -4,6 +4,7 @@ from uuid import UUID
 
 from iso8601 import ParseError, iso8601
 from jsonschema import Draft7Validator, FormatChecker, ValidationError
+
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,

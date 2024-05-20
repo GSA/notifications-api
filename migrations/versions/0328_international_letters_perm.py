@@ -24,10 +24,10 @@ def upgrade():
         VALUES (:service_id, 'international_letters', now())
     """
     conn = op.get_bind()
-    results = conn.execute(sql)
+    results = conn.execute(text(sql))
     services_to_add_permission = results.fetchall()
     for x in services_to_add_permission:
-        conn.execute(text(insert_sql), service_id=x.service_id)
+        conn.execute(text(insert_sql), {"service_id": x.service_id})
 
 
 def downgrade():

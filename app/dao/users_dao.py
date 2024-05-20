@@ -13,7 +13,7 @@ from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
 from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
-from app.models import User, VerifyCode
+from app.models import Organization, Service, User, VerifyCode
 from app.utils import escape_special_characters, get_archived_db_column_value
 
 
@@ -185,15 +185,16 @@ def update_user_password(user, password):
 
 
 def get_user_and_accounts(user_id):
+    # TODO: With sqlalchemy 2.0 change as below because of the breaking change
+    # at User.organizations.services, we need to verify that the below subqueryload
+    # that we have put is functionally doing the same thing as before
     return (
         User.query.filter(User.id == user_id)
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)
-            joinedload("services"),
-            joinedload("organizations"),
-            joinedload("organizations.services"),
-            joinedload("services.organization"),
+            joinedload(User.services).joinedload(Service.organization),
+            joinedload(User.organizations).subqueryload(Organization.services),
         )
         .one()
     )

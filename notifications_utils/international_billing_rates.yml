@@ -1,0 +1,2891 @@
+#################################################
+#
+# DO NOT MODIFY THE "attributes" IN THIS FILE
+#
+# This file was generated from an external source,
+# so its content should be kept as-is to avoid any
+# ambiguity if we regenerate it in future. If you
+# find something is incorrect, add a comment.
+#
+# It's OK to modify the "billable_units", as these
+# get used for our actual billing calculations.
+#
+#################################################
+#
+# Key for entries:
+#
+#   *in all cases, "null" means "don't know" or "n/a"
+#
+#   alpha:
+#     possible values: 'REG' | 'YES' | 'NO'
+#     description: whether alphanumeric sender names are supported, potentially by registration only ('REG')
+#   comment:
+#     possible values: <text>
+#     description: additional usage info e.g. "OPT-OUT option in the message is required"
+#   dlr:
+#     possible_values: '' | 'YES' | 'Carrier DLR' | 'NO'
+#     description: whether we get delivery receipts; 'Carrier DLR' also means 'NO'; unclear what '' means
+#   generic_sender:
+#     possible_values: '' | <alpha>
+#     description: supports unregistered senders by converted to <alpha> ('' means we don't know what <alpha> is)
+#   numeric:
+#     possible_values: 'NO' | 'YES' | 'LIMITED'
+#     description: whether numeric sender names are supported, or randomly generated ('LIMITED')
+#   sc:
+#     possible_values: 'NO' | 'YES' | 'LIMITED' | 'REG'
+#     description: whether short codes are supported, potentially by registration only ('REG'), potentially limited in availability ('LIMITED')
+#   sender_and_registration_info:
+#     possible_values: <text>
+#     description: specific operational info e.g. "All senders CONVERTED into random long numeric senders"
+#   text_restrictions:
+#     possible_values: <text>
+#     description: similar to "comment"
+
+'1':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 1
+  names:
+  - Canada
+  - United States
+  - Dominican Republic
+'7':
+  attributes:
+    alpha: REG
+    comment: HIGH FEEs for SPAM
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: Transactional traffic ONLY
+  billable_units: 1
+  names:
+  - South Ossetia
+  - Kazakhstan
+  - Abkhazia
+  - Russian Federation
+'20':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: REG
+    sc: REG
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Egypt
+'27':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into long numeric sender
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - South Africa
+'30':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: Senders MUST NOT include "," (comma separator) within,
+      up to 11 chars in length
+    text_restrictions: NO unicode nor binary formatted SMS support
+  billable_units: 2
+  names:
+  - Greece
+'31':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Netherlands
+'32':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Belgium
+'33':
+  attributes:
+    alpha: 'YES'
+    comment: STOP and CONTACT for OPT-OUTs required
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: All numeric senders CONVERTED into limited amount
+      of registered shared SCs. HIGH one time and monthly FEEs for each additional
+      SC
+    text_restrictions: Marketing traffic is on hold on working days from 10PM to 8AM
+      (UTC/GMT +1 hour), weekend and bank holidays. Transactional traffic can be allowed  with
+      no time limits with approval only.
+  billable_units: 2
+  names:
+  - France
+'34':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'YES'
+    sender_and_registration_info: All long numeric senders not starting with 34 are
+      CONVERTED to "InfoSMS"
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Spain
+'36':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED to one national long numeric
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Hungary
+'39':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: Numeric national (local) sender IDs allowed only
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Italy
+'40':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: All not registered senders are CONVERTED into one
+      SC. Monthly time  FEE for each SC, one time fee for each Alpha sender, authorization
+      letter and description required. Unregistered senders are converted to SC 1797
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Romania
+'41':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'YES'
+    sender_and_registration_info: National numeric senders are not allowed
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Switzerland
+'43':
+  attributes:
+    alpha: REG
+    comment: OPT-IN REQUIRED for each end user
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: HIGH monthly FEE for alpha senders. Otherwise ONLY
+      one long numeric sender allowed
+    text_restrictions: Bulk traffic NOT allowed. NO political content and other text
+      restrictions
+  billable_units: 3
+  names:
+  - Austria
+'44':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Guernsey
+  - Isle of Man
+  - Jersey
+'45':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: ''
+    text_restrictions: Only transactional traffic allowed
+  billable_units: 1
+  names:
+  - Denmark
+'46':
+  attributes:
+    alpha: 'YES'
+    comment: HIGH FEEs for SPAM
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: ''
+    text_restrictions: ''
+  billable_units: 2
+  names:
+  - Sweden
+'47':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Norway
+'48':
+  attributes:
+    alpha: 'YES'
+    comment: Extremely HIGH penalties for marketing messages without OPT-Ins
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: ''
+  billable_units: 1
+  names:
+  - Poland
+'49':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Germany
+'51':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: LIMITED
+    sender_and_registration_info: All senders CONVERTED into one SC
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Peru
+'52':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 2
+  names:
+  - Mexico
+'53':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Cuba
+'54':
+  attributes:
+    alpha: 'NO'
+    comment: OPT-IN REQUIRED for each end user
+    dlr: 'NO'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: LIMITED
+    sender_and_registration_info: All senders CONVERTED into one available shared
+      SC
+    text_restrictions: Political content NOT allowed
+  billable_units: 3
+  names:
+  - Argentina
+'55':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: LIMITED
+    sender_and_registration_info: LIMITED amount of SCs available
+    text_restrictions: NO marketing traffic. NO special characters. 160 chars per
+      message available
+  billable_units: 1
+  names:
+  - Brazil
+'56':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 2
+  names:
+  - Chile
+'57':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'NO'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: LIMITED
+    sender_and_registration_info: LIMITED amount of SCs available
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Colombia
+'58':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Venezuela
+'60':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: LIMITED amount of registered shared SCs available.
+      HIGH one time and monthly FEEs for each additional dedicated SC
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Malaysia
+'61':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: Long numeric MUST NOT begin with "0" (zero)
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Australia
+'62':
+  attributes:
+    alpha: REG
+    comment: Local clients NOT allowed. International clients ONLY
+    dlr: 'YES'
+    generic_sender: globalsms/InfoSMS
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: ''
+  billable_units: 1
+  names:
+  - Indonesia
+'63':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: INFO / Globalsms
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: All numeric senders are converted to InfoText
+    text_restrictions: Adult, alcohol, drugs, gambling, election and tobacco contents
+      are strictly forbidden
+  billable_units: 1
+  names:
+  - Philippines
+'64':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: All alpha senders converted to a random UK longnumber
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - New Zealand
+'65':
+  attributes:
+    alpha: REG
+    comment: Where SMS exceeds 160 characters, it shall be broken into two or more
+      messages and transmitted separately
+    dlr: 'YES'
+    generic_sender: InfoSMS
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All not registered senders are CONVERTED into "InfoSMS".
+      LIMITED amount of free senders, MONTHLY FEE for additional Alpha and numeric
+      senders. Only national long numeric senders ara available
+    text_restrictions: ''
+  billable_units: 1
+  names:
+  - Singapore
+'66':
+  attributes:
+    alpha: REG
+    comment: Maximum long message lenght is 459 for GSM7 or 201 for Unicode alphabet.
+      Special registration procedure for sending to DND numbers
+    dlr: 'YES'
+    generic_sender: SMS
+    numeric: REG
+    sc: REG
+    sender_and_registration_info: Alpha sender up to 11 characters in length. NO "
+      " (space) support in the sender name. NO special character at the beginning
+      of the sender. Numeric sender up to 11 digits in length. Dynamic sender available
+      over Offnet connection.
+    text_restrictions: NO political nor erotic content and other text restrictions
+  billable_units: 1
+  names:
+  - Thailand
+'81':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: 11-digit long short code.
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Japan
+'82':
+  attributes:
+    alpha: 'NO'
+    comment: Message length - 140 characters
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: 'All Alpha senders CONVERTED to one local long numeric.
+      "00" is ADDED in front of international long numeric sender ids. '
+    text_restrictions: "[\uAD6D\uC81C\uBC1C\uC2E0] is added in front of SMS text for\
+      \ every inbound P2P and A2P coming from overseas countries."
+  billable_units: 2
+  names:
+  - Korea, Republic of
+'84':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: InfoSMS
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: One time and monthly FEEs for each sender. All not
+      registered senders CONVERTED into "InfoSMS" sender
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Vietnam
+'86':
+  attributes:
+    alpha: 'NO'
+    comment: Extremenly HIGH penalties for any traffic other than transactional
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into one available national
+      numeric sender
+    text_restrictions: Content template MUST be approved by the MNO. Transactional
+      traffic ONLY. Sufix added in the message text
+  billable_units: 1
+  names:
+  - China
+'90':
+  attributes:
+    alpha: REG
+    comment: ONLY for Turkish clients. International clients NOT allowed, unless approved
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: LIMITED
+    sender_and_registration_info: LIMITED amount of numeric senders are allowed (just
+      some ranges)
+    text_restrictions: NO lottery, gambling nor erotic content and other text restrictions
+  billable_units: 1
+  names:
+  - Turkey
+  - Northern Cyprus
+'91':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Alpha senders with exactly 6 characters ONLY
+    text_restrictions: Transactional traffic ONLY
+  billable_units: 1
+  names:
+  - India
+'92':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Pakistan
+'93':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: SMS-Info
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: 'All not registered senders CONVERTED to ''SMS-Info''.
+      Sender and text example required prior to registration. Registration ETA: up
+      to 10 days.'
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Afghanistan
+'94':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Sri Lanka
+'95':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: There is monthly FEE for renting a SC. No generic
+      senders available. WEB page and description for each sender needed.
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Myanmar
+'98':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Iran
+'211':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - South Sudan
+'212':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: Globalsms
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Case sensitive senders
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Morocco
+'213':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: InfoSMS/SMS
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Algeria
+'216':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Tunisia
+'218':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Libya
+'220':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Gambia
+'221':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Senegal
+'222':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Mauritania
+'223':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Mali
+'224':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: 00 added in front of destination
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Guinea
+'225':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Cote d'Ivoire
+'226':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Burkina Faso
+'227':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Niger
+'228':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Togo
+'229':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Benin
+'230':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Mauritius
+'231':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Liberia
+'232':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Sierra Leone
+'233':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: REG
+    sender_and_registration_info: One time and monthly FEEs for each SC
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Ghana
+'234':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: SMS
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Nigeria
+'235':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Chad
+'236':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Central African Republic
+'237':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Cameroon
+'238':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Cape Verde
+'239':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Sao Tome and Principe
+'240':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Equatorial Guinea
+'241':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Gabon
+'242':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Congo
+'243':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Congo, Democratic Republic of
+'244':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: Info
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Angola
+'245':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Guinea-Bissau
+'246':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - British Indian Ocean Territory
+'248':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Seychelles
+'249':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Sudan
+'250':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Rwanda, Republic of
+'251':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Ethiopia
+'252':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Somalia
+'253':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Djibouti, Republic of
+'254':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: ONLY one shared SC available. HIGH one time and
+      monthly FEEs for each additional sender. Only local entities can register senders
+      for Safaricom.
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Kenya
+'255':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Tanzania
+'256':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: INFOSMS
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: All not registered senders CONVERTED to "INFOSMS".
+      Only local entities can register the sender (requires Authorization letter).
+    text_restrictions: As per regulation, 'DND*196#' is being added at the end of
+      each message.
+  billable_units: 1
+  names:
+  - Uganda
+'257':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Burundi
+'258':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Mozambique
+'260':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Zambia
+'261':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Madagascar
+'262':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Reunion
+'263':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Zimbabwe
+'264':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Long registration procedure, up to 30 days. Monthly
+      FEE for each sender
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Namibia
+'265':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Malawi
+'266':
+  attributes:
+    alpha: null  # should be 'REG'
+    comment: null
+    dlr: null  # should be 'YES'
+    generic_sender: null  # should be "''"
+    numeric: null  # should be 'NO'
+    sc: null  # should be 'NO'
+    sender_and_registration_info: null  # should be "Sender names can only be 3-11 chars, no spaces"
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Lesotho
+'267':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Botswana
+'268':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Swaziland
+'269':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Comoros
+'297':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Aruba
+'298':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Faroe Islands
+'299':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Greenland
+'350':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Gibraltar
+'351':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Portugal
+'352':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Luxembourg
+'353':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: Numeric sender up to 12 digits in length. SC available
+      upon registration
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Ireland
+'354':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Iceland
+'355':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Albania
+'356':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Malta
+'357':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: InfoSMS/Message
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Senders up to 11 characters in length. NO special
+      characters. Generic senders available
+    text_restrictions: NO violent, offensive, discriminatory or erotic content
+  billable_units: 1
+  names:
+  - Cyprus
+'358':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: $ INSERTED in front of each Alpha sender, "00" in
+      front of long numeric senders
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Finland
+'359':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: Sender converts to short code 1917.
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Bulgaria
+'370':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Lithuania
+'371':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Latvia
+'372':
+  attributes:
+    alpha: 'YES'
+    comment: OPT-INs required
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: ''
+    text_restrictions: NO messages in any way related to premium rate services
+  billable_units: 2
+  names:
+  - Estonia
+'373':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: All senders CONVERTED into one SC
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Moldova
+'374':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: REG
+    sender_and_registration_info: NO long numeric senders
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Armenia
+'375':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: SMSinfo
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Belarus
+'376':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Andorra
+'377':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Monaco
+'378':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - San Marino, Republic of
+'380':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: Info/INFO/InfoSMS/SMS
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: Alpha senders are case sensitive
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Ukraine
+'381':
+  attributes:
+    alpha: REG
+    comment: All traffic bulks MUST be registered at MNO
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: Monthly FEE for each SC
+    text_restrictions: Transactional traffic ONLY
+  billable_units: 1
+  names:
+  - Serbia
+'382':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: REG
+    sc: REG
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Montenegro
+'385':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: InfoSMS
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: One time and monthly FEES for each sender. NO special
+      chars nor " " (space) support in the sender name. Instead of space "_" (underscore)
+      is being used
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Croatia
+'386':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: InfoSMS
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Slovenia
+'387':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: INFOSMS
+    numeric: REG
+    sc: REG
+    sender_and_registration_info: Numeric sender available for the FEE upon registration.
+      SC registration CHARGED - one time and monthly FEEs per each sender.
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Bosnia and Herzegovina
+'389':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Macedonia
+'420':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: Info
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: All not registered senders CONVERTED into "Info"
+      sender. Monthly FEE for each additional sender. NO special chars nor " " (space)
+      support in the sender name
+    text_restrictions: Traffic allowed ONLY between 8am and 6pm (CET) on working days.
+      Content promoting lottery, betting, gambling nor consumer loans NOT allowed.
+      NO political, violent, erotic nor abusive content and other text restrictions
+  billable_units: 2
+  names:
+  - Czech Republic
+'421':
+  attributes:
+    alpha: 'YES'
+    comment: P2P not allowed
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: SC up to 6 digits in length. One time and monthly
+      FEEs for numeric senders. All not registered long numeric senders are CONVERTED
+      into "Info"
+    text_restrictions: ''
+  billable_units: 2
+  names:
+  - Slovakia
+'423':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: LIMITED
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Liechtenstein
+'500':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Falkland Islands
+'501':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Belize
+'502':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Guatemala
+'503':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - El Salvador
+'504':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Honduras
+'505':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Nicaragua
+'506':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Costa Rica
+'507':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Panama
+'508':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Saint Pierre and Miquelon
+'509':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Haiti
+'590':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Guadeloupe
+'591':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Bolivia
+'592':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Guyana
+'593':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: ''
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Ecuador
+'594':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - French Guiana
+'595':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Paraguay
+'596':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Martinique
+'597':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Suriname
+'598':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Uruguay
+'599':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Curacao (former Netherlands Antilles)
+'670':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Timor L'este
+'672':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Norfolk Island
+'673':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Brunei Darussalam
+'674':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Nauru
+'675':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Papua New Guinea
+'676':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Tonga
+'677':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Solomon Islands
+'678':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Vanuatu
+'679':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Fiji
+'680':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Palau
+'682':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Cook Islands
+'685':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Samoa
+'687':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - New Caledonia
+'689':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - French Polynesia
+'691':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Micronesia, Federated States of
+'692':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Marshall Islands
+'852':
+  attributes:
+    alpha: REG
+    comment: DND register is being used
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: OPT-IN required for promotional traffic. NO violent, discriminatory
+      nor erotic content
+  billable_units: 3
+  names:
+  - Hong Kong
+'853':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Macau
+'855':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Cambodia
+'856':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Laos
+'880':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Bangladesh
+'886':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'NO'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: ONLY one shared long numeric available
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Taiwan
+'960':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Maldives
+'961':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Lebanon
+'962':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Jordan
+'963':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Syria
+'964':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 3
+  names:
+  - Iraq
+'965':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: No new senders available at the moment. Registration
+      ETA 1-5 days.
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Kuwait
+'966':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Saudi Arabia
+'967':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Yemen
+'968':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Only local entities can register senders. NOC and
+      Trace Licence required.
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Oman
+'970':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Palestinian Territory
+'971':
+  attributes:
+    alpha: REG
+    comment: OPT-OUT option in the message is required
+    dlr: 'YES'
+    generic_sender: SMS-Info
+    numeric: 'NO'
+    sc: REG
+    sender_and_registration_info: NOC letter is required to begin the registration
+      process. One time and monthly FEEs for each additional SC
+    text_restrictions: 'No marketing traffic between 8pm and 8am (GMT +4). International
+      traffic is allowed. '
+  billable_units: 2
+  names:
+  - United Arab Emirates
+'972':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Israel
+'973':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Bahrain
+'974':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: INFOSMSI / Message
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Case sensitive senders. SCs and numeric senders
+      MUST have more than 5 digits. All not registered senders are CONVERTED to "INFOSMSI"
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Qatar
+'975':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Bhutan
+'976':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Mongolia
+'977':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'NO'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Nepal
+'992':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: Numeric sender available upon registration. Numeric
+      sender MUST begin with "992" or "0" (zero)
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Tajikistan
+'993':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Turkmenistan
+'994':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: NO political, erotic, religious, alcoholic or tobacco products,
+      premium services related info. APPROVAL required for food add., medical, non-govern.
+      organizations or minor individuals related messages
+  billable_units: 3
+  names:
+  - Azerbaijan
+'995':
+  attributes:
+    alpha: REG
+    comment: null
+    dlr: 'YES'
+    generic_sender: InfoSMS
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: ''
+    text_restrictions: Few GSM 7 characters are not supported
+  billable_units: 1
+  names:
+  - Georgia
+'996':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: REG
+    sc: 'NO'
+    sender_and_registration_info: ONLY two shared numeric senders available. Long
+      numeric usage MUST be approved by MNO
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Kyrgyzstan
+'998':
+  attributes:
+    alpha: REG
+    comment: All features are supported (DLRs, longSMS, special characters, Unicode)
+    dlr: 'YES'
+    generic_sender: InfoSMS
+    numeric: 'NO'
+    sc: 'NO'
+    sender_and_registration_info: Numeric and all non registered senders are converted
+      to InfoSMS
+    text_restrictions: ''
+  billable_units: 1
+  names:
+  - Uzbekistan
+'1242':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 2
+  names:
+  - Bahamas
+'1246':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 2
+  names:
+  - Barbados
+'1264':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Anguilla
+'1268':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Antigua and Barbuda
+'1284':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Virgin Islands, British
+'1345':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Cayman Islands
+'1441':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Bermuda
+'1473':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Grenada
+'1649':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Turks and Caicos Islands
+'1664':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: 'YES'
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 1
+  names:
+  - Montserrat
+'1684':
+  attributes:
+    alpha: 'NO'
+    comment: null
+    dlr: Carrier DLR
+    generic_sender: ''
+    numeric: LIMITED
+    sc: 'NO'
+    sender_and_registration_info: All senders CONVERTED into random long numeric senders
+    text_restrictions: Bulk/marketing traffic NOT allowed
+  billable_units: 3
+  names:
+  - American Samoa
+'1721':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Sint Maarten
+'1758':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Saint Lucia
+'1767':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Dominica, Commonwealth of
+'1784':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Saint Vincent and The Grenadines
+'1868':
+  attributes:
+    alpha: null
+    comment: null
+    dlr: null
+    generic_sender: null
+    numeric: null
+    sc: null
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Trinidad and Tobago
+'1869':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 2
+  names:
+  - Saint Kitts and Nevis
+'1876':
+  attributes:
+    alpha: 'YES'
+    comment: null
+    dlr: 'YES'
+    generic_sender: null
+    numeric: 'YES'
+    sc: 'YES'
+    sender_and_registration_info: null
+    text_restrictions: null
+  billable_units: 1
+  names:
+  - Jamaica

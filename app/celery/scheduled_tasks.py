@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from flask import current_app
-from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -32,6 +31,7 @@ from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
 
