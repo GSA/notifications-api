@@ -17,6 +17,7 @@ from app.utils import hilite
 def send_notification_to_service_users(
     service_id, template_id, personalisation=None, include_user_fields=None
 ):
+    print(f"SERVICE ID {service_id} TEMPLATE_ID {template_id}")
     personalisation = personalisation or {}
     print(hilite(f"personalisation {personalisation}"))
     include_user_fields = include_user_fields or []

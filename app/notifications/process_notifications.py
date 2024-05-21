@@ -134,6 +134,9 @@ def persist_notification(
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
+        print(
+            f"LOOK UP TEMPLATE WITH TEMPLATE_ID {template_id} and service_id {service.id}"
+        )
         template = dao_get_template_by_id_and_service_id(template_id, service.id)
         print(hilite(f"created template?: {template}"))
         template_object = create_content_for_notification(
