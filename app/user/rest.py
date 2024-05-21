@@ -386,6 +386,10 @@ def send_user_confirm_new_email(user_id):
         current_app.config["CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID"]
     )
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    # TODO writing this personalization to the db adds a little PII
+    # to the notifications table, but it will be purged after 7 days.
+    # If we don't want it to go into the db at all, we would need to
+    # turn this into a job and retrieve it from S3.
     personalisation = {
         "name": user_to_send_to.name,
         "url": _create_confirmation_url(
@@ -398,7 +402,7 @@ def send_user_confirm_new_email(user_id):
         template_version=template.version,
         recipient=email["email"],
         service=service,
-        personalisation={},
+        personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
         key_type=KeyType.NORMAL,
