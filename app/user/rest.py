@@ -441,17 +441,19 @@ def send_new_user_email_verification(user_id):
             base_url=request_json.get("admin_base_url"),
         ),
     }
+    print("TRY TO SAVE NOTI")
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=user_to_send_to.email_address,
         service=service,
-        personalisation={},
+        personalisation=personalisation,
         notification_type=template.template_type,
         api_key_id=None,
         key_type=KeyType.NORMAL,
         reply_to_text=service.get_default_reply_to_email_address(),
     )
+    print("SAVED THE NOTIFICATION")
     saved_notification.personalisation = personalisation
 
     redis_store.set(
@@ -464,6 +466,7 @@ def send_new_user_email_verification(user_id):
         json.dumps(personalisation),
         ex=60 * 60,
     )
+    print("SET REDIS")
     current_app.logger.info("Sending notification to queue")
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
