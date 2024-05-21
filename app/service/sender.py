@@ -1,4 +1,3 @@
-from app.utils import hilite
 from flask import current_app
 
 from app.config import QueueNames
@@ -12,6 +11,7 @@ from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
 )
+from app.utils import hilite
 
 
 def send_notification_to_service_users(

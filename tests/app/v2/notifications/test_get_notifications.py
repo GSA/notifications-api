@@ -74,6 +74,7 @@ def test_get_notification_by_id_returns_200(
         "scheduled_for": None,
         "provider_response": None,
         "carrier": None,
+        "message_parts": None,
     }
 
     assert json_response == expected_response
