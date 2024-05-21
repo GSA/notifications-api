@@ -107,6 +107,8 @@ def persist_notification(
         document_download_count=document_download_count,
         updated_at=updated_at,
     )
+    print(hilite(f"personalisation? {personalisation}"))
+    print(hilite(f"notification? {notification}"))
 
     if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
@@ -119,6 +121,7 @@ def persist_notification(
         notification.rate_multiplier = recipient_info.billable_units
 
     elif notification_type == NotificationType.EMAIL:
+        print(hilite("inside elif for email type"))
         current_app.logger.info(
             f"Persisting notification with type: {NotificationType.EMAIL}"
         )
@@ -127,19 +130,20 @@ def persist_notification(
             format_email_address(notification.to),
             ex=1800,
         )
-
+    print(hilite(f"simulated? {simulated}"))
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
         template = dao_get_template_by_id_and_service_id(template_id, service.id)
+        print(hilite(f"created template?: {template}"))
         template_object = create_content_for_notification(
             template, notification.personalisation
         )
-
-        notification.message_parts = template_object.fragment_count
-
-        current_app.logger.info(f"Message parts? {notification.message_parts}")
+        print(hilite(f"template object? {template_object}"))
+        if isinstance(template_object, SMSMessageTemplate):
+            notification.message_parts = template_object.fragment_count
         dao_create_notification(notification)
+        print(hilite("created notification?"))
         if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
                 "Redis enabled, querying cache key for service id: {}".format(

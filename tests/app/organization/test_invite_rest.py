@@ -7,6 +7,7 @@ from freezegun import freeze_time
 
 from app.enums import InvitedUserStatus
 from app.models import Notification
+from app.utils import hilite
 from notifications_utils.url_safe_token import generate_token
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_org_user
@@ -46,7 +47,7 @@ def test_create_invited_org_user(
         organization=str(sample_organization.id),
         email_address=email_address,
         invited_by=str(sample_user.id),
-        **extra_args
+        **extra_args,
     )
 
     json_resp = admin_request.post(
@@ -55,7 +56,7 @@ def test_create_invited_org_user(
         _data=data,
         _expected_status=201,
     )
-
+    print(hilite(f"{json_resp}"))
     assert json_resp["data"]["organization"] == str(sample_organization.id)
     assert json_resp["data"]["email_address"] == email_address
     assert json_resp["data"]["invited_by"] == str(sample_user.id)

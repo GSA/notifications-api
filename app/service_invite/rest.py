@@ -75,12 +75,18 @@ def _create_service_invite(invited_user, invite_link_host):
         "url": url,
     }
 
+    db_personalisation = personalisation
+    if db_personalisation.get("phone_number"):
+        del db_personalisation["phone_number"]
+    if db_personalisation.get("email_address"):
+        del db_personalisation["email_address"]
+
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=invited_user.email_address,
         service=service,
-        personalisation={},
+        personalisation=db_personalisation,
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KeyType.NORMAL,

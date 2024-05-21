@@ -1,3 +1,4 @@
+from app.utils import hilite
 import pytest
 from flask import current_app
 
@@ -17,6 +18,7 @@ def test_send_notification_to_service_users_persists_notifications_correctly(
     mocker.patch("app.service.sender.send_notification_to_queue")
 
     template = create_template(sample_service, template_type=notification_type)
+    print(hilite(f"heres my template?  {template}"))
     send_notification_to_service_users(
         service_id=sample_service.id, template_id=template.id
     )

@@ -15,6 +15,7 @@ from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
+    hilite,
     midnight_n_days_ago,
 )
 from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
@@ -53,6 +54,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
 
 @autocommit
 def dao_create_notification(notification):
+    print(hilite("about to add noti to db"))
     if not notification.id:
         # need to populate defaulted fields before we create the notification history object
         notification.id = create_uuid()
@@ -70,10 +72,8 @@ def dao_create_notification(notification):
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
-
-    print(f"****DAO CREATE NOTIFICATION MESSAGE PARTS IS: {notification.message_parts}")
-    print(str(db.session.add(notification)))
     db.session.add(notification)
+    print(hilite("added noti to db"))
 
 
 def country_records_delivery(phone_prefix):
@@ -678,6 +678,6 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
 
 def dao_get_notification_message_parts_by_job_id(job_id):
     total_message_parts = db.session.query(
-        func.sum(Notification.message_parts.label("message_parts"))
+        functions.sum(Notification.message_parts.label("message_parts"))
     ).filter(Notification.job_id == job_id)
     return total_message_parts

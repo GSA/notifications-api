@@ -1,3 +1,4 @@
+from app.utils import hilite
 from flask import current_app
 
 from app.config import QueueNames
@@ -17,6 +18,7 @@ def send_notification_to_service_users(
     service_id, template_id, personalisation=None, include_user_fields=None
 ):
     personalisation = personalisation or {}
+    print(hilite(f"personalisation {personalisation}"))
     include_user_fields = include_user_fields or []
     template = dao_get_template_by_id(template_id)
     service = dao_fetch_service_by_id(service_id)
@@ -25,6 +27,7 @@ def send_notification_to_service_users(
 
     for user in active_users:
         personalisation = _add_user_fields(user, personalisation, include_user_fields)
+        print(hilite(f"next personalisation {personalisation}"))
         notification = persist_notification(
             template_id=template.id,
             template_version=template.version,
@@ -40,6 +43,7 @@ def send_notification_to_service_users(
             key_type=KeyType.NORMAL,
             reply_to_text=notify_service.get_default_reply_to_email_address(),
         )
+        print(hilite("Persisted notification!"))
         send_notification_to_queue(notification, queue=QueueNames.NOTIFY)
 
 

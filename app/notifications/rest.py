@@ -237,7 +237,6 @@ def create_template_object_for_notification(template, personalisation):
 
 @notifications.route("/notifications/<uuid:job_id>/message_parts", methods=["GET"])
 def get_batch_notification_message_parts_by_job_id(job_id):
-    print(hilite("AT THE TOP OF THE API CALL"))
     total_message_parts = (
         notifications_dao.dao_get_notification_message_parts_by_job_id(job_id=job_id)
     )
