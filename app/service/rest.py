@@ -1,5 +1,5 @@
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
@@ -63,6 +63,7 @@ from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_live_services_data,
     dao_fetch_service_by_id,
+    dao_fetch_stats_for_service_from_day,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_remove_user_from_service,
@@ -208,6 +209,36 @@ def get_service_notification_statistics(service_id):
             int(request.args.get("limit_days", 7)),
         )
     )
+
+
+@service_blueprint.route("/<uuid:service_id>/statistics/<string:start>/<int:days>")
+def get_service_notification_statistics_by_day(service_id, start, days):
+    return jsonify(
+        data=get_service_statistics_for_specific_days(service_id, start, int(days))
+    )
+
+
+def get_service_statistics_for_specific_days(service_id, start, days=1):
+    start_date = datetime.strptime(start, "%Y-%m-%d").date()
+
+    if days == 1:
+        stats = {}
+        stats[start] = {
+            "value": statistics.format_statistics(
+                dao_fetch_stats_for_service_from_day(service_id, start_date)
+            )
+        }
+    else:
+        stats = {}
+        for d in range(days):
+            new_date = start_date + timedelta(days=d)
+            key = new_date.strftime("%Y-%m-%d")
+            value = statistics.format_statistics(
+                dao_fetch_stats_for_service_from_day(service_id, new_date)
+            )
+            stats[key] = {"value": value}
+
+    return stats
 
 
 @service_blueprint.route("", methods=["POST"])

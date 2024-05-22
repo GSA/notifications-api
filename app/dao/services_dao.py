@@ -425,6 +425,33 @@ def dao_fetch_todays_stats_for_service(service_id):
     )
 
 
+def dao_fetch_stats_for_service_from_day(service_id, day):
+    # today = datetime.now(timezone.utc).date()
+    # 2024-05-20
+    # day_date = datetime.strptime(day, '%Y-%m-%d').date()
+    start_date = get_midnight_in_utc(day)
+    end_date = get_midnight_in_utc(day + timedelta(days=1))
+    print(start_date)
+    return (
+        db.session.query(
+            NotificationHistory.notification_type,
+            NotificationHistory.status,
+            func.count(NotificationHistory.id).label("count"),
+        )
+        .filter(
+            NotificationHistory.service_id == service_id,
+            NotificationHistory.key_type != KeyType.TEST,
+            NotificationHistory.created_at >= start_date,
+            NotificationHistory.created_at <= end_date,
+        )
+        .group_by(
+            NotificationHistory.notification_type,
+            NotificationHistory.status,
+        )
+        .all()
+    )
+
+
 def dao_fetch_todays_stats_for_all_services(
     include_from_test_key=True, only_active=True
 ):
