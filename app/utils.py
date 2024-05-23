@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import url_for
 from sqlalchemy import func
@@ -132,3 +132,15 @@ def hilite(message):
     ansi_green = "\033[32m"
     ansi_reset = "\033[0m"
     return f"{ansi_green}{message}{ansi_reset}"
+
+
+def aware_utcnow():
+    return datetime.now(timezone.utc)
+
+
+def naive_utcnow():
+    return aware_utcnow().replace(tzinfo=None)
+
+
+def utc_now():
+    return naive_utcnow()
