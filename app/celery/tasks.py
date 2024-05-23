@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from flask import current_app
 from requests import HTTPError, RequestException, request
@@ -24,7 +23,7 @@ from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from app.v2.errors import TotalRequestsError
 from notifications_utils.recipients import RecipientCSV
 
@@ -32,7 +31,7 @@ from notifications_utils.recipients import RecipientCSV
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
     """Update job status, get csv data from s3, and begin processing csv rows."""
-    start = datetime.utcnow()
+    start = utc_now()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
         "Starting process-job task for job id {} with status: {}".format(
@@ -82,7 +81,7 @@ def process_job(job_id, sender_id=None):
 def job_complete(job, resumed=False, start=None):
     job.job_status = JobStatus.FINISHED
 
-    finished = datetime.utcnow()
+    finished = utc_now()
     job.processing_finished = finished
     dao_update_job(job)
 
@@ -157,7 +156,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
             return False
     except TotalRequestsError:
         job.job_status = "sending limits exceeded"
-        job.processing_finished = datetime.utcnow()
+        job.processing_finished = utc_now()
         dao_update_job(job)
         current_app.logger.error(
             "Job {} size {} error. Total sending limits {} exceeded".format(
@@ -211,7 +210,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             notification_type=NotificationType.SMS,
             api_key_id=None,
             key_type=KeyType.NORMAL,
-            created_at=datetime.utcnow(),
+            created_at=utc_now(),
             created_by_id=created_by_id,
             job_id=notification.get("job", None),
             job_row_number=notification.get("row_number", None),
@@ -272,7 +271,7 @@ def save_email(
             notification_type=NotificationType.EMAIL,
             api_key_id=None,
             key_type=KeyType.NORMAL,
-            created_at=datetime.utcnow(),
+            created_at=utc_now(),
             job_id=notification.get("job", None),
             job_row_number=notification.get("row_number", None),
             notification_id=notification_id,
@@ -438,7 +437,7 @@ def process_incomplete_jobs(job_ids):
     # reset the processing start time so that the check_job_status scheduled task doesn't pick this job up again
     for job in jobs:
         job.job_status = JobStatus.IN_PROGRESS
-        job.processing_started = datetime.utcnow()
+        job.processing_started = utc_now()
         dao_update_job(job)
 
     current_app.logger.info("Resuming Job(s) {}".format(job_ids))

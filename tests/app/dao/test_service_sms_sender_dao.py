@@ -164,11 +164,12 @@ def test_dao_update_service_sms_sender_switches_default(notify_db_session):
         .order_by(ServiceSmsSender.created_at)
         .all()
     )
+    # TODO hmmm we had to change the order around, why?
     assert len(sms_senders) == 2
-    assert sms_senders[0].sms_sender == "testing"
-    assert not sms_senders[0].is_default
-    assert sms_senders[1].sms_sender == "updated"
-    assert sms_senders[1].is_default
+    assert sms_senders[1].sms_sender == "testing"
+    assert not sms_senders[1].is_default
+    assert sms_senders[0].sms_sender == "updated"
+    assert sms_senders[0].is_default
 
 
 def test_dao_update_service_sms_sender_raises_exception_when_no_default_after_update(

@@ -102,7 +102,7 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import get_prev_next_pagination_links, hilite
+from app.utils import get_prev_next_pagination_links, hilite, utc_now
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -144,7 +144,7 @@ def get_services():
     include_from_test_key = request.args.get("include_from_test_key", "True") != "False"
 
     # If start and end date are not set, we are expecting today's stats.
-    today = str(datetime.utcnow().date())
+    today = str(utc_now().date())
 
     start_date = datetime.strptime(
         request.args.get("start_date", today), "%Y-%m-%d"
@@ -583,7 +583,7 @@ def get_monthly_notification_stats(service_id):
     )
     statistics.add_monthly_notification_status_stats(data, stats)
 
-    now = datetime.utcnow()
+    now = utc_now()
     if end_date > now:
         todays_deltas = fetch_notification_status_for_service_for_day(
             now, service_id=service_id
@@ -615,7 +615,7 @@ def get_service_statistics(service_id, today_only, limit_days=7):
 def get_detailed_services(
     start_date, end_date, only_active=False, include_from_test_key=True
 ):
-    if start_date == datetime.utcnow().date():
+    if start_date == utc_now().date():
         stats = dao_fetch_todays_stats_for_all_services(
             include_from_test_key=include_from_test_key, only_active=only_active
         )

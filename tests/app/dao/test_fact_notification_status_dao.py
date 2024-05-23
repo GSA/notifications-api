@@ -19,6 +19,7 @@ from app.dao.fact_notification_status_dao import (
 )
 from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import FactNotificationStatus
+from app.utils import utc_now
 from tests.app.db import (
     create_ft_notification_status,
     create_job,
@@ -643,10 +644,8 @@ def test_fetch_monthly_template_usage_for_service(sample_service):
         template=template_two,
         count=5,
     )
-    create_notification(
-        template=template_two, created_at=datetime.utcnow() - timedelta(days=1)
-    )
-    create_notification(template=template_two, created_at=datetime.utcnow())
+    create_notification(template=template_two, created_at=utc_now() - timedelta(days=1))
+    create_notification(template=template_two, created_at=utc_now())
     results = fetch_monthly_template_usage_for_service(
         datetime(2017, 4, 1), datetime(2018, 3, 31), sample_service.id
     )
@@ -713,7 +712,7 @@ def test_fetch_monthly_template_usage_for_service_does_join_to_notifications_if_
         template=template_one,
         count=3,
     )
-    create_notification(template=template_one, created_at=datetime.utcnow())
+    create_notification(template=template_one, created_at=utc_now())
     results = fetch_monthly_template_usage_for_service(
         datetime(2018, 1, 1), datetime(2018, 2, 20), template_one.service_id
     )
@@ -747,7 +746,7 @@ def test_fetch_monthly_template_usage_for_service_does_not_include_cancelled_sta
     )
     create_notification(
         template=sample_template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.CANCELLED,
     )
     results = fetch_monthly_template_usage_for_service(
@@ -771,7 +770,7 @@ def test_fetch_monthly_template_usage_for_service_does_not_include_test_notifica
     )
     create_notification(
         template=sample_template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.DELIVERED,
         key_type=KeyType.TEST,
     )

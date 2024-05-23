@@ -12,6 +12,7 @@ from app.performance_dashboard.performance_dashboard_schema import (
     performance_dashboard_request,
 )
 from app.schema_validation import validate
+from app.utils import utc_now
 
 performance_dashboard_blueprint = Blueprint(
     "performance_dashboard", __name__, url_prefix="/performance-dashboard"
@@ -29,7 +30,7 @@ def get_performance_dashboard():
         validate(request.args, performance_dashboard_request)
 
     # If start and end date are not set, we are expecting today's stats.
-    today = str(datetime.utcnow().date())
+    today = str(utc_now().date())
 
     start_date = datetime.strptime(
         request.args.get("start_date", today),

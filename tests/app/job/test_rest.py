@@ -16,6 +16,7 @@ from app.enums import (
     NotificationType,
     TemplateType,
 )
+from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_ft_notification_status,
@@ -152,7 +153,7 @@ def test_create_unscheduled_job_with_sender_id_in_metadata(
 
 @freeze_time("2016-01-01 12:00:00.000000")
 def test_create_scheduled_job(client, sample_template, mocker, fake_uuid):
-    scheduled_date = (datetime.utcnow() + timedelta(hours=95, minutes=59)).isoformat()
+    scheduled_date = (utc_now() + timedelta(hours=95, minutes=59)).isoformat()
     mocker.patch("app.celery.tasks.process_job.apply_async")
     mocker.patch(
         "app.job.rest.get_job_metadata_from_s3",
@@ -250,7 +251,7 @@ def test_create_job_returns_400_if_file_is_invalid(
 def test_should_not_create_scheduled_job_more_then_96_hours_in_the_future(
     client, sample_template, mocker, fake_uuid
 ):
-    scheduled_date = (datetime.utcnow() + timedelta(hours=96, minutes=1)).isoformat()
+    scheduled_date = (utc_now() + timedelta(hours=96, minutes=1)).isoformat()
     mocker.patch("app.celery.tasks.process_job.apply_async")
     mocker.patch(
         "app.job.rest.get_job_metadata_from_s3",
@@ -287,7 +288,7 @@ def test_should_not_create_scheduled_job_more_then_96_hours_in_the_future(
 def test_should_not_create_scheduled_job_in_the_past(
     client, sample_template, mocker, fake_uuid
 ):
-    scheduled_date = (datetime.utcnow() - timedelta(minutes=1)).isoformat()
+    scheduled_date = (utc_now() - timedelta(minutes=1)).isoformat()
     mocker.patch("app.celery.tasks.process_job.apply_async")
     mocker.patch(
         "app.job.rest.get_job_metadata_from_s3",
@@ -656,7 +657,7 @@ def test_get_job_by_id_with_stats_for_old_job_where_notifications_have_been_purg
     old_job = create_job(
         sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(days=9),
+        created_at=utc_now() - timedelta(days=9),
         job_status=JobStatus.FINISHED,
     )
 
@@ -771,8 +772,8 @@ def test_get_jobs_with_limit_days(admin_request, sample_template):
 
 
 def test_get_jobs_should_return_statistics(admin_request, sample_template):
-    now = datetime.utcnow()
-    earlier = datetime.utcnow() - timedelta(days=1)
+    now = utc_now()
+    earlier = utc_now() - timedelta(days=1)
     job_1 = create_job(sample_template, processing_started=earlier)
     job_2 = create_job(sample_template, processing_started=now)
     create_notification(job=job_1, status=NotificationStatus.CREATED)
@@ -807,8 +808,8 @@ def test_get_jobs_should_return_no_stats_if_no_rows_in_notifications(
     admin_request,
     sample_template,
 ):
-    now = datetime.utcnow()
-    earlier = datetime.utcnow() - timedelta(days=1)
+    now = utc_now()
+    earlier = utc_now() - timedelta(days=1)
     job_1 = create_job(sample_template, created_at=earlier)
     job_2 = create_job(sample_template, created_at=now)
 

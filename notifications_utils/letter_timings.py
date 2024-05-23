@@ -1,9 +1,10 @@
 from collections import namedtuple
-from datetime import datetime, time, timedelta
+from datetime import time, timedelta
 
 import pytz
 from govuk_bank_holidays.bank_holidays import BankHolidays
 
+from app.utils import utc_now
 from notifications_utils.countries.data import Postage
 from notifications_utils.timezones import utc_string_to_aware_gmt_datetime
 
@@ -101,11 +102,7 @@ def get_letter_timings(upload_time, postage):
 
     # print deadline is 3pm BST
     printed_by = set_gmt_hour(print_day, hour=15)
-    now = (
-        datetime.utcnow()
-        .replace(tzinfo=pytz.utc)
-        .astimezone(pytz.timezone("Europe/London"))
-    )
+    now = utc_now().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("Europe/London"))
 
     return LetterTimings(
         printed_by=printed_by,
@@ -135,7 +132,7 @@ def too_late_to_cancel_letter(notification_created_at):
     time_created_at = notification_created_at
     day_created_on = time_created_at.date()
 
-    current_time = datetime.utcnow()
+    current_time = utc_now()
     current_day = current_time.date()
     if (
         _after_letter_processing_deadline()
@@ -152,14 +149,14 @@ def too_late_to_cancel_letter(notification_created_at):
 
 
 def _after_letter_processing_deadline():
-    current_utc_datetime = datetime.utcnow()
+    current_utc_datetime = utc_now()
     bst_time = current_utc_datetime.time()
 
     return bst_time >= LETTER_PROCESSING_DEADLINE
 
 
 def _notification_created_before_today_deadline(notification_created_at):
-    current_bst_datetime = datetime.utcnow()
+    current_bst_datetime = utc_now()
     todays_deadline = current_bst_datetime.replace(
         hour=LETTER_PROCESSING_DEADLINE.hour,
         minute=LETTER_PROCESSING_DEADLINE.minute,

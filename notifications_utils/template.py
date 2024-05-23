@@ -1,7 +1,6 @@
 import math
 import re
 from abc import ABC, abstractmethod
-from datetime import datetime
 from functools import lru_cache
 from html import unescape
 from os import path
@@ -13,6 +12,7 @@ from notifications_utils import (
     LETTER_MAX_PAGE_COUNT,
     MAGIC_SEQUENCE,
     SMS_CHAR_COUNT_LIMIT,
+    utc_now,
 )
 from notifications_utils.countries.data import Postage
 from notifications_utils.field import Field, PlainTextField
@@ -739,7 +739,7 @@ class BaseLetterTemplate(SubjectMixin, Template):
         )
         self.admin_base_url = admin_base_url
         self.logo_file_name = logo_file_name
-        self.date = date or datetime.utcnow()
+        self.date = date or utc_now()
 
     @property
     def subject(self):

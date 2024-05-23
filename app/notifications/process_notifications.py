@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from flask import current_app
 
@@ -12,6 +11,7 @@ from app.dao.notifications_dao import (
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
+from app.utils import utc_now
 from app.v2.errors import BadRequestError
 from notifications_utils.recipients import (
     format_email_address,
@@ -77,7 +77,7 @@ def persist_notification(
     document_download_count=None,
     updated_at=None,
 ):
-    notification_created_at = created_at or datetime.utcnow()
+    notification_created_at = created_at or utc_now()
     if not notification_id:
         notification_id = uuid.uuid4()
 

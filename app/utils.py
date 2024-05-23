@@ -94,7 +94,7 @@ def midnight_n_days_ago(number_of_days):
     """
     Returns midnight a number of days ago. Takes care of daylight savings etc.
     """
-    return get_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
+    return get_midnight_in_utc(utc_now() - timedelta(days=number_of_days))
 
 
 def escape_special_characters(string):
@@ -104,7 +104,7 @@ def escape_special_characters(string):
 
 
 def get_archived_db_column_value(column):
-    date = datetime.utcnow().strftime("%Y-%m-%d")
+    date = utc_now().strftime("%Y-%m-%d")
     return f"_archived_{date}_{column}"
 
 
