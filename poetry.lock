@@ -2644,12 +2644,12 @@ setuptools = "*"
 
 [[package]]
 name = "notifications-python-client"
-version = "9.0.0"
+version = "9.1.0"
 description = "Python API client for GOV.UK Notify."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "notifications_python_client-9.0.0-py3-none-any.whl", hash = "sha256:664a5b5da2aa1a00efa8106bfa4855db04da95d79586e5edfb0411637d20d2d9"},
+    {file = "notifications_python_client-9.1.0-py3-none-any.whl", hash = "sha256:43b8f738dfa81ae3aa656d91e361dbc51316194f8b9a430706b03347fa7a01bc"},
 ]
 
 [package.dependencies]
@@ -4734,4 +4734,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "765256247a8d6a17d7ddcfe74bd66da09498cfd3a364326450452c23f0caf3a2"
+content-hash = "a0618053a17f5c46853d80ffe6a992c256793330a51ab0da07729f27e64ed316"
