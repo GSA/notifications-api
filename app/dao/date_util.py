@@ -1,3 +1,4 @@
+import calendar
 from datetime import date, datetime, time, timedelta
 
 
@@ -64,3 +65,7 @@ def get_calendar_year_for_datetime(start_date):
         return year - 1
     else:
         return year
+
+
+def get_number_of_days_for_month(year, month):
+    return calendar.monthrange(year, month)[1]

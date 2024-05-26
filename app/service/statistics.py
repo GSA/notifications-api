@@ -113,7 +113,6 @@ def create_empty_monthly_notification_status_stats_dict(year):
 def add_monthly_notification_status_stats(data, stats):
     for row in stats:
         month = row.month.strftime("%Y-%m")
-
         data[month][row.notification_type][row.notification_status] += row.count
-
+        data[month][row.notification_type][StatisticsType.REQUESTED] += row.count
     return data
