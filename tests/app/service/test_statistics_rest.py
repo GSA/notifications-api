@@ -255,7 +255,8 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     assert response["data"]["2016-06"] == {
         NotificationType.SMS: {
             # it combines the two days
-            NotificationStatus.DELIVERED: 2
+            NotificationStatus.DELIVERED: 2,
+            StatisticsType.REQUESTED: 2,
         },
         NotificationType.EMAIL: {},
     }
@@ -264,8 +265,12 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
         NotificationType.SMS: {
             NotificationStatus.CREATED: 1,
             NotificationStatus.DELIVERED: 2,
+            StatisticsType.REQUESTED: 3,
         },
-        NotificationType.EMAIL: {StatisticsType.DELIVERED: 1},
+        NotificationType.EMAIL: {
+            StatisticsType.DELIVERED: 1,
+            StatisticsType.REQUESTED: 1,
+        },
     }
 
 
@@ -311,7 +316,10 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
 
     assert len(response["data"]) == 6  # January to June
     assert response["data"]["2016-05"] == {
-        NotificationType.SMS: {NotificationStatus.DELIVERED: 1},
+        NotificationType.SMS: {
+            NotificationStatus.DELIVERED: 1,
+            StatisticsType.REQUESTED: 1,
+        },
         NotificationType.EMAIL: {},
     }
     assert response["data"]["2016-06"] == {
@@ -319,6 +327,7 @@ def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
             # combines the stats from the historic ft_notification_status and the current notifications
             NotificationStatus.CREATED: 3,
             NotificationStatus.DELIVERED: 1,
+            StatisticsType.REQUESTED: 4,
         },
         NotificationType.EMAIL: {},
     }
@@ -354,6 +363,7 @@ def test_get_monthly_notification_stats_ignores_test_keys(
 
     assert response["data"]["2016-06"][NotificationType.SMS] == {
         NotificationStatus.DELIVERED: 3,
+        StatisticsType.REQUESTED: 3,
     }
 
 
@@ -385,9 +395,11 @@ def test_get_monthly_notification_stats_checks_dates(admin_request, sample_servi
     assert "2017-04" not in response["data"]
     assert response["data"]["2016-04"][NotificationType.SMS] == {
         NotificationStatus.SENDING: 1,
+        StatisticsType.REQUESTED: 1,
     }
     assert response["data"]["2016-04"][NotificationType.SMS] == {
         NotificationStatus.SENDING: 1,
+        StatisticsType.REQUESTED: 1,
     }
 
 
@@ -416,6 +428,9 @@ def test_get_monthly_notification_stats_only_gets_for_one_service(
     )
 
     assert response["data"]["2016-06"] == {
-        NotificationType.SMS: {NotificationStatus.CREATED: 1},
+        NotificationType.SMS: {
+            NotificationStatus.CREATED: 1,
+            StatisticsType.REQUESTED: 1,
+        },
         NotificationType.EMAIL: {},
     }
