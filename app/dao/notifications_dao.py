@@ -330,7 +330,7 @@ def sanitize_successful_notification_by_id(notification_id, carrier, provider_re
         "sent_at": datetime.utcnow(),
     }
 
-    db.session.execute(update_query, input_params)
+    db.session.execute(text(update_query), input_params)
     db.session.commit()
 
 
