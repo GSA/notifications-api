@@ -838,7 +838,7 @@ def test_fetch_sms_billing_for_all_services_with_remainder(notify_db_session):
         },
     ]
 
-    assert [dict(result) for result in results] == expected_results
+    assert [result._asdict() for result in results] == expected_results
 
 
 def test_fetch_sms_billing_for_all_services_without_an_organization_appears(
@@ -893,7 +893,7 @@ def test_fetch_sms_billing_for_all_services_without_an_organization_appears(
         },
     ]
 
-    assert [dict(result) for result in results] == expected_results
+    assert [result._asdict() for result in results] == expected_results
 
 
 @freeze_time("2019-06-01 13:30")
@@ -1228,8 +1228,8 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
 
     result = query_organization_sms_usage_for_year(org.id, 2022).all()
 
-    service_1_rows = [row for row in result if row.service_id == service_1.id]
-    service_2_rows = [row for row in result if row.service_id == service_2.id]
+    service_1_rows = [row._asdict() for row in result if row.service_id == service_1.id]
+    service_2_rows = [row._asdict() for row in result if row.service_id == service_2.id]
 
     assert len(service_1_rows) == 2
     assert len(service_2_rows) == 2
@@ -1256,10 +1256,10 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
 
     # assert total costs are accurate
     assert (
-        float(sum(row.cost for row in service_1_rows)) == 1
+        float(sum(row["cost"] for row in service_1_rows)) == 1
     )  # rows with 2 and 4, allowance of 5
     assert (
-        float(sum(row.cost for row in service_2_rows)) == 14
+        float(sum(row["cost"] for row in service_2_rows)) == 14
     )  # rows with 8 and 16, allowance of 10
 
 
@@ -1296,7 +1296,10 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
         financial_year_start=current_year,
     )
 
-    result = query_organization_sms_usage_for_year(org.id, 2022).all()
+    result = [
+        row._asdict()
+        for row in query_organization_sms_usage_for_year(org.id, 2022).all()
+    ]
 
     # al lthe free allowance is used on the first day
     assert result[0]["local_date"] == date(2022, 4, 29)

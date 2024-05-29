@@ -4,8 +4,8 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
 from app.config import QueueNames
@@ -56,6 +56,7 @@ from app.user.users_schema import (
     post_verify_webauthn_schema,
 )
 from app.utils import url_with_token
+from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
 register_errors(user_blueprint)
@@ -533,6 +534,12 @@ def set_permissions(user_id, service_id):
     # TODO fix security hole, how do we verify that the user
     # who is making this request has permission to make the request.
     service_user = dao_get_service_user(user_id, service_id)
+    # TODO: Below exception is raised to account for the test case failure that got handled
+    # on its own in 1.4 when dao_get_service_user() returned an excpetion in case no result was found
+    if service_user is None:
+        raise NoResultFound(
+            "No ServiceUser found with the provided user_id and service_id"
+        )
     user = get_user_by_id(user_id)
     service = dao_fetch_service_by_id(service_id=service_id)
 

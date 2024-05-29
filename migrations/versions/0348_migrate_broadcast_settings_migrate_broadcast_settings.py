@@ -34,7 +34,7 @@ def upgrade():
     WHERE service_permissions.permission = 'broadcast'
     """
 
-    services = conn.execute(find_services_sql)
+    services = conn.execute(text(find_services_sql))
     for service in services:
         input_params = {"service_id": service.id}
         setting = conn.execute(

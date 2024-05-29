@@ -32,9 +32,7 @@ def upgrade():
                   """
     conn.execute(
         text(user_insert),
-        user_id=user_id,
-        time_now=datetime.utcnow(),
-        password=password,
+        {"user_id": user_id, "time_now": datetime.utcnow(), "password": password},
     )
     service_history_insert = """INSERT INTO services_history (id, name, created_at, active, message_limit, restricted, research_mode, email_from, created_by_id, reply_to_email_address, version)
                         VALUES (:service_id, 'Notify service', :time_now, True, 1000, False, False, 'testsender@dispostable.com',
@@ -43,9 +41,7 @@ def upgrade():
                      """
     conn.execute(
         text(service_history_insert),
-        service_id=service_id,
-        time_now=datetime.utcnow(),
-        user_id=user_id,
+        {"service_id": service_id, "time_now": datetime.utcnow(), "user_id": user_id},
     )
     service_insert = """INSERT INTO services (id, name, created_at, active, message_limit, restricted, research_mode, email_from, created_by_id, reply_to_email_address, version)
                         VALUES (:service_id, 'Notify service', :time_now, True, 1000, False, False, 'testsender@dispostable.com',
@@ -53,12 +49,12 @@ def upgrade():
                     """
     conn.execute(
         text(service_insert),
-        service_id=service_id,
-        time_now=datetime.utcnow(),
-        user_id=user_id,
+        {"service_id": service_id, "time_now": datetime.utcnow(), "user_id": user_id},
     )
     user_to_service_insert = """INSERT INTO user_to_service (user_id, service_id) VALUES (:user_id, :service_id)"""
-    conn.execute(text(user_to_service_insert), user_id=user_id, service_id=service_id)
+    conn.execute(
+        text(user_to_service_insert), {"user_id": user_id, "service_id": service_id}
+    )
 
     template_history_insert = """INSERT INTO templates_history (id, name, template_type, created_at,
                                                                 content, archived, service_id,
@@ -74,25 +70,29 @@ def upgrade():
     email_verification_content = """Hi ((name)),\n\nTo complete your registration for GOV.UK Notify please click the link below\n\n((url))"""
     conn.execute(
         text(template_history_insert),
-        template_id=uuid.uuid4(),
-        template_name="Notify email verification code",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=email_verification_content,
-        service_id=service_id,
-        subject="Confirm GOV.UK Notify registration",
-        user_id=user_id,
+        {
+            "template_id": uuid.uuid4(),
+            "template_name": "Notify email verification code",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": email_verification_content,
+            "service_id": service_id,
+            "subject": "Confirm GOV.UK Notify registration",
+            "user_id": user_id,
+        },
     )
     conn.execute(
         text(template_insert),
-        template_id="ece42649-22a8-4d06-b87f-d52d5d3f0a27",
-        template_name="Notify email verification code",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=email_verification_content,
-        service_id=service_id,
-        subject="Confirm GOV.UK Notify registration",
-        user_id=user_id,
+        {
+            "template_id": "ece42649-22a8-4d06-b87f-d52d5d3f0a27",
+            "template_name": "Notify email verification code",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": email_verification_content,
+            "service_id": service_id,
+            "subject": "Confirm GOV.UK Notify registration",
+            "user_id": user_id,
+        },
     )
 
     invitation_subject = "((user_name)) has invited you to collaborate on ((service_name)) on GOV.UK Notify"
@@ -103,50 +103,58 @@ def upgrade():
         """
     conn.execute(
         text(template_history_insert),
-        template_id="4f46df42-f795-4cc4-83bb-65ca312f49cc",
-        template_name="Notify invitation email",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=invitation_content,
-        service_id=service_id,
-        subject=invitation_subject,
-        user_id=user_id,
+        {
+            "template_id": "4f46df42-f795-4cc4-83bb-65ca312f49cc",
+            "template_name": "Notify invitation email",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": invitation_content,
+            "service_id": service_id,
+            "subject": invitation_subject,
+            "user_id": user_id,
+        },
     )
     conn.execute(
         text(template_insert),
-        template_id="4f46df42-f795-4cc4-83bb-65ca312f49cc",
-        template_name="Notify invitation email",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=invitation_content,
-        service_id=service_id,
-        subject=invitation_subject,
-        user_id=user_id,
+        {
+            "template_id": "4f46df42-f795-4cc4-83bb-65ca312f49cc",
+            "template_name": "Notify invitation email",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": invitation_content,
+            "service_id": service_id,
+            "subject": invitation_subject,
+            "user_id": user_id,
+        },
     )
 
     sms_code_content = "((verify_code)) is your US Notify authentication code"
     conn.execute(
         text(template_history_insert),
-        template_id="36fb0730-6259-4da1-8a80-c8de22ad4246",
-        template_name="Notify SMS verify code",
-        template_type="sms",
-        time_now=datetime.utcnow(),
-        content=sms_code_content,
-        service_id=service_id,
-        subject=None,
-        user_id=user_id,
+        {
+            "template_id": "36fb0730-6259-4da1-8a80-c8de22ad4246",
+            "template_name": "Notify SMS verify code",
+            "template_type": "sms",
+            "time_now": datetime.utcnow(),
+            "content": sms_code_content,
+            "service_id": service_id,
+            "subject": None,
+            "user_id": user_id,
+        },
     )
 
     conn.execute(
         text(template_insert),
-        template_id="36fb0730-6259-4da1-8a80-c8de22ad4246",
-        template_name="Notify SMS verify code",
-        template_type="sms",
-        time_now=datetime.utcnow(),
-        content=sms_code_content,
-        service_id=service_id,
-        subject=None,
-        user_id=user_id,
+        {
+            "template_id": "36fb0730-6259-4da1-8a80-c8de22ad4246",
+            "template_name": "Notify SMS verify code",
+            "template_type": "sms",
+            "time_now": datetime.utcnow(),
+            "content": sms_code_content,
+            "service_id": service_id,
+            "subject": None,
+            "user_id": user_id,
+        },
     )
 
     password_reset_content = (
@@ -160,25 +168,30 @@ def upgrade():
 
     conn.execute(
         text(template_history_insert),
-        template_id="474e9242-823b-4f99-813d-ed392e7f1201",
-        template_name="Notify password reset email",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=password_reset_content,
-        service_id=service_id,
-        subject="Reset your GOV.UK Notify password",
-        user_id=user_id,
+        {
+            "template_id": "474e9242-823b-4f99-813d-ed392e7f1201",
+            "template_name": "Notify password reset email",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": password_reset_content,
+            "service_id": service_id,
+            "subject": "Reset your GOV.UK Notify password",
+            "user_id": user_id,
+        },
     )
+
     conn.execute(
         text(template_insert),
-        template_id="474e9242-823b-4f99-813d-ed392e7f1201",
-        template_name="Notify password reset email",
-        template_type="email",
-        time_now=datetime.utcnow(),
-        content=password_reset_content,
-        service_id=service_id,
-        subject="Reset your GOV.UK Notify password",
-        user_id=user_id,
+        {
+            "template_id": "474e9242-823b-4f99-813d-ed392e7f1201",
+            "template_name": "Notify password reset email",
+            "template_type": "email",
+            "time_now": datetime.utcnow(),
+            "content": password_reset_content,
+            "service_id": service_id,
+            "subject": "Reset your GOV.UK Notify password",
+            "user_id": user_id,
+        },
     )
 
 

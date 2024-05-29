@@ -1,0 +1,252 @@
+{% if complete_html %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta content="telephone=no" name="format-detection" /> <!-- need to add formatting for real phone numbers -->
+  <meta name="viewport" content="width=device-width" />
+  <title>{{ subject }}</title>
+
+  <style type="text/css">
+    @media only screen and (min-device-width: 581px) {
+      .content {
+        width: 580px !important;
+      }
+    }
+    body { margin:0 !important; }
+    div[style*="margin: 16px 0"] { margin:0 !important; }
+  </style>
+
+  <!--[if gte mso 9]>
+    <style type="text/css">
+      li {
+        margin-left: 4px !important;
+      }
+      table {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+    </style>
+  <![endif]-->
+
+</head>
+
+<body style="font-family: Helvetica, Arial, sans-serif;font-size: 16px;margin: 0;color:#0b0c0c;">
+{% endif %}
+<span style="display: none;font-size: 1px;color: #fff; max-height: 0;">{{ preheader }}…</span>
+{% if govuk_banner %}
+  <table role="presentation" width="100%" style="border-collapse: collapse;min-width: 100%;width: 100% !important;" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td width="100%" height="53">
+        <!--[if (gte mso 9)|(IE)]>
+          <table role="presentation" width="580" align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;width: 580px;">
+            <tr>
+              <td>
+        <![endif]-->
+        <table role="presentation" width="100%" style="border-collapse: collapse;max-width: 580px;" cellpadding="0" cellspacing="0" border="0" align="center">
+          <tr>
+            <td width="70" valign="middle">
+              <a href="https://beta.notify.gov" title="Go to the beta.notify.gov homepage" style="text-decoration: none;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td style="font-size: 28px; line-height: 1.315789474; Margin-top: 4px; padding-left: 10px;">
+                      <span style="
+                        font-family: Public Sans Web,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                        font-weight: 600;
+                        color:#0b0c0c;
+                        text-decoration: none;
+                        vertical-align:top;
+                        display: inline-block;
+                          ">Notify.gov</span>
+                    </td>
+                  </tr>
+                </table>
+              </a>
+            </td>
+          </tr>
+        </table>
+        <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+  <table
+      role="presentation"
+      class="content"
+      align="center"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="border-collapse: collapse;max-width: 580px; width: 100% !important;"
+      width="100%"
+  >
+    <tr>
+      <td width="10" height="10" valign="middle"></td>
+      <td>
+        <!--[if (gte mso 9)|(IE)]>
+          <table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;width: 560px;">
+            <tr>
+              <td height="10">
+        <![endif]-->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td bgcolor="#1D70B8" width="100%" height="10"></td>
+                  </tr>
+                </table>
+        <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+        <![endif]-->
+      </td>
+      <td width="10" valign="middle" height="10"></td>
+    </tr>
+  </table>
+{% endif %}
+{% if brand_banner %}
+  {% set brand_colour = brand_colour if brand_colour else '#0b0c0c' %}
+  <table role="presentation" width="100%" style="border-collapse: collapse;min-width: 100%;width: 100% !important;" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="100%" height="53" bgcolor="{{brand_colour}}">
+          <!--[if (gte mso 9)|(IE)]>
+            <table role="presentation" width="580" align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;width: 580px;">
+              <tr>
+                <td>
+          <![endif]-->
+          <table role="presentation" width="100%" style="border-collapse: collapse;max-width: 580px;" cellpadding="0" cellspacing="0" border="0" align="center">
+            <tr>
+              {% if brand_logo %}
+                <td
+                  width="70"
+                  height="{% if brand_text -%} 27 {%- else -%} 54 {%- endif %}"
+                  bgcolor="{{brand_colour}}"
+                  valign="middle"
+                  style="padding: 10px 0px 12px 10px"
+                >
+                  <img
+                    src="{{ brand_logo }}"
+                    border="0"
+                    style="display: block; border: 0;"
+                    height="{% if brand_text -%} 27 {%- else -%} 54 {%- endif %}"
+                    alt="{% if brand_text %}{% else -%}{{ brand_name }}{%- endif %}"
+                  />
+                </td>
+              {% endif %}
+              {% if brand_text %}
+                <td width="100%" bgcolor="{{brand_colour}}" valign="middle" align="left" style="padding: 14px 0 14px 10px">
+                  <span style="
+                    display: block;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-weight: 700;
+                    font-size: 19px;
+                    color: #ffffff;
+                    line-height: 25px;
+                    ">
+                      {{ brand_text }}
+                  </span>
+                </td>
+              {% endif %}
+            </tr>
+          </table>
+          <!--[if (gte mso 9)|(IE)]>
+                </td>
+              </tr>
+            </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+{% endif %}
+{% if brand_logo and not brand_banner %}
+  <table
+      role="presentation"
+      class="content"
+      align="center"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="border-collapse: collapse;max-width: 580px; width: 100% !important;"
+      width="100%"
+  >
+    <tr>
+      <td width="10" height="10" valign="middle"></td>
+      <td>
+        <!--[if (gte mso 9)|(IE)]>
+          <table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;width: 560px;">
+            <tr>
+              <td height="10">
+        <![endif]-->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse">
+                  <tr>
+                    <td height="24" width="100%" colspan="2"><br /></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse">
+                        <tr>
+                          <td style="padding: 0 5px 0{% if brand_colour %} 7px; border-left: solid 2px {{ brand_colour }}{% else %} 0{% endif %}">
+                            <img src="{{ brand_logo }}" style="display: block; border: 0" height="{% if brand_text -%} 27 {%- else -%} 54 {%- endif %}"
+                                 alt="{% if brand_text %}{% else -%}{{ brand_name }}{%- endif %}" />
+                          </td>
+                          <td width="100%" style="font-family: Helvetica, Arial, sans-serif; font-size: 18px; line-height: 23px;" valign="center">
+                            {% if brand_text %}
+                            {{ brand_text }}
+                            {% endif %}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+        <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+        <![endif]-->
+      </td>
+      <td width="10" valign="middle" height="10"></td>
+    </tr>
+  </table>
+{% endif %}
+  <table
+      role="presentation"
+      class="content"
+      align="center"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="border-collapse: collapse;max-width: 580px; width: 100% !important;"
+      width="100%"
+  >
+    <tr>
+      <td height="30"><br /></td>
+    </tr>
+    <tr>
+      <td width="10" valign="middle"><br /></td>
+      <td style="font-family: Helvetica, Arial, sans-serif; font-size: 19px; line-height: 1.315789474; max-width: 560px;">
+        <!--[if (gte mso 9)|(IE)]>
+          <table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;width: 560px;">
+            <tr>
+              <td style="font-family: Helvetica, Arial, sans-serif; font-size: 19px; line-height: 1.315789474;">
+        <![endif]-->
+            {{ body|safe }}
+        <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+        <![endif]-->
+      </td>
+      <td width="10" valign="middle"><br /></td>
+    </tr>
+    <tr>
+      <td height="30"><br /></td>
+    </tr>
+  </table>
+{% if complete_html %}
+</body>
+</html>
+{% endif %}

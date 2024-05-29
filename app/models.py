@@ -3,15 +3,6 @@ import itertools
 import uuid
 
 from flask import current_app, url_for
-from notifications_utils.clients.encryption.encryption_client import EncryptionError
-from notifications_utils.recipients import (
-    InvalidEmailError,
-    InvalidPhoneError,
-    try_validate_and_format_phone_number,
-    validate_email_address,
-    validate_phone_number,
-)
-from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -46,6 +37,15 @@ from app.utils import (
     DATETIME_FORMAT_NO_TIMEZONE,
     get_dt_string_or_none,
 )
+from notifications_utils.clients.encryption.encryption_client import EncryptionError
+from notifications_utils.recipients import (
+    InvalidEmailError,
+    InvalidPhoneError,
+    try_validate_and_format_phone_number,
+    validate_email_address,
+    validate_phone_number,
+)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 
 def filter_null_value_fields(obj):
