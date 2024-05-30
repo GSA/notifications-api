@@ -38,40 +38,46 @@ def upgrade():
         )
 
     conn = op.get_bind()
-    conn.execute(
+
+    query = text(
         """
-    INSERT INTO service_permissions (service_id, permission, created_at)
-    SELECT id, 'sms', '2017-05-26 17:30:00.000000' FROM services
-    WHERE id NOT IN (SELECT service_id FROM service_permissions
-    WHERE service_id=id AND permission='sms')
+        INSERT INTO service_permissions (service_id, permission, created_at)
+        SELECT id, 'sms', '2017-05-26 17:30:00.000000' FROM services
+        WHERE id NOT IN (SELECT service_id FROM service_permissions
+        WHERE service_id=id AND permission='sms')
     """
     )
+    conn.execute(query)
 
-    conn.execute(
+    query = text(
         """
         INSERT INTO service_permissions (service_id, permission, created_at)
         SELECT id, 'email', '2017-05-26 17:30:00.000000' FROM services
         WHERE id NOT IN (SELECT service_id FROM service_permissions
         WHERE service_id=id AND permission='email')
-        """
+     """
     )
+    conn.execute(query)
 
-    conn.execute(
+    query = text(
         """
-    INSERT INTO service_permissions (service_id, permission, created_at)
-    SELECT id, 'letter', '2017-05-26 17:30:00.000000' FROM services
-    WHERE can_send_letters AND id NOT IN (SELECT service_id FROM service_permissions
-    WHERE service_id=id AND permission='letter')
+        INSERT INTO service_permissions (service_id, permission, created_at)
+        SELECT id, 'letter', '2017-05-26 17:30:00.000000' FROM services
+        WHERE can_send_letters AND id NOT IN (SELECT service_id FROM service_permissions
+        WHERE service_id=id AND permission='letter')
     """
     )
-    conn.execute(
+    conn.execute(query)
+
+    query = text(
         """
         INSERT INTO service_permissions (service_id, permission, created_at)
         SELECT id, 'international_sms', '2017-05-26 17:30:00.000000' FROM services
         WHERE can_send_international_sms AND id NOT IN (SELECT service_id FROM service_permissions
         WHERE service_id=id AND permission='international_sms')
-        """
+    """
     )
+    conn.execute(query)
 
 
 def downgrade():

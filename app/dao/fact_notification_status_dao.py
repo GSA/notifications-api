@@ -459,25 +459,21 @@ def get_total_notifications_for_date_range(start_date, end_date):
             FactNotificationStatus.local_date.label("local_date"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_type
-                            == NotificationType.EMAIL,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_type
+                        == NotificationType.EMAIL,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("emails"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_type
-                            == NotificationType.SMS,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_type
+                        == NotificationType.SMS,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("sms"),
@@ -507,78 +503,66 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
             FactNotificationStatus.notification_type,
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status.in_(
-                                [NotificationStatus.SENDING, NotificationStatus.PENDING]
-                            ),
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status.in_(
+                            [NotificationStatus.SENDING, NotificationStatus.PENDING]
+                        ),
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_sending"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status
-                            == NotificationStatus.DELIVERED,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status
+                        == NotificationStatus.DELIVERED,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_delivered"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status.in_(
-                                [
-                                    NotificationStatus.TECHNICAL_FAILURE,
-                                    NotificationStatus.FAILED,
-                                ]
-                            ),
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status.in_(
+                            [
+                                NotificationStatus.TECHNICAL_FAILURE,
+                                NotificationStatus.FAILED,
+                            ]
+                        ),
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_technical_failure"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status
-                            == NotificationStatus.TEMPORARY_FAILURE,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status
+                        == NotificationStatus.TEMPORARY_FAILURE,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_temporary_failure"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status
-                            == NotificationStatus.PERMANENT_FAILURE,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status
+                        == NotificationStatus.PERMANENT_FAILURE,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_permanent_failure"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactNotificationStatus.notification_status
-                            == NotificationStatus.SENT,
-                            FactNotificationStatus.notification_count,
-                        )
-                    ],
+                    (
+                        FactNotificationStatus.notification_status
+                        == NotificationStatus.SENT,
+                        FactNotificationStatus.notification_count,
+                    ),
                     else_=0,
                 )
             ).label("count_sent"),

@@ -5,7 +5,6 @@ from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
-from notifications_utils.url_safe_token import check_token, generate_token
 
 from app import redis_store
 from app.config import QueueNames
@@ -27,6 +26,7 @@ from app.notifications.process_notifications import (
 )
 from app.schemas import invited_user_schema
 from app.utils import hilite
+from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)
 
@@ -55,7 +55,7 @@ def _create_service_invite(invited_user, invite_link_host):
     data = {}
     permissions = invited_user.permissions
     permissions = permissions.split(",")
-    data["from_user_id"] = (str(invited_user.from_user.id))
+    data["from_user_id"] = str(invited_user.from_user.id)
     data["service_id"] = str(invited_user.service.id)
     data["permissions"] = permissions
     data["folder_permissions"] = invited_user.folder_permissions

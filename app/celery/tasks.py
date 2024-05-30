@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 
 from flask import current_app
-from notifications_utils.recipients import RecipientCSV
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
@@ -27,6 +26,7 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT
 from app.v2.errors import TotalRequestsError
+from notifications_utils.recipients import RecipientCSV
 
 
 @notify_celery.task(name="process-job")

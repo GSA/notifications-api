@@ -26,7 +26,9 @@ class PermissionDAO(DAOClass):
     ):
         try:
             if replace:
-                query = self.Meta.model.query.filter_by(user=user, service=service)
+                query = self.Meta.model.query.filter(
+                    self.Meta.model.user == user, self.Meta.model.service == service
+                )
                 query.delete()
             for p in permissions:
                 p.user = user

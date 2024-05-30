@@ -1,6 +1,4 @@
 from flask import Blueprint, jsonify, request
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.template import SMSMessageTemplate
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.services_dao import dao_fetch_service_by_id
@@ -28,6 +26,8 @@ from app.template.template_schemas import (
     post_update_template_schema,
 )
 from app.utils import get_public_notify_type_text
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
+from notifications_utils.template import SMSMessageTemplate
 
 template_blueprint = Blueprint(
     "template", __name__, url_prefix="/service/<uuid:service_id>/template"

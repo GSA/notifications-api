@@ -19,7 +19,6 @@ This repo contains:
 Our other repositories are:
 
 - [notifications-admin](https://github.com/GSA/notifications-admin)
-- [notifications-utils](https://github.com/GSA/notifications-utils)
 - [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
 - [notify-python-demo](https://github.com/GSA/notify-python-demo)
 
@@ -430,23 +429,6 @@ will do the following for you:
 In either situation, once you are finished and have verified the dependency
 changes are working, please be sure to commit both the `pyproject.toml` and
 `poetry.lock` files.
-
-### Keeping the notification-utils Dependency Up-to-Date
-
-The `notifications-utils` dependency references the other repository we have at
-https://github.com/GSA/notifications-utils - this dependency requires a bit of
-extra legwork to ensure it stays up-to-date.
-
-Whenever a PR is merged in the `notifications-utils` repository, we need to make
-sure the changes are pulled in here and committed to this repository as well.
-You can do this by going through these steps:
-
-- Make sure your local `main` branch is up-to-date
-- Create a new branch to work in
-- Run `make update-utils`
-- Commit the updated `poetry.lock` file and push the changes
-- Make a new PR with the change
-- Have the PR get reviewed and merged
 
 ## Known Installation Issues
 

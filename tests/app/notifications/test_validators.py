@@ -1,7 +1,6 @@
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import templates_dao
@@ -37,6 +36,7 @@ from app.serialised_models import (
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_template_instance
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests.app.db import (
     create_api_key,
     create_reply_to_email,

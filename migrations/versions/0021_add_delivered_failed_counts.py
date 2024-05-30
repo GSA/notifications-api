@@ -25,7 +25,7 @@ def upgrade():
         "jobs", sa.Column("notifications_failed", sa.Integer(), nullable=True)
     )
     conn = op.get_bind()
-    results = conn.execute("select distinct job_id from notifications")
+    results = conn.execute(text("select distinct job_id from notifications"))
     res = results.fetchall()
     for x in res:
         if x.job_id:
