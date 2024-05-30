@@ -12,10 +12,9 @@ from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
 from app.enums import KeyType, NotificationType, TemplateProcessType, TemplateType
-from app.errors import InvalidRequest
+from app.errors import InvalidRequest, RateLimitError
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
-from app.v2.errors import RateLimitError
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests import create_service_authorization_header
 from tests.app.db import (

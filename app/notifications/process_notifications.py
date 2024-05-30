@@ -11,8 +11,8 @@ from app.dao.notifications_dao import (
     dao_delete_notifications_by_id,
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
+from app.errors import BadRequestError
 from app.models import Notification
-from app.v2.errors import BadRequestError
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
