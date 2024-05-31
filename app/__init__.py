@@ -12,10 +12,6 @@ from flask.ctx import has_app_context
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
-from notifications_utils import logging, request_helper
-from notifications_utils.clients.encryption.encryption_client import Encryption
-from notifications_utils.clients.redis.redis_client import RedisClient
-from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
@@ -26,6 +22,10 @@ from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.clients.sms.aws_sns import AwsSnsClient
+from notifications_utils import logging, request_helper
+from notifications_utils.clients.encryption.encryption_client import Encryption
+from notifications_utils.clients.redis.redis_client import RedisClient
+from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 
 
 class NotifyCelery(Celery):

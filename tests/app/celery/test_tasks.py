@@ -7,8 +7,6 @@ import pytest
 import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
-from notifications_utils.recipients import Row
-from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from requests import RequestException
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -39,6 +37,8 @@ from app.enums import (
 from app.models import Job, Notification
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import DATETIME_FORMAT
+from notifications_utils.recipients import Row
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from tests.app import load_example_csv
 from tests.app.db import (
     create_api_key,

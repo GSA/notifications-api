@@ -4,10 +4,10 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
-from notifications_utils.url_safe_token import generate_token
 
 from app.enums import InvitedUserStatus
 from app.models import Notification
+from notifications_utils.url_safe_token import generate_token
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_org_user
 

@@ -1,5 +1,4 @@
 from flask import Blueprint, current_app, json, jsonify, request
-from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app.celery import tasks
 from app.config import QueueNames
@@ -9,6 +8,7 @@ from app.enums import ServicePermissionType
 from app.errors import InvalidRequest, register_errors
 from app.models import InboundSms
 from app.notifications.sns_handlers import sns_notification_handler
+from notifications_utils.recipients import try_validate_and_format_phone_number
 
 receive_notifications_blueprint = Blueprint("receive_notifications", __name__)
 register_errors(receive_notifications_blueprint)

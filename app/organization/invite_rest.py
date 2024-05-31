@@ -3,7 +3,6 @@ import os
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
-from notifications_utils.url_safe_token import check_token, generate_token
 
 from app import redis_store
 from app.config import QueueNames
@@ -28,6 +27,7 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
+from notifications_utils.url_safe_token import check_token, generate_token
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
 

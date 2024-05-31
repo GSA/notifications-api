@@ -4,7 +4,6 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -57,6 +56,7 @@ from app.user.users_schema import (
     post_verify_webauthn_schema,
 )
 from app.utils import url_with_token
+from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
 register_errors(user_blueprint)
