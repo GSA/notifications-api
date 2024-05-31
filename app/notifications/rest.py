@@ -64,7 +64,11 @@ def get_notification_by_id(notification_id):
 
 @notifications.route("/notifications", methods=["GET"])
 def get_all_notifications():
+    current_app.logger.debug("enter get_all_notifications()")
     data = notifications_filter_schema.load(request.args)
+    current_app.logger.debug(
+        f"get_all_notifications() data {data} request.args {request.args}"
+    )
 
     include_jobs = data.get("include_jobs", False)
     page = data.get("page", 1)
@@ -96,19 +100,18 @@ def get_all_notifications():
             notification.to = recipient
             notification.normalised_to = recipient
 
-    return (
-        jsonify(
-            notifications=notification_with_personalisation_schema.dump(
-                pagination.items, many=True
-            ),
-            page_size=page_size,
-            total=pagination.total,
-            links=pagination_links(
-                pagination, ".get_all_notifications", **request.args.to_dict()
-            ),
+    result = jsonify(
+        notifications=notification_with_personalisation_schema.dump(
+            pagination.items, many=True
         ),
-        200,
+        page_size=page_size,
+        total=pagination.total,
+        links=pagination_links(
+            pagination, ".get_all_notifications", **request.args.to_dict()
+        ),
     )
+    current_app.logger.debug(f"result={result}")
+    return result, 200
 
 
 @notifications.route("/notifications/<string:notification_type>", methods=["POST"])
