@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 
 SMS_CHAR_COUNT_LIMIT = 918  # 153 * 6, no network issues but check with providers before upping this further
 LETTER_MAX_PAGE_COUNT = 10
@@ -23,3 +24,15 @@ email_with_smart_quotes_regex = re.compile(
 # and then later remove when performing tricky formatting operations
 MAGIC_SEQUENCE = "🇬🇧🐦✉️"
 magic_sequence_regex = re.compile(MAGIC_SEQUENCE)
+
+
+def aware_utcnow():
+    return datetime.now(timezone.utc)
+
+
+def naive_utcnow():
+    return aware_utcnow().replace(tzinfo=None)
+
+
+def utc_now():
+    return naive_utcnow()

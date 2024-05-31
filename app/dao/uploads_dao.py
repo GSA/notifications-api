@@ -1,4 +1,3 @@
-from datetime import datetime
 from os import getenv
 
 from flask import current_app
@@ -7,7 +6,7 @@ from sqlalchemy import String, and_, desc, func, literal, text
 from app import db
 from app.enums import JobStatus, NotificationStatus, NotificationType
 from app.models import Job, Notification, ServiceDataRetention, Template
-from app.utils import midnight_n_days_ago
+from app.utils import midnight_n_days_ago, utc_now
 
 
 def _get_printing_day(created_at):
@@ -40,7 +39,7 @@ def _naive_gmt_to_utc(column):
 def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size=50):
     # Hardcoded filter to exclude cancelled or scheduled jobs
     # for the moment, but we may want to change this method take 'statuses' as a argument in the future
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     jobs_query_filter = [
         Job.service_id == service_id,
         Job.original_file_name != current_app.config["TEST_MESSAGE_FILENAME"],

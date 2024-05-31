@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +24,7 @@ from app.models import (
     VerifyCode,
     filter_null_value_fields,
 )
+from app.utils import utc_now
 from tests.app.db import (
     create_inbound_number,
     create_notification,
@@ -385,7 +384,7 @@ def test_user_password():
 
 
 def test_annual_billing_serialize():
-    now = datetime.utcnow()
+    now = utc_now()
     ab = AnnualBilling()
     service = Service()
     ab.service = service
@@ -449,7 +448,7 @@ def test_rate_str():
     ),
 )
 def test_organization_agreement_mou(notify_db_session, agreement_type, expected):
-    now = datetime.utcnow()
+    now = utc_now()
     agree = Agreement()
     agree.id = "whatever"
     agree.start_time = now
@@ -469,7 +468,7 @@ def test_organization_agreement_mou(notify_db_session, agreement_type, expected)
     ),
 )
 def test_organization_agreement_active(notify_db_session, agreement_status, expected):
-    now = datetime.utcnow()
+    now = utc_now()
     agree = Agreement()
     agree.id = "whatever"
     agree.start_time = now
@@ -485,7 +484,7 @@ def test_agreement_serialize():
     agree = Agreement()
     agree.id = "abc"
 
-    now = datetime.utcnow()
+    now = utc_now()
     agree.start_time = now
     agree.end_time = now
     serialize = agree.serialize()

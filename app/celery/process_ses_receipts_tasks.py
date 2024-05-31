@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import iso8601
 from celery.exceptions import Retry
@@ -22,6 +22,7 @@ from app.dao.service_callback_api_dao import (
 )
 from app.enums import CallbackType, NotificationStatus
 from app.models import Complaint
+from app.utils import utc_now
 
 
 @notify_celery.task(
@@ -57,7 +58,7 @@ def process_ses_results(self, response):
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(
                 tzinfo=None
             )
-            if datetime.utcnow() - message_time < timedelta(minutes=5):
+            if utc_now() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
                     f"Notification not found for reference: {reference}"
                     f"(while attempting update to {notification_status}). "

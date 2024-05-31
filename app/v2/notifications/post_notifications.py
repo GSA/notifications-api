@@ -1,6 +1,5 @@
 import functools
 import uuid
-from datetime import datetime
 
 import botocore
 from flask import abort, current_app, jsonify, request
@@ -27,7 +26,7 @@ from app.notifications.validators import (
     validate_template,
 )
 from app.schema_validation import validate
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from app.v2.errors import BadRequestError
 from app.v2.notifications import v2_notification_blueprint
 from app.v2.notifications.create_response import (
@@ -226,7 +225,7 @@ def save_email_or_sms_to_queue(
         "reply_to_text": reply_to_text,
         "document_download_count": document_download_count,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
     encrypted = encryption.encrypt(data)
 

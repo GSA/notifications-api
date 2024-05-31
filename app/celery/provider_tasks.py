@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
@@ -18,6 +18,7 @@ from app.dao.notifications_dao import (
 from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
+from app.utils import utc_now
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
@@ -113,9 +114,7 @@ def deliver_sms(self, notification_id):
         message_id = send_to_providers.send_sms_to_provider(notification)
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
-        my_eta = datetime.utcnow() + timedelta(
-            seconds=DELIVERY_RECEIPT_DELAY_IN_SECONDS
-        )
+        my_eta = utc_now() + timedelta(seconds=DELIVERY_RECEIPT_DELAY_IN_SECONDS)
         check_sms_delivery_receipt.apply_async(
             [message_id, notification_id, notification.created_at],
             eta=my_eta,

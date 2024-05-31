@@ -9,6 +9,7 @@ from app.dao.complaint_dao import (
 )
 from app.enums import TemplateType
 from app.models import Complaint
+from app.utils import utc_now
 from tests.app.db import (
     create_complaint,
     create_notification,
@@ -55,7 +56,7 @@ def test_fetch_complaint_by_service_returns_one(
         service_id=sample_service.id,
         ses_feedback_id=str(uuid.uuid4()),
         complaint_type="abuse",
-        complaint_date=datetime.utcnow(),
+        complaint_date=utc_now(),
     )
 
     save_complaint(complaint)
@@ -83,22 +84,22 @@ def test_fetch_complaint_by_service_return_many(notify_db_session):
         service_id=service_1.id,
         ses_feedback_id=str(uuid.uuid4()),
         complaint_type="abuse",
-        complaint_date=datetime.utcnow(),
+        complaint_date=utc_now(),
     )
     complaint_2 = Complaint(
         notification_id=notification_2.id,
         service_id=service_2.id,
         ses_feedback_id=str(uuid.uuid4()),
         complaint_type="abuse",
-        complaint_date=datetime.utcnow(),
+        complaint_date=utc_now(),
     )
     complaint_3 = Complaint(
         notification_id=notification_3.id,
         service_id=service_2.id,
         ses_feedback_id=str(uuid.uuid4()),
         complaint_type="abuse",
-        complaint_date=datetime.utcnow(),
-        created_at=datetime.utcnow() + timedelta(minutes=1),
+        complaint_date=utc_now(),
+        created_at=utc_now() + timedelta(minutes=1),
     )
 
     save_complaint(complaint_1)

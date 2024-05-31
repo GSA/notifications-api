@@ -1,10 +1,10 @@
 import uuid
-from datetime import datetime
 from unittest.mock import Mock, call
 
 import pytest
 from freezegun import freeze_time
 
+from app.utils import utc_now
 from notifications_utils.clients.redis.redis_client import RedisClient, prepare_value
 
 
@@ -208,9 +208,7 @@ def test_delete_multi(mocked_redis_client):
         (1.2, 1.2),
         (uuid.UUID(int=0), "00000000-0000-0000-0000-000000000000"),
         pytest.param({"a": 1}, None, marks=pytest.mark.xfail(raises=ValueError)),
-        pytest.param(
-            datetime.utcnow(), None, marks=pytest.mark.xfail(raises=ValueError)
-        ),
+        pytest.param(utc_now(), None, marks=pytest.mark.xfail(raises=ValueError)),
     ],
 )
 def test_prepare_value(input, output):

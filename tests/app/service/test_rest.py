@@ -36,6 +36,7 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
+from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_annual_billing,
@@ -369,7 +370,7 @@ def test_get_service_by_id_should_404_if_no_service_for_user(notify_api, sample_
 def test_get_service_by_id_returns_go_live_user_and_go_live_at(
     admin_request, sample_user
 ):
-    now = datetime.utcnow()
+    now = utc_now()
     service = create_service(user=sample_user, go_live_user=sample_user, go_live_at=now)
     json_resp = admin_request.get("service.get_service_by_id", service_id=service.id)
     assert json_resp["data"]["go_live_user"] == str(sample_user.id)
@@ -2270,9 +2271,7 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
     create_notification(service_1_template, status=NotificationStatus.DELIVERED)
     create_notification(service_1_template, status=NotificationStatus.CREATED)
 
-    data = get_detailed_services(
-        start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date()
-    )
+    data = get_detailed_services(start_date=utc_now().date(), end_date=utc_now().date())
     data = sorted(data, key=lambda x: x["name"])
 
     assert len(data) == 2
@@ -2315,9 +2314,7 @@ def test_get_detailed_services_includes_services_with_no_notifications(
     service_1_template = create_template(service_1)
     create_notification(service_1_template)
 
-    data = get_detailed_services(
-        start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date()
-    )
+    data = get_detailed_services(start_date=utc_now().date(), end_date=utc_now().date())
     data = sorted(data, key=lambda x: x["name"])
 
     assert len(data) == 2
@@ -2359,7 +2356,7 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
 
     with freeze_time("2015-10-10T12:00:00"):
         data = get_detailed_services(
-            start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date()
+            start_date=utc_now().date(), end_date=utc_now().date()
         )
         data = sorted(data, key=lambda x: x["id"])
 
@@ -2386,29 +2383,29 @@ def test_get_detailed_services_for_date_range(
     from app.service.rest import get_detailed_services
 
     create_ft_notification_status(
-        local_date=(datetime.utcnow() - timedelta(days=3)).date(),
+        local_date=(utc_now() - timedelta(days=3)).date(),
         service=sample_template.service,
         notification_type=NotificationType.SMS,
     )
     create_ft_notification_status(
-        local_date=(datetime.utcnow() - timedelta(days=2)).date(),
+        local_date=(utc_now() - timedelta(days=2)).date(),
         service=sample_template.service,
         notification_type=NotificationType.SMS,
     )
     create_ft_notification_status(
-        local_date=(datetime.utcnow() - timedelta(days=1)).date(),
+        local_date=(utc_now() - timedelta(days=1)).date(),
         service=sample_template.service,
         notification_type=NotificationType.SMS,
     )
 
     create_notification(
         template=sample_template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.DELIVERED,
     )
 
-    start_date = (datetime.utcnow() - timedelta(days=start_date_delta)).date()
-    end_date = (datetime.utcnow() - timedelta(days=end_date_delta)).date()
+    start_date = (utc_now() - timedelta(days=start_date_delta)).date()
+    end_date = (utc_now() - timedelta(days=end_date_delta)).date()
 
     data = get_detailed_services(
         only_active=False,

@@ -15,6 +15,7 @@ from app.config import QueueNames
 from app.dao.fact_billing_dao import get_rate
 from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import FactBilling, FactNotificationStatus, Notification
+from app.utils import utc_now
 from tests.app.db import (
     create_notification,
     create_notification_history,
@@ -420,7 +421,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         template_type=TemplateType.EMAIL,
     )
 
-    process_day = datetime.utcnow().date() - timedelta(days=5)
+    process_day = utc_now().date() - timedelta(days=5)
     with freeze_time(datetime.combine(process_day, time.max)):
         create_notification(
             template=first_template,
@@ -449,9 +450,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         )
 
     # these created notifications from a different day get ignored
-    with freeze_time(
-        datetime.combine(datetime.utcnow().date() - timedelta(days=4), time.max)
-    ):
+    with freeze_time(datetime.combine(utc_now().date() - timedelta(days=4), time.max)):
         create_notification(template=first_template)
         create_notification_history(template=second_template)
 
@@ -519,7 +518,7 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
 ):
     first_service = create_service(service_name="First Service")
     first_template = create_template(service=first_service)
-    process_day = datetime.utcnow().date()
+    process_day = utc_now().date()
 
     # first run: one notification, expect one row (just one status)
     notification = create_notification(

@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app import db
 from app.enums import InvitedUserStatus
 from app.models import InvitedUser
+from app.utils import utc_now
 
 
 def save_invited_user(invited_user):
@@ -41,7 +42,7 @@ def expire_invitations_created_more_than_two_days_ago():
     expired = (
         db.session.query(InvitedUser)
         .filter(
-            InvitedUser.created_at <= datetime.utcnow() - timedelta(days=2),
+            InvitedUser.created_at <= utc_now() - timedelta(days=2),
             InvitedUser.status.in_((InvitedUserStatus.PENDING,)),
         )
         .update({InvitedUser.status: InvitedUserStatus.EXPIRED})

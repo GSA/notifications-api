@@ -5,6 +5,7 @@ from flask import url_for
 
 from app.dao.templates_dao import dao_update_template
 from app.enums import TemplateProcessType
+from app.utils import utc_now
 from tests import create_admin_authorization_header
 
 
@@ -32,7 +33,7 @@ def test_template_history_version(notify_api, sample_user, sample_template):
                 datetime.strptime(
                     json_resp["data"]["created_at"], "%Y-%m-%d %H:%M:%S.%f"
                 ).date()
-                == datetime.utcnow().date()
+                == utc_now().date()
             )
 
 

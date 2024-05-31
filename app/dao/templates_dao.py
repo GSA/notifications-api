@@ -1,11 +1,11 @@
 import uuid
-from datetime import datetime
 
 from sqlalchemy import asc, desc
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
 from app.models import Template, TemplateHistory, TemplateRedacted
+from app.utils import utc_now
 
 
 @autocommit
@@ -39,7 +39,7 @@ def dao_update_template(template):
 @autocommit
 def dao_redact_template(template, user_id):
     template.template_redacted.redact_personalisation = True
-    template.template_redacted.updated_at = datetime.utcnow()
+    template.template_redacted.updated_at = utc_now()
     template.template_redacted.updated_by_id = user_id
     db.session.add(template.template_redacted)
 

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast, select
@@ -44,6 +44,7 @@ from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
     get_midnight_in_utc,
+    utc_now,
 )
 
 
@@ -252,7 +253,7 @@ def dao_archive_service(service_id):
 
     for api_key in service.api_keys:
         if not api_key.expiry_date:
-            api_key.expiry_date = datetime.utcnow()
+            api_key.expiry_date = utc_now()
 
 
 def dao_fetch_service_by_id_and_user(service_id, user_id):
@@ -404,7 +405,7 @@ def delete_service_and_all_associated_db_objects(service):
 
 
 def dao_fetch_todays_stats_for_service(service_id):
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     start_date = get_midnight_in_utc(today)
     return (
         db.session.query(
@@ -428,7 +429,7 @@ def dao_fetch_todays_stats_for_service(service_id):
 def dao_fetch_todays_stats_for_all_services(
     include_from_test_key=True, only_active=True
 ):
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     start_date = get_midnight_in_utc(today)
     end_date = get_midnight_in_utc(today + timedelta(days=1))
 
@@ -491,7 +492,7 @@ def dao_suspend_service(service_id):
 
     for api_key in service.api_keys:
         if not api_key.expiry_date:
-            api_key.expiry_date = datetime.utcnow()
+            api_key.expiry_date = utc_now()
 
     service.active = False
 
