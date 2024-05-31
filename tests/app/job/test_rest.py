@@ -80,8 +80,17 @@ def test_cant_cancel_normal_job(client, sample_job, mocker):
     assert mock_update.call_count == 0
 
 
-def test_create_unscheduled_job(client, sample_template, mocker, fake_uuid):
+def test_start_job(client, mocker, fake_uuid):
+    mocker.patch("app.job.rest.dao_get_job_by_service_id_and_job_id")
     mocker.patch("app.celery.tasks.process_job.apply_async")
+    client.post(f"/{fake_uuid}/start-job")
+
+    app.celery.tasks.process_job.apply_async.assert_called_once_with(
+        ([str(fake_uuid)]), {"sender_id": None}, queue="job-tasks"
+    )
+
+
+def test_create_unscheduled_job(client, sample_template, mocker, fake_uuid):
     mocker.patch(
         "app.job.rest.get_job_metadata_from_s3",
         return_value={
@@ -102,10 +111,6 @@ def test_create_unscheduled_job(client, sample_template, mocker, fake_uuid):
     response = client.post(path, data=json.dumps(data), headers=headers)
     assert response.status_code == 201
 
-    app.celery.tasks.process_job.apply_async.assert_called_once_with(
-        ([str(fake_uuid)]), {"sender_id": None}, queue="job-tasks"
-    )
-
     resp_json = json.loads(response.get_data(as_text=True))
 
     assert resp_json["data"]["id"] == fake_uuid
@@ -121,7 +126,6 @@ def test_create_unscheduled_job(client, sample_template, mocker, fake_uuid):
 def test_create_unscheduled_job_with_sender_id_in_metadata(
     client, sample_template, mocker, fake_uuid
 ):
-    mocker.patch("app.celery.tasks.process_job.apply_async")
     mocker.patch(
         "app.job.rest.get_job_metadata_from_s3",
         return_value={
@@ -142,12 +146,6 @@ def test_create_unscheduled_job_with_sender_id_in_metadata(
 
     response = client.post(path, data=json.dumps(data), headers=headers)
     assert response.status_code == 201
-
-    app.celery.tasks.process_job.apply_async.assert_called_once_with(
-        ([str(fake_uuid)]),
-        {"sender_id": fake_uuid},
-        queue="job-tasks",
-    )
 
 
 @freeze_time("2016-01-01 12:00:00.000000")

@@ -200,13 +200,17 @@ def send_notifications_on_mou_signed(organization_id):
 
     def _send_notification(template_id, recipient, personalisation):
         template = dao_get_template_by_id(template_id)
-
+        db_personalisation = personalisation
+        if db_personalisation.get("phone_number"):
+            del db_personalisation["phone_number"]
+        if db_personalisation.get("email_address"):
+            del db_personalisation["email_address"]
         saved_notification = persist_notification(
             template_id=template.id,
             template_version=template.version,
             recipient=recipient,
             service=notify_service,
-            personalisation={},
+            personalisation=db_personalisation,
             notification_type=template.template_type,
             api_key_id=None,
             key_type=KeyType.NORMAL,

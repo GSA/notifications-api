@@ -27,6 +27,7 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
+from app.utils import hilite
 from notifications_utils.url_safe_token import check_token, generate_token
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
@@ -38,20 +39,21 @@ register_errors(organization_invite_blueprint)
     "/organization/<uuid:organization_id>/invite", methods=["POST"]
 )
 def invite_user_to_org(organization_id):
+    print(hilite("top of org method"))
     data = request.get_json()
     validate(data, post_create_invited_org_user_status_schema)
-
+    print(hilite(f"got the data: {data}"))
     invited_org_user = InvitedOrganizationUser(
         email_address=data["email_address"],
         invited_by_id=data["invited_by"],
         organization_id=organization_id,
     )
     save_invited_org_user(invited_org_user)
-
+    print(hilite("saved the data"))
     template = dao_get_template_by_id(
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
-
+    print(hilite("got the template"))
     token = generate_token(
         str(invited_org_user.email_address),
         current_app.config["SECRET_KEY"],
@@ -70,19 +72,29 @@ def invite_user_to_org(organization_id):
         "organization_name": invited_org_user.organization.name,
         "url": url,
     }
+    print(hilite(f"personalisation: {personalisation}"))
+    db_personalisation = personalisation
+    if db_personalisation.get("phone_number"):
+        del db_personalisation["phone_number"]
+    if db_personalisation.get("email_address"):
+        del db_personalisation["email_address"]
+    # try:
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
         recipient=invited_org_user.email_address,
         service=template.service,
-        personalisation={},
+        personalisation=db_personalisation,
         notification_type=NotificationType.EMAIL,
         api_key_id=None,
         key_type=KeyType.NORMAL,
         reply_to_text=invited_org_user.invited_by.email_address,
     )
-
+    # except BaseException as be:
+    #     print(hilite(be))
+    print(hilite(f"saved notification: {saved_notification}"))
     saved_notification.personalisation = personalisation
+    print(hilite(f"saved notification after personalisation: {saved_notification}"))
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
@@ -90,7 +102,7 @@ def invite_user_to_org(organization_id):
     )
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
-
+    print(hilite("sent notification to queue"))
     return jsonify(data=invited_org_user.serialize()), 201
 
 

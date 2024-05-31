@@ -17,9 +17,7 @@ from notifications_utils.formatters import (
     strip_and_remove_obscure_whitespace,
 )
 from notifications_utils.insensitive_dict import InsensitiveDict
-from notifications_utils.international_billing_rates import (
-    INTERNATIONAL_BILLING_RATES,
-)
+from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
 from notifications_utils.postal_address import (
     address_line_7_key,
     address_lines_1_to_6_and_postcode_keys,

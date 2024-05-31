@@ -10,8 +10,10 @@ from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
 )
+from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
+from app.utils import hilite
 from app.v2.errors import BadRequestError
 from notifications_utils.recipients import (
     format_email_address,
@@ -22,6 +24,7 @@ from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTempl
 
 
 def create_content_for_notification(template, personalisation):
+    print(f"enter create_content_for_notification {template.id} {personalisation}")
     if template.template_type == NotificationType.EMAIL:
         template_object = PlainTextEmailTemplate(
             {
@@ -31,6 +34,7 @@ def create_content_for_notification(template, personalisation):
             },
             personalisation,
         )
+        print("created email template object")
     if template.template_type == NotificationType.SMS:
         template_object = SMSMessageTemplate(
             {
@@ -50,6 +54,7 @@ def check_placeholders(template_object):
         message = "Missing personalisation: {}".format(
             ", ".join(template_object.missing_data)
         )
+        print(f"GOING TO RAISE BAD REQUEST ERROR WITH {message}")
         raise BadRequestError(fields=[{"template": message}], message=message)
 
 
@@ -105,6 +110,8 @@ def persist_notification(
         document_download_count=document_download_count,
         updated_at=updated_at,
     )
+    print(hilite(f"personalisation? {personalisation}"))
+    print(hilite(f"notification? {notification}"))
 
     if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
@@ -117,6 +124,7 @@ def persist_notification(
         notification.rate_multiplier = recipient_info.billable_units
 
     elif notification_type == NotificationType.EMAIL:
+        print(hilite("inside elif for email type"))
         current_app.logger.info(
             f"Persisting notification with type: {NotificationType.EMAIL}"
         )
@@ -125,11 +133,29 @@ def persist_notification(
             format_email_address(notification.to),
             ex=1800,
         )
-
+    print(hilite(f"simulated? {simulated}"))
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
         current_app.logger.info("Firing dao_create_notification")
-        dao_create_notification(notification)
+        print(
+            f"LOOK UP TEMPLATE WITH TEMPLATE_ID {template_id} and service_id {service.id}"
+        )
+        template = dao_get_template_by_id_and_service_id(template_id, service.id)
+        print(hilite(f"created template?: {template} personalization {notification.personalisation}"))
+        template_object = create_content_for_notification(
+            template, notification.personalisation
+        )
+        print(hilite(f"template object? {template_object}"))
+        if isinstance(template_object, SMSMessageTemplate):
+            print(f"MESSAGE PARTS {template_object.fragment_count}")
+            notification.message_parts = template_object.fragment_count
+        print("GOING TO CREATE NOTIFICATION")
+        try:
+            dao_create_notification(notification)
+        except BaseException as be:
+            print(be)
+
+        print(hilite("created notification?"))
         if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
                 "Redis enabled, querying cache key for service id: {}".format(

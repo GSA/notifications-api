@@ -5,6 +5,7 @@ from app.dao.services_dao import dao_add_user_to_service
 from app.enums import NotificationType, TemplateType
 from app.models import Notification
 from app.service.sender import send_notification_to_service_users
+from app.utils import hilite
 from tests.app.db import create_service, create_template, create_user
 
 
@@ -16,9 +17,10 @@ def test_send_notification_to_service_users_persists_notifications_correctly(
 ):
     mocker.patch("app.service.sender.send_notification_to_queue")
 
-    template = create_template(sample_service, template_type=notification_type)
+    template = create_template(notify_service, template_type=notification_type)
+    print(hilite(f"heres my template?  {template.id} service_id {notify_service.id}"))
     send_notification_to_service_users(
-        service_id=sample_service.id, template_id=template.id
+        service_id=notify_service.id, template_id=template.id
     )
 
     notification = Notification.query.one()
@@ -40,9 +42,9 @@ def test_send_notification_to_service_users_sends_to_queue(
 ):
     send_mock = mocker.patch("app.service.sender.send_notification_to_queue")
 
-    template = create_template(sample_service, template_type=NotificationType.EMAIL)
+    template = create_template(notify_service, template_type=NotificationType.EMAIL)
     send_notification_to_service_users(
-        service_id=sample_service.id, template_id=template.id
+        service_id=notify_service.id, template_id=template.id
     )
 
     assert send_mock.called
