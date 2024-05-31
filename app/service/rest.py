@@ -472,7 +472,12 @@ def get_all_notifications_for_service(service_id):
             pagination.items, many=True
         )
     current_app.logger.debug(f"number of notifications are {len(notifications)}")
-    current_app.logger.debug(f"first notification is {notifications[0]}")
+
+    if len(notifications) > 0:
+        current_app.logger.debug(f"first notification is {notifications[0]}")
+    else:
+        current_app.logger.debug("there are no notifications to show")
+
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
