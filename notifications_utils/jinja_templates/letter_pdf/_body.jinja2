@@ -1,0 +1,33 @@
+  </head>
+  <body>
+    <div id="logo">
+      {% if logo_file_name %}
+        <img src="{{admin_base_url}}/static/images/letter-template/{{logo_file_name}}" class="{{ logo_class }}"/>
+      {% endif %}
+    </div>
+    <div id="to">
+      <div id="mdi">
+        000_000_0000000_000000_0000_00000
+      </div>
+      <ul>
+      {%- for line in address -%}
+        <li>{{ line }}</li>
+      {%- endfor -%}
+      </ul>
+    </div>
+    <div id="barcode">
+    </div>
+    <div id="qrcode">
+    </div>
+    <div id="from">
+      {{ contact_block }}
+    </div>
+    <div id="content">
+      <p>
+        {{ date }}
+      </p>
+      <h1>{{ subject }}</h1>
+      {{ message }}
+    </div>
+  </body>
+</html>

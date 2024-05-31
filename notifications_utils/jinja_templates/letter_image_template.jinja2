@@ -1,0 +1,37 @@
+{% for page_number in page_numbers %}
+  <div class="letter">
+    {% if loop.first and show_postage %}
+      <p class="letter-postage {{ postage_class_value }}">
+        Postage: {{ postage_description }}
+      </p>
+    {% endif %}
+    <img src="{{ image_url }}?page={{ page_number }}" alt="" loading="{{ 'eager' if loop.first else 'lazy' }}">
+  </div>
+{% endfor %}
+
+<div class="govuk-visually-hidden">
+  <h3>
+    Recipient address
+  </h3>
+  <ul>
+  {%- for line in address -%}
+    <li>{{ line }}</li>
+  {%- endfor -%}
+  </ul>
+  <h3>
+    Contact block
+  </h3>
+  <p>
+    {{ contact_block }}
+  </p>
+  <h3>
+    Content
+  </h3>
+  <p>
+    {{ date }}
+  </p>
+  <h3>
+    {{ subject }}
+  </h3>
+  {{ message }}
+</div>
