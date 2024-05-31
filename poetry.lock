@@ -204,17 +204,17 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "awscli"
-version = "1.32.114"
+version = "1.32.116"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "awscli-1.32.114-py3-none-any.whl", hash = "sha256:965d75c65ced8e1ab90a29164657c0e213f43a866ca00c6bcbcda4bbbbe50018"},
-    {file = "awscli-1.32.114.tar.gz", hash = "sha256:1fbebc83213c250aedda6623d65d7d60489f821eb6900be3b34fa67c8860c652"},
+    {file = "awscli-1.32.116-py3-none-any.whl", hash = "sha256:b50b0931eb32a5756d511ac347ad58cc23c5967eb2f8b56c9e6334b9a1f8a491"},
+    {file = "awscli-1.32.116.tar.gz", hash = "sha256:859889ea13319b022f04cb4c220bd41675bf83953538b71aa59eb7356cde4f5e"},
 ]
 
 [package.dependencies]
-botocore = "1.34.114"
+botocore = "1.34.116"
 colorama = ">=0.2.5,<0.4.7"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -403,17 +403,17 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.34.114"
+version = "1.34.116"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.114-py3-none-any.whl", hash = "sha256:4460958d2b0c53bd2195b23ed5d45db2350e514486fe8caeb38b285b30742280"},
-    {file = "boto3-1.34.114.tar.gz", hash = "sha256:eeb11bca9b19d12baf93436fb8a16b8b824f1f7e8b9bcc722607e862c46b1b08"},
+    {file = "boto3-1.34.116-py3-none-any.whl", hash = "sha256:e7f5ab2d1f1b90971a2b9369760c2c6bae49dae98c084a5c3f5c78e3968ace15"},
+    {file = "boto3-1.34.116.tar.gz", hash = "sha256:53cb8aeb405afa1cd2b25421e27a951aeb568026675dec020587861fac96ac87"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.114,<1.35.0"
+botocore = ">=1.34.116,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.114"
+version = "1.34.116"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.114-py3-none-any.whl", hash = "sha256:606d1e55984d45e41a812badee292755f4db0233eed9cca63ea3bb8f5755507f"},
-    {file = "botocore-1.34.114.tar.gz", hash = "sha256:5705f74fda009656a218ffaf4afd81228359160f2ab806ab8222d07e9da3a73b"},
+    {file = "botocore-1.34.116-py3-none-any.whl", hash = "sha256:ec4d42c816e9b2d87a2439ad277e7dda16a4a614ef6839cf66f4c1a58afa547c"},
+    {file = "botocore-1.34.116.tar.gz", hash = "sha256:269cae7ba99081519a9f87d7298e238d9e68ba94eb4f8ddfa906224c34cb8b6c"},
 ]
 
 [package.dependencies]
@@ -2389,13 +2389,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "5.0.8"
+version = "5.0.9"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "moto-5.0.8-py2.py3-none-any.whl", hash = "sha256:7d1035e366434bfa9fcc0621f07d5aa724b6846408071d540137a0554c46f214"},
-    {file = "moto-5.0.8.tar.gz", hash = "sha256:517fb808dc718bcbdda54c6ffeaca0adc34cf6e10821bfb01216ce420a31765c"},
+    {file = "moto-5.0.9-py2.py3-none-any.whl", hash = "sha256:21a13e02f83d6a18cfcd99949c96abb2e889f4bd51c4c6a3ecc8b78765cb854e"},
+    {file = "moto-5.0.9.tar.gz", hash = "sha256:eb71f1cba01c70fff1f16086acb24d6d9aeb32830d646d8989f98a29aeae24ba"},
 ]
 
 [package.dependencies]
@@ -2493,6 +2493,7 @@ files = [
     {file = "msgpack-1.0.8-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:5fbb160554e319f7b22ecf530a80a3ff496d38e8e07ae763b9e82fadfe96f273"},
     {file = "msgpack-1.0.8-cp39-cp39-win32.whl", hash = "sha256:f9af38a89b6a5c04b7d18c492c8ccf2aee7048aff1ce8437c4683bb5a1df893d"},
     {file = "msgpack-1.0.8-cp39-cp39-win_amd64.whl", hash = "sha256:ed59dd52075f8fc91da6053b12e8c89e37aa043f8986efd89e61fae69dc1b011"},
+    {file = "msgpack-1.0.8-py3-none-any.whl", hash = "sha256:24f727df1e20b9876fa6e95f840a2a2651e34c0ad147676356f4bf5fbb0206ca"},
     {file = "msgpack-1.0.8.tar.gz", hash = "sha256:95c02b0e27e706e48d0e5426d1710ca78e0f0628d6e89d5b5a5b91a5f12274f3"},
 ]
 
@@ -3755,13 +3756,13 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.32.2"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "requests-2.32.2-py3-none-any.whl", hash = "sha256:fc06670dd0ed212426dfeb94fc1b983d917c4f9847c863f313c9dfaaffb7c23c"},
-    {file = "requests-2.32.2.tar.gz", hash = "sha256:dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -4754,4 +4755,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "81af59750dfe335204a44033903f180f6b00f07511057404b14398ebc0a48cb8"
+content-hash = "3edde9f099af67b705d18ac9c15c8b967e299115ea07919fc3efa02384437cd1"

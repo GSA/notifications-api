@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from urllib import parse
 
 from cachetools import TTLCache, cached
@@ -14,6 +13,7 @@ from app.dao.provider_details_dao import get_provider_details_by_notification_ty
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
+from app.utils import utc_now
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -177,7 +177,7 @@ def send_email_to_provider(notification):
 
 
 def update_notification_to_sending(notification, provider):
-    notification.sent_at = datetime.utcnow()
+    notification.sent_at = utc_now()
     notification.sent_by = provider.name
     if notification.status not in NotificationStatus.completed_types():
         notification.status = NotificationStatus.SENDING

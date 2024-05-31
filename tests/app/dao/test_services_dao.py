@@ -67,6 +67,7 @@ from app.models import (
     VerifyCode,
     user_folder_permissions,
 )
+from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
     create_api_key,
@@ -1493,8 +1494,8 @@ def test_dao_find_services_sending_to_tv_numbers(notify_db_session, fake_uuid):
             status=NotificationStatus.DELIVERED,
         )
 
-    start_date = datetime.utcnow() - timedelta(days=1)
-    end_date = datetime.utcnow()
+    start_date = utc_now() - timedelta(days=1)
+    end_date = utc_now()
 
     result = dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=4)
     assert len(result) == 1
@@ -1541,8 +1542,8 @@ def test_dao_find_services_with_high_failure_rates(notify_db_session, fake_uuid)
         status=NotificationStatus.PERMANENT_FAILURE,
     )  # below threshold is excluded
 
-    start_date = datetime.utcnow() - timedelta(days=1)
-    end_date = datetime.utcnow()
+    start_date = utc_now() - timedelta(days=1)
+    end_date = utc_now()
 
     result = dao_find_services_with_high_failure_rates(
         start_date, end_date, threshold=3

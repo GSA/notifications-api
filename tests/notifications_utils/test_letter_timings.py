@@ -4,6 +4,7 @@ import pytest
 import pytz
 from freezegun import freeze_time
 
+from app.utils import utc_now
 from notifications_utils.letter_timings import (
     get_letter_timings,
     letter_can_be_cancelled,
@@ -188,7 +189,7 @@ def test_get_estimated_delivery_date_for_letter(
 def test_letter_cannot_be_cancelled_if_letter_status_is_not_created_or_pending_virus_check(
     status,
 ):
-    notification_created_at = datetime.utcnow()
+    notification_created_at = utc_now()
 
     assert not letter_can_be_cancelled(status, notification_created_at)
 

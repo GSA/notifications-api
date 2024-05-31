@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 import pytest
@@ -18,6 +17,7 @@ from app.dao.organization_dao import (
 )
 from app.enums import OrganizationType
 from app.models import Organization, Service
+from app.utils import utc_now
 from tests.app.db import (
     create_domain,
     create_email_branding,
@@ -65,7 +65,7 @@ def test_update_organization(notify_db_session):
         "name": "new name",
         "organization_type": OrganizationType.STATE,
         "agreement_signed": True,
-        "agreement_signed_at": datetime.datetime.utcnow(),
+        "agreement_signed_at": utc_now(),
         "agreement_signed_by_id": user.id,
         "agreement_signed_version": 999.99,
         "email_branding_id": email_branding.id,

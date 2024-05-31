@@ -20,6 +20,7 @@ from app.dao.jobs_dao import (
 )
 from app.enums import JobStatus, NotificationStatus
 from app.models import Job, NotificationType, TemplateType
+from app.utils import utc_now
 from tests.app.db import (
     create_job,
     create_notification,
@@ -228,8 +229,8 @@ def test_update_job(sample_job):
 def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_now(
     sample_template,
 ):
-    one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
-    one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
+    one_minute_ago = utc_now() - timedelta(minutes=1)
+    one_hour_ago = utc_now() - timedelta(minutes=60)
     job_new = create_job(
         sample_template,
         scheduled_for=one_minute_ago,
@@ -249,7 +250,7 @@ def test_set_scheduled_jobs_to_pending_gets_all_jobs_in_scheduled_state_before_n
 def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_not_scheduled(
     sample_template, sample_job
 ):
-    one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
+    one_minute_ago = utc_now() - timedelta(minutes=1)
     job_scheduled = create_job(
         sample_template,
         scheduled_for=one_minute_ago,
@@ -268,8 +269,8 @@ def test_set_scheduled_jobs_to_pending_gets_ignores_jobs_scheduled_in_the_future
 
 
 def test_set_scheduled_jobs_to_pending_updates_rows(sample_template):
-    one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
-    one_hour_ago = datetime.utcnow() - timedelta(minutes=60)
+    one_minute_ago = utc_now() - timedelta(minutes=1)
+    one_hour_ago = utc_now() - timedelta(minutes=60)
     create_job(
         sample_template,
         scheduled_for=one_minute_ago,
@@ -298,7 +299,7 @@ def test_should_get_jobs_seven_days_old(sample_template):
     """
     Jobs older than seven days are deleted, but only two day's worth (two-day window)
     """
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = utc_now() - timedelta(days=7)
     within_seven_days = seven_days_ago + timedelta(seconds=1)
 
     eight_days_ago = seven_days_ago - timedelta(days=1)
@@ -367,8 +368,8 @@ def test_get_jobs_for_service_doesnt_return_test_messages(
 
 @freeze_time("2016-10-31 10:00:00")
 def test_should_get_jobs_seven_days_old_by_scheduled_for_date(sample_service):
-    six_days_ago = datetime.utcnow() - timedelta(days=6)
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
+    six_days_ago = utc_now() - timedelta(days=6)
+    eight_days_ago = utc_now() - timedelta(days=8)
     sms_template = create_template(sample_service, template_type=TemplateType.SMS)
 
     create_job(sms_template, created_at=eight_days_ago)
@@ -405,7 +406,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
         template=sample_email_template,
         notification_count=3,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=20),
+        processing_finished=utc_now() - timedelta(minutes=20),
     )
     for i in range(0, 3):
         create_notification(job=healthy_job, job_row_number=i)
@@ -413,7 +414,7 @@ def test_find_jobs_with_missing_rows(sample_email_template):
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=20),
+        processing_finished=utc_now() - timedelta(minutes=20),
     )
     for i in range(0, 4):
         create_notification(job=job_with_missing_rows, job_row_number=i)
@@ -431,7 +432,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_less_th
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=9),
+        processing_finished=utc_now() - timedelta(minutes=9),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -448,7 +449,7 @@ def test_find_jobs_with_missing_rows_returns_nothing_for_a_job_completed_more_th
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(days=1),
+        processing_finished=utc_now() - timedelta(days=1),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -474,7 +475,7 @@ def test_find_jobs_with_missing_rows_doesnt_return_jobs_that_are_not_finished(
         template=sample_email_template,
         notification_count=5,
         job_status=status,
-        processing_finished=datetime.utcnow() - timedelta(minutes=11),
+        processing_finished=utc_now() - timedelta(minutes=11),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -489,7 +490,7 @@ def test_find_missing_row_for_job(sample_email_template):
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=11),
+        processing_finished=utc_now() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
     create_notification(job=job, job_row_number=1)
@@ -506,7 +507,7 @@ def test_find_missing_row_for_job_more_than_one_missing_row(sample_email_templat
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=11),
+        processing_finished=utc_now() - timedelta(minutes=11),
     )
     create_notification(job=job, job_row_number=0)
     create_notification(job=job, job_row_number=1)
@@ -525,7 +526,7 @@ def test_find_missing_row_for_job_return_none_when_row_isnt_missing(
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=11),
+        processing_finished=utc_now() - timedelta(minutes=11),
     )
     for i in range(0, 5):
         create_notification(job=job, job_row_number=i)

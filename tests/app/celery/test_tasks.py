@@ -36,7 +36,7 @@ from app.enums import (
 )
 from app.models import Job, Notification
 from app.serialised_models import SerialisedService, SerialisedTemplate
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from notifications_utils.recipients import Row
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from tests.app import load_example_csv
@@ -419,7 +419,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
         == sample_template_with_placeholders.version
     )
     assert persisted_notification.status == NotificationStatus.CREATED
-    assert persisted_notification.created_at <= datetime.utcnow()
+    assert persisted_notification.created_at <= utc_now()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
@@ -455,7 +455,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
     assert persisted_notification.status == NotificationStatus.CREATED
-    assert persisted_notification.created_at <= datetime.utcnow()
+    assert persisted_notification.created_at <= utc_now()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
@@ -565,7 +565,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
-    now = datetime.utcnow()
+    now = utc_now()
     save_sms(
         sample_job.service.id,
         notification_id,
@@ -676,7 +676,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     dao_update_template(sample_email_template)
     t = dao_get_template_by_id(sample_email_template.id)
     assert t.version > version_on_notification
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template.service_id,
         uuid.uuid4(),
@@ -706,7 +706,7 @@ def test_should_use_email_template_subject_placeholders(
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     notification_id = uuid.uuid4()
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template_with_placeholders.service_id,
         notification_id,
@@ -791,7 +791,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
 
     notification_id = uuid.uuid4()
 
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template.service_id,
         notification_id,
@@ -1157,9 +1157,9 @@ def test_process_incomplete_job_sms(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1189,9 +1189,9 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1229,9 +1229,9 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
     create_notification(sample_template, job, 0)
@@ -1243,9 +1243,9 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     job2 = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1282,9 +1282,9 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1339,9 +1339,9 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     job = create_job(
         template=sample_email_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1371,22 +1371,22 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
 
     job1 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(minutes=30),
+        processing_started=utc_now() - timedelta(minutes=30),
         job_status=JobStatus.ERROR,
     )
     job2 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
     process_incomplete_jobs([str(job1.id), str(job2.id)])
 
     assert job1.job_status == JobStatus.IN_PROGRESS
-    assert job1.processing_started == datetime.utcnow()
+    assert job1.processing_started == utc_now()
 
     assert job2.job_status == JobStatus.IN_PROGRESS
-    assert job2.processing_started == datetime.utcnow()
+    assert job2.processing_started == utc_now()
 
     assert mock_process_incomplete_job.mock_calls == [
         call(str(job1.id)),
@@ -1422,7 +1422,7 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
         "reply_to_text": None,
         "document_download_count": 0,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
 
     if notification_type == NotificationType.EMAIL:
@@ -1476,7 +1476,7 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         "reply_to_text": "our.email@gov.uk",
         "document_download_count": 0,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
 
     if notification_type == NotificationType.EMAIL:
@@ -1621,7 +1621,7 @@ def test_save_api_tasks_use_cache(
                 "reply_to_text": "our.email@gov.uk",
                 "document_download_count": 0,
                 "status": NotificationStatus.CREATED,
-                "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+                "created_at": utc_now().strftime(DATETIME_FORMAT),
             }
         )
 

@@ -1,7 +1,6 @@
 import base64
 import json
 import os
-from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
@@ -25,7 +24,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
-from app.utils import hilite
+from app.utils import hilite, utc_now
 from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)
@@ -156,7 +155,7 @@ def resend_service_invite(service_id, invited_user_id):
         invited_user_id=invited_user_id,
     )
 
-    fetched.created_at = datetime.utcnow()
+    fetched.created_at = utc_now()
     fetched.status = InvitedUserStatus.PENDING
 
     current_data = {k: v for k, v in invited_user_schema.dump(fetched).items()}

@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 import pytest
 from flask import current_app
@@ -13,6 +12,7 @@ from app.dao.organization_dao import (
 from app.dao.services_dao import dao_archive_service
 from app.enums import OrganizationType
 from app.models import AnnualBilling, Organization
+from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
     create_domain,
@@ -835,7 +835,7 @@ def test_get_organization_services_usage(admin_request, notify_db_session):
         service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019
     )
     create_ft_billing(
-        local_date=datetime.utcnow().date(),
+        local_date=utc_now().date(),
         template=template,
         billable_unit=19,
         rate=0.060,
@@ -873,7 +873,7 @@ def test_get_organization_services_usage_sort_active_first(
         service_id=service.id, free_sms_fragment_limit=10, financial_year_start=2019
     )
     create_ft_billing(
-        local_date=datetime.utcnow().date(),
+        local_date=utc_now().date(),
         template=template,
         billable_unit=19,
         rate=0.060,

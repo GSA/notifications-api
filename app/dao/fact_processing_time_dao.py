@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case
 
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import FactProcessingTime
+from app.utils import utc_now
 
 
 @autocommit
@@ -27,7 +26,7 @@ def insert_update_processing_time(processing_time):
         set_={
             "messages_total": stmt.excluded.messages_total,
             "messages_within_10_secs": stmt.excluded.messages_within_10_secs,
-            "updated_at": datetime.utcnow(),
+            "updated_at": utc_now(),
         },
     )
     db.session.connection().execute(stmt)

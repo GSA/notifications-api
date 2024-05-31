@@ -6,7 +6,7 @@ from app.complaint.complaint_schema import complaint_count_request
 from app.dao.complaint_dao import fetch_count_of_complaints, fetch_paginated_complaints
 from app.errors import register_errors
 from app.schema_validation import validate
-from app.utils import pagination_links
+from app.utils import pagination_links, utc_now
 
 complaint_blueprint = Blueprint("complaint", __name__, url_prefix="/complaint")
 
@@ -35,7 +35,7 @@ def get_complaint_count():
         validate(request.args, complaint_count_request)
 
     # If start and end date are not set, we are expecting today's stats.
-    today = str(datetime.utcnow().date())
+    today = str(utc_now().date())
 
     start_date = datetime.strptime(
         request.args.get("start_date", today), "%Y-%m-%d"

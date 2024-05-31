@@ -11,7 +11,7 @@ from app.celery.service_callback_tasks import (
     send_delivery_status_to_service,
 )
 from app.enums import CallbackType, NotificationStatus, NotificationType
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from tests.app.db import (
     create_complaint,
     create_notification,
@@ -101,7 +101,7 @@ def test_send_complaint_to_service_posts_https_request_to_service_with_encrypted
             "complaint_id": str(complaint.id),
             "reference": notification.client_reference,
             "to": notification.to,
-            "complaint_date": datetime.utcnow().strftime(DATETIME_FORMAT),
+            "complaint_date": utc_now().strftime(DATETIME_FORMAT),
         }
 
         assert request_mock.call_count == 1

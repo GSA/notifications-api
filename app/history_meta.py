@@ -15,11 +15,11 @@ session events.
 
 """
 
-import datetime
-
 from sqlalchemy import Column, ForeignKeyConstraint, Integer, Table, util
 from sqlalchemy.orm import attributes, object_mapper, registry
 from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
+
+from app.utils import utc_now
 
 
 def col_references_table(col, table):
@@ -236,10 +236,10 @@ def create_history(obj, history_cls=None):
 
     if not obj.version:
         obj.version = 1
-        obj.created_at = datetime.datetime.utcnow()
+        obj.created_at = utc_now()
     else:
         obj.version += 1
-        now = datetime.datetime.utcnow()
+        now = utc_now()
         obj.updated_at = now
         data["updated_at"] = now
 

@@ -102,7 +102,7 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import get_prev_next_pagination_links, hilite
+from app.utils import get_prev_next_pagination_links, hilite, utc_now
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -144,7 +144,7 @@ def get_services():
     include_from_test_key = request.args.get("include_from_test_key", "True") != "False"
 
     # If start and end date are not set, we are expecting today's stats.
-    today = str(datetime.utcnow().date())
+    today = str(utc_now().date())
 
     start_date = datetime.strptime(
         request.args.get("start_date", today), "%Y-%m-%d"
@@ -389,12 +389,17 @@ def get_service_history(service_id):
 
 @service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
 def get_all_notifications_for_service(service_id):
+    current_app.logger.debug("enter get_all_notifications_for_service")
     if request.method == "GET":
         data = notifications_filter_schema.load(request.args)
+        current_app.logger.debug(
+            f"use GET, request.args {request.args} and data {data}"
+        )
     elif request.method == "POST":
         # Must transform request.get_json() to MultiDict as NotificationsFilterSchema expects a MultiDict.
         # Unlike request.args, request.get_json() does not return a MultiDict but instead just a dict.
         data = notifications_filter_schema.load(MultiDict(request.get_json()))
+        current_app.logger.debug(f"use POST, request {request.get_json()} data {data}")
 
     if data.get("to"):
         notification_type = (
@@ -421,6 +426,10 @@ def get_all_notifications_for_service(service_id):
     # for whether to show pagination links
     count_pages = data.get("count_pages", True)
 
+    current_app.logger.debug(
+        f"get pagination with {service_id} service_id filters {data} \
+                             limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}"
+    )
     pagination = notifications_dao.get_notifications_for_service(
         service_id,
         filter_dict=data,
@@ -462,6 +471,8 @@ def get_all_notifications_for_service(service_id):
         notifications = notification_with_template_schema.dump(
             pagination.items, many=True
         )
+    current_app.logger.debug(f"number of notifications are {len(notifications)}")
+    current_app.logger.debug(f"first notification is {notifications[0]}")
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
@@ -583,7 +594,7 @@ def get_monthly_notification_stats(service_id):
     )
     statistics.add_monthly_notification_status_stats(data, stats)
 
-    now = datetime.utcnow()
+    now = utc_now()
     if end_date > now:
         todays_deltas = fetch_notification_status_for_service_for_day(
             now, service_id=service_id
@@ -615,7 +626,7 @@ def get_service_statistics(service_id, today_only, limit_days=7):
 def get_detailed_services(
     start_date, end_date, only_active=False, include_from_test_key=True
 ):
-    if start_date == datetime.utcnow().date():
+    if start_date == utc_now().date():
         stats = dao_fetch_todays_stats_for_all_services(
             include_from_test_key=include_from_test_key, only_active=only_active
         )
