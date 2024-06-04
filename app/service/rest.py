@@ -235,7 +235,7 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
     else:
         stats = {}
         for d in range(days):
-            new_date = start_date + timedelta(days=d)
+            new_date = start_date - timedelta(days=d)
             key = new_date.strftime("%Y-%m-%d")
             stats[key] = statistics.format_statistics(
                 dao_fetch_stats_for_service_from_day(service_id, new_date)
