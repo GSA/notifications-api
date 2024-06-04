@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import and_, asc, desc, func
@@ -13,7 +13,7 @@ from app.models import (
     ServiceDataRetention,
     Template,
 )
-from app.utils import midnight_n_days_ago
+from app.utils import midnight_n_days_ago, utc_now
 
 
 def dao_get_notification_outcomes_for_job(service_id, job_id):
@@ -110,7 +110,7 @@ def dao_set_scheduled_jobs_to_pending():
     jobs = (
         Job.query.filter(
             Job.job_status == JobStatus.SCHEDULED,
-            Job.scheduled_for < datetime.utcnow(),
+            Job.scheduled_for < utc_now(),
         )
         .order_by(asc(Job.scheduled_for))
         .with_for_update()
@@ -131,7 +131,7 @@ def dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id):
         Job.service_id == service_id,
         Job.id == job_id,
         Job.job_status == JobStatus.SCHEDULED,
-        Job.scheduled_for > datetime.utcnow(),
+        Job.scheduled_for > utc_now(),
     ).one()
 
 
@@ -152,7 +152,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
         ServiceDataRetention.notification_type.in_(notification_types)
     ).all()
     jobs = []
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     for f in flexible_data_retention:
         end_date = today - timedelta(days=f.days_of_retention)
 
@@ -193,8 +193,8 @@ def dao_get_jobs_older_than_data_retention(notification_types):
 def find_jobs_with_missing_rows():
     # Jobs can be a maximum of 100,000 rows. It typically takes 10 minutes to create all those notifications.
     # Using 20 minutes as a condition seems reasonable.
-    ten_minutes_ago = datetime.utcnow() - timedelta(minutes=20)
-    yesterday = datetime.utcnow() - timedelta(days=1)
+    ten_minutes_ago = utc_now() - timedelta(minutes=20)
+    yesterday = utc_now() - timedelta(days=1)
     jobs_with_rows_missing = (
         db.session.query(Job)
         .filter(

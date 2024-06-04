@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from unittest.mock import ANY
 
 from freezegun import freeze_time
@@ -18,6 +17,7 @@ from app.celery.test_key_tasks import (
 from app.dao.notifications_dao import get_notification_by_id
 from app.enums import CallbackType, NotificationStatus
 from app.models import Complaint
+from app.utils import utc_now
 from tests.app.conftest import create_sample_notification
 from tests.app.db import (
     create_notification,
@@ -136,7 +136,7 @@ def test_process_ses_results(sample_email_template):
     create_notification(
         sample_email_template,
         reference="ref1",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
 
@@ -147,7 +147,7 @@ def test_process_ses_results_retry_called(sample_email_template, mocker):
     create_notification(
         sample_email_template,
         reference="ref1",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     mocker.patch(
@@ -198,7 +198,7 @@ def test_ses_callback_should_update_notification_status(
             template=sample_email_template,
             reference="ref",
             status=NotificationStatus.SENDING,
-            sent_at=datetime.utcnow(),
+            sent_at=utc_now(),
         )
         create_service_callback_api(
             service=sample_email_template.service, url="https://original_url.com"
@@ -294,7 +294,7 @@ def test_ses_callback_does_not_call_send_delivery_status_if_no_db_entry(
             template=sample_email_template,
             reference="ref",
             status=NotificationStatus.SENDING,
-            sent_at=datetime.utcnow(),
+            sent_at=utc_now(),
         )
         assert (
             get_notification_by_id(notification.id).status == NotificationStatus.SENDING
@@ -318,7 +318,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         notify_db_session,
         template=sample_email_template,
         reference="ref1",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     create_sample_notification(
@@ -326,7 +326,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         notify_db_session,
         template=sample_email_template,
         reference="ref2",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     create_sample_notification(
@@ -334,7 +334,7 @@ def test_ses_callback_should_update_multiple_notification_status_sent(
         notify_db_session,
         template=sample_email_template,
         reference="ref3",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     create_service_callback_api(
@@ -358,7 +358,7 @@ def test_ses_callback_should_set_status_to_temporary_failure(
         template=sample_email_template,
         reference="ref",
         status=NotificationStatus.SENDING,
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
     )
     create_service_callback_api(
         service=notification.service, url="https://original_url.com"
@@ -384,7 +384,7 @@ def test_ses_callback_should_set_status_to_permanent_failure(
         template=sample_email_template,
         reference="ref",
         status=NotificationStatus.SENDING,
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
     )
     create_service_callback_api(
         service=sample_email_template.service, url="https://original_url.com"
@@ -412,7 +412,7 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(
     notification = create_notification(
         template=sample_email_template,
         reference="ref1",
-        sent_at=datetime.utcnow(),
+        sent_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     response = ses_complaint_callback()

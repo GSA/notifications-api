@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app import db
 from app.models import InvitedOrganizationUser
+from app.utils import utc_now
 
 
 def save_invited_org_user(invited_org_user):
@@ -28,9 +29,7 @@ def get_invited_org_users_for_organization(organization_id):
 def delete_org_invitations_created_more_than_two_days_ago():
     deleted = (
         db.session.query(InvitedOrganizationUser)
-        .filter(
-            InvitedOrganizationUser.created_at <= datetime.utcnow() - timedelta(days=2)
-        )
+        .filter(InvitedOrganizationUser.created_at <= utc_now() - timedelta(days=2))
         .delete()
     )
     db.session.commit()

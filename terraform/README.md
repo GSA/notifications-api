@@ -214,3 +214,17 @@ This error indicates that the Cloud Foundry user account (or service account) ne
 You have exceeded your organization's services limit.
 ```
 Too many Cloud Foundry services have been created without being destroyed. Perhaps Terraform developers have forgotten to delete their SpaceDeployers after they finish with them. List `cf services` to see.
+
+### Unknown error
+```
+Error: Service Instance xx-name-xx failed xx-UUID-xx, reason: [Job (xx-UUID-xx) failed: An unknown error occurred.]
+```
+This unhelpful message may be clarified by looking in the Cloud.gov web UI. Among the list of service instances (Cloud Foundry &#x2192; Organizations &#x2192; gsa-tts-benefits-studio &#x2192; Spaces &#x2192; your-space-name &#x2192; Service instances) check for pending or erroring items. Refer below if you discover a [domain identity verification](#Domain_identity_verification) error.
+
+The audit event logs may also provide insight. They are visible in web UI or [in the terminal](https://v3-apidocs.cloudfoundry.org/version/3.159.0/#audit-events).
+
+### Domain identity verification
+```
+Error: Error creating SES domain identity verification: Expected domain verification Success, but was in state Pending
+```
+This error comes via the [Supplementary Service Broker](https://github.com/GSA/usnotify-ssb/) and originates from the [SMTP Brokerpak](https://github.com/GSA-TTS/datagov-brokerpak-smtp) it uses. You can run the [broker provisioning locally](https://github.com/GSA-TTS/datagov-brokerpak-smtp/tree/main/terraform/provision) to tinker with the error.

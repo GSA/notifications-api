@@ -27,7 +27,7 @@ from app.dao.service_data_retention_dao import (
 )
 from app.enums import NotificationType
 from app.models import FactProcessingTime
-from app.utils import get_midnight_in_utc
+from app.utils import get_midnight_in_utc, utc_now
 
 
 @notify_celery.task(name="remove_sms_email_jobs")
@@ -46,7 +46,7 @@ def _remove_csv_files(job_types):
 
 @notify_celery.task(name="cleanup-unfinished-jobs")
 def cleanup_unfinished_jobs():
-    now = datetime.utcnow()
+    now = utc_now()
     jobs = dao_get_unfinished_jobs()
     for job in jobs:
         # The query already checks that the processing_finished time is null, so here we are saying
@@ -88,7 +88,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
 
     for f in flexible_data_retention:
         day_to_delete_backwards_from = get_midnight_in_utc(
-            datetime.utcnow()
+            utc_now()
         ).date() - timedelta(days=f.days_of_retention)
 
         delete_notifications_for_service_and_type.apply_async(
@@ -100,7 +100,7 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
             },
         )
 
-    seven_days_ago = get_midnight_in_utc(datetime.utcnow()).date() - timedelta(days=7)
+    seven_days_ago = get_midnight_in_utc(utc_now()).date() - timedelta(days=7)
 
     service_ids_with_data_retention = {x.service_id for x in flexible_data_retention}
 
@@ -136,14 +136,14 @@ def _delete_notifications_older_than_retention_by_type(notification_type):
 def delete_notifications_for_service_and_type(
     service_id, notification_type, datetime_to_delete_before
 ):
-    start = datetime.utcnow()
+    start = utc_now()
     num_deleted = move_notifications_to_notification_history(
         notification_type,
         service_id,
         datetime_to_delete_before,
     )
     if num_deleted:
-        end = datetime.utcnow()
+        end = utc_now()
         current_app.logger.info(
             f"delete-notifications-for-service-and-type: "
             f"service: {service_id}, "
@@ -158,7 +158,7 @@ def delete_notifications_for_service_and_type(
 def timeout_notifications():
     notifications = ["dummy value so len() > 0"]
 
-    cutoff_time = datetime.utcnow() - timedelta(
+    cutoff_time = utc_now() - timedelta(
         seconds=current_app.config.get("SENDING_NOTIFICATIONS_TIMEOUT_PERIOD")
     )
 
@@ -179,11 +179,11 @@ def timeout_notifications():
 @cronitor("delete-inbound-sms")
 def delete_inbound_sms():
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         deleted = delete_inbound_sms_older_than_retention()
         current_app.logger.info(
             "Delete inbound sms job started {} finished {} deleted {} inbound sms notifications".format(
-                start, datetime.utcnow(), deleted
+                start, utc_now(), deleted
             )
         )
     except SQLAlchemyError:
@@ -197,7 +197,7 @@ def save_daily_notification_processing_time(local_date=None):
     # local_date is a string in the format of "YYYY-MM-DD"
     if local_date is None:
         # if a date is not provided, we run against yesterdays data
-        local_date = (datetime.utcnow() - timedelta(days=1)).date()
+        local_date = (utc_now() - timedelta(days=1)).date()
     else:
         local_date = datetime.strptime(local_date, "%Y-%m-%d").date()
 

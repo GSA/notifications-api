@@ -69,6 +69,7 @@ from app.models import (
     User,
     WebauthnCredential,
 )
+from app.utils import utc_now
 
 
 def create_user(
@@ -265,7 +266,7 @@ def create_notification(
         template = job.template
 
     if created_at is None:
-        created_at = datetime.utcnow()
+        created_at = utc_now()
 
     if to_field is None:
         to_field = (
@@ -280,8 +281,8 @@ def create_notification(
         NotificationStatus.VIRUS_SCAN_FAILED,
         NotificationStatus.PENDING_VIRUS_CHECK,
     ):
-        sent_at = sent_at or datetime.utcnow()
-        updated_at = updated_at or datetime.utcnow()
+        sent_at = sent_at or utc_now()
+        updated_at = updated_at or utc_now()
 
     if not one_off and (job is None and api_key is None):
         # we did not specify in test - lets create it
@@ -354,11 +355,11 @@ def create_notification_history(
         template = job.template
 
     if created_at is None:
-        created_at = datetime.utcnow()
+        created_at = utc_now()
 
     if status != NotificationStatus.CREATED:
-        sent_at = sent_at or datetime.utcnow()
-        updated_at = updated_at or datetime.utcnow()
+        sent_at = sent_at or utc_now()
+        updated_at = updated_at or utc_now()
 
     data = {
         "id": id or uuid.uuid4(),
@@ -412,7 +413,7 @@ def create_job(
         "template_version": template.version,
         "original_file_name": original_file_name,
         "notification_count": notification_count,
-        "created_at": created_at or datetime.utcnow(),
+        "created_at": created_at or utc_now(),
         "created_by": template.created_by,
         "job_status": job_status,
         "scheduled_for": scheduled_for,
@@ -456,10 +457,10 @@ def create_inbound_sms(
 
     inbound = InboundSms(
         service=service,
-        created_at=created_at or datetime.utcnow(),
+        created_at=created_at or utc_now(),
         notify_number=service.get_inbound_number(),
         user_number=user_number,
-        provider_date=provider_date or datetime.utcnow(),
+        provider_date=provider_date or utc_now(),
         provider_reference=provider_reference or "foo",
         content=content,
         provider=provider,
@@ -769,7 +770,7 @@ def create_complaint(service=None, notification=None, created_at=None):
         service_id=service.id,
         ses_feedback_id=str(uuid.uuid4()),
         complaint_type="abuse",
-        complaint_date=datetime.utcnow(),
+        complaint_date=utc_now(),
         created_at=created_at if created_at else datetime.now(),
     )
     db.session.add(complaint)
