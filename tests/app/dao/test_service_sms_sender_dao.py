@@ -167,8 +167,7 @@ def test_dao_update_service_sms_sender_switches_default(notify_db_session):
     expected = {("testing", False), ("updated", True)}
     assert len(sms_senders) == 2
     results = {(sender.sms_sender, sender.is_default) for sender in sms_senders}
-    for item in expected:
-        assert item in results
+    assert expected <= results
 
 
 def test_dao_update_service_sms_sender_raises_exception_when_no_default_after_update(
