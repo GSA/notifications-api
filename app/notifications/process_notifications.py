@@ -12,7 +12,7 @@ from app.dao.notifications_dao import (
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.errors import BadRequestError
 from app.models import Notification
-
+from app.utils import utc_now
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
