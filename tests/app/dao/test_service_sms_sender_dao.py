@@ -164,11 +164,11 @@ def test_dao_update_service_sms_sender_switches_default(notify_db_session):
         .order_by(ServiceSmsSender.created_at)
         .all()
     )
+    expected = {("testing", False), ("updated", True)}
     assert len(sms_senders) == 2
-    assert sms_senders[0].sms_sender == "testing"
-    assert not sms_senders[0].is_default
-    assert sms_senders[1].sms_sender == "updated"
-    assert sms_senders[1].is_default
+    results = {(sender.sms_sender, sender.is_default) for sender in sms_senders}
+    for item in expected:
+        assert item in results
 
 
 def test_dao_update_service_sms_sender_raises_exception_when_no_default_after_update(
