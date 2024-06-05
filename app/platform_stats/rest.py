@@ -17,7 +17,7 @@ from app.errors import InvalidRequest, register_errors
 from app.platform_stats.platform_stats_schema import platform_stats_request
 from app.schema_validation import validate
 from app.service.statistics import format_admin_stats
-from app.utils import get_midnight_in_utc
+from app.utils import get_midnight_in_utc, utc_now
 
 platform_stats_blueprint = Blueprint("platform_stats", __name__)
 
@@ -30,7 +30,7 @@ def get_platform_stats():
         validate(request.args, platform_stats_request)
 
     # If start and end date are not set, we are expecting today's stats.
-    today = str(datetime.utcnow().date())
+    today = str(utc_now().date())
 
     start_date = datetime.strptime(
         request.args.get("start_date", today), "%Y-%m-%d"

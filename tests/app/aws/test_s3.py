@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from os import getenv
 
 import pytest
@@ -13,6 +12,7 @@ from app.aws.s3 import (
     remove_csv_object,
     remove_s3_object,
 )
+from app.utils import utc_now
 
 default_access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
 default_secret_key = getenv("CSV_AWS_SECRET_ACCESS_KEY")
@@ -23,7 +23,7 @@ def single_s3_object_stub(key="foo", last_modified=None):
     return {
         "ETag": '"d41d8cd98f00b204e9800998ecf8427e"',
         "Key": key,
-        "LastModified": last_modified or datetime.utcnow(),
+        "LastModified": last_modified or utc_now(),
     }
 
 

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from secrets import randbelow
 
 import sqlalchemy
@@ -14,7 +14,7 @@ from app.dao.service_user_dao import dao_get_service_users_by_user_id
 from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
 from app.models import Organization, Service, User, VerifyCode
-from app.utils import escape_special_characters, get_archived_db_column_value
+from app.utils import escape_special_characters, get_archived_db_column_value, utc_now
 
 
 def _remove_values_for_keys_if_present(dict, keys):
@@ -76,9 +76,9 @@ def save_model_user(
 ):
     if password:
         user.password = password
-        user.password_changed_at = datetime.utcnow()
+        user.password_changed_at = utc_now()
     if validated_email_access:
-        user.email_access_validated_at = datetime.utcnow()
+        user.email_access_validated_at = utc_now()
     if update_dict:
         _remove_values_for_keys_if_present(update_dict, ["id", "password_changed_at"])
         db.session.query(User).filter_by(id=user.id).update(update_dict or {})
@@ -90,7 +90,7 @@ def save_model_user(
 def create_user_code(user, code, code_type):
     verify_code = VerifyCode(
         code_type=code_type,
-        expiry_datetime=datetime.utcnow() + timedelta(minutes=30),
+        expiry_datetime=utc_now() + timedelta(minutes=30),
         user=user,
     )
     verify_code.code = code
@@ -111,7 +111,7 @@ def get_user_code(user, code, code_type):
 def delete_codes_older_created_more_than_a_day_ago():
     deleted = (
         db.session.query(VerifyCode)
-        .filter(VerifyCode.created_at < datetime.utcnow() - timedelta(hours=24))
+        .filter(VerifyCode.created_at < utc_now() - timedelta(hours=24))
         .delete()
     )
     db.session.commit()
@@ -138,7 +138,7 @@ def delete_user_verify_codes(user):
 def count_user_verify_codes(user):
     query = VerifyCode.query.filter(
         VerifyCode.user == user,
-        VerifyCode.expiry_datetime > datetime.utcnow(),
+        VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
     )
     return query.count()
@@ -179,7 +179,7 @@ def reset_failed_login_count(user):
 def update_user_password(user, password):
     # reset failed login count - they've just reset their password so should be fine
     user.password = password
-    user.password_changed_at = datetime.utcnow()
+    user.password_changed_at = utc_now()
     db.session.add(user)
     db.session.commit()
 

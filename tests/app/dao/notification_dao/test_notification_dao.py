@@ -36,6 +36,7 @@ from app.enums import (
     TemplateType,
 )
 from app.models import Job, Notification, NotificationHistory
+from app.utils import utc_now
 from tests.app.db import (
     create_ft_notification_status,
     create_job,
@@ -701,7 +702,7 @@ def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template
         with freeze_time(past_date):
             create_notification(
                 sample_template,
-                created_at=datetime.utcnow(),
+                created_at=utc_now(),
                 status=NotificationStatus.FAILED,
             )
 
@@ -777,7 +778,7 @@ def _notification_json(sample_template, job_id=None, id=None, status=None):
         "service_id": sample_template.service.id,
         "template_id": sample_template.id,
         "template_version": sample_template.version,
-        "created_at": datetime.utcnow(),
+        "created_at": utc_now(),
         "billable_units": 1,
         "notification_type": sample_template.template_type,
         "key_type": KeyType.NORMAL,
@@ -792,7 +793,7 @@ def _notification_json(sample_template, job_id=None, id=None, status=None):
 
 
 def test_dao_timeout_notifications(sample_template):
-    with freeze_time(datetime.utcnow() - timedelta(minutes=2)):
+    with freeze_time(utc_now() - timedelta(minutes=2)):
         created = create_notification(
             sample_template,
             status=NotificationStatus.CREATED,
@@ -810,7 +811,7 @@ def test_dao_timeout_notifications(sample_template):
             status=NotificationStatus.DELIVERED,
         )
 
-    temporary_failure_notifications = dao_timeout_notifications(datetime.utcnow())
+    temporary_failure_notifications = dao_timeout_notifications(utc_now())
 
     assert len(temporary_failure_notifications) == 2
     assert Notification.query.get(created.id).status == NotificationStatus.CREATED
@@ -828,7 +829,7 @@ def test_dao_timeout_notifications(sample_template):
 def test_dao_timeout_notifications_only_updates_for_older_notifications(
     sample_template,
 ):
-    with freeze_time(datetime.utcnow() + timedelta(minutes=10)):
+    with freeze_time(utc_now() + timedelta(minutes=10)):
         sending = create_notification(
             sample_template,
             status=NotificationStatus.SENDING,
@@ -838,7 +839,7 @@ def test_dao_timeout_notifications_only_updates_for_older_notifications(
             status=NotificationStatus.PENDING,
         )
 
-    temporary_failure_notifications = dao_timeout_notifications(datetime.utcnow())
+    temporary_failure_notifications = dao_timeout_notifications(utc_now())
 
     assert len(temporary_failure_notifications) == 0
     assert Notification.query.get(sending.id).status == NotificationStatus.SENDING
@@ -913,23 +914,23 @@ def test_get_notifications_created_by_api_or_csv_are_returned_correctly_excludin
     sample_test_api_key,
 ):
     create_notification(
-        template=sample_job.template, created_at=datetime.utcnow(), job=sample_job
+        template=sample_job.template, created_at=utc_now(), job=sample_job
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_api_key,
         key_type=sample_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_team_api_key,
         key_type=sample_team_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_test_api_key,
         key_type=sample_test_api_key.key_type,
     )
@@ -959,24 +960,24 @@ def test_get_notifications_with_a_live_api_key_type(
 ):
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         job=sample_job,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_api_key,
         key_type=sample_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_team_api_key,
         key_type=sample_team_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_test_api_key,
         key_type=sample_test_api_key.key_type,
     )
@@ -1001,23 +1002,23 @@ def test_get_notifications_with_a_test_api_key_type(
     sample_job, sample_api_key, sample_team_api_key, sample_test_api_key
 ):
     create_notification(
-        template=sample_job.template, created_at=datetime.utcnow(), job=sample_job
+        template=sample_job.template, created_at=utc_now(), job=sample_job
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_api_key,
         key_type=sample_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_team_api_key,
         key_type=sample_team_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_test_api_key,
         key_type=sample_test_api_key.key_type,
     )
@@ -1045,24 +1046,24 @@ def test_get_notifications_with_a_team_api_key_type(
 ):
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         job=sample_job,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_api_key,
         key_type=sample_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_team_api_key,
         key_type=sample_team_api_key.key_type,
     )
     create_notification(
         sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_test_api_key,
         key_type=sample_test_api_key.key_type,
     )
@@ -1090,25 +1091,25 @@ def test_should_exclude_test_key_notifications_by_default(
 ):
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         job=sample_job,
     )
 
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_api_key,
         key_type=sample_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_team_api_key,
         key_type=sample_team_api_key.key_type,
     )
     create_notification(
         template=sample_job.template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         api_key=sample_test_api_key,
         key_type=sample_test_api_key.key_type,
     )
@@ -1699,9 +1700,9 @@ def test_dao_get_notifications_by_to_field_orders_by_created_at_desc(sample_temp
     )
 
     notification_a_minute_ago = notification(
-        created_at=datetime.utcnow() - timedelta(minutes=1)
+        created_at=utc_now() - timedelta(minutes=1)
     )
-    notification = notification(created_at=datetime.utcnow())
+    notification = notification(created_at=utc_now())
 
     notifications = dao_get_notifications_by_recipient_or_reference(
         sample_template.service_id,
@@ -1718,9 +1719,9 @@ def test_dao_get_last_notification_added_for_job_id_valid_job_id(sample_template
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_notification(sample_template, job, 0)
@@ -1734,9 +1735,9 @@ def test_dao_get_last_notification_added_for_job_id_no_notifications(sample_temp
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
 
@@ -1890,17 +1891,17 @@ def test_notifications_not_yet_sent(sample_service, notification_type):
     template = create_template(service=sample_service, template_type=notification_type)
     old_notification = create_notification(
         template=template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.CREATED,
     )
     create_notification(
         template=template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.SENDING,
     )
     create_notification(
         template=template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.CREATED,
     )
 
@@ -1917,17 +1918,17 @@ def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_
     template = create_template(service=sample_service, template_type=notification_type)
     create_notification(
         template=template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.CREATED,
     )
     create_notification(
         template=template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.SENDING,
     )
     create_notification(
         template=template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.DELIVERED,
     )
 

@@ -4,6 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from app.enums import NotificationType
+from app.utils import utc_now
 from tests.app.db import (
     create_inbound_sms,
     create_service,
@@ -243,7 +244,7 @@ def test_get_most_recent_inbound_sms_for_service_respects_data_retention(
 ):
     create_service_data_retention(sample_service, NotificationType.SMS, 5)
     for i in range(10):
-        created = datetime.utcnow() - timedelta(days=i)
+        created = utc_now() - timedelta(days=i)
         create_inbound_sms(
             sample_service,
             user_number="44770090000{}".format(i),
@@ -288,7 +289,7 @@ def test_get_inbound_sms_for_service_respects_data_retention(
 ):
     create_service_data_retention(sample_service, NotificationType.SMS, 5)
     for i in range(10):
-        created = datetime.utcnow() - timedelta(days=i)
+        created = utc_now() - timedelta(days=i)
         create_inbound_sms(
             sample_service, user_number="44770090000{}".format(i), created_at=created
         )

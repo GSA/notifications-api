@@ -11,6 +11,7 @@ from app.enums import (
     StatisticsType,
     TemplateType,
 )
+from app.utils import utc_now
 from tests.app.db import (
     create_ft_notification_status,
     create_notification,
@@ -28,7 +29,7 @@ def test_get_template_usage_by_month_returns_correct_data(
         template=sample_template,
         count=3,
     )
-    create_notification(sample_template, created_at=datetime.utcnow())
+    create_notification(sample_template, created_at=utc_now())
 
     resp_json = admin_request.get(
         "service.get_monthly_template_usage",
@@ -74,7 +75,7 @@ def test_get_template_usage_by_month_returns_two_templates(
         template=sample_template,
         count=3,
     )
-    create_notification(sample_template, created_at=datetime.utcnow())
+    create_notification(sample_template, created_at=utc_now())
 
     resp_json = admin_request.get(
         "service.get_monthly_template_usage",

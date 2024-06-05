@@ -19,6 +19,7 @@ from app.celery.nightly_tasks import (
 )
 from app.enums import NotificationType, TemplateType
 from app.models import FactProcessingTime, Job
+from app.utils import utc_now
 from tests.app.db import (
     create_job,
     create_notification,
@@ -62,7 +63,7 @@ def test_will_remove_csv_files_for_jobs_older_than_seven_days(
     """
     mocker.patch("app.celery.nightly_tasks.s3.remove_job_from_s3")
 
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = utc_now() - timedelta(days=7)
     just_under_seven_days = seven_days_ago + timedelta(seconds=1)
     eight_days_ago = seven_days_ago - timedelta(days=1)
     nine_days_ago = eight_days_ago - timedelta(days=1)
@@ -115,9 +116,9 @@ def test_will_remove_csv_files_for_jobs_older_than_retention_period(
         template_type=TemplateType.EMAIL,
     )
 
-    four_days_ago = datetime.utcnow() - timedelta(days=4)
-    eight_days_ago = datetime.utcnow() - timedelta(days=8)
-    thirty_one_days_ago = datetime.utcnow() - timedelta(days=31)
+    four_days_ago = utc_now() - timedelta(days=4)
+    eight_days_ago = utc_now() - timedelta(days=8)
+    thirty_one_days_ago = utc_now() - timedelta(days=31)
 
     job1_to_delete = create_job(sms_template_service_1, created_at=four_days_ago)
     job2_to_delete = create_job(email_template_service_1, created_at=eight_days_ago)
@@ -369,21 +370,21 @@ def test_delete_notifications_task_calls_task_for_services_that_have_sent_notifi
     # will be deleted as service has no custom retention, but past our default 7 days
     create_notification(
         service_will_delete_1.templates[0],
-        created_at=datetime.utcnow() - timedelta(days=8),
+        created_at=utc_now() - timedelta(days=8),
     )
     create_notification(
         service_will_delete_2.templates[0],
-        created_at=datetime.utcnow() - timedelta(days=8),
+        created_at=utc_now() - timedelta(days=8),
     )
 
     # will be kept as it's recent, and we won't run delete_notifications_for_service_and_type
     create_notification(
-        nothing_to_delete_sms_template, created_at=datetime.utcnow() - timedelta(days=2)
+        nothing_to_delete_sms_template, created_at=utc_now() - timedelta(days=2)
     )
     # this is an old notification, but for email not sms, so we won't run delete_notifications_for_service_and_type
     create_notification(
         nothing_to_delete_email_template,
-        created_at=datetime.utcnow() - timedelta(days=8),
+        created_at=utc_now() - timedelta(days=8),
     )
 
     mock_subtask = mocker.patch(

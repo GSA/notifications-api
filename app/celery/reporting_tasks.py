@@ -9,6 +9,7 @@ from app.dao.fact_billing_dao import fetch_billing_data_for_day, update_fact_bil
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
 from app.enums import NotificationType
+from app.utils import utc_now
 
 
 @notify_celery.task(name="create-nightly-billing")
@@ -17,7 +18,7 @@ def create_nightly_billing(day_start=None):
     # day_start is a datetime.date() object. e.g.
     # up to 4 days of data counting back from day_start is consolidated
     if day_start is None:
-        day_start = datetime.utcnow().date() - timedelta(days=1)
+        day_start = utc_now().date() - timedelta(days=1)
     else:
         # When calling the task its a string in the format of "YYYY-MM-DD"
         day_start = datetime.strptime(day_start, "%Y-%m-%d").date()
@@ -39,9 +40,9 @@ def create_nightly_billing_for_day(process_day):
         f"create-nightly-billing-for-day task for {process_day}: started"
     )
 
-    start = datetime.utcnow()
+    start = utc_now()
     transit_data = fetch_billing_data_for_day(process_day=process_day)
-    end = datetime.utcnow()
+    end = utc_now()
 
     current_app.logger.info(
         f"create-nightly-billing-for-day task for {process_day}: data fetched in {(end - start).seconds} seconds"
@@ -78,7 +79,7 @@ def create_nightly_notification_status():
         mean the aggregated results are temporarily incorrect.
     """
 
-    yesterday = datetime.utcnow().date() - timedelta(days=1)
+    yesterday = utc_now().date() - timedelta(days=1)
 
     for notification_type in (NotificationType.SMS, NotificationType.EMAIL):
         days = 4
@@ -107,14 +108,14 @@ def create_nightly_notification_status_for_service_and_day(
 ):
     process_day = datetime.strptime(process_day, "%Y-%m-%d").date()
 
-    start = datetime.utcnow()
+    start = utc_now()
     update_fact_notification_status(
         process_day=process_day,
         notification_type=notification_type,
         service_id=service_id,
     )
 
-    end = datetime.utcnow()
+    end = utc_now()
     current_app.logger.info(
         f"create-nightly-notification-status-for-service-and-day task update "
         f"for {service_id}, {notification_type} for {process_day}: "

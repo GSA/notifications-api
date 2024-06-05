@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import asc, desc, or_, select, text, union
@@ -16,6 +16,7 @@ from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
     midnight_n_days_ago,
+    utc_now,
 )
 from notifications_utils.international_billing_rates import INTERNATIONAL_BILLING_RATES
 from notifications_utils.recipients import (
@@ -95,7 +96,7 @@ def _update_notification_status(
         current_status=notification.status, status=status
     )
     notification.status = status
-    notification.sent_at = datetime.utcnow()
+    notification.sent_at = utc_now()
     if provider_response:
         notification.provider_response = provider_response
     if carrier:
@@ -179,7 +180,7 @@ def update_notification_status_by_reference(reference, status):
 
 @autocommit
 def dao_update_notification(notification):
-    notification.updated_at = datetime.utcnow()
+    notification.updated_at = utc_now()
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
@@ -327,10 +328,10 @@ def sanitize_successful_notification_by_id(notification_id, carrier, provider_re
         "notification_id": notification_id,
         "carrier": carrier,
         "response": provider_response,
-        "sent_at": datetime.utcnow(),
+        "sent_at": utc_now(),
     }
 
-    db.session.execute(update_query, input_params)
+    db.session.execute(text(update_query), input_params)
     db.session.commit()
 
 
@@ -437,7 +438,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
     Set email and SMS notifications (only) to "temporary-failure" status
     if they're still sending from before the specified cutoff_time.
     """
-    updated_at = datetime.utcnow()
+    updated_at = utc_now()
     current_statuses = [NotificationStatus.SENDING, NotificationStatus.PENDING]
     new_status = NotificationStatus.TEMPORARY_FAILURE
 
@@ -599,9 +600,7 @@ def dao_get_last_notification_added_for_job_id(job_id):
 
 
 def notifications_not_yet_sent(should_be_sending_after_seconds, notification_type):
-    older_than_date = datetime.utcnow() - timedelta(
-        seconds=should_be_sending_after_seconds
-    )
+    older_than_date = utc_now() - timedelta(seconds=should_be_sending_after_seconds)
 
     notifications = Notification.query.filter(
         Notification.created_at <= older_than_date,
@@ -622,8 +621,7 @@ def _duplicate_update_warning(notification, status):
             id=notification.id,
             old_status=notification.status,
             new_status=status,
-            time_diff=datetime.utcnow()
-            - (notification.updated_at or notification.created_at),
+            time_diff=utc_now() - (notification.updated_at or notification.created_at),
             type=notification.notification_type,
             sent_by=notification.sent_by,
             service_id=notification.service_id,

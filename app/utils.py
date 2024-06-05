@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import url_for
 from sqlalchemy import func
@@ -94,7 +94,7 @@ def midnight_n_days_ago(number_of_days):
     """
     Returns midnight a number of days ago. Takes care of daylight savings etc.
     """
-    return get_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
+    return get_midnight_in_utc(utc_now() - timedelta(days=number_of_days))
 
 
 def escape_special_characters(string):
@@ -104,7 +104,7 @@ def escape_special_characters(string):
 
 
 def get_archived_db_column_value(column):
-    date = datetime.utcnow().strftime("%Y-%m-%d")
+    date = utc_now().strftime("%Y-%m-%d")
     return f"_archived_{date}_{column}"
 
 
@@ -132,3 +132,15 @@ def hilite(message):
     ansi_green = "\033[32m"
     ansi_reset = "\033[0m"
     return f"{ansi_green}{message}{ansi_reset}"
+
+
+def aware_utcnow():
+    return datetime.now(timezone.utc)
+
+
+def naive_utcnow():
+    return aware_utcnow().replace(tzinfo=None)
+
+
+def utc_now():
+    return naive_utcnow()

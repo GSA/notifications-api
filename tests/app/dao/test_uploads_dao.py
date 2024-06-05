@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from freezegun import freeze_time
 
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
 from app.enums import JobStatus, NotificationStatus, NotificationType, TemplateType
+from app.utils import utc_now
 from tests.app.db import (
     create_job,
     create_notification,
@@ -47,11 +48,11 @@ def test_get_uploads_for_service(sample_template):
     create_service_data_retention(
         sample_template.service, NotificationType.SMS, days_of_retention=9
     )
-    job = create_job(sample_template, processing_started=datetime.utcnow())
+    job = create_job(sample_template, processing_started=utc_now())
 
     other_service = create_service(service_name="other service")
     other_template = create_template(service=other_service)
-    other_job = create_job(other_template, processing_started=datetime.utcnow())
+    other_job = create_job(other_template, processing_started=utc_now())
 
     uploads_from_db = dao_get_uploads_by_service_id(job.service_id).items
     other_uploads_from_db = dao_get_uploads_by_service_id(other_job.service_id).items
@@ -91,16 +92,16 @@ def test_get_uploads_for_service(sample_template):
 
 
 def test_get_uploads_orders_by_processing_started_desc(sample_template):
-    days_ago = datetime.utcnow() - timedelta(days=3)
+    days_ago = utc_now() - timedelta(days=3)
     upload_1 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(days=1),
+        processing_started=utc_now() - timedelta(days=1),
         created_at=days_ago,
         job_status=JobStatus.IN_PROGRESS,
     )
     upload_2 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(days=2),
+        processing_started=utc_now() - timedelta(days=2),
         created_at=days_ago,
         job_status=JobStatus.IN_PROGRESS,
     )

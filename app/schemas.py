@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from uuid import UUID
 
 from dateutil.parser import parse
@@ -19,7 +19,7 @@ from app import ma, models
 from app.dao.permissions_dao import permission_dao
 from app.enums import ServicePermissionType, TemplateType
 from app.models import ServicePermission
-from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance
+from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance, utc_now
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -41,12 +41,12 @@ def _validate_positive_number(value, msg="Not a positive integer"):
 def _validate_datetime_not_more_than_96_hours_in_future(
     dte, msg="Date cannot be more than 96hrs in the future"
 ):
-    if dte > datetime.utcnow() + timedelta(hours=96):
+    if dte > utc_now() + timedelta(hours=96):
         raise ValidationError(msg)
 
 
 def _validate_datetime_not_in_past(dte, msg="Date cannot be in the past"):
-    if dte < datetime.utcnow():
+    if dte < utc_now():
         raise ValidationError(msg)
 
 

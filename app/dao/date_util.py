@@ -1,6 +1,8 @@
 import calendar
 from datetime import date, datetime, time, timedelta
 
+from app.utils import utc_now
+
 
 def get_months_for_financial_year(year):
     return [
@@ -23,7 +25,7 @@ def get_calendar_year_dates(year):
 
 
 def get_current_calendar_year():
-    now = datetime.utcnow()
+    now = utc_now()
     current_year = int(now.strftime("%Y"))
     year = current_year
     return get_calendar_year(year)

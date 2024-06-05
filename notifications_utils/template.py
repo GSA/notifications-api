@@ -1,7 +1,6 @@
 import math
 import re
 from abc import ABC, abstractmethod
-from datetime import datetime
 from functools import lru_cache
 from html import unescape
 from os import path
@@ -13,6 +12,7 @@ from notifications_utils import (
     LETTER_MAX_PAGE_COUNT,
     MAGIC_SEQUENCE,
     SMS_CHAR_COUNT_LIMIT,
+    utc_now,
 )
 from notifications_utils.countries.data import Postage
 from notifications_utils.field import Field, PlainTextField
@@ -43,10 +43,7 @@ from notifications_utils.markdown import (
     notify_letter_preview_markdown,
     notify_plain_text_email_markdown,
 )
-from notifications_utils.postal_address import (
-    PostalAddress,
-    address_lines_1_to_7_keys,
-)
+from notifications_utils.postal_address import PostalAddress, address_lines_1_to_7_keys
 from notifications_utils.sanitise_text import SanitiseSMS
 from notifications_utils.take import Take
 from notifications_utils.template_change import TemplateChange
@@ -742,7 +739,7 @@ class BaseLetterTemplate(SubjectMixin, Template):
         )
         self.admin_base_url = admin_base_url
         self.logo_file_name = logo_file_name
-        self.date = date or datetime.utcnow()
+        self.date = date or utc_now()
 
     @property
     def subject(self):
