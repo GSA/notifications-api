@@ -9,7 +9,7 @@ from flask import current_app
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
 from app.exceptions import NotificationTechnicalFailureException
-from app.utils import utc_now
+from app.utils import hilite, scrub, utc_now
 
 
 class AwsCloudwatchClient(Client):
@@ -124,6 +124,7 @@ class AwsCloudwatchClient(Client):
             self.warn_if_dev_is_opted_out(
                 message["delivery"]["providerResponse"], notification_id
             )
+            current_app.logger.info(hilite(scrub(f"DELIVERED: {message}")))
             return (
                 "success",
                 message["delivery"]["providerResponse"],
@@ -140,6 +141,8 @@ class AwsCloudwatchClient(Client):
             self.warn_if_dev_is_opted_out(
                 message["delivery"]["providerResponse"], notification_id
             )
+
+            current_app.logger.info(hilite(scrub(f"FAILED: {message}")))
             return (
                 "failure",
                 message["delivery"]["providerResponse"],
