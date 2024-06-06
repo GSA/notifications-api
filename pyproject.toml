@@ -36,7 +36,7 @@ gunicorn = {version = "==22.0.0", extras = ["eventlet"]}
 iso8601 = "==2.1.0"
 jsonschema = {version = "==4.22.0", extras = ["format"]}
 lxml = "==5.2.2"
-marshmallow = "==3.21.2"
+marshmallow = "==3.21.3"
 marshmallow-sqlalchemy = "==1.0.0"
 newrelic = "*"
 notifications-python-client = "==9.1.0"
