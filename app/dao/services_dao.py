@@ -28,6 +28,7 @@ from app.models import (
     Job,
     Notification,
     NotificationHistory,
+    NotificationAllTimeView,
     Organization,
     Permission,
     Service,
@@ -434,19 +435,19 @@ def dao_fetch_stats_for_service_from_day(service_id, day):
     end_date = get_midnight_in_utc(day + timedelta(days=1))
     return (
         db.session.query(
-            NotificationHistory.notification_type,
-            NotificationHistory.status,
-            func.count(NotificationHistory.id).label("count"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
-            NotificationHistory.service_id == service_id,
-            NotificationHistory.key_type != KeyType.TEST,
-            NotificationHistory.created_at >= start_date,
-            NotificationHistory.created_at <= end_date,
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at <= end_date,
         )
         .group_by(
-            NotificationHistory.notification_type,
-            NotificationHistory.status,
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
         )
         .all()
     )
@@ -460,20 +461,20 @@ def dao_fetch_stats_for_service_from_day_for_user(service_id, day, user_id):
     end_date = get_midnight_in_utc(day + timedelta(days=1))
     return (
         db.session.query(
-            NotificationHistory.notification_type,
-            NotificationHistory.status,
-            func.count(NotificationHistory.id).label("count"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
-            NotificationHistory.service_id == service_id,
-            NotificationHistory.key_type != KeyType.TEST,
-            NotificationHistory.created_at >= start_date,
-            NotificationHistory.created_at <= end_date,
-            NotificationHistory.created_by_id == user_id,
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at <= end_date,
+            NotificationAllTimeView.created_by_id == user_id,
         )
         .group_by(
-            NotificationHistory.notification_type,
-            NotificationHistory.status,
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
         )
         .all()
     )
@@ -667,22 +668,22 @@ def fetch_notification_stats_for_service_by_month_by_user(
 ):
     return (
         db.session.query(
-            func.date_trunc("month", NotificationHistory.created_at).label("month"),
-            NotificationHistory.notification_type,
-            (NotificationHistory.status).label("notification_status"),
-            func.count(NotificationHistory.id).label("count"),
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            (NotificationAllTimeView.status).label("notification_status"),
+            func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
-            NotificationHistory.service_id == service_id,
-            NotificationHistory.created_at >= start_date,
-            NotificationHistory.created_at < end_date,
-            NotificationHistory.key_type != KeyType.TEST,
-            NotificationHistory.created_by_id == user_id,
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_by_id == user_id,
         )
         .group_by(
-            func.date_trunc("month", NotificationHistory.created_at).label("month"),
-            NotificationHistory.notification_type,
-            NotificationHistory.status,
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
         )
         .all()
     )
