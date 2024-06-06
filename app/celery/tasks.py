@@ -24,7 +24,8 @@ from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
-from app.utils import DATETIME_FORMAT, utc_now
+from app.utils import DATETIME_FORMAT, hilite, scrub, utc_now
+from app.errors import TotalRequestsError
 from notifications_utils.recipients import RecipientCSV
 
 
@@ -189,6 +190,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
     # Return False when trial mode services try sending notifications
     # to non-team and non-simulated recipients.
     if not service_allowed_to_send_to(notification["to"], service, KeyType.NORMAL):
+        current_app.logger.info(hilite(scrub(f"service not allowed to send to {notification['to']}, aborting")))
         current_app.logger.debug(
             "SMS {} failed as restricted service".format(notification_id)
         )
@@ -219,6 +221,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         )
 
         # Kick off sns process in provider_tasks.py
+        current_app.logger.info(hilite(scrub(f"Going to deliver sms for recipient: {notification['to']}")))
         provider_tasks.deliver_sms.apply_async(
             [str(saved_notification.id)], queue=QueueNames.SEND_SMS
         )
