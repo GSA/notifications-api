@@ -243,20 +243,31 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
 
     return stats
 
-@service_blueprint.route("/<uuid:service_id>/statistics/user/<uuid:user_id>/<string:start>/<int:days>")
-def get_service_notification_statistics_by_day_by_user(service_id, user_id, start, days):
+
+@service_blueprint.route(
+    "/<uuid:service_id>/statistics/user/<uuid:user_id>/<string:start>/<int:days>"
+)
+def get_service_notification_statistics_by_day_by_user(
+    service_id, user_id, start, days
+):
     return jsonify(
-        data=get_service_statistics_for_specific_days_by_user(service_id, user_id, start, int(days))
+        data=get_service_statistics_for_specific_days_by_user(
+            service_id, user_id, start, int(days)
+        )
     )
 
 
-def get_service_statistics_for_specific_days_by_user(service_id, user_id, start, days=1):
+def get_service_statistics_for_specific_days_by_user(
+    service_id, user_id, start, days=1
+):
     start_date = datetime.strptime(start, "%Y-%m-%d").date()
 
     if days == 1:
         stats = {}
         stats[start] = statistics.format_statistics(
-            dao_fetch_stats_for_service_from_day_for_user(service_id, start_date, user_id)
+            dao_fetch_stats_for_service_from_day_for_user(
+                service_id, start_date, user_id
+            )
         )
     else:
         stats = {}
@@ -264,7 +275,9 @@ def get_service_statistics_for_specific_days_by_user(service_id, user_id, start,
             new_date = start_date - timedelta(days=d)
             key = new_date.strftime("%Y-%m-%d")
             stats[key] = statistics.format_statistics(
-                dao_fetch_stats_for_service_from_day_for_user(service_id, new_date, user_id)
+                dao_fetch_stats_for_service_from_day_for_user(
+                    service_id, new_date, user_id
+                )
             )
 
     return stats
