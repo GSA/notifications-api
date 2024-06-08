@@ -6,6 +6,13 @@ locals {
   recursive_delete = true # deprecated, still used in shared modules
 }
 
+resource "null_resource" "prevent_destroy" {
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
 module "database" {
   source = "github.com/GSA-TTS/terraform-cloudgov//database?ref=v1.0.0"
 
