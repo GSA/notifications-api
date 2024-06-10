@@ -204,17 +204,17 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "awscli"
-version = "1.33.2"
+version = "1.33.5"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "awscli-1.33.2-py3-none-any.whl", hash = "sha256:b8246ef8085df75ba20537c5ac0a621a4dbae1f084dc536bdc49cf2736fd0d3c"},
-    {file = "awscli-1.33.2.tar.gz", hash = "sha256:4f692fff0e75fc2505f9a7cb613ec09426c6ed52bcd5a99246f58426b16a1bb6"},
+    {file = "awscli-1.33.5-py3-none-any.whl", hash = "sha256:46eb5858f154723d3d11900b33035f24b51882758d5f3f753e472ca12375bc46"},
+    {file = "awscli-1.33.5.tar.gz", hash = "sha256:eda29ad39b0907505f78d693e6cc1dc76c2d47a0e5cf5376e86a791d5e830535"},
 ]
 
 [package.dependencies]
-botocore = "1.34.120"
+botocore = "1.34.123"
 colorama = ">=0.2.5,<0.4.7"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -422,13 +422,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.120"
+version = "1.34.123"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.120-py3-none-any.whl", hash = "sha256:92bd739938078c7a0b110689a3eee21ecb3954d90653da013d9f98ef1165d6f7"},
-    {file = "botocore-1.34.120.tar.gz", hash = "sha256:5cc0fca43cb2aad54917a394a001ac9ba774d21ad6a08828002d54b601776f78"},
+    {file = "botocore-1.34.123-py3-none-any.whl", hash = "sha256:8c34ada2a708c82e7174bff700611643db7ce2cb18f1130c35045c24310d299d"},
+    {file = "botocore-1.34.123.tar.gz", hash = "sha256:a8577f6574600c4d159b5cd103ee05744a443d77f7778304e17307940b369c4f"},
 ]
 
 [package.dependencies]
@@ -437,7 +437,7 @@ python-dateutil = ">=2.1,<3.0.0"
 urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""}
 
 [package.extras]
-crt = ["awscrt (==0.20.9)"]
+crt = ["awscrt (==0.20.11)"]
 
 [[package]]
 name = "build"
@@ -4752,4 +4752,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "ce7453a1b1abd5b3dbd343e42e043bb91e81c89869e6eac0722fd69b2381f3d8"
+content-hash = "a2adaf7b01261da0702ecc1698c4e86fd159375f3ff59ed26182b5379037a411"
