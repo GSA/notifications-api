@@ -1,5 +1,6 @@
 import logging
 import logging.handlers
+import re
 import sys
 from itertools import product
 
@@ -130,4 +131,32 @@ class JSONFormatter(BaseJSONFormatter):
             log_record["message"] = log_record["message"].format(**log_record)
         except (KeyError, IndexError) as e:
             logger.exception("failed to format log message: {} not found".format(e))
+        return log_record
+
+
+class PIIFormatter(BaseJSONFormatter):
+
+    def scrub(self, msg):
+        # Eventually we want to scrub all messages in all logs for phone numbers
+        # and email addresses, masking them.  Ultimately this will probably get
+        # refactored into a 'SafeLogger' subclass or something, but let's start here
+        # with phones.
+        phones = re.findall("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d", msg)
+        phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
+        for phone in phones:
+            msg = msg.replace(phone, f"1XXXXX{phone[-5:]}")
+
+        emails = re.findall(
+            r"[\w\.-]+@[\w\.-]+", msg
+        )  # ['alice@google.com', 'bob@abc.com']
+        for email in emails:
+            # do something with each found email string
+            msg = msg.replace(email, f"XXXXX{email[-10:]}")
+        return msg
+
+    def process_log_record(self, log_record):
+        try:
+            log_record["message"] = self.scrub(log_record["message"])
+        except (KeyError, IndexError, ValueError) as e:
+            logger.exception(f"failed to scrub log message: {e}")
         return log_record

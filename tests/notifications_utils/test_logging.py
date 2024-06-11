@@ -49,3 +49,20 @@ def test_base_json_formatter_contains_service_id():
         == "message to log"
     )
     assert service_id_filter.filter(record).service_id == "notify-admin"
+
+
+def test_scrub():
+    record = builtin_logging.LogRecord(
+        name="log thing",
+        level="info",
+        pathname="path",
+        lineno=123,
+        msg="phone1: 1555555555, phone2: 1555555554, email1: fake@fake.gov, email2: fake@fake2.fake.gov",
+        exc_info=None,
+        args=None,
+    )
+
+    assert (
+        json.loads(logging.PIIFormatter().format(record))["message"]
+        == "phone1: 1XXXXX55555, phone2: 1XXXXX55554, email1: XXXXXe@fake.gov, email2: XXXXX2.fake.gov"
+    )
