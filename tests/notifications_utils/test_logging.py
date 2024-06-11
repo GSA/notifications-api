@@ -51,7 +51,7 @@ def test_base_json_formatter_contains_service_id():
     assert service_id_filter.filter(record).service_id == "notify-admin"
 
 
-def test_scrub():
+def test_pii_filter():
     record = builtin_logging.LogRecord(
         name="log thing",
         level="info",
@@ -61,8 +61,6 @@ def test_scrub():
         exc_info=None,
         args=None,
     )
-
-    assert (
-        json.loads(logging.PIIFormatter().format(record))["message"]
-        == "phone1: 1XXXXX55555, phone2: 1XXXXX55554, email1: XXXXXe@fake.gov, email2: XXXXX2.fake.gov"
-    )
+    pii_filter = logging.PIIFilter()
+    x = pii_filter.filter(record)
+    assert pii_filter.filter(record).msg == "phone1: 1XXXXX55555, phone2: 1XXXXX55554, email1: XXXXXe@fake.gov, email2: XXXXX2.fake.gov"

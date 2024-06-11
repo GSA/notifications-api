@@ -70,6 +70,7 @@ def configure_handler(handler, app, formatter):
     handler.addFilter(AppNameFilter(app.config["NOTIFY_APP_NAME"]))
     handler.addFilter(RequestIdFilter())
     handler.addFilter(ServiceIdFilter())
+    handler.addFilter(PIIFilter())
 
     return handler
 
@@ -116,26 +117,7 @@ class ServiceIdFilter(logging.Filter):
         return record
 
 
-class JSONFormatter(BaseJSONFormatter):
-    def process_log_record(self, log_record):
-        rename_map = {
-            "asctime": "time",
-            "request_id": "requestId",
-            "app_name": "application",
-            "service_id": "service_id",
-        }
-        for key, newkey in rename_map.items():
-            log_record[newkey] = log_record.pop(key)
-        log_record["logType"] = "application"
-        try:
-            log_record["message"] = log_record["message"].format(**log_record)
-        except (KeyError, IndexError) as e:
-            logger.exception("failed to format log message: {} not found".format(e))
-        return log_record
-
-
-class PIIFormatter(BaseJSONFormatter):
-
+class PIIFilter(logging.Filter):
     def scrub(self, msg):
         # Eventually we want to scrub all messages in all logs for phone numbers
         # and email addresses, masking them.  Ultimately this will probably get
@@ -154,9 +136,24 @@ class PIIFormatter(BaseJSONFormatter):
             msg = msg.replace(email, f"XXXXX{email[-10:]}")
         return msg
 
+    def filter(self, record):
+        record.msg = self.scrub(record.msg)
+        return record
+
+
+class JSONFormatter(BaseJSONFormatter):
     def process_log_record(self, log_record):
+        rename_map = {
+            "asctime": "time",
+            "request_id": "requestId",
+            "app_name": "application",
+            "service_id": "service_id",
+        }
+        for key, newkey in rename_map.items():
+            log_record[newkey] = log_record.pop(key)
+        log_record["logType"] = "application"
         try:
-            log_record["message"] = self.scrub(log_record["message"])
-        except (KeyError, IndexError, ValueError) as e:
-            logger.exception(f"failed to scrub log message: {e}")
+            log_record["message"] = log_record["message"].format(**log_record)
+        except (KeyError, IndexError) as e:
+            logger.exception("failed to format log message: {} not found".format(e))
         return log_record
