@@ -62,5 +62,5 @@ def test_pii_filter():
         args=None,
     )
     pii_filter = logging.PIIFilter()
-    x = pii_filter.filter(record)
-    assert pii_filter.filter(record).msg == "phone1: 1XXXXX55555, phone2: 1XXXXX55554, email1: XXXXXe@fake.gov, email2: XXXXX2.fake.gov"
+    clean_msg = "phone1: 1XXXXX55555, phone2: 1XXXXX55554, email1: XXXXXe@fake.gov, email2: XXXXX2.fake.gov"
+    assert pii_filter.filter(record).msg == clean_msg
