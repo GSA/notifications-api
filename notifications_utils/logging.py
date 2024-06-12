@@ -123,7 +123,12 @@ class PIIFilter(logging.Filter):
         # and email addresses, masking them.  Ultimately this will probably get
         # refactored into a 'SafeLogger' subclass or something, but let's start here
         # with phones.
+
+        # Sometimes just an exception object is passed in for the message, skip those.
+        if not isinstance(msg, str):
+            return msg
         phones = re.findall("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d", msg)
+
         phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
         for phone in phones:
             msg = msg.replace(phone, f"1XXXXX{phone[-5:]}")
