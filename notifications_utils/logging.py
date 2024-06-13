@@ -138,7 +138,9 @@ class PIIFilter(logging.Filter):
         )  # ['alice@google.com', 'bob@abc.com']
         for email in emails:
             # do something with each found email string
-            msg = msg.replace(email, f"XXXXX{email[-10:]}")
+            email_parts = email.split("@")
+            masked_email = f"{email_parts[0][0:3]}XXX@{email_parts[1][0:7]}XXX"
+            msg = msg.replace(email, masked_email)
         return msg
 
     def filter(self, record):
