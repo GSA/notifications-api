@@ -36,7 +36,7 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ./.github/actions/setup-project
     - name: Install application dependencies
       run: make bootstrap
@@ -53,7 +53,7 @@ jobs:
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: poetry run coverage run --omit=*/notifications_utils/* -m pytest --maxfail=10
+      run: poetry run coverage run --omit=*/notifications_utils/*,*/migrations/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
@@ -62,13 +62,13 @@ jobs:
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Check coverage threshold
       # TODO get this back up to 95
-      run: poetry run coverage report --fail-under=87
+      run: poetry run coverage report --fail-under=95
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install poetry packages
         run: poetry install
@@ -82,18 +82,18 @@ jobs:
   pip-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
         run: poetry export --without-hashes --format=requirements.txt > requirements.txt
-      - uses: pypa/gh-action-pip-audit@v1.0.6
+      - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
 
   static-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install bandit
         run: pip install bandit
@@ -118,7 +118,7 @@ jobs:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Install application dependencies
         run: make bootstrap

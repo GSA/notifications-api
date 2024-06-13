@@ -25,7 +25,7 @@ def upgrade():
         values(uuid_in(md5(random()::text)::cstring), :updated_at, :service_id, :id, now(), null)
     """
 
-    results = conn.execute(sql)
+    results = conn.execute(text(sql))
     returned_letters = results.fetchall()
     for x in returned_letters:
         input_params = {

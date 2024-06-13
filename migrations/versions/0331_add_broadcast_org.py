@@ -10,6 +10,7 @@ import os
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy import text
 
 revision = "0331_add_broadcast_org"
 down_revision = "0330_broadcast_invite_email"
@@ -54,17 +55,19 @@ def upgrade():
         """
         conn = op.get_bind()
         conn.execute(
-            sa.text(insert_sql),
-            id=organisation_id,
-            name=f"Broadcast Services ({environment})",
-            active=True,
-            agreement_signed=None,
-            crown=None,
-            organisation_type="central",
+            text(insert_sql),
+            {
+                "id": organisation_id,
+                "name": f"Broadcast Services ({environment})",
+                "active": True,
+                "agreement_signed": None,
+                "crown": None,
+                "organisation_type": "central",
+            },
         )
         conn.execute(
-            sa.text(update_service_set_broadcast_org_sql),
-            organisation_id=organisation_id,
+            text(update_service_set_broadcast_org_sql),
+            {"organisation_id": organisation_id},
         )
 
 
@@ -80,6 +83,6 @@ def downgrade():
     """
     conn = op.get_bind()
     conn.execute(
-        sa.text(update_service_remove_org_sql), organisation_id=organisation_id
+        text(update_service_remove_org_sql), {"organisation_id": organisation_id}
     )
-    conn.execute(sa.text(delete_sql), organisation_id=organisation_id)
+    conn.execute(text(delete_sql), {"organisation_id": organisation_id})

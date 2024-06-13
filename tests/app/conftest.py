@@ -46,6 +46,7 @@ from app.models import (
     Template,
     TemplateHistory,
 )
+from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_api_key,
@@ -91,7 +92,7 @@ def create_sample_notification(
     normalised_to=None,
 ):
     if created_at is None:
-        created_at = datetime.utcnow()
+        created_at = utc_now()
     if service is None:
         service = create_service(check_if_service_exists=True)
     if template is None:
@@ -383,7 +384,7 @@ def sample_job(notify_db_session):
         "template_version": template.version,
         "original_file_name": "some.csv",
         "notification_count": 1,
-        "created_at": datetime.utcnow(),
+        "created_at": utc_now(),
         "created_by": service.created_by,
         "job_status": JobStatus.PENDING,
         "scheduled_for": None,
@@ -410,7 +411,7 @@ def sample_scheduled_job(sample_template_with_placeholders):
     return create_job(
         sample_template_with_placeholders,
         job_status=JobStatus.SCHEDULED,
-        scheduled_for=(datetime.utcnow() + timedelta(minutes=60)).isoformat(),
+        scheduled_for=(utc_now() + timedelta(minutes=60)).isoformat(),
     )
 
 
@@ -437,7 +438,7 @@ def sample_notification_with_job(notify_db_session):
 
 @pytest.fixture(scope="function")
 def sample_notification(notify_db_session):
-    created_at = datetime.utcnow()
+    created_at = utc_now()
     service = create_service(check_if_service_exists=True)
     template = create_template(service=service)
 
@@ -484,7 +485,7 @@ def sample_notification(notify_db_session):
 
 @pytest.fixture(scope="function")
 def sample_email_notification(notify_db_session):
-    created_at = datetime.utcnow()
+    created_at = utc_now()
     service = create_service(check_if_service_exists=True)
     template = create_template(service, template_type=TemplateType.EMAIL)
     job = create_job(template)
@@ -519,8 +520,8 @@ def sample_email_notification(notify_db_session):
 
 @pytest.fixture(scope="function")
 def sample_notification_history(notify_db_session, sample_template):
-    created_at = datetime.utcnow()
-    sent_at = datetime.utcnow()
+    created_at = utc_now()
+    sent_at = utc_now()
     notification_type = sample_template.template_type
     api_key = create_api_key(sample_template.service, key_type=KeyType.NORMAL)
 
@@ -575,7 +576,7 @@ def sample_expired_user(notify_db_session):
         "from_user": from_user,
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": ["folder_1_id", "folder_2_id"],
-        "created_at": datetime.utcnow() - timedelta(days=3),
+        "created_at": utc_now() - timedelta(days=3),
         "status": InvitedUserStatus.EXPIRED,
     }
     expired_user = InvitedUser(**data)

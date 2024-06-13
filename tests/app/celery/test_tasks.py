@@ -7,8 +7,6 @@ import pytest
 import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
-from notifications_utils.recipients import Row
-from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from requests import RequestException
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -38,7 +36,9 @@ from app.enums import (
 )
 from app.models import Job, Notification
 from app.serialised_models import SerialisedService, SerialisedTemplate
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
+from notifications_utils.recipients import Row
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 from tests.app import load_example_csv
 from tests.app.db import (
     create_api_key,
@@ -100,14 +100,14 @@ def test_should_process_sms_job(sample_job, mocker):
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(sample_job.service.id), job_id=str(sample_job.id)
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123123"
+    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
     assert encryption.encrypt.call_args[0][0]["template"] == str(sample_job.template.id)
     assert (
         encryption.encrypt.call_args[0][0]["template_version"]
         == sample_job.template.version
     )
     assert encryption.encrypt.call_args[0][0]["personalisation"] == {
-        "phonenumber": "+441234123123"
+        "phonenumber": "+14254147755"
     }
     assert encryption.encrypt.call_args[0][0]["row_number"] == 0
     tasks.save_sms.apply_async.assert_called_once_with(
@@ -279,7 +279,7 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
         service_id=str(sample_job_with_placeholdered_template.service.id),
         job_id=str(sample_job_with_placeholdered_template.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+441234123120"
+    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
     assert encryption.encrypt.call_args[0][0]["template"] == str(
         sample_job_with_placeholdered_template.template.id
     )
@@ -288,7 +288,7 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
         == sample_job_with_placeholdered_template.template.version
     )  # noqa
     assert encryption.encrypt.call_args[0][0]["personalisation"] == {
-        "phonenumber": "+441234123120",
+        "phonenumber": "+14254147755",
         "name": "chris",
     }
     assert tasks.save_sms.apply_async.call_count == 10
@@ -397,7 +397,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
 ):
     notification = _notification_json(
         sample_template_with_placeholders,
-        to="+447234123123",
+        to="+14254147755",
         personalisation={"name": "Jo"},
     )
 
@@ -419,7 +419,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
         == sample_template_with_placeholders.version
     )
     assert persisted_notification.status == NotificationStatus.CREATED
-    assert persisted_notification.created_at <= datetime.utcnow()
+    assert persisted_notification.created_at <= utc_now()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
@@ -455,7 +455,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
     assert persisted_notification.status == NotificationStatus.CREATED
-    assert persisted_notification.created_at <= datetime.utcnow()
+    assert persisted_notification.created_at <= utc_now()
     assert not persisted_notification.sent_at
     assert not persisted_notification.sent_by
     assert not persisted_notification.job_id
@@ -558,14 +558,14 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
     notification = _notification_json(
         sample_job.template,
-        to="+447234123123",
+        to="+14254147755",
         job_id=sample_job.id,
         row_number=2,
     )
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
     notification_id = uuid.uuid4()
-    now = datetime.utcnow()
+    now = utc_now()
     save_sms(
         sample_job.service.id,
         notification_id,
@@ -676,7 +676,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     dao_update_template(sample_email_template)
     t = dao_get_template_by_id(sample_email_template.id)
     assert t.version > version_on_notification
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template.service_id,
         uuid.uuid4(),
@@ -706,7 +706,7 @@ def test_should_use_email_template_subject_placeholders(
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     notification_id = uuid.uuid4()
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template_with_placeholders.service_id,
         notification_id,
@@ -791,7 +791,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
 
     notification_id = uuid.uuid4()
 
-    now = datetime.utcnow()
+    now = utc_now()
     save_email(
         sample_email_template.service_id,
         notification_id,
@@ -813,7 +813,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
 
 
 def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, mocker):
-    notification = _notification_json(sample_template, "+447234123123")
+    notification = _notification_json(sample_template, "+14254147755")
 
     expected_exception = SQLAlchemyError()
 
@@ -1017,7 +1017,7 @@ def test_send_inbound_sms_to_service_post_https_request_to_service(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1063,7 +1063,7 @@ def test_send_inbound_sms_to_service_does_not_sent_request_when_inbound_api_does
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1084,7 +1084,7 @@ def test_send_inbound_sms_to_service_retries_if_request_returns_500(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1109,7 +1109,7 @@ def test_send_inbound_sms_to_service_retries_if_request_throws_unknown(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1134,7 +1134,7 @@ def test_send_inbound_sms_to_service_does_not_retries_if_request_returns_404(
     inbound_sms = create_inbound_sms(
         service=sample_service,
         notify_number="0751421",
-        user_number="447700900111",
+        user_number="+14254147755",
         provider_date=datetime(2017, 6, 20),
         content="Here is some content",
     )
@@ -1157,9 +1157,9 @@ def test_process_incomplete_job_sms(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1189,9 +1189,9 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1229,9 +1229,9 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
     create_notification(sample_template, job, 0)
@@ -1243,9 +1243,9 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     job2 = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1282,9 +1282,9 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
     job = create_job(
         template=sample_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1339,9 +1339,9 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     job = create_job(
         template=sample_email_template,
         notification_count=10,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
@@ -1371,22 +1371,22 @@ def test_process_incomplete_jobs_sets_status_to_in_progress_and_resets_processin
 
     job1 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(minutes=30),
+        processing_started=utc_now() - timedelta(minutes=30),
         job_status=JobStatus.ERROR,
     )
     job2 = create_job(
         sample_template,
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
 
     process_incomplete_jobs([str(job1.id), str(job2.id)])
 
     assert job1.job_status == JobStatus.IN_PROGRESS
-    assert job1.processing_started == datetime.utcnow()
+    assert job1.processing_started == utc_now()
 
     assert job2.job_status == JobStatus.IN_PROGRESS
-    assert job2.processing_started == datetime.utcnow()
+    assert job2.processing_started == utc_now()
 
     assert mock_process_incomplete_job.mock_calls == [
         call(str(job1.id)),
@@ -1422,14 +1422,14 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
         "reply_to_text": None,
         "document_download_count": 0,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
 
     if notification_type == NotificationType.EMAIL:
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
-        data.update({"to": "+447700900855"})
+        data.update({"to": "+14254147755"})
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
@@ -1476,14 +1476,14 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         "reply_to_text": "our.email@gov.uk",
         "document_download_count": 0,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
 
     if notification_type == NotificationType.EMAIL:
         data.update({"to": "jane.citizen@example.com"})
         expected_queue = QueueNames.SEND_EMAIL
     else:
-        data.update({"to": "+447700900855"})
+        data.update({"to": "+14254147755"})
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
@@ -1576,7 +1576,7 @@ def test_save_tasks_use_cached_service_and_template(
             NotificationType.SMS,
             save_api_sms,
             QueueNames.SEND_SMS,
-            "+447700900855",
+            "+14254147755",
         ),
         (
             NotificationType.EMAIL,
@@ -1621,7 +1621,7 @@ def test_save_api_tasks_use_cache(
                 "reply_to_text": "our.email@gov.uk",
                 "document_download_count": 0,
                 "status": NotificationStatus.CREATED,
-                "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+                "created_at": utc_now().strftime(DATETIME_FORMAT),
             }
         )
 

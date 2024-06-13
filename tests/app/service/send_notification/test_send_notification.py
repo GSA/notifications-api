@@ -5,7 +5,6 @@ import pytest
 from flask import current_app, json
 from freezegun import freeze_time
 from notifications_python_client.authentication import create_jwt_token
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import notifications_dao
@@ -17,6 +16,7 @@ from app.errors import InvalidRequest
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import RateLimitError
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests import create_service_authorization_header
 from tests.app.db import (
     create_api_key,
@@ -89,7 +89,7 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
 @pytest.mark.parametrize(
     "template_type, to",
     [
-        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.SMS, "+14254147755"),
         (TemplateType.EMAIL, "ok@ok.com"),
     ],
 )
@@ -257,7 +257,7 @@ def test_should_not_send_notification_for_archived_template(
             sample_template.archived = True
             dao_update_template(sample_template)
             json_data = json.dumps(
-                {"to": "+447700900855", "template": sample_template.id}
+                {"to": "+14254147755", "template": sample_template.id}
             )
             auth_header = create_service_authorization_header(
                 service_id=sample_template.service_id
@@ -276,7 +276,7 @@ def test_should_not_send_notification_for_archived_template(
 @pytest.mark.parametrize(
     "template_type, to",
     [
-        (TemplateType.SMS, "+447700900855"),
+        (TemplateType.SMS, "+16618675309"),
         (TemplateType.EMAIL, "not-someone-we-trust@email-address.com"),
     ],
 )
@@ -1230,6 +1230,7 @@ def test_should_allow_store_original_number_on_sms_notification(
     assert "1" == notifications[0].to
 
 
+@pytest.mark.skip("We don't support international at moment")
 def test_should_not_allow_sending_to_international_number_without_international_permission(
     client, sample_template, mocker
 ):
@@ -1254,6 +1255,7 @@ def test_should_not_allow_sending_to_international_number_without_international_
     assert error_json["message"] == "Cannot send to international mobile numbers"
 
 
+@pytest.mark.skip("We don't support international at the moment")
 def test_should_allow_sending_to_international_number_with_international_permission(
     client, sample_service_full_permissions, mocker
 ):

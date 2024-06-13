@@ -1,10 +1,8 @@
 import functools
 import uuid
-from datetime import datetime
 
 import botocore
 from flask import abort, current_app, jsonify, request
-from notifications_utils.recipients import try_validate_and_format_phone_number
 
 from app import api_user, authenticated_service, document_download_client, encryption
 from app.celery.tasks import save_api_email, save_api_sms
@@ -28,7 +26,7 @@ from app.notifications.validators import (
     validate_template,
 )
 from app.schema_validation import validate
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from app.v2.errors import BadRequestError
 from app.v2.notifications import v2_notification_blueprint
 from app.v2.notifications.create_response import (
@@ -40,6 +38,7 @@ from app.v2.notifications.notification_schemas import (
     post_sms_request,
 )
 from app.v2.utils import get_valid_json
+from notifications_utils.recipients import try_validate_and_format_phone_number
 
 
 @v2_notification_blueprint.route("/<notification_type>", methods=["POST"])
@@ -226,7 +225,7 @@ def save_email_or_sms_to_queue(
         "reply_to_text": reply_to_text,
         "document_download_count": document_download_count,
         "status": NotificationStatus.CREATED,
-        "created_at": datetime.utcnow().strftime(DATETIME_FORMAT),
+        "created_at": utc_now().strftime(DATETIME_FORMAT),
     }
     encrypted = encryption.encrypt(data)
 

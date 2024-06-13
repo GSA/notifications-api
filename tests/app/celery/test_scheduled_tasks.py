@@ -1,14 +1,12 @@
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest import mock
 from unittest.mock import ANY, call
 
 import pytest
-from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
-    check_db_notification_fails,
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     check_job_status,
@@ -20,6 +18,8 @@ from app.celery.scheduled_tasks import (
 from app.config import QueueNames, Test
 from app.dao.jobs_dao import dao_get_job_by_id
 from app.enums import JobStatus, NotificationStatus, TemplateType
+from app.utils import utc_now
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
 
@@ -49,57 +49,10 @@ def test_should_call_expire_or_delete_invotations_on_expire_or_delete_invitation
     )
 
 
-def test_should_check_db_notification_fails_task_over_100_percent(
-    notify_db_session, mocker
-):
-    mock_dao = mocker.patch(
-        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
-    )
-    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
-    mock_dao.return_value = 100000
-    check_db_notification_fails()
-    assert mock_provider.call_count == 1
-
-
-def test_should_check_db_notification_fails_task_less_than_25_percent(
-    notify_db_session, mocker
-):
-    mock_dao = mocker.patch(
-        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
-    )
-    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store")
-    mock_redis.get.return_value = 0
-    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
-    mock_dao.return_value = 10
-    check_db_notification_fails()
-    assert mock_provider.call_count == 0
-
-
-def test_should_check_db_notification_fails_task_over_50_percent(
-    notify_db_session, mocker
-):
-    # This tests that we only send an alert the 1st time we cross over 50%.  We don't want
-    # to be sending the same alert every hour, especially as it might be quite normal for the db
-    # fails to be at 25 or 50 for long periods of time.
-    mock_dao = mocker.patch(
-        "app.celery.scheduled_tasks.dao_get_failed_notification_count"
-    )
-    mock_provider = mocker.patch("app.celery.scheduled_tasks.provider_to_use")
-    mock_redis = mocker.patch("app.celery.scheduled_tasks.redis_store")
-    mock_dao.return_value = 5001
-    mock_redis.get.return_value = "0".encode("utf-8")
-    check_db_notification_fails()
-    assert mock_provider.call_count == 1
-
-    mock_redis.get.return_value = "5001".encode("utf-8")
-    check_db_notification_fails()
-    assert mock_provider.call_count == 1
-
-
 def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
     mocked = mocker.patch("app.celery.tasks.process_job.apply_async")
 
-    one_minute_in_the_past = datetime.utcnow() - timedelta(minutes=1)
+    one_minute_in_the_past = utc_now() - timedelta(minutes=1)
     job = create_job(
         sample_template,
         job_status=JobStatus.SCHEDULED,
@@ -116,9 +69,9 @@ def test_should_update_scheduled_jobs_and_put_on_queue(mocker, sample_template):
 def test_should_update_all_scheduled_jobs_and_put_on_queue(sample_template, mocker):
     mocked = mocker.patch("app.celery.tasks.process_job.apply_async")
 
-    one_minute_in_the_past = datetime.utcnow() - timedelta(minutes=1)
-    ten_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=10)
-    twenty_minutes_in_the_past = datetime.utcnow() - timedelta(minutes=20)
+    one_minute_in_the_past = utc_now() - timedelta(minutes=1)
+    ten_minutes_in_the_past = utc_now() - timedelta(minutes=10)
+    twenty_minutes_in_the_past = utc_now() - timedelta(minutes=20)
     job_1 = create_job(
         sample_template,
         job_status=JobStatus.SCHEDULED,
@@ -155,8 +108,8 @@ def test_check_job_status_task_calls_process_incomplete_jobs(mocker, sample_temp
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_notification(template=sample_template, job=job)
@@ -172,9 +125,9 @@ def test_check_job_status_task_calls_process_incomplete_jobs_when_scheduled_job_
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -189,8 +142,8 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_pending_schedul
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.PENDING,
     )
 
@@ -207,7 +160,7 @@ def test_check_job_status_task_does_not_call_process_incomplete_jobs_for_non_sch
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
+        created_at=utc_now() - timedelta(hours=2),
         job_status=JobStatus.PENDING,
     )
     check_job_status()
@@ -222,17 +175,17 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_multiple_jobs(
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -247,23 +200,23 @@ def test_check_job_status_task_only_sends_old_tasks(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=29),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(minutes=50),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=50),
+        scheduled_for=utc_now() - timedelta(minutes=29),
         job_status=JobStatus.PENDING,
     )
     check_job_status()
@@ -277,16 +230,16 @@ def test_check_job_status_task_sets_jobs_to_error(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=29),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -315,33 +268,33 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
     # notifications expected to be resent
     old_sms = create_notification(
         template=sms_template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.CREATED,
     )
     old_email = create_notification(
         template=email_template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.CREATED,
     )
     # notifications that are not to be resent
     create_notification(
         template=sms_template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.SENDING,
     )
     create_notification(
         template=email_template,
-        created_at=datetime.utcnow() - timedelta(seconds=older_than),
+        created_at=utc_now() - timedelta(seconds=older_than),
         status=NotificationStatus.DELIVERED,
     )
     create_notification(
         template=sms_template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.CREATED,
     )
     create_notification(
         template=email_template,
-        created_at=datetime.utcnow(),
+        created_at=utc_now(),
         status=NotificationStatus.CREATED,
     )
 
@@ -358,16 +311,16 @@ def test_check_job_status_task_does_not_raise_error(sample_template):
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(hours=2),
-        scheduled_for=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=2),
+        scheduled_for=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.FINISHED,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=datetime.utcnow() - timedelta(minutes=31),
-        processing_started=datetime.utcnow() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(minutes=31),
+        processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.FINISHED,
     )
 
@@ -399,7 +352,7 @@ def test_check_for_missing_rows_in_completed_jobs_ignores_old_and_new_jobs(
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - offset,
+        processing_finished=utc_now() - offset,
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -421,7 +374,7 @@ def test_check_for_missing_rows_in_completed_jobs(mocker, sample_email_template)
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=20),
+        processing_finished=utc_now() - timedelta(minutes=20),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -448,7 +401,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=20),
+        processing_finished=utc_now() - timedelta(minutes=20),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)
@@ -478,7 +431,7 @@ def test_check_for_missing_rows_in_completed_jobs_uses_sender_id(
         template=sample_email_template,
         notification_count=5,
         job_status=JobStatus.FINISHED,
-        processing_finished=datetime.utcnow() - timedelta(minutes=20),
+        processing_finished=utc_now() - timedelta(minutes=20),
     )
     for i in range(0, 4):
         create_notification(job=job, job_row_number=i)

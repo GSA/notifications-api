@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +12,7 @@ from app.dao.service_data_retention_dao import (
 )
 from app.enums import NotificationType
 from app.models import ServiceDataRetention
+from app.utils import utc_now
 from tests.app.db import create_service, create_service_data_retention
 
 
@@ -102,7 +102,7 @@ def test_insert_service_data_retention(sample_service):
     assert results[0].service_id == sample_service.id
     assert results[0].notification_type == NotificationType.EMAIL
     assert results[0].days_of_retention == 3
-    assert results[0].created_at.date() == datetime.utcnow().date()
+    assert results[0].created_at.date() == utc_now().date()
 
 
 def test_insert_service_data_retention_throws_unique_constraint(sample_service):
@@ -137,8 +137,8 @@ def test_update_service_data_retention(sample_service):
     assert results[0].service_id == sample_service.id
     assert results[0].notification_type == NotificationType.SMS
     assert results[0].days_of_retention == 5
-    assert results[0].created_at.date() == datetime.utcnow().date()
-    assert results[0].updated_at.date() == datetime.utcnow().date()
+    assert results[0].created_at.date() == utc_now().date()
+    assert results[0].updated_at.date() == utc_now().date()
 
 
 def test_update_service_data_retention_does_not_update_if_row_does_not_exist(

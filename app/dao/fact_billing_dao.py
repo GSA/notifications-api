@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from flask import current_app
 from sqlalchemy import Date, Integer, and_, desc, func, union
@@ -18,7 +18,7 @@ from app.models import (
     Rate,
     Service,
 )
-from app.utils import get_midnight_in_utc
+from app.utils import get_midnight_in_utc, utc_now
 
 
 def fetch_sms_free_allowance_remainder_until_date(end_date):
@@ -198,7 +198,7 @@ def fetch_monthly_billing_for_year(service_id, year):
     we also update the table on-the-fly if we need accurate data for this year.
     """
     _, year_end = get_calendar_year_dates(year)
-    today = datetime.utcnow().date()
+    today = utc_now().date()
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:
@@ -535,7 +535,7 @@ def update_fact_billing(data, process_day):
         set_={
             "notifications_sent": stmt.excluded.notifications_sent,
             "billable_units": stmt.excluded.billable_units,
-            "updated_at": datetime.utcnow(),
+            "updated_at": utc_now(),
         },
     )
     db.session.connection().execute(stmt)
@@ -699,7 +699,7 @@ def query_organization_sms_usage_for_year(organization_id, year):
 
 def fetch_usage_year_for_organization(organization_id, year):
     year_start, year_end = get_calendar_year_dates(year)
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     services = dao_get_organization_live_services(organization_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
@@ -779,45 +779,37 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
             FactBilling.local_date,
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("sms_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragment_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units * FactBilling.rate_multiplier,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units * FactBilling.rate_multiplier,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragments_times_multiplier"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.EMAIL,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.EMAIL,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("email_totals"),
@@ -897,34 +889,28 @@ def fetch_volumes_by_service(start_date, end_date):
             FactBilling.service_id,
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("sms_totals"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.SMS,
-                            FactBilling.billable_units * FactBilling.rate_multiplier,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.SMS,
+                        FactBilling.billable_units * FactBilling.rate_multiplier,
+                    ),
                     else_=0,
                 )
             ).label("sms_fragments_times_multiplier"),
             func.sum(
                 case(
-                    [
-                        (
-                            FactBilling.notification_type == NotificationType.EMAIL,
-                            FactBilling.notifications_sent,
-                        )
-                    ],
+                    (
+                        FactBilling.notification_type == NotificationType.EMAIL,
+                        FactBilling.notifications_sent,
+                    ),
                     else_=0,
                 )
             ).label("email_totals"),

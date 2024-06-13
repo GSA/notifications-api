@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy.orm.exc import NoResultFound
@@ -14,6 +14,7 @@ from app.dao.invited_user_dao import (
 )
 from app.enums import InvitedUserStatus, PermissionType
 from app.models import InvitedUser
+from app.utils import utc_now
 from tests.app.db import create_invited_user
 
 
@@ -196,7 +197,7 @@ def make_invitation(user, service, age=None, email_address="test@test.com"):
         from_user=user,
         service=service,
         status=InvitedUserStatus.PENDING,
-        created_at=datetime.utcnow() - (age or timedelta(hours=0)),
+        created_at=utc_now() - (age or timedelta(hours=0)),
         permissions=PermissionType.MANAGE_SETTINGS,
         folder_permissions=[str(uuid.uuid4())],
     )

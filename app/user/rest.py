@@ -1,11 +1,10 @@
 import json
 import uuid
-from datetime import datetime
 from urllib.parse import urlencode
 
 from flask import Blueprint, abort, current_app, jsonify, request
-from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis_store
 from app.config import QueueNames
@@ -55,7 +54,8 @@ from app.user.users_schema import (
     post_verify_code_schema,
     post_verify_webauthn_schema,
 )
-from app.utils import url_with_token
+from app.utils import url_with_token, utc_now
+from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
 register_errors(user_blueprint)
@@ -221,15 +221,15 @@ def verify_user_code(user_id):
         # only relevant from sms
         increment_failed_login_count(user_to_verify)
         raise InvalidRequest("Code not found", status_code=404)
-    if datetime.utcnow() > code.expiry_datetime or code.code_used:
+    if utc_now() > code.expiry_datetime or code.code_used:
         # sms and email
         increment_failed_login_count(user_to_verify)
         raise InvalidRequest("Code has expired", status_code=400)
 
     user_to_verify.current_session_id = str(uuid.uuid4())
-    user_to_verify.logged_in_at = datetime.utcnow()
+    user_to_verify.logged_in_at = utc_now()
     if data["code_type"] == CodeType.EMAIL:
-        user_to_verify.email_access_validated_at = datetime.utcnow()
+        user_to_verify.email_access_validated_at = utc_now()
     user_to_verify.failed_login_count = 0
     save_model_user(user_to_verify)
 
@@ -262,7 +262,7 @@ def complete_login_after_webauthn_authentication_attempt(user_id):
 
     if successful:
         user.current_session_id = str(uuid.uuid4())
-        user.logged_in_at = datetime.utcnow()
+        user.logged_in_at = utc_now()
         user.failed_login_count = 0
         save_model_user(user)
     else:
@@ -533,6 +533,12 @@ def set_permissions(user_id, service_id):
     # TODO fix security hole, how do we verify that the user
     # who is making this request has permission to make the request.
     service_user = dao_get_service_user(user_id, service_id)
+    # TODO: Below exception is raised to account for the test case failure that got handled
+    # on its own in 1.4 when dao_get_service_user() returned an excpetion in case no result was found
+    if service_user is None:
+        raise NoResultFound(
+            "No ServiceUser found with the provided user_id and service_id"
+        )
     user = get_user_by_id(user_id)
     service = dao_fetch_service_by_id(service_id=service_id)
 
@@ -669,7 +675,7 @@ def get_organizations_and_services_for_user(user_id):
 
 
 def _create_reset_password_url(email, next_redirect, base_url=None):
-    data = json.dumps({"email": email, "created_at": str(datetime.utcnow())})
+    data = json.dumps({"email": email, "created_at": str(utc_now())})
     static_url_part = "/new-password/"
     full_url = url_with_token(
         data, static_url_part, current_app.config, base_url=base_url

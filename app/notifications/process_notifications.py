@@ -1,13 +1,6 @@
 import uuid
-from datetime import datetime
 
 from flask import current_app
-from notifications_utils.recipients import (
-    format_email_address,
-    get_international_phone_info,
-    validate_and_format_phone_number,
-)
-from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 from app import redis_store
 from app.celery import provider_tasks
@@ -18,7 +11,14 @@ from app.dao.notifications_dao import (
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
+from app.utils import hilite, scrub, utc_now
 from app.v2.errors import BadRequestError
+from notifications_utils.recipients import (
+    format_email_address,
+    get_international_phone_info,
+    validate_and_format_phone_number,
+)
+from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
 
 
 def create_content_for_notification(template, personalisation):
@@ -77,7 +77,7 @@ def persist_notification(
     document_download_count=None,
     updated_at=None,
 ):
-    notification_created_at = created_at or datetime.utcnow()
+    notification_created_at = created_at or utc_now()
     if not notification_id:
         notification_id = uuid.uuid4()
 
@@ -110,6 +110,7 @@ def persist_notification(
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
         )
+        current_app.logger.info(hilite(scrub(f"Persisting notification with recipient {formatted_recipient}")))
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient
         notification.international = recipient_info.international

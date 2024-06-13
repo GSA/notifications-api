@@ -1,11 +1,12 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy import func, or_
 
 from app import db
 from app.dao.dao_utils import autocommit, version_class
 from app.models import ApiKey
+from app.utils import utc_now
 
 
 @autocommit
@@ -23,7 +24,7 @@ def save_model_api_key(api_key):
 @version_class(ApiKey)
 def expire_api_key(service_id, api_key_id):
     api_key = ApiKey.query.filter_by(id=api_key_id, service_id=service_id).one()
-    api_key.expiry_date = datetime.utcnow()
+    api_key.expiry_date = utc_now()
     db.session.add(api_key)
 
 
@@ -32,7 +33,7 @@ def get_model_api_keys(service_id, id=None):
         return ApiKey.query.filter_by(
             id=id, service_id=service_id, expiry_date=None
         ).one()
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = utc_now() - timedelta(days=7)
     return ApiKey.query.filter(
         or_(
             ApiKey.expiry_date == None,  # noqa

@@ -5,6 +5,7 @@ import pytest
 from alembic.command import upgrade
 from alembic.config import Config
 from flask import Flask
+from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app import create_app
 from app.dao.provider_details_dao import get_provider_details_by_identifier
@@ -52,9 +53,10 @@ def _notify_db(notify_api):
     """
     with notify_api.app_context() as app_context:
         db = app_context.app.extensions["sqlalchemy"]
-        assert (
-            "test_notification_api" in db.engine.url.database
-        ), "dont run tests against main db"
+
+        # Check if test_notification_api exists, if not, create
+        if not database_exists(db.engine.url):
+            create_database(db.engine.url)
 
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
         ALEMBIC_CONFIG = os.path.join(BASE_DIR, "migrations")
@@ -70,6 +72,9 @@ def _notify_db(notify_api):
         yield db
 
         db.session.remove()
+        # Check if test_notification_api exists, if so, drop
+        if database_exists(db.engine.url):
+            drop_database(db.engine.url)
         db.engine.dispose()
 
 
@@ -94,23 +99,24 @@ def notify_db_session(_notify_db, sms_providers):
     yield _notify_db.session
 
     _notify_db.session.remove()
-    for tbl in reversed(_notify_db.metadata.sorted_tables):
-        if tbl.name not in [
-            "provider_details",
-            "key_types",
-            "branding_type",
-            "job_status",
-            "provider_details_history",
-            "template_process_type",
-            "notifications_all_time_view",
-            "notification_status_types",
-            "organization_types",
-            "service_permission_types",
-            "auth_type",
-            "invite_status_type",
-            "service_callback_type",
-        ]:
-            _notify_db.engine.execute(tbl.delete())
+    with _notify_db.engine.begin() as connection:
+        for tbl in reversed(_notify_db.metadata.sorted_tables):
+            if tbl.name not in [
+                "provider_details",
+                "key_types",
+                "branding_type",
+                "job_status",
+                "provider_details_history",
+                "template_process_type",
+                "notifications_all_time_view",
+                "notification_status_types",
+                "organization_types",
+                "service_permission_types",
+                "auth_type",
+                "invite_status_type",
+                "service_callback_type",
+            ]:
+                connection.execute(tbl.delete())
     _notify_db.session.commit()
 
 

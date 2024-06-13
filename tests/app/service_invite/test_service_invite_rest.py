@@ -5,10 +5,10 @@ from functools import partial
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from notifications_utils.url_safe_token import generate_token
 
 from app.enums import AuthType, InvitedUserStatus
 from app.models import Notification
+from notifications_utils.url_safe_token import generate_token
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_user
 
@@ -31,6 +31,9 @@ def test_create_invited_user(
     extra_args,
     expected_start_of_invite_url,
 ):
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
+
     mocked = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -92,6 +95,9 @@ def test_create_invited_user(
 def test_create_invited_user_without_auth_type(
     admin_request, sample_service, mocker, invitation_email_template
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
@@ -213,6 +219,9 @@ def test_resend_expired_invite(
     invitation_email_template,
     mocker,
 ):
+
+    mocker.patch("app.service_invite.rest.redis_store.raw_set")
+    mocker.patch("app.service_invite.rest.redis_store.raw_get")
     url = f"/service/{sample_expired_user.service_id}/invite/{sample_expired_user.id}/resend"
     mock_send = mocker.patch("app.service_invite.rest.send_notification_to_queue")
     mock_persist = mocker.patch("app.service_invite.rest.persist_notification")
@@ -326,7 +335,7 @@ def test_validate_invitation_token_for_expired_token_returns_400(client):
     json_resp = json.loads(response.get_data(as_text=True))
     assert json_resp["result"] == "error"
     assert json_resp["message"] == {
-        "invitation": "Your invitation to GOV.UK Notify has expired. "
+        "invitation": "Your invitation to Notify.gov has expired. "
         "Please ask the person that invited you to send you another one"
     }
 

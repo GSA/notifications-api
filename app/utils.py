@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta
+import re
+from datetime import datetime, timedelta, timezone
 
 from flask import url_for
-from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 from sqlalchemy import func
+
+from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
 
 DATETIME_FORMAT_NO_TIMEZONE = "%Y-%m-%d %H:%M:%S.%f"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -93,7 +95,7 @@ def midnight_n_days_ago(number_of_days):
     """
     Returns midnight a number of days ago. Takes care of daylight savings etc.
     """
-    return get_midnight_in_utc(datetime.utcnow() - timedelta(days=number_of_days))
+    return get_midnight_in_utc(utc_now() - timedelta(days=number_of_days))
 
 
 def escape_special_characters(string):
@@ -103,7 +105,7 @@ def escape_special_characters(string):
 
 
 def get_archived_db_column_value(column):
-    date = datetime.utcnow().strftime("%Y-%m-%d")
+    date = utc_now().strftime("%Y-%m-%d")
     return f"_archived_{date}_{column}"
 
 
@@ -131,3 +133,27 @@ def hilite(message):
     ansi_green = "\033[32m"
     ansi_reset = "\033[0m"
     return f"{ansi_green}{message}{ansi_reset}"
+
+
+def aware_utcnow():
+    return datetime.now(timezone.utc)
+
+
+def naive_utcnow():
+    return aware_utcnow().replace(tzinfo=None)
+
+
+def utc_now():
+    return naive_utcnow()
+
+
+def scrub(msg):
+    # Eventually we want to scrub all messages in all logs for phone numbers
+    # and email addresses, masking them.  Ultimately this will probably get
+    # refactored into a 'SafeLogger' subclass or something, but let's start here
+    # with phones.
+    phones = re.findall("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d", msg)
+    phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
+    for phone in phones:
+        msg = msg.replace(phone, f"1XXXXX{phone[-5:]}")
+    return msg

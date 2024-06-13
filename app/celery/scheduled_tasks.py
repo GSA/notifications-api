@@ -1,12 +1,10 @@
-import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
-from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, redis_store, zendesk_client
+from app import notify_celery, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -24,19 +22,17 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import (
-    dao_get_failed_notification_count,
-    notifications_not_yet_sent,
-)
+from app.dao.notifications_dao import notifications_not_yet_sent
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
-from app.delivery.send_to_providers import provider_to_use
 from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
+from app.utils import utc_now
+from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
 
@@ -57,11 +53,11 @@ def run_scheduled_jobs():
 @notify_celery.task(name="delete-verify-codes")
 def delete_verify_codes():
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         deleted = delete_codes_older_created_more_than_a_day_ago()
         current_app.logger.info(
             "Delete job started {} finished {} deleted {} verify codes".format(
-                start, datetime.utcnow(), deleted
+                start, utc_now(), deleted
             )
         )
     except SQLAlchemyError:
@@ -72,100 +68,24 @@ def delete_verify_codes():
 @notify_celery.task(name="expire-or-delete-invitations")
 def expire_or_delete_invitations():
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         expired_invites = expire_invitations_created_more_than_two_days_ago()
         current_app.logger.info(
-            f"Expire job started {start} finished {datetime.utcnow()} expired {expired_invites} invitations"
+            f"Expire job started {start} finished {utc_now()} expired {expired_invites} invitations"
         )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to expire invitations")
         raise
 
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         deleted_invites = delete_org_invitations_created_more_than_two_days_ago()
         current_app.logger.info(
-            f"Delete job started {start} finished {datetime.utcnow()} deleted {deleted_invites} invitations"
+            f"Delete job started {start} finished {utc_now()} deleted {deleted_invites} invitations"
         )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
         raise
-
-
-# TODO THIS IS ACTUALLY DEPRECATED, WE ARE REMOVING PHONE NUMBERS FROM THE DB
-# SO THERE WILL BE NO REASON TO KEEP TRACK OF THIS COUNT
-@notify_celery.task(name="check-db-notification-fails")
-def check_db_notification_fails():
-    """
-    We are going to use redis to keep track of the previous fail count.
-
-    If the number of fails is more than 100% of the limit, we want to send an alert every time this
-    runs, because it is urgent to fix it.
-
-    If the number is more than 25%, 50% or 75% of the limit, we only want to send an alert
-    on a breach.  I.e., if the last number was at 23% and the current number is 27%, send an email.
-    But if the last number was 26% and the current is 27%, don't.
-    """
-    last_value = redis_store.get("LAST_DB_NOTIFICATION_COUNT")
-    if not last_value:
-        last_value = 0
-    else:
-        last_value = int(last_value.decode("utf-8"))
-
-    failed_count = dao_get_failed_notification_count()
-    if failed_count > last_value:
-        redis_store.set("LAST_DB_NOTIFICATION_COUNT", failed_count)
-    message = ""
-    curr_env = os.getenv("ENVIRONMENT")
-    if failed_count >= MAX_NOTIFICATION_FAILS:
-        message = f"We are over 100% in the db for failed notifications on {curr_env}"
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.9
-        and last_value < MAX_NOTIFICATION_FAILS * 0.9
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 90% in the db for failed notifications on {curr_env}",
-        )
-
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.75
-        and last_value < MAX_NOTIFICATION_FAILS * 0.75
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 75% in the db for failed notifications on {curr_env}",
-        )
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.5
-        and last_value < MAX_NOTIFICATION_FAILS * 0.5
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 50% in the db for failed notifications on {curr_env}",
-        )
-    elif (
-        failed_count >= MAX_NOTIFICATION_FAILS * 0.25
-        and last_value < MAX_NOTIFICATION_FAILS * 0.25
-    ):
-        message = (
-            "tts-notify-alerts@gsa.gov",
-            f"We crossed above 25% in the db for failed notifications on {curr_env}",
-        )
-    # suppress any spam coming from development tier
-    if message and curr_env != "development":
-        provider = provider_to_use(NotificationType.EMAIL, False)
-        from_address = '"{}" <{}@{}>'.format(
-            "Failed Notification Count Alert",
-            "test_sender",
-            current_app.config["NOTIFY_EMAIL_DOMAIN"],
-        )
-        provider.send_email(
-            from_address,
-            "tts-notify-alerts@gsa.gov",
-            "DB Notification Failures Level Breached",
-            body=str(message),
-        )
 
 
 @notify_celery.task(name="check-job-status")
@@ -182,8 +102,8 @@ def check_job_status():
         update the job_status to 'error'
         process the rows in the csv that are missing (in another task) just do the check here.
     """
-    thirty_minutes_ago = datetime.utcnow() - timedelta(minutes=30)
-    thirty_five_minutes_ago = datetime.utcnow() - timedelta(minutes=35)
+    thirty_minutes_ago = utc_now() - timedelta(minutes=30)
+    thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
     incomplete_in_progress_jobs = Job.query.filter(
         Job.job_status == JobStatus.IN_PROGRESS,
@@ -260,8 +180,8 @@ def check_for_missing_rows_in_completed_jobs():
     name="check-for-services-with-high-failure-rates-or-sending-to-tv-numbers"
 )
 def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
-    start_date = datetime.utcnow() - timedelta(days=1)
-    end_date = datetime.utcnow()
+    start_date = utc_now() - timedelta(days=1)
+    end_date = utc_now()
     message = ""
 
     services_with_failures = dao_find_services_with_high_failure_rates(

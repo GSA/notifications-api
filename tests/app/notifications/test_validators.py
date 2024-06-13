@@ -1,7 +1,6 @@
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
 
 import app
 from app.dao import templates_dao
@@ -37,6 +36,7 @@ from app.serialised_models import (
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_template_instance
 from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests.app.db import (
     create_api_key,
     create_reply_to_email,
@@ -165,7 +165,7 @@ def test_service_can_send_to_recipient_passes(key_type, notify_db_session):
     "user_number, recipient_number",
     [
         ["+12028675309", "202-867-5309"],
-        ["+447513332413", "+44 (07513) 332413"],
+        # ["+447513332413", "+44 (07513) 332413"],
     ],
 )
 def test_service_can_send_to_recipient_passes_with_non_normalized_number(
@@ -569,6 +569,9 @@ def test_check_rate_limiting_validates_api_rate_limit_and_daily_limit(
 
 
 @pytest.mark.parametrize("key_type", [KeyType.TEST, KeyType.NORMAL])
+@pytest.mark.skip(
+    "We currently don't support international numbers, our validation fails before here"
+)
 def test_validate_and_format_recipient_fails_when_international_number_and_service_does_not_allow_int_sms(
     key_type,
     notify_db_session,
@@ -588,6 +591,7 @@ def test_validate_and_format_recipient_fails_when_international_number_and_servi
 
 
 @pytest.mark.parametrize("key_type", [KeyType.TEST, KeyType.NORMAL])
+@pytest.mark.skip("We currently don't support international numbers")
 def test_validate_and_format_recipient_succeeds_with_international_numbers_if_service_does_allow_int_sms(
     key_type, sample_service_full_permissions
 ):

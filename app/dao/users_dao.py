@@ -1,7 +1,9 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from secrets import randbelow
 
+import sqlalchemy
+from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
@@ -11,8 +13,8 @@ from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_users_by_user_id
 from app.enums import AuthType, PermissionType
 from app.errors import InvalidRequest
-from app.models import User, VerifyCode
-from app.utils import escape_special_characters, get_archived_db_column_value
+from app.models import Organization, Service, User, VerifyCode
+from app.utils import escape_special_characters, get_archived_db_column_value, utc_now
 
 
 def _remove_values_for_keys_if_present(dict, keys):
@@ -39,10 +41,21 @@ def get_login_gov_user(login_uuid, email_address):
     user = User.query.filter_by(login_uuid=login_uuid).first()
     if user:
         if user.email_address != email_address:
-            save_user_attribute(user, {"email_address": email_address})
+            try:
+                save_user_attribute(user, {"email_address": email_address})
+            except sqlalchemy.exc.IntegrityError as ie:
+                # We are trying to change the email address as a courtesy,
+                # based on the assumption that the user has somehow changed their
+                # address in login.gov.
+                # But if we cannot change the email address, at least we don't
+                # want to fail here, otherwise the user will be locked out.
+                current_app.logger.error(ie)
+                db.session.rollback()
+
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
-    user = User.query.filter_by(email_address=email_address).first()
+    user = User.query.filter(User.email_address.ilike(email_address)).first()
+
     if user:
         save_user_attribute(user, {"login_uuid": login_uuid})
         return user
@@ -63,9 +76,9 @@ def save_model_user(
 ):
     if password:
         user.password = password
-        user.password_changed_at = datetime.utcnow()
+        user.password_changed_at = utc_now()
     if validated_email_access:
-        user.email_access_validated_at = datetime.utcnow()
+        user.email_access_validated_at = utc_now()
     if update_dict:
         _remove_values_for_keys_if_present(update_dict, ["id", "password_changed_at"])
         db.session.query(User).filter_by(id=user.id).update(update_dict or {})
@@ -77,7 +90,7 @@ def save_model_user(
 def create_user_code(user, code, code_type):
     verify_code = VerifyCode(
         code_type=code_type,
-        expiry_datetime=datetime.utcnow() + timedelta(minutes=30),
+        expiry_datetime=utc_now() + timedelta(minutes=30),
         user=user,
     )
     verify_code.code = code
@@ -98,7 +111,7 @@ def get_user_code(user, code, code_type):
 def delete_codes_older_created_more_than_a_day_ago():
     deleted = (
         db.session.query(VerifyCode)
-        .filter(VerifyCode.created_at < datetime.utcnow() - timedelta(hours=24))
+        .filter(VerifyCode.created_at < utc_now() - timedelta(hours=24))
         .delete()
     )
     db.session.commit()
@@ -125,7 +138,7 @@ def delete_user_verify_codes(user):
 def count_user_verify_codes(user):
     query = VerifyCode.query.filter(
         VerifyCode.user == user,
-        VerifyCode.expiry_datetime > datetime.utcnow(),
+        VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
     )
     return query.count()
@@ -166,21 +179,22 @@ def reset_failed_login_count(user):
 def update_user_password(user, password):
     # reset failed login count - they've just reset their password so should be fine
     user.password = password
-    user.password_changed_at = datetime.utcnow()
+    user.password_changed_at = utc_now()
     db.session.add(user)
     db.session.commit()
 
 
 def get_user_and_accounts(user_id):
+    # TODO: With sqlalchemy 2.0 change as below because of the breaking change
+    # at User.organizations.services, we need to verify that the below subqueryload
+    # that we have put is functionally doing the same thing as before
     return (
         User.query.filter(User.id == user_id)
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)
-            joinedload("services"),
-            joinedload("organizations"),
-            joinedload("organizations.services"),
-            joinedload("services.organization"),
+            joinedload(User.services).joinedload(Service.organization),
+            joinedload(User.organizations).subqueryload(Organization.services),
         )
         .one()
     )

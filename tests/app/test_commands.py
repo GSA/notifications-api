@@ -38,6 +38,7 @@ from app.models import (
     Template,
     User,
 )
+from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
     create_job,
@@ -102,7 +103,7 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
     create_job(sms_template)
 
-    right_now = datetime.datetime.utcnow()
+    right_now = utc_now()
     tomorrow = right_now + datetime.timedelta(days=1)
 
     right_now = right_now.strftime("%Y-%m-%d")

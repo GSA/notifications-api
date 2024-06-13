@@ -1,12 +1,12 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
 
 from app.enums import NotificationStatus, TemplateType
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, utc_now
 from tests.app.db import create_ft_notification_status, create_notification
 
 # get_template_statistics_for_service_by_day
@@ -119,9 +119,9 @@ def test_get_template_statistics_for_service_by_day_returns_empty_list_if_no_tem
 
 
 def test_get_last_used_datetime_for_template(admin_request, sample_template):
-    date_from_notification = datetime.utcnow() - timedelta(hours=2)
+    date_from_notification = utc_now() - timedelta(hours=2)
     create_notification(template=sample_template, created_at=date_from_notification)
-    date_from_ft_status = (datetime.utcnow() - timedelta(days=2)).date()
+    date_from_ft_status = (utc_now() - timedelta(days=2)).date()
     create_ft_notification_status(
         local_date=date_from_ft_status, template=sample_template
     )

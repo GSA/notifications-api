@@ -3,7 +3,6 @@ import os
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
-from notifications_utils.url_safe_token import check_token, generate_token
 
 from app import redis_store
 from app.config import QueueNames
@@ -28,6 +27,7 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
+from notifications_utils.url_safe_token import check_token, generate_token
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
 
@@ -52,6 +52,15 @@ def invite_user_to_org(organization_id):
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
 
+    token = generate_token(
+        str(invited_org_user.email_address),
+        current_app.config["SECRET_KEY"],
+        current_app.config["DANGEROUS_SALT"],
+    )
+    url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
+    url = url.replace("NONCE", token)
+    url = url.replace("STATE", token)
+
     personalisation = {
         "user_name": (
             "The Notify.gov team"
@@ -59,7 +68,7 @@ def invite_user_to_org(organization_id):
             else invited_org_user.invited_by.name
         ),
         "organization_name": invited_org_user.organization.name,
-        "url": os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"],
+        "url": url,
     }
     saved_notification = persist_notification(
         template_id=template.id,
@@ -80,14 +89,6 @@ def invite_user_to_org(organization_id):
         ex=1800,
     )
 
-    # This is for the login.gov path, note 24 hour expiry to match
-    # The expiration of invitations.
-    redis_key = f"organization-invite-{invited_org_user.email_address}"
-    redis_store.set(
-        redis_key,
-        organization_id,
-        ex=3600 * 24,
-    )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
     return jsonify(data=invited_org_user.serialize()), 201
@@ -164,7 +165,7 @@ def validate_invitation_token(token):
         )
     except SignatureExpired:
         errors = {
-            "invitation": "Your invitation to GOV.UK Notify has expired. "
+            "invitation": "Your invitation to Notify.gov has expired. "
             "Please ask the person that invited you to send you another one"
         }
         raise InvalidRequest(errors, status_code=400)

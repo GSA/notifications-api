@@ -23,6 +23,7 @@ from app.dao.fact_billing_dao import (
 from app.dao.organization_dao import dao_add_service_to_organization
 from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import FactBilling
+from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
     create_ft_billing,
@@ -101,7 +102,7 @@ def test_fetch_billing_data_for_today_includes_data_with_the_right_key_type(
             key_type=key_type,
         )
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 1
     assert results[0].notifications_sent == 2
@@ -118,7 +119,7 @@ def test_fetch_billing_data_for_day_only_calls_query_for_permission_type(
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
     create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(
         process_day=today.date(), check_permissions=True
     )
@@ -137,7 +138,7 @@ def test_fetch_billing_data_for_day_only_calls_query_for_all_channels(
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
     create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(
         process_day=today.date(),
         check_permissions=False,
@@ -192,7 +193,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_template_and_notification_type
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
     create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 2
     assert results[0].notifications_sent == 1
@@ -207,7 +208,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_service(notify_db_session):
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
     create_notification(template=sms_template, status=NotificationStatus.DELIVERED)
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 2
     assert results[0].notifications_sent == 1
@@ -228,7 +229,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_provider(notify_db_session):
         sent_by="sns",
     )
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 1
     assert results[0].notifications_sent == 2
@@ -249,7 +250,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_rate_mulitplier(notify_db_sess
         rate_multiplier=2,
     )
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 2
     assert results[0].notifications_sent == 1
@@ -270,7 +271,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_international(notify_db_sessio
         international=False,
     )
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 2
     assert all(result.notifications_sent == 1 for result in results)
@@ -286,7 +287,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_notification_type(notify_db_se
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
     create_notification(template=email_template, status=NotificationStatus.DELIVERED)
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert len(results) == 2
     notification_types = [x.notification_type for x in results]
@@ -294,7 +295,7 @@ def test_fetch_billing_data_for_day_is_grouped_by_notification_type(notify_db_se
 
 
 def test_fetch_billing_data_for_day_returns_empty_list(notify_db_session):
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(today.date())
     assert results == []
 
@@ -307,7 +308,7 @@ def test_fetch_billing_data_for_day_uses_correct_table(notify_db_session):
     sms_template = create_template(service=service, template_type=TemplateType.SMS)
     email_template = create_template(service=service, template_type=TemplateType.EMAIL)
 
-    five_days_ago = datetime.utcnow() - timedelta(days=5)
+    five_days_ago = utc_now() - timedelta(days=5)
     create_notification(
         template=sms_template,
         status=NotificationStatus.DELIVERED,
@@ -337,7 +338,7 @@ def test_fetch_billing_data_for_day_returns_list_for_given_service(notify_db_ses
     create_notification(template=template, status=NotificationStatus.DELIVERED)
     create_notification(template=template_2, status=NotificationStatus.DELIVERED)
 
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(
         process_day=today.date(), service_id=service.id
     )
@@ -352,7 +353,7 @@ def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session
     for status in NotificationStatus:
         create_notification(template=sms_template, status=status)
         create_notification(template=email_template, status=status)
-    today = datetime.utcnow()
+    today = utc_now()
     results = fetch_billing_data_for_day(
         process_day=today.date(), service_id=service.id
     )
@@ -368,13 +369,11 @@ def test_fetch_billing_data_for_day_bills_correctly_for_status(notify_db_session
 
 def test_get_rates_for_billing(notify_db_session):
     create_rate(
-        start_date=datetime.utcnow(), value=12, notification_type=NotificationType.EMAIL
+        start_date=utc_now(), value=12, notification_type=NotificationType.EMAIL
     )
+    create_rate(start_date=utc_now(), value=22, notification_type=NotificationType.SMS)
     create_rate(
-        start_date=datetime.utcnow(), value=22, notification_type=NotificationType.SMS
-    )
-    create_rate(
-        start_date=datetime.utcnow(), value=33, notification_type=NotificationType.EMAIL
+        start_date=utc_now(), value=33, notification_type=NotificationType.EMAIL
     )
     rates = get_rates_for_billing()
 
@@ -500,7 +499,7 @@ def test_fetch_monthly_billing_for_year_adds_data_for_today(notify_db_session):
     template = create_template(service=service, template_type=TemplateType.SMS)
 
     create_rate(
-        start_date=datetime.utcnow() - timedelta(days=1),
+        start_date=utc_now() - timedelta(days=1),
         value=0.158,
         notification_type=NotificationType.SMS,
     )
@@ -838,7 +837,7 @@ def test_fetch_sms_billing_for_all_services_with_remainder(notify_db_session):
         },
     ]
 
-    assert [dict(result) for result in results] == expected_results
+    assert [result._asdict() for result in results] == expected_results
 
 
 def test_fetch_sms_billing_for_all_services_without_an_organization_appears(
@@ -893,7 +892,7 @@ def test_fetch_sms_billing_for_all_services_without_an_organization_appears(
         },
     ]
 
-    assert [dict(result) for result in results] == expected_results
+    assert [result._asdict() for result in results] == expected_results
 
 
 @freeze_time("2019-06-01 13:30")
@@ -960,7 +959,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
     notify_db_session,
 ):
     create_rate(
-        start_date=datetime.utcnow() - timedelta(days=1),
+        start_date=utc_now() - timedelta(days=1),
         value=0.65,
         notification_type=NotificationType.SMS,
     )
@@ -968,7 +967,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
     service = create_service()
     template = create_template(service=service)
     dao_add_service_to_organization(service=service, organization_id=new_org.id)
-    current_year = datetime.utcnow().year
+    current_year = utc_now().year
     create_annual_billing(
         service_id=service.id,
         free_sms_fragment_limit=10,
@@ -992,7 +991,7 @@ def test_fetch_usage_year_for_organization_calculates_cost_from_multiple_rates(
 ):
     old_rate_date = date(2022, 4, 29)
     new_rate_date = date(2022, 5, 1)
-    current_year = datetime.utcnow().year
+    current_year = utc_now().year
 
     org = create_organization(name="Organization 1")
 
@@ -1033,7 +1032,7 @@ def test_fetch_usage_year_for_organization_calculates_cost_from_multiple_rates(
 
 @freeze_time("2022-05-01 13:30")
 def test_fetch_usage_year_for_organization_when_no_usage(notify_db_session):
-    current_year = datetime.utcnow().year
+    current_year = utc_now().year
 
     org = create_organization(name="Organization 1")
 
@@ -1059,11 +1058,11 @@ def test_fetch_usage_year_for_organization_when_no_usage(notify_db_session):
 
 @freeze_time("2022-05-01 13:30")
 def test_fetch_usage_year_for_organization_only_queries_present_year(notify_db_session):
-    current_year = datetime.utcnow().year
+    current_year = utc_now().year
     last_year = current_year - 1
     date_two_years_ago = date(2021, 3, 31)
     date_in_last_financial_year = date(2022, 3, 31)
-    date_in_this_year = datetime.utcnow().date()
+    date_in_this_year = utc_now().date()
 
     org = create_organization(name="Organization 1")
 
@@ -1133,20 +1132,20 @@ def test_fetch_usage_year_for_organization_only_returns_data_for_live_services(
     dao_add_service_to_organization(service=live_service, organization_id=org.id)
     dao_add_service_to_organization(service=trial_service, organization_id=org.id)
     create_ft_billing(
-        local_date=datetime.utcnow().date(),
+        local_date=utc_now().date(),
         template=sms_template,
         rate=0.0158,
         billable_unit=19,
         notifications_sent=19,
     )
     create_ft_billing(
-        local_date=datetime.utcnow().date(),
+        local_date=utc_now().date(),
         template=email_template,
         billable_unit=0,
         notifications_sent=100,
     )
     create_ft_billing(
-        local_date=datetime.utcnow().date(),
+        local_date=utc_now().date(),
         template=trial_sms_template,
         billable_unit=200,
         rate=0.0158,
@@ -1172,9 +1171,9 @@ def test_fetch_usage_year_for_organization_only_returns_data_for_live_services(
 def test_query_organization_sms_usage_for_year_handles_multiple_services(
     notify_db_session,
 ):
-    today = datetime.utcnow().date()
-    yesterday = datetime.utcnow().date() - timedelta(days=1)
-    current_year = datetime.utcnow().year
+    today = utc_now().date()
+    yesterday = utc_now().date() - timedelta(days=1)
+    current_year = utc_now().year
 
     org = create_organization(name="Organization 1")
 
@@ -1228,8 +1227,8 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
 
     result = query_organization_sms_usage_for_year(org.id, 2022).all()
 
-    service_1_rows = [row for row in result if row.service_id == service_1.id]
-    service_2_rows = [row for row in result if row.service_id == service_2.id]
+    service_1_rows = [row._asdict() for row in result if row.service_id == service_1.id]
+    service_2_rows = [row._asdict() for row in result if row.service_id == service_2.id]
 
     assert len(service_1_rows) == 2
     assert len(service_2_rows) == 2
@@ -1256,10 +1255,10 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
 
     # assert total costs are accurate
     assert (
-        float(sum(row.cost for row in service_1_rows)) == 1
+        float(sum(row["cost"] for row in service_1_rows)) == 1
     )  # rows with 2 and 4, allowance of 5
     assert (
-        float(sum(row.cost for row in service_2_rows)) == 14
+        float(sum(row["cost"] for row in service_2_rows)) == 14
     )  # rows with 8 and 16, allowance of 10
 
 
@@ -1269,7 +1268,7 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
 ):
     old_rate_date = date(2022, 4, 29)
     new_rate_date = date(2022, 5, 1)
-    current_year = datetime.utcnow().year
+    current_year = utc_now().year
 
     org = create_organization(name="Organization 1")
 
@@ -1296,7 +1295,10 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
         financial_year_start=current_year,
     )
 
-    result = query_organization_sms_usage_for_year(org.id, 2022).all()
+    result = [
+        row._asdict()
+        for row in query_organization_sms_usage_for_year(org.id, 2022).all()
+    ]
 
     # al lthe free allowance is used on the first day
     assert result[0]["local_date"] == date(2022, 4, 29)

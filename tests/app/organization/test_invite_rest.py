@@ -4,10 +4,10 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
-from notifications_utils.url_safe_token import generate_token
 
 from app.enums import InvitedUserStatus
 from app.models import Notification
+from notifications_utils.url_safe_token import generate_token
 from tests import create_admin_authorization_header
 from tests.app.db import create_invited_org_user
 
@@ -249,7 +249,7 @@ def test_validate_invitation_token_for_expired_token_returns_400(client):
     json_resp = json.loads(response.get_data(as_text=True))
     assert json_resp["result"] == "error"
     assert json_resp["message"] == {
-        "invitation": "Your invitation to GOV.UK Notify has expired. "
+        "invitation": "Your invitation to Notify.gov has expired. "
         "Please ask the person that invited you to send you another one"
     }
 

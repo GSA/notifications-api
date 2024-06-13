@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from boto3 import client
 from flask import current_app
@@ -9,6 +9,7 @@ from flask import current_app
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
 from app.exceptions import NotificationTechnicalFailureException
+from app.utils import hilite, scrub, utc_now
 
 
 class AwsCloudwatchClient(Client):
@@ -50,7 +51,7 @@ class AwsCloudwatchClient(Client):
 
     def _get_log(self, my_filter, log_group_name, sent_at):
         # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
-        now = datetime.utcnow()
+        now = utc_now()
         beginning = sent_at
         next_token = None
         all_log_events = []
@@ -112,7 +113,7 @@ class AwsCloudwatchClient(Client):
         # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
-        time_now = datetime.utcnow()
+        time_now = utc_now()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
         filter_pattern = '{$.notification.messageId="XXXXX"}'
         filter_pattern = filter_pattern.replace("XXXXX", message_id)
@@ -123,6 +124,7 @@ class AwsCloudwatchClient(Client):
             self.warn_if_dev_is_opted_out(
                 message["delivery"]["providerResponse"], notification_id
             )
+            current_app.logger.info(hilite(scrub(f"DELIVERED: {message}")))
             return (
                 "success",
                 message["delivery"]["providerResponse"],
@@ -139,6 +141,8 @@ class AwsCloudwatchClient(Client):
             self.warn_if_dev_is_opted_out(
                 message["delivery"]["providerResponse"], notification_id
             )
+
+            current_app.logger.info(hilite(scrub(f"FAILED: {message}")))
             return (
                 "failure",
                 message["delivery"]["providerResponse"],

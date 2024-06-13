@@ -2,8 +2,6 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
-from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.recipients import InvalidPhoneError
 
 from app.config import QueueNames
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
@@ -18,6 +16,8 @@ from app.enums import (
 from app.models import Notification, ServiceGuestList
 from app.service.send_notification import send_one_off_notification
 from app.v2.errors import BadRequestError
+from notifications_utils import SMS_CHAR_COUNT_LIMIT
+from notifications_utils.recipients import InvalidPhoneError
 from tests.app.db import (
     create_reply_to_email,
     create_service,
@@ -98,6 +98,7 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
     )
 
 
+@pytest.mark.skip("We currently don't support international")
 def test_send_one_off_notification_calls_persist_correctly_for_international_sms(
     persist_mock, celery_mock, notify_db_session
 ):

@@ -10,8 +10,9 @@ from app.clients import AWS_CLIENT_CONFIG
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
-
-JOBS = ExpiringDict(max_len=1000, max_age_seconds=3600 * 4)
+# Temporarily extend cache to 7 days
+ttl = 60 * 60 * 24 * 7
+JOBS = ExpiringDict(max_len=20000, max_age_seconds=ttl)
 
 
 JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
@@ -82,9 +83,6 @@ def incr_jobs_cache_misses():
         redis_store.set(JOBS_CACHE_MISSES, 1)
     else:
         redis_store.incr(JOBS_CACHE_MISSES)
-    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
-    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.debug(f"JOBS CACHE MISS hits {hits} misses {misses}")
 
 
 def incr_jobs_cache_hits():
@@ -92,9 +90,6 @@ def incr_jobs_cache_hits():
         redis_store.set(JOBS_CACHE_HITS, 1)
     else:
         redis_store.incr(JOBS_CACHE_HITS)
-    hits = redis_store.get(JOBS_CACHE_HITS).decode("utf-8")
-    misses = redis_store.get(JOBS_CACHE_MISSES).decode("utf-8")
-    current_app.logger.debug(f"JOBS CACHE HIT hits {hits} misses {misses}")
 
 
 def extract_phones(job):
@@ -102,7 +97,6 @@ def extract_phones(job):
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
-    current_app.logger.info(f"HEADERS {first_row}")
     phone_index = 0
     for item in first_row:
         # Note: may contain a BOM and look like \ufeffphone number

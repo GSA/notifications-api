@@ -1,14 +1,8 @@
 import json
-from datetime import datetime
 from urllib import parse
 
 from cachetools import TTLCache, cached
 from flask import current_app
-from notifications_utils.template import (
-    HTMLEmailTemplate,
-    PlainTextEmailTemplate,
-    SMSMessageTemplate,
-)
 
 from app import create_uuid, db, notification_provider_clients, redis_store
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
@@ -19,6 +13,12 @@ from app.dao.provider_details_dao import get_provider_details_by_notification_ty
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
+from app.utils import hilite, scrub, utc_now
+from notifications_utils.template import (
+    HTMLEmailTemplate,
+    PlainTextEmailTemplate,
+    SMSMessageTemplate,
+)
 
 
 def send_sms_to_provider(notification):
@@ -109,15 +109,19 @@ def send_sms_to_provider(notification):
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-                current_app.logger.info("sending to sms")
+
                 message_id = provider.send_sms(**send_sms_kwargs)
                 current_app.logger.info(f"got message_id {message_id}")
             except Exception as e:
-                current_app.logger.error(e)
+                msg = f"FAILED sending message for this recipient: {recipient} to sms"
+                current_app.logger.error(hilite(scrub(f"{msg} {e}")))
+
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
                 raise e
             else:
+                msg = f"Sending message for this recipient: {recipient} to sms"
+                current_app.logger.info(hilite(scrub(msg)))
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
@@ -177,7 +181,7 @@ def send_email_to_provider(notification):
 
 
 def update_notification_to_sending(notification, provider):
-    notification.sent_at = datetime.utcnow()
+    notification.sent_at = utc_now()
     notification.sent_by = provider.name
     if notification.status not in NotificationStatus.completed_types():
         notification.status = NotificationStatus.SENDING
