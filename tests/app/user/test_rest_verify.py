@@ -500,7 +500,6 @@ def test_send_user_email_code_with_urlencoded_next_param(
     mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-
     mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
 
     data = {"to": None, "next": "/services"}
