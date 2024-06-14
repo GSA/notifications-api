@@ -199,6 +199,11 @@ class Config(object):
                 "schedule": timedelta(minutes=66),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "report-all-users": {
+                "task": "report-all-users",
+                "schedule": timedelta(minutes=2),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "check-job-status": {
                 "task": "check-job-status",
                 "schedule": crontab(),

@@ -110,7 +110,11 @@ def persist_notification(
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
         )
-        current_app.logger.info(hilite(scrub(f"Persisting notification with recipient {formatted_recipient}")))
+        current_app.logger.info(
+            hilite(
+                scrub(f"Persisting notification with recipient {formatted_recipient}")
+            )
+        )
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient
         notification.international = recipient_info.international

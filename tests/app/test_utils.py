@@ -99,7 +99,10 @@ def test_scrub():
     result = scrub(
         "This is a message with 17775554324, and also 18884449323 and also 17775554324"
     )
-    assert result == "This is a message with 1XXXXX54324, and also 1XXXXX49323 and also 1XXXXX54324"
+    assert (
+        result
+        == "This is a message with 1XXXXX54324, and also 1XXXXX49323 and also 1XXXXX54324"
+    )
 
 
 # This method is used for simulating bulk sends.  We use localstack and run on a developer's machine to do the
