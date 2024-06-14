@@ -117,7 +117,6 @@ def create_app(application):
     document_download_client.init_app(application)
 
     register_blueprint(application)
-    register_v2_blueprints(application)
 
     # avoid circular imports by importing this file later
     from app.commands import setup_commands
@@ -250,34 +249,6 @@ def register_blueprint(application):
 
     upload_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(upload_blueprint)
-
-
-def register_v2_blueprints(application):
-    from app.authentication.auth import requires_auth
-    from app.v2.inbound_sms.get_inbound_sms import v2_inbound_sms_blueprint
-    from app.v2.notifications import (  # noqa
-        get_notifications,
-        post_notifications,
-        v2_notification_blueprint,
-    )
-    from app.v2.template import (  # noqa
-        get_template,
-        post_template,
-        v2_template_blueprint,
-    )
-    from app.v2.templates.get_templates import v2_templates_blueprint
-
-    v2_notification_blueprint.before_request(requires_auth)
-    application.register_blueprint(v2_notification_blueprint)
-
-    v2_templates_blueprint.before_request(requires_auth)
-    application.register_blueprint(v2_templates_blueprint)
-
-    v2_template_blueprint.before_request(requires_auth)
-    application.register_blueprint(v2_template_blueprint)
-
-    v2_inbound_sms_blueprint.before_request(requires_auth)
-    application.register_blueprint(v2_inbound_sms_blueprint)
 
 
 def init_app(app):
