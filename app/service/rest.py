@@ -706,7 +706,7 @@ def get_monthly_notification_stats_by_user(service_id, user_id):
 
     statistics.add_monthly_notification_status_stats(data, stats)
 
-    now = datetime.utcnow()
+    now = utc_now()
     if end_date > now:
         todays_deltas = fetch_notification_status_for_service_for_day(
             now, service_id=service_id
@@ -744,6 +744,35 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
                 dao_fetch_stats_for_service_from_day_for_user(
                     service_id, new_date, user_id
                 )
+            )
+
+    return jsonify(stats)
+
+
+@service_blueprint.route("/<uuid:service_id>/notifications/month", methods=["GET"])
+def get_single_month_notification_stats_for_service(service_id):
+    # check service_id validity
+    dao_fetch_service_by_id(service_id)
+
+    try:
+        month = int(request.args.get("month", "NaN"))
+        year = int(request.args.get("year", "NaN"))
+    except ValueError:
+        raise InvalidRequest(
+            "Both a month and year are required as numbers", status_code=400
+        )
+
+    month_year = datetime(year, month, 10, 00, 00, 00)
+    days = get_number_of_days_for_month(year, month)
+    start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
+
+    stats = {}
+    for d in range(days):
+        new_date = start_date + timedelta(days=d)
+        if new_date <= end_date:
+            key = new_date.strftime("%Y-%m-%d")
+            stats[key] = statistics.format_statistics(
+                dao_fetch_stats_for_service_from_day(service_id, new_date)
             )
 
     return jsonify(stats)

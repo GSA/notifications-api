@@ -12,6 +12,8 @@ from datetime import datetime
 from alembic import op
 from sqlalchemy import text
 
+from app.utils import utc_now
+
 revision = "0330_broadcast_invite_email"
 down_revision = "0329_purge_broadcast_data"
 
@@ -60,7 +62,7 @@ def upgrade():
     input_params = {
         "template_id": template_id,
         "template_name": broadcast_invitation_template_name,
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
         "content": broadcast_invitation_content,
         "service_id": service_id,
         "subject": broadcast_invitation_subject,
