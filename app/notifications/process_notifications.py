@@ -10,9 +10,9 @@ from app.dao.notifications_dao import (
     dao_delete_notifications_by_id,
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
+from app.errors import BadRequestError
 from app.models import Notification
 from app.utils import hilite, utc_now
-from app.v2.errors import BadRequestError
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
@@ -111,7 +111,9 @@ def persist_notification(
             recipient, international=True
         )
         current_app.logger.info(
-            hilite(f"Persisting notification with recipient {formatted_recipient}")
+            hilite(
+                f"Persisting notification with job_id: {job_id} row_number: {job_row_number}"
+            )
         )
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient

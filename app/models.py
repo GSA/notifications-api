@@ -1215,7 +1215,6 @@ class Template(TemplateBase):
     )
 
     def get_link(self):
-        # TODO: use "/v2/" route once available
         return url_for(
             "template.get_template_by_id_and_service_id",
             service_id=self.service_id,
@@ -1284,8 +1283,9 @@ class TemplateHistory(TemplateBase):
 
     def get_link(self):
         return url_for(
-            "v2_template.get_template_by_id",
+            "template.get_template_by_id_and_service_id",
             template_id=self.id,
+            service_id=self.service.id,
             version=self.version,
             _external=True,
         )

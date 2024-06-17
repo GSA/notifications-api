@@ -131,15 +131,14 @@ class PIIFilter(logging.Filter):
 
         phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
         for phone in phones:
-            msg = msg.replace(phone, f"1XXXXX{phone[-5:]}")
+            msg = msg.replace(phone, "1XXXXXXXXXX")
 
         emails = re.findall(
             r"[\w\.-]+@[\w\.-]+", msg
         )  # ['alice@google.com', 'bob@abc.com']
         for email in emails:
             # do something with each found email string
-            email_parts = email.split("@")
-            masked_email = f"{email_parts[0][0:3]}XXX@{email_parts[1][0:7]}XXX"
+            masked_email = "XXXXX@XXXXXXX"
             msg = msg.replace(email, masked_email)
         return msg
 

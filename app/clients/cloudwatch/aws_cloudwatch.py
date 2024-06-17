@@ -124,7 +124,14 @@ class AwsCloudwatchClient(Client):
             self.warn_if_dev_is_opted_out(
                 message["delivery"]["providerResponse"], notification_id
             )
-            current_app.logger.info(hilite(f"DELIVERED: {message}"))
+            # Here we map the answer from aws to the message_id.
+            # Previously, in send_to_providers, we mapped the job_id and row number
+            # to the message id.  And on the admin side we mapped the csv filename
+            # to the job_id.  So by tracing through all the logs we can go:
+            # filename->job_id->message_id->what really happened
+            current_app.logger.info(
+                hilite(f"DELIVERED: {message} for message_id {message_id}")
+            )
             return (
                 "success",
                 message["delivery"]["providerResponse"],
@@ -142,7 +149,9 @@ class AwsCloudwatchClient(Client):
                 message["delivery"]["providerResponse"], notification_id
             )
 
-            current_app.logger.info(hilite(f"FAILED: {message}"))
+            current_app.logger.info(
+                hilite(f"FAILED: {message} for message_id {message_id}")
+            )
             return (
                 "failure",
                 message["delivery"]["providerResponse"],
