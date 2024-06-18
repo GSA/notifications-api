@@ -9,7 +9,7 @@ locals {
 resource "null_resource" "prevent_destroy" {
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false # destrying staging is allowed
   }
 }
 
