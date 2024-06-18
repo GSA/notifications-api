@@ -16,7 +16,7 @@ module "database" {
   rds_plan_name    = "micro-psql"
 }
 
-module "redis" {
+module "redis" { # default v6.2; delete after v7.0 resource is bound
   source = "github.com/18f/terraform-cloudgov//redis?ref=v0.7.1"
 
   cf_org_name      = local.cf_org_name
