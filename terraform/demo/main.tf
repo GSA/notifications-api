@@ -3,7 +3,6 @@ locals {
   cf_space_name    = "notify-demo"
   env              = "demo"
   app_name         = "notify-api"
-  recursive_delete = false
 }
 
 module "database" {
@@ -66,7 +65,6 @@ module "ses_email" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-ses-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-west-2"
   email_domain        = "notify.sandbox.10x.gsa.gov"
   email_receipt_error = "notify-support@gsa.gov"
@@ -78,7 +76,6 @@ module "sns_sms" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-sns-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-east-1"
   monthly_spend_limit = 25
 }

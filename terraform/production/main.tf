@@ -3,7 +3,6 @@ locals {
   cf_space_name    = "notify-production"
   env              = "production"
   app_name         = "notify-api"
-  recursive_delete = false
 }
 
 module "database" {
@@ -51,7 +50,6 @@ module "ses_email" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-ses-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-gov-west-1"
   email_domain        = "notify.gov"
   mail_from_subdomain = "mail"
@@ -64,7 +62,6 @@ module "sns_sms" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-sns-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-gov-west-1"
   monthly_spend_limit = 1000
 }
