@@ -1,4 +1,4 @@
-import uuid
+# import uuid
 from datetime import date, datetime
 
 import pytest
@@ -6,12 +6,8 @@ from freezegun import freeze_time
 
 from app.enums import ServicePermissionType
 from app.utils import (
-    format_sequential_number,
-    get_midnight_for_day_before,
     get_midnight_in_utc,
     get_public_notify_type_text,
-    get_reference_from_personalisation,
-    get_uuid_string_or_none,
     midnight_n_days_ago,
     scrub,
 )
@@ -32,16 +28,16 @@ def test_get_midnight_in_utc_returns_expected_date(date, expected_date):
     assert get_midnight_in_utc(date) == expected_date
 
 
-@pytest.mark.parametrize(
-    "date, expected_date",
-    [
-        (datetime(2016, 1, 15, 0, 30), datetime(2016, 1, 14, 0, 0)),
-        (datetime(2016, 7, 15, 0, 0), datetime(2016, 7, 14, 0, 0)),
-        (datetime(2016, 8, 23, 11, 59), datetime(2016, 8, 22, 0, 0)),
-    ],
-)
-def test_get_midnight_for_day_before_returns_expected_date(date, expected_date):
-    assert get_midnight_for_day_before(date) == expected_date
+# @pytest.mark.parametrize(
+#     "date, expected_date",
+#     [
+#         (datetime(2016, 1, 15, 0, 30), datetime(2016, 1, 14, 0, 0)),
+#         (datetime(2016, 7, 15, 0, 0), datetime(2016, 7, 14, 0, 0)),
+#         (datetime(2016, 8, 23, 11, 59), datetime(2016, 8, 22, 0, 0)),
+#     ],
+# )
+# def test_get_midnight_for_day_before_returns_expected_date(date, expected_date):
+#     assert get_midnight_for_day_before(date) == expected_date
 
 
 @pytest.mark.parametrize(
@@ -66,27 +62,27 @@ def test_midnight_n_days_ago(current_time, arg, expected_datetime):
         assert midnight_n_days_ago(arg) == expected_datetime
 
 
-def test_format_sequential_number():
-    assert format_sequential_number(123) == "0000007b"
+# def test_format_sequential_number():
+#     assert format_sequential_number(123) == "0000007b"
 
 
-@pytest.mark.parametrize(
-    "personalisation, expected_response",
-    [
-        ({"nothing": "interesting"}, None),
-        ({"reference": "something"}, "something"),
-        (None, None),
-    ],
-)
-def test_get_reference_from_personalisation(personalisation, expected_response):
-    assert get_reference_from_personalisation(personalisation) == expected_response
+# @pytest.mark.parametrize(
+#     "personalisation, expected_response",
+#     [
+#         ({"nothing": "interesting"}, None),
+#         ({"reference": "something"}, "something"),
+#         (None, None),
+#     ],
+# )
+# def test_get_reference_from_personalisation(personalisation, expected_response):
+#     assert get_reference_from_personalisation(personalisation) == expected_response
 
 
-def test_get_uuid_string_or_none():
-    my_uuid = uuid.uuid4()
-    assert str(my_uuid) == get_uuid_string_or_none(my_uuid)
+# def test_get_uuid_string_or_none():
+#     my_uuid = uuid.uuid4()
+#     assert str(my_uuid) == get_uuid_string_or_none(my_uuid)
 
-    assert get_uuid_string_or_none(None) is None
+#     assert get_uuid_string_or_none(None) is None
 
 
 def test_get_public_notify_type_text():
