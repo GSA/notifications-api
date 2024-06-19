@@ -1,8 +1,8 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio"
-  cf_space_name    = "notify-staging"
-  env              = "staging"
-  app_name         = "notify-api"
+  cf_org_name   = "gsa-tts-benefits-studio"
+  cf_space_name = "notify-staging"
+  env           = "staging"
+  app_name      = "notify-api"
 }
 
 module "database" {
