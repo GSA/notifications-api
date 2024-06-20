@@ -31,8 +31,8 @@ def test_create_invited_user(
     extra_args,
     expected_start_of_invite_url,
 ):
-    mocker.patch("app.service_invite.rest.redis_store.raw_set")
-    mocker.patch("app.service_invite.rest.redis_store.raw_get")
+    mocker.patch("app.service_invite.rest.redis_store.set")
+    mocker.patch("app.service_invite.rest.redis_store.get")
 
     mocked = mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
     email_address = "invited_user@service.gov.uk"
