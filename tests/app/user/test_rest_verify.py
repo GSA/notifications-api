@@ -500,11 +500,6 @@ def test_send_user_email_code_with_urlencoded_next_param(
     mock_redis_get = mocker.patch("app.celery.scheduled_tasks.redis_store.raw_get")
     mock_redis_get.return_value = "foo"
 
-    mock_s3_personalisation = mocker.patch(
-        "app.v2.notifications.get_notifications.get_personalisation_from_s3"
-    )
-    mock_s3_personalisation.return_value = {"name": "Bob"}
-
     mocker.patch("app.celery.scheduled_tasks.redis_store.raw_set")
 
     data = {"to": None, "next": "/services"}

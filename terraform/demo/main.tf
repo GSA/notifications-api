@@ -16,7 +16,7 @@ module "database" {
   rds_plan_name    = "micro-psql"
 }
 
-module "redis" {
+module "redis" { # default v6.2; delete after v7.0 resource is bound
   source = "github.com/18f/terraform-cloudgov//redis?ref=v0.7.1"
 
   cf_org_name      = local.cf_org_name
@@ -24,6 +24,20 @@ module "redis" {
   name             = "${local.app_name}-redis-${local.env}"
   recursive_delete = local.recursive_delete
   redis_plan_name  = "redis-dev"
+}
+
+module "redis-v70" {
+  source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
+
+  cf_org_name     = local.cf_org_name
+  cf_space_name   = local.cf_space_name
+  name            = "${local.app_name}-redis-v70-${local.env}"
+  redis_plan_name = "redis-dev"
+  json_params = jsonencode(
+    {
+      "engineVersion" : "7.0",
+    }
+  )
 }
 
 module "csv_upload_bucket" {

@@ -5,6 +5,7 @@ from freezegun import freeze_time
 import app
 from app.dao import templates_dao
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
+from app.errors import BadRequestError, RateLimitError, TotalRequestsError
 from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
@@ -35,7 +36,6 @@ from app.serialised_models import (
 )
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_template_instance
-from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests.app.db import (
     create_api_key,

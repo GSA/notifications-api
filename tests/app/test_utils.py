@@ -13,6 +13,7 @@ from app.utils import (
     get_reference_from_personalisation,
     get_uuid_string_or_none,
     midnight_n_days_ago,
+    scrub,
 )
 
 
@@ -91,6 +92,16 @@ def test_get_uuid_string_or_none():
 def test_get_public_notify_type_text():
     assert (
         get_public_notify_type_text(ServicePermissionType.UPLOAD_DOCUMENT) == "document"
+    )
+
+
+def test_scrub():
+    result = scrub(
+        "This is a message with 17775554324, and also 18884449323 and also 17775554324"
+    )
+    assert (
+        result
+        == "This is a message with 1XXXXX54324, and also 1XXXXX49323 and also 1XXXXX54324"
     )
 
 

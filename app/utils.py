@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta, timezone
 
 from flask import url_for
@@ -144,3 +145,15 @@ def naive_utcnow():
 
 def utc_now():
     return naive_utcnow()
+
+
+def scrub(msg):
+    # Eventually we want to scrub all messages in all logs for phone numbers
+    # and email addresses, masking them.  Ultimately this will probably get
+    # refactored into a 'SafeLogger' subclass or something, but let's start here
+    # with phones.
+    phones = re.findall("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d", msg)
+    phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
+    for phone in phones:
+        msg = msg.replace(phone, f"1XXXXX{phone[-5:]}")
+    return msg

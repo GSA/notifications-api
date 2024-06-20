@@ -8,6 +8,7 @@ from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
+from app.errors import BadRequestError
 from app.models import Notification, NotificationHistory
 from app.notifications.process_notifications import (
     create_content_for_notification,
@@ -16,7 +17,6 @@ from app.notifications.process_notifications import (
     simulated_recipient,
 )
 from app.serialised_models import SerialisedTemplate
-from app.v2.errors import BadRequestError
 from notifications_utils.recipients import (
     validate_and_format_email_address,
     validate_and_format_phone_number,
