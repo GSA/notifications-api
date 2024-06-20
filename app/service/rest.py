@@ -1,4 +1,5 @@
 import itertools
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
@@ -17,11 +18,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import (
-    get_calendar_year,
-    get_month_start_and_end_date_in_utc,
-    get_number_of_days_for_month,
-)
+from app.dao.date_util import get_calendar_year, get_month_start_and_end_date_in_utc
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
@@ -67,8 +64,8 @@ from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_live_services_data,
     dao_fetch_service_by_id,
-    dao_fetch_stats_for_service_from_day,
-    dao_fetch_stats_for_service_from_day_for_user,
+    dao_fetch_stats_for_service_from_days,
+    dao_fetch_stats_for_service_from_days_for_user,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_remove_user_from_service,
@@ -227,19 +224,33 @@ def get_service_notification_statistics_by_day(service_id, start, days):
 def get_service_statistics_for_specific_days(service_id, start, days=1):
     start_date = datetime.strptime(start, "%Y-%m-%d").date()
 
-    if days == 1:
-        stats = {}
-        stats[start] = statistics.format_statistics(
-            dao_fetch_stats_for_service_from_day(service_id, start_date)
-        )
-    else:
-        stats = {}
-        for d in range(days):
-            new_date = start_date - timedelta(days=d)
-            key = new_date.strftime("%Y-%m-%d")
-            stats[key] = statistics.format_statistics(
-                dao_fetch_stats_for_service_from_day(service_id, new_date)
-            )
+    def generate_date_range(start_date, days):
+        current_date = start_date
+        end_date = start_date - timedelta(days=days)
+        while current_date > end_date:
+            try:
+                valid_date = datetime(
+                    current_date.year, current_date.month, current_date.day
+                )
+                yield valid_date.date()
+            except ValueError:
+                pass
+            current_date -= timedelta(days=1)
+
+    results = dao_fetch_stats_for_service_from_days(service_id, start_date, days)
+
+    grouped_results = defaultdict(list)
+    for row in results:
+        notification_type, status, day, count = row
+        grouped_results[day.date()].append(row)
+
+    for date in generate_date_range(start_date, days):
+        if date not in grouped_results:
+            grouped_results[date] = []
+
+    stats = {}
+    for day, rows in grouped_results.items():
+        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
 
     return stats
 
@@ -262,23 +273,35 @@ def get_service_statistics_for_specific_days_by_user(
 ):
     start_date = datetime.strptime(start, "%Y-%m-%d").date()
 
-    if days == 1:
-        stats = {}
-        stats[start] = statistics.format_statistics(
-            dao_fetch_stats_for_service_from_day_for_user(
-                service_id, start_date, user_id
-            )
-        )
-    else:
-        stats = {}
-        for d in range(days):
-            new_date = start_date - timedelta(days=d)
-            key = new_date.strftime("%Y-%m-%d")
-            stats[key] = statistics.format_statistics(
-                dao_fetch_stats_for_service_from_day_for_user(
-                    service_id, new_date, user_id
+    def generate_date_range(start_date, days):
+        current_date = start_date
+        end_date = start_date - timedelta(days=days)
+        while current_date > end_date:
+            try:
+                valid_date = datetime(
+                    current_date.year, current_date.month, current_date.day
                 )
-            )
+                yield valid_date.date()
+            except ValueError:
+                pass
+            current_date -= timedelta(days=1)
+
+    results = dao_fetch_stats_for_service_from_days_for_user(
+        service_id, start_date, days, user_id
+    )
+
+    grouped_results = defaultdict(list)
+    for row in results:
+        notification_type, status, day, count = row
+        grouped_results[day.date()].append(row)
+
+    for date in generate_date_range(start_date, days):
+        if date not in grouped_results:
+            grouped_results[date] = []
+
+    stats = {}
+    for day, rows in grouped_results.items():
+        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
 
     return stats
 
@@ -732,19 +755,37 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
         )
 
     month_year = datetime(year, month, 10, 00, 00, 00)
-    days = get_number_of_days_for_month(year, month)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    stats = {}
-    for d in range(days):
-        new_date = start_date + timedelta(days=d)
-        if new_date <= end_date:
-            key = new_date.strftime("%Y-%m-%d")
-            stats[key] = statistics.format_statistics(
-                dao_fetch_stats_for_service_from_day_for_user(
-                    service_id, new_date, user_id
+    def generate_date_range(start_date, end_date):
+        current_date = start_date
+        end_date = end_date
+        while current_date < end_date:
+            try:
+                valid_date = datetime(
+                    current_date.year, current_date.month, current_date.day
                 )
-            )
+                yield valid_date.date()
+            except ValueError:
+                pass
+            current_date += timedelta(days=1)
+
+    results = dao_fetch_stats_for_service_from_days_for_user(
+        service_id, start_date, user_id
+    )
+
+    grouped_results = defaultdict(list)
+    for row in results:
+        notification_type, status, day, count = row
+        grouped_results[day.date()].append(row)
+
+    for date in generate_date_range(start_date, end_date):
+        if date not in grouped_results:
+            grouped_results[date] = []
+
+    stats = {}
+    for day, rows in grouped_results.items():
+        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
 
     return jsonify(stats)
 
@@ -763,17 +804,35 @@ def get_single_month_notification_stats_for_service(service_id):
         )
 
     month_year = datetime(year, month, 10, 00, 00, 00)
-    days = get_number_of_days_for_month(year, month)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
+    def generate_date_range(start_date, end_date):
+        current_date = start_date
+        end_date = end_date
+        while current_date < end_date:
+            try:
+                valid_date = datetime(
+                    current_date.year, current_date.month, current_date.day
+                )
+                yield valid_date.date()
+            except ValueError:
+                pass
+            current_date += timedelta(days=1)
+
+    results = dao_fetch_stats_for_service_from_days(service_id, start_date)
+
+    grouped_results = defaultdict(list)
+    for row in results:
+        notification_type, status, day, count = row
+        grouped_results[day.date()].append(row)
+
+    for date in generate_date_range(start_date, end_date):
+        if date not in grouped_results:
+            grouped_results[date] = []
+
     stats = {}
-    for d in range(days):
-        new_date = start_date + timedelta(days=d)
-        if new_date <= end_date:
-            key = new_date.strftime("%Y-%m-%d")
-            stats[key] = statistics.format_statistics(
-                dao_fetch_stats_for_service_from_day(service_id, new_date)
-            )
+    for day, rows in grouped_results.items():
+        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
 
     return jsonify(stats)
 

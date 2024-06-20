@@ -427,16 +427,15 @@ def dao_fetch_todays_stats_for_service(service_id):
     )
 
 
-def dao_fetch_stats_for_service_from_day(service_id, day):
-    # today = datetime.now(timezone.utc).date()
-    # 2024-05-20
-    # day_date = datetime.strptime(day, '%Y-%m-%d').date()
-    start_date = get_midnight_in_utc(day)
-    end_date = get_midnight_in_utc(day + timedelta(days=1))
+def dao_fetch_stats_for_service_from_days(service_id, start, days):
+    start_date = get_midnight_in_utc(start)
+    end_date = get_midnight_in_utc(start + timedelta(days=days))
+
     return (
         db.session.query(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
@@ -448,21 +447,21 @@ def dao_fetch_stats_for_service_from_day(service_id, day):
         .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
         )
         .all()
     )
 
 
-def dao_fetch_stats_for_service_from_day_for_user(service_id, day, user_id):
-    # today = datetime.now(timezone.utc).date()
-    # 2024-05-20
-    # day_date = datetime.strptime(day, '%Y-%m-%d').date()
-    start_date = get_midnight_in_utc(day)
-    end_date = get_midnight_in_utc(day + timedelta(days=1))
+def dao_fetch_stats_for_service_from_days_for_user(service_id, start, days, user_id):
+    start_date = get_midnight_in_utc(start)
+    end_date = get_midnight_in_utc(start + timedelta(days=days))
+
     return (
         db.session.query(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
@@ -475,6 +474,7 @@ def dao_fetch_stats_for_service_from_day_for_user(service_id, day, user_id):
         .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
         )
         .all()
     )
