@@ -84,21 +84,21 @@ def update_fact_notification_status(process_day, notification_type, service_id):
 def fetch_notification_status_for_service_by_month(start_date, end_date, service_id):
     return (
         db.session.query(
-            func.date_trunc("month", FactNotificationStatus.local_date).label("month"),
-            FactNotificationStatus.notification_type,
-            FactNotificationStatus.notification_status,
-            func.sum(FactNotificationStatus.notification_count).label("count"),
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status.label('notification_status'),
+            func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(
-            FactNotificationStatus.service_id == service_id,
-            FactNotificationStatus.local_date >= start_date,
-            FactNotificationStatus.local_date < end_date,
-            FactNotificationStatus.key_type != KeyType.TEST,
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.key_type != KeyType.TEST,
         )
         .group_by(
-            func.date_trunc("month", FactNotificationStatus.local_date).label("month"),
-            FactNotificationStatus.notification_type,
-            FactNotificationStatus.notification_status,
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
         )
         .all()
     )

@@ -442,7 +442,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.key_type != KeyType.TEST,
             NotificationAllTimeView.created_at >= start_date,
-            NotificationAllTimeView.created_at <= end_date,
+            NotificationAllTimeView.created_at < end_date,
         )
         .group_by(
             NotificationAllTimeView.notification_type,
@@ -470,7 +470,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.key_type != KeyType.TEST,
             NotificationAllTimeView.created_at >= start_date,
-            NotificationAllTimeView.created_at <= end_date,
+            NotificationAllTimeView.created_at < end_date,
             NotificationAllTimeView.created_by_id == user_id,
         )
         .group_by(
