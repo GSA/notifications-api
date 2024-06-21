@@ -429,7 +429,7 @@ def dao_fetch_todays_stats_for_service(service_id):
 
 def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
-    end_date = get_midnight_in_utc(end_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
     return (
         db.session.query(
@@ -457,7 +457,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
     service_id, start_date, end_date, user_id
 ):
     start_date = get_midnight_in_utc(start_date)
-    end_date = get_midnight_in_utc(end_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
     return (
         db.session.query(
