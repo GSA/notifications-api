@@ -21,12 +21,12 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import dao_report_users
 from app.enums import JobStatus, KeyType, NotificationType
+from app.errors import TotalRequestsError
 from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT, hilite, scrub, utc_now
-from app.v2.errors import TotalRequestsError
 from notifications_utils.recipients import RecipientCSV
 
 
