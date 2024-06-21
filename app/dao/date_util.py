@@ -71,3 +71,25 @@ def get_calendar_year_for_datetime(start_date):
 
 def get_number_of_days_for_month(year, month):
     return calendar.monthrange(year, month)[1]
+
+
+def generate_date_range(start_date, end_date=None, days=0):
+    if end_date:
+        current_date = start_date
+        while current_date <= end_date:
+            try:
+                yield current_date.date()
+            except ValueError:
+                pass
+            current_date += timedelta(days=1)
+    elif days > 0:
+        end_date = start_date + timedelta(days=days)
+        current_date = start_date
+        while current_date < end_date:
+            try:
+                yield current_date.date()
+            except ValueError:
+                pass
+            current_date += timedelta(days=1)
+    else:
+        return "A start_date or number of days must be specified"
