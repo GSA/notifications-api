@@ -89,7 +89,7 @@ def send_sms_to_provider(notification):
                 except Exception:
                     # It is our 2facode, maybe
                     key = f"2facode-{notification.id}".replace(" ", "")
-                    recipient = redis_store.raw_get(key)
+                    recipient = redis_store.get(key)
 
                     if recipient:
                         recipient = recipient.decode("utf-8")
