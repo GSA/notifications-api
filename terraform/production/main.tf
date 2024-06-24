@@ -3,27 +3,32 @@ locals {
   cf_space_name    = "notify-production"
   env              = "production"
   app_name         = "notify-api"
-  recursive_delete = false
+  recursive_delete = false # deprecated, still used in shared
+}
+
+resource "null_resource" "prevent_destroy" {
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 module "database" {
-  source = "github.com/18f/terraform-cloudgov//database?ref=v0.7.1"
+  source = "github.com/GSA-TTS/terraform-cloudgov//database?ref=v1.0.0"
 
-  cf_org_name      = local.cf_org_name
-  cf_space_name    = local.cf_space_name
-  name             = "${local.app_name}-rds-${local.env}"
-  recursive_delete = local.recursive_delete
-  rds_plan_name    = "small-psql-redundant"
+  cf_org_name   = local.cf_org_name
+  cf_space_name = local.cf_space_name
+  name          = "${local.app_name}-rds-${local.env}"
+  rds_plan_name = "small-psql-redundant"
 }
 
 module "redis" { # default v6.2; delete after v7.0 resource is bound
-  source = "github.com/18f/terraform-cloudgov//redis?ref=v0.7.1"
+  source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
 
-  cf_org_name      = local.cf_org_name
-  cf_space_name    = local.cf_space_name
-  name             = "${local.app_name}-redis-${local.env}"
-  recursive_delete = local.recursive_delete
-  redis_plan_name  = "redis-3node-large"
+  cf_org_name     = local.cf_org_name
+  cf_space_name   = local.cf_space_name
+  name            = "${local.app_name}-redis-${local.env}"
+  redis_plan_name = "redis-3node-large"
 }
 
 module "redis-v70" {
@@ -41,12 +46,11 @@ module "redis-v70" {
 }
 
 module "csv_upload_bucket" {
-  source = "github.com/18f/terraform-cloudgov//s3?ref=v0.7.1"
+  source = "github.com/GSA-TTS/terraform-cloudgov//s3?ref=v1.0.0"
 
-  cf_org_name      = local.cf_org_name
-  cf_space_name    = local.cf_space_name
-  recursive_delete = local.recursive_delete
-  name             = "${local.app_name}-csv-upload-bucket-${local.env}"
+  cf_org_name   = local.cf_org_name
+  cf_space_name = local.cf_space_name
+  name          = "${local.app_name}-csv-upload-bucket-${local.env}"
 }
 
 module "egress-space" {
@@ -65,7 +69,6 @@ module "ses_email" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-ses-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-gov-west-1"
   email_domain        = "notify.gov"
   mail_from_subdomain = "mail"
@@ -78,7 +81,6 @@ module "sns_sms" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-sns-${local.env}"
-  recursive_delete    = local.recursive_delete
   aws_region          = "us-gov-west-1"
   monthly_spend_limit = 1000
 }
