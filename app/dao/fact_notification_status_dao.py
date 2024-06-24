@@ -86,7 +86,7 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
         db.session.query(
             func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
             NotificationAllTimeView.notification_type,
-            NotificationAllTimeView.status.label('notification_status'),
+            NotificationAllTimeView.status.label("notification_status"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .filter(

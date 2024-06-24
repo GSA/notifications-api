@@ -234,17 +234,36 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     sms_t2 = create_template(sample_service)
     email_template = create_template(sample_service, template_type=TemplateType.EMAIL)
 
-    create_ft_notification_status(datetime(2016, 6, 1), template=sms_t1)
-    create_ft_notification_status(datetime(2016, 6, 2), template=sms_t1)
-
-    create_ft_notification_status(datetime(2016, 7, 1), template=sms_t1)
-    create_ft_notification_status(datetime(2016, 7, 1), template=sms_t2)
-    create_ft_notification_status(
-        datetime(2016, 7, 1),
-        template=sms_t1,
-        notification_status=NotificationStatus.CREATED,
+    create_notification(
+        sms_t1,
+        created_at=datetime(2016, 6, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
     )
-    create_ft_notification_status(datetime(2016, 7, 1), template=email_template)
+    create_notification(
+        sms_t1,
+        created_at=datetime(2016, 6, 2, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
+    create_notification(
+        sms_t1,
+        created_at=datetime(2016, 7, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
+    create_notification(
+        sms_t2,
+        created_at=datetime(2016, 7, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
+    create_notification(
+        sms_t1,
+        created_at=datetime(2016, 7, 1, 1, 1, 0),
+        status=NotificationStatus.CREATED,
+    )
+    create_notification(
+        email_template,
+        created_at=datetime(2016, 7, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
 
     response = admin_request.get(
         "service.get_monthly_notification_stats",
@@ -275,85 +294,94 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     }
 
 
-@freeze_time("2016-06-05 12:00:00")
-def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
-    admin_request, sample_template
-):
-    create_ft_notification_status(
-        datetime(2016, 5, 1, 12),
-        template=sample_template,
-        count=1,
-    )
-    create_ft_notification_status(
-        datetime(2016, 6, 1, 12),
-        template=sample_template,
-        notification_status=NotificationStatus.CREATED,
-        count=2,
-    )  # noqa
+# Test removed because new endpoint uses the view which combines this data
+# @freeze_time("2016-06-05 12:00:00")
+# def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
+#     admin_request, sample_template
+# ):
+#     create_ft_notification_status(
+#         datetime(2016, 5, 1, 12),
+#         template=sample_template,
+#         count=1,
+#     )
+#     create_ft_notification_status(
+#         datetime(2016, 6, 1, 12),
+#         template=sample_template,
+#         notification_status=NotificationStatus.CREATED,
+#         count=2,
+#     )  # noqa
 
-    create_notification(
-        sample_template,
-        created_at=datetime(2016, 6, 5, 12),
-        status=NotificationStatus.CREATED,
-    )
-    create_notification(
-        sample_template,
-        created_at=datetime(2016, 6, 5, 12),
-        status=NotificationStatus.DELIVERED,
-    )
+#     create_notification(
+#         sample_template,
+#         created_at=datetime(2016, 6, 5, 12),
+#         status=NotificationStatus.CREATED,
+#     )
+#     create_notification(
+#         sample_template,
+#         created_at=datetime(2016, 6, 5, 12),
+#         status=NotificationStatus.DELIVERED,
+#     )
 
-    # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
-    create_notification(
-        sample_template,
-        created_at=datetime(2016, 6, 4, 12),
-        status=NotificationStatus.SENDING,
-    )
+#     # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
+#     create_notification(
+#         sample_template,
+#         created_at=datetime(2016, 6, 4, 12),
+#         status=NotificationStatus.SENDING,
+#     )
 
-    response = admin_request.get(
-        "service.get_monthly_notification_stats",
-        service_id=sample_template.service_id,
-        year=2016,
-    )
+#     response = admin_request.get(
+#         "service.get_monthly_notification_stats",
+#         service_id=sample_template.service_id,
+#         year=2016,
+#     )
 
-    assert len(response["data"]) == 6  # January to June
-    assert response["data"]["2016-05"] == {
-        NotificationType.SMS: {
-            NotificationStatus.DELIVERED: 1,
-            StatisticsType.REQUESTED: 1,
-        },
-        NotificationType.EMAIL: {},
-    }
-    assert response["data"]["2016-06"] == {
-        NotificationType.SMS: {
-            # combines the stats from the historic ft_notification_status and the current notifications
-            NotificationStatus.CREATED: 3,
-            NotificationStatus.DELIVERED: 1,
-            StatisticsType.REQUESTED: 4,
-        },
-        NotificationType.EMAIL: {},
-    }
+#     assert len(response["data"]) == 6  # January to June
+#     assert response["data"]["2016-05"] == {
+#         NotificationType.SMS: {
+#             NotificationStatus.DELIVERED: 1,
+#             StatisticsType.REQUESTED: 1,
+#         },
+#         NotificationType.EMAIL: {},
+#     }
+#     assert response["data"]["2016-06"] == {
+#         NotificationType.SMS: {
+#             # combines the stats from the historic ft_notification_status and the current notifications
+#             NotificationStatus.CREATED: 3,
+#             NotificationStatus.DELIVERED: 1,
+#             StatisticsType.REQUESTED: 4,
+#         },
+#         NotificationType.EMAIL: {},
+#     }
 
 
 def test_get_monthly_notification_stats_ignores_test_keys(
     admin_request, sample_service
 ):
-    create_ft_notification_status(
-        datetime(2016, 6, 1),
-        service=sample_service,
+    create_template(service=sample_service)
+
+    create_notification(
+        sample_service.templates[0],
+        created_at=datetime(2016, 6, 1, 1, 1, 0),
         key_type=KeyType.NORMAL,
-        count=1,
+        status=NotificationStatus.DELIVERED,
     )
-    create_ft_notification_status(
-        datetime(2016, 6, 1),
-        service=sample_service,
+    create_notification(
+        sample_service.templates[0],
+        created_at=datetime(2016, 6, 2, 1, 1, 0),
+        key_type=KeyType.NORMAL,
+        status=NotificationStatus.DELIVERED,
+    )
+    create_notification(
+        sample_service.templates[0],
+        created_at=datetime(2016, 6, 1, 1, 1, 0),
         key_type=KeyType.TEAM,
-        count=2,
+        status=NotificationStatus.DELIVERED,
     )
-    create_ft_notification_status(
-        datetime(2016, 6, 1),
-        service=sample_service,
+    create_notification(
+        sample_service.templates[0],
+        created_at=datetime(2016, 6, 1, 1, 1, 0),
         key_type=KeyType.TEST,
-        count=4,
+        status=NotificationStatus.DELIVERED,
     )
 
     response = admin_request.get(
@@ -370,21 +398,21 @@ def test_get_monthly_notification_stats_ignores_test_keys(
 
 def test_get_monthly_notification_stats_checks_dates(admin_request, sample_service):
     t = create_template(sample_service)
-    # create_ft_notification_status(datetime(2016, 3, 31), template=t, notification_status='created')
-    create_ft_notification_status(
-        datetime(2016, 4, 2),
-        template=t,
-        notification_status=NotificationStatus.SENDING,
+
+    create_notification(
+        t,
+        created_at=datetime(2016, 4, 2),
+        status=NotificationStatus.SENDING,
     )
-    create_ft_notification_status(
-        datetime(2017, 3, 31),
-        template=t,
-        notification_status=NotificationStatus.DELIVERED,
+    create_notification(
+        t,
+        created_at=datetime(2017, 3, 31),
+        status=NotificationStatus.DELIVERED,
     )
-    create_ft_notification_status(
-        datetime(2017, 4, 11),
-        template=t,
-        notification_status=NotificationStatus.PERMANENT_FAILURE,
+    create_notification(
+        t,
+        created_at=datetime(2017, 4, 11),
+        status=NotificationStatus.PERMANENT_FAILURE,
     )
 
     response = admin_request.get(
@@ -411,15 +439,15 @@ def test_get_monthly_notification_stats_only_gets_for_one_service(
 
     templates = [create_template(services[0]), create_template(services[1])]
 
-    create_ft_notification_status(
-        datetime(2016, 6, 1),
-        template=templates[0],
-        notification_status=NotificationStatus.CREATED,
+    create_notification(
+        templates[0],
+        created_at=datetime(2016, 6, 1),
+        status=NotificationStatus.CREATED,
     )
-    create_ft_notification_status(
-        datetime(2016, 6, 1),
-        template=templates[1],
-        notification_status=NotificationStatus.DELIVERED,
+    create_notification(
+        templates[1],
+        created_at=datetime(2016, 6, 1),
+        status=NotificationStatus.DELIVERED,
     )
 
     response = admin_request.get(
