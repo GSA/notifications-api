@@ -13,7 +13,7 @@ from app.dao.provider_details_dao import get_provider_details_by_notification_ty
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
-from app.utils import hilite, scrub, utc_now
+from app.utils import hilite, utc_now
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -113,15 +113,18 @@ def send_sms_to_provider(notification):
                 message_id = provider.send_sms(**send_sms_kwargs)
                 current_app.logger.info(f"got message_id {message_id}")
             except Exception as e:
-                msg = f"FAILED sending message for this recipient: {recipient} to sms"
-                current_app.logger.error(hilite(scrub(f"{msg} {e}")))
+                n = notification
+                msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                current_app.logger.error(hilite(f"{msg} {e}"))
 
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
                 raise e
             else:
-                msg = f"Sending message for this recipient: {recipient} to sms"
-                current_app.logger.info(hilite(scrub(msg)))
+                # Here we map the job_id and row number to the aws message_id
+                n = notification
+                msg = f"Send to aws for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                current_app.logger.info(hilite(msg))
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
