@@ -1,5 +1,4 @@
 import re
-import uuid
 
 import botocore
 from boto3 import Session
@@ -8,7 +7,6 @@ from flask import current_app
 
 from app import redis_store
 from app.clients import AWS_CLIENT_CONFIG
-from notifications_utils.s3 import s3upload as utils_s3upload
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
@@ -21,29 +19,9 @@ JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
 JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
 
 
-def get_csv_location(service_id, upload_id):
-    return (
-        current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
-        FILE_LOCATION_STRUCTURE.format(service_id, upload_id),
-        current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],
-        current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],
-        current_app.config["CSV_UPLOAD_BUCKET"]["region"],
-    )
-
-
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
     s3_file = get_s3_object(bucket_name, file_location, access_key, secret_key, region)
     return s3_file.get()["Body"].read().decode("utf-8")
-
-
-def get_file_from_s3(file_location):
-    return get_s3_file(
-        current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
-        file_location,
-        current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],
-        current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],
-        current_app.config["CSV_UPLOAD_BUCKET"]["region"],
-    )
 
 
 def get_s3_object(bucket_name, file_location, access_key, secret_key, region):
@@ -275,21 +253,3 @@ def remove_csv_object(object_key):
         current_app.config["CSV_UPLOAD_BUCKET"]["region"],
     )
     return obj.delete()
-
-
-def s3upload(service_id, filedata, upload_id=None):
-
-    if upload_id is None:
-        upload_id = str(uuid.uuid4())
-    bucket_name, file_location, access_key, secret_key, region = get_csv_location(
-        service_id, upload_id
-    )
-    utils_s3upload(
-        filedata=filedata["data"],
-        region=region,
-        bucket_name=bucket_name,
-        file_location=file_location,
-        access_key=access_key,
-        secret_key=secret_key,
-    )
-    return upload_id

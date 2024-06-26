@@ -1,5 +1,4 @@
 import json
-import os
 
 from flask import current_app
 from requests import HTTPError, RequestException, request
@@ -19,7 +18,6 @@ from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
-from app.dao.users_dao import dao_report_users
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
 from app.notifications.process_notifications import persist_notification
@@ -481,30 +479,3 @@ def process_incomplete_job(job_id):
             process_row(row, template, job, job.service, sender_id=sender_id)
 
     job_complete(job, resumed=True)
-
-
-@notify_celery.task(name="report-all-users")
-def report_all_users():
-    """
-    This is to support the platform admin's ability to view all user data.
-    It runs once per night and is stored in
-    bucket/service-all-users-report-{env}-notify/all-users-report-{env}.csv
-
-    When the front end is ready, it can just download from there.
-    """
-    users = dao_report_users()
-    csv_text = "NAME,EMAIL_ADDRESS,MOBILE_NUMBER,SERVICE\n"
-    for user in users:
-        row = f"{user[0]},{user[1]},{user[2]},{user[3]}\n"
-        csv_text = f"{csv_text}{row}"
-    my_env = os.getenv("NOTIFY_ENVIRONMENT")
-    report_name = f"all-users-report-{my_env}"
-    file_data = {}
-    file_data["data"] = csv_text
-    object_key = s3.FILE_LOCATION_STRUCTURE.format(report_name, report_name)
-    s3.remove_csv_object(object_key)
-    s3.s3upload(report_name, file_data, report_name)
-
-    # prove that it works
-    x = s3.get_file_from_s3(object_key)
-    print(f"!!!!!!!DOWNLOADED {x}")
