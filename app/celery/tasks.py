@@ -26,7 +26,7 @@ from app.notifications.process_notifications import persist_notification
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
-from app.utils import DATETIME_FORMAT, hilite, scrub, utc_now
+from app.utils import DATETIME_FORMAT, hilite, utc_now
 from notifications_utils.recipients import RecipientCSV
 
 
@@ -193,7 +193,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
     if not service_allowed_to_send_to(notification["to"], service, KeyType.NORMAL):
         current_app.logger.info(
             hilite(
-                scrub(f"service not allowed to send to {notification['to']}, aborting")
+                f"service not allowed to send for job_id {notification.get('job', None)}, aborting"
             )
         )
         current_app.logger.debug(
@@ -226,8 +226,11 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         )
 
         # Kick off sns process in provider_tasks.py
+        sn = saved_notification
         current_app.logger.info(
-            hilite(scrub(f"Going to deliver sms for recipient: {notification['to']}"))
+            hilite(
+                f"Deliver sms for job_id: {sn.job_id} row_number: {sn.job_row_number}"
+            )
         )
         provider_tasks.deliver_sms.apply_async(
             [str(saved_notification.id)], queue=QueueNames.SEND_SMS

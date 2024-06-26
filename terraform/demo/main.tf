@@ -1,11 +1,9 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio"
-  cf_space_name    = "notify-demo"
-  env              = "demo"
-  app_name         = "notify-api"
-  recursive_delete = false # deprecated, still used in shared modules
+  cf_org_name   = "gsa-tts-benefits-studio"
+  cf_space_name = "notify-demo"
+  env           = "demo"
+  app_name      = "notify-api"
 }
-
 
 resource "null_resource" "prevent_destroy" {
 
