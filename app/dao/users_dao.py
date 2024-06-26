@@ -4,7 +4,7 @@ from secrets import randbelow
 
 import sqlalchemy
 from flask import current_app
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import joinedload
 
 from app import db
@@ -244,3 +244,15 @@ def user_can_be_archived(user):
             return False
 
     return True
+
+
+def dao_report_users():
+    sql = """
+    select users.name, users.email_address, users.mobile_number, services.name as service_name
+    from users
+    inner join user_to_service on users.id=user_to_service.user_id
+    inner join services on services.id=user_to_service.service_id
+    where services.name not like '_archived%'
+    order by services.name asc, users.name asc
+    """
+    return db.session.execute(text(sql))

@@ -18,6 +18,7 @@ from app.dao.users_dao import (
     create_secret_code,
     create_user_code,
     dao_archive_user,
+    dao_report_users,
     get_login_gov_user,
     get_user_and_accounts,
     get_user_by_email,
@@ -665,6 +666,12 @@ def update_password(user_id):
 
     update_user_password(user, password)
     return jsonify(data=user.serialize()), 200
+
+
+@user_blueprint.route("/report-all-users", methods=["GET"])
+def report_all_users():
+    users = dao_report_users()
+    return jsonify(data=users.serialize()), 200
 
 
 @user_blueprint.route("/<uuid:user_id>/organizations-and-services", methods=["GET"])
