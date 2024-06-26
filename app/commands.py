@@ -61,7 +61,7 @@ from app.models import (
     TemplateHistory,
     User,
 )
-from app.utils import get_midnight_in_utc
+from app.utils import get_midnight_in_utc, utc_now
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
 from tests.app.db import (
@@ -327,7 +327,7 @@ def update_jobs_archived_flag(start_date, end_date):
     total_updated = 0
 
     while process_date < end_date:
-        start_time = datetime.utcnow()
+        start_time = utc_now()
         sql = """update
                     jobs set archived = true
                 where

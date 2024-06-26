@@ -1,9 +1,10 @@
 import json
-from datetime import date, datetime
+from datetime import date
 
 from flask import url_for
 from freezegun import freeze_time
 
+from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
     create_complaint,
@@ -93,7 +94,7 @@ def test_get_complaint_sets_start_and_end_date_to_today_if_not_specified(
     )
 
     dao_mock.assert_called_once_with(
-        start_date=datetime.utcnow().date(), end_date=datetime.utcnow().date()
+        start_date=utc_now().date(), end_date=utc_now().date()
     )
     assert response.status_code == 200
     assert json.loads(response.get_data(as_text=True)) == 5

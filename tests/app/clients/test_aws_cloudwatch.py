@@ -1,10 +1,8 @@
-# import pytest
-from datetime import datetime
-
 import pytest
 from flask import current_app
 
 from app import aws_cloudwatch_client
+from app.utils import utc_now
 
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
@@ -87,7 +85,7 @@ def test_check_sms_success(notify_api, mocker):
 
     message_id = "succeed"
     notification_id = "ccc"
-    created_at = datetime.utcnow()
+    created_at = utc_now()
     with notify_api.app_context():
         aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
 
@@ -109,7 +107,7 @@ def test_check_sms_failure(notify_api, mocker):
     )
     message_id = "fail"
     notification_id = "bbb"
-    created_at = datetime.utcnow()
+    created_at = utc_now()
     with notify_api.app_context():
         aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
 

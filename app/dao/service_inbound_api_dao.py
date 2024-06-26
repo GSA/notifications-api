@@ -1,15 +1,14 @@
-from datetime import datetime
-
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit, version_class
 from app.models import ServiceInboundApi
+from app.utils import utc_now
 
 
 @autocommit
 @version_class(ServiceInboundApi)
 def save_service_inbound_api(service_inbound_api):
     service_inbound_api.id = create_uuid()
-    service_inbound_api.created_at = datetime.utcnow()
+    service_inbound_api.created_at = utc_now()
     db.session.add(service_inbound_api)
 
 
@@ -23,7 +22,7 @@ def reset_service_inbound_api(
     if bearer_token:
         service_inbound_api.bearer_token = bearer_token
     service_inbound_api.updated_by_id = updated_by_id
-    service_inbound_api.updated_at = datetime.utcnow()
+    service_inbound_api.updated_at = utc_now()
 
     db.session.add(service_inbound_api)
 

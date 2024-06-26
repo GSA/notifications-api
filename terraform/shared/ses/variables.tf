@@ -13,12 +13,6 @@ variable "name" {
   description = "name of the service instance"
 }
 
-variable "recursive_delete" {
-  type        = bool
-  description = "when true, deletes service bindings attached to the resource (not recommended for production)"
-  default     = false
-}
-
 variable "aws_region" {
   type        = string
   description = "AWS region the SES instance is in"

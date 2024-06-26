@@ -7,6 +7,7 @@ from app import db
 from app.dao.dao_utils import autocommit
 from app.enums import NotificationType
 from app.models import FactBilling, ProviderDetails, ProviderDetailsHistory, User
+from app.utils import utc_now
 
 
 def get_provider_details_by_id(provider_details_id):
@@ -66,7 +67,7 @@ def _get_sms_providers_for_update(time_threshold):
 
     # if something updated recently, don't update again. If the updated_at is null, treat it as min time
     if any(
-        (provider.updated_at or datetime.min) > datetime.utcnow() - time_threshold
+        (provider.updated_at or datetime.min) > utc_now() - time_threshold
         for provider in q
     ):
         current_app.logger.info(
@@ -102,7 +103,7 @@ def _update_provider_details_without_commit(provider_details):
     Doesn't commit, for when you need to control the database transaction manually
     """
     provider_details.version += 1
-    provider_details.updated_at = datetime.utcnow()
+    provider_details.updated_at = utc_now()
     history = ProviderDetailsHistory.from_original(provider_details)
     db.session.add(provider_details)
     db.session.add(history)
@@ -111,7 +112,7 @@ def _update_provider_details_without_commit(provider_details):
 def dao_get_provider_stats():
     # this query does not include the current day since the task to populate ft_billing runs overnight
 
-    current_datetime = datetime.utcnow()
+    current_datetime = utc_now()
     first_day_of_the_month = current_datetime.date().replace(day=1)
 
     subquery = (

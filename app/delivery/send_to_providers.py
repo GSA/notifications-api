@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from urllib import parse
 
 from cachetools import TTLCache, cached
@@ -14,6 +13,7 @@ from app.dao.provider_details_dao import get_provider_details_by_notification_ty
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
+from app.utils import hilite, utc_now
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -89,7 +89,7 @@ def send_sms_to_provider(notification):
                 except Exception:
                     # It is our 2facode, maybe
                     key = f"2facode-{notification.id}".replace(" ", "")
-                    recipient = redis_store.raw_get(key)
+                    recipient = redis_store.get(key)
 
                     if recipient:
                         recipient = recipient.decode("utf-8")
@@ -109,15 +109,22 @@ def send_sms_to_provider(notification):
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-                current_app.logger.info("sending to sms")
+
                 message_id = provider.send_sms(**send_sms_kwargs)
                 current_app.logger.info(f"got message_id {message_id}")
             except Exception as e:
-                current_app.logger.error(e)
+                n = notification
+                msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                current_app.logger.error(hilite(f"{msg} {e}"))
+
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)
                 raise e
             else:
+                # Here we map the job_id and row number to the aws message_id
+                n = notification
+                msg = f"Send to aws for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                current_app.logger.info(hilite(msg))
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
@@ -177,7 +184,7 @@ def send_email_to_provider(notification):
 
 
 def update_notification_to_sending(notification, provider):
-    notification.sent_at = datetime.utcnow()
+    notification.sent_at = utc_now()
     notification.sent_by = provider.name
     if notification.status not in NotificationStatus.completed_types():
         notification.status = NotificationStatus.SENDING

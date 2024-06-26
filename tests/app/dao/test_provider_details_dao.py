@@ -16,6 +16,7 @@ from app.dao.provider_details_dao import (
 )
 from app.enums import NotificationType, TemplateType
 from app.models import ProviderDetails, ProviderDetailsHistory
+from app.utils import utc_now
 from tests.app.db import create_ft_billing, create_service, create_template
 from tests.conftest import set_config
 
@@ -158,7 +159,7 @@ def test_adjust_provider_priority_sets_priority(
 
     _adjust_provider_priority(sns_provider, 50)
 
-    assert sns_provider.updated_at == datetime.utcnow()
+    assert sns_provider.updated_at == utc_now()
     assert sns_provider.created_by.id == notify_user.id
     assert sns_provider.priority == 50
 

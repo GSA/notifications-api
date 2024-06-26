@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +13,7 @@ from app.dao.api_key_dao import (
 )
 from app.enums import KeyType
 from app.models import ApiKey
+from app.utils import utc_now
 
 
 def test_save_api_key_should_create_new_api_key_and_history(sample_service):
@@ -43,7 +44,7 @@ def test_expire_api_key_should_update_the_api_key_and_create_history_record(
     expire_api_key(service_id=sample_api_key.service_id, api_key_id=sample_api_key.id)
     all_api_keys = get_model_api_keys(service_id=sample_api_key.service_id)
     assert len(all_api_keys) == 1
-    assert all_api_keys[0].expiry_date <= datetime.utcnow()
+    assert all_api_keys[0].expiry_date <= utc_now()
     assert all_api_keys[0].secret == sample_api_key.secret
     assert all_api_keys[0].id == sample_api_key.id
     assert all_api_keys[0].service_id == sample_api_key.service_id
@@ -107,7 +108,7 @@ def test_save_api_key_can_create_key_with_same_name_if_other_is_expired(sample_s
             "name": "normal api key",
             "created_by": sample_service.created_by,
             "key_type": KeyType.NORMAL,
-            "expiry_date": datetime.utcnow(),
+            "expiry_date": utc_now(),
         }
     )
     save_model_api_key(expired_api_key)
@@ -153,7 +154,7 @@ def test_should_not_return_revoked_api_keys_older_than_7_days(
             "name": sample_service.name,
             "created_by": sample_service.created_by,
             "key_type": KeyType.NORMAL,
-            "expiry_date": datetime.utcnow() - timedelta(days=days_old),
+            "expiry_date": utc_now() - timedelta(days=days_old),
         }
     )
     save_model_api_key(expired_api_key)

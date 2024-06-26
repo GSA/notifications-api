@@ -1,16 +1,15 @@
-from datetime import datetime
-
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit, version_class
 from app.enums import CallbackType
 from app.models import ServiceCallbackApi
+from app.utils import utc_now
 
 
 @autocommit
 @version_class(ServiceCallbackApi)
 def save_service_callback_api(service_callback_api):
     service_callback_api.id = create_uuid()
-    service_callback_api.created_at = datetime.utcnow()
+    service_callback_api.created_at = utc_now()
     db.session.add(service_callback_api)
 
 
@@ -24,7 +23,7 @@ def reset_service_callback_api(
     if bearer_token:
         service_callback_api.bearer_token = bearer_token
     service_callback_api.updated_by_id = updated_by_id
-    service_callback_api.updated_at = datetime.utcnow()
+    service_callback_api.updated_at = utc_now()
 
     db.session.add(service_callback_api)
 

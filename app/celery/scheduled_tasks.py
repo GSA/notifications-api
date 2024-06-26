@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import between
@@ -31,6 +31,7 @@ from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
+from app.utils import utc_now
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
@@ -52,11 +53,11 @@ def run_scheduled_jobs():
 @notify_celery.task(name="delete-verify-codes")
 def delete_verify_codes():
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         deleted = delete_codes_older_created_more_than_a_day_ago()
         current_app.logger.info(
             "Delete job started {} finished {} deleted {} verify codes".format(
-                start, datetime.utcnow(), deleted
+                start, utc_now(), deleted
             )
         )
     except SQLAlchemyError:
@@ -67,20 +68,20 @@ def delete_verify_codes():
 @notify_celery.task(name="expire-or-delete-invitations")
 def expire_or_delete_invitations():
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         expired_invites = expire_invitations_created_more_than_two_days_ago()
         current_app.logger.info(
-            f"Expire job started {start} finished {datetime.utcnow()} expired {expired_invites} invitations"
+            f"Expire job started {start} finished {utc_now()} expired {expired_invites} invitations"
         )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to expire invitations")
         raise
 
     try:
-        start = datetime.utcnow()
+        start = utc_now()
         deleted_invites = delete_org_invitations_created_more_than_two_days_ago()
         current_app.logger.info(
-            f"Delete job started {start} finished {datetime.utcnow()} deleted {deleted_invites} invitations"
+            f"Delete job started {start} finished {utc_now()} deleted {deleted_invites} invitations"
         )
     except SQLAlchemyError:
         current_app.logger.exception("Failed to delete invitations")
@@ -101,8 +102,8 @@ def check_job_status():
         update the job_status to 'error'
         process the rows in the csv that are missing (in another task) just do the check here.
     """
-    thirty_minutes_ago = datetime.utcnow() - timedelta(minutes=30)
-    thirty_five_minutes_ago = datetime.utcnow() - timedelta(minutes=35)
+    thirty_minutes_ago = utc_now() - timedelta(minutes=30)
+    thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
     incomplete_in_progress_jobs = Job.query.filter(
         Job.job_status == JobStatus.IN_PROGRESS,
@@ -179,8 +180,8 @@ def check_for_missing_rows_in_completed_jobs():
     name="check-for-services-with-high-failure-rates-or-sending-to-tv-numbers"
 )
 def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
-    start_date = datetime.utcnow() - timedelta(days=1)
-    end_date = datetime.utcnow()
+    start_date = utc_now() - timedelta(days=1)
+    end_date = utc_now()
     message = ""
 
     services_with_failures = dao_find_services_with_high_failure_rates(

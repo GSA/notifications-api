@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from flask import current_app
 
@@ -11,8 +10,9 @@ from app.dao.notifications_dao import (
     dao_delete_notifications_by_id,
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
+from app.errors import BadRequestError
 from app.models import Notification
-from app.v2.errors import BadRequestError
+from app.utils import hilite, utc_now
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
@@ -77,7 +77,7 @@ def persist_notification(
     document_download_count=None,
     updated_at=None,
 ):
-    notification_created_at = created_at or datetime.utcnow()
+    notification_created_at = created_at or utc_now()
     if not notification_id:
         notification_id = uuid.uuid4()
 
@@ -109,6 +109,11 @@ def persist_notification(
     if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
+        )
+        current_app.logger.info(
+            hilite(
+                f"Persisting notification with job_id: {job_id} row_number: {job_row_number}"
+            )
         )
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient

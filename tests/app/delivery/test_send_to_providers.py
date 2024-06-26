@@ -1,6 +1,5 @@
 import json
 from collections import namedtuple
-from datetime import datetime
 from unittest.mock import ANY
 
 import pytest
@@ -18,6 +17,7 @@ from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.models import EmailBranding, Notification
 from app.serialised_models import SerialisedService
+from app.utils import utc_now
 from tests.app.db import (
     create_email_branding,
     create_notification,
@@ -105,7 +105,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     notification = Notification.query.filter_by(id=db_notification.id).one()
 
     assert notification.status == NotificationStatus.SENDING
-    assert notification.sent_at <= datetime.utcnow()
+    assert notification.sent_at <= utc_now()
     assert notification.sent_by == "sns"
     assert notification.billable_units == 1
     assert notification.personalisation == {"name": "Jo"}
@@ -147,7 +147,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
 
     notification = Notification.query.filter_by(id=db_notification.id).one()
     assert notification.status == NotificationStatus.SENDING
-    assert notification.sent_at <= datetime.utcnow()
+    assert notification.sent_at <= utc_now()
     assert notification.sent_by == "ses"
     assert notification.personalisation == {"name": "Jo"}
 
