@@ -11,7 +11,7 @@ applications:
 
     services:
       - notify-api-rds-((env))
-      - notify-api-redis-v70-((env))
+      - notify-api-redis-((env))
       - notify-api-csv-upload-bucket-((env))
       - name: notify-api-ses-((env))
         parameters:
