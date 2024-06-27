@@ -30,20 +30,6 @@ module "redis" { # default v6.2; delete after v7.0 resource is bound
   redis_plan_name = "redis-3node-large"
 }
 
-module "redis-v70" {
-  source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
-
-  cf_org_name     = local.cf_org_name
-  cf_space_name   = local.cf_space_name
-  name            = "${local.app_name}-redis-v70-${local.env}"
-  redis_plan_name = "redis-dev"
-  json_params = jsonencode(
-    {
-      "engineVersion" : "7.0",
-    }
-  )
-}
-
 module "csv_upload_bucket" {
   source = "github.com/GSA-TTS/terraform-cloudgov//s3?ref=v1.0.0"
 
