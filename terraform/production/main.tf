@@ -21,15 +21,6 @@ module "database" {
   rds_plan_name = "small-psql-redundant"
 }
 
-module "redis" { # default v6.2; delete after v7.0 resource is bound
-  source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
-
-  cf_org_name     = local.cf_org_name
-  cf_space_name   = local.cf_space_name
-  name            = "${local.app_name}-redis-${local.env}"
-  redis_plan_name = "redis-3node-large"
-}
-
 module "redis-v70" {
   source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
 
