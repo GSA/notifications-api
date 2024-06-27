@@ -13,9 +13,9 @@ from app.enums import (
     TemplateProcessType,
     TemplateType,
 )
+from app.errors import BadRequestError
 from app.models import Notification, ServiceGuestList
 from app.service.send_notification import send_one_off_notification
-from app.v2.errors import BadRequestError
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.recipients import InvalidPhoneError
 from tests.app.db import (

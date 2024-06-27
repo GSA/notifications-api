@@ -6,12 +6,12 @@ from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
+from app.errors import BadRequestError, RateLimitError, TotalRequestsError
 from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
-from app.v2.errors import BadRequestError, RateLimitError, TotalRequestsError
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     rate_limit_cache_key,

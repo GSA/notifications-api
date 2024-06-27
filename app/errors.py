@@ -5,6 +5,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.authentication.auth import AuthError
+from app.enums import KeyType
 from app.exceptions import ArchiveValidationError
 from notifications_utils.recipients import InvalidEmailError
 
@@ -113,3 +114,45 @@ def register_errors(blueprint):
         e = getattr(e, "original_exception", e)
         current_app.logger.exception(e)
         return jsonify(result="error", message="Internal server error"), 500
+
+
+class TooManyRequestsError(InvalidRequest):
+    status_code = 429
+    message_template = "Exceeded send limits ({}) for today"
+
+    def __init__(self, sending_limit):
+        self.message = self.message_template.format(sending_limit)
+
+
+class TotalRequestsError(InvalidRequest):
+    status_code = 429
+    message_template = "Exceeded total application limits ({}) for today"
+
+    def __init__(self, sending_limit):
+        self.message = self.message_template.format(sending_limit)
+
+
+class RateLimitError(InvalidRequest):
+    status_code = 429
+    message_template = (
+        "Exceeded rate limit for key type {} of {} requests per {} seconds"
+    )
+
+    def __init__(self, sending_limit, interval, key_type):
+        # normal keys are spoken of as "live" in the documentation
+        # so using this in the error messaging
+        if key_type == KeyType.NORMAL:
+            key_type = "live"
+
+        self.message = self.message_template.format(
+            key_type.upper(), sending_limit, interval
+        )
+
+
+class BadRequestError(InvalidRequest):
+    message = "An error occurred"
+
+    def __init__(self, fields=None, message=None, status_code=400):
+        self.status_code = status_code
+        self.fields = fields or []
+        self.message = message if message else self.message
