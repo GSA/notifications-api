@@ -54,7 +54,7 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 
 
 .PHONY: dead-code
-dead-code:
+dead-code: ## Use 60 to look for suspected dead code
 	poetry run vulture ./app --min-confidence=100
 
 .PHONY: run-celery-beat

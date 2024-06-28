@@ -9,10 +9,9 @@ from app.enums import KeyType
 from app.exceptions import ArchiveValidationError
 from notifications_utils.recipients import InvalidEmailError
 
-
-class VirusScanError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
+# class VirusScanError(Exception):
+#     def __init__(self, message):
+#         super().__init__(message)
 
 
 class InvalidRequest(Exception):

@@ -1,4 +1,4 @@
-from datetime import timedelta
+# from datetime import timedelta
 
 from flask import Blueprint, jsonify, request
 
@@ -8,7 +8,7 @@ from app.errors import InvalidRequest
 from app.notifications.sns_handlers import sns_notification_handler
 
 ses_callback_blueprint = Blueprint("notifications_ses_callback", __name__)
-DEFAULT_MAX_AGE = timedelta(days=10000)
+# DEFAULT_MAX_AGE = timedelta(days=10000)
 
 
 # 400 counts as a permanent failure so SNS will not retry.
