@@ -33,31 +33,44 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     service_1 = create_service(service_name="service_1")
     service_2 = create_service(service_name="service_2")
 
-    create_ft_notification_status(
-        date(2018, 1, 1), NotificationType.SMS, service_1, count=4
-    )
-    create_ft_notification_status(
-        date(2018, 1, 2), NotificationType.SMS, service_1, count=10
-    )
-    create_ft_notification_status(
-        date(2018, 1, 2),
-        NotificationType.SMS,
-        service_1,
-        notification_status=NotificationStatus.CREATED,
-    )
-    create_ft_notification_status(date(2018, 1, 3), NotificationType.EMAIL, service_1)
+    create_template(service=service_1)
+    create_template(service=service_1, template_type=TemplateType.EMAIL)
+    # not the service being tested
+    create_template(service=service_2)
 
-    create_ft_notification_status(date(2018, 2, 2), NotificationType.SMS, service_1)
+    # loop messages for the month
+    for x in range(0, 14):
+        create_notification(
+            service_1.templates[0],
+            created_at=datetime(2018, 1, 1, 1, x, 0),
+            status=NotificationStatus.DELIVERED,
+        )
+    create_notification(
+        service_1.templates[0], created_at=datetime(2018, 1, 1, 1, 1, 0)
+    )
+    create_notification(
+        service_1.templates[1],
+        created_at=datetime(2018, 1, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
+    create_notification(
+        service_1.templates[0],
+        created_at=datetime(2018, 2, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
 
-    # not included - too early
-    create_ft_notification_status(date(2017, 12, 31), NotificationType.SMS, service_1)
-    # not included - too late
-    create_ft_notification_status(date(2017, 3, 1), NotificationType.SMS, service_1)
-    # not included - wrong service
-    create_ft_notification_status(date(2018, 1, 3), NotificationType.SMS, service_2)
-    # not included - test keys
-    create_ft_notification_status(
-        date(2018, 1, 3), NotificationType.SMS, service_1, key_type=KeyType.TEST
+    # not the right month
+    create_notification(
+        service_1.templates[0],
+        created_at=datetime(2018, 4, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
+    )
+
+    # not the right service
+    create_notification(
+        service_2.templates[0],
+        created_at=datetime(2018, 2, 1, 1, 1, 0),
+        status=NotificationStatus.DELIVERED,
     )
 
     results = sorted(

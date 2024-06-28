@@ -27,6 +27,7 @@ from app.models import (
     InvitedUser,
     Job,
     Notification,
+    NotificationAllTimeView,
     NotificationHistory,
     Organization,
     Permission,
@@ -426,6 +427,61 @@ def dao_fetch_todays_stats_for_service(service_id):
     )
 
 
+def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
+    start_date = get_midnight_in_utc(start_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
+
+    return (
+        db.session.query(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+        )
+        .group_by(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
+        )
+        .all()
+    )
+
+
+def dao_fetch_stats_for_service_from_days_for_user(
+    service_id, start_date, end_date, user_id
+):
+    start_date = get_midnight_in_utc(start_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
+
+    return (
+        db.session.query(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.created_by_id == user_id,
+        )
+        .group_by(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
+        )
+        .all()
+    )
+
+
 def dao_fetch_todays_stats_for_all_services(
     include_from_test_key=True, only_active=True
 ):
@@ -607,3 +663,29 @@ def get_live_services_with_organization():
     )
 
     return query.all()
+
+
+def fetch_notification_stats_for_service_by_month_by_user(
+    start_date, end_date, service_id, user_id
+):
+    return (
+        db.session.query(
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            (NotificationAllTimeView.status).label("notification_status"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_by_id == user_id,
+        )
+        .group_by(
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+        )
+        .all()
+    )

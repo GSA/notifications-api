@@ -13,6 +13,7 @@ from alembic import op
 from sqlalchemy import text
 
 from app.dao.date_util import get_current_calendar_year_start_year
+from app.utils import utc_now
 
 revision = "0139_migrate_sms_allowance_data"
 down_revision = "0138_sms_sender_nullable"
@@ -34,7 +35,7 @@ def upgrade():
     input_params = {
         "current_year": current_year,
         "default_limit": default_limit,
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
     }
     insert_row_if_not_exist = """
         INSERT INTO annual_billing

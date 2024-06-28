@@ -12,6 +12,8 @@ from alembic import op
 from flask import current_app
 from sqlalchemy import text
 
+from app.utils import utc_now
+
 revision = "0294_add_verify_reply_to"
 down_revision = "0293_drop_complaint_fk"
 
@@ -58,7 +60,7 @@ def upgrade():
         "template_id": email_template_id,
         "template_name": email_template_name,
         "template_type": "email",
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
         "content": email_template_content,
         "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
         "subject": email_template_subject,

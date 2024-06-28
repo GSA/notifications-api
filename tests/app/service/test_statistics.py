@@ -301,12 +301,15 @@ def test_add_monthly_notification_status_stats():
     data = create_empty_monthly_notification_status_stats_dict(2018)
     # this data won't be affected
     data["2018-05"][NotificationType.EMAIL][NotificationStatus.SENDING] = 32
+    data["2018-05"][NotificationType.EMAIL][StatisticsType.REQUESTED] = 32
 
     # this data will get combined with the 8 from row_data
     data["2018-05"][NotificationType.SMS][NotificationStatus.SENDING] = 16
+    data["2018-05"][NotificationType.SMS][StatisticsType.REQUESTED] = 16
 
     add_monthly_notification_status_stats(data, rows)
     # first 3 months are empty
+
     assert data == {
         "2018-01": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
         "2018-02": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
@@ -315,12 +318,22 @@ def test_add_monthly_notification_status_stats():
             NotificationType.SMS: {
                 NotificationStatus.SENDING: 1,
                 NotificationStatus.DELIVERED: 2,
+                StatisticsType.REQUESTED: 3,
             },
-            NotificationType.EMAIL: {NotificationStatus.SENDING: 4},
+            NotificationType.EMAIL: {
+                NotificationStatus.SENDING: 4,
+                StatisticsType.REQUESTED: 4,
+            },
         },
         "2018-05": {
-            NotificationType.SMS: {NotificationStatus.SENDING: 24},
-            NotificationType.EMAIL: {NotificationStatus.SENDING: 32},
+            NotificationType.SMS: {
+                NotificationStatus.SENDING: 24,
+                StatisticsType.REQUESTED: 24,
+            },
+            NotificationType.EMAIL: {
+                NotificationStatus.SENDING: 32,
+                StatisticsType.REQUESTED: 32,
+            },
         },
         "2018-06": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
     }

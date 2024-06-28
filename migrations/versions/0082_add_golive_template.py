@@ -14,6 +14,8 @@ from alembic import op
 from flask import current_app
 from sqlalchemy import text
 
+from app.utils import utc_now
+
 revision = "0082_add_go_live_template"
 down_revision = "0081_noti_status_as_enum"
 
@@ -89,7 +91,7 @@ GOV.UK Notify team
         "template_id": template_id,
         "template_name": template_name,
         "template_type": "email",
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
         "content": template_content,
         "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
         "subject": template_subject,

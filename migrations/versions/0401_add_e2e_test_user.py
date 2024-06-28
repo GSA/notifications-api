@@ -16,6 +16,7 @@ from alembic import op
 from app import db
 from app.dao.users_dao import get_user_by_email
 from app.models import User
+from app.utils import utc_now
 
 revision = "0401_add_e2e_test_user"
 down_revision = "0400_add_total_message_limit"
@@ -32,11 +33,11 @@ def upgrade():
         "password": password,
         "mobile_number": "+12025555555",
         "state": "active",
-        "created_at": datetime.datetime.utcnow(),
-        "password_changed_at": datetime.datetime.utcnow(),
+        "created_at": utc_now(),
+        "password_changed_at": utc_now(),
         "failed_login_count": 0,
         "platform_admin": "f",
-        "email_access_validated_at": datetime.datetime.utcnow(),
+        "email_access_validated_at": utc_now(),
     }
     conn = op.get_bind()
     insert_sql = """
