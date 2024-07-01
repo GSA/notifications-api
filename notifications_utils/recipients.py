@@ -603,7 +603,7 @@ def validate_us_phone_number(number):
 
 
 def show_mangled_number_clues(number):
-    print(f"ORIG {number}")
+
     translator = {
         "1": "X",
         "2": "X",
