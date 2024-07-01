@@ -589,6 +589,17 @@ def process_row_from_job(job_id, job_row_number):
             )
 
 
+@notify_command(name="download-csv-file-by-name")
+@click.option("-f", "--csv_filename", required=True, help="csv file name")
+def download_csv_file_by_name(csv_filename):
+
+    bucket_name = getenv("CSV_BUCKET_NAME")
+    access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
+    secret = getenv("CSV_AWS_SECRET_ACCESS_KEY")
+    region = getenv("CSV_AWS_REGION")
+    print(s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region))
+
+
 @notify_command(name="populate-annual-billing-with-the-previous-years-allowance")
 @click.option(
     "-y",

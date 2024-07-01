@@ -602,12 +602,34 @@ def validate_us_phone_number(number):
         raise InvalidPhoneError(exc._msg) from exc
 
 
+def show_mangled_number_clues(number):
+    print(f"ORIG {number}")
+    translator = {
+        "1": "X",
+        "2": "X",
+        "3": "X",
+        "4": "X",
+        "5": "X",
+        "6": "X",
+        "7": "X",
+        "8": "X",
+        "9": "X",
+        "0": "X",
+    }
+    for key in translator:
+        number = number.replace(key, translator[key])
+
+    return number
+
+
 def validate_phone_number(number, international=False):
     if (not international) or is_us_phone_number(number):
+        print("FAST EXIT")
         return validate_us_phone_number(number)
 
     try:
         parsed = phonenumbers.parse(number, None)
+        print("PARSED")
         if parsed.country_code != 1:
             raise InvalidPhoneError("Invalid country code")
         number = f"{parsed.country_code}{parsed.national_number}"
@@ -619,7 +641,11 @@ def validate_phone_number(number, international=False):
     except NumberParseException as exc:
         if exc._msg == "Could not interpret numbers after plus-sign.":
             raise InvalidPhoneError("Not a valid country prefix") from exc
-        raise InvalidPhoneError(exc._msg) from exc
+        if not isinstance(number, str):
+            raise InvalidPhoneError(f"Number must be string, not type {type(number)}")
+        raise InvalidPhoneError(
+            f"Invalid phone number looks like {show_mangled_number_clues(number)} {exc._msg}"
+        )
 
 
 validate_and_format_phone_number = validate_phone_number
