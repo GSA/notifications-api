@@ -624,12 +624,10 @@ def show_mangled_number_clues(number):
 
 def validate_phone_number(number, international=False):
     if (not international) or is_us_phone_number(number):
-        print("FAST EXIT")
         return validate_us_phone_number(number)
 
     try:
         parsed = phonenumbers.parse(number, None)
-        print("PARSED")
         if parsed.country_code != 1:
             raise InvalidPhoneError("Invalid country code")
         number = f"{parsed.country_code}{parsed.national_number}"
