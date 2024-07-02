@@ -9,6 +9,7 @@ from notifications_utils.recipients import (
     get_international_phone_info,
     international_phone_info,
     is_us_phone_number,
+    show_mangled_number_clues,
     try_validate_and_format_phone_number,
     validate_and_format_phone_number,
     validate_email_address,
@@ -322,6 +323,11 @@ def test_phone_number_rejects_invalid_international_values(phone_number, error_m
     with pytest.raises(InvalidPhoneError) as e:
         validate_phone_number(phone_number, international=True)
     assert error_message == str(e.value)
+
+
+def test_show_mangled_number_clues():
+    x = show_mangled_number_clues("848!!-202?-2020$$")
+    assert x == "XXX!!-XXX?-XXXX$$"
 
 
 @pytest.mark.parametrize("email_address", valid_email_addresses)
