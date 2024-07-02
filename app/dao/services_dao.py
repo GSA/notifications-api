@@ -702,9 +702,7 @@ def get_specific_days_stats(results, start_date, days=None, end_date=None):
     else:
         raise ValueError("Either days or end_date must be set.")
 
-    grouped_results = {
-        date: [] for date in gen_range
-    } | {
+    grouped_results = {date: [] for date in gen_range} | {
         day.date(): [notification_type, status, day, count]
         for notification_type, status, day, count in results
     }

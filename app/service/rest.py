@@ -17,10 +17,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import (
-    get_calendar_year,
-    get_month_start_and_end_date_in_utc,
-)
+from app.dao.date_util import get_calendar_year, get_month_start_and_end_date_in_utc
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
