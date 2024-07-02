@@ -38,6 +38,11 @@
   - [Celery scheduled tasks](#celery-scheduled-tasks)
 - [Notify.gov](#notifygov)
   - [System Description](#system-description)
+- [Pull Requests](#pull-requests)
+  - [Getting Started](#getting-started)
+  - [Description](#description)
+  - [TODO (optional)](#todo-(optional))
+  - [Security Considerations](#security-considerations)
 - [Code Reviews](#code-reviews)
   - [For the reviewer](#for-the-reviewer)
   - [For the author](#for-the-author)
@@ -820,6 +825,97 @@ Notify.gov also provisions and uses two AWS services via a [supplemental service
 For further details of the system and how it connects to supporting services, see the [application boundary diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
 
 
+Pull Requests
+=============
+
+Changes are made to our applications via pull requests, which show a diff
+(the before and after state of all proposed changes in the code) of of the work
+done for that particular branch.  We use pull requests as the basis for working
+on Notify.gov and modifying the application over time for improvements, bug
+fixes, new features, and more.
+
+There are several things that make for a good and complete pull request:
+
+* An appropriate and descriptive title
+* A detailed description of what's being changed, including any outstanding work
+  (TODOs)
+* A list of security considerations, which contains information about anything
+  we need to be mindful of from a security compliance perspective
+* The proper labels, assignee, code reviewer, and other project metadata set
+
+
+### Getting Started
+
+When you first open a pull request, start off by making sure the metadata for it
+is in place:
+
+* Provide an appropriate and descriptive title for the pull request
+* Link the pull request to its corresponding issue (must be done after creating
+  the pull request itself)
+* Assign yourself as the author
+* Attach the appropriate labels to it
+* Set it to be on the Notify.gov project board
+* Select one or more reviewers from the team or mark the pull request as a draft
+  depending on its current state
+   * If the pull request is a draft, please be sure to add reviewers once it is
+     ready for review and mark it ready for review
+
+### Description
+
+Please enter a clear description about your proposed changes and what the
+expected outcome(s) is/are from there.  If there are complex implementation
+details within the changes, this is a great place to explain those details using
+plain language.
+
+This should include:
+
+* Links to issues that this PR addresses (especially if more than one)
+* Screenshots or screen captures of any visible changes, especially for UI work
+* Dependency changes
+
+If there are any caveats, known issues, follow-up items, etc., make a quick note
+of them here as well, though more details are probably warranted in the issue
+itself in this case.
+
+### TODO (optional)
+
+If you're opening a draft PR, it might be helpful to list any outstanding work,
+especially if you're asking folks to take a look before it's ready for full
+review.  In this case, create a small checklist with the outstanding items:
+
+* [ ] TODO item 1
+* [ ] TODO item 2
+* [ ] TODO item ...
+
+### Security Considerations
+
+Please think about the security compliance aspect of your changes and what the
+potential impacts might be.
+
+**NOTE:  Please be mindful of sharing sensitive information here!  If you're not sure of what to write, please ask the team first before writing anything here.**
+
+Relevant details could include (and are not limited to) the following:
+
+* Handling secrets/credential management (or specifically calling out that there
+  is nothing to handle)
+* Any adjustments to the flow of data in and out the system, or even within it
+* Connecting or disconnecting any external services to the application
+* Handling of any sensitive information, such as PII
+* Handling of information within log statements or other application monitoring
+  services/hooks
+* The inclusion of a new external dependency or the removal of an existing one
+* ... (anything else relevant from a security compliance perspective)
+
+There are some cases where there are no security considerations to be had, e.g.,
+updating our documentation with publicly available information.  In those cases
+it is fine to simply put something like this:
+
+* None; this is a documentation update with publicly available information.
+
+This way it shows that we still gave this section consideration and that nothing
+happens to apply in this scenario.
+
+
 Code Reviews
 ============
 
@@ -859,19 +955,19 @@ behavior and lack of professionalism is not acceptable or tolerated.**
 When performing a code review, it is helpful to keep the following guidelines in
 mind:
 
-- Be on the lookout for any sensitive information and/or leaked credentials,
+* Be on the lookout for any sensitive information and/or leaked credentials,
   secrets, PII, etc.
-- Ask and call out things that aren't clear to you; it never hurts to double
+* Ask and call out things that aren't clear to you; it never hurts to double
   check your understanding of something!
-- Check that things are named descriptively and appropriately and call out
+* Check that things are named descriptively and appropriately and call out
   anything that is not.
-- Check that comments are present for complex areas when needed.
-- Make sure the pull request itself is properly prepared - it has a clear
+* Check that comments are present for complex areas when needed.
+* Make sure the pull request itself is properly prepared - it has a clear
   description, calls out security concerns, and has the necessary labels, flags,
   issue link, etc., set on it.
-- Do not be shy about using the suggested changes feature in GitHub pull request
+* Do not be shy about using the suggested changes feature in GitHub pull request
   comments; this can help save a lot of time!
-- Do not be shy about marking a review with the `Request Changes` status - yes,
+* Do not be shy about marking a review with the `Request Changes` status - yes,
   it looks big and red when it shows up, but this is completely fine and not to
   be taken as a personal mark against the author(s) of the pull request!
 
@@ -899,14 +995,14 @@ behavior and lack of professionalism is not acceptable or tolerated.**
 
 When going over a review, it may be helpful to keep these perspectives in mind:
 
-- Approach the review with an open mind, curiosity, and appreciation.
-- If anything the reviewer(s) mentions is unclear to you, please ask for
+* Approach the review with an open mind, curiosity, and appreciation.
+* If anything the reviewer(s) mentions is unclear to you, please ask for
   clarification and engage them in further dialogue!
-- If you disagree with a suggestion or request, please say so and engage in an
+* If you disagree with a suggestion or request, please say so and engage in an
   open and respecful dialogue to come to a mutual understanding of what the
   appropriate next step(S) should be - accept the change, reject the change,
   take a different path entirely, etc.
-- If there are no issues with any suggested edits or requested changes, make
+* If there are no issues with any suggested edits or requested changes, make
   the necessary adjustments and let the reviewer(s) know when the work is ready
   for review again.
 
