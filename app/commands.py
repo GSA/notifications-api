@@ -593,10 +593,10 @@ def process_row_from_job(job_id, job_row_number):
 @click.option("-f", "--csv_filename", required=True, help="csv file name")
 def download_csv_file_by_name(csv_filename):
 
-    bucket_name = getenv("CSV_BUCKET_NAME")
-    access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
-    secret = getenv("CSV_AWS_SECRET_ACCESS_KEY")
-    region = getenv("CSV_AWS_REGION")
+    bucket_name = (current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],)
+    access_key = (current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],)
+    secret = (current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],)
+    region = (current_app.config["CSV_UPLOAD_BUCKET"]["region"],)
     print(s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region))
 
 
@@ -865,10 +865,11 @@ def promote_user_to_platform_admin(user_email_address):
 
 @notify_command(name="purge-csv-bucket")
 def purge_csv_bucket():
-    bucket_name = getenv("CSV_BUCKET_NAME")
-    access_key = getenv("CSV_AWS_ACCESS_KEY_ID")
-    secret = getenv("CSV_AWS_SECRET_ACCESS_KEY")
-    region = getenv("CSV_AWS_REGION")
+    bucket_name = (current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],)
+    access_key = (current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],)
+    secret = (current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],)
+    region = (current_app.config["CSV_UPLOAD_BUCKET"]["region"],)
+
     print("ABOUT TO RUN PURGE CSV BUCKET")
     s3.purge_bucket(bucket_name, access_key, secret, region)
     print("RAN PURGE CSV BUCKET")

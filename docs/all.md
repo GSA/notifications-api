@@ -1243,7 +1243,7 @@ In the api logs, search by job_id.  Either you will see evidence of the job fail
 
 ## Viewing the csv file
 
-If you need to view th questionable csv file, run the following command:
+If you need to view the questionable csv file, run the following command:
 
 
 ```
