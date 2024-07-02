@@ -92,4 +92,4 @@ def generate_date_range(start_date, end_date=None, days=0):
                 pass
             current_date += timedelta(days=1)
     else:
-        return "A start_date or number of days must be specified"
+        return "An end_date or number of days must be specified"

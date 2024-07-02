@@ -78,6 +78,7 @@ from app.dao.services_dao import (
     dao_update_service,
     fetch_notification_stats_for_service_by_month_by_user,
     get_services_by_partial_name,
+    get_specific_days_stats,
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
@@ -234,18 +235,7 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
 
     results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
 
-    grouped_results = defaultdict(list)
-    for row in results:
-        notification_type, status, day, count = row
-        grouped_results[day.date()].append(row)
-
-    for date in generate_date_range(start_date, days=days):
-        if date not in grouped_results:
-            grouped_results[date] = []
-
-    stats = {}
-    for day, rows in grouped_results.items():
-        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
+    stats = get_specific_days_stats(results, start_date, days=days)
 
     return stats
 
@@ -276,20 +266,7 @@ def get_service_statistics_for_specific_days_by_user(
         service_id, start_date, end_date, user_id
     )
 
-    grouped_results = defaultdict(list)
-    for row in results:
-        notification_type, status, day, count = row
-        grouped_results[day.date()].append(row)
-
-    print(grouped_results)
-
-    for date in generate_date_range(start_date, days=days):
-        if date not in grouped_results:
-            grouped_results[date] = []
-
-    stats = {}
-    for day, rows in grouped_results.items():
-        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
+    stats = get_specific_days_stats(results, start_date, days=days)
 
     return stats
 
@@ -744,19 +721,7 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
         service_id, start_date, end_date, user_id
     )
 
-    grouped_results = defaultdict(list)
-    for row in results:
-        notification_type, status, day, count = row
-        grouped_results[day.date()].append(row)
-
-    for date in generate_date_range(start_date, end_date):
-        if date not in grouped_results:
-            grouped_results[date] = []
-
-    stats = {}
-    for day, rows in grouped_results.items():
-        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
-
+    stats = get_specific_days_stats(results, start_date, end_date=end_date)
     return jsonify(stats)
 
 
@@ -778,19 +743,7 @@ def get_single_month_notification_stats_for_service(service_id):
 
     results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
 
-    grouped_results = defaultdict(list)
-    for row in results:
-        notification_type, status, day, count = row
-        grouped_results[day.date()].append(row)
-
-    for date in generate_date_range(start_date, end_date):
-        if date not in grouped_results:
-            grouped_results[date] = []
-
-    stats = {}
-    for day, rows in grouped_results.items():
-        stats[day.strftime("%Y-%m-%d")] = statistics.format_statistics(rows)
-
+    stats = get_specific_days_stats(results, start_date, end_date=end_date)
     return jsonify(stats)
 
 

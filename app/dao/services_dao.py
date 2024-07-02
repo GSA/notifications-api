@@ -1,3 +1,4 @@
+from re import I
 import uuid
 from datetime import timedelta
 
@@ -8,7 +9,7 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.date_util import get_current_calendar_year
+from app.dao.date_util import generate_date_range, get_current_calendar_year
 from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
@@ -41,6 +42,7 @@ from app.models import (
     User,
     VerifyCode,
 )
+from app.service import statistics
 from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
@@ -689,3 +691,28 @@ def fetch_notification_stats_for_service_by_month_by_user(
         )
         .all()
     )
+
+
+def get_specific_days_stats(results, start_date, days=None, end_date=None):
+    if days is not None and end_date is not None:
+        raise ValueError("Only set days OR set end_date, not both.")
+    elif days is not None:
+        gen_range = generate_date_range(start_date, days=days)
+    elif end_date is not None:
+        gen_range = generate_date_range(start_date, end_date)
+    else:
+        raise ValueError("Either days or end_date must be set.")
+
+    grouped_results = {
+        date: [] for date in gen_range
+    } | {
+        day.date(): [notification_type, status, day, count]
+        for notification_type, status, day, count in results
+    }
+
+    stats = {
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
+        for day, rows in grouped_results.items()
+    }
+
+    return stats

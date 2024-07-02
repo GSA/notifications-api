@@ -294,66 +294,6 @@ def test_get_monthly_notification_stats_returns_stats(admin_request, sample_serv
     }
 
 
-# Test removed because new endpoint uses the view which combines this data
-# @freeze_time("2016-06-05 12:00:00")
-# def test_get_monthly_notification_stats_combines_todays_data_and_historic_stats(
-#     admin_request, sample_template
-# ):
-#     create_ft_notification_status(
-#         datetime(2016, 5, 1, 12),
-#         template=sample_template,
-#         count=1,
-#     )
-#     create_ft_notification_status(
-#         datetime(2016, 6, 1, 12),
-#         template=sample_template,
-#         notification_status=NotificationStatus.CREATED,
-#         count=2,
-#     )  # noqa
-
-#     create_notification(
-#         sample_template,
-#         created_at=datetime(2016, 6, 5, 12),
-#         status=NotificationStatus.CREATED,
-#     )
-#     create_notification(
-#         sample_template,
-#         created_at=datetime(2016, 6, 5, 12),
-#         status=NotificationStatus.DELIVERED,
-#     )
-
-#     # this doesn't get returned in the stats because it is old - it should be in ft_notification_status by now
-#     create_notification(
-#         sample_template,
-#         created_at=datetime(2016, 6, 4, 12),
-#         status=NotificationStatus.SENDING,
-#     )
-
-#     response = admin_request.get(
-#         "service.get_monthly_notification_stats",
-#         service_id=sample_template.service_id,
-#         year=2016,
-#     )
-
-#     assert len(response["data"]) == 6  # January to June
-#     assert response["data"]["2016-05"] == {
-#         NotificationType.SMS: {
-#             NotificationStatus.DELIVERED: 1,
-#             StatisticsType.REQUESTED: 1,
-#         },
-#         NotificationType.EMAIL: {},
-#     }
-#     assert response["data"]["2016-06"] == {
-#         NotificationType.SMS: {
-#             # combines the stats from the historic ft_notification_status and the current notifications
-#             NotificationStatus.CREATED: 3,
-#             NotificationStatus.DELIVERED: 1,
-#             StatisticsType.REQUESTED: 4,
-#         },
-#         NotificationType.EMAIL: {},
-#     }
-
-
 def test_get_monthly_notification_stats_ignores_test_keys(
     admin_request, sample_service
 ):
