@@ -1,5 +1,4 @@
 import itertools
-from collections import defaultdict
 from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
@@ -19,7 +18,6 @@ from app.dao.api_key_dao import (
 )
 from app.dao.dao_utils import dao_rollback, transaction
 from app.dao.date_util import (
-    generate_date_range,
     get_calendar_year,
     get_month_start_and_end_date_in_utc,
 )

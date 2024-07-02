@@ -1,4 +1,3 @@
-from re import I
 import uuid
 from datetime import timedelta
 
