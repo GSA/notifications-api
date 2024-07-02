@@ -226,7 +226,7 @@ def test_cannot_create_user_with_empty_strings(admin_request, notify_db_session)
     assert resp["message"] == {
         "email_address": ["Not a valid email address"],
         "mobile_number": [
-            "Invalid phone number: The string supplied did not seem to be a phone number."
+            "Invalid phone number: Invalid phone number looks like  The string supplied did not seem to be a phone number."  # noqa
         ],
         "name": ["Invalid name"],
     }
@@ -949,7 +949,7 @@ def test_cannot_update_user_with_mobile_number_as_empty_string(
         _expected_status=400,
     )
     assert resp["message"]["mobile_number"] == [
-        "Invalid phone number: The string supplied did not seem to be a phone number."
+        "Invalid phone number: Invalid phone number looks like  The string supplied did not seem to be a phone number."  # noqa
     ]
 
 
