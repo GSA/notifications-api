@@ -21,8 +21,8 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: |
-          terraform/demo
-          terraform/shared
+          terraform/demo/**
+          terraform/shared/**
           .github/workflows/deploy-demo.yml
     - name: Terraform init
       if: steps.changed-terraform-files.outputs.any_changed == 'true'
