@@ -505,7 +505,7 @@ flask command purge_functional_test_data -u <functional tests user name prefix>
 Running on cloud.gov:
 
 ```
-cf run-task notify-api --comand "flask command purge_functional_test_data -u <functional tests user name prefix>"
+cf run-task notify-api --command "flask command purge_functional_test_data -u <functional tests user name prefix>"
 ```
 
 
@@ -1351,3 +1351,12 @@ locally, just do:
 ```
 poetry run flask command download-csv-file-by-name -f <file location in admin logs>
 ```
+
+## Debug steps
+
+1. Either send a message and capture the csv file name, or get a csv file name from a user
+2. Using the log tool at logs.fr.cloud.gov, use filters to limit what you're searching on (cf.app is 'notify-admin-production' for example) and then search with the csv file name in double quotes over the relevant time period (last 5 minutes if you just sent a message, or else whatever time the user sent at)
+3. When you find the log line, you should also find the job_id and the s3 file location.  Save these somewhere.
+4. To get the csv file contents, you can run the command above.  This command currently prints to the notify-api log, so after you run the command,
+you need to search in notify-api-production for the last 5 minutes with the logs sorted by timestamp.  The contents of the csv file unfortunately appear on separate lines so it's very important to sort by time.
+5. If you want to see where the message actually failed, search with cf.app is notify-api-production using the job_id that you saved in step #3.   If you get far enough, you might see one of the log lines has a message_id.  If you see it, you can switch and search on that, which should tell you what happened in AWS (success or failure).
