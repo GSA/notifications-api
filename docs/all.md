@@ -505,7 +505,7 @@ flask command purge_functional_test_data -u <functional tests user name prefix>
 Running on cloud.gov:
 
 ```
-cf run-task notify-api "flask command purge_functional_test_data -u <functional tests user name prefix>"
+cf run-task notify-api --comand "flask command purge_functional_test_data -u <functional tests user name prefix>"
 ```
 
 
@@ -1339,9 +1339,15 @@ In the api logs, search by job_id.  Either you will see evidence of the job fail
 
 ## Viewing the csv file
 
-If you need to view the questionable csv file, run the following command:
+If you need to view the questionable csv file on production, run the following command:
 
 
 ```
-cf run-task notify-api "flask command download_csv_file_by_name -f <file location found in admin logs>"
+cf run-task notify-api-production --command "flask command download-csv-file-by-name -f <file location found in admin logs>"
+```
+
+locally, just do:
+
+```
+poetry run flask command download-csv-file-by-name -f <file location in admin logs>
 ```
