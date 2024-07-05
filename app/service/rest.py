@@ -1,6 +1,7 @@
 import itertools
 from datetime import datetime, timedelta
 
+from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -500,18 +501,44 @@ def get_all_notifications_for_service(service_id):
 
     for notification in pagination.items:
         if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
-            recipient = get_phone_number_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
-            notification.to = recipient
-            notification.normalised_to = recipient
+            try:
+                notification.personalisation = get_personalisation_from_s3(
+                    notification.service_id,
+                    notification.job_id,
+                    notification.job_row_number,
+                )
+            except ClientError as ex:
+                if ex.response["Error"]["Code"] == "NoSuchKey":
+                    s = notification.service_id
+                    j = notification.job_id
+                    current_app.logger.warning(
+                        f"No personalisation found for s3 file location service: service-{s}-notify/{j}.csv"
+                    )
+                    notification.personalisation = ""
+                else:
+                    raise ex
+
+            try:
+                recipient = get_phone_number_from_s3(
+                    notification.service_id,
+                    notification.job_id,
+                    notification.job_row_number,
+                )
+
+                notification.to = recipient
+                notification.normalised_to = recipient
+            except ClientError as ex:
+                if ex.response["Error"]["Code"] == "NoSuchKey":
+                    s = notification.service_id
+                    j = notification.job_id
+                    current_app.logger.warning(
+                        f"No phone number found for s3 file location service: service-{s}-notify/{j}.csv"
+                    )
+                    notification.to = ""
+                    notification.normalised_to = ""
+                else:
+                    raise ex
+
         else:
             notification.to = "1"
             notification.normalised_to = "1"
