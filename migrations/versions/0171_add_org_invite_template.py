@@ -12,6 +12,8 @@ from alembic import op
 from flask import current_app
 from sqlalchemy import text
 
+from app.utils import utc_now
+
 revision = "0171_add_org_invite_template"
 down_revision = "0170_hidden_non_nullable"
 
@@ -53,7 +55,7 @@ def upgrade():
         "template_id": template_id,
         "template_name": template_name,
         "template_type": "email",
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
         "content": template_content,
         "notify_service_id": current_app.config["NOTIFY_SERVICE_ID"],
         "subject": template_subject,

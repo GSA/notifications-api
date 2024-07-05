@@ -8,7 +8,7 @@ from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
-from app.dao.date_util import get_current_calendar_year
+from app.dao.date_util import generate_date_range, get_current_calendar_year
 from app.dao.organization_dao import dao_get_organization_by_email_address
 from app.dao.service_sms_sender_dao import insert_service_sms_sender
 from app.dao.service_user_dao import dao_get_service_user
@@ -27,6 +27,7 @@ from app.models import (
     InvitedUser,
     Job,
     Notification,
+    NotificationAllTimeView,
     NotificationHistory,
     Organization,
     Permission,
@@ -40,6 +41,7 @@ from app.models import (
     User,
     VerifyCode,
 )
+from app.service import statistics
 from app.utils import (
     escape_special_characters,
     get_archived_db_column_value,
@@ -426,6 +428,61 @@ def dao_fetch_todays_stats_for_service(service_id):
     )
 
 
+def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
+    start_date = get_midnight_in_utc(start_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
+
+    return (
+        db.session.query(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+        )
+        .group_by(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
+        )
+        .all()
+    )
+
+
+def dao_fetch_stats_for_service_from_days_for_user(
+    service_id, start_date, end_date, user_id
+):
+    start_date = get_midnight_in_utc(start_date)
+    end_date = get_midnight_in_utc(end_date + timedelta(days=1))
+
+    return (
+        db.session.query(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.created_by_id == user_id,
+        )
+        .group_by(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
+        )
+        .all()
+    )
+
+
 def dao_fetch_todays_stats_for_all_services(
     include_from_test_key=True, only_active=True
 ):
@@ -607,3 +664,52 @@ def get_live_services_with_organization():
     )
 
     return query.all()
+
+
+def fetch_notification_stats_for_service_by_month_by_user(
+    start_date, end_date, service_id, user_id
+):
+    return (
+        db.session.query(
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            (NotificationAllTimeView.status).label("notification_status"),
+            func.count(NotificationAllTimeView.id).label("count"),
+        )
+        .filter(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_by_id == user_id,
+        )
+        .group_by(
+            func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+        )
+        .all()
+    )
+
+
+def get_specific_days_stats(results, start_date, days=None, end_date=None):
+    if days is not None and end_date is not None:
+        raise ValueError("Only set days OR set end_date, not both.")
+    elif days is not None:
+        gen_range = generate_date_range(start_date, days=days)
+    elif end_date is not None:
+        gen_range = generate_date_range(start_date, end_date)
+    else:
+        raise ValueError("Either days or end_date must be set.")
+
+    grouped_results = {date: [] for date in gen_range} | {
+        day.date(): [notification_type, status, day, count]
+        for notification_type, status, day, count in results
+    }
+
+    stats = {
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
+        for day, rows in grouped_results.items()
+    }
+
+    return stats
