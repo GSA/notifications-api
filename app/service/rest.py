@@ -1,5 +1,5 @@
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +17,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import get_calendar_year
+from app.dao.date_util import get_calendar_year, get_month_start_and_end_date_in_utc
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
@@ -63,13 +63,17 @@ from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_live_services_data,
     dao_fetch_service_by_id,
+    dao_fetch_stats_for_service_from_days,
+    dao_fetch_stats_for_service_from_days_for_user,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_remove_user_from_service,
     dao_resume_service,
     dao_suspend_service,
     dao_update_service,
+    fetch_notification_stats_for_service_by_month_by_user,
     get_services_by_partial_name,
+    get_specific_days_stats,
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
@@ -208,6 +212,58 @@ def get_service_notification_statistics(service_id):
             int(request.args.get("limit_days", 7)),
         )
     )
+
+
+@service_blueprint.route("/<uuid:service_id>/statistics/<string:start>/<int:days>")
+def get_service_notification_statistics_by_day(service_id, start, days):
+    return jsonify(
+        data=get_service_statistics_for_specific_days(service_id, start, int(days))
+    )
+
+
+def get_service_statistics_for_specific_days(service_id, start, days=1):
+    # start and end dates needs to be reversed because
+    # the end date is today and the start is x days in the past
+    # a day needs to be substracted to allow for today
+    end_date = datetime.strptime(start, "%Y-%m-%d")
+    start_date = end_date - timedelta(days=days - 1)
+
+    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+
+    stats = get_specific_days_stats(results, start_date, days=days)
+
+    return stats
+
+
+@service_blueprint.route(
+    "/<uuid:service_id>/statistics/user/<uuid:user_id>/<string:start>/<int:days>"
+)
+def get_service_notification_statistics_by_day_by_user(
+    service_id, user_id, start, days
+):
+    return jsonify(
+        data=get_service_statistics_for_specific_days_by_user(
+            service_id, user_id, start, int(days)
+        )
+    )
+
+
+def get_service_statistics_for_specific_days_by_user(
+    service_id, user_id, start, days=1
+):
+    # start and end dates needs to be reversed because
+    # the end date is today and the start is x days in the past
+    # a day needs to be substracted to allow for today
+    end_date = datetime.strptime(start, "%Y-%m-%d")
+    start_date = end_date - timedelta(days=days - 1)
+
+    results = dao_fetch_stats_for_service_from_days_for_user(
+        service_id, start_date, end_date, user_id
+    )
+
+    stats = get_specific_days_stats(results, start_date, days=days)
+
+    return stats
 
 
 @service_blueprint.route("", methods=["POST"])
@@ -592,6 +648,7 @@ def get_monthly_notification_stats(service_id):
     stats = fetch_notification_status_for_service_by_month(
         start_date, end_date, service_id
     )
+
     statistics.add_monthly_notification_status_stats(data, stats)
 
     now = utc_now()
@@ -602,6 +659,87 @@ def get_monthly_notification_stats(service_id):
         statistics.add_monthly_notification_status_stats(data, todays_deltas)
 
     return jsonify(data=data)
+
+
+@service_blueprint.route(
+    "/<uuid:service_id>/notifications/<uuid:user_id>/monthly", methods=["GET"]
+)
+def get_monthly_notification_stats_by_user(service_id, user_id):
+    # check service_id validity
+    dao_fetch_service_by_id(service_id)
+    # user = get_user_by_id(user_id=user_id)
+
+    try:
+        year = int(request.args.get("year", "NaN"))
+    except ValueError:
+        raise InvalidRequest("Year must be a number", status_code=400)
+
+    start_date, end_date = get_calendar_year(year)
+
+    data = statistics.create_empty_monthly_notification_status_stats_dict(year)
+
+    stats = fetch_notification_stats_for_service_by_month_by_user(
+        start_date, end_date, service_id, user_id
+    )
+
+    statistics.add_monthly_notification_status_stats(data, stats)
+
+    now = utc_now()
+    if end_date > now:
+        todays_deltas = fetch_notification_status_for_service_for_day(
+            now, service_id=service_id
+        )
+        statistics.add_monthly_notification_status_stats(data, todays_deltas)
+
+    return jsonify(data=data)
+
+
+@service_blueprint.route(
+    "/<uuid:service_id>/notifications/<uuid:user_id>/month", methods=["GET"]
+)
+def get_single_month_notification_stats_by_user(service_id, user_id):
+    # check service_id validity
+    dao_fetch_service_by_id(service_id)
+
+    try:
+        month = int(request.args.get("month", "NaN"))
+        year = int(request.args.get("year", "NaN"))
+    except ValueError:
+        raise InvalidRequest(
+            "Both a month and year are required as numbers", status_code=400
+        )
+
+    month_year = datetime(year, month, 10, 00, 00, 00)
+    start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
+
+    results = dao_fetch_stats_for_service_from_days_for_user(
+        service_id, start_date, end_date, user_id
+    )
+
+    stats = get_specific_days_stats(results, start_date, end_date=end_date)
+    return jsonify(stats)
+
+
+@service_blueprint.route("/<uuid:service_id>/notifications/month", methods=["GET"])
+def get_single_month_notification_stats_for_service(service_id):
+    # check service_id validity
+    dao_fetch_service_by_id(service_id)
+
+    try:
+        month = int(request.args.get("month", "NaN"))
+        year = int(request.args.get("year", "NaN"))
+    except ValueError:
+        raise InvalidRequest(
+            "Both a month and year are required as numbers", status_code=400
+        )
+
+    month_year = datetime(year, month, 10, 00, 00, 00)
+    start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
+
+    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+
+    stats = get_specific_days_stats(results, start_date, end_date=end_date)
+    return jsonify(stats)
 
 
 def get_detailed_service(service_id, today_only=False):
