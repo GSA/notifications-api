@@ -692,7 +692,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
     )
 
 
-def get_specific_days_stats(results, start_date, days=None, end_date=None):
+def get_specific_days_stats(data, start_date, days=None, end_date=None):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
@@ -702,14 +702,14 @@ def get_specific_days_stats(results, start_date, days=None, end_date=None):
     else:
         raise ValueError("Either days or end_date must be set.")
 
-    grouped_results = {date: [] for date in gen_range} | {
-        day.date(): [notification_type, status, day, count]
-        for notification_type, status, day, count in results
+    grouped_data = {date: [] for date in gen_range} | {
+        day: [row for row in data if row.day.date() == day]
+        for day in {item.day.date() for item in data}
     }
 
     stats = {
         day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
-        for day, rows in grouped_results.items()
+        for day, rows in grouped_data.items()
     }
 
     return stats
