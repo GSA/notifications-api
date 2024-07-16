@@ -38,6 +38,11 @@
   - [Celery scheduled tasks](#celery-scheduled-tasks)
 - [Notify.gov](#notifygov)
   - [System Description](#system-description)
+- [Pull Requests](#pull-requests)
+  - [Getting Started](#getting-started)
+  - [Description](#description)
+  - [TODO (optional)](#todo-(optional))
+  - [Security Considerations](#security-considerations)
 - [Code Reviews](#code-reviews)
   - [For the reviewer](#for-the-reviewer)
   - [For the author](#for-the-author)
@@ -55,6 +60,9 @@
 - [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
   - [Potential PII Locations](#potential-pii-locations)
   - [Data Retention Policy](#data-retention-policy)
+- [Debug messages not being sent](#debug-messages-not-being-sent)
+  - [Getting the file location and tracing what happens](#getting-the-file-location-and-tracing-what-happens)
+  - [Viewing the csv file](#viewing-the-csv-file)
 
 
 # Infrastructure overview
@@ -497,7 +505,7 @@ flask command purge_functional_test_data -u <functional tests user name prefix>
 Running on cloud.gov:
 
 ```
-cf run-task notify-api "flask command purge_functional_test_data -u <functional tests user name prefix>"
+cf run-task notify-api --command "flask command purge_functional_test_data -u <functional tests user name prefix>"
 ```
 
 
@@ -817,6 +825,97 @@ Notify.gov also provisions and uses two AWS services via a [supplemental service
 For further details of the system and how it connects to supporting services, see the [application boundary diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
 
 
+Pull Requests
+=============
+
+Changes are made to our applications via pull requests, which show a diff
+(the before and after state of all proposed changes in the code) of of the work
+done for that particular branch.  We use pull requests as the basis for working
+on Notify.gov and modifying the application over time for improvements, bug
+fixes, new features, and more.
+
+There are several things that make for a good and complete pull request:
+
+* An appropriate and descriptive title
+* A detailed description of what's being changed, including any outstanding work
+  (TODOs)
+* A list of security considerations, which contains information about anything
+  we need to be mindful of from a security compliance perspective
+* The proper labels, assignee, code reviewer, and other project metadata set
+
+
+### Getting Started
+
+When you first open a pull request, start off by making sure the metadata for it
+is in place:
+
+* Provide an appropriate and descriptive title for the pull request
+* Link the pull request to its corresponding issue (must be done after creating
+  the pull request itself)
+* Assign yourself as the author
+* Attach the appropriate labels to it
+* Set it to be on the Notify.gov project board
+* Select one or more reviewers from the team or mark the pull request as a draft
+  depending on its current state
+   * If the pull request is a draft, please be sure to add reviewers once it is
+     ready for review and mark it ready for review
+
+### Description
+
+Please enter a clear description about your proposed changes and what the
+expected outcome(s) is/are from there.  If there are complex implementation
+details within the changes, this is a great place to explain those details using
+plain language.
+
+This should include:
+
+* Links to issues that this PR addresses (especially if more than one)
+* Screenshots or screen captures of any visible changes, especially for UI work
+* Dependency changes
+
+If there are any caveats, known issues, follow-up items, etc., make a quick note
+of them here as well, though more details are probably warranted in the issue
+itself in this case.
+
+### TODO (optional)
+
+If you're opening a draft PR, it might be helpful to list any outstanding work,
+especially if you're asking folks to take a look before it's ready for full
+review.  In this case, create a small checklist with the outstanding items:
+
+* [ ] TODO item 1
+* [ ] TODO item 2
+* [ ] TODO item ...
+
+### Security Considerations
+
+Please think about the security compliance aspect of your changes and what the
+potential impacts might be.
+
+**NOTE:  Please be mindful of sharing sensitive information here!  If you're not sure of what to write, please ask the team first before writing anything here.**
+
+Relevant details could include (and are not limited to) the following:
+
+* Handling secrets/credential management (or specifically calling out that there
+  is nothing to handle)
+* Any adjustments to the flow of data in and out the system, or even within it
+* Connecting or disconnecting any external services to the application
+* Handling of any sensitive information, such as PII
+* Handling of information within log statements or other application monitoring
+  services/hooks
+* The inclusion of a new external dependency or the removal of an existing one
+* ... (anything else relevant from a security compliance perspective)
+
+There are some cases where there are no security considerations to be had, e.g.,
+updating our documentation with publicly available information.  In those cases
+it is fine to simply put something like this:
+
+* None; this is a documentation update with publicly available information.
+
+This way it shows that we still gave this section consideration and that nothing
+happens to apply in this scenario.
+
+
 Code Reviews
 ============
 
@@ -856,19 +955,19 @@ behavior and lack of professionalism is not acceptable or tolerated.**
 When performing a code review, it is helpful to keep the following guidelines in
 mind:
 
-- Be on the lookout for any sensitive information and/or leaked credentials,
+* Be on the lookout for any sensitive information and/or leaked credentials,
   secrets, PII, etc.
-- Ask and call out things that aren't clear to you; it never hurts to double
+* Ask and call out things that aren't clear to you; it never hurts to double
   check your understanding of something!
-- Check that things are named descriptively and appropriately and call out
+* Check that things are named descriptively and appropriately and call out
   anything that is not.
-- Check that comments are present for complex areas when needed.
-- Make sure the pull request itself is properly prepared - it has a clear
+* Check that comments are present for complex areas when needed.
+* Make sure the pull request itself is properly prepared - it has a clear
   description, calls out security concerns, and has the necessary labels, flags,
   issue link, etc., set on it.
-- Do not be shy about using the suggested changes feature in GitHub pull request
+* Do not be shy about using the suggested changes feature in GitHub pull request
   comments; this can help save a lot of time!
-- Do not be shy about marking a review with the `Request Changes` status - yes,
+* Do not be shy about marking a review with the `Request Changes` status - yes,
   it looks big and red when it shows up, but this is completely fine and not to
   be taken as a personal mark against the author(s) of the pull request!
 
@@ -896,14 +995,14 @@ behavior and lack of professionalism is not acceptable or tolerated.**
 
 When going over a review, it may be helpful to keep these perspectives in mind:
 
-- Approach the review with an open mind, curiosity, and appreciation.
-- If anything the reviewer(s) mentions is unclear to you, please ask for
+* Approach the review with an open mind, curiosity, and appreciation.
+* If anything the reviewer(s) mentions is unclear to you, please ask for
   clarification and engage them in further dialogue!
-- If you disagree with a suggestion or request, please say so and engage in an
+* If you disagree with a suggestion or request, please say so and engage in an
   open and respecful dialogue to come to a mutual understanding of what the
   appropriate next step(S) should be - accept the change, reject the change,
   take a different path entirely, etc.
-- If there are no issues with any suggested edits or requested changes, make
+* If there are no issues with any suggested edits or requested changes, make
   the necessary adjustments and let the reviewer(s) know when the work is ready
   for review again.
 
@@ -1224,3 +1323,40 @@ Data Retention Policy
 Seven (7) days by default. Each service can be set with a custom policy via `ServiceDataRetention` by a Platform Admin. The `ServiceDataRetention` setting applies per-service and per-message type and controls both entries in the `notifications` table as well as `csv` contact files uploaded to s3
 
 Data cleanup is controlled by several tasks in the `nightly_tasks.py` file, kicked off by Celery Beat.
+
+
+# Debug messages not being sent
+
+
+## Getting the file location and tracing what happens
+
+
+Ask the user to provide the csv file name.  Either the csv file they uploaded, or the one that is autogenerated when they do a one-off send and is visible in the UI
+
+Starting with the admin logs, search for this file name.  When you find it, the log line should have the file name linked to the job_id and the csv file location.  Save both of these.
+
+In the api logs, search by job_id.  Either you will see evidence of the job failing and retrying over and over (in which case search for a stack trace using timestamp), or you will ultimately get to a log line that links the job_id to a message_id.  In this case, now search by message_id.  You should be able to find the actual result from AWS, either success or failure, with hopefully some helpful info.
+
+## Viewing the csv file
+
+If you need to view the questionable csv file on production, run the following command:
+
+
+```
+cf run-task notify-api-production --command "flask command download-csv-file-by-name -f <file location found in admin logs>"
+```
+
+locally, just do:
+
+```
+poetry run flask command download-csv-file-by-name -f <file location in admin logs>
+```
+
+## Debug steps
+
+1. Either send a message and capture the csv file name, or get a csv file name from a user
+2. Using the log tool at logs.fr.cloud.gov, use filters to limit what you're searching on (cf.app is 'notify-admin-production' for example) and then search with the csv file name in double quotes over the relevant time period (last 5 minutes if you just sent a message, or else whatever time the user sent at)
+3. When you find the log line, you should also find the job_id and the s3 file location.  Save these somewhere.
+4. To get the csv file contents, you can run the command above.  This command currently prints to the notify-api log, so after you run the command,
+you need to search in notify-api-production for the last 5 minutes with the logs sorted by timestamp.  The contents of the csv file unfortunately appear on separate lines so it's very important to sort by time.
+5. If you want to see where the message actually failed, search with cf.app is notify-api-production using the job_id that you saved in step #3.   If you get far enough, you might see one of the log lines has a message_id.  If you see it, you can switch and search on that, which should tell you what happened in AWS (success or failure).

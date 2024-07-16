@@ -1,11 +1,9 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio"
-  cf_space_name    = "notify-demo"
-  env              = "demo"
-  app_name         = "notify-api"
-  recursive_delete = false # deprecated, still used in shared modules
+  cf_org_name   = "gsa-tts-benefits-studio"
+  cf_space_name = "notify-demo"
+  env           = "demo"
+  app_name      = "notify-api"
 }
-
 
 resource "null_resource" "prevent_destroy" {
 
@@ -21,15 +19,6 @@ module "database" {
   cf_space_name = local.cf_space_name
   name          = "${local.app_name}-rds-${local.env}"
   rds_plan_name = "micro-psql"
-}
-
-module "redis" { # default v6.2; delete after v7.0 resource is bound
-  source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v1.0.0"
-
-  cf_org_name     = local.cf_org_name
-  cf_space_name   = local.cf_space_name
-  name            = "${local.app_name}-redis-${local.env}"
-  redis_plan_name = "redis-dev"
 }
 
 module "redis-v70" {

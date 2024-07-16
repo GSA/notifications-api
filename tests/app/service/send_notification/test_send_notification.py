@@ -79,7 +79,7 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
             assert json_resp["result"] == "error"
             assert len(json_resp["message"].keys()) == 1
             assert (
-                "Invalid phone number: The string supplied did not seem to be a phone number."
+                "Invalid phone number: Invalid phone number looks like invalid The string supplied did not seem to be a phone number."  # noqa
                 in json_resp["message"]["to"]
             )
             assert response.status_code == 400

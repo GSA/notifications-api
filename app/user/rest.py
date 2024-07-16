@@ -18,6 +18,7 @@ from app.dao.users_dao import (  # get_user_and_accounts,; update_user_password,
     create_secret_code,
     create_user_code,
     dao_archive_user,
+    dao_report_users,
     get_login_gov_user,
     get_user_and_accounts,
     get_user_by_email,
@@ -171,6 +172,17 @@ def activate_user(user_id):
         raise InvalidRequest("User already active", status_code=400)
 
     user.state = "active"
+    save_model_user(user)
+    return jsonify(data=user.serialize()), 200
+
+
+@user_blueprint.route("/<uuid:user_id>/deactivate", methods=["POST"])
+def deactivate_user(user_id):
+    user = get_user_by_id(user_id=user_id)
+    if user.state == "pending":
+        raise InvalidRequest("User already inactive", status_code=400)
+
+    user.state = "pending"
     save_model_user(user)
     return jsonify(data=user.serialize()), 200
 
@@ -359,7 +371,7 @@ def create_2fa_code(
     saved_notification.personalisation = personalisation
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
-    redis_store.raw_set(key, recipient, ex=60 * 60)
+    redis_store.set(key, recipient, ex=60 * 60)
 
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the
@@ -663,6 +675,12 @@ def get_all_users():
 
 #     update_user_password(user, password)
 #     return jsonify(data=user.serialize()), 200
+
+
+@user_blueprint.route("/report-all-users", methods=["GET"])
+def report_all_users():
+    users = dao_report_users()
+    return jsonify(data=users.serialize()), 200
 
 
 @user_blueprint.route("/<uuid:user_id>/organizations-and-services", methods=["GET"])

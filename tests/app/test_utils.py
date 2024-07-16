@@ -9,7 +9,6 @@ from app.utils import (
     get_midnight_in_utc,
     get_public_notify_type_text,
     midnight_n_days_ago,
-    scrub,
 )
 
 
@@ -88,16 +87,6 @@ def test_midnight_n_days_ago(current_time, arg, expected_datetime):
 def test_get_public_notify_type_text():
     assert (
         get_public_notify_type_text(ServicePermissionType.UPLOAD_DOCUMENT) == "document"
-    )
-
-
-def test_scrub():
-    result = scrub(
-        "This is a message with 17775554324, and also 18884449323 and also 17775554324"
-    )
-    assert (
-        result
-        == "This is a message with 1XXXXX54324, and also 1XXXXX49323 and also 1XXXXX54324"
     )
 
 

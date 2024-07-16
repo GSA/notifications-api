@@ -11,6 +11,8 @@ from datetime import datetime
 
 from sqlalchemy import text
 
+from app.utils import utc_now
+
 revision = "0028_fix_reg_template_history"
 down_revision = "0026_rename_notify_service"
 
@@ -38,7 +40,7 @@ def upgrade():
         "id": "ece42649-22a8-4d06-b87f-d52d5d3f0a27",
         "name": "Notify email verification code",
         "type": "email",
-        "time_now": datetime.utcnow(),
+        "time_now": utc_now(),
         "content": email_verification_content,
         "service_id": service_id,
         "subject": "Confirm GOV.UK Notify registration",
