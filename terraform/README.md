@@ -250,7 +250,7 @@ You are not hooked up to the remote backend that stores Terraform state
 Run steps in [Retrieving existing bucket credentials](#retrieving-existing-bucket-credentials).
 
 ### Space Deployers will be updated in-place
-```diff
+```
 # module.egress-space.cloudfoundry_space_users.deployers will be updated in-place
   ~ resource "cloudfoundry_space_users" "deployers" {
       ~ developers = [
