@@ -1,8 +1,9 @@
 # Terraform
 
 This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
-* [read about the directory structure](#structure), or
-* [get set up to develop HCL code](#retrieving-existing-bucket-credentials).
+* [Set up](#retrieving-existing-bucket-credentials) the Sandbox or set up to develop HCL code
+* [Learn](#structure) about the directory structure, or
+* [Troubleshoot](#troubleshooting) error messages
 
 The Admin app repo [has its own terraform directory](https://github.com/GSA/notifications-admin/tree/main/terraform) but a lot of the below instructions apply to both apps.
 
@@ -228,3 +229,32 @@ The audit event logs may also provide insight. They are visible in web UI or [in
 Error: Error creating SES domain identity verification: Expected domain verification Success, but was in state Pending
 ```
 This error comes via the [Supplementary Service Broker](https://github.com/GSA/usnotify-ssb/) and originates from the [SMTP Brokerpak](https://github.com/GSA-TTS/datagov-brokerpak-smtp) it uses. You can run the [broker provisioning locally](https://github.com/GSA-TTS/datagov-brokerpak-smtp/tree/main/terraform/provision) to tinker with the error.
+
+### Validating provider credentials
+```
+Error: validating provider credentials: retrieving caller identity from STS: operation error STS: GetCallerIdentity, https response error StatusCode: 403
+```
+The steps in [Use bootstrap credentials](#use-bootstrap-credentials) may not be complete. Or the AWS CLI may have reverted to the default profile, in which case, re-run:
+```bash
+export AWS_PROFILE=notify-terraform-backend
+```
+
+### No valid credential sources
+```
+Error: No valid credential sources found
+Please see https://www.terraform.io/docs/language/settings/backends/s3.html for more information about providing credentials.
+
+Error: failed to refresh cached credentials, no EC2 IMDS role found, operation error ec2imds: GetMetadata, request canceled, context deadline exceeded
+```
+You are not hooked up to the remote backend that stores Terraform state
+Run steps in [Retrieving existing bucket credentials](#retrieving-existing-bucket-credentials).
+
+### Space Deployers will be updated in-place
+```{style="background: #8a1515;"}
+# module.egress-space.cloudfoundry_space_users.deployers will be updated in-place
+  ~ resource "cloudfoundry_space_users" "deployers" {
+      ~ developers = [
+          - "xxx-GUID-xxx",
+          + "yyy-GUID-yyy",
+```
+The environment was last deployed by someone other than you, using a different Space Deployer account. If you are working in the Sandbox environment, this is fine; go ahead and apply the changes. After you do, the other person evidently also working in the Sandbox env will then see the same message. The two of you might play tug-of-war with different GUIDs, but this is inconsequential.
