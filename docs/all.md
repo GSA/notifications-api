@@ -432,6 +432,8 @@ Rules for use:
 
 ### Deploying to the sandbox
 
+If this is the first time you have used Terraform in this repository, you will first have to hook your copy of Terraform up to our remote state. Follow [Retrieving existing bucket credentials](https://github.com/GSA/notifications-api/tree/main/terraform#retrieving-existing-bucket-credentials).
+
 1. Set up services:
     ```
     $ cd terraform/sandbox
@@ -440,6 +442,7 @@ Rules for use:
     $ terraform plan
     $ terraform apply
     ```
+1. Change back to the project root directory: `cd ../..`
 1. start a poetry shell as a shortcut to load `.env` file variables: `$ poetry shell`
 1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Deploy the application:
