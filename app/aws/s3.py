@@ -1,5 +1,7 @@
 import re
+import csv
 
+from app.utils import hilite
 import botocore
 from boto3 import Session
 from expiringdict import ExpiringDict
@@ -124,17 +126,31 @@ def extract_phones(job):
 
 
 def extract_personalisation(job):
+    print(hilite(f"job type: {type(job)}"))
+    print(hilite(f"Job? {job}"))
+
     job = job.split("\r\n")
+    print(hilite(f"job after first split: {job}"))
     first_row = job[0]
+    print(hilite(f"first_row: {first_row}"))
     job.pop(0)
     first_row = first_row.split(",")
+    print(hilite(f"first_row again: {first_row}"))
     personalisation = {}
     job_row = 0
+
+    row_csv_module = csv.reader(job)
+    for row_module in row_csv_module:
+        print(hilite(f"CSV MODULE ROW: {row_module}"))
+
     for row in job:
         row = row.split(",")
+        print(hilite(f"row: {row}"))
         temp = dict(zip(first_row, row))
         personalisation[job_row] = temp
         job_row = job_row + 1
+        print(hilite(f"job_row: {job_row}"))
+    print(hilite(f"personalisation: {personalisation}"))
     return personalisation
 
 
@@ -190,6 +206,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     job = JOBS.get(job_id)
     if job is None:
         job = get_job_from_s3(service_id, job_id)
+        print(hilite(f"job at the beginning: {job}"))
         JOBS[job_id] = job
         incr_jobs_cache_misses()
     else:
