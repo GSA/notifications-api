@@ -597,8 +597,10 @@ def download_csv_file_by_name(csv_filename):
     access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
     secret = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
     region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-    print(s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region))
-
+    content = s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region)
+    # We want it all to get logged in one line
+    content = content.replace("\n", "|")
+    print(content)
 
 @notify_command(name="populate-annual-billing-with-the-previous-years-allowance")
 @click.option(
