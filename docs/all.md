@@ -442,6 +442,7 @@ If this is the first time you have used Terraform in this repository, you will f
     $ terraform plan
     $ terraform apply
     ```
+1. Change back to the project root directory: `cd ../..`
 1. start a poetry shell as a shortcut to load `.env` file variables: `$ poetry shell`
 1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Deploy the application:
