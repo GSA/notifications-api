@@ -432,7 +432,7 @@ Rules for use:
 
 ### Deploying to the sandbox
 
-If this is the first time you have used Terraform in this repository, you will first have to hook you copy of Terraform up to our remote state. Follow [Retrieving existing bucket credentials](https://github.com/GSA/notifications-api/tree/main/terraform#retrieving-existing-bucket-credentials).
+If this is the first time you have used Terraform in this repository, you will first have to hook your copy of Terraform up to our remote state. Follow [Retrieving existing bucket credentials](https://github.com/GSA/notifications-api/tree/main/terraform#retrieving-existing-bucket-credentials).
 
 1. Set up services:
     ```
