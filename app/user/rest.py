@@ -178,6 +178,17 @@ def activate_user(user_id):
     return jsonify(data=user.serialize()), 200
 
 
+@user_blueprint.route("/<uuid:user_id>/deactivate", methods=["POST"])
+def deactivate_user(user_id):
+    user = get_user_by_id(user_id=user_id)
+    if user.state == "pending":
+        raise InvalidRequest("User already inactive", status_code=400)
+
+    user.state = "pending"
+    save_model_user(user)
+    return jsonify(data=user.serialize()), 200
+
+
 @user_blueprint.route("/<uuid:user_id>/reset-failed-login-count", methods=["POST"])
 def user_reset_failed_login_count(user_id):
     user_to_update = get_user_by_id(user_id=user_id)
