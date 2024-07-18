@@ -602,6 +602,7 @@ def download_csv_file_by_name(csv_filename):
     content = content.replace("\n", "|")
     print(content)
 
+
 @notify_command(name="populate-annual-billing-with-the-previous-years-allowance")
 @click.option(
     "-y",
