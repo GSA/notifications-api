@@ -252,6 +252,7 @@ def register_blueprint(application):
 
 
 def init_app(app):
+
     @app.before_request
     def record_request_details():
         g.start = monotonic()

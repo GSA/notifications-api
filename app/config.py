@@ -249,6 +249,11 @@ class Config(object):
                 "schedule": crontab(hour=6, minute=0),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "regenerate-job-cache": {
+                "task": "regenerate-job-cache",
+                "schedule": crontab(),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "cleanup-unfinished-jobs": {
                 "task": "cleanup-unfinished-jobs",
                 "schedule": crontab(hour=4, minute=5),
