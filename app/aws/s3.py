@@ -20,7 +20,6 @@ JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
 
 
 def list_s3_objects():
-    print("ENTER LIST_S3_OBJECTS")
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
     access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
     secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
@@ -51,7 +50,7 @@ def list_s3_objects():
 
 
 def get_s3_files():
-    print("ENTER GET_S3_FILES")
+    current_app.logger.info("Regenerate job cache #notify-admin-1200")
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
     access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
     secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
@@ -64,7 +63,7 @@ def get_s3_files():
     objects = list_s3_objects()
 
     s3res = session.resource("s3", config=AWS_CLIENT_CONFIG)
-    print(f"LEN JOBS BEFORE LOAD {len(JOBS)}")
+    current_app.logger.info(f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200")
     for object in objects:
         object_arr = object.split("/")
         job_id = object_arr[1]
@@ -75,7 +74,7 @@ def get_s3_files():
             )
             if "phone number" in object.lower():
                 JOBS[job_id] = object
-                print(f"NOW LEN JOBS IS {len(JOBS)} object {object}")
+    current_app.logger.info(f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200")
 
 
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
