@@ -2,6 +2,7 @@ import json
 import os
 from datetime import timedelta
 
+from botocore.exceptions import ClientError
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -62,6 +63,21 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
                 provider_response=provider_response,
             )
             raise self.retry(exc=ntfe)
+        except ClientError as err:
+            # Probably a ThrottlingException but could be something else
+            error_code = err.response["Error"]["Code"]
+            provider_response = (
+                f"{error_code} while checking sms receipt -- still looking"
+            )
+            status = "pending"
+            carrier = ""
+            update_notification_status_by_id(
+                notification_id,
+                status,
+                carrier=carrier,
+                provider_response=provider_response,
+            )
+            raise self.retry(exc=err)
 
     if status == "success":
         status = NotificationStatus.DELIVERED
