@@ -449,7 +449,10 @@ If this is the first time you have used Terraform in this repository, you will f
   ```
   cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
   ```
-
+  The real `push` command has more var arguments than the single one above. Get their values from a Notify team member.
+1. Visit the URL of the app you just deployed
+  * Admin https://notify-sandbox.app.cloud.gov/
+  * API https://notify-api-sandbox.app.cloud.gov/
 
 # Database management
 
@@ -1385,7 +1388,7 @@ After pushing the Admin app, you might see this in the logs
 {"name": "app", "levelname": "ERROR", "message": "API unknown failed with status 503 message Request failed", "pathname": "/home/vcap/app/app/__init__.py", ...
 ```
 
-This indicates that the Admin and API apps are unable to talk to each other because of either a missing route or a missing network policy. The apps require [container-to-container networking](https://cloud.gov/docs/management/container-to-container/) to communicate. List `cf network-policies` and compare the output to other deployed envrionments. If you find a policy is missing, you might have to create a network policy with something like:
+This indicates that the Admin and API apps are unable to talk to each other because of either a missing route or a missing network policy. The apps require [container-to-container networking](https://cloud.gov/docs/management/container-to-container/) to communicate. List `cf network-policies` and compare the output to our other deployed envs. If you find a policy is missing, you might have to create a network policy with something like:
 ```
 cf add-network-policy notify-admin-sandbox notify-api-sandbox --protocol tcp --port 61443
 ```

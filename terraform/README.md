@@ -134,6 +134,8 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
     This command *will deploy your changes* to the cloud. This is a healthy part of testing your code in the sandbox, or if you are creating a new environment (a new directory). **Do not** apply in environments that people are relying upon.
 
+    If you need to go on to deploy application code on top of the resources you just instantiated, you will [use `cf push`](https://github.com/GSA/notifications-api/blob/main/docs/all.md#deploying-to-the-sandbox)
+
 1. Remove the space deployer service instance when you are done manually running Terraform.
     ```bash
     # <SPACE_NAME> and <ACCOUNT_NAME> have the same values as used above.
