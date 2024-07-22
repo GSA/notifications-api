@@ -543,8 +543,6 @@ class Service(db.Model, Versioned):
         nullable=True,
     )
     organization = db.relationship("Organization", backref="services")
-    service_sms_senders = db.relationship("ServiceSmsSender", back_populates="service")
-    inbound_number = db.relationship("InboundNumber", back_populates="service")
 
     notes = db.Column(db.Text, nullable=True)
     purchase_order_number = db.Column(db.String(255), nullable=True)
@@ -687,7 +685,10 @@ class InboundNumber(db.Model):
         index=True,
         nullable=True,
     )
-    service = db.relationship(Service, back_populates="inbound_number")
+    service = db.relationship(
+        Service,
+        backref=db.backref("inbound_number", uselist=False),
+    )
     active = db.Column(
         db.Boolean,
         index=False,
@@ -733,7 +734,10 @@ class ServiceSmsSender(db.Model):
         nullable=False,
         unique=False,
     )
-    service = db.relationship(Service, back_populates="service_sms_senders")
+    service = db.relationship(
+        Service,
+        backref=db.backref("service_sms_senders", uselist=True),
+    )
     is_default = db.Column(db.Boolean, nullable=False, default=True)
     archived = db.Column(db.Boolean, nullable=False, default=False)
     inbound_number_id = db.Column(
