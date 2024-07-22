@@ -217,7 +217,6 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     if job is None:
         job = get_job_from_s3(service_id, job_id)
         JOBS[job_id] = job
-        print(f"CACHE MISS FOR JOB_ID {job_id}")
         incr_jobs_cache_misses()
     else:
         incr_jobs_cache_hits()
