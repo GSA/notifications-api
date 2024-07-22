@@ -60,7 +60,7 @@
 - [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
   - [Potential PII Locations](#potential-pii-locations)
   - [Data Retention Policy](#data-retention-policy)
-- [Troubleshooting]
+- [Troubleshooting](#troubleshooting)
   - [Debug messages not being sent](#debug-messages-not-being-sent)
     - [Getting the file location and tracing what happens](#getting-the-file-location-and-tracing-what-happens)
     - [Viewing the csv file](#viewing-the-csv-file)
