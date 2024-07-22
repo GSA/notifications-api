@@ -60,9 +60,13 @@
 - [Data Storage Policies \& Procedures](#data-storage-policies--procedures)
   - [Potential PII Locations](#potential-pii-locations)
   - [Data Retention Policy](#data-retention-policy)
-- [Debug messages not being sent](#debug-messages-not-being-sent)
-  - [Getting the file location and tracing what happens](#getting-the-file-location-and-tracing-what-happens)
-  - [Viewing the csv file](#viewing-the-csv-file)
+- [Troubleshooting]
+  - [Debug messages not being sent](#debug-messages-not-being-sent)
+    - [Getting the file location and tracing what happens](#getting-the-file-location-and-tracing-what-happens)
+    - [Viewing the csv file](#viewing-the-csv-file)
+  - [Deployment / app push problems](#deployment--app-push-problems)
+    - [Routes cannot be mapped to destinations in different spaces](#routes-cannot-be-mapped-to-destinations-in-different-spaces)
+    - [API request failed](#api-request-failed)
 
 
 # Infrastructure overview
