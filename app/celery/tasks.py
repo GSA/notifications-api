@@ -443,7 +443,6 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
 
 @notify_celery.task(name="regenerate-job-cache")
 def regenerate_job_cache():
-    print("ENTER REGENERATE_JOB_CACHE")
     s3.get_s3_files()
 
 

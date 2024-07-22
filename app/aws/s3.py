@@ -45,7 +45,9 @@ def list_s3_objects():
             else:
                 break
     except Exception as e:
-        current_app.logger.error(f"An error occurred while regenerating cache {e}")
+        current_app.logger.error(
+            f"An error occurred while regenerating cache #notify-admin-1200 {e}"
+        )
     return objects
 
 
@@ -63,7 +65,9 @@ def get_s3_files():
     objects = list_s3_objects()
 
     s3res = session.resource("s3", config=AWS_CLIENT_CONFIG)
-    current_app.logger.info(f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200")
+    current_app.logger.info(
+        f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200"
+    )
     for object in objects:
         object_arr = object.split("/")
         job_id = object_arr[1]
@@ -74,7 +78,9 @@ def get_s3_files():
             )
             if "phone number" in object.lower():
                 JOBS[job_id] = object
-    current_app.logger.info(f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200")
+    current_app.logger.info(
+        f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
+    )
 
 
 def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
