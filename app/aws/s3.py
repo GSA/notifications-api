@@ -69,15 +69,24 @@ def get_s3_files():
         f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200"
     )
     for object in objects:
-        object_arr = object.split("/")
-        job_id = object_arr[1]
-        job_id = job_id.replace(".csv", "")
-        if JOBS.get(job_id) is None:
-            object = (
-                s3res.Object(bucket_name, object).get()["Body"].read().decode("utf-8")
-            )
-            if "phone number" in object.lower():
-                JOBS[job_id] = object
+        # We put our csv files in the format "service-{service_id}-notify/{job_id}"
+        try:
+            object_arr = object.split("/")
+            job_id = object_arr[1]  # get the job_id
+            job_id = job_id.replace(".csv", "")  # we just want the job_id
+            if JOBS.get(job_id) is None:
+                object = (
+                    s3res.Object(bucket_name, object)
+                    .get()["Body"]
+                    .read()
+                    .decode("utf-8")
+                )
+                if "phone number" in object.lower():
+                    JOBS[job_id] = object
+        except LookupError as le:
+            # perhaps our key is not formatted as we expected.  If so skip it.
+            current_app.logger.error(f"LookupError {le} #notify-admin-1200")
+
     current_app.logger.info(
         f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
     )
