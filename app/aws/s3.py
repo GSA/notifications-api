@@ -36,7 +36,7 @@ def list_s3_objects():
         response = s3.list_objects_v2(Bucket=bucket_name)
         while True:
             for obj in response.get("Contents", []):
-                objects.append(obj["Key"])
+                yield obj["Key"]
             if "NextContinuationToken" in response:
                 response = s3.list_objects_v2(
                     Bucket=bucket_name,
@@ -48,7 +48,7 @@ def list_s3_objects():
         current_app.logger.error(
             f"An error occurred while regenerating cache #notify-admin-1200 {e}"
         )
-    return objects
+
 
 
 def get_s3_files():
