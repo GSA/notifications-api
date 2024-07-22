@@ -31,7 +31,6 @@ def list_s3_objects():
     )
     s3 = session.client("s3")
 
-    objects = []
     try:
         response = s3.list_objects_v2(Bucket=bucket_name)
         while True:
@@ -48,7 +47,6 @@ def list_s3_objects():
         current_app.logger.error(
             f"An error occurred while regenerating cache #notify-admin-1200 {e}"
         )
-
 
 
 def get_s3_files():
