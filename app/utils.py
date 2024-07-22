@@ -60,11 +60,6 @@ def get_midnight_in_utc(date):
     return datetime.combine(date, datetime.min.time())
 
 
-# def get_midnight_for_day_before(date):
-#     day_before = date - timedelta(1)
-#     return get_midnight_in_utc(day_before)
-
-
 def get_month_from_utc_column(column):
     """
     Where queries need to count notifications by month it needs to be
@@ -110,20 +105,6 @@ def get_archived_db_column_value(column):
 
 def get_dt_string_or_none(val):
     return val.strftime(DATETIME_FORMAT) if val else None
-
-
-# def get_uuid_string_or_none(val):
-#     return str(val) if val else None
-
-
-# def format_sequential_number(sequential_number):
-#     return format(sequential_number, "x").zfill(8)
-
-
-# def get_reference_from_personalisation(personalisation):
-#     if personalisation:
-#         return personalisation.get("reference")
-#     return None
 
 
 # Function used for debugging.

@@ -1,4 +1,3 @@
-# import uuid
 from datetime import date, datetime
 
 import pytest
@@ -27,18 +26,6 @@ def test_get_midnight_in_utc_returns_expected_date(date, expected_date):
     assert get_midnight_in_utc(date) == expected_date
 
 
-# @pytest.mark.parametrize(
-#     "date, expected_date",
-#     [
-#         (datetime(2016, 1, 15, 0, 30), datetime(2016, 1, 14, 0, 0)),
-#         (datetime(2016, 7, 15, 0, 0), datetime(2016, 7, 14, 0, 0)),
-#         (datetime(2016, 8, 23, 11, 59), datetime(2016, 8, 22, 0, 0)),
-#     ],
-# )
-# def test_get_midnight_for_day_before_returns_expected_date(date, expected_date):
-#     assert get_midnight_for_day_before(date) == expected_date
-
-
 @pytest.mark.parametrize(
     "current_time, arg, expected_datetime",
     [
@@ -61,40 +48,7 @@ def test_midnight_n_days_ago(current_time, arg, expected_datetime):
         assert midnight_n_days_ago(arg) == expected_datetime
 
 
-# def test_format_sequential_number():
-#     assert format_sequential_number(123) == "0000007b"
-
-
-# @pytest.mark.parametrize(
-#     "personalisation, expected_response",
-#     [
-#         ({"nothing": "interesting"}, None),
-#         ({"reference": "something"}, "something"),
-#         (None, None),
-#     ],
-# )
-# def test_get_reference_from_personalisation(personalisation, expected_response):
-#     assert get_reference_from_personalisation(personalisation) == expected_response
-
-
-# def test_get_uuid_string_or_none():
-#     my_uuid = uuid.uuid4()
-#     assert str(my_uuid) == get_uuid_string_or_none(my_uuid)
-
-#     assert get_uuid_string_or_none(None) is None
-
-
 def test_get_public_notify_type_text():
     assert (
         get_public_notify_type_text(ServicePermissionType.UPLOAD_DOCUMENT) == "document"
     )
-
-
-# This method is used for simulating bulk sends.  We use localstack and run on a developer's machine to do the
-# simulation.  Please see docs->bulk_testing.md for instructions.
-# def test_generate_csv_for_bulk_testing():
-#     f = open("bulktest_100000.csv", "w")
-#     f.write("phone number\n")
-#     for _ in range(0, 100000):
-#         f.write("16615555555\n")
-#     f.close()
