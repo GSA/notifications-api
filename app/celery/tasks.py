@@ -441,6 +441,11 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
             )
 
 
+@notify_celery.task(name="regenerate-job-cache")
+def regenerate_job_cache():
+    s3.get_s3_files()
+
+
 @notify_celery.task(name="process-incomplete-jobs")
 def process_incomplete_jobs(job_ids):
     jobs = [dao_get_job_by_id(job_id) for job_id in job_ids]
