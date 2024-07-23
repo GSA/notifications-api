@@ -590,7 +590,7 @@ def process_row_from_job(job_id, job_row_number):
 
 
 @notify_command(name="download-csv-file-by-name")
-@click.option("-f", "--csv_filename", required=True, help="csv file name")
+@click.argument("csv_filename")
 def download_csv_file_by_name(csv_filename):
 
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
@@ -598,9 +598,7 @@ def download_csv_file_by_name(csv_filename):
     secret = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
     region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
     content = s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region)
-    # We want it all to get logged in one line
-    content = content.replace("\n", "|")
-    print(content)
+    click.echo(content)
 
 
 @notify_command(name="populate-annual-billing-with-the-previous-years-allowance")
