@@ -23,7 +23,7 @@ from app.utils import utc_now
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
-DELIVERY_RECEIPT_DELAY_IN_SECONDS = 120
+DELIVERY_RECEIPT_DELAY_IN_SECONDS = 30
 
 
 @notify_celery.task(
