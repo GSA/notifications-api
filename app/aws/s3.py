@@ -138,15 +138,12 @@ def extract_personalisation(job):
     print(hilite(f"first_row again: {first_row}"))
     personalisation = {}
     job_row = 0
-
     row_csv_module = csv.reader(job)
-    for row_module in row_csv_module:
-        print(hilite(f"CSV MODULE ROW: {row_module}"))
 
-    for row in job:
-        row = row.split(",")
+    for row in row_csv_module:
         print(hilite(f"row: {row}"))
         temp = dict(zip(first_row, row))
+        print(hilite(f"temp: {temp}"))
         personalisation[job_row] = temp
         job_row = job_row + 1
         print(hilite(f"job_row: {job_row}"))

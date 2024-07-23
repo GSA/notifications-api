@@ -18,7 +18,7 @@ from app.dao.notifications_dao import (
 from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
-from app.utils import utc_now
+from app.utils import hilite, utc_now
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
@@ -100,7 +100,7 @@ def deliver_sms(self, notification_id):
         notification = notifications_dao.get_notification_by_id(notification_id)
         ansi_green = "\033[32m"
         ansi_reset = "\033[0m"
-
+        print(hilite(f"notification inside of deliver_sms: {notification}"))
         if not notification:
             raise NoResultFound()
         if (
