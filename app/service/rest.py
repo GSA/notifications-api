@@ -202,9 +202,7 @@ def get_service_by_id(service_id):
 
         data = service_schema.dump(fetched)
 
-    current_app.logger.info(
-        f'>> SERVICE: {data["id"]}; sms_senders: {data["sms_senders_with_hints"]}'
-    )
+    current_app.logger.info(f'>> SERVICE: {data["id"]}; {data}')
     return jsonify(data=data)
 
 
