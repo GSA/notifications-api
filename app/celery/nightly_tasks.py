@@ -51,7 +51,13 @@ def cleanup_unfinished_jobs():
     for job in jobs:
         # The query already checks that the processing_finished time is null, so here we are saying
         # if it started more than 4 hours ago, that's too long
-        acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+        try:
+            acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+        except TypeError:
+            current_app.logger.error(
+                f"Job ID {job.id} processing_started is {job.processing_started}."
+            )
+            raise
         if now > acceptable_finish_time:
             remove_csv_object(job.original_file_name)
             dao_archive_job(job)
