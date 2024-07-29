@@ -438,23 +438,31 @@ Rules for use:
 
 If this is the first time you have used Terraform in this repository, you will first have to hook your copy of Terraform up to our remote state. Follow [Retrieving existing bucket credentials](https://github.com/GSA/notifications-api/tree/main/terraform#retrieving-existing-bucket-credentials).
 
+:anchor: The Admin app depends upon the API app, so set up the API first.
+
 1. Set up services:
-    ```
+    ```bash
     $ cd terraform/sandbox
     $ ../create_service_account.sh -s notify-sandbox -u <your-name>-terraform -m > secrets.auto.tfvars
     $ terraform init
     $ terraform plan
     $ terraform apply
     ```
+    Check [Terraform troubleshooting](https://github.com/GSA/notifications-api/tree/main/terraform#troubleshooting) if you encounter problems.
 1. Change back to the project root directory: `cd ../..`
-1. start a poetry shell as a shortcut to load `.env` file variables: `$ poetry shell`
+1. Start a poetry shell as a shortcut to load `.env` file variables by running `poetry shell`. (You'll have to restart this any time you change the file.)
 1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
-1. Deploy the application:
+1. Ensure you are using the correct CloudFoundry target
+  ```bash
+  cf target -o gsa-tts-benefits-studio -s notify-sandbox
   ```
+1. Deploy the application:
+  ```bash
   cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
   ```
   The real `push` command has more var arguments than the single one above. Get their values from a Notify team member.
-1. Visit the URL of the app you just deployed
+
+1. Visit the URL(s) of the app you just deployed
   * Admin https://notify-sandbox.app.cloud.gov/
   * API https://notify-api-sandbox.app.cloud.gov/
 
@@ -1392,7 +1400,24 @@ After pushing the Admin app, you might see this in the logs
 {"name": "app", "levelname": "ERROR", "message": "API unknown failed with status 503 message Request failed", "pathname": "/home/vcap/app/app/__init__.py", ...
 ```
 
-This indicates that the Admin and API apps are unable to talk to each other because of either a missing route or a missing network policy. The apps require [container-to-container networking](https://cloud.gov/docs/management/container-to-container/) to communicate. List `cf network-policies` and compare the output to our other deployed envs. If you find a policy is missing, you might have to create a network policy with something like:
+And you would also see this in the Admin web UI
+
 ```
+Sorry, we can't deliver what you asked for right now.
+```
+
+This indicates that the Admin and API apps are unable to talk to each other because of either a missing route or a missing network policy. The apps require [container-to-container networking](https://cloud.gov/docs/management/container-to-container/) to communicate. List `cf network-policies`; you should see one connecting API and Admin on port 61443. If not, you can create one manually:
+
+```bash
 cf add-network-policy notify-admin-sandbox notify-api-sandbox --protocol tcp --port 61443
 ```
+
+### Service instance not found
+
+This error encounted after `cf push` indicates you may be using the wrong CloudFoundry target
+
+```
+For application 'notify-api-sandbox': Service instance 'notify-api-rds-sandbox' not found
+```
+
+Run `cf target -o gsa-tts-benefits-studio -s notify-sandbox` before pushing to the Sandbox
