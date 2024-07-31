@@ -330,6 +330,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
         template=template,
     )
     db_notification.personalisation = {"misc": placeholder}
+    db_notification.reply_to_text = 'testing'
 
     mocker.patch("app.aws_sns_client.send_sms")
 
@@ -621,6 +622,7 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         billable_units=0,
         status=NotificationStatus.CREATED,
         key_type=key_type,
+        reply_to_text='testing',
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -784,7 +786,7 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+12028675309", normalised_to="2028675309"
+        template=sample_template, to_field="+12028675309", normalised_to="2028675309", reply_to_text='testing'
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -860,7 +862,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
 
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+447700900855", normalised_to="447700900855"
+        template=sample_template, to_field="+447700900855", normalised_to="447700900855", reply_to_text='testing'
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
