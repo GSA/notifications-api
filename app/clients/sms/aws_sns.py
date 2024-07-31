@@ -2,6 +2,7 @@ import os
 import re
 from time import monotonic
 
+from app.utils import hilite
 import botocore
 import phonenumbers
 from boto3 import client
@@ -54,7 +55,7 @@ class AwsSnsClient(SmsClient):
             to = phonenumbers.format_number(
                 match.number, phonenumbers.PhoneNumberFormat.E164
             )
-
+            print(hilite(f"to in send_sms: {to}"))
             # See documentation
             # https://docs.aws.amazon.com/sns/latest/dg/sms_publish-to-phone.html#sms_publish_sdk
             attributes = {

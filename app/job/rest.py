@@ -33,7 +33,7 @@ from app.schemas import (
     notifications_filter_schema,
     unarchived_template_schema,
 )
-from app.utils import midnight_n_days_ago, pagination_links
+from app.utils import hilite, midnight_n_days_ago, pagination_links
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
@@ -172,6 +172,7 @@ def create_job(service_id):
         raise InvalidRequest("Create job is not allowed: service is inactive ", 403)
 
     data = request.get_json()
+    print(hilite(f"data at the top of create_job: {data}"))
     original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:

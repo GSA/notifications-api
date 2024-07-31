@@ -170,6 +170,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
     notification = encryption.decrypt(encrypted_notification)
+    print(hilite(f"notification at the top of save_sms: {notification}"))
     # SerialisedService and SerialisedTemplate classes are
     # used here to grab the same service and template from the cache
     # to improve performance.

@@ -86,6 +86,7 @@ def send_sms_to_provider(notification):
                         notification.job_id,
                         notification.job_row_number,
                     )
+                    print(hilite(f"recipient: {recipient}"))
                 except Exception:
                     # It is our 2facode, maybe
                     key = f"2facode-{notification.id}".replace(" ", "")
@@ -108,6 +109,7 @@ def send_sms_to_provider(notification):
                     "sender": notification.reply_to_text,
                     "international": notification.international,
                 }
+                print(hilite(f"send_sms_kwargs: {send_sms_kwargs}"))
                 db.session.close()  # no commit needed as no changes to objects have been made above
 
                 message_id = provider.send_sms(**send_sms_kwargs)
