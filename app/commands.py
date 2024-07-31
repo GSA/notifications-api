@@ -36,12 +36,14 @@ from app.dao.organization_dao import (
     dao_get_organization_by_email_address,
     dao_get_organization_by_id,
 )
+from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.dao.services_dao import (
     dao_fetch_all_services_by_user,
     dao_fetch_all_services_created_by_user,
     dao_fetch_service_by_id,
     dao_update_service,
     delete_service_and_all_associated_db_objects,
+    get_services_by_partial_name,
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import (
@@ -598,6 +600,21 @@ def download_csv_file_by_name(csv_filename):
     secret = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
     region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
     print(s3.get_s3_file(bucket_name, csv_filename, access_key, secret, region))
+
+
+@notify_command(name="dump-sms-senders")
+@click.argument("service_name")
+def dump_user_info(service_name):
+    services = get_services_by_partial_name(service_name)
+    if len(services) > 1:
+        raise ValueError(
+            f"Please use a unique and complete service name instead of {service_name}"
+        )
+
+    senders = dao_get_sms_senders_by_service_id(services[0].id)
+    for sender in senders:
+        # Not PII, okay to put in logs
+        click.echo(sender.serialize())
 
 
 @notify_command(name="populate-annual-billing-with-the-previous-years-allowance")
