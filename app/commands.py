@@ -604,7 +604,10 @@ def download_csv_file_by_name(csv_filename):
 
 @notify_command(name="dump-sms-senders")
 @click.argument("service_name")
-def dump_user_info(service_name):
+def dump_sms_senders(service_name):
+
+    # poetry run flask command dump-sms-senders MyServiceName
+    # cf run-task notify-api-production --command "flask command dump-sms-senders MyServiceName"
     services = get_services_by_partial_name(service_name)
     if len(services) > 1:
         raise ValueError(
