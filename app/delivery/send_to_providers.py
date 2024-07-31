@@ -10,6 +10,7 @@ from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
+from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
@@ -101,6 +102,18 @@ def send_sms_to_provider(notification):
                     raise Exception(
                         f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
                     )
+
+                possible_senders = dao_get_sms_senders_by_service_id(
+                    notification.service_id
+                )
+                sender_numbers = []
+                for possible_sender in possible_senders:
+                    sender_numbers.append(possible_sender.sms_sender)
+                if notification.reply_to_text not in sender_numbers:
+                    raise ValueError(
+                        f"{notification.reply_to_text} not in {sender_numbers} #notify-admin-1701"
+                    )
+
                 send_sms_kwargs = {
                     "to": recipient,
                     "content": str(template),
