@@ -103,12 +103,7 @@ def send_sms_to_provider(notification):
                         f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
                     )
 
-                possible_senders = dao_get_sms_senders_by_service_id(
-                    notification.service_id
-                )
-                sender_numbers = []
-                for possible_sender in possible_senders:
-                    sender_numbers.append(possible_sender.sms_sender)
+                sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
                         f"{notification.reply_to_text} not in {sender_numbers} #notify-admin-1701"
@@ -141,6 +136,14 @@ def send_sms_to_provider(notification):
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
+
+
+def get_sender_numbers(notification):
+    possible_senders = dao_get_sms_senders_by_service_id(notification.service_id)
+    sender_numbers = []
+    for possible_sender in possible_senders:
+        sender_numbers.append(possible_sender.sms_sender)
+    return sender_numbers
 
 
 def send_email_to_provider(notification):
