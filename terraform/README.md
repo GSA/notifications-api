@@ -33,15 +33,6 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files. Now you are ready to develop Terraform using the [Workflow for deployed environments](#workflow-for-deployed-environments).
 
-## SpaceDeployers
-
-A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
-deploy the application from the CI/CD pipeline. Create a new account by running:
-
-`./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
-
-SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [the next section](#workflow-for-deployed-environments).
-
 ## Workflow for deployed environments
 
 These are the steps for developing Terraform code for our deployed environment modules (`sandbox`, `demo`, `staging` and `production`) locally on your laptop. Or for setting up a new deployment environment, or otherwise for running Terraform manually in any module that uses remote state. You don't need to do all this to run code in the `development` module, because it is not a deployed environment and it does not use remote state.
@@ -110,6 +101,15 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     List `cf services` if you are unsure which space deployer service instances still exist
 
     Optionally, you can also `rm secrets.auto.tfvars`
+
+## SpaceDeployers
+
+A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
+deploy the application from the CI/CD pipeline. Create a new account by running:
+
+`./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
+
+SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [the next section](#workflow-for-deployed-environments).
 
 ## Structure
 
