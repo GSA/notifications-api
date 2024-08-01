@@ -8,6 +8,7 @@ from app.commands import (
     bulk_invite_user_to_service,
     create_new_service,
     create_test_user,
+    download_csv_file_by_name,
     fix_billable_units,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
@@ -425,6 +426,22 @@ def test_promote_user_to_platform_admin(
 
     user = get_user_by_email("notify@digital.fake.gov")
     assert user.platform_admin is True
+
+
+def test_download_csv_file_by_name(
+    notify_api, sample_platform_admin
+):
+    assert sample_platform_admin.platform_admin is True
+
+    result = notify_api.test_cli_runner().invoke(
+        download_csv_file_by_name,
+        [
+            "NonExistentName",
+        ],
+    )
+
+    print(result)
+    assert result == '404'
 
 
 def test_promote_user_to_platform_admin_no_result_found(
