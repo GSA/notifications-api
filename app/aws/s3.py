@@ -104,15 +104,20 @@ def download_from_s3(
         region_name=region,
     )
     s3 = session.client("s3", config=AWS_CLIENT_CONFIG)
+    result = None
     try:
-        s3.download_file(bucket_name, s3_key, local_filename)
+        result = s3.download_file(bucket_name, s3_key, local_filename)
         print(f"File downloaded successfully to {local_filename}")
-    except botocore.exceptions.NoCredentialsError:
+    except botocore.exceptions.NoCredentialsError as nce:
         print("Credentials not found")
-    except botocore.exceptions.PartialCredentialsError:
+        raise Exception(nce)
+    except botocore.exceptions.PartialCredentialsError as pce:
         print("Incomplete credentials provided")
+        raise Exception(pce)
     except Exception as e:
         print(f"An error occurred {e}")
+        raise Exception(e)
+    return result
 
 
 def get_s3_object(bucket_name, file_location, access_key, secret_key, region):

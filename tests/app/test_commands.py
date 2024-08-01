@@ -428,9 +428,7 @@ def test_promote_user_to_platform_admin(
     assert user.platform_admin is True
 
 
-def test_download_csv_file_by_name(
-    notify_api, sample_platform_admin
-):
+def test_download_csv_file_by_name(notify_api, sample_platform_admin):
     assert sample_platform_admin.platform_admin is True
 
     result = notify_api.test_cli_runner().invoke(
@@ -440,8 +438,9 @@ def test_download_csv_file_by_name(
         ],
     )
 
-    print(result)
-    assert result == '404'
+    # if we get a 404, it means that the file is not in s3 (of course)
+    # but we are making the call to s3, etc. so that part is working
+    assert "404" in str(result)
 
 
 def test_promote_user_to_platform_admin_no_result_found(
