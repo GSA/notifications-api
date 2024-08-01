@@ -1,6 +1,6 @@
 # Terraform
 
-<img align="right" height="350" src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA23900.width-1440.jpg">
+<img align="right" height="300" alt="illustration of space exploration" src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA23900.width-1440.jpg">
 
 This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
 * [Set up](#retrieving-existing-bucket-credentials) the Sandbox and develop Terraform,
@@ -108,7 +108,11 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
 ### Version upgrade checklist
 
-* Cloud Foundry Terraform plugin in every module, [here for example](sandbox/providers.tf#L6)
+* Cloud Foundry Terraform plugin in every module in the API and Admin apps, [here for example](sandbox/providers.tf#L6).
+* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to serveral times in most modules, [here for example](sandbox/main.tf#16).
+* Cloud Service Broker (CSB) version in [the SMS](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-sms.sh) and [the SMTP](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-smtp.sh) download scripts of the usnotify-ssb repo.
+* SMS and SMTP brokerpak versions, also in the download scripts of the usnotify-ssb repo, along with with the [SMTP brokerpak project](https://github.com/GSA-TTS/datagov-brokerpak-smtp) itself.
+* The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
 
 
 ## SpaceDeployers
