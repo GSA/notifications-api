@@ -116,7 +116,8 @@ def download_from_s3(
         raise Exception(pce)
     except Exception as e:
         print(f"An error occurred {e}")
-        raise Exception(e)
+        text = f"EXCEPTION {e} local_filename {local_filename}"
+        raise Exception(text)
     return result
 
 
