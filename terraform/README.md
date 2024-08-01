@@ -4,6 +4,7 @@
 
 This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
 * [Set up](#retrieving-existing-bucket-credentials) the Sandbox and develop Terraform,
+* [Maintain](#maintenance) software versions or CI/CD,
 * [Learn](#structure) about the directory structure, or
 * [Troubleshoot](#troubleshooting) error messages
 
