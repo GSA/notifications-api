@@ -428,23 +428,22 @@ def test_promote_user_to_platform_admin(
     assert user.platform_admin is True
 
 
-def test_download_csv_file_by_name(notify_api, sample_platform_admin):
-    assert sample_platform_admin.platform_admin is True
-
-    result = notify_api.test_cli_runner().invoke(
+def test_download_csv_file_by_name(notify_api, mocker):
+    mock_download = mocker.patch("app.commands.s3.download_from_s3")
+    notify_api.test_cli_runner().invoke(
         download_csv_file_by_name,
         [
+            "-f",
             "NonExistentName",
         ],
     )
-
-    # if we get a 404, it means that the file is not in s3 (of course)
-    # but we are making the call to s3, etc. so that part is working
-    assert "404" in str(result)
+    mock_download.assert_called_once()
 
 
 def test_promote_user_to_platform_admin_no_result_found(
-    notify_db_session, notify_api, sample_user
+    notify_db_session,
+    notify_api,
+    sample_user,
 ):
     assert sample_user.platform_admin is False
 

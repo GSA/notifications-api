@@ -592,14 +592,15 @@ def process_row_from_job(job_id, job_row_number):
 
 
 @notify_command(name="download-csv-file-by-name")
-@click.argument("csv_filename")
+@click.option("-f", "--csv_filename", required=True, help="S3 file location")
 def download_csv_file_by_name(csv_filename):
-    # poetry run flask command download-csv-file-by-name <s3 file location>
-    # cf run-task notify-api-production --command "flask command download-csv-file-by-name <s3 location>"
+    # poetry run flask command download-csv-file-by-name -f <s3 file location>
+    # cf run-task notify-api-production --command "flask command download-csv-file-by-name -f <s3 location>"
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
     access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
     secret = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
     region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+
     s3.download_from_s3(
         bucket_name, csv_filename, "download.csv", access_key, secret, region
     )
