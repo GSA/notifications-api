@@ -116,10 +116,10 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 * The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
 
 
-## SpaceDeployers
+### SpaceDeployers
 
 A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
-deploy the application from the CI/CD pipeline. Create a new account by running:
+deploy the application from the CI/CD pipeline. During CI/CD maintenance you might need to create a new account:
 
 `./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
 
