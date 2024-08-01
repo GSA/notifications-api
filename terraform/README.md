@@ -1,5 +1,7 @@
 # Terraform
 
+<img align="right" height="350" src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA23900.width-1440.jpg">
+
 This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
 * [Set up](#retrieving-existing-bucket-credentials) the Sandbox and develop Terraform,
 * [Learn](#structure) about the directory structure, or
@@ -75,7 +77,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
     This will show you any pending changes that Terraform is ready to make.
 
-    :pencil: Now is the time to write any HCL code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop. Keep in mind that any changes to the codebase that you commit will be run by the CI/CD pipeline.
+    :pencil: Now is the time to write any HCL code (aka Terraform code) you are planning to write, re-running `terraform plan` to confirm that the code works as you develop. Keep in mind that any changes to the codebase that you commit will be run by the CI/CD pipeline.
 
 1. **Only if it is safe to do so**, apply your changes.
 
@@ -102,6 +104,13 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
     Optionally, you can also `rm secrets.auto.tfvars`
 
+## Maintenance
+
+### Version upgrade checklist
+
+* Cloud Foundry Terraform plugin in every module, [here for example](sandbox/providers.tf#L6)
+
+
 ## SpaceDeployers
 
 A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
@@ -109,7 +118,7 @@ deploy the application from the CI/CD pipeline. Create a new account by running:
 
 `./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
 
-SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [the next section](#workflow-for-deployed-environments).
+SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [Workflow for deployed environments](#workflow-for-deployed-environments).
 
 ## Structure
 
