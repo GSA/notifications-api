@@ -30,7 +30,6 @@ from app.dao.users_dao import (
     reset_failed_login_count,
     save_model_user,
     save_user_attribute,
-    update_user_password,
     use_user_code,
 )
 from app.enums import CodeType, KeyType, NotificationType, TemplateType
@@ -45,7 +44,6 @@ from app.schemas import (
     create_user_schema,
     email_data_request_schema,
     partial_email_data_request_schema,
-    user_update_password_schema_load_json,
     user_update_schema_load_json,
 )
 from app.user.users_schema import (
@@ -628,57 +626,6 @@ def get_all_users():
     return jsonify(data=result), 200
 
 
-@user_blueprint.route("/reset-password", methods=["POST"])
-def send_user_reset_password():
-    request_json = request.get_json()
-    email = email_data_request_schema.load(request_json)
-
-    user_to_send_to = get_user_by_email(email["email"])
-    template = dao_get_template_by_id(current_app.config["PASSWORD_RESET_TEMPLATE_ID"])
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
-    personalisation = {
-        "user_name": user_to_send_to.name,
-        "url": _create_reset_password_url(
-            user_to_send_to.email_address,
-            base_url=request_json.get("admin_base_url"),
-            next_redirect=request_json.get("next"),
-        ),
-    }
-    saved_notification = persist_notification(
-        template_id=template.id,
-        template_version=template.version,
-        recipient=email["email"],
-        service=service,
-        personalisation=None,
-        notification_type=template.template_type,
-        api_key_id=None,
-        key_type=KeyType.NORMAL,
-        reply_to_text=service.get_default_reply_to_email_address(),
-    )
-    saved_notification.personalisation = personalisation
-
-    redis_store.set(
-        f"email-personalisation-{saved_notification.id}",
-        json.dumps(personalisation),
-        ex=60 * 60,
-    )
-    send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
-
-    return jsonify({}), 204
-
-
-@user_blueprint.route("/<uuid:user_id>/update-password", methods=["POST"])
-def update_password(user_id):
-    user = get_user_by_id(user_id=user_id)
-    req_json = request.get_json()
-    password = req_json.get("_password")
-
-    user_update_password_schema_load_json.load(req_json)
-
-    update_user_password(user, password)
-    return jsonify(data=user.serialize()), 200
-
-
 @user_blueprint.route("/report-all-users", methods=["GET"])
 def report_all_users():
     users = dao_report_users()
@@ -690,17 +637,6 @@ def get_organizations_and_services_for_user(user_id):
     user = get_user_and_accounts(user_id)
     data = get_orgs_and_services(user)
     return jsonify(data)
-
-
-def _create_reset_password_url(email, next_redirect, base_url=None):
-    data = json.dumps({"email": email, "created_at": str(utc_now())})
-    static_url_part = "/new-password/"
-    full_url = url_with_token(
-        data, static_url_part, current_app.config, base_url=base_url
-    )
-    if next_redirect:
-        full_url += "?{}".format(urlencode({"next": next_redirect}))
-    return full_url
 
 
 def _create_verification_url(user, base_url):

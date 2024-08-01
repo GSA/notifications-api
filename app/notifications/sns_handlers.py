@@ -1,5 +1,4 @@
 import enum
-from datetime import timedelta
 from json import decoder
 
 import requests
@@ -7,8 +6,6 @@ from flask import current_app, json
 
 from app.errors import InvalidRequest
 from app.notifications.sns_cert_validator import validate_sns_cert
-
-DEFAULT_MAX_AGE = timedelta(days=10000)
 
 
 class SNSMessageType(enum.Enum):
