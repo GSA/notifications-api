@@ -7,6 +7,8 @@ This directory holds the Terraform modules for maintaining Notify.gov's API infr
 
 The Admin app repo [has its own terraform directory](https://github.com/GSA/notifications-admin/tree/main/terraform) but a lot of the below instructions apply to both apps.
 
+:tv: [Video introduction](https://drive.google.com/file/d/13SR3M8IowYBa4Wp_YEcuAURZ74EcCYoc/) to Notify infrastructure
+
 ## Retrieving existing bucket credentials
 
 :green_book: New developers start here!
