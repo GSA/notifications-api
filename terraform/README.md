@@ -112,10 +112,10 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 These version numbers are hardcoded in Terraform or shell scripts. We should periodically check them for upgrades.
 
 * Cloud Foundry Terraform plugin in every module in the API and Admin apps, [here for example](sandbox/providers.tf#L6).
-* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to serveral times in most modules, [here for example](sandbox/main.tf#16).
+* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to serveral times in most modules, [here for example](sandbox/main.tf#L16).
 * Cloud Service Broker (CSB) version in [the SMS](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-sms.sh) and [the SMTP](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-smtp.sh) download scripts of the usnotify-ssb repo.
 * SMS and SMTP brokerpak versions, also in the download scripts of the usnotify-ssb repo. (And we may have to help maintain the [SMTP brokerpak project](https://github.com/GSA-TTS/datagov-brokerpak-smtp) itself.)
-* The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
+* The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#L33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
 * A required minimum version of Terraform is noted in every providers.tf file, [here for example](sandbox/providers.tf#L2). It would be best to keep it in sync with the version used by our CI/CD deployment pipeline. But, it does not need to be updated with every new Terraform release.
 
 :tv: Some of these version upgrades are discussed in our [video introduction](https://drive.google.com/file/d/13SR3M8IowYBa4Wp_YEcuAURZ74EcCYoc/).
