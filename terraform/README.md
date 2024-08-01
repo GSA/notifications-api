@@ -33,43 +33,6 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files. Now you are ready to develop Terraform using the [Workflow for deployed environments](#workflow-for-deployed-environments).
 
-## Initial setup
-
-These instructions were used for deploying the project for the first time, years ago. We should not have to perform these steps again. They are provided here for reference.
-
-1. Manually run the bootstrap module following instructions under [Terraform State Credentials](#terraform-state-credentials)
-1. Setup CI/CD Pipeline to run Terraform
-    1. Copy bootstrap credentials to your CI/CD secrets using the instructions in the base README
-    1. Create a cloud.gov SpaceDeployer by following the instructions under [SpaceDeployers](#spacedeployers)
-    1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
-1. Manually Running Terraform
-    1. Follow instructions under [Workflow for deployed environments](#workflow-for-deployed-environments) to create your infrastructure
-
-### Terraform state credentials
-
-The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in. (If the bucket is already created, you should [Use bootstrap credentials](#use-bootstrap-credentials))
-
-#### Bootstrapping the state storage s3 buckets for the first time
-
-1. Within the `bootstrap` directory, run `terraform init`
-1. Run `./run.sh plan` to verify that the changes are what you expect
-1. Run `./run.sh apply` to set up the bucket
-1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
-1. Ensure that `import.sh` includes a line and correct IDs for any resources created
-1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
-1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
-
-#### To make changes to the bootstrap module
-
-*This should not be necessary in most cases*
-
-1. Run `terraform init`
-1. If you don't have terraform state locally:
-    1. run `./import.sh`
-    1. optionally run `./run.sh apply` to include the existing outputs in the state file
-1. Make your changes
-1. Continue from step 2 of the boostrapping instructions
-
 ## SpaceDeployers
 
 A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
