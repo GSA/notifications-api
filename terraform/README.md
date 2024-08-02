@@ -1,11 +1,16 @@
 # Terraform
 
+<img align="right" height="300" alt="illustration of space exploration" src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA23900.width-1440.jpg">
+
 This directory holds the Terraform modules for maintaining Notify.gov's API infrastructure. You might want to:
 * [Set up](#retrieving-existing-bucket-credentials) the Sandbox and develop Terraform,
+* [Maintain](#maintenance) software versions or CI/CD,
 * [Learn](#structure) about the directory structure, or
 * [Troubleshoot](#troubleshooting) error messages
 
 The Admin app repo [has its own terraform directory](https://github.com/GSA/notifications-admin/tree/main/terraform) but a lot of the below instructions apply to both apps.
+
+:tv: [Video introduction](https://drive.google.com/file/d/13SR3M8IowYBa4Wp_YEcuAURZ74EcCYoc/) to Notify infrastructure
 
 ## Retrieving existing bucket credentials
 
@@ -30,52 +35,6 @@ Assuming [initial setup](#initial-setup) is complete &mdash; which it should be 
 1. Check which AWS profile you are using with `aws configure list`. If needed, use `export AWS_PROFILE=notify-terraform-backend` to change to the profile and credentials you just added.
 
 These credentials will allow Terraform to access the AWS/Cloud.gov bucket in which developers share Terraform state files. Now you are ready to develop Terraform using the [Workflow for deployed environments](#workflow-for-deployed-environments).
-
-## Initial setup
-
-These instructions were used for deploying the project for the first time, years ago. We should not have to perform these steps again. They are provided here for reference.
-
-1. Manually run the bootstrap module following instructions under [Terraform State Credentials](#terraform-state-credentials)
-1. Setup CI/CD Pipeline to run Terraform
-    1. Copy bootstrap credentials to your CI/CD secrets using the instructions in the base README
-    1. Create a cloud.gov SpaceDeployer by following the instructions under [SpaceDeployers](#spacedeployers)
-    1. Copy SpaceDeployer credentials to your CI/CD secrets using the instructions in the base README
-1. Manually Running Terraform
-    1. Follow instructions under [Workflow for deployed environments](#workflow-for-deployed-environments) to create your infrastructure
-
-### Terraform state credentials
-
-The bootstrap module is used to create an s3 bucket for later terraform runs to store their state in. (If the bucket is already created, you should [Use bootstrap credentials](#use-bootstrap-credentials))
-
-#### Bootstrapping the state storage s3 buckets for the first time
-
-1. Within the `bootstrap` directory, run `terraform init`
-1. Run `./run.sh plan` to verify that the changes are what you expect
-1. Run `./run.sh apply` to set up the bucket
-1. Follow instructions under [Use bootstrap credentials](#use-bootstrap-credentials)
-1. Ensure that `import.sh` includes a line and correct IDs for any resources created
-1. Run `./teardown_creds.sh` to remove the space deployer account used to create the s3 bucket
-1. Copy `bucket` from `bucket_credentials` output to the backend block of `staging/providers.tf` and `production/providers.tf`
-
-#### To make changes to the bootstrap module
-
-*This should not be necessary in most cases*
-
-1. Run `terraform init`
-1. If you don't have terraform state locally:
-    1. run `./import.sh`
-    1. optionally run `./run.sh apply` to include the existing outputs in the state file
-1. Make your changes
-1. Continue from step 2 of the boostrapping instructions
-
-## SpaceDeployers
-
-A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
-deploy the application from the CI/CD pipeline. Create a new account by running:
-
-`./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
-
-SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [the next section](#workflow-for-deployed-environments).
 
 ## Workflow for deployed environments
 
@@ -119,7 +78,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 
     This will show you any pending changes that Terraform is ready to make.
 
-    :pencil: Now is the time to write any HCL code you are planning to write, re-running `terraform plan` to confirm that the code works as you develop. Keep in mind that any changes to the codebase that you commit will be run by the CI/CD pipeline.
+    :pencil: Now is the time to write any HCL code (aka Terraform code) you are planning to write, re-running `terraform plan` to confirm that the code works as you develop. Keep in mind that any changes to the codebase that you commit will be run by the CI/CD pipeline.
 
 1. **Only if it is safe to do so**, apply your changes.
 
@@ -145,6 +104,30 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
     List `cf services` if you are unsure which space deployer service instances still exist
 
     Optionally, you can also `rm secrets.auto.tfvars`
+
+## Maintenance
+
+### Version upgrade checklist
+
+These version numbers are hardcoded in Terraform or shell scripts. We should periodically check them for upgrades.
+
+* Cloud Foundry Terraform plugin in every module in the API and Admin apps, [here for example](sandbox/providers.tf#L6).
+* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to serveral times in most modules, [here for example](sandbox/main.tf#L16).
+* Cloud Service Broker (CSB) version in [the SMS](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-sms.sh) and [the SMTP](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-smtp.sh) download scripts of the usnotify-ssb repo.
+* SMS and SMTP brokerpak versions, also in the download scripts of the usnotify-ssb repo. (And we may have to help maintain the [SMTP brokerpak project](https://github.com/GSA-TTS/datagov-brokerpak-smtp) itself.)
+* The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#L33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
+* A required minimum version of Terraform is noted in every providers.tf file, [here for example](sandbox/providers.tf#L2). It would be best to keep it in sync with the version used by our CI/CD deployment pipeline. But, it does not need to be updated with every new Terraform release.
+
+:tv: Some of these version upgrades are discussed in our [video introduction](https://drive.google.com/file/d/13SR3M8IowYBa4Wp_YEcuAURZ74EcCYoc/).
+
+### SpaceDeployers
+
+A [SpaceDeployer](https://cloud.gov/docs/services/cloud-gov-service-account/) account is required to run terraform or
+deploy the application from the CI/CD pipeline. During CI/CD maintenance you might need to create a new account:
+
+`./create_service_account.sh -s <SPACE_NAME> -u <ACCOUNT_NAME>`
+
+SpaceDeployers are also needed to run Terraform locally &mdash; they fill user and password input variables (via `deployers` within `main.tf`) that some of our Terraform modules require when they start running. Using a SpaceDeployer account locally is covered in [Workflow for deployed environments](#workflow-for-deployed-environments).
 
 ## Structure
 
