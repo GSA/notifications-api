@@ -82,6 +82,8 @@ class ResponseHeaderMiddleware(object):
         except BaseException as be:  # noqa
             if "AuthError" in str(be):
                 current_app.logger.error(be)
+            elif "AttributeError" in str(be):
+                current_app.logger.error(be)
             else:
                 raise be
 
