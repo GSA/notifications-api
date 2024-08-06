@@ -629,7 +629,18 @@ def get_all_users():
 @user_blueprint.route("/report-all-users", methods=["GET"])
 def report_all_users():
     users = dao_report_users()
-    return jsonify(data=users.serialize()), 200
+    download_users = []
+    for user in users:
+        new_user = {
+            "name": user[0],
+            "email_address": user[1],
+            "mobile_number": user[2],
+            "service": user[3],
+        }
+        download_users.append(new_user)
+    print(f"download_users {download_users}")
+    dump = json.dumps(download_users)
+    return jsonify(data=dump), 200
 
 
 @user_blueprint.route("/<uuid:user_id>/organizations-and-services", methods=["GET"])
