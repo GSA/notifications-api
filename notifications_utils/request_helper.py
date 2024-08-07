@@ -84,6 +84,8 @@ class ResponseHeaderMiddleware(object):
                 current_app.logger.error(be)
             elif "AttributeError" in str(be):  # notify-api-1394
                 current_app.logger.error(be)
+            elif "MethodNotAllowed" in str(be): # notify-admin-1392
+                current_app.logger.error(be)
             else:
                 raise be
 
