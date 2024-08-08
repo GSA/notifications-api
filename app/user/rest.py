@@ -638,9 +638,8 @@ def report_all_users():
             "service": user[3],
         }
         download_users.append(new_user)
-    print(f"download_users {download_users}")
-    dump = json.dumps(download_users)
-    return jsonify(data=dump), 200
+
+    return jsonify(data=download_users, status=200, mime_type="application/json"), 200
 
 
 @user_blueprint.route("/<uuid:user_id>/organizations-and-services", methods=["GET"])

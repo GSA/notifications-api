@@ -1137,5 +1137,14 @@ def test_report_all_users(admin_request, mocker):
         _expected_status=200,
     )
     assert response == {
-        "data": '[{"name": "name", "email_address": "email", "mobile_number": "phone", "service": "service"}]'
+        "data": [
+            {
+                "name": "name",
+                "email_address": "email",
+                "mobile_number": "phone",
+                "service": "service",
+            }
+        ],
+        "mime_type": "application/json",
+        "status": 200,
     }
