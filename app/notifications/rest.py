@@ -2,9 +2,8 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app import api_user, authenticated_service
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
-from app.config import QueueNames
 from app.dao import notifications_dao
-from app.enums import KeyType, NotificationType, TemplateProcessType
+from app.enums import KeyType, NotificationType
 from app.errors import InvalidRequest, register_errors
 from app.notifications.process_notifications import (
     persist_notification,

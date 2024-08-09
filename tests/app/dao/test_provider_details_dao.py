@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun import freeze_time
-from sqlalchemy.sql import desc
 
 from app import notification_provider_clients
 from app.dao.provider_details_dao import (
@@ -15,7 +14,6 @@ from app.dao.provider_details_dao import (
 )
 from app.enums import NotificationType, TemplateType
 from app.models import ProviderDetails, ProviderDetailsHistory
-from app.utils import utc_now
 from tests.app.db import create_ft_billing, create_service, create_template
 from tests.conftest import set_config
 

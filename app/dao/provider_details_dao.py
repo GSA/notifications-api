@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import current_app
-from sqlalchemy import asc, desc, func
+from sqlalchemy import desc, func
 
 from app import db
 from app.dao.dao_utils import autocommit

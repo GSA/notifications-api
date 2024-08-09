@@ -3,14 +3,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.config import QueueNames
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.enums import (
     KeyType,
     NotificationType,
     RecipientType,
     ServicePermissionType,
-    TemplateProcessType,
     TemplateType,
 )
 from app.errors import BadRequestError

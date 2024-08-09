@@ -8,7 +8,7 @@ from app import api_user, authenticated_service, document_download_client, encry
 from app.celery.tasks import save_api_email, save_api_sms
 from app.clients.document_download import DocumentDownloadError
 from app.config import QueueNames
-from app.enums import KeyType, NotificationStatus, NotificationType, TemplateProcessType
+from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import Notification
 from app.notifications.process_notifications import (
     persist_notification,
