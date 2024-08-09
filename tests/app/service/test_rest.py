@@ -1770,9 +1770,6 @@ def test_get_all_notifications_for_service_in_order_with_post_request(
     assert response.status_code == 200
 
 
-@pytest.mark.skip(
-    reason="We can't search on recipient if recipient is not kept in the db"
-)
 def test_get_all_notifications_for_service_filters_notifications_when_using_post_request(
     client, notify_db_session
 ):
@@ -1808,7 +1805,6 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
         "page": 1,
         "template_type": [TemplateType.SMS],
         "status": [NotificationStatus.CREATED, NotificationStatus.SENDING],
-        "to": "0855",
     }
 
     response = client.post(
@@ -1818,7 +1814,7 @@ def test_get_all_notifications_for_service_filters_notifications_when_using_post
     )
 
     resp = json.loads(response.get_data(as_text=True))
-    assert len(resp["notifications"]) == 1
+    assert len(resp["notifications"]) == 2
     assert resp["notifications"][0]["to"] == "1"
     assert resp["notifications"][0]["status"] == returned_notification.status
     assert response.status_code == 200

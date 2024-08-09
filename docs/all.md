@@ -1368,7 +1368,7 @@ cf run-task notify-api-production --command "flask command download-csv-file-by-
 locally, just do:
 
 ```
-poetry run flask command download-csv-file-by-name -f <file location in admin logs>
+poetry run flask command download-csv-file-by-name <file location in admin logs>
 ```
 
 ### Debug steps
