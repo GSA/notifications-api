@@ -85,7 +85,6 @@ def process_sms_or_email_notification(
     notification_type,
     template,
     template_with_content,
-    template_process_type,
     service,
     reply_to_text=None,
 ):
