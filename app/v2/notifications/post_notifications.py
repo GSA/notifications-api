@@ -176,11 +176,7 @@ def process_sms_or_email_notification(
     )
 
     if not simulated:
-        queue_name = (
-            QueueNames.PRIORITY
-            if template_process_type == TemplateProcessType.PRIORITY
-            else None
-        )
+        queue_name = None
         send_notification_to_queue_detached(
             key_type=api_user.key_type,
             notification_type=notification_type,

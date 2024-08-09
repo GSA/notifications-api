@@ -80,11 +80,7 @@ def send_one_off_notification(service_id, post_data):
         client_reference=client_reference,
     )
 
-    queue_name = (
-        QueueNames.PRIORITY
-        if template.process_type == TemplateProcessType.PRIORITY
-        else None
-    )
+    queue_name = None
 
     send_notification_to_queue(
         notification=notification,

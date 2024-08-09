@@ -168,11 +168,7 @@ def send_notification(notification_type):
         reply_to_text=template.reply_to_text,
     )
     if not simulated:
-        queue_name = (
-            QueueNames.PRIORITY
-            if template.process_type == TemplateProcessType.PRIORITY
-            else None
-        )
+        queue_name = None
         send_notification_to_queue(notification=notification_model, queue=queue_name)
 
     else:

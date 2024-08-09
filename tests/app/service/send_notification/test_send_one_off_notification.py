@@ -161,24 +161,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
     )
 
 
-def test_send_one_off_notification_honors_priority(
-    notify_db_session, persist_mock, celery_mock
-):
-    service = create_service()
-    template = create_template(service=service)
-    template.process_type = TemplateProcessType.PRIORITY
-
-    post_data = {
-        "template_id": str(template.id),
-        "to": "202-867-5309",
-        "created_by": str(service.created_by_id),
-    }
-
-    send_one_off_notification(service.id, post_data)
-
-    assert celery_mock.call_args[1]["queue"] == QueueNames.PRIORITY
-
-
 def test_send_one_off_notification_raises_if_invalid_recipient(notify_db_session):
     service = create_service()
     template = create_template(service=service)

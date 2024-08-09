@@ -6,7 +6,6 @@ from sqlalchemy.sql import desc
 
 from app import notification_provider_clients
 from app.dao.provider_details_dao import (
-    _adjust_provider_priority,
     _get_sms_providers_for_update,
     dao_get_provider_stats,
     dao_update_provider_details,
@@ -33,9 +32,6 @@ def set_primary_sms_provider(identifier):
         get_alternative_sms_provider(identifier)
     )
 
-    primary_provider.priority = 10
-    secondary_provider.priority = 20
-
     dao_update_provider_details(primary_provider)
     dao_update_provider_details(secondary_provider)
 
@@ -53,18 +49,6 @@ def test_can_get_sms_international_providers(notify_db_session):
     assert len(sms_providers) == 1
     assert all(NotificationType.SMS == prov.notification_type for prov in sms_providers)
     assert all(prov.supports_international for prov in sms_providers)
-
-
-def test_can_get_sms_providers_in_order_of_priority(notify_db_session):
-    providers = get_provider_details_by_notification_type(NotificationType.SMS, False)
-    priorities = [provider.priority for provider in providers]
-    assert priorities == sorted(priorities)
-
-
-def test_can_get_email_providers_in_order_of_priority(notify_db_session):
-    providers = get_provider_details_by_notification_type(NotificationType.EMAIL)
-
-    assert providers[0].identifier == "ses"
 
 
 def test_can_get_email_providers(notify_db_session):
@@ -144,61 +128,6 @@ def test_get_alternative_sms_provider_returns_expected_provider(identifier, expe
 def test_get_alternative_sms_provider_fails_if_unrecognised():
     with pytest.raises(ValueError):
         get_alternative_sms_provider("ses")
-
-
-@freeze_time("2016-01-01 00:30")
-def test_adjust_provider_priority_sets_priority(
-    restore_provider_details,
-    notify_user,
-    sns_provider,
-):
-    # need to update these manually to avoid triggering the `onupdate` clause of the updated_at column
-    ProviderDetails.query.filter(ProviderDetails.identifier == "sns").update(
-        {"updated_at": datetime.min}
-    )
-
-    _adjust_provider_priority(sns_provider, 50)
-
-    assert sns_provider.updated_at == utc_now()
-    assert sns_provider.created_by.id == notify_user.id
-    assert sns_provider.priority == 50
-
-
-@freeze_time("2016-01-01 00:30")
-def test_adjust_provider_priority_adds_history(
-    restore_provider_details,
-    notify_user,
-    sns_provider,
-):
-    # need to update these manually to avoid triggering the `onupdate` clause of the updated_at column
-    ProviderDetails.query.filter(ProviderDetails.identifier == "sns").update(
-        {"updated_at": datetime.min}
-    )
-
-    old_provider_history_rows = (
-        ProviderDetailsHistory.query.filter(
-            ProviderDetailsHistory.id == sns_provider.id
-        )
-        .order_by(desc(ProviderDetailsHistory.version))
-        .all()
-    )
-
-    _adjust_provider_priority(sns_provider, 50)
-
-    updated_provider_history_rows = (
-        ProviderDetailsHistory.query.filter(
-            ProviderDetailsHistory.id == sns_provider.id
-        )
-        .order_by(desc(ProviderDetailsHistory.version))
-        .all()
-    )
-
-    assert len(updated_provider_history_rows) - len(old_provider_history_rows) == 1
-    assert (
-        updated_provider_history_rows[0].version - old_provider_history_rows[0].version
-        == 1
-    )
-    assert updated_provider_history_rows[0].priority == 50
 
 
 @freeze_time("2016-01-01 01:00")
