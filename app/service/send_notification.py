@@ -1,12 +1,11 @@
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.config import QueueNames
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.dao.users_dao import get_user_by_id
-from app.enums import KeyType, NotificationType, TemplateProcessType
+from app.enums import KeyType, NotificationType
 from app.errors import BadRequestError
 from app.notifications.process_notifications import (
     persist_notification,
@@ -80,11 +79,7 @@ def send_one_off_notification(service_id, post_data):
         client_reference=client_reference,
     )
 
-    queue_name = (
-        QueueNames.PRIORITY
-        if template.process_type == TemplateProcessType.PRIORITY
-        else None
-    )
+    queue_name = None
 
     send_notification_to_queue(
         notification=notification,

@@ -11,7 +11,7 @@ from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
-from app.enums import KeyType, NotificationType, TemplateProcessType, TemplateType
+from app.enums import KeyType, NotificationType, TemplateType
 from app.errors import InvalidRequest, RateLimitError
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
@@ -1111,49 +1111,6 @@ def test_create_template_raises_invalid_request_when_content_too_large(
                 f"Content has a character count greater than the limit of {SMS_CHAR_COUNT_LIMIT}"
             ]
         }
-
-
-@pytest.mark.parametrize(
-    "notification_type,send_to",
-    [
-        (NotificationType.SMS, "2028675309"),
-        (
-            NotificationType.EMAIL,
-            "sample@email.com",
-        ),
-    ],
-)
-def test_send_notification_uses_priority_queue_when_template_is_marked_as_priority(
-    client,
-    sample_service,
-    mocker,
-    notification_type,
-    send_to,
-):
-    sample = create_template(
-        sample_service,
-        template_type=notification_type,
-        process_type=TemplateProcessType.PRIORITY,
-    )
-    mocked = mocker.patch(
-        f"app.celery.provider_tasks.deliver_{notification_type}.apply_async"
-    )
-
-    data = {"to": send_to, "template": str(sample.id)}
-
-    auth_header = create_service_authorization_header(service_id=sample.service_id)
-
-    response = client.post(
-        path=f"/notifications/{notification_type}",
-        data=json.dumps(data),
-        headers=[("Content-Type", "application/json"), auth_header],
-    )
-
-    response_data = json.loads(response.data)["data"]
-    notification_id = response_data["notification"]["id"]
-
-    assert response.status_code == 201
-    mocked.assert_called_once_with([notification_id], queue="priority-tasks")
 
 
 @pytest.mark.parametrize(
