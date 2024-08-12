@@ -8,7 +8,6 @@ from flask import Flask
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app import create_app
-from app.dao.provider_details_dao import get_provider_details_by_identifier
 
 
 @pytest.fixture(scope="session")
