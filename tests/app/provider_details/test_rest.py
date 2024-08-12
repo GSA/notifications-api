@@ -105,7 +105,6 @@ def test_get_provider_versions_contains_correct_fields(client, notify_db_session
         "created_by",
         "display_name",
         "identifier",
-        "priority",
         "notification_type",
         "active",
         "version",
