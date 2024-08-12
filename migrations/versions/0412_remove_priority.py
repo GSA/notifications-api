@@ -13,10 +13,12 @@ down_revision = "0411_add_login_uuid"
 
 
 def upgrade():
+    print("DELETING COLUMNS")
     op.drop_column("provider_details", sa.Column("priority"))
     op.drop_column("provider_details_history", sa.Column("priority"))
 
 
 def downgrade():
+    print("ADDING COLUMNS")
     op.add_column("provider_details", sa.Column("priority", sa.Integer()))
     op.add_column("provider_details_history", sa.Column("priority", sa.Integer()))
