@@ -663,6 +663,17 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
         )
 
 
+@notify_command(name="dump-user-info")
+@click.argument("user_email_address")
+def dump_user_info(user_email_address):
+    user = get_user_by_email(user_email_address)
+    content = user.serialize()
+    with open("user_download.json", "wb") as f:
+        f.write(json.dumps(content).encode("utf8"))
+    f.close()
+    print("Successfully downloaded user info to user_download.json")
+
+
 @notify_command(name="populate-annual-billing-with-defaults")
 @click.option(
     "-y",
