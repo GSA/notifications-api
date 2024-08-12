@@ -1563,20 +1563,6 @@ files = [
 ]
 
 [[package]]
-name = "govuk-bank-holidays"
-version = "0.14"
-description = "Tool to load UK bank holidays from GOV.UK"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "govuk-bank-holidays-0.14.tar.gz", hash = "sha256:ce85102423b72908957d25981f616494729686515d5d66c09a1d35a354ce20a6"},
-    {file = "govuk_bank_holidays-0.14-py3-none-any.whl", hash = "sha256:da485c4a40c6c874c925916e492e3f20b807cffba7eed5f07fb69327aef6b10b"},
-]
-
-[package.dependencies]
-requests = "*"
-
-[[package]]
 name = "greenlet"
 version = "3.0.3"
 description = "Lightweight in-process concurrent programming"
@@ -4739,4 +4725,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "89b99841ebd4bd735104048c8f8f0a35bfedb700a7a5648ecabe713816e25579"
+content-hash = "8fa243a938720113dd0999656594d7d3660a1e6202a4f26b9e9abe25d19b0cc0"
