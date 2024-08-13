@@ -1,4 +1,5 @@
 import re
+import time
 
 import botocore
 from boto3 import Session
@@ -107,15 +108,15 @@ def download_from_s3(
     result = None
     try:
         result = s3.download_file(bucket_name, s3_key, local_filename)
-        print(f"File downloaded successfully to {local_filename}")
+        current_app.logger.info(f"File downloaded successfully to {local_filename}")
     except botocore.exceptions.NoCredentialsError as nce:
-        print("Credentials not found")
+        current_app.logger.error("Credentials not found")
         raise Exception(nce)
     except botocore.exceptions.PartialCredentialsError as pce:
-        print("Incomplete credentials provided")
+        current_app.logger.error("Incomplete credentials provided")
         raise Exception(pce)
     except Exception as e:
-        print(f"An error occurred {e}")
+        current_app.logger.error(f"An error occurred {e}")
         text = f"EXCEPTION {e} local_filename {local_filename}"
         raise Exception(text)
     return result
@@ -171,8 +172,29 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 
 
 def get_job_from_s3(service_id, job_id):
-    obj = get_s3_object(*get_job_location(service_id, job_id))
-    return obj.get()["Body"].read().decode("utf-8")
+    retries = 0
+    max_retries = 5
+    backoff_factor = 1
+    while retries < max_retries:
+
+        try:
+            obj = get_s3_object(*get_job_location(service_id, job_id))
+            return obj.get()["Body"].read().decode("utf-8")
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] in [
+                "Throttling",
+                "RequestTimeout",
+                "SlowDown",
+            ]:
+                retries += 1
+                sleep_time = backoff_factor * (2**retries)  # Exponential backoff
+                time.sleep(sleep_time)
+                continue
+        except Exception as e:
+            current_app.logger.error(f"Failed to get object from bucket {e}")
+            raise
+
+    raise Exception(f"Failed to get object after 5 attempts")
 
 
 def incr_jobs_cache_misses():
@@ -241,6 +263,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = JOBS.get(job_id)
     if job is None:
+        current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         JOBS[job_id] = job
         incr_jobs_cache_misses()

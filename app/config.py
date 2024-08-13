@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from os import getenv, path
 
 from celery.schedules import crontab
@@ -165,6 +165,8 @@ class Config(object):
     # we only need real email in Live environment (production)
     DVLA_EMAIL_ADDRESSES = json.loads(getenv("DVLA_EMAIL_ADDRESSES", "[]"))
 
+    current_minute = (datetime.now().minute + 1) % 60
+
     CELERY = {
         "broker_url": REDIS_URL,
         "broker_transport_options": {
@@ -253,6 +255,16 @@ class Config(object):
                 "task": "regenerate-job-cache",
                 "schedule": crontab(minute="*/30"),
                 "options": {"queue": QueueNames.PERIODIC},
+            },
+            "regenerate-job-cache-on-startup": {
+                "task": "regenerate-job-cache",
+                "schedule": crontab(
+                    minute=current_minute
+                ),  # Runs once at the next minute
+                "options": {
+                    "queue": QueueNames.PERIODIC,
+                    "expires": 60,
+                },  # Ensure it doesn't run if missed
             },
             "cleanup-unfinished-jobs": {
                 "task": "cleanup-unfinished-jobs",
