@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 
 from app.aws.s3 import (
     file_exists,
+    get_job_from_s3,
     get_personalisation_from_s3,
     get_phone_number_from_s3,
     get_s3_file,
@@ -85,6 +86,21 @@ def test_get_phone_number_from_s3(
     get_job_mock.return_value = job
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
+
+def mock_s3_get_object_slowdown(*args, **kwargs):
+    error_response = {
+        'Error': {
+            'Code': 'SlowDown',
+            'Message': 'Reduce your request rate',
+        }
+    }
+    raise ClientError(error_response, 'GetObject')
+
+def test_get_job_from_s3_exponential_backoff(mocker):
+    get_s3_object = mocker.patch("app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown)
+    with pytest.raises(Exception) as exc_info:
+        job = get_job_from_s3("service_id", "job_id")
+    assert 'Failed to get object after 5 attempts' in str(exc_info)
 
 
 @pytest.mark.parametrize(
