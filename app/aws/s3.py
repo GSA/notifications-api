@@ -194,7 +194,7 @@ def get_job_from_s3(service_id, job_id):
             current_app.logger.error(f"Failed to get object from bucket {e}")
             raise
 
-    raise Exception(f"Failed to get object after 5 attempts")
+    raise Exception("Failed to get object after 5 attempts")
 
 
 def incr_jobs_cache_misses():
