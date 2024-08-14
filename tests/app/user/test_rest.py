@@ -1125,3 +1125,26 @@ def test_complete_login_after_webauthn_authentication_attempt_raises_400_if_sche
         _data={"successful": "True"},
         _expected_status=400,
     )
+
+
+def test_report_all_users(admin_request, mocker):
+    mocker.patch(
+        "app.user.rest.dao_report_users",
+        return_value=[("name", "email", "phone", "service")],
+    )
+    response = admin_request.get(
+        "user.report_all_users",
+        _expected_status=200,
+    )
+    assert response == {
+        "data": [
+            {
+                "name": "name",
+                "email_address": "email",
+                "mobile_number": "phone",
+                "service": "service",
+            }
+        ],
+        "mime_type": "application/json",
+        "status": 200,
+    }
