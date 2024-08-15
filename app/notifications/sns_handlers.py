@@ -45,9 +45,9 @@ def sns_notification_handler(data, headers):
 
     try:
         validate_sns_cert(message)
-    except Exception as e:
+    except Exception:
         current_app.logger.error(
-            f"SES-SNS callback failed: validation failed with error: Signature validation failed",
+            "SES-SNS callback failed: validation failed with error: Signature validation failed",
             exc_info=True,
         )
         raise InvalidRequest("SES-SNS callback failed: validation failed", 400)

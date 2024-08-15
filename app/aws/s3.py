@@ -44,7 +44,7 @@ def list_s3_objects():
                 )
             else:
                 break
-    except Exception as e:
+    except Exception:
         current_app.logger.error(
             f"An error occurred while regenerating cache #notify-admin-1200",
             exc_info=True,
@@ -116,7 +116,7 @@ def download_from_s3(
     except botocore.exceptions.PartialCredentialsError as pce:
         current_app.logger.error("Incomplete credentials provided", exc_info=True)
         raise Exception(pce)
-    except Exception as e:
+    except Exception:
         current_app.logger.error(f"An error occurred", exc_info=True)
         text = f"EXCEPTION local_filename {local_filename}"
         raise Exception(text)
@@ -191,7 +191,7 @@ def get_job_from_s3(service_id, job_id):
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
                 time.sleep(sleep_time)
                 continue
-        except Exception as e:
+        except Exception:
             current_app.logger.error(f"Failed to get object from bucket", exc_info=True)
             raise
 

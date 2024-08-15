@@ -300,8 +300,8 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                     current_app.logger.warning(
                         f"*** ERROR occurred for email address: {email_address.strip()}"
                     )
-                current_app.logger, info(response[0].get_data(as_text=True))
-            except Exception as e:
+                current_app.logger.info(response[0].get_data(as_text=True))
+            except Exception:
                 current_app.logger.error(
                     f"*** ERROR occurred for email address: {email_address.strip()}.",
                     exc_info=True,
@@ -531,7 +531,7 @@ def populate_go_live(file_name):
                     go_live_user = None
             except NoResultFound:
                 current_app.logger.error(
-                    f"No user found for email address", exc_info=True
+                    "No user found for email address", exc_info=True
                 )
                 continue
             try:
@@ -1070,4 +1070,4 @@ def add_test_users_to_db(generate, state, admin):
             state=state,
             platform_admin=admin,
         )
-        currente_app.logger.info(f"{num} {user.email_address} created")
+        current_app.logger.info(f"{num} {user.email_address} created")

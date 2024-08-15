@@ -107,7 +107,7 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import get_prev_next_pagination_links, hilite, utc_now
+from app.utils import get_prev_next_pagination_links, utc_now
 
 service_blueprint = Blueprint("service", __name__)
 
