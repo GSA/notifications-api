@@ -31,7 +31,7 @@ def sns_notification_handler(data, headers):
         verify_message_type(message_type)
     except InvalidMessageTypeException:
         current_app.logger.exception(
-            f"Response headers: {headers}\nResponse data: {data}"
+            f"Response headers: {headers}\nResponse data: {data}", exc_info=True
         )
         raise InvalidRequest("SES-SNS callback failed: invalid message type", 400)
 
@@ -39,7 +39,7 @@ def sns_notification_handler(data, headers):
         message = json.loads(data.decode("utf-8"))
     except decoder.JSONDecodeError:
         current_app.logger.exception(
-            f"Response headers: {headers}\nResponse data: {data}"
+            f"Response headers: {headers}\nResponse data: {data}", exc_info=True
         )
         raise InvalidRequest("SES-SNS callback failed: invalid JSON given", 400)
 

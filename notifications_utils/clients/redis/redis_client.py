@@ -166,7 +166,7 @@ class RedisClient:
 
     def __handle_exception(self, e, raise_exception, operation, key_name):
         current_app.logger.exception(
-            "Redis error performing {} on {}".format(operation, key_name)
+            "Redis error performing {} on {}".format(operation, key_name), exc_info=True
         )
         if raise_exception:
             raise e

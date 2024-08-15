@@ -148,7 +148,8 @@ def deliver_sms(self, notification_id):
             )
         else:
             current_app.logger.exception(
-                "SMS notification delivery for id: {} failed".format(notification_id)
+                "SMS notification delivery for id: {} failed".format(notification_id),
+                exc_info=True,
             )
 
         try:
@@ -188,7 +189,7 @@ def deliver_email(self, notification_id):
         send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException as e:
         current_app.logger.exception(
-            f"Email notification {notification_id} failed: {e}"
+            f"Email notification {notification_id} failed", exc_info=True
         )
         update_notification_status_by_id(notification_id, "technical-failure")
     except Exception as e:
@@ -199,7 +200,7 @@ def deliver_email(self, notification_id):
                 )
             else:
                 current_app.logger.exception(
-                    f"RETRY: Email notification {notification_id} failed"
+                    f"RETRY: Email notification {notification_id} failed", exc_info=True
                 )
 
             self.retry(queue=QueueNames.RETRY)

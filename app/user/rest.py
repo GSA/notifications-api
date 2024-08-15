@@ -68,7 +68,7 @@ def handle_integrity_error(exc):
     if "ck_user_has_mobile_or_other_auth" in str(exc):
         # we don't expect this to trip, so still log error
         current_app.logger.exception(
-            "Check constraint ck_user_has_mobile_or_other_auth triggered"
+            "Check constraint ck_user_has_mobile_or_other_auth triggered", exc_info=True
         )
         return (
             jsonify(

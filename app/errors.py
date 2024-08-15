@@ -72,7 +72,7 @@ def register_errors(blueprint):
     @blueprint.errorhandler(400)
     def bad_request(e):
         msg = e.description or "Invalid request parameters"
-        current_app.logger.exception(msg)
+        current_app.logger.exception(msg, exc_info=True)
         return jsonify(result="error", message=str(msg)), 400
 
     @blueprint.errorhandler(401)
@@ -91,7 +91,7 @@ def register_errors(blueprint):
 
     @blueprint.errorhandler(429)
     def limit_exceeded(e):
-        current_app.logger.exception(e)
+        current_app.logger.exception(e, exc_info=True)
         return jsonify(result="error", message=str(e.description)), 429
 
     @blueprint.errorhandler(NoResultFound)
@@ -107,7 +107,7 @@ def register_errors(blueprint):
         # if e is a werkzeug InternalServerError then it may wrap the original exception. For more details see:
         # https://flask.palletsprojects.com/en/1.1.x/errorhandling/?highlight=internalservererror#unhandled-exceptions
         e = getattr(e, "original_exception", e)
-        current_app.logger.exception(e)
+        current_app.logger.exception(e, exc_info=True)
         return jsonify(result="error", message="Internal server error"), 500
 
 

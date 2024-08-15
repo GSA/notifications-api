@@ -194,7 +194,9 @@ def delete_inbound_sms():
             )
         )
     except SQLAlchemyError:
-        current_app.logger.exception("Failed to delete inbound sms notifications")
+        current_app.logger.exception(
+            "Failed to delete inbound sms notifications", exc_info=True
+        )
         raise
 
 

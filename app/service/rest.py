@@ -137,7 +137,7 @@ def handle_integrity_error(exc):
             ),
             400,
         )
-    current_app.logger.exception(exc)
+    current_app.logger.exception(exc, exc_info=True)
     return jsonify(result="error", message="Internal server error"), 500
 
 
@@ -838,7 +838,7 @@ def update_guest_list(service_id):
     try:
         guest_list_objects = get_guest_list_objects(service_id, request.get_json())
     except ValueError as e:
-        current_app.logger.exception(e)
+        current_app.logger.exception(e, exc_info=True)
         dao_rollback()
         msg = "{} is not a valid email address or phone number".format(str(e))
         raise InvalidRequest(msg, 400)

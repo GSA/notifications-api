@@ -82,7 +82,7 @@ def test_cronitor_does_nothing_if_name_not_recognised(notify_api, rmock, mocker)
         assert successful_task() == 1
 
     mock_logger.error.assert_called_with(
-        "Cronitor enabled but task_name hello not found in environment"
+        "Cronitor enabled but task_name hello not found in environment", exc_info=True
     )
 
     assert rmock.called is False
