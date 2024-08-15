@@ -187,7 +187,7 @@ def deliver_email(self, notification_id):
 
         notification.personalisation = json.loads(personalisation)
         send_to_providers.send_email_to_provider(notification)
-    except EmailClientNonRetryableException as e:
+    except EmailClientNonRetryableException:
         current_app.logger.exception(
             f"Email notification {notification_id} failed", exc_info=True
         )
