@@ -511,11 +511,6 @@ def get_all_notifications_for_service(service_id):
                 )
             except ClientError as ex:
                 if ex.response["Error"]["Code"] == "NoSuchKey":
-                    s = notification.service_id
-                    j = notification.job_id
-                    current_app.logger.warning(
-                        f"No personalisation found for s3 file location service: service-{s}-notify/{j}.csv"
-                    )
                     notification.personalisation = ""
                 else:
                     raise ex
@@ -531,11 +526,6 @@ def get_all_notifications_for_service(service_id):
                 notification.normalised_to = recipient
             except ClientError as ex:
                 if ex.response["Error"]["Code"] == "NoSuchKey":
-                    s = notification.service_id
-                    j = notification.job_id
-                    current_app.logger.warning(
-                        f"No phone number found for s3 file location service: service-{s}-notify/{j}.csv"
-                    )
                     notification.to = ""
                     notification.normalised_to = ""
                 else:

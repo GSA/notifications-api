@@ -62,22 +62,32 @@ class ResponseHeaderMiddleware(object):
         self._app = app
 
     def __call__(self, environ, start_response):
-        req = NotifyRequest(environ)
+        try:
+            req = NotifyRequest(environ)
 
-        def rewrite_response_headers(status, headers, exc_info=None):
-            lower_existing_header_names = frozenset(
-                name.lower() for name, value in headers
-            )
+            def rewrite_response_headers(status, headers, exc_info=None):
+                lower_existing_header_names = frozenset(
+                    name.lower() for name, value in headers
+                )
 
-            if TRACE_ID_HEADER.lower() not in lower_existing_header_names:
-                headers.append((TRACE_ID_HEADER, str(req.trace_id)))
+                if TRACE_ID_HEADER.lower() not in lower_existing_header_names:
+                    headers.append((TRACE_ID_HEADER, str(req.trace_id)))
 
-            if SPAN_ID_HEADER.lower() not in lower_existing_header_names:
-                headers.append((SPAN_ID_HEADER, str(req.span_id)))
+                if SPAN_ID_HEADER.lower() not in lower_existing_header_names:
+                    headers.append((SPAN_ID_HEADER, str(req.span_id)))
 
-            return start_response(status, headers, exc_info)
+                return start_response(status, headers, exc_info)
 
-        return self._app(environ, rewrite_response_headers)
+            return self._app(environ, rewrite_response_headers)
+        except BaseException as be:  # noqa
+            if "AuthError" in str(be):  # notify-api-1135
+                current_app.logger.error(be)
+            elif "AttributeError" in str(be):  # notify-api-1394
+                current_app.logger.error(be)
+            elif "MethodNotAllowed" in str(be):  # notify-admin-1392
+                current_app.logger.error(be)
+            else:
+                raise be
 
 
 def init_app(app):

@@ -253,6 +253,6 @@ def dao_report_users():
     inner join user_to_service on users.id=user_to_service.user_id
     inner join services on services.id=user_to_service.service_id
     where services.name not like '_archived%'
-    order by services.name asc, users.name asc
+    order by users.name asc
     """
     return db.session.execute(text(sql))

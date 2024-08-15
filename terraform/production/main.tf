@@ -74,23 +74,3 @@ module "sns_sms" {
   aws_region          = "us-gov-west-1"
   monthly_spend_limit = 1000
 }
-
-###########################################################################
-# The following lines need to be commented out for the initial `terraform apply`
-# It can be re-enabled after:
-# TODO: decide on public API domain name
-# 1) the app has first been deployed
-# 2) the route has been manually created by an OrgManager:
-#     `cf create-domain gsa-tts-benefits-studio api.notify.gov`
-###########################################################################
-# module "domain" {
-#   source = "github.com/18f/terraform-cloudgov//domain?ref=v0.7.1"
-#
-#   cf_org_name      = local.cf_org_name
-#   cf_space_name    = local.cf_space_name
-#   app_name_or_id   = "${local.app_name}-${local.env}"
-#   name             = "${local.app_name}-domain-${local.env}"
-#   recursive_delete = local.recursive_delete
-#   cdn_plan_name    = "domain"
-#   domain_name      = "api.notify.gov"
-# }

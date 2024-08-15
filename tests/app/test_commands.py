@@ -8,6 +8,7 @@ from app.commands import (
     bulk_invite_user_to_service,
     create_new_service,
     create_test_user,
+    download_csv_file_by_name,
     fix_billable_units,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
@@ -427,8 +428,22 @@ def test_promote_user_to_platform_admin(
     assert user.platform_admin is True
 
 
+def test_download_csv_file_by_name(notify_api, mocker):
+    mock_download = mocker.patch("app.commands.s3.download_from_s3")
+    notify_api.test_cli_runner().invoke(
+        download_csv_file_by_name,
+        [
+            "-f",
+            "NonExistentName",
+        ],
+    )
+    mock_download.assert_called_once()
+
+
 def test_promote_user_to_platform_admin_no_result_found(
-    notify_db_session, notify_api, sample_user
+    notify_db_session,
+    notify_api,
+    sample_user,
 ):
     assert sample_user.platform_admin is False
 

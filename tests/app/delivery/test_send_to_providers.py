@@ -318,6 +318,9 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     # é, o, and u are in GSM.
     # ī, grapes, tabs, zero width space and ellipsis are not
     # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
+    mocker.patch(
+        "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
     msg = "a é ī o u 🍇 foo\tbar\u200bbaz((misc))…"
     placeholder = "∆∆∆abc"
     gsm_message = "?ódz Housing Service: a é i o u ? foo barbaz???abc..."
@@ -327,6 +330,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
         template=template,
     )
     db_notification.personalisation = {"misc": placeholder}
+    db_notification.reply_to_text = "testing"
 
     mocker.patch("app.aws_sns_client.send_sms")
 
@@ -609,11 +613,16 @@ def __update_notification(notification_to_update, research_mode, expected_status
 def test_should_update_billable_units_and_status_according_to_research_mode_and_key_type(
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
+
+    mocker.patch(
+        "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
     notification = create_notification(
         template=sample_template,
         billable_units=0,
         status=NotificationStatus.CREATED,
         key_type=key_type,
+        reply_to_text="testing",
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -771,9 +780,16 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 
 
 def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_template):
+
+    mocker.patch(
+        "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+12028675309", normalised_to="2028675309"
+        template=sample_template,
+        to_field="+12028675309",
+        normalised_to="2028675309",
+        reply_to_text="testing",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -826,6 +842,10 @@ def test_send_email_to_provider_should_user_normalised_to(
 def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker, client, sample_template
 ):
+
+    mocker.patch(
+        "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
     from app.schemas import service_schema, template_schema
 
     service_dict = service_schema.dump(sample_template.service)
@@ -845,7 +865,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
 
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
-        template=sample_template, to_field="+447700900855", normalised_to="447700900855"
+        template=sample_template,
+        to_field="+447700900855",
+        normalised_to="447700900855",
+        reply_to_text="testing",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
