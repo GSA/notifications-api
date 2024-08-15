@@ -46,7 +46,7 @@ def list_s3_objects():
                 break
     except Exception:
         current_app.logger.error(
-            f"An error occurred while regenerating cache #notify-admin-1200",
+            "An error occurred while regenerating cache #notify-admin-1200",
             exc_info=True,
         )
 
@@ -83,9 +83,9 @@ def get_s3_files():
                 )
                 if "phone number" in object.lower():
                     JOBS[job_id] = object
-        except LookupError as le:
+        except LookupError:
             # perhaps our key is not formatted as we expected.  If so skip it.
-            current_app.logger.error(f"LookupError #notify-admin-1200", exc_info=True)
+            current_app.logger.error("LookupError #notify-admin-1200", exc_info=True)
 
     current_app.logger.info(
         f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
@@ -117,7 +117,7 @@ def download_from_s3(
         current_app.logger.error("Incomplete credentials provided", exc_info=True)
         raise Exception(pce)
     except Exception:
-        current_app.logger.error(f"An error occurred", exc_info=True)
+        current_app.logger.error("An error occurred", exc_info=True)
         text = f"EXCEPTION local_filename {local_filename}"
         raise Exception(text)
     return result
@@ -192,7 +192,7 @@ def get_job_from_s3(service_id, job_id):
                 time.sleep(sleep_time)
                 continue
         except Exception:
-            current_app.logger.error(f"Failed to get object from bucket", exc_info=True)
+            current_app.logger.error("Failed to get object from bucket", exc_info=True)
             raise
 
     raise Exception("Failed to get object after 5 attempts")
