@@ -117,7 +117,7 @@ def fetch_potential_service(inbound_number, provider_name):
 
     if not has_inbound_sms_permissions(service.permissions):
         current_app.logger.error(
-            'Service "{}" does not allow inbound SMS'.format(service.id)
+            'Service "{}" does not allow inbound SMS'.format(service.id), exc_info=True
         )
         return False
 

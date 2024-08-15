@@ -41,7 +41,8 @@ class PerformancePlatformClient:
                 current_app.logger.error(
                     "Performance platform update request failed for payload with response details: {} '{}'".format(
                         json.dumps(payload), resp.status_code
-                    )
+                    ),
+                    exc_info=True,
                 )
                 resp.raise_for_status()
 

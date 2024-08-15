@@ -57,9 +57,7 @@ def s3upload(
     try:
         key.put(**put_args)
     except botocore.exceptions.ClientError as e:
-        current_app.logger.error(
-            "Unable to upload file to S3 bucket {}".format(bucket_name)
-        )
+        current_app.logger.error("Unable to upload file to S3 bucket", exc_info=True)
         raise e
 
 

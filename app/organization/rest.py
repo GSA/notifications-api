@@ -46,8 +46,7 @@ def handle_integrity_error(exc):
     """
     Handle integrity errors caused by the unique constraint on ix_organization_name
     """
-    print(exc)
-    current_app.logger.exception(exc)
+    current_app.logger.exception("Handling integrity error", exc_info=True)
     if "ix_organization_name" in str(exc):
         return jsonify(result="error", message="Organization name already exists"), 400
     if 'duplicate key value violates unique constraint "domain_pkey"' in str(exc):

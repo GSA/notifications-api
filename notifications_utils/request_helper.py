@@ -81,11 +81,11 @@ class ResponseHeaderMiddleware(object):
             return self._app(environ, rewrite_response_headers)
         except BaseException as be:  # noqa
             if "AuthError" in str(be):  # notify-api-1135
-                current_app.logger.error(be)
+                current_app.logger.error("AuthError", exc_info=True)
             elif "AttributeError" in str(be):  # notify-api-1394
-                current_app.logger.error(be)
+                current_app.logger.error("AttributeError", exc_info=True)
             elif "MethodNotAllowed" in str(be):  # notify-admin-1392
-                current_app.logger.error(be)
+                current_app.logger.error("MethodNotAllowed", exc_info=True)
             else:
                 raise be
 

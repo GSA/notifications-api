@@ -373,9 +373,6 @@ def get_users_for_service(service_id):
 def add_user_to_service(service_id, user_id):
     service = dao_fetch_service_by_id(service_id)
     user = get_user_by_id(user_id=user_id)
-    # TODO REMOVE DEBUG
-    print(hilite(f"GOING TO ADD {user.name} to service {service.name}"))
-    # END DEBUG
     if user in service.users:
         error = "User id: {} already part of service id: {}".format(user_id, service_id)
         raise InvalidRequest(error, status_code=400)
@@ -390,9 +387,6 @@ def add_user_to_service(service_id, user_id):
     folder_permissions = data.get("folder_permissions", [])
 
     dao_add_user_to_service(service, user, permissions, folder_permissions)
-    # TODO REMOVE DEBUG
-    print(hilite(f"ADDED {user.name} to service {service.name}"))
-    # END DEBUG
 
     data = service_schema.dump(service)
     return jsonify(data=data), 201

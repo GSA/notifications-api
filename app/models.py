@@ -1568,7 +1568,8 @@ class Notification(db.Model):
                 return encryption.decrypt(self._personalisation)
             except EncryptionError:
                 current_app.logger.error(
-                    "Error decrypting notification.personalisation, returning empty dict"
+                    "Error decrypting notification.personalisation, returning empty dict",
+                    exc_info=True,
                 )
         return {}
 

@@ -33,9 +33,6 @@ register_errors(service_invite)
 
 
 def _create_service_invite(invited_user, invite_link_host):
-    # TODO REMOVE DEBUG
-    print(hilite("ENTER _create_service_invite"))
-    # END DEBUG
 
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 

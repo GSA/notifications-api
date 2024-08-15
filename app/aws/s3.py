@@ -46,7 +46,8 @@ def list_s3_objects():
                 break
     except Exception as e:
         current_app.logger.error(
-            f"An error occurred while regenerating cache #notify-admin-1200 {e}"
+            f"An error occurred while regenerating cache #notify-admin-1200",
+            exc_info=True,
         )
 
 
@@ -84,7 +85,7 @@ def get_s3_files():
                     JOBS[job_id] = object
         except LookupError as le:
             # perhaps our key is not formatted as we expected.  If so skip it.
-            current_app.logger.error(f"LookupError {le} #notify-admin-1200")
+            current_app.logger.error(f"LookupError #notify-admin-1200", exc_info=True)
 
     current_app.logger.info(
         f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
@@ -110,14 +111,14 @@ def download_from_s3(
         result = s3.download_file(bucket_name, s3_key, local_filename)
         current_app.logger.info(f"File downloaded successfully to {local_filename}")
     except botocore.exceptions.NoCredentialsError as nce:
-        current_app.logger.error("Credentials not found")
+        current_app.logger.error("Credentials not found", exc_info=True)
         raise Exception(nce)
     except botocore.exceptions.PartialCredentialsError as pce:
-        current_app.logger.error("Incomplete credentials provided")
+        current_app.logger.error("Incomplete credentials provided", exc_info=True)
         raise Exception(pce)
     except Exception as e:
-        current_app.logger.error(f"An error occurred {e}")
-        text = f"EXCEPTION {e} local_filename {local_filename}"
+        current_app.logger.error(f"An error occurred", exc_info=True)
+        text = f"EXCEPTION local_filename {local_filename}"
         raise Exception(text)
     return result
 
@@ -191,7 +192,7 @@ def get_job_from_s3(service_id, job_id):
                 time.sleep(sleep_time)
                 continue
         except Exception as e:
-            current_app.logger.error(f"Failed to get object from bucket {e}")
+            current_app.logger.error(f"Failed to get object from bucket", exc_info=True)
             raise
 
     raise Exception("Failed to get object after 5 attempts")
@@ -231,7 +232,8 @@ def extract_phones(job):
         if phone_index >= len(row):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
-                "Corrupt csv file, missing columns or possibly a byte order mark in the file"
+                "Corrupt csv file, missing columns or possibly a byte order mark in the file",
+                exc_info=True,
             )
 
         else:
@@ -298,7 +300,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
             return "Unavailable"
     else:
         current_app.logger.error(
-            f"Was unable to construct lookup dictionary for job {job_id}"
+            f"Was unable to construct lookup dictionary for job {job_id}", exc_info=True
         )
         return "Unavailable"
 
@@ -345,7 +347,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
             return {}
     else:
         current_app.logger.error(
-            f"Was unable to construct lookup dictionary for job {job_id}"
+            f"Was unable to construct lookup dictionary for job {job_id}", exc_info=True
         )
         return {}
 

@@ -55,7 +55,8 @@ def cleanup_unfinished_jobs():
             acceptable_finish_time = job.processing_started + timedelta(minutes=5)
         except TypeError:
             current_app.logger.error(
-                f"Job ID {job.id} processing_started is {job.processing_started}."
+                f"Job ID {job.id} processing_started is {job.processing_started}.",
+                exc_info=True,
             )
             raise
         if now > acceptable_finish_time:
