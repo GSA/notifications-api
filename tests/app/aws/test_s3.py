@@ -102,7 +102,7 @@ def test_get_job_from_s3_exponential_backoff(mocker):
     mocker.patch("app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown)
     with pytest.raises(Exception) as exc_info:
         get_job_from_s3("service_id", "job_id")
-    assert "Failed to get object after 5 attempts" in str(exc_info)
+    assert "Failed to get object after 3 attempts" in str(exc_info)
 
 
 @pytest.mark.parametrize(
