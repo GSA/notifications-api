@@ -1,7 +1,6 @@
 import itertools
 from datetime import datetime, timedelta
 
-from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound

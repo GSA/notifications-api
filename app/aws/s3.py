@@ -183,7 +183,7 @@ def get_job_from_s3(service_id, job_id):
         try:
             obj = get_s3_object(*get_job_location(service_id, job_id))
             return obj.get()["Body"].read().decode("utf-8")
-        except botocore.exceptions.ClientError as e:
+        except botocore.exceptions.ClientError:
             current_app.logger.error(
                 f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
                 exc_info=True,
@@ -204,7 +204,8 @@ def get_job_from_s3(service_id, job_id):
             continue
 
     current_app.logger.error(
-        f"Never retrieved job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
+        f"Never retrieved job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}",
+        exc_info=True,
     )
     return None
 
@@ -277,19 +278,15 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
+        # Even if it is None, put it here to avoid KeyErrors
         JOBS[job_id] = job
         incr_jobs_cache_misses()
     else:
         incr_jobs_cache_hits()
 
-    # If the job is None after our attempt to retrieve it from s3, it
-    # probably means the job is old and has been deleted from s3, in
-    # which case there is nothing we can do.  It's unlikely to run into
-    # this, but it could theoretically happen, especially if we ever
-    # change the task schedules
     if job is None:
-        current_app.logger.warning(
-            f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+        current_app.logger.error(
+            f"Couldnt find phone for job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} because job is missing"
         )
         return "Unavailable"
 
