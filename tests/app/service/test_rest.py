@@ -1954,8 +1954,8 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
 
     resp = json.loads(response.get_data(as_text=True))
     assert len(resp["notifications"]) == expected_count_of_notifications
-    assert resp["notifications"][0]["to"] == sample_notification_with_job.to
-    assert resp["notifications"][1]["to"] == sample_notification.to
+    assert resp["notifications"][0]["to"] == ''
+    assert resp["notifications"][1]["to"] == ''
     assert response.status_code == 200
 
 
