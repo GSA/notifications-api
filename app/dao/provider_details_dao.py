@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import current_app
-from sqlalchemy import asc, desc, func
+from sqlalchemy import desc, func
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -31,20 +31,6 @@ def dao_get_provider_versions(provider_id):
         .limit(100)  # limit results instead of adding pagination
         .all()
     )
-
-
-def _adjust_provider_priority(provider, new_priority):
-    current_app.logger.info(
-        f"Adjusting provider priority - {provider.identifier} going from {provider.priority} to {new_priority}"
-    )
-    provider.priority = new_priority
-
-    # Automatic update so set as notify user
-    provider.created_by_id = current_app.config["NOTIFY_USER_ID"]
-
-    # update without commit so that both rows can be changed without ending the transaction
-    # and releasing the for_update lock
-    _update_provider_details_without_commit(provider)
 
 
 def _get_sms_providers_for_update(time_threshold):
@@ -86,11 +72,7 @@ def get_provider_details_by_notification_type(
     if supports_international:
         filters.append(ProviderDetails.supports_international == supports_international)
 
-    return (
-        ProviderDetails.query.filter(*filters)
-        .order_by(asc(ProviderDetails.priority))
-        .all()
-    )
+    return ProviderDetails.query.filter(*filters).all()
 
 
 @autocommit
@@ -135,7 +117,6 @@ def dao_get_provider_stats():
             ProviderDetails.id,
             ProviderDetails.display_name,
             ProviderDetails.identifier,
-            ProviderDetails.priority,
             ProviderDetails.notification_type,
             ProviderDetails.active,
             ProviderDetails.updated_at,
@@ -149,7 +130,6 @@ def dao_get_provider_stats():
         .outerjoin(User, ProviderDetails.created_by_id == User.id)
         .order_by(
             ProviderDetails.notification_type,
-            ProviderDetails.priority,
         )
         .all()
     )

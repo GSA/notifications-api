@@ -42,7 +42,6 @@ def test_get_provider_contains_correct_fields(client, sample_template):
         "created_by_name",
         "display_name",
         "identifier",
-        "priority",
         "notification_type",
         "active",
         "updated_at",
@@ -51,24 +50,6 @@ def test_get_provider_contains_correct_fields(client, sample_template):
     }
     assert len(json_resp) > 0
     assert allowed_keys == set(json_resp[0].keys())
-
-
-def test_should_be_able_to_update_priority(client, restore_provider_details):
-    provider = ProviderDetails.query.first()
-
-    update_resp = client.post(
-        "/provider-details/{}".format(provider.id),
-        headers=[
-            ("Content-Type", "application/json"),
-            create_admin_authorization_header(),
-        ],
-        data=json.dumps({"priority": 5}),
-    )
-    assert update_resp.status_code == 200
-    update_json = json.loads(update_resp.get_data(as_text=True))["provider_details"]
-    assert update_json["identifier"] == provider.identifier
-    assert update_json["priority"] == 5
-    assert provider.priority == 5
 
 
 def test_should_be_able_to_update_status(client, restore_provider_details):
@@ -124,7 +105,6 @@ def test_get_provider_versions_contains_correct_fields(client, notify_db_session
         "created_by",
         "display_name",
         "identifier",
-        "priority",
         "notification_type",
         "active",
         "version",
