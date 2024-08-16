@@ -191,10 +191,16 @@ def get_job_from_s3(service_id, job_id):
                 time.sleep(sleep_time)
                 continue
             else:
-                current_app.logger.error("Failed to get job from bucket", exc_info=True)
+                current_app.logger.error(
+                    f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} from bucket",
+                    exc_info=True,
+                )
                 return None
         except Exception:
-            current_app.logger.error("Failed to get job from bucket", exc_info=True)
+            current_app.logger.error(
+                f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} from bucket",
+                exc_info=True,
+            )
             return None
 
     raise Exception("Failed to get object after 3 attempts")
