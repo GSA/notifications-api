@@ -173,7 +173,7 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 
 def get_job_from_s3(service_id, job_id):
     retries = 0
-    max_retries = 5
+    max_retries = 3
     backoff_factor = 1
     while retries < max_retries:
 
@@ -190,11 +190,14 @@ def get_job_from_s3(service_id, job_id):
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
                 time.sleep(sleep_time)
                 continue
+            else:
+                current_app.logger.error("Failed to get job from bucket", exc_info=True)
+                return None
         except Exception as e:
-            current_app.logger.error(f"Failed to get object from bucket {e}")
-            raise
+            current_app.logger.error(f"Failed to get job from bucket", exc_info=True)
+            return None
 
-    raise Exception("Failed to get object after 5 attempts")
+    raise Exception("Failed to get object after 3 attempts")
 
 
 def incr_jobs_cache_misses():
