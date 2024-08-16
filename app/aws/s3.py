@@ -193,8 +193,8 @@ def get_job_from_s3(service_id, job_id):
             else:
                 current_app.logger.error("Failed to get job from bucket", exc_info=True)
                 return None
-        except Exception as e:
-            current_app.logger.error(f"Failed to get job from bucket", exc_info=True)
+        except Exception:
+            current_app.logger.error("Failed to get job from bucket", exc_info=True)
             return None
 
     raise Exception("Failed to get object after 3 attempts")
