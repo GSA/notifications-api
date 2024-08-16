@@ -98,11 +98,23 @@ def mock_s3_get_object_slowdown(*args, **kwargs):
     raise ClientError(error_response, "GetObject")
 
 
-def test_get_job_from_s3_exponential_backoff(mocker):
-    mocker.patch("app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown)
-    with pytest.raises(Exception) as exc_info:
-        get_job_from_s3("service_id", "job_id")
-    assert "Failed to get object after 3 attempts" in str(exc_info)
+def test_get_job_from_s3_exponential_backoff_on_throttling(mocker):
+    # We try multiple times to retrieve the job, and if we can't we return None
+    mock_get_object = mocker.patch(
+        "app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown
+    )
+    mocker.patch("app.aws.s3.file_exists", return_value=True)
+    job = get_job_from_s3("service_id", "job_id")
+    assert job is None
+    assert mock_get_object.call_count == 4
+
+
+def test_get_job_from_s3_exponential_backoff_file_not_found(mocker):
+    mock_get_object = mocker.patch("app.aws.s3.get_s3_object", return_value=None)
+    mocker.patch("app.aws.s3.file_exists", return_value=False)
+    job = get_job_from_s3("service_id", "job_id")
+    assert job is None
+    assert mock_get_object.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -177,19 +189,9 @@ def test_file_exists_true(notify_api, mocker):
     get_s3_mock = mocker.patch("app.aws.s3.get_s3_object")
 
     file_exists(
-        os.getenv("CSV_BUCKET_NAME"),
         "mykey",
-        default_access_key,
-        default_secret_key,
-        default_region,
     )
-    get_s3_mock.assert_called_once_with(
-        os.getenv("CSV_BUCKET_NAME"),
-        "mykey",
-        default_access_key,
-        default_secret_key,
-        default_region,
-    )
+    get_s3_mock.assert_called_once()
 
 
 def test_file_exists_false(notify_api, mocker):
@@ -204,17 +206,7 @@ def test_file_exists_false(notify_api, mocker):
 
     with pytest.raises(ClientError):
         file_exists(
-            os.getenv("CSV_BUCKET_NAME"),
             "mykey",
-            default_access_key,
-            default_secret_key,
-            default_region,
         )
 
-    get_s3_mock.assert_called_once_with(
-        os.getenv("CSV_BUCKET_NAME"),
-        "mykey",
-        default_access_key,
-        default_secret_key,
-        default_region,
-    )
+    get_s3_mock.assert_called_once()
