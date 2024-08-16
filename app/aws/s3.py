@@ -172,38 +172,41 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 
 
 def get_job_from_s3(service_id, job_id):
+    # We have to make sure the retries don't take up to much time, because
+    # we might be retrieving dozens of jobs.  So max time is:
+    # 0.2 + 0.4 + 0.8 + 1.6 = 3.0 seconds
     retries = 0
-    max_retries = 3
-    backoff_factor = 1
+    max_retries = 4
+    backoff_factor = 0.2
     while retries < max_retries:
 
         try:
             obj = get_s3_object(*get_job_location(service_id, job_id))
             return obj.get()["Body"].read().decode("utf-8")
         except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] in [
-                "Throttling",
-                "RequestTimeout",
-                "SlowDown",
-            ]:
-                retries += 1
-                sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                time.sleep(sleep_time)
-                continue
-            else:
-                current_app.logger.error(
-                    f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} from bucket",
-                    exc_info=True,
-                )
-                return None
-        except Exception:
             current_app.logger.error(
-                f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} from bucket",
+                f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
                 exc_info=True,
             )
-            return None
+            retries += 1
+            sleep_time = backoff_factor * (2**retries)  # Exponential backoff
+            time.sleep(sleep_time)
+            continue
 
-    raise Exception("Failed to get object after 3 attempts")
+        except Exception:
+            current_app.logger.error(
+                f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
+                exc_info=True,
+            )
+            retries += 1
+            sleep_time = backoff_factor * (2**retries)  # Exponential backoff
+            time.sleep(sleep_time)
+            continue
+
+    current_app.logger.error(
+        f"Never retrieved job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
+    )
+    return None
 
 
 def incr_jobs_cache_misses():
@@ -331,7 +334,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # change the task schedules
     if job is None:
         current_app.logger.warning(
-            "Couldnt find personalisation for job_id {job_id} row number {job_row_number} because job is missing"
+            f"Couldnt find personalisation for job_id {job_id} row number {job_row_number} because job is missing"
         )
         return {}
 

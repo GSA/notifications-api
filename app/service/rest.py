@@ -503,37 +503,24 @@ def get_all_notifications_for_service(service_id):
 
     for notification in pagination.items:
         if notification.job_id is not None:
-            try:
-                notification.personalisation = get_personalisation_from_s3(
-                    notification.service_id,
-                    notification.job_id,
-                    notification.job_row_number,
-                )
-            except ClientError as ex:
-                if ex.response["Error"]["Code"] == "NoSuchKey":
-                    notification.personalisation = ""
-                else:
-                    raise ex
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
 
-            try:
-                recipient = get_phone_number_from_s3(
-                    notification.service_id,
-                    notification.job_id,
-                    notification.job_row_number,
-                )
+            recipient = get_phone_number_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
 
-                notification.to = recipient
-                notification.normalised_to = recipient
-            except ClientError as ex:
-                if ex.response["Error"]["Code"] == "NoSuchKey":
-                    notification.to = ""
-                    notification.normalised_to = ""
-                else:
-                    raise ex
+            notification.to = recipient
+            notification.normalised_to = recipient
 
         else:
-            notification.to = "1"
-            notification.normalised_to = "1"
+            notification.to = ""
+            notification.normalised_to = ""
 
     kwargs = request.args.to_dict()
     kwargs["service_id"] = service_id
