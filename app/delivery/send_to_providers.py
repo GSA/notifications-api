@@ -80,20 +80,15 @@ def send_sms_to_provider(notification):
 
                 # We start by trying to get the phone number from a job in s3.  If we fail, we assume
                 # the phone number is for the verification code on login, which is not a job.
-                print(f"IN THE TRY AND JOB_ID is {notification.job_id}")
                 recipient = None
                 # It is our 2facode, maybe
                 if notification.job_id is None:
-                    print(f"IN THE IF AND WE ARE GOING TO GET THE 2FA KEY")
                     key = f"2facode-{notification.id}".replace(" ", "")
-                    print(hilite(f"KEY IS SEND_TO_PROVIDERS IS {key}"))
                     recipient = redis_store.get(key)
                     if recipient:
                         recipient = recipient.decode("utf-8")
 
-                    print(hilite(f"RECIPIENT IN SEND TO PROVIDERS IS {recipient}"))
                 else:
-                    print(f"IN THE ELSE AND WE ARE GOING TO GET FROM S3")
                     try:
                         recipient = get_phone_number_from_s3(
                             notification.service_id,
@@ -103,9 +98,7 @@ def send_sms_to_provider(notification):
                     except Exception:
                         # It is our 2facode, maybe
                         key = f"2facode-{notification.id}".replace(" ", "")
-                        print(hilite(f"KEY IS SEND_TO_PROVIDERS IS {key}"))
                         recipient = redis_store.get(key)
-                        print(hilite(f"RECIPIENT IN SEND TO PROVIDERS IS {recipient}"))
 
                         if recipient:
                             recipient = recipient.decode("utf-8")
