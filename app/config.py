@@ -84,7 +84,7 @@ class Config(object):
     SQLALCHEMY_POOL_TIMEOUT = 30
     SQLALCHEMY_POOL_RECYCLE = 300
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
-    PAGE_SIZE = 50
+    PAGE_SIZE = 20
     API_PAGE_SIZE = 250
     REDIS_URL = cloud_config.redis_url
     REDIS_ENABLED = getenv("REDIS_ENABLED", "1") == "1"
