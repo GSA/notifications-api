@@ -54,7 +54,7 @@ def dao_get_jobs_by_service_id(
     *,
     limit_days=None,
     page=1,
-    page_size=20,
+    page_size=50,
     statuses=None,
 ):
     query_filter = [
