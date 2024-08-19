@@ -75,6 +75,8 @@ def test_provider_to_use_raises_if_no_active_providers(
 def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     sample_sms_template_with_html, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     db_notification = create_notification(
         template=sample_sms_template_with_html,
         personalisation={},
@@ -213,6 +215,8 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
 def test_send_sms_should_use_template_version_from_notification_not_latest(
     sample_template, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     db_notification = create_notification(
         template=sample_template,
         to_field="2028675309",
@@ -614,6 +618,7 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
 
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -725,6 +730,8 @@ def test_should_send_sms_to_international_providers(
 def test_should_handle_sms_sender_and_prefix_message(
     mocker, sms_sender, prefix_sms, expected_sender, expected_content, notify_db_session
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
     service = create_service_with_defined_sms_sender(
         sms_sender_value=sms_sender, prefix_sms=prefix_sms
