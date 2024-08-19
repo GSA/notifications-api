@@ -53,7 +53,7 @@ from app.user.users_schema import (
     post_verify_code_schema,
     post_verify_webauthn_schema,
 )
-from app.utils import url_with_token, utc_now
+from app.utils import hilite, url_with_token, utc_now
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
@@ -307,8 +307,9 @@ def send_user_2fa_code(user_id, code_type):
 
 
 def send_user_sms_code(user_to_send_to, data):
+    print(hilite("SEND_USER_SMS_CODE"))
     recipient = data.get("to") or user_to_send_to.mobile_number
-
+    print(hilite(f"RECIPIENT {recipient}"))
     secret_code = create_secret_code()
     personalisation = {"verify_code": secret_code}
 
@@ -372,6 +373,7 @@ def create_2fa_code(
     key = f"2facode-{saved_notification.id}".replace(" ", "")
     recipient = str(recipient)
     redis_store.set(key, recipient, ex=60 * 60)
+    print(hilite(f"SET REDIS 2facode-{saved_notification.id} to {recipient}"))
 
     # Assume that we never want to observe the Notify service's research mode
     # setting for this notification - we still need to be able to log into the

@@ -2,6 +2,7 @@ import os
 import re
 from time import monotonic
 
+from app.utils import hilite
 import botocore
 import phonenumbers
 from boto3 import client
@@ -48,7 +49,7 @@ class AwsSnsClient(SmsClient):
 
     def send_sms(self, to, content, reference, sender=None, international=False):
         matched = False
-
+        print(hilite(f"TO {to}"))
         for match in phonenumbers.PhoneNumberMatcher(to, "US"):
             matched = True
             to = phonenumbers.format_number(
