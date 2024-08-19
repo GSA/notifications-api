@@ -2,7 +2,6 @@ import os
 import re
 from time import monotonic
 
-from app.utils import hilite
 import botocore
 import phonenumbers
 from boto3 import client
@@ -10,6 +9,7 @@ from boto3 import client
 from app.clients import AWS_CLIENT_CONFIG
 from app.clients.sms import SmsClient
 from app.cloudfoundry_config import cloud_config
+from app.utils import hilite
 
 
 class AwsSnsClient(SmsClient):

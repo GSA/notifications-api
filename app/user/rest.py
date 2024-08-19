@@ -53,7 +53,7 @@ from app.user.users_schema import (
     post_verify_code_schema,
     post_verify_webauthn_schema,
 )
-from app.utils import hilite, url_with_token, utc_now
+from app.utils import url_with_token, utc_now
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
