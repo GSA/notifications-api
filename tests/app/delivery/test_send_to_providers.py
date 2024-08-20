@@ -116,9 +116,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 def test_should_send_personalised_template_to_correct_email_provider_and_persist(
     sample_email_template_with_html, mocker
 ):
-    mock_redis = mocker.patch(
-        "app.delivery.send_to_providers._get_verify_code", return_value=None
-    )
+
     utf8_encoded_email = "jo.smith@example.com".encode("utf-8")
     mock_redis.get.return_value = utf8_encoded_email
     email = utf8_encoded_email
