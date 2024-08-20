@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from urllib import parse
 
 from cachetools import TTLCache, cached
@@ -129,7 +130,7 @@ def send_sms_to_provider(notification):
 def _get_verify_code(notification):
     key = f"2facode-{notification.id}".replace(" ", "")
     recipient = redis_store.get(key)
-    if recipient:
+    with suppress(AttributeError):
         recipient = recipient.decode("utf-8")
     return recipient
 
