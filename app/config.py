@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from os import getenv, path
 
 from celery.schedules import crontab
@@ -11,7 +11,6 @@ from app.cloudfoundry_config import cloud_config
 
 class QueueNames(object):
     PERIODIC = "periodic-tasks"
-    PRIORITY = "priority-tasks"
     DATABASE = "database-tasks"
     SEND_SMS = "send-sms-tasks"
     CHECK_SMS = "check-sms_tasks"
@@ -30,7 +29,6 @@ class QueueNames(object):
     @staticmethod
     def all_queues():
         return [
-            QueueNames.PRIORITY,
             QueueNames.PERIODIC,
             QueueNames.DATABASE,
             QueueNames.SEND_SMS,
@@ -86,7 +84,7 @@ class Config(object):
     SQLALCHEMY_POOL_TIMEOUT = 30
     SQLALCHEMY_POOL_RECYCLE = 300
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
-    PAGE_SIZE = 50
+    PAGE_SIZE = 20
     API_PAGE_SIZE = 250
     REDIS_URL = cloud_config.redis_url
     REDIS_ENABLED = getenv("REDIS_ENABLED", "1") == "1"
@@ -164,6 +162,8 @@ class Config(object):
     NHS_EMAIL_BRANDING_ID = "a7dc4e56-660b-4db7-8cff-12c37b12b5ea"
     # we only need real email in Live environment (production)
     DVLA_EMAIL_ADDRESSES = json.loads(getenv("DVLA_EMAIL_ADDRESSES", "[]"))
+
+    current_minute = (datetime.now().minute + 1) % 60
 
     CELERY = {
         "broker_url": REDIS_URL,
@@ -253,6 +253,16 @@ class Config(object):
                 "task": "regenerate-job-cache",
                 "schedule": crontab(minute="*/30"),
                 "options": {"queue": QueueNames.PERIODIC},
+            },
+            "regenerate-job-cache-on-startup": {
+                "task": "regenerate-job-cache",
+                "schedule": crontab(
+                    minute=current_minute
+                ),  # Runs once at the next minute
+                "options": {
+                    "queue": QueueNames.PERIODIC,
+                    "expires": 60,
+                },  # Ensure it doesn't run if missed
             },
             "cleanup-unfinished-jobs": {
                 "task": "cleanup-unfinished-jobs",

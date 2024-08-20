@@ -1,4 +1,5 @@
 import re
+import time
 
 import botocore
 from boto3 import Session
@@ -18,26 +19,52 @@ JOBS = ExpiringDict(max_len=20000, max_age_seconds=ttl)
 JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
 JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
 
+# Global variable
+s3_client = None
+s3_resource = None
+
+
+def get_s3_client():
+    global s3_client
+    if s3_client is None:
+        access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+        secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+        region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+        session = Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name=region,
+        )
+        s3_client = session.client("s3")
+    return s3_client
+
+
+def get_s3_resource():
+    global s3_resource
+    if s3_resource is None:
+        access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+        secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+        region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+        session = Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name=region,
+        )
+        s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    return s3_resource
+
 
 def list_s3_objects():
-    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
-    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
-    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
-    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    s3 = session.client("s3")
 
+    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+    s3_client = get_s3_client()
     try:
-        response = s3.list_objects_v2(Bucket=bucket_name)
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
         while True:
             for obj in response.get("Contents", []):
                 yield obj["Key"]
             if "NextContinuationToken" in response:
-                response = s3.list_objects_v2(
+                response = s3_client.list_objects_v2(
                     Bucket=bucket_name,
                     ContinuationToken=response["NextContinuationToken"],
                 )
@@ -50,19 +77,11 @@ def list_s3_objects():
 
 
 def get_s3_files():
-    current_app.logger.info("Regenerate job cache #notify-admin-1200")
+
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
-    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
-    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
-    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
     objects = list_s3_objects()
 
-    s3res = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    s3res = get_s3_resource()
     current_app.logger.info(
         f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200"
     )
@@ -98,51 +117,48 @@ def get_s3_file(bucket_name, file_location, access_key, secret_key, region):
 def download_from_s3(
     bucket_name, s3_key, local_filename, access_key, secret_key, region
 ):
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    s3 = session.client("s3", config=AWS_CLIENT_CONFIG)
+
+    s3 = get_s3_client()
     result = None
     try:
         result = s3.download_file(bucket_name, s3_key, local_filename)
-        print(f"File downloaded successfully to {local_filename}")
+        current_app.logger.info(f"File downloaded successfully to {local_filename}")
     except botocore.exceptions.NoCredentialsError as nce:
-        print("Credentials not found")
+        current_app.logger.error("Credentials not found")
         raise Exception(nce)
     except botocore.exceptions.PartialCredentialsError as pce:
-        print("Incomplete credentials provided")
+        current_app.logger.error("Incomplete credentials provided")
         raise Exception(pce)
     except Exception as e:
-        print(f"An error occurred {e}")
+        current_app.logger.error(f"An error occurred {e}")
         text = f"EXCEPTION {e} local_filename {local_filename}"
         raise Exception(text)
     return result
 
 
 def get_s3_object(bucket_name, file_location, access_key, secret_key, region):
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
-    return s3.Object(bucket_name, file_location)
+
+    s3 = get_s3_resource()
+    try:
+        return s3.Object(bucket_name, file_location)
+    except botocore.exceptions.ClientError:
+        current_app.logger.error(
+            f"Can't retrieve S3 Object from {file_location}", exc_info=True
+        )
 
 
 def purge_bucket(bucket_name, access_key, secret_key, region):
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    s3 = get_s3_resource()
     bucket = s3.Bucket(bucket_name)
     bucket.objects.all().delete()
 
 
-def file_exists(bucket_name, file_location, access_key, secret_key, region):
+def file_exists(file_location):
+    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+
     try:
         # try and access metadata of object
         get_s3_object(
@@ -171,8 +187,64 @@ def get_job_and_metadata_from_s3(service_id, job_id):
 
 
 def get_job_from_s3(service_id, job_id):
-    obj = get_s3_object(*get_job_location(service_id, job_id))
-    return obj.get()["Body"].read().decode("utf-8")
+    """
+    If and only if we hit a throttling exception of some kind, we want to try
+    exponential backoff.  However, if we are getting NoSuchKey or something
+    that indicates things are permanently broken, we want to give up right away
+    to save time.
+    """
+    # We have to make sure the retries don't take up to much time, because
+    # we might be retrieving dozens of jobs.  So max time is:
+    # 0.2 + 0.4 + 0.8 + 1.6 = 3.0 seconds
+    retries = 0
+    max_retries = 4
+    backoff_factor = 0.2
+
+    if not file_exists(FILE_LOCATION_STRUCTURE.format(service_id, job_id)):
+        current_app.logger.error(
+            f"This file does not exist {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
+        )
+        return None
+
+    while retries < max_retries:
+
+        try:
+            obj = get_s3_object(*get_job_location(service_id, job_id))
+            return obj.get()["Body"].read().decode("utf-8")
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] in [
+                "Throttling",
+                "RequestTimeout",
+                "SlowDown",
+            ]:
+                current_app.logger.error(
+                    f"Retrying job fetch {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
+                    exc_info=True,
+                )
+                retries += 1
+                sleep_time = backoff_factor * (2**retries)  # Exponential backoff
+                time.sleep(sleep_time)
+                continue
+            else:
+                # Typically this is "NoSuchKey"
+                current_app.logger.error(
+                    f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}",
+                    exc_info=True,
+                )
+                return None
+
+        except Exception:
+            current_app.logger.error(
+                f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
+                exc_info=True,
+            )
+            return None
+
+    current_app.logger.error(
+        f"Never retrieved job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}",
+        exc_info=True,
+    )
+    return None
 
 
 def incr_jobs_cache_misses():
@@ -241,20 +313,17 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = JOBS.get(job_id)
     if job is None:
+        current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
+        # Even if it is None, put it here to avoid KeyErrors
         JOBS[job_id] = job
         incr_jobs_cache_misses()
     else:
         incr_jobs_cache_hits()
 
-    # If the job is None after our attempt to retrieve it from s3, it
-    # probably means the job is old and has been deleted from s3, in
-    # which case there is nothing we can do.  It's unlikely to run into
-    # this, but it could theoretically happen, especially if we ever
-    # change the task schedules
     if job is None:
-        current_app.logger.warning(
-            f"Couldnt find phone for job_id {job_id} row number {job_row_number} because job is missing"
+        current_app.logger.error(
+            f"Couldnt find phone for job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} because job is missing"
         )
         return "Unavailable"
 
@@ -299,7 +368,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # change the task schedules
     if job is None:
         current_app.logger.warning(
-            "Couldnt find personalisation for job_id {job_id} row number {job_row_number} because job is missing"
+            f"Couldnt find personalisation for job_id {job_id} row number {job_row_number} because job is missing"
         )
         return {}
 

@@ -23,7 +23,6 @@ def get_providers():
             "id": row.id,
             "display_name": row.display_name,
             "identifier": row.identifier,
-            "priority": row.priority,
             "notification_type": row.notification_type,
             "active": row.active,
             "updated_at": row.updated_at,

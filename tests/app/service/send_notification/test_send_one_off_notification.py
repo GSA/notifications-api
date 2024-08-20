@@ -3,14 +3,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.config import QueueNames
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.enums import (
     KeyType,
     NotificationType,
     RecipientType,
     ServicePermissionType,
-    TemplateProcessType,
     TemplateType,
 )
 from app.errors import BadRequestError
@@ -159,24 +157,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_email(
         reference=None,
         client_reference=None,
     )
-
-
-def test_send_one_off_notification_honors_priority(
-    notify_db_session, persist_mock, celery_mock
-):
-    service = create_service()
-    template = create_template(service=service)
-    template.process_type = TemplateProcessType.PRIORITY
-
-    post_data = {
-        "template_id": str(template.id),
-        "to": "202-867-5309",
-        "created_by": str(service.created_by_id),
-    }
-
-    send_one_off_notification(service.id, post_data)
-
-    assert celery_mock.call_args[1]["queue"] == QueueNames.PRIORITY
 
 
 def test_send_one_off_notification_raises_if_invalid_recipient(notify_db_session):
