@@ -308,7 +308,6 @@ def send_user_2fa_code(user_id, code_type):
 
 def send_user_sms_code(user_to_send_to, data):
     recipient = data.get("to") or user_to_send_to.mobile_number
-
     secret_code = create_secret_code()
     personalisation = {"verify_code": secret_code}
 
