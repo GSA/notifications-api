@@ -153,11 +153,11 @@ def dao_create_job(job):
         current_app.logger.error(
             "#notify-admin-1859 Something is wrong with job.created_at!  Try resetting it"
         )
-        job.created_at = now_time
-        dao_update_job(job)
-        current_app.logger.error(
-            f"#notify-admin-1859 Job created_at reset to {job.created_at}"
-        )
+        # job.created_at = now_time
+        # dao_update_job(job)
+        # current_app.logger.error(
+        #    f"#notify-admin-1859 Job created_at reset to {job.created_at}"
+        # )
 
 
 def dao_update_job(job):
