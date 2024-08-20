@@ -151,8 +151,9 @@ def dao_create_job(job):
     )
     if diff_time.total_seconds() > 120:  # It should be only a few seconds diff at most
         current_app.logger.error(
-            "#notify-admin-1859 Something is wrong with job.created_at!  Try resetting it"
+            "#notify-admin-1859 Something is wrong with job.created_at!"
         )
+        raise Exception("#notify-admin-1859 Something is wrong with job.created_at!")
         # job.created_at = now_time
         # dao_update_job(job)
         # current_app.logger.error(
