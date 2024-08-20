@@ -13,7 +13,7 @@ from app.models import (
     ServiceDataRetention,
     Template,
 )
-from app.utils import midnight_n_days_ago, utc_now
+from app.utils import hilite, midnight_n_days_ago, utc_now
 
 
 def dao_get_notification_outcomes_for_job(service_id, job_id):
@@ -140,6 +140,25 @@ def dao_create_job(job):
         job.id = uuid.uuid4()
     db.session.add(job)
     db.session.commit()
+    # We are seeing weird time anomalies where a job can be created on
+    # 8/19 yet show a created_at time of 8/16.  This seems to be the only
+    # place the created_at value is set so do some double-checking and debugging
+    orig_time = job.created_at
+    orig_time = orig_time - timedelta(days=3)
+    now_time = utc_now()
+    diff_time = now_time - orig_time
+    current_app.logger.info(
+        f"#notify-admin-1859 dao_create_job orig created at {orig_time} and now {now_time}"
+    )
+    if diff_time.total_seconds() > 120:  # It should be only a few seconds diff at most
+        current_app.logger.error(
+            f"#notify-admin-1859 Something is wrong with job.created_at!  Try resetting it"
+        )
+        job.created_at = now_time
+        dao_update_job(job)
+        current_app.logger.error(
+            f"#notify-admin-1859 Job created_at reset to {job.created_at}"
+        )
 
 
 def dao_update_job(job):
