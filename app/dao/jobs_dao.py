@@ -13,7 +13,7 @@ from app.models import (
     ServiceDataRetention,
     Template,
 )
-from app.utils import hilite, midnight_n_days_ago, utc_now
+from app.utils import midnight_n_days_ago, utc_now
 
 
 def dao_get_notification_outcomes_for_job(service_id, job_id):
@@ -152,7 +152,7 @@ def dao_create_job(job):
     )
     if diff_time.total_seconds() > 120:  # It should be only a few seconds diff at most
         current_app.logger.error(
-            f"#notify-admin-1859 Something is wrong with job.created_at!  Try resetting it"
+            "#notify-admin-1859 Something is wrong with job.created_at!  Try resetting it"
         )
         job.created_at = now_time
         dao_update_job(job)
