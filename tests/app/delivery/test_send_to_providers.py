@@ -218,7 +218,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     sample_template, mocker
 ):
 
-    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     db_notification = create_notification(
         template=sample_template,
         to_field="2028675309",
@@ -688,7 +688,7 @@ def test_should_send_sms_to_international_providers(
     sample_template, sample_user, mocker
 ):
 
-    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
 
     notification_international = create_notification(
@@ -796,7 +796,7 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 
 def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_template):
 
-    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -859,7 +859,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker, client, sample_template
 ):
 
-    mocker.patch("app.delivery.send_to_providers._get_verify_coe", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
