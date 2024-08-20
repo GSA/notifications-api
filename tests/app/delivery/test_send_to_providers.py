@@ -322,6 +322,8 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     # é, o, and u are in GSM.
     # ī, grapes, tabs, zero width space and ellipsis are not
     # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -356,6 +358,8 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
 def test_send_sms_should_use_service_sms_sender(
     sample_service, sample_template, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
 
     sms_sender = create_service_sms_sender(
@@ -681,6 +685,8 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
 def test_should_send_sms_to_international_providers(
     sample_template, sample_user, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
 
     notification_international = create_notification(
@@ -788,6 +794,7 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 
 def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_template):
 
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -850,6 +857,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker, client, sample_template
 ):
 
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
