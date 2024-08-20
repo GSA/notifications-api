@@ -76,11 +76,10 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     sample_sms_template_with_html, mocker
 ):
 
-    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     db_notification = create_notification(
         template=sample_sms_template_with_html,
         personalisation={},
-        job_id="myjobid",
         status=NotificationStatus.CREATED,
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
     )
@@ -117,7 +116,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 def test_should_send_personalised_template_to_correct_email_provider_and_persist(
     sample_email_template_with_html, mocker
 ):
-    mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
+    mock_redis = mocker.patch(
+        "app.delivery.send_to_providers._get_verify_code", return_value=None
+    )
     utf8_encoded_email = "jo.smith@example.com".encode("utf-8")
     mock_redis.get.return_value = utf8_encoded_email
     email = utf8_encoded_email
@@ -224,7 +225,6 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
         status=NotificationStatus.CREATED,
         reply_to_text=sample_template.service.get_default_sms_sender(),
         normalised_to="2028675309",
-        job_id="myjobid",
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -694,7 +694,6 @@ def test_should_send_sms_to_international_providers(
     notification_international = create_notification(
         template=sample_template,
         to_field="+6011-17224412",
-        job_id="myjobid",
         personalisation={"name": "Jo"},
         status=NotificationStatus.CREATED,
         international=True,
@@ -804,7 +803,6 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
         template=sample_template,
-        job_id="myjobid",
         to_field="+12028675309",
         normalised_to="2028675309",
         reply_to_text="testing",
@@ -861,7 +859,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker, client, sample_template
 ):
 
-    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
+    mocker.patch("app.delivery.send_to_providers._get_verify_coe", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -885,7 +883,6 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
         template=sample_template,
-        job_id="myjobid",
         to_field="+447700900855",
         normalised_to="447700900855",
         reply_to_text="testing",

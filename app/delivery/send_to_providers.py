@@ -82,33 +82,13 @@ def send_sms_to_provider(notification):
                 # the phone number is for the verification code on login, which is not a job.
                 recipient = None
                 # It is our 2facode, maybe
-                if notification.job_id is None:
-                    key = f"2facode-{notification.id}".replace(" ", "")
-                    recipient = redis_store.get(key)
-                    if recipient:
-                        recipient = recipient.decode("utf-8")
-
-                else:
-                    try:
-                        recipient = get_phone_number_from_s3(
-                            notification.service_id,
-                            notification.job_id,
-                            notification.job_row_number,
-                        )
-                    except Exception:
-                        # It is our 2facode, maybe
-                        key = f"2facode-{notification.id}".replace(" ", "")
-                        recipient = redis_store.get(key)
-
-                        if recipient:
-                            recipient = recipient.decode("utf-8")
+                recipient = _get_verify_code(notification)
 
                 if recipient is None:
-                    si = notification.service_id
-                    ji = notification.job_id
-                    jrn = notification.job_row_number
-                    raise Exception(
-                        f"The recipient for (Service ID: {si}; Job ID: {ji}; Job Row Number {jrn} was not found."
+                    recipient = get_phone_number_from_s3(
+                        notification.service_id,
+                        notification.job_id,
+                        notification.job_row_number,
                     )
 
                 sender_numbers = get_sender_numbers(notification)
@@ -144,6 +124,14 @@ def send_sms_to_provider(notification):
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
+
+
+def _get_verify_code(notification):
+    key = f"2facode-{notification.id}".replace(" ", "")
+    recipient = redis_store.get(key)
+    if recipient:
+        recipient = recipient.decode("utf-8")
+    return recipient
 
 
 def get_sender_numbers(notification):
