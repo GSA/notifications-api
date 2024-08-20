@@ -144,7 +144,6 @@ def dao_create_job(job):
     # 8/19 yet show a created_at time of 8/16.  This seems to be the only
     # place the created_at value is set so do some double-checking and debugging
     orig_time = job.created_at
-    orig_time = orig_time - timedelta(days=3)
     now_time = utc_now()
     diff_time = now_time - orig_time
     current_app.logger.info(
