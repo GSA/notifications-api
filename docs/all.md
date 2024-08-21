@@ -1425,3 +1425,12 @@ For application 'notify-api-sandbox': Service instance 'notify-api-rds-sandbox' 
 ```
 
 Run `cf target -o gsa-tts-benefits-studio -s notify-sandbox` before pushing to the Sandbox
+
+### Searchable tags for 'hot' items
+
+Note: better to search on space 'notify-production' rather than specifically for admin or api
+
+#notify-admin-1200 (job cache regeneration)
+#notify-admin-1505 (general login issues)
+#notify-admin-1701 (wrong sender phone number)
+#notify-admin-1859 (job is created with created_at being the wrong time)

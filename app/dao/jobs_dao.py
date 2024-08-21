@@ -188,6 +188,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             .all()
         )
 
+    # notify-api-1287, make default data retention 7 days, 23 hours
     end_date = today - timedelta(days=7, hours=23)
     for notification_type in notification_types:
         services_with_data_retention = [
