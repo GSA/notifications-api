@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from sqlalchemy import Date, case, func
 from sqlalchemy.dialects.postgresql import insert
@@ -136,7 +136,10 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
         ),
         FactNotificationStatus.notification_status.cast(db.Text).label("status"),
         *(
-            [FactNotificationStatus.template_id.label("template_id")]
+            [
+                FactNotificationStatus.template_id.label("template_id"),
+                FactNotificationStatus.local_date.label("last_used"),
+            ]
             if by_template
             else []
         ),
@@ -151,7 +154,14 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
         db.session.query(
             Notification.notification_type.cast(db.Text),
             Notification.status.cast(db.Text),
-            *([Notification.template_id] if by_template else []),
+            *(
+                [
+                    Notification.template_id,
+                    literal(date.today()).label("last_used"),
+                ]
+                if by_template
+                else []
+            ),
             func.count().label("count"),
         )
         .filter(
@@ -174,6 +184,8 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
                 Template.name.label("template_name"),
                 False,  # TODO: this is related to is_precompiled_letter
                 all_stats_table.c.template_id,
+                Template.folder.name.label("folder"),
+                Template.created_by.name.label("created_by"),
             ]
             if by_template
             else []
