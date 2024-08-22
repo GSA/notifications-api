@@ -10,7 +10,6 @@ on:
 permissions:
   contents: write
   actions: write
-  secrets: write  # pragma: allowlist secret
 
 jobs:
   rotate-secret:
