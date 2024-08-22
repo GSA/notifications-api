@@ -8,7 +8,9 @@ on:
     branches: [ main ] # Redundant, workflow_run events are only triggered on default branch (`main`)
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
+  secrets: write  # pragma: allowlist secret
 
 jobs:
   rotate-secret:
