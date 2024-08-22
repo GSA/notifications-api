@@ -8,6 +8,8 @@ on:
     branches: [ main ] # Redundant, workflow_run events are only triggered on default branch (`main`)
 
 permissions:
+  checks: write
+  pull-requests: write
   contents: write
   actions: write
 
