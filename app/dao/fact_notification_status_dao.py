@@ -15,6 +15,9 @@ from app.models import (
     NotificationAllTimeView,
     Service,
     Template,
+    TemplateFolder,
+    User,
+    template_folder_map,
 )
 from app.utils import (
     get_midnight_in_utc,
@@ -183,8 +186,8 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
                 Template.name.label("template_name"),
                 False,  # TODO: Handle `is_precompiled_letter`
                 all_stats_alias.c.template_id,
-                Template.folder.label("folder"),
-                Template.created_by.label("created_by"),
+                TemplateFolder.name.label("folder"),
+                User.name.label("created_by"),
                 func.max(all_stats_alias.c.date_used).label("last_used"),  # Get the most recent date
             ] if by_template else []
         ),
@@ -194,7 +197,19 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     )
 
     if by_template:
-        query = query.join(Template, all_stats_alias.c.template_id == Template.id)
+        query = query.join(
+            Template,
+            all_stats_alias.c.template_id == Template.id
+        ).join(
+            User,
+            Template.created_by_id == User.id
+        ).join(
+            template_folder_map,
+            Template.id == template_folder_map.c.template_id
+        ).join(
+            TemplateFolder,
+            TemplateFolder.id == template_folder_map.c.template_id
+        )
 
     # Group by all necessary fields except date_used
     query = query.group_by(
@@ -202,8 +217,8 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
             [
                 Template.name,
                 all_stats_alias.c.template_id,
-                Template.folder,
-                Template.created_by,
+                TemplateFolder.name,
+                User.name,
             ] if by_template else []
         ),
         all_stats_alias.c.notification_type,
