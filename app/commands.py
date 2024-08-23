@@ -1053,3 +1053,15 @@ def add_test_users_to_db(generate, state, admin):
             platform_admin=admin,
         )
         print(f"{num} {user.email_address} created")
+
+# generate a new salt value
+@notify_command(name="generate-salt")
+def generate_salt():
+    salt = secrets.token_hex(16)
+    # We want to print here.  This value is
+    # generated locally for the developer doing
+    # the salt rotation task, so we don't care if
+    # the task is somehow run on production tier and
+    # appears in the logs, because that will not be
+    # the correct value.
+    print(salt)

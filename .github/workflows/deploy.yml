@@ -8,35 +8,9 @@ on:
     branches: [ main ] # Redundant, workflow_run events are only triggered on default branch (`main`)
 
 permissions:
-  checks: write
-  pull-requests: write
-  contents: write
-  actions: write
+  contents: read
 
 jobs:
-  rotate-secret:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Generate new secret value
-        id: generate-secret
-        run: |
-          # Generate a new random secret value
-          NEW_SECRET=$(openssl rand -base64 32)
-          echo "new-secret=$NEW_SECRET" >> $GITHUB_ENV
-      - name: Update GitHub secret
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_SECRET: ${{ env.new-secret }}
-        run: |
-          # Update the secret in the repository
-          curl -X PUT \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/secrets/DANGEROUS_SALT \
-            -d "{\"encrypted_value\":\"$(echo -n $NEW_SECRET | base64)\",\"key_id\":\"$(curl -H 'Authorization: Bearer $GITHUB_TOKEN' https://api.github.com/repos/${{ github.repository }}/actions/secrets/public-key | jq -r '.key_id')\"}"
 
   deploy:
     runs-on: ubuntu-latest
