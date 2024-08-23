@@ -1054,6 +1054,7 @@ def add_test_users_to_db(generate, state, admin):
         )
         print(f"{num} {user.email_address} created")
 
+
 # generate a new salt value
 @notify_command(name="generate-salt")
 def generate_salt():
