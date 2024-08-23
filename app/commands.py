@@ -1058,11 +1058,8 @@ def add_test_users_to_db(generate, state, admin):
 # generate a new salt value
 @notify_command(name="generate-salt")
 def generate_salt():
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
     salt = secrets.token_hex(16)
-    # We want to print here.  This value is
-    # generated locally for the developer doing
-    # the salt rotation task, so we don't care if
-    # the task is somehow run on production tier and
-    # appears in the logs, because that will not be
-    # the correct value.
     print(salt)
