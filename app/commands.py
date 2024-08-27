@@ -1053,3 +1053,13 @@ def add_test_users_to_db(generate, state, admin):
             platform_admin=admin,
         )
         print(f"{num} {user.email_address} created")
+
+
+# generate a new salt value
+@notify_command(name="generate-salt")
+def generate_salt():
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
+        current_app.logger.error("Can only be run in development")
+        return
+    salt = secrets.token_hex(16)
+    print(salt)
