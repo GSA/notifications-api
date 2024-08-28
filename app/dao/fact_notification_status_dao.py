@@ -1,6 +1,6 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
-from sqlalchemy import Date, case, func, select, union_all, cast
+from sqlalchemy import Date, case, cast, func, select, union_all
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import extract, literal
@@ -130,12 +130,10 @@ def fetch_notification_status_for_service_for_day(fetch_day, service_id):
 
 
 def fetch_notification_status_for_service_for_today_and_7_previous_days(
-    service_id: str,
-    by_template: bool = False,
-    limit_days: int = 7
+    service_id: str, by_template: bool = False, limit_days: int = 7
 ) -> list[dict | None]:
     start_date = midnight_n_days_ago(limit_days)
-    now = utc_now()
+    now = get_midnight_in_utc(utc_now())
 
     # Query for the last 7 days
     stats_for_7_days = select(
@@ -145,7 +143,9 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
             [
                 FactNotificationStatus.template_id.label("template_id"),
                 FactNotificationStatus.local_date.label("date_used"),
-            ] if by_template else []
+            ]
+            if by_template
+            else []
         ),
         FactNotificationStatus.notification_count.label("count"),
     ).where(
@@ -155,41 +155,53 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     )
 
     # Query for today's stats
-    stats_for_today = select(
-        cast(Notification.notification_type, Text),
-        cast(Notification.status, Text),
-        *(
-            [
-                Notification.template_id,
-                literal(date.today()).label("date_used"),
-            ] if by_template else []
-        ),
-        func.count().label("count"),
-    ).where(
-        Notification.created_at >= get_midnight_in_utc(now),
-        Notification.service_id == service_id,
-        Notification.key_type != KeyType.TEST,
-    ).group_by(
-        Notification.notification_type,
-        *([Notification.template_id] if by_template else []),
-        Notification.status,
+    stats_for_today = (
+        select(
+            cast(Notification.notification_type, Text),
+            cast(Notification.status, Text),
+            *(
+                [
+                    Notification.template_id,
+                    literal(now).label("date_used"),
+                ]
+                if by_template
+                else []
+            ),
+            func.count().label("count"),
+        )
+        .where(
+            Notification.created_at >= now,
+            Notification.service_id == service_id,
+            Notification.key_type != KeyType.TEST,
+        )
+        .group_by(
+            Notification.notification_type,
+            *([Notification.template_id] if by_template else []),
+            Notification.status,
+        )
     )
 
     # Combine the queries using union_all
     all_stats_union = union_all(stats_for_7_days, stats_for_today).subquery()
-    all_stats_alias = aliased(all_stats_union)
+    all_stats_alias = aliased(all_stats_union, name="all_stats")
 
     # Final query with optional template joins
     query = select(
         *(
             [
+                TemplateFolder.name.label("folder"),
                 Template.name.label("template_name"),
                 False,  # TODO: Handle `is_precompiled_letter`
+                template_folder_map.c.template_folder_id,
                 all_stats_alias.c.template_id,
-                TemplateFolder.name.label("folder"),
                 User.name.label("created_by"),
-                func.max(all_stats_alias.c.date_used).label("last_used"),  # Get the most recent date
-            ] if by_template else []
+                Template.created_by_id,
+                func.max(all_stats_alias.c.date_used).label(
+                    "last_used"
+                ),  # Get the most recent date
+            ]
+            if by_template
+            else []
         ),
         all_stats_alias.c.notification_type,
         all_stats_alias.c.status,
@@ -197,37 +209,35 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     )
 
     if by_template:
-        query = query.join(
-            Template,
-            all_stats_alias.c.template_id == Template.id
-        ).join(
-            User,
-            Template.created_by_id == User.id
-        ).join(
-            template_folder_map,
-            Template.id == template_folder_map.c.template_id
-        ).join(
-            TemplateFolder,
-            TemplateFolder.id == template_folder_map.c.template_id
+        query = (
+            query.join(Template, all_stats_alias.c.template_id == Template.id)
+            .join(User, Template.created_by_id == User.id)
+            .outerjoin(
+                template_folder_map, Template.id == template_folder_map.c.template_id
+            )
+            .outerjoin(
+                TemplateFolder,
+                TemplateFolder.id == template_folder_map.c.template_folder_id,
+            )
         )
 
     # Group by all necessary fields except date_used
     query = query.group_by(
         *(
             [
+                TemplateFolder.name,
                 Template.name,
                 all_stats_alias.c.template_id,
-                TemplateFolder.name,
                 User.name,
-            ] if by_template else []
+                template_folder_map.c.template_folder_id,
+                Template.created_by_id,
+            ]
+            if by_template
+            else []
         ),
         all_stats_alias.c.notification_type,
         all_stats_alias.c.status,
     )
-
-    print("*"*79)
-    print(query)
-    print("*"*79)
 
     # Execute the query using Flask-SQLAlchemy's session
     result = db.session.execute(query)
