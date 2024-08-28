@@ -41,6 +41,11 @@ def get_template_statistics_for_service_by_day(service_id):
                 "count": row.count,
                 "template_id": str(row.template_id),
                 "template_name": row.template_name,
+                "template_folder_id": row.template_folder_id,
+                "template_folder": row.folder,
+                "created_by_id": row.created_by_id,
+                "created_by": row.created_by,
+                "last_used": row.last_used,
                 "template_type": row.notification_type,
                 "status": row.status,
             }
