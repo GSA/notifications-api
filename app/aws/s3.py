@@ -1,3 +1,4 @@
+import datetime
 import re
 import time
 
@@ -8,6 +9,7 @@ from flask import current_app
 
 from app import redis_store
 from app.clients import AWS_CLIENT_CONFIG
+from notifications_utils import aware_utcnow
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
 
@@ -58,11 +60,15 @@ def list_s3_objects():
 
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
     s3_client = get_s3_client()
+    # Our reports only support 7 days, but pull 8 days to avoid
+    # any edge cases
+    time_limit = aware_utcnow() - datetime.timedelta(days=8)
     try:
         response = s3_client.list_objects_v2(Bucket=bucket_name)
         while True:
             for obj in response.get("Contents", []):
-                yield obj["Key"]
+                if obj["LastModified"] >= time_limit:
+                    yield obj["Key"]
             if "NextContinuationToken" in response:
                 response = s3_client.list_objects_v2(
                     Bucket=bucket_name,
