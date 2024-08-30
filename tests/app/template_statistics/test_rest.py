@@ -79,6 +79,11 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
                 template_name=sample_template.name,
                 notification_type=sample_template.template_type,
                 status=NotificationStatus.CREATED,
+                template_folder_id="123456",
+                folder="Some_Folder",
+                created_by_id="987654",
+                created_by="Mr. Nobody",
+                last_used="0/0/0",
             )
         ],
     )
@@ -95,6 +100,11 @@ def test_get_template_statistics_for_service_by_day_goes_to_db(
             "template_name": sample_template.name,
             "template_type": sample_template.template_type,
             "status": NotificationStatus.CREATED,
+            "template_folder_id": "123456",
+            "template_folder": "Some_Folder",
+            "created_by_id": "987654",
+            "created_by": "Mr. Nobody",
+            "last_used": "0/0/0",
         }
     ]
     # dao only called for 2nd, since redis returned values for first call

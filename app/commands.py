@@ -1056,7 +1056,7 @@ def add_test_users_to_db(generate, state, admin):
         current_app.logger.error("Can only be run in development", exc_info=True)
         return
 
-    for num in range(1, int(generate) + 1):
+    for num in range(1, int(generate) + 1):  # noqa
 
         def fake_email(name):
             first_name, last_name = name.split(maxsplit=1)
@@ -1064,7 +1064,7 @@ def add_test_users_to_db(generate, state, admin):
             return f"{username}@test.gsa.gov"
 
         name = fake.name()
-        user = create_user(
+        create_user(
             name=name,
             email=fake_email(name),
             state=state,
