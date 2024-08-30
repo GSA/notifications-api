@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import timedelta
 
@@ -140,6 +141,25 @@ def dao_create_job(job):
         job.id = uuid.uuid4()
     db.session.add(job)
     db.session.commit()
+    # We are seeing weird time anomalies where a job can be created on
+    # 8/19 yet show a created_at time of 8/16.  This seems to be the only
+    # place the created_at value is set so do some double-checking and debugging
+    orig_time = job.created_at
+    now_time = utc_now()
+    diff_time = now_time - orig_time
+    current_app.logger.info(
+        f"#notify-admin-1859 dao_create_job orig created at {orig_time} and now {now_time}"
+    )
+    if diff_time.total_seconds() > 300:  # It should be only a few seconds diff at most
+        current_app.logger.error(
+            "#notify-admin-1859 Something is wrong with job.created_at!"
+        )
+        if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
+            job.created_at = now_time
+            dao_update_job(job)
+            current_app.logger.error(
+                f"#notify-admin-1859 Job created_at reset to {job.created_at}"
+            )
 
 
 def dao_update_job(job):
@@ -168,7 +188,8 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             .all()
         )
 
-    end_date = today - timedelta(days=7)
+    # notify-api-1287, make default data retention 7 days, 23 hours
+    end_date = today - timedelta(days=7, hours=23)
     for notification_type in notification_types:
         services_with_data_retention = [
             x.service_id

@@ -212,7 +212,7 @@ def test_get_inbound_sms_by_id_with_invalid_service_id_returns_404(
 
 @pytest.mark.parametrize(
     "page_given, expected_rows, has_next_link",
-    [(True, 10, False), (False, 50, True)],
+    [(True, 20, True), (False, 20, True)],
 )
 def test_get_most_recent_inbound_sms_for_service(
     admin_request,

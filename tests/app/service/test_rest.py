@@ -2036,10 +2036,10 @@ def test_get_notifications_for_service_pagination_links(
     resp = admin_request.get(
         "service.get_all_notifications_for_service",
         service_id=sample_template.service_id,
-        page=3,
+        page=6,
     )
 
-    assert "?page=2" in resp["links"]["prev"]
+    assert "?page=5" in resp["links"]["prev"]
     assert "next" not in resp["links"]
 
 

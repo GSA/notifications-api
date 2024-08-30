@@ -75,6 +75,8 @@ def test_provider_to_use_raises_if_no_active_providers(
 def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     sample_sms_template_with_html, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     db_notification = create_notification(
         template=sample_sms_template_with_html,
         personalisation={},
@@ -114,6 +116,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 def test_should_send_personalised_template_to_correct_email_provider_and_persist(
     sample_email_template_with_html, mocker
 ):
+
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     utf8_encoded_email = "jo.smith@example.com".encode("utf-8")
     mock_redis.get.return_value = utf8_encoded_email
@@ -213,6 +216,8 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
 def test_send_sms_should_use_template_version_from_notification_not_latest(
     sample_template, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     db_notification = create_notification(
         template=sample_template,
         to_field="2028675309",
@@ -318,6 +323,8 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     # é, o, and u are in GSM.
     # ī, grapes, tabs, zero width space and ellipsis are not
     # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -352,6 +359,8 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
 def test_send_sms_should_use_service_sms_sender(
     sample_service, sample_template, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
 
     sms_sender = create_service_sms_sender(
@@ -614,6 +623,7 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     sample_template, mocker, research_mode, key_type, billable_units, expected_status
 ):
 
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -676,6 +686,8 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
 def test_should_send_sms_to_international_providers(
     sample_template, sample_user, mocker
 ):
+
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
 
     notification_international = create_notification(
@@ -725,6 +737,8 @@ def test_should_send_sms_to_international_providers(
 def test_should_handle_sms_sender_and_prefix_message(
     mocker, sms_sender, prefix_sms, expected_sender, expected_content, notify_db_session
 ):
+
+    mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
     service = create_service_with_defined_sms_sender(
         sms_sender_value=sms_sender, prefix_sms=prefix_sms
@@ -781,6 +795,7 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 
 def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_template):
 
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
@@ -843,6 +858,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker, client, sample_template
 ):
 
+    mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )

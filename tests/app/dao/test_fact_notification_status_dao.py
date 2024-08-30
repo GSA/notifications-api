@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from unittest import mock
 from uuid import UUID
 
 import pytest
@@ -26,6 +25,7 @@ from tests.app.db import (
     create_notification,
     create_service,
     create_template,
+    create_template_folder,
 )
 
 
@@ -253,15 +253,18 @@ def test_fetch_notification_status_by_template_for_service_for_today_and_7_previ
     notify_db_session,
 ):
     service_1 = create_service(service_name="service_1")
+    test_folder = create_template_folder(service=service_1, name="Test_Folder_For_This")
     sms_template = create_template(
         template_name="sms Template 1",
         service=service_1,
         template_type=TemplateType.SMS,
+        folder=test_folder,
     )
     sms_template_2 = create_template(
         template_name="sms Template 2",
         service=service_1,
         template_type=TemplateType.SMS,
+        folder=test_folder,
     )
     email_template = create_template(
         service=service_1, template_type=TemplateType.EMAIL
@@ -330,82 +333,152 @@ def test_fetch_notification_status_by_template_for_service_for_today_and_7_previ
         by_template=True,
     )
 
-    assert [
-        (
-            "email Template Name",
-            False,
-            mock.ANY,
-            NotificationType.EMAIL,
-            NotificationStatus.DELIVERED,
-            1,
-        ),
-        (
-            "email Template Name",
-            False,
-            mock.ANY,
-            NotificationType.EMAIL,
-            NotificationStatus.DELIVERED,
-            3,
-        ),
-        (
-            "sms Template 1",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.CREATED,
-            1,
-        ),
-        (
-            "sms Template Name",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.CREATED,
-            1,
-        ),
-        (
-            "sms Template 1",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.DELIVERED,
-            1,
-        ),
-        (
-            "sms Template 2",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.DELIVERED,
-            1,
-        ),
-        (
-            "sms Template Name",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.DELIVERED,
-            8,
-        ),
-        (
-            "sms Template Name",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.DELIVERED,
-            10,
-        ),
-        (
-            "sms Template Name",
-            False,
-            mock.ANY,
-            NotificationType.SMS,
-            NotificationStatus.DELIVERED,
-            11,
-        ),
-    ] == sorted(
-        results, key=lambda x: (x.notification_type, x.status, x.template_name, x.count)
-    )
+    expected = [
+        {
+            "folder": None,
+            "template_name": "email Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 31, 0, 0),
+            "notification_type": NotificationType.EMAIL,
+            "status": NotificationStatus.DELIVERED,
+            "count": 1,
+        },
+        {
+            "folder": None,
+            "template_name": "email Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 29, 0, 0),
+            "notification_type": NotificationType.EMAIL,
+            "status": NotificationStatus.DELIVERED,
+            "count": 3,
+        },
+        {
+            "folder": None,
+            "template_name": "sms Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 29, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.CREATED,
+            "count": 1,
+        },
+        {
+            "folder": "Test_Folder_For_This",
+            "template_name": "sms Template 1",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 31, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.CREATED,
+            "count": 1,
+        },
+        {
+            "folder": None,
+            "template_name": "sms Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 29, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.DELIVERED,
+            "count": 10,
+        },
+        {
+            "folder": "Test_Folder_For_This",
+            "template_name": "sms Template 2",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 31, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.DELIVERED,
+            "count": 1,
+        },
+        {
+            "folder": None,
+            "template_name": "sms Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 25, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.DELIVERED,
+            "count": 8,
+        },
+        {
+            "folder": "Test_Folder_For_This",
+            "template_name": "sms Template 1",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 31, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.DELIVERED,
+            "count": 1,
+        },
+        {
+            "folder": None,
+            "template_name": "sms Template Name",
+            "_no_label": False,
+            "created_by": "Test User",
+            "last_used": datetime(2018, 10, 29, 0, 0),
+            "notification_type": NotificationType.SMS,
+            "status": NotificationStatus.DELIVERED,
+            "count": 11,
+        },
+    ]
+
+    expected = [
+        [
+            str(row[k]) if k != "last_used" else row[k].strftime("%Y-%m-%d")
+            for k in (
+                "folder",
+                "template_name",
+                "created_by",
+                "last_used",
+                "notification_type",
+                "status",
+                "count",
+            )
+        ]
+        for row in sorted(
+            expected,
+            key=lambda x: (
+                str(x["notification_type"]),
+                str(x["status"]),
+                x["folder"] if x["folder"] is not None else "",
+                x["template_name"],
+                x["count"],
+                x["last_used"],
+            ),
+        )
+    ]
+
+    results = [
+        [
+            str(row[k]) if k != "last_used" else row[k].strftime("%Y-%m-%d")
+            for k in (
+                "folder",
+                "template_name",
+                "created_by",
+                "last_used",
+                "notification_type",
+                "status",
+                "count",
+            )
+        ]
+        for row in sorted(
+            results,
+            key=lambda x: (
+                x.notification_type,
+                x.status,
+                x.folder if x.folder is not None else "",
+                x.template_name,
+                x.count,
+                x.last_used,
+            ),
+        )
+    ]
+
+    assert expected == results
 
 
 @pytest.mark.parametrize(

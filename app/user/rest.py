@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from urllib.parse import urlencode
 
@@ -53,7 +54,7 @@ from app.user.users_schema import (
     post_verify_code_schema,
     post_verify_webauthn_schema,
 )
-from app.utils import url_with_token, utc_now
+from app.utils import hilite, url_with_token, utc_now
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
@@ -308,7 +309,6 @@ def send_user_2fa_code(user_id, code_type):
 
 def send_user_sms_code(user_to_send_to, data):
     recipient = data.get("to") or user_to_send_to.mobile_number
-
     secret_code = create_secret_code()
     personalisation = {"verify_code": secret_code}
 
@@ -589,13 +589,27 @@ def get_user_login_gov_user():
     return jsonify(data=result)
 
 
+def debug_not_production(msg):
+    if os.getenv("NOTIFY_ENVIRONMENT") not in ["production"]:
+        current_app.logger.info(msg)
+
+
 @user_blueprint.route("/email", methods=["POST"])
 def fetch_user_by_email():
-    email = email_data_request_schema.load(request.get_json())
-
-    fetched_user = get_user_by_email(email["email"])
-    result = fetched_user.serialize()
-    return jsonify(data=result)
+    try:
+        debug_not_production(
+            hilite(f"enter fetch_user_by_email with {request.get_json()}")
+        )
+        email = email_data_request_schema.load(request.get_json())
+        debug_not_production(hilite(f"request schema loads {email}"))
+        fetched_user = get_user_by_email(email["email"])
+        debug_not_production(hilite(f"fetched user is {fetched_user}"))
+        result = fetched_user.serialize()
+        debug_not_production(hilite(f"result is serialized to {result}"))
+        return jsonify(data=result)
+    except Exception as e:
+        debug_not_production(hilite(f"Failed with {e}!!"))
+        raise e
 
 
 # TODO: Deprecate this GET endpoint
