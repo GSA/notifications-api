@@ -652,7 +652,6 @@ def report_all_users():
             "service": user[3],
         }
         download_users.append(new_user)
-
     return jsonify(data=download_users, status=200, mime_type="application/json"), 200
 
 

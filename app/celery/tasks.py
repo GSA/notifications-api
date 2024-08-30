@@ -1,5 +1,6 @@
 import json
 
+from app.dao.services_dao import get_services_by_partial_name
 from flask import current_app
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -484,3 +485,9 @@ def process_incomplete_job(job_id):
             process_row(row, template, job, job.service, sender_id=sender_id)
 
     job_complete(job, resumed=True)
+
+def perform_load_test(delivered, failed):
+
+    service = get_services_by_partial_name("Notify.gov")
+    if service is None:
+        current_app.logger.error("Could not find service Notify.gov in db")

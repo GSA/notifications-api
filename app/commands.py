@@ -11,6 +11,7 @@ import flask
 from click_datetime import Datetime as click_dt
 from faker import Faker
 from flask import current_app, json
+from flask.cli import with_appcontext
 from notifications_python_client.authentication import create_jwt_token
 from sqlalchemy import and_, text
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +20,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app import db, redis_store
 from app.aws import s3
 from app.celery.nightly_tasks import cleanup_unfinished_jobs
-from app.celery.tasks import process_row
+from app.celery.tasks import perform_load_test, process_row
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     set_default_free_allowance_for_service,
@@ -1063,3 +1064,18 @@ def generate_salt():
         return
     salt = secrets.token_hex(16)
     print(salt)
+
+
+# IT SHOULD NOT BE A COMMAND, HAS TO BE A BUTTON ON PLATFORM ADMIN TAB
+# generate d number of delivered messages to the aws simulated success number
+# generate f number of failed messages to the aws simulated failure number
+# To be used for testing processing load and 7 day report download performance
+@notify_command(name="do-load-test")
+@click.option("-d", "--delivered", required=True, prompt=True, default="100")
+@click.option("-f", "--failed", required=True, prompt=True, default="100")
+@with_appcontext
+def do_load_test(delivered, failed):
+    if getenv("NOTIFY_ENVIRONMENT", "") in ["production"]:
+        current_app.logger.error("Cannot be run on production")
+        return
+    perform_load_test(delivered, failed)
