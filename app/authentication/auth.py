@@ -67,8 +67,10 @@ def requires_internal_auth(expected_client_id):
         f"TODO REMOVE: Enter requires_internal_auth with expected client id {expected_client_id}"
     )
     # Looks like we are hitting this for some reason
-    if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
-        keys = current_app.config.get("INTERNAL_CLIENT_API_KEYS")
+    # expected_client_id looks like ADMIN_CLIENT_USERNAME on the admin side, and
+    # INTERNAL_CLIENT_API_KEYS is a dict
+    keys = current_app.config.get("INTERNAL_CLIENT_API_KEYS")
+    if keys.get(expected_client_id) is None:
         debug_not_production(
             f"TODO REMOVE: {expected_client_id} not in {keys}, raising TypeError\n"
         )
