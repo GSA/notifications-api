@@ -68,14 +68,16 @@ def requires_internal_auth(expected_client_id):
             f"Enter requires_internal_auth with expected client id {expected_client_id}"
         )
     )
-    if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
-        raise TypeError("Unknown client_id for internal auth")
+    # if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
+    #    debug_not_production(
+    #        f"TODO REMOVE: expected_client_id {expected_client_id} not in {current_app.config.get("INTERNAL_CLIENT_API_KEYS")}, raising TypeError\n")
+    #    raise TypeError("Unknown client_id for internal auth")
 
     request_helper.check_proxy_header_before_request()
     auth_token = _get_auth_token(request)
-    debug_not_production(f"auth token {auth_token}")
+    debug_not_production(f"TODO REMOVE: auth token {auth_token}")
     client_id = _get_token_issuer(auth_token)
-    debug_not_production(f"client id {client_id}")
+    debug_not_production(f"TODO_REMOVE: client id {client_id}")
     if client_id != expected_client_id:
         current_app.logger.info("client_id: %s", client_id)
         current_app.logger.info("expected_client_id: %s", expected_client_id)
