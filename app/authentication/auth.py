@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from flask import current_app, g, request
@@ -15,6 +16,7 @@ from notifications_python_client.errors import (
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.serialised_models import SerialisedService
+from app.utils import debug_not_production, hilite
 from notifications_utils import request_helper
 
 # stvnrlly - this is silly, but bandit has a multiline string bug (https://github.com/PyCQA/bandit/issues/658)
@@ -165,6 +167,11 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
 
         return api_key
     else:
+        # We are hitting this in the e2e tests, debug why
+        debug_not_production(
+            f"auth token {auth_token} keys {api_keys} service_id={service_id}"
+        )
+
         # service has API keys, but none matching the one the user provided
         raise AuthError("Invalid token: API key not found", 403, service_id=service_id)
 
