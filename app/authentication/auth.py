@@ -64,13 +64,19 @@ def requires_admin_auth():
 
 
 def requires_internal_auth(expected_client_id):
+    debug_not_production(
+        hilite(
+            f"Enter requires_internal_auth with expected client id {expected_client_id}"
+        )
+    )
     if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
         raise TypeError("Unknown client_id for internal auth")
 
     request_helper.check_proxy_header_before_request()
     auth_token = _get_auth_token(request)
+    debug_not_production(f"auth token {auth_token}")
     client_id = _get_token_issuer(auth_token)
-
+    debug_not_production(f"client id {client_id}")
     if client_id != expected_client_id:
         current_app.logger.info("client_id: %s", client_id)
         current_app.logger.info("expected_client_id: %s", expected_client_id)
@@ -80,6 +86,9 @@ def requires_internal_auth(expected_client_id):
         InternalApiKey(client_id, secret)
         for secret in current_app.config.get("INTERNAL_CLIENT_API_KEYS")[client_id]
     ]
+    debug_not_production(
+        f"got the api keys ... note client_id {client_id} should be the service_id {api_keys}"
+    )
 
     _decode_jwt_token(auth_token, api_keys, client_id)
     g.service_id = client_id
