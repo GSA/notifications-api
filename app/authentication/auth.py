@@ -15,7 +15,7 @@ from notifications_python_client.errors import (
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.serialised_models import SerialisedService
-from app.utils import debug_not_production, hilite
+from app.utils import debug_not_production
 from notifications_utils import request_helper
 
 # stvnrlly - this is silly, but bandit has a multiline string bug (https://github.com/PyCQA/bandit/issues/658)
@@ -64,18 +64,23 @@ def requires_admin_auth():
 
 def requires_internal_auth(expected_client_id):
     debug_not_production(
-        hilite(
-            f"Enter requires_internal_auth with expected client id {expected_client_id}"
-        )
+        f"TODO REMOVE: Enter requires_internal_auth with expected client id {expected_client_id}"
     )
-    if expected_client_id not in current_app.config.get("INTERNAL_CLIENT_API_KEYS"):
+    # Looks like we are hitting this for some reason
+    # expected_client_id looks like ADMIN_CLIENT_USERNAME on the admin side, and
+    # INTERNAL_CLIENT_API_KEYS is a dict
+    keys = current_app.config.get("INTERNAL_CLIENT_API_KEYS")
+    if keys.get(expected_client_id) is None:
+        debug_not_production(
+            f"TODO REMOVE: {expected_client_id} not in {keys}, raising TypeError\n"
+        )
         raise TypeError("Unknown client_id for internal auth")
 
     request_helper.check_proxy_header_before_request()
     auth_token = _get_auth_token(request)
-    debug_not_production(f"auth token {auth_token}")
+    debug_not_production(f"TODO REMOVE: auth token {auth_token}")
     client_id = _get_token_issuer(auth_token)
-    debug_not_production(f"client id {client_id}")
+    debug_not_production(f"TODO_REMOVE: client id {client_id}")
     if client_id != expected_client_id:
         current_app.logger.info("client_id: %s", client_id)
         current_app.logger.info("expected_client_id: %s", expected_client_id)
@@ -138,6 +143,16 @@ def _decode_jwt_token(auth_token, api_keys, service_id=None):
     for api_key in api_keys:
         try:
             decode_jwt_token(auth_token, api_key.secret)
+        except TypeError:
+            debug_not_production(
+                f"TODO REMOVE: Hit TypeError!!! service_id {service_id} api_keys {api_keys}"
+            )
+            raise AuthError(
+                "Invalid token: type error",
+                403,
+                service_id=service_id,
+                api_key_id=api_key.id,
+            )
         except TokenExpiredError:
             if not current_app.config.get("ALLOW_EXPIRED_API_TOKEN", False):
                 err_msg = (
