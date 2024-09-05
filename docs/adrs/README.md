@@ -180,7 +180,7 @@ top!).
 
 |                             ADR                              |                                               TITLE                                               | CURRENT STATUS | IMPLEMENTED | LAST MODIFIED |
 |:------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------:|:-----------:|:-------------:|
-| [ADR-0009](./0009-adr-implement-backstopjs-to-improve-qa.md) | [Use backstopJS for QA Improvement within Admin Project](./0006-use-for-dependency-management.md) |    Proposal    |     No      |  08/27/2024   |
+| [ADR-0009](./0009-adr-implement-backstopjs-to-improve-qa.md) | [Use backstopJS for QA Improvement within Admin Project](./0006-use-for-dependency-management.md) |    Accepted    |     No      |  08/27/2024   |
 |     [ADR-0006](./0006-use-for-dependency-management.md)      |         [Use `poetry` for Dependency Management](./0006-use-for-dependency-management.md)         |    Accepted    |     Yes     |  09/08/2023   |
 |          [ADR-0005](./0005-agreement-data-model.md)          |                  [Agreement info in data model](./0005-agreement-data-model.md)                   |    Accepted    |     No      |  07/05/2023   |
 |   [ADR-0004](./0004-designing-pilot-content-visibility.md)   |        [Designing Pilot Content Visibility](./0004-designing-pilot-content-visibility.md)         |    Proposed    |     No      |  06/20/2023   |
