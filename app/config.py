@@ -249,6 +249,11 @@ class Config(object):
                 "schedule": crontab(hour=6, minute=0),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "delete_old_s3_objects": {
+                "task": "delete-old-s3-objects",
+                "schedule": crontab(minute="*/5"),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "regenerate-job-cache": {
                 "task": "regenerate-job-cache",
                 "schedule": crontab(minute="*/30"),

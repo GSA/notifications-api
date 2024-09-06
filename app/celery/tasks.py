@@ -446,6 +446,11 @@ def regenerate_job_cache():
     s3.get_s3_files()
 
 
+@notify_celery.task(name="delete-old-s3-objects")
+def delete_old_s3_objects():
+    s3.cleanup_old_s3_objects()
+
+
 @notify_celery.task(name="process-incomplete-jobs")
 def process_incomplete_jobs(job_ids):
     jobs = [dao_get_job_by_id(job_id) for job_id in job_ids]
