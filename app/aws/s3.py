@@ -93,8 +93,10 @@ def cleanup_old_s3_objects():
         response = s3_client.list_objects_v2(Bucket=bucket_name)
         while True:
             for obj in response.get("Contents", []):
-                if obj["LastModified"] >= time_limit:
-                    print(f"{obj['LastModified']} {obj['Key']}")
+                if obj["LastModified"] <= time_limit:
+                    current_app.logger.info(
+                        f"#delete-old-s3-objects Wanting to delete: {obj['LastModified']} {obj['Key']}"
+                    )
             if "NextContinuationToken" in response:
                 response = s3_client.list_objects_v2(
                     Bucket=bucket_name,
@@ -104,7 +106,7 @@ def cleanup_old_s3_objects():
                 break
     except Exception:
         current_app.logger.error(
-            f"An error occurred while cleaning up old s3 objects #notify-api-1303",
+            "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
             exc_info=True,
         )
 
