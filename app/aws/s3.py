@@ -82,6 +82,35 @@ def list_s3_objects():
         )
 
 
+def cleanup_old_s3_objects():
+
+    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+    s3_client = get_s3_client()
+    # Our reports only support 7 days, but can be scheduled 3 days in advance
+    # Use 14 day for the v1.0 version of this behavior
+    time_limit = aware_utcnow() - datetime.timedelta(days=14)
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
+        while True:
+            for obj in response.get("Contents", []):
+                if obj["LastModified"] <= time_limit:
+                    current_app.logger.info(
+                        f"#delete-old-s3-objects Wanting to delete: {obj['LastModified']} {obj['Key']}"
+                    )
+            if "NextContinuationToken" in response:
+                response = s3_client.list_objects_v2(
+                    Bucket=bucket_name,
+                    ContinuationToken=response["NextContinuationToken"],
+                )
+            else:
+                break
+    except Exception:
+        current_app.logger.error(
+            "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
+            exc_info=True,
+        )
+
+
 def get_s3_files():
 
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
