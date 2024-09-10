@@ -82,15 +82,21 @@ def list_s3_objects():
         )
 
 
+def get_bucket_name():
+    return current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+
+
 def cleanup_old_s3_objects():
 
-    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+    bucket_name = get_bucket_name()
+
     s3_client = get_s3_client()
     # Our reports only support 7 days, but can be scheduled 3 days in advance
     # Use 14 day for the v1.0 version of this behavior
     time_limit = aware_utcnow() - datetime.timedelta(days=14)
     try:
         response = s3_client.list_objects_v2(Bucket=bucket_name)
+        print(f"RESPONSE = {response}")
         while True:
             for obj in response.get("Contents", []):
                 if obj["LastModified"] <= time_limit:
