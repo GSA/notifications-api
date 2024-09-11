@@ -265,7 +265,7 @@ def init_app(app):
 
     @app.errorhandler(Exception)
     def exception(error):
-        app.logger.exception(error)
+        app.logger.exception(f"Handling error: {error}")
         # error.code is set for our exception types.
         msg = getattr(error, "message", str(error))
         code = getattr(error, "code", 500)
@@ -353,7 +353,9 @@ def setup_sqlalchemy_events(app):
                         "url_rule": "unknown",
                     }
             except Exception:
-                current_app.logger.exception("Exception caught for checkout event.")
+                current_app.logger.exception(
+                    "Exception caught for checkout event.",
+                )
 
         @event.listens_for(db.engine, "checkin")
         def checkin(dbapi_connection, connection_record):  # noqa
@@ -403,7 +405,7 @@ def make_task(app):
                     "Celery task {task_name} (queue: {queue_name}) failed".format(
                         task_name=self.name,
                         queue_name=self.queue_name,
-                    )
+                    ),
                 )
 
         def __call__(self, *args, **kwargs):

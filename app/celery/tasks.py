@@ -158,10 +158,10 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         job.job_status = "sending limits exceeded"
         job.processing_finished = utc_now()
         dao_update_job(job)
-        current_app.logger.error(
+        current_app.logger.exception(
             "Job {} size {} error. Total sending limits {} exceeded".format(
                 job_id, job.notification_count, service.message_limit
-            )
+            ),
         )
         return True
 
@@ -360,8 +360,8 @@ def save_api_email_or_sms(self, encrypted_notification):
         try:
             self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
-            current_app.logger.error(
-                f"Max retry failed Failed to persist notification {notification['id']}"
+            current_app.logger.exception(
+                f"Max retry failed Failed to persist notification {notification['id']}",
             )
 
 
@@ -381,7 +381,7 @@ def handle_exception(task, notification, notification_id, exc):
         try:
             task.retry(queue=QueueNames.RETRY, exc=exc)
         except task.MaxRetriesExceededError:
-            current_app.logger.error("Max retry failed" + retry_msg)
+            current_app.logger.exception("Max retry failed" + retry_msg)
 
 
 @notify_celery.task(
@@ -430,7 +430,7 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
             try:
                 self.retry(queue=QueueNames.RETRY)
             except self.MaxRetriesExceededError:
-                current_app.logger.error(
+                current_app.logger.exception(
                     "Retry: send_inbound_sms_to_service has retried the max number of"
                     + f"times for service: {service_id} and inbound_sms {inbound_sms_id}"
                 )
