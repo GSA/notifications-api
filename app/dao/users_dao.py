@@ -49,7 +49,7 @@ def get_login_gov_user(login_uuid, email_address):
                 # address in login.gov.
                 # But if we cannot change the email address, at least we don't
                 # want to fail here, otherwise the user will be locked out.
-                current_app.logger.error("Error getting login.gov user", exc_info=True)
+                current_app.logger.exception("Error getting login.gov user")
                 db.session.rollback()
 
         return user

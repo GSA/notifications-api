@@ -19,8 +19,7 @@ def cronitor(task_name):
                 current_app.logger.error(
                     "Cronitor enabled but task_name {} not found in environment".format(
                         task_name
-                    ),
-                    exc_info=True,
+                    )
                 )
                 return
 

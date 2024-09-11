@@ -158,11 +158,10 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         job.job_status = "sending limits exceeded"
         job.processing_finished = utc_now()
         dao_update_job(job)
-        current_app.logger.error(
+        current_app.logger.exception(
             "Job {} size {} error. Total sending limits {} exceeded".format(
                 job_id, job.notification_count, service.message_limit
             ),
-            exc_info=True,
         )
         return True
 
@@ -361,9 +360,8 @@ def save_api_email_or_sms(self, encrypted_notification):
         try:
             self.retry(queue=QueueNames.RETRY)
         except self.MaxRetriesExceededError:
-            current_app.logger.error(
+            current_app.logger.exception(
                 f"Max retry failed Failed to persist notification {notification['id']}",
-                exc_info=True,
             )
 
 
@@ -379,11 +377,11 @@ def handle_exception(task, notification, notification_id, exc):
         # SQLAlchemy is throwing a FlushError. So we check if the notification id already exists then do not
         # send to the retry queue.
         # This probably (hopefully) is not an issue with Redis as the celery backing store
-        current_app.logger.exception("Retry" + retry_msg, exc_info=True)
+        current_app.logger.exception("Retry" + retry_msg)
         try:
             task.retry(queue=QueueNames.RETRY, exc=exc)
         except task.MaxRetriesExceededError:
-            current_app.logger.error("Max retry failed" + retry_msg, exc_info=True)
+            current_app.logger.exception("Max retry failed" + retry_msg)
 
 
 @notify_celery.task(
@@ -432,10 +430,9 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
             try:
                 self.retry(queue=QueueNames.RETRY)
             except self.MaxRetriesExceededError:
-                current_app.logger.error(
+                current_app.logger.exception(
                     "Retry: send_inbound_sms_to_service has retried the max number of"
-                    + f"times for service: {service_id} and inbound_sms {inbound_sms_id}",
-                    exc_info=True,
+                    + f"times for service: {service_id} and inbound_sms {inbound_sms_id}"
                 )
         else:
             current_app.logger.warning(
@@ -447,6 +444,11 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
 @notify_celery.task(name="regenerate-job-cache")
 def regenerate_job_cache():
     s3.get_s3_files()
+
+
+@notify_celery.task(name="delete-old-s3-objects")
+def delete_old_s3_objects():
+    s3.cleanup_old_s3_objects()
 
 
 @notify_celery.task(name="process-incomplete-jobs")

@@ -165,7 +165,6 @@ def update_notification_status_by_reference(reference, status):
             "notification not found for reference {} (update to {})".format(
                 reference, status
             ),
-            exc_info=True,
         )
         return None
 

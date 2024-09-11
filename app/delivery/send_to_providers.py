@@ -112,7 +112,7 @@ def send_sms_to_provider(notification):
             except Exception as e:
                 n = notification
                 msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"
-                current_app.logger.error(hilite(msg), exc_info=True)
+                current_app.logger.exception(hilite(msg))
 
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)

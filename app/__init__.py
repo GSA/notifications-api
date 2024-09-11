@@ -265,7 +265,7 @@ def init_app(app):
 
     @app.errorhandler(Exception)
     def exception(error):
-        app.logger.exception("Handling error:", exc_info=True)
+        app.logger.exception(f"Handling error: {error}")
         # error.code is set for our exception types.
         msg = getattr(error, "message", str(error))
         code = getattr(error, "code", 500)
@@ -354,7 +354,7 @@ def setup_sqlalchemy_events(app):
                     }
             except Exception:
                 current_app.logger.exception(
-                    "Exception caught for checkout event.", exc_info=True
+                    "Exception caught for checkout event.",
                 )
 
         @event.listens_for(db.engine, "checkin")
@@ -406,7 +406,6 @@ def make_task(app):
                         task_name=self.name,
                         queue_name=self.queue_name,
                     ),
-                    exc_info=True,
                 )
 
         def __call__(self, *args, **kwargs):

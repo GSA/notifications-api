@@ -54,9 +54,8 @@ def cleanup_unfinished_jobs():
         try:
             acceptable_finish_time = job.processing_started + timedelta(minutes=5)
         except TypeError:
-            current_app.logger.error(
+            current_app.logger.exception(
                 f"Job ID {job.id} processing_started is {job.processing_started}.",
-                exc_info=True,
             )
             raise
         if now > acceptable_finish_time:
@@ -194,9 +193,7 @@ def delete_inbound_sms():
             )
         )
     except SQLAlchemyError:
-        current_app.logger.exception(
-            "Failed to delete inbound sms notifications", exc_info=True
-        )
+        current_app.logger.exception("Failed to delete inbound sms notifications")
         raise
 
 

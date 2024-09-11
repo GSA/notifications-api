@@ -127,7 +127,7 @@ def purge_functional_test_data(user_email_prefix):
     users, services, etc. Give an email prefix. Probably "notify-tests-preview".
     """
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     users = User.query.filter(User.email_address.like(f"{user_email_prefix}%")).all()
@@ -302,9 +302,8 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                     )
                 current_app.logger.info(response[0].get_data(as_text=True))
             except Exception:
-                current_app.logger.error(
+                current_app.logger.exception(
                     f"*** ERROR occurred for email address: {email_address.strip()}.",
-                    exc_info=True,
                 )
 
     file.close()
@@ -404,9 +403,7 @@ def populate_organizations_from_file(file_name):
                 db.session.add(org)
                 db.session.commit()
             except IntegrityError:
-                current_app.logger.error(
-                    f"Error duplicate org {org.name}", exc_info=True
-                )
+                current_app.logger.exception(f"Error duplicate org {org.name}")
                 db.session.rollback()
             domains = columns[4].split(",")
             for d in domains:
@@ -416,9 +413,8 @@ def populate_organizations_from_file(file_name):
                         db.session.add(domain)
                         db.session.commit()
                     except IntegrityError:
-                        current_app.logger.error(
+                        current_app.logger.exception(
                             f"Integrity error duplicate domain {d.strip()}",
-                            exc_info=True,
                         )
                         db.session.rollback()
 
@@ -530,15 +526,13 @@ def populate_go_live(file_name):
                 else:
                     go_live_user = None
             except NoResultFound:
-                current_app.logger.error(
-                    "No user found for email address", exc_info=True
-                )
+                current_app.logger.exception("No user found for email address")
                 continue
             try:
                 service = dao_fetch_service_by_id(service_id)
             except NoResultFound:
-                current_app.logger.error(
-                    f"No service found for service: {service_id}", exc_info=True
+                current_app.logger.exception(
+                    f"No service found for service: {service_id}"
                 )
                 continue
             service.go_live_user = go_live_user
@@ -786,9 +780,7 @@ def validate_mobile(ctx, param, value):  # noqa
 @click.option("-d", "--admin", default=False, type=bool)
 def create_test_user(name, email, mobile_number, password, auth_type, state, admin):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test", "staging"]:
-        current_app.logger.error(
-            "Can only be run in development, test, staging", exc_info=True
-        )
+        current_app.logger.error("Can only be run in development, test, staging")
         return
 
     data = {
@@ -805,14 +797,14 @@ def create_test_user(name, email, mobile_number, password, auth_type, state, adm
         db.session.add(user)
         db.session.commit()
     except IntegrityError:
-        current_app.logger.error("Integrity error duplicate user", exc_info=True)
+        current_app.logger.exception("Integrity error duplicate user")
         db.session.rollback()
 
 
 @notify_command(name="create-admin-jwt")
 def create_admin_jwt():
     if getenv("NOTIFY_ENVIRONMENT", "") != "development":
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
     current_app.logger.info(
         create_jwt_token(
@@ -825,7 +817,7 @@ def create_admin_jwt():
 @click.option("-t", "--token", required=True, prompt=False)
 def create_user_jwt(token):
     if getenv("NOTIFY_ENVIRONMENT", "") != "development":
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
     service_id = token[-73:-37]
     api_key = token[-36:]
@@ -941,7 +933,7 @@ where possible to enable better maintainability.
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
 def add_test_organizations_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     def generate_gov_agency():
@@ -1003,7 +995,7 @@ def add_test_organizations_to_db(generate):
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
 def add_test_services_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     for num in range(1, int(generate) + 1):
@@ -1017,7 +1009,7 @@ def add_test_services_to_db(generate):
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
 def add_test_jobs_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     for num in range(1, int(generate) + 1):
@@ -1032,7 +1024,7 @@ def add_test_jobs_to_db(generate):
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
 def add_test_notifications_to_db(generate):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     for num in range(1, int(generate) + 1):
@@ -1053,7 +1045,7 @@ def add_test_notifications_to_db(generate):
 @click.option("-d", "--admin", default=False, type=bool)
 def add_test_users_to_db(generate, state, admin):
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
-        current_app.logger.error("Can only be run in development", exc_info=True)
+        current_app.logger.error("Can only be run in development")
         return
 
     for num in range(1, int(generate) + 1):  # noqa

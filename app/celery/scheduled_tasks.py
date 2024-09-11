@@ -46,7 +46,7 @@ def run_scheduled_jobs():
                 "Job ID {} added to process job queue".format(job.id)
             )
     except SQLAlchemyError:
-        current_app.logger.exception("Failed to run scheduled jobs", exc_info=True)
+        current_app.logger.exception("Failed to run scheduled jobs")
         raise
 
 
@@ -61,7 +61,7 @@ def delete_verify_codes():
             )
         )
     except SQLAlchemyError:
-        current_app.logger.exception("Failed to delete verify codes", exc_info=True)
+        current_app.logger.exception("Failed to delete verify codes")
         raise
 
 
@@ -74,7 +74,7 @@ def expire_or_delete_invitations():
             f"Expire job started {start} finished {utc_now()} expired {expired_invites} invitations"
         )
     except SQLAlchemyError:
-        current_app.logger.exception("Failed to expire invitations", exc_info=True)
+        current_app.logger.exception("Failed to expire invitations")
         raise
 
     try:
@@ -84,7 +84,7 @@ def expire_or_delete_invitations():
             f"Delete job started {start} finished {utc_now()} deleted {deleted_invites} invitations"
         )
     except SQLAlchemyError:
-        current_app.logger.exception("Failed to delete invitations", exc_info=True)
+        current_app.logger.exception("Failed to delete invitations")
         raise
 
 
