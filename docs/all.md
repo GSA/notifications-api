@@ -49,6 +49,7 @@
 - [Run Book](#run-book)
   - [Alerts, Notifications, Monitoring](#-alerts-notifications-monitoring)
   - [Restaging Apps](#-restaging-apps)
+  - [Deploying to Production](#-deploying-to-production)
   - [Smoke-testing the App](#-smoke-testing-the-app)
   - [Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [Configuration Management](#-configuration-management)
@@ -1039,14 +1040,15 @@ Any changes to policies and procedures defined both here and in the SSPP must be
 that the security of the system is maintained.
 
 1. [Alerts, Notifications, Monitoring](#alerts)
-2. [Restaging Apps](#restaging-apps)
-3. [Smoke-testing the App](#smoke-testing)
-4. [Simulated bulk send testing](#simulated-bulk-send-testing)
-5. [Configuration Management](#cm)
-6. [DNS Changes](#dns)
-7. [Known Gotchas](#gotcha)
-8. [User Account Management](#ac)
-9. [SMS Phone Number Management](#phone-numbers)
+1. [Restaging Apps](#restaging-apps)
+1. [Deploying to Production](#deploying-to-production)
+1. [Smoke-testing the App](#smoke-testing)
+1. [Simulated bulk send testing](#simulated-bulk-send-testing)
+1. [Configuration Management](#cm)
+1. [DNS Changes](#dns)
+1. [Known Gotchas](#gotcha)
+1. [User Account Management](#ac)
+1. [SMS Phone Number Management](#phone-numbers)
 
 ## <a name="alerts"></a> Alerts, Notifications, Monitoring
 
@@ -1095,6 +1097,57 @@ When `ssb-devel-sms` and/or `ssb-devel-smtp` need to be restaged:
 1. Leave `Use workflow from` on it's default of `Branch: main`
 1. Select the `development` environment from the dropdown
 1. Click `Run workflow` within the popup
+
+
+## <a name="deploying-to-production"></a> Deploying to Production
+
+Deploying to production involves 3 steps that must be done in order, and can be done for just the API, just the Admin, or both at the same time:
+
+1. Create a new pull request in GitHub that merges the `main` branch into the `production` branch; be sure to provide details about what is in the release!
+1. Create a new release tag and generate release notes; publish it with the `Pre-release` at first, then update it to latest after a deploy is finished and successful.
+1. Review and approve the pull request(s) for the production deployment.
+
+Additionally, you may have to monitor the GitHub Actions as they take place to troubleshoot and/or re-run failed jobs.
+
+### Create a new pull request
+
+This is done entirely in GitHub.  First, go to the pull requests section of the API and/or Admin repository, then click on the `New pull request` button.
+
+In the screen that appears, change the `base: main` target branch on the left side of the arrow to `base: production` instead.  You want to merge all of the latest changes in `main` to the `production` branch.  After you've made the switch, click on the `Create pull request` button.
+
+When the pull request details page appears, you'll need to set a few things:
+
+Title: `<current> Production Deploy`, e.g., `9/9/2024 Production Deploy`
+Description:  feel free to copy from a previous production deploy PR; note that you'll have to change the links to the release notes if applicable!
+Labels:  `Engineering`
+Author:  set to yourself
+Reviewers:  assign folks or the @notify-contributors team
+
+Please link it to the project board as well, then click on the `Create pull request` button to finalize it all.
+
+### Create a new release tag
+
+On the main page of the repository, click on the small heading that says `Releases` on the right to get to the release listing page.  Once there, click on the `Draft a new release` button.
+
+You'll first have to choose a tag or create a new one:  use the current date as the tag name, e.g., `9/9/2024`.  Keep the target set to `main` and then click on the `Generate release notes button`.
+
+Add a title in the format of `<current date>` Production Deploy, e.g., `9/9/2024 Production Deploy`.
+
+Lastly, uncheck the `Set as the latest release` checkbox and check the `Set as a pre-release` checkbox instead.
+
+Once everything is complete, cick on the `Publish release` button and then link to the new release notes in the corresponding production deploy pull request.
+
+### Review and approve the pull request(s)
+
+When everything is good to go, two people will need to approve the pull request for merging into the `production` branch.  Once they do, then merge the pull request.
+
+At this point everything is mostly automatic.  The deploy will update both the `demo` and `production` environments.  Once the deploys are done and successful, go back into the pre-release release notes and switch the checkboxes to turn it into the latest release and save the change.
+
+### Troubleshooting production deploys
+
+Sometimes a deploy will fail and you will have to look at the GitHub Action deployment logs to see what the cause is.  In many cases it will be an out of memory error because of the two environments going out at the same time.  Whenever the successful deploy is finished, re-run the failed jobs in the other deployment action again.
+
+Once the deploys are finished it's also a good idea to just poke around the site to make sure things are working fine and as expected!
 
 
 ## <a name="smoke-testing"></a> Smoke-testing the App
