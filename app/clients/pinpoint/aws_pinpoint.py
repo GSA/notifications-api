@@ -1,4 +1,5 @@
 from boto3 import client
+from botocore.exceptions import ClientError
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
@@ -25,13 +26,19 @@ class AwsPinpointClient(Client):
         return "pinpoint"
 
     def validate_phone_number(self, country_code, phone_number):
-        response = self._client.phone_number_validate(
-            NumberValidateRequest={"IsoCountryCode": country_code, "PhoneNumber": phone_number}
-        )
+        try:
+            response = self._client.phone_number_validate(
+                NumberValidateRequest={
+                    "IsoCountryCode": country_code,
+                    "PhoneNumber": phone_number,
+                }
+            )
 
-        # TODO right now this will only print with AWS simulated numbers,
-        # but remove this when that changes
-        current_app.logger.info(hilite(response))
+            # TODO right now this will only print with AWS simulated numbers,
+            # but remove this when that changes
+            current_app.logger.info(hilite(response))
+        except ClientError:
+            current_app.logger.exception("Could not validate with pinpoint")
 
         # TODO This is the structure of the response.  When the phone validation
         # capability we want to offer is better defined (it may just be a question
