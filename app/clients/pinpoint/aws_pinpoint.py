@@ -26,7 +26,7 @@ class AwsPinpointClient(Client):
 
     def validate_phone_number(self, country_code, phone_number):
         response = self._client.phone_number_validate(
-            NumberValidateRequest={"IsoCountryCode": "string", "PhoneNumber": "string"}
+            NumberValidateRequest={"IsoCountryCode": country_code, "PhoneNumber": phone_number}
         )
 
         # TODO right now this will only print with AWS simulated numbers,
