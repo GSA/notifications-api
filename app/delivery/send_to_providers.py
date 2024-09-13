@@ -5,7 +5,13 @@ from urllib import parse
 from cachetools import TTLCache, cached
 from flask import current_app
 
-from app import create_uuid, db, notification_provider_clients, redis_store
+from app import (
+    aws_pinpoint_client,
+    create_uuid,
+    db,
+    notification_provider_clients,
+    redis_store,
+)
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
@@ -91,6 +97,11 @@ def send_sms_to_provider(notification):
                         notification.job_id,
                         notification.job_row_number,
                     )
+
+                # TODO This is temporary to test the capability of validating phone numbers
+                # The future home of the validation is TBD
+                if recipient in current_app.config["SIMULATED_SMS_NUMBERS"]:
+                    aws_pinpoint_client.validate_phone_number("01", recipient)
 
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
