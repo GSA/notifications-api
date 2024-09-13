@@ -100,8 +100,15 @@ def send_sms_to_provider(notification):
 
                 # TODO This is temporary to test the capability of validating phone numbers
                 # The future home of the validation is TBD
-                if recipient in current_app.config["SIMULATED_SMS_NUMBERS"]:
+                if "+" not in recipient:
+                    recipient_lookup = f"+{recipient}"
+                else:
+                    recipient_lookup = recipient
+                if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"]:
+                    current_app.logger.info(hilite("#validate-phone-number fired"))
                     aws_pinpoint_client.validate_phone_number("01", recipient)
+                else:
+                    current_app.logger.info(hilite("#validate-phone-number not fired"))
 
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
