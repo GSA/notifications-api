@@ -38,7 +38,9 @@ class AwsPinpointClient(Client):
             # but remove this when that changes
             current_app.logger.info(hilite(response))
         except ClientError:
-            current_app.logger.exception("Could not validate with pinpoint")
+            current_app.logger.exception(
+                "#validate-phone-number Could not validate with pinpoint"
+            )
 
         # TODO This is the structure of the response.  When the phone validation
         # capability we want to offer is better defined (it may just be a question

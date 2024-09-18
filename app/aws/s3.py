@@ -96,7 +96,6 @@ def cleanup_old_s3_objects():
     time_limit = aware_utcnow() - datetime.timedelta(days=14)
     try:
         response = s3_client.list_objects_v2(Bucket=bucket_name)
-        print(f"RESPONSE = {response}")
         while True:
             for obj in response.get("Contents", []):
                 if obj["LastModified"] <= time_limit:
