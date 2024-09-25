@@ -137,13 +137,15 @@ def purge_functional_test_data(user_email_prefix):
         try:
             uuid.UUID(usr.email_address.split("@")[0].split("+")[1])
         except ValueError:
-            print(
+            current_app.logger.warning(
                 f"Skipping {usr.email_address} as the user email doesn't contain a UUID."
             )
         else:
             services = dao_fetch_all_services_by_user(usr.id)
             if services:
-                print(f"Deleting user {usr.id} which is part of services")
+                current_app.logger.info(
+                    f"Deleting user {usr.id} which is part of services"
+                )
                 for service in services:
                     delete_service_and_all_associated_db_objects(service)
             else:
@@ -154,11 +156,13 @@ def purge_functional_test_data(user_email_prefix):
                     # user is not part of any services but may still have been the one to create the service
                     # sometimes things get in this state if the tests fail half way through
                     # Remove the service they created (but are not a part of) so we can then remove the user
-                    print(f"Deleting services created by {usr.id}")
+                    current_app.logger.info(f"Deleting services created by {usr.id}")
                     for service in services_created_by_this_user:
                         delete_service_and_all_associated_db_objects(service)
 
-                print(f"Deleting user {usr.id} which is not part of any services")
+                current_app.logger.info(
+                    f"Deleting user {usr.id} which is not part of any services"
+                )
                 delete_user_verify_codes(usr)
                 delete_model_user(usr)
 
@@ -173,7 +177,7 @@ def purge_functional_test_data(user_email_prefix):
 def insert_inbound_numbers_from_file(file_name):
     # TODO maintainability what is the purpose of this command?  Who would use it and why?
 
-    print(f"Inserting inbound numbers from {file_name}")
+    current_app.logger.info(f"Inserting inbound numbers from {file_name}")
     with open(file_name) as file:
         sql = text(
             "insert into inbound_numbers values(:uuid, :line, 'sns', null, True, now(), null);"
@@ -182,7 +186,7 @@ def insert_inbound_numbers_from_file(file_name):
         for line in file:
             line = line.strip()
             if line:
-                print(line)
+                current_app.logger.info(line)
                 db.session.execute(sql, {"uuid": str(uuid.uuid4()), "line": line})
                 db.session.commit()
 
@@ -293,13 +297,13 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
                 response = create_invited_user(service_id)
                 current_app.logger.info(f"RESPONSE {response[1]}")
                 if response[1] != 201:
-                    print(
+                    current_app.logger.warning(
                         f"*** ERROR occurred for email address: {email_address.strip()}"
                     )
-                print(response[0].get_data(as_text=True))
-            except Exception as e:
-                print(
-                    f"*** ERROR occurred for email address: {email_address.strip()}. \n{e}"
+                current_app.logger.info(response[0].get_data(as_text=True))
+            except Exception:
+                current_app.logger.exception(
+                    f"*** ERROR occurred for email address: {email_address.strip()}.",
                 )
 
     file.close()
@@ -380,7 +384,7 @@ def populate_organizations_from_file(file_name):
 
         for line in itertools.islice(f, 1, None):
             columns = line.split("|")
-            print(columns)
+            current_app.logger.info(columns)
             email_branding = None
             email_branding_column = columns[5].strip()
             if len(email_branding_column) > 0:
@@ -399,7 +403,7 @@ def populate_organizations_from_file(file_name):
                 db.session.add(org)
                 db.session.commit()
             except IntegrityError:
-                print("duplicate org", org.name)
+                current_app.logger.exception(f"Error duplicate org {org.name}")
                 db.session.rollback()
             domains = columns[4].split(",")
             for d in domains:
@@ -409,7 +413,9 @@ def populate_organizations_from_file(file_name):
                         db.session.add(domain)
                         db.session.commit()
                     except IntegrityError:
-                        print("duplicate domain", d.strip())
+                        current_app.logger.exception(
+                            f"Integrity error duplicate domain {d.strip()}",
+                        )
                         db.session.rollback()
 
 
@@ -463,7 +469,7 @@ def associate_services_to_organizations():
                 service=service, organization_id=organization.id
             )
 
-    print("finished associating services to organizations")
+    current_app.logger.info("finished associating services to organizations")
 
 
 @notify_command(name="populate-service-volume-intentions")
@@ -483,12 +489,12 @@ def populate_service_volume_intentions(file_name):
     with open(file_name, "r") as f:
         for line in itertools.islice(f, 1, None):
             columns = line.split(",")
-            print(columns)
+            current_app.logger.info(columns)
             service = dao_fetch_service_by_id(columns[0])
             service.volume_sms = columns[1]
             service.volume_email = columns[2]
             dao_update_service(service)
-    print("populate-service-volume-intentions complete")
+    current_app.logger.info("populate-service-volume-intentions complete")
 
 
 @notify_command(name="populate-go-live")
@@ -500,32 +506,34 @@ def populate_go_live(file_name):
     # 6- Contact detail, 7-MOU, 8- LIVE date, 9- SMS, 10 - Email, 11 - Letters, 12 -CRM, 13 - Blue badge
     import csv
 
-    print("Populate go live user and date")
+    current_app.logger.info("Populate go live user and date")
     with open(file_name, "r") as f:
         rows = csv.reader(
             f,
             quoting=csv.QUOTE_MINIMAL,
             skipinitialspace=True,
         )
-        print(next(rows))  # ignore header row
+        current_app.logger.info(next(rows))  # ignore header row
         for index, row in enumerate(rows):
-            print(index, row)
+            current_app.logger.info(index, row)
             service_id = row[2]
             go_live_email = row[6]
             go_live_date = datetime.strptime(row[8], "%d/%m/%Y") + timedelta(hours=12)
-            print(service_id, go_live_email, go_live_date)
+            current_app.logger.info(service_id, go_live_email, go_live_date)
             try:
                 if go_live_email:
                     go_live_user = get_user_by_email(go_live_email)
                 else:
                     go_live_user = None
             except NoResultFound:
-                print("No user found for email address: ", go_live_email)
+                current_app.logger.exception("No user found for email address")
                 continue
             try:
                 service = dao_fetch_service_by_id(service_id)
             except NoResultFound:
-                print("No service found for: ", service_id)
+                current_app.logger.exception(
+                    f"No service found for service: {service_id}"
+                )
                 continue
             service.go_live_user = go_live_user
             service.go_live_at = go_live_date
@@ -553,7 +561,7 @@ def fix_billable_units():
             prefix=notification.service.name,
             show_prefix=notification.service.prefix_sms,
         )
-        print(
+        current_app.logger.info(
             f"Updating notification: {notification.id} with {template.fragment_count} billable_units"
         )
 
@@ -561,13 +569,13 @@ def fix_billable_units():
             {"billable_units": template.fragment_count}
         )
     db.session.commit()
-    print("End fix_billable_units")
+    current_app.logger.info("End fix_billable_units")
 
 
 @notify_command(name="delete-unfinished-jobs")
 def delete_unfinished_jobs():
     cleanup_unfinished_jobs()
-    print("End cleanup_unfinished_jobs")
+    current_app.logger.info("End cleanup_unfinished_jobs")
 
 
 @notify_command(name="process-row-from-job")
@@ -655,7 +663,9 @@ def populate_annual_billing_with_the_previous_years_allowance(year):
             text(latest_annual_billing), {"service_id": row.id}
         )
         free_allowance = [x[0] for x in free_allowance_rows]
-        print(f"create free limit of {free_allowance[0]} for service: {row.id}")
+        current_app.logger.info(
+            f"create free limit of {free_allowance[0]} for service: {row.id}"
+        )
         dao_create_or_update_annual_billing_for_year(
             service_id=row.id,
             free_sms_fragment_limit=free_allowance[0],
@@ -671,7 +681,7 @@ def dump_user_info(user_email_address):
     with open("user_download.json", "wb") as f:
         f.write(json.dumps(content).encode("utf8"))
     f.close()
-    print("Successfully downloaded user info to user_download.json")
+    current_app.logger.info("Successfully downloaded user info to user_download.json")
 
 
 @notify_command(name="populate-annual-billing-with-defaults")
@@ -731,14 +741,14 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
         # set the free allowance for this year to 0 as well.
         # Else use the default free allowance for the service.
         if service.id in [x.service_id for x in services_with_zero_free_allowance]:
-            print(f"update service {service.id} to 0")
+            current_app.logger.info(f"update service {service.id} to 0")
             dao_create_or_update_annual_billing_for_year(
                 service_id=service.id,
                 free_sms_fragment_limit=0,
                 financial_year_start=year,
             )
         else:
-            print(f"update service {service.id} with default")
+            current_app.logger.info(f"update service {service.id} with default")
             set_default_free_allowance_for_service(service, year)
 
 
@@ -787,7 +797,7 @@ def create_test_user(name, email, mobile_number, password, auth_type, state, adm
         db.session.add(user)
         db.session.commit()
     except IntegrityError:
-        print("duplicate user", user.name)
+        current_app.logger.exception("Integrity error duplicate user")
         db.session.rollback()
 
 
@@ -796,7 +806,7 @@ def create_admin_jwt():
     if getenv("NOTIFY_ENVIRONMENT", "") != "development":
         current_app.logger.error("Can only be run in development")
         return
-    print(
+    current_app.logger.info(
         create_jwt_token(
             current_app.config["SECRET_KEY"], current_app.config["ADMIN_CLIENT_ID"]
         )
@@ -811,7 +821,7 @@ def create_user_jwt(token):
         return
     service_id = token[-73:-37]
     api_key = token[-36:]
-    print(create_jwt_token(api_key, service_id))
+    current_app.logger.info(create_jwt_token(api_key, service_id))
 
 
 def _update_template(id, name, template_type, content, subject):
@@ -883,7 +893,7 @@ def create_new_service(name, message_limit, restricted, email_from, created_by_i
         db.session.add(service)
         db.session.commit()
     except IntegrityError:
-        print("duplicate service", service.name)
+        current_app.logger.info("duplicate service", service.name)
         db.session.rollback()
 
 
@@ -977,7 +987,7 @@ def add_test_organizations_to_db(generate):
             name=generate_gov_agency(),
             organization_type=secrets.choice(["federal", "state", "other"]),
         )
-        print(f"{num} {org.name} created")
+        current_app.logger.info(f"{num} {org.name} created")
 
 
 # generate n number of test services into the dev DB
@@ -991,7 +1001,7 @@ def add_test_services_to_db(generate):
     for num in range(1, int(generate) + 1):
         service_name = f"{fake.company()} sample service"
         service = create_service(service_name=service_name)
-        print(f"{num} {service.name} created")
+        current_app.logger.info(f"{num} {service.name} created")
 
 
 # generate n number of test jobs into the dev DB
@@ -1006,7 +1016,7 @@ def add_test_jobs_to_db(generate):
         service = create_service(check_if_service_exists=True)
         template = create_template(service=service)
         job = create_job(template)
-        print(f"{num} {job.id} created")
+        current_app.logger.info(f"{num} {job.id} created")
 
 
 # generate n number of notifications into the dev DB
@@ -1025,7 +1035,7 @@ def add_test_notifications_to_db(generate):
             template=template,
             job=job,
         )
-        print(f"{num} {notification.id} created")
+        current_app.logger.info(f"{num} {notification.id} created")
 
 
 # generate n number of test users into the dev DB
@@ -1038,7 +1048,7 @@ def add_test_users_to_db(generate, state, admin):
         current_app.logger.error("Can only be run in development")
         return
 
-    for num in range(1, int(generate) + 1):
+    for num in range(1, int(generate) + 1):  # noqa
 
         def fake_email(name):
             first_name, last_name = name.split(maxsplit=1)
@@ -1046,13 +1056,13 @@ def add_test_users_to_db(generate, state, admin):
             return f"{username}@test.gsa.gov"
 
         name = fake.name()
-        user = create_user(
+        create_user(
             name=name,
             email=fake_email(name),
             state=state,
             platform_admin=admin,
         )
-        print(f"{num} {user.email_address} created")
+        current_app.logger.info("User created")
 
 
 # generate a new salt value
@@ -1062,4 +1072,4 @@ def generate_salt():
         current_app.logger.error("Can only be run in development")
         return
     salt = secrets.token_hex(16)
-    print(salt)
+    print(salt)  # noqa

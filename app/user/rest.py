@@ -1,5 +1,4 @@
 import json
-import os
 import uuid
 from urllib.parse import urlencode
 
@@ -54,7 +53,7 @@ from app.user.users_schema import (
     post_verify_code_schema,
     post_verify_webauthn_schema,
 )
-from app.utils import hilite, url_with_token, utc_now
+from app.utils import debug_not_production, hilite, url_with_token, utc_now
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
 user_blueprint = Blueprint("user", __name__)
@@ -587,11 +586,6 @@ def get_user_login_gov_user():
         return jsonify({})
     result = user.serialize()
     return jsonify(data=result)
-
-
-def debug_not_production(msg):
-    if os.getenv("NOTIFY_ENVIRONMENT") not in ["production"]:
-        current_app.logger.info(msg)
 
 
 @user_blueprint.route("/email", methods=["POST"])

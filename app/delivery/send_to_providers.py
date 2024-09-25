@@ -1,11 +1,18 @@
 import json
+import os
 from contextlib import suppress
 from urllib import parse
 
 from cachetools import TTLCache, cached
 from flask import current_app
 
-from app import create_uuid, db, notification_provider_clients, redis_store
+from app import (
+    aws_pinpoint_client,
+    create_uuid,
+    db,
+    notification_provider_clients,
+    redis_store,
+)
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
@@ -92,6 +99,20 @@ def send_sms_to_provider(notification):
                         notification.job_row_number,
                     )
 
+                # TODO This is temporary to test the capability of validating phone numbers
+                # The future home of the validation is TBD
+                if "+" not in recipient:
+                    recipient_lookup = f"+{recipient}"
+                else:
+                    recipient_lookup = recipient
+                if recipient_lookup in current_app.config[
+                    "SIMULATED_SMS_NUMBERS"
+                ] and os.getenv("NOTIFY_ENVIRONMENT") in ["development", "test"]:
+                    current_app.logger.info(hilite("#validate-phone-number fired"))
+                    aws_pinpoint_client.validate_phone_number("01", recipient)
+                else:
+                    current_app.logger.info(hilite("#validate-phone-number not fired"))
+
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
@@ -112,7 +133,7 @@ def send_sms_to_provider(notification):
             except Exception as e:
                 n = notification
                 msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"
-                current_app.logger.error(hilite(f"{msg} {e}"))
+                current_app.logger.exception(hilite(msg))
 
                 notification.billable_units = template.fragment_count
                 dao_update_notification(notification)

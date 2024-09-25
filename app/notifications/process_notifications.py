@@ -151,8 +151,6 @@ def persist_notification(
 def send_notification_to_queue_detached(
     key_type, notification_type, notification_id, queue=None
 ):
-    if key_type == KeyType.TEST:
-        print("send_notification_to_queue_detached key is test key")
 
     if notification_type == NotificationType.SMS:
         if not queue:

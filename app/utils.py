@@ -1,6 +1,7 @@
+import os
 from datetime import datetime, timedelta, timezone
 
-from flask import url_for
+from flask import current_app, url_for
 from sqlalchemy import func
 
 from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
@@ -125,3 +126,8 @@ def naive_utcnow():
 
 def utc_now():
     return naive_utcnow()
+
+
+def debug_not_production(msg):
+    if os.getenv("NOTIFY_ENVIRONMENT") not in ["production"]:
+        current_app.logger.info(msg)

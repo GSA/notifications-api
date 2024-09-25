@@ -113,8 +113,8 @@ def process_ses_results(self, response):
     except Retry:
         raise
 
-    except Exception as e:
-        current_app.logger.exception("Error processing SES results: {}".format(type(e)))
+    except Exception:
+        current_app.logger.exception("Error processing SES results")
         self.retry(queue=QueueNames.RETRY)
 
 
@@ -204,9 +204,9 @@ def handle_complaint(ses_message):
     )
     try:
         reference = ses_message["mail"]["messageId"]
-    except KeyError as e:
+    except KeyError:
         current_app.logger.exception(
-            f"Complaint from SES failed to get reference from message with error: {e}"
+            "Complaint from SES failed to get reference from message"
         )
         return
     notification = dao_get_notification_history_by_reference(reference)

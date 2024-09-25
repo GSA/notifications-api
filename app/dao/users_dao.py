@@ -43,13 +43,13 @@ def get_login_gov_user(login_uuid, email_address):
         if user.email_address != email_address:
             try:
                 save_user_attribute(user, {"email_address": email_address})
-            except sqlalchemy.exc.IntegrityError as ie:
+            except sqlalchemy.exc.IntegrityError:
                 # We are trying to change the email address as a courtesy,
                 # based on the assumption that the user has somehow changed their
                 # address in login.gov.
                 # But if we cannot change the email address, at least we don't
                 # want to fail here, otherwise the user will be locked out.
-                current_app.logger.error(ie)
+                current_app.logger.exception("Error getting login.gov user")
                 db.session.rollback()
 
         return user

@@ -21,6 +21,7 @@ from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
+from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -68,6 +69,7 @@ aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = AwsCloudwatchClient()
+aws_pinpoint_client = AwsPinpointClient()
 encryption = Encryption()
 zendesk_client = ZendeskClient()
 redis_store = RedisClient()
@@ -101,6 +103,7 @@ def create_app(application):
     aws_ses_client.init_app()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
+    aws_pinpoint_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
@@ -265,7 +268,7 @@ def init_app(app):
 
     @app.errorhandler(Exception)
     def exception(error):
-        app.logger.exception(error)
+        app.logger.exception(f"Handling error: {error}")
         # error.code is set for our exception types.
         msg = getattr(error, "message", str(error))
         code = getattr(error, "code", 500)
@@ -353,7 +356,9 @@ def setup_sqlalchemy_events(app):
                         "url_rule": "unknown",
                     }
             except Exception:
-                current_app.logger.exception("Exception caught for checkout event.")
+                current_app.logger.exception(
+                    "Exception caught for checkout event.",
+                )
 
         @event.listens_for(db.engine, "checkin")
         def checkin(dbapi_connection, connection_record):  # noqa
@@ -403,7 +408,7 @@ def make_task(app):
                     "Celery task {task_name} (queue: {queue_name}) failed".format(
                         task_name=self.name,
                         queue_name=self.queue_name,
-                    )
+                    ),
                 )
 
         def __call__(self, *args, **kwargs):

@@ -76,9 +76,42 @@ def list_s3_objects():
                 )
             else:
                 break
-    except Exception as e:
-        current_app.logger.error(
-            f"An error occurred while regenerating cache #notify-admin-1200 {e}"
+    except Exception:
+        current_app.logger.exception(
+            "An error occurred while regenerating cache #notify-admin-1200",
+        )
+
+
+def get_bucket_name():
+    return current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+
+
+def cleanup_old_s3_objects():
+
+    bucket_name = get_bucket_name()
+
+    s3_client = get_s3_client()
+    # Our reports only support 7 days, but can be scheduled 3 days in advance
+    # Use 14 day for the v1.0 version of this behavior
+    time_limit = aware_utcnow() - datetime.timedelta(days=14)
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
+        while True:
+            for obj in response.get("Contents", []):
+                if obj["LastModified"] <= time_limit:
+                    current_app.logger.info(
+                        f"#delete-old-s3-objects Wanting to delete: {obj['LastModified']} {obj['Key']}"
+                    )
+            if "NextContinuationToken" in response:
+                response = s3_client.list_objects_v2(
+                    Bucket=bucket_name,
+                    ContinuationToken=response["NextContinuationToken"],
+                )
+            else:
+                break
+    except Exception:
+        current_app.logger.exception(
+            "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
         )
 
 
@@ -106,9 +139,9 @@ def get_s3_files():
                 )
                 if "phone number" in object.lower():
                     JOBS[job_id] = object
-        except LookupError as le:
+        except LookupError:
             # perhaps our key is not formatted as we expected.  If so skip it.
-            current_app.logger.error(f"LookupError {le} #notify-admin-1200")
+            current_app.logger.exception("LookupError #notify-admin-1200")
 
     current_app.logger.info(
         f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
@@ -130,14 +163,14 @@ def download_from_s3(
         result = s3.download_file(bucket_name, s3_key, local_filename)
         current_app.logger.info(f"File downloaded successfully to {local_filename}")
     except botocore.exceptions.NoCredentialsError as nce:
-        current_app.logger.error("Credentials not found")
+        current_app.logger.exception("Credentials not found")
         raise Exception(nce)
     except botocore.exceptions.PartialCredentialsError as pce:
-        current_app.logger.error("Incomplete credentials provided")
+        current_app.logger.exception("Incomplete credentials provided")
         raise Exception(pce)
-    except Exception as e:
-        current_app.logger.error(f"An error occurred {e}")
-        text = f"EXCEPTION {e} local_filename {local_filename}"
+    except Exception:
+        current_app.logger.exception("An error occurred")
+        text = f"EXCEPTION local_filename {local_filename}"
         raise Exception(text)
     return result
 
@@ -148,8 +181,8 @@ def get_s3_object(bucket_name, file_location, access_key, secret_key, region):
     try:
         return s3.Object(bucket_name, file_location)
     except botocore.exceptions.ClientError:
-        current_app.logger.error(
-            f"Can't retrieve S3 Object from {file_location}", exc_info=True
+        current_app.logger.exception(
+            f"Can't retrieve S3 Object from {file_location}",
         )
 
 
@@ -223,9 +256,8 @@ def get_job_from_s3(service_id, job_id):
                 "RequestTimeout",
                 "SlowDown",
             ]:
-                current_app.logger.error(
+                current_app.logger.exception(
                     f"Retrying job fetch {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
-                    exc_info=True,
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
@@ -233,22 +265,19 @@ def get_job_from_s3(service_id, job_id):
                 continue
             else:
                 # Typically this is "NoSuchKey"
-                current_app.logger.error(
+                current_app.logger.exception(
                     f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}",
-                    exc_info=True,
                 )
                 return None
 
         except Exception:
-            current_app.logger.error(
+            current_app.logger.exception(
                 f"Failed to get job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)} retry_count={retries}",
-                exc_info=True,
             )
             return None
 
     current_app.logger.error(
         f"Never retrieved job {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}",
-        exc_info=True,
     )
     return None
 
@@ -287,7 +316,7 @@ def extract_phones(job):
         if phone_index >= len(row):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
-                "Corrupt csv file, missing columns or possibly a byte order mark in the file"
+                "Corrupt csv file, missing columns or possibly a byte order mark in the file",
             )
 
         else:
