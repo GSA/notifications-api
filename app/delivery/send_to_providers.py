@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import suppress
 from urllib import parse
 
@@ -104,7 +105,9 @@ def send_sms_to_provider(notification):
                     recipient_lookup = f"+{recipient}"
                 else:
                     recipient_lookup = recipient
-                if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"]:
+                if recipient_lookup in current_app.config[
+                    "SIMULATED_SMS_NUMBERS"
+                ] and os.getenv("NOTIFY_ENVIRONMENT") in ["development", "test"]:
                     current_app.logger.info(hilite("#validate-phone-number fired"))
                     aws_pinpoint_client.validate_phone_number("01", recipient)
                 else:
