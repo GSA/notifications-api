@@ -54,7 +54,7 @@ jobs:
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: poetry run coverage run --source=*/app/* -m pytest --maxfail=10
+      run: poetry run coverage run --omit=*/tests/*,*/migrations/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
