@@ -36,7 +36,6 @@ def clean_cache():
             keys_to_delete.append(key)
 
     for key in keys_to_delete:
-        print(hilite(f"DELETING {key}"))
         del job_cache[key]
 
 
@@ -349,13 +348,10 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
-    print("ENTER get_phone_number_from_s3")
     job = job_cache.get(job_id)
-    print(f"JOB FROM CACHE {job}")
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
-        print(f"JOB from s3 {job}")
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_cache, job_id, job)
     else:
@@ -372,11 +368,9 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # and that dictionary is not there, create it
     if job_cache.get(f"{job_id}_phones") is None:
         phones = extract_phones(job)
-        print(f"HMMM job is {job} phones are {phones}")
         set_job_cache(job_cache, f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
-    print(f"PHONES {phones} ROW NUMBER {job_row_number}")
     phone_to_return = phones[job_row_number]
     if phone_to_return:
         return phone_to_return

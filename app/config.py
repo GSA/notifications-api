@@ -271,7 +271,7 @@ class Config(object):
             },
             "clean-job-cache": {
                 "task": "clean-job-cache",
-                "schedule": crontab(minute="*/5"),
+                "schedule": crontab(hour=2, minute=11),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "cleanup-unfinished-jobs": {
