@@ -8,7 +8,6 @@ from boto3 import Session
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG
-from app.utils import hilite
 from notifications_utils import aware_utcnow
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
