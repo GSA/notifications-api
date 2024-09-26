@@ -302,7 +302,7 @@ def get_job_from_s3(service_id, job_id):
 
 
 def extract_phones(job):
-    job = job[0].split("\r\n")
+    job = job.split("\r\n")
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
@@ -333,6 +333,7 @@ def extract_phones(job):
 
 
 def extract_personalisation(job):
+
     job = job[0].split("\r\n")
     first_row = job[0]
     job.pop(0)
@@ -348,15 +349,18 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
-    # We don't want to constantly pull down a job from s3 every time we need a phone number.
-    # At the same time we don't want to store it in redis or the db
-    # So this is a little recycling mechanism to reduce the number of downloads.
+    print("ENTER get_phone_number_from_s3")
     job = job_cache.get(job_id)
+    print(f"JOB FROM CACHE {job}")
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
+        print(f"JOB from s3 {job}")
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_cache, job_id, job)
+    else:
+        # skip expiration date from cache, we don't need it here
+        job = job[0]
 
     if job is None:
         current_app.logger.error(
@@ -367,21 +371,18 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
     # If we look in the JOBS cache for the quick lookup dictionary of phones for a given job
     # and that dictionary is not there, create it
     if job_cache.get(f"{job_id}_phones") is None:
-        set_job_cache(job_cache, f"{job_id}_phones", extract_phones(job))
+        phones = extract_phones(job)
+        print(f"HMMM job is {job} phones are {phones}")
+        set_job_cache(job_cache, f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
-    if job_cache.get(f"{job_id}_phones") is not None:
-        phone_to_return = job_cache.get(f"{job_id}_phones")[0].get(job_row_number)
-        if phone_to_return:
-            return phone_to_return
-        else:
-            current_app.logger.warning(
-                f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
-            )
-            return "Unavailable"
+    print(f"PHONES {phones} ROW NUMBER {job_row_number}")
+    phone_to_return = phones[job_row_number]
+    if phone_to_return:
+        return phone_to_return
     else:
-        current_app.logger.error(
-            f"Was unable to construct lookup dictionary for job {job_id}"
+        current_app.logger.warning(
+            f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
         )
         return "Unavailable"
 
