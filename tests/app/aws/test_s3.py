@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from os import getenv
 
 import pytest
@@ -31,15 +32,29 @@ def single_s3_object_stub(key="foo", last_modified=None):
 
 
 def test_cleanup_old_s3_objects(mocker):
+    """
+    Currently we are going to delete s3 objects if they are more than 14 days old,
+    because we want to delete all jobs older than 7 days, and jobs can be scheduled
+    three days in advance, and on top of that we want to leave a little cushion for
+    the time being.  This test shows that a 3 day old job ("B") is not deleted,
+    whereas a 30 day old job ("A") is.
+    """
     mocker.patch("app.aws.s3.get_bucket_name", return_value="Bucket")
     mock_s3_client = mocker.Mock()
     mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
+    mock_remove_csv_object = mocker.patch("app.aws.s3.remove_csv_object")
+    lastmod30 = aware_utcnow() - timedelta(days=30)
+    lastmod3 = aware_utcnow() - timedelta(days=3)
 
     mock_s3_client.list_objects_v2.return_value = {
-        "Contents": [{"Key": "A", "LastModified": aware_utcnow()}]
+        "Contents": [
+            {"Key": "A", "LastModified": lastmod30},
+            {"Key": "B", "LastModified": lastmod3},
+        ]
     }
     cleanup_old_s3_objects()
     mock_s3_client.list_objects_v2.assert_called_with(Bucket="Bucket")
+    mock_remove_csv_object.assert_called_once_with("A")
 
 
 def test_get_s3_file_makes_correct_call(notify_api, mocker):

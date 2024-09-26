@@ -87,7 +87,6 @@ def get_bucket_name():
 
 
 def cleanup_old_s3_objects():
-
     bucket_name = get_bucket_name()
 
     s3_client = get_s3_client()
@@ -99,9 +98,15 @@ def cleanup_old_s3_objects():
         while True:
             for obj in response.get("Contents", []):
                 if obj["LastModified"] <= time_limit:
-                    current_app.logger.info(
-                        f"#delete-old-s3-objects Wanting to delete: {obj['LastModified']} {obj['Key']}"
-                    )
+
+                    try:
+                        remove_csv_object(obj["Key"])
+                        current_app.logger.info(
+                            f"#delete-old-s3-objects Deleted: {obj['LastModified']} {obj['Key']}"
+                        )
+                    except botocore.exceptions.ClientError:
+                        current_app.logger.exception(f"Couldn't delete {obj['Key']}")
+
             if "NextContinuationToken" in response:
                 response = s3_client.list_objects_v2(
                     Bucket=bucket_name,
