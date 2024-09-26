@@ -106,6 +106,10 @@ sqlalchemy-utils = "^0.41.2"
 vulture = "^2.10"
 detect-secrets = "^1.5.0"
 
+[tool.coverage.run]
+omit = [
+    "tests/*", # Omit everything in the tests directory
+]
 
 [build-system]
 requires = ["poetry-core"]
