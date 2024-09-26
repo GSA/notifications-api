@@ -446,6 +446,11 @@ def regenerate_job_cache():
     s3.get_s3_files()
 
 
+@notify_celery.task(name="clean-job-cache")
+def clean_job_cache():
+    s3.clean_cache()
+
+
 @notify_celery.task(name="delete-old-s3-objects")
 def delete_old_s3_objects():
     s3.cleanup_old_s3_objects()

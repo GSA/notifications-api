@@ -269,6 +269,11 @@ class Config(object):
                     "expires": 60,
                 },  # Ensure it doesn't run if missed
             },
+            "clean-job-cache": {
+                "task": "clean-job-cache",
+                "schedule": crontab(minute="*/5"),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "cleanup-unfinished-jobs": {
                 "task": "cleanup-unfinished-jobs",
                 "schedule": crontab(hour=4, minute=5),
