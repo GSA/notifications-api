@@ -116,6 +116,13 @@ def cleanup_old_s3_objects():
         )
 
 
+def get_job_id_from_s3_object_key(key):
+    object_arr = key.split("/")
+    job_id = object_arr[1]  # get the job_id
+    job_id = job_id.replace(".csv", "")  # we just want the job_id
+    return job_id
+
+
 def read_s3_file(bucket_name, object_key, s3res):
     """
     This method runs during the 'regenerate job cache' task.
@@ -132,10 +139,7 @@ def read_s3_file(bucket_name, object_key, s3res):
     in wait time, to this back end process.
     """
     try:
-
-        object_arr = object_key.split("/")
-        job_id = object_arr[1]  # get the job_id
-        job_id = job_id.replace(".csv", "")  # we just want the job_id
+        job_id = get_job_id_from_s3_object_key(object_key)
         if JOBS.get(job_id) is None:
             object = (
                 s3res.Object(bucket_name, object_key)
@@ -147,6 +151,7 @@ def read_s3_file(bucket_name, object_key, s3res):
                 JOBS[job_id] = object
                 JOBS[f"{job_id}_phones"] = extract_phones(object)
                 JOBS[f"{job_id}_personalisation"] = extract_personalisation(object)
+
     except LookupError:
         # perhaps our key is not formatted as we expected.  If so skip it.
         current_app.logger.exception("LookupError #notify-admin-1200")

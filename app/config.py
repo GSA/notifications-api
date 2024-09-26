@@ -256,7 +256,7 @@ class Config(object):
             },
             "regenerate-job-cache": {
                 "task": "regenerate-job-cache",
-                "schedule": crontab(minute="*/30"),
+                "schedule": crontab(minute="*/3"),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "regenerate-job-cache-on-startup": {
