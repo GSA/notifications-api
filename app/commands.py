@@ -1043,7 +1043,7 @@ def add_test_notifications_to_db(generate):  # pragma: no cover
 @click.option("-g", "--generate", required=True, prompt=True, default="1")
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
-def add_test_users_to_db(generate, state, admin): # pragma: no cover
+def add_test_users_to_db(generate, state, admin):  # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
