@@ -196,8 +196,11 @@ def get_s3_files():
     current_app.logger.info(
         f"job_cache length before regen: {len(job_cache)} #notify-admin-1200"
     )
-    with ThreadPoolExecutor() as executor:
-        executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+    try:
+        with ThreadPoolExecutor() as executor:
+            executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+    except Exception:
+        current_app.logger.exception("Connection pool issue")
 
     current_app.logger.info(
         f"job_cache length after regen: {len(job_cache)} #notify-admin-1200"

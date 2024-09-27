@@ -13,6 +13,7 @@ AWS_CLIENT_CONFIG = Config(
         "addressing_style": "virtual",
     },
     use_fips_endpoint=True,
+    max_pool_connections=50,
 )
 
 
