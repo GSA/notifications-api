@@ -931,7 +931,7 @@ where possible to enable better maintainability.
 # generate n number of test orgs into the dev DB
 @notify_command(name="add-test-organizations-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_organizations_to_db(generate):
+def add_test_organizations_to_db(generate):  # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -993,7 +993,7 @@ def add_test_organizations_to_db(generate):
 # generate n number of test services into the dev DB
 @notify_command(name="add-test-services-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_services_to_db(generate):
+def add_test_services_to_db(generate):  # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -1007,7 +1007,7 @@ def add_test_services_to_db(generate):
 # generate n number of test jobs into the dev DB
 @notify_command(name="add-test-jobs-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_jobs_to_db(generate):
+def add_test_jobs_to_db(generate):  # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -1022,7 +1022,7 @@ def add_test_jobs_to_db(generate):
 # generate n number of notifications into the dev DB
 @notify_command(name="add-test-notifications-to-db")
 @click.option("-g", "--generate", required=True, prompt=True, default=1)
-def add_test_notifications_to_db(generate):
+def add_test_notifications_to_db(generate):  # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
@@ -1043,7 +1043,7 @@ def add_test_notifications_to_db(generate):
 @click.option("-g", "--generate", required=True, prompt=True, default="1")
 @click.option("-s", "--state", default="active")
 @click.option("-d", "--admin", default=False, type=bool)
-def add_test_users_to_db(generate, state, admin):
+def add_test_users_to_db(generate, state, admin): # pragma: no cover
     if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
