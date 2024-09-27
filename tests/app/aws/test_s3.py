@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from os import getenv
 
 import pytest
@@ -32,15 +33,30 @@ def single_s3_object_stub(key="foo", last_modified=None):
 
 
 def test_cleanup_old_s3_objects(mocker):
+    """
+    Currently we are going to delete s3 objects if they are more than 14 days old,
+    because we want to delete all jobs older than 7 days, and jobs can be scheduled
+    three days in advance, and on top of that we want to leave a little cushion for
+    the time being.  This test shows that a 3 day old job ("B") is not deleted,
+    whereas a 30 day old job ("A") is.
+    """
     mocker.patch("app.aws.s3.get_bucket_name", return_value="Bucket")
+
     mock_s3_client = mocker.Mock()
     mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
+    mock_remove_csv_object = mocker.patch("app.aws.s3.remove_csv_object")
+    lastmod30 = aware_utcnow() - timedelta(days=30)
+    lastmod3 = aware_utcnow() - timedelta(days=3)
 
     mock_s3_client.list_objects_v2.return_value = {
-        "Contents": [{"Key": "A", "LastModified": aware_utcnow()}]
+        "Contents": [
+            {"Key": "A", "LastModified": lastmod30},
+            {"Key": "B", "LastModified": lastmod3},
+        ]
     }
     cleanup_old_s3_objects()
     mock_s3_client.list_objects_v2.assert_called_with(Bucket="Bucket")
+    mock_remove_csv_object.assert_called_once_with("A")
 
 
 def test_get_s3_file_makes_correct_call(notify_api, mocker):
@@ -96,7 +112,6 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
 def test_get_phone_number_from_s3(
     mocker, job, job_id, job_row_number, expected_phone_number
 ):
-    mocker.patch("app.aws.s3.redis_store")
     get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
     get_job_mock.return_value = job
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
@@ -176,7 +191,6 @@ def test_get_job_from_s3_exponential_backoff_file_not_found(mocker):
 def test_get_personalisation_from_s3(
     mocker, job, job_id, job_row_number, expected_personalisation
 ):
-    mocker.patch("app.aws.s3.redis_store")
     get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
     get_job_mock.return_value = job
     personalisation = get_personalisation_from_s3("service_id", job_id, job_row_number)
