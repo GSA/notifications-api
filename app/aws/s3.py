@@ -164,20 +164,13 @@ def read_s3_file(bucket_name, object_key, s3res):
                 .read()
                 .decode("utf-8")
             )
-            # TODO we probably don't need this phone number check anymore.
-            # Originally, there were csv uploads that were not valid
-            # for messaging sending.  They may have been experimental, or
-            # they may have not been caught by validation.  When we're sure
-            # all csv files have a phone number column, we can remove the if.
-            # We are essentially just making sure this object looks like a job.
-            if "phone number" in object.lower():
-                set_job_cache(job_cache, job_id, object)
-                set_job_cache(job_cache, f"{job_id}_phones", extract_phones(object))
-                set_job_cache(
-                    job_cache,
-                    f"{job_id}_personalisation",
-                    extract_personalisation(object),
-                )
+            set_job_cache(job_cache, job_id, object)
+            set_job_cache(job_cache, f"{job_id}_phones", extract_phones(object))
+            set_job_cache(
+                job_cache,
+                f"{job_id}_personalisation",
+                extract_personalisation(object),
+            )
 
     except LookupError:
         # perhaps our key is not formatted as we expected.  If so skip it.
