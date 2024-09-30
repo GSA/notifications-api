@@ -278,7 +278,7 @@ def get_job_from_s3(service_id, job_id):
                 "SlowDown",
             ]:
                 current_app.logger.exception(
-                    f"Retrying job fetch  retry_count={retries}",
+                    f"Retrying job fetch service_id {service_id} job_id {job_id} retry_count={retries}",
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
