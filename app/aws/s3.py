@@ -1,6 +1,7 @@
 import datetime
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import Manager
 
 import botocore
@@ -132,33 +133,67 @@ def cleanup_old_s3_objects():
         )
 
 
-def get_s3_files():
+def get_job_id_from_s3_object_key(key):
+    object_arr = key.split("/")
+    job_id = object_arr[1]  # get the job_id
+    job_id = job_id.replace(".csv", "")  # we just want the job_id
+    return job_id
 
+
+def read_s3_file(bucket_name, object_key, s3res):
+    """
+    This method runs during the 'regenerate job cache' task.
+    Note that in addition to retrieving the jobs and putting them
+    into the cache, this method also does some pre-processing by
+    putting a list of all phone numbers into the cache as well.
+
+    This means that when the report needs to be regenerated, it
+    can easily find the phone numbers in the cache through job_cache[<job_id>_phones]
+    and the personalization through job_cache[<job_id>_personalisation], which
+    in theory should make report generation a lot faster.
+
+    We are moving processing from the front end where the user can see it
+    in wait time, to this back end process.
+    """
+    try:
+        job_id = get_job_id_from_s3_object_key(object_key)
+        if job_cache.get(job_id) is None:
+            object = (
+                s3res.Object(bucket_name, object_key)
+                .get()["Body"]
+                .read()
+                .decode("utf-8")
+            )
+            set_job_cache(job_cache, job_id, object)
+            set_job_cache(job_cache, f"{job_id}_phones", extract_phones(object))
+            set_job_cache(
+                job_cache,
+                f"{job_id}_personalisation",
+                extract_personalisation(object),
+            )
+
+    except LookupError:
+        # perhaps our key is not formatted as we expected.  If so skip it.
+        current_app.logger.exception("LookupError #notify-admin-1200")
+
+
+def get_s3_files():
+    """
+    We're using the ThreadPoolExecutor here to speed up the retrieval of S3
+    csv files for scaling needs.
+    """
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
-    objects = list_s3_objects()
+    object_keys = list_s3_objects()
 
     s3res = get_s3_resource()
     current_app.logger.info(
         f"job_cache length before regen: {len(job_cache)} #notify-admin-1200"
     )
-    for object in objects:
-        # We put our csv files in the format "service-{service_id}-notify/{job_id}"
-        try:
-            object_arr = object.split("/")
-            job_id = object_arr[1]  # get the job_id
-            job_id = job_id.replace(".csv", "")  # we just want the job_id
-            if job_cache.get(job_id) is None:
-                object = (
-                    s3res.Object(bucket_name, object)
-                    .get()["Body"]
-                    .read()
-                    .decode("utf-8")
-                )
-                if "phone number" in object.lower():
-                    set_job_cache(job_cache, job_id, object)
-        except LookupError:
-            # perhaps our key is not formatted as we expected.  If so skip it.
-            current_app.logger.exception("LookupError #notify-admin-1200")
+    try:
+        with ThreadPoolExecutor() as executor:
+            executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+    except Exception:
+        current_app.logger.exception("Connection pool issue")
 
     current_app.logger.info(
         f"job_cache length after regen: {len(job_cache)} #notify-admin-1200"
@@ -363,7 +398,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    # If we look in the JOBS cache for the quick lookup dictionary of phones for a given job
+    # If we look in the job_cache for the quick lookup dictionary of phones for a given job
     # and that dictionary is not there, create it
     if job_cache.get(f"{job_id}_phones") is None:
         phones = extract_phones(job)
@@ -400,7 +435,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    # If we look in the JOBS cache for the quick lookup dictionary of personalisations for a given job
+    # If we look in the job_cache for the quick lookup dictionary of personalisations for a given job
     # and that dictionary is not there, create it
     if job_cache.get(f"{job_id}_personalisation") is None:
         set_job_cache(

@@ -9,6 +9,7 @@ from app.aws.s3 import (
     cleanup_old_s3_objects,
     file_exists,
     get_job_from_s3,
+    get_job_id_from_s3_object_key,
     get_personalisation_from_s3,
     get_phone_number_from_s3,
     get_s3_file,
@@ -115,6 +116,21 @@ def test_get_phone_number_from_s3(
     get_job_mock.return_value = job
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
+
+
+@pytest.mark.parametrize(
+    "key, expected_job_id",
+    [
+        ("service-blahblahblah-notify/abcde.csv", "abcde"),
+        (
+            "service-x-notify/4c99f361-4ed7-49b1-bd6f-02fe0c807c53.csv",
+            "4c99f361-4ed7-49b1-bd6f-02fe0c807c53",
+        ),
+    ],
+)
+def test_get_job_id_from_s3_object_key(key, expected_job_id):
+    actual_job_id = get_job_id_from_s3_object_key(key)
+    assert actual_job_id == expected_job_id
 
 
 def mock_s3_get_object_slowdown(*args, **kwargs):
