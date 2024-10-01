@@ -366,8 +366,9 @@ def extract_phones(job):
 
 
 def extract_personalisation(job):
-
-    job = job[0].split("\r\n")
+    if isinstance(job, dict):
+        job = job[0]
+    job = job.split("\r\n")
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
@@ -398,11 +399,8 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    # If we look in the job_cache for the quick lookup dictionary of phones for a given job
-    # and that dictionary is not there, create it
-    if job_cache.get(f"{job_id}_phones") is None:
-        phones = extract_phones(job)
-        set_job_cache(job_cache, f"{job_id}_phones", phones)
+    phones = extract_phones(job)
+    set_job_cache(job_cache, f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
     phone_to_return = phones[job_row_number]
@@ -421,9 +419,13 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = job_cache.get(job_id)
     if job is None:
+        current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
+        # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_cache, job_id, job)
-
+    else:
+        # skip expiration date from cache, we don't need it here
+        job = job[0]
     # If the job is None after our attempt to retrieve it from s3, it
     # probably means the job is old and has been deleted from s3, in
     # which case there is nothing we can do.  It's unlikely to run into
@@ -435,12 +437,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    # If we look in the job_cache for the quick lookup dictionary of personalisations for a given job
-    # and that dictionary is not there, create it
-    if job_cache.get(f"{job_id}_personalisation") is None:
-        set_job_cache(
-            job_cache, f"{job_id}_personalisation", extract_personalisation(job)
-        )
+    set_job_cache(job_cache, f"{job_id}_personalisation", extract_personalisation(job))
 
     # If we can find the quick dictionary, use it
     if job_cache.get(f"{job_id}_personalisation") is not None:
