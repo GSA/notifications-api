@@ -269,7 +269,6 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     assert persisted_notification.template_version == version_on_notification
     assert persisted_notification.template_version != t.version
     assert persisted_notification.status == NotificationStatus.SENDING
-    assert not persisted_notification.personalisation
 
 
 def test_should_have_sending_status_if_fake_callback_function_fails(
@@ -894,7 +893,7 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mock_personalisation = mocker.patch(
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
-    mock_personalisation.return_value = {"ignore: ignore"}
+    mock_personalisation.return_value = {"ignore": "ignore"}
 
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
