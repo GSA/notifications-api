@@ -649,7 +649,8 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
     mock_personalisation = mocker.patch(
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
-    mock_personalisation.return_value = {}
+    # So we don't treat it as a one off and have to mock other things
+    mock_personalisation.return_value = {"ignore": "ignore"}
 
     send_to_providers.send_sms_to_provider(notification)
     assert notification.billable_units == billable_units

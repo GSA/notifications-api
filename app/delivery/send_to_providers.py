@@ -65,7 +65,9 @@ def send_sms_to_provider(notification):
             temp = dict(zip(first_row, row))
             personalisation[job_row] = temp
             job_row = job_row + 1
-    notification.personalisation = personalisation[notification.job_row_number]
+        notification.personalisation = personalisation[notification.job_row_number]
+    else:
+        notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
