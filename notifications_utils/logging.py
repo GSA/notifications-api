@@ -39,6 +39,12 @@ def init_app(app):
     for logger_instance, handler in product(warning_loggers, handlers):
         logger_instance.addHandler(handler)
         logger_instance.setLevel(logging.WARNING)
+
+    # Suppress specific loggers to prevent leaking sensitive info
+    logging.getLogger("boto3").setLevel(logging.ERROR)
+    logging.getLogger("botocore").setLevel(logging.ERROR)
+    logging.getLogger("urllib3").setLevel(logging.ERROR)
+
     app.logger.info("Logging configured")
 
 

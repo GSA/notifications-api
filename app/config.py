@@ -251,7 +251,7 @@ class Config(object):
             },
             "delete_old_s3_objects": {
                 "task": "delete-old-s3-objects",
-                "schedule": crontab(minute="*/5"),
+                "schedule": crontab(hour=7, minute=10),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "regenerate-job-cache": {
@@ -268,6 +268,11 @@ class Config(object):
                     "queue": QueueNames.PERIODIC,
                     "expires": 60,
                 },  # Ensure it doesn't run if missed
+            },
+            "clean-job-cache": {
+                "task": "clean-job-cache",
+                "schedule": crontab(hour=2, minute=11),
+                "options": {"queue": QueueNames.PERIODIC},
             },
             "cleanup-unfinished-jobs": {
                 "task": "cleanup-unfinished-jobs",

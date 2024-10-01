@@ -36,17 +36,14 @@ def send_sms_to_provider(notification):
     Get data for recipient, template,
     notification and send it to sns.
     """
-    # we no longer store the personalisation in the db,
-    # need to retrieve from s3 before generating content
-    # However, we are still sending the initial verify code through personalisation
-    # so if there is some value there, don't overwrite it
-    if not notification.personalisation:
-        personalisation = get_personalisation_from_s3(
-            notification.service_id,
-            notification.job_id,
-            notification.job_row_number,
-        )
-        notification.personalisation = personalisation
+    # Take this path for report generation, where we know
+    # everything is in the cache.
+    personalisation = get_personalisation_from_s3(
+        notification.service_id,
+        notification.job_id,
+        notification.job_row_number,
+    )
+    notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None

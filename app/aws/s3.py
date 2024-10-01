@@ -1,13 +1,13 @@
 import datetime
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Manager
 
 import botocore
 from boto3 import Session
-from expiringdict import ExpiringDict
 from flask import current_app
 
-from app import redis_store
 from app.clients import AWS_CLIENT_CONFIG
 from notifications_utils import aware_utcnow
 
@@ -16,15 +16,28 @@ NEW_FILE_LOCATION_STRUCTURE = "{}-service-notify/{}.csv"
 
 # Temporarily extend cache to 7 days
 ttl = 60 * 60 * 24 * 7
-JOBS = ExpiringDict(max_len=20000, max_age_seconds=ttl)
+manager = Manager()
+job_cache = manager.dict()
 
-
-JOBS_CACHE_HITS = "JOBS_CACHE_HITS"
-JOBS_CACHE_MISSES = "JOBS_CACHE_MISSES"
 
 # Global variable
 s3_client = None
 s3_resource = None
+
+
+def set_job_cache(job_cache, key, value):
+    job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
+
+
+def clean_cache():
+    current_time = time.time()
+    keys_to_delete = []
+    for key, (_, expiry_time) in job_cache.items():
+        if expiry_time < current_time:
+            keys_to_delete.append(key)
+
+    for key in keys_to_delete:
+        del job_cache[key]
 
 
 def get_s3_client():
@@ -88,7 +101,6 @@ def get_bucket_name():
 
 
 def cleanup_old_s3_objects():
-
     bucket_name = get_bucket_name()
 
     s3_client = get_s3_client()
@@ -100,9 +112,15 @@ def cleanup_old_s3_objects():
         while True:
             for obj in response.get("Contents", []):
                 if obj["LastModified"] <= time_limit:
-                    current_app.logger.info(
-                        f"#delete-old-s3-objects Wanting to delete: {obj['LastModified']} {obj['Key']}"
-                    )
+
+                    try:
+                        remove_csv_object(obj["Key"])
+                        current_app.logger.info(
+                            f"#delete-old-s3-objects Deleted: {obj['LastModified']} {obj['Key']}"
+                        )
+                    except botocore.exceptions.ClientError:
+                        current_app.logger.exception(f"Couldn't delete {obj['Key']}")
+
             if "NextContinuationToken" in response:
                 response = s3_client.list_objects_v2(
                     Bucket=bucket_name,
@@ -116,36 +134,70 @@ def cleanup_old_s3_objects():
         )
 
 
-def get_s3_files():
+def get_job_id_from_s3_object_key(key):
+    object_arr = key.split("/")
+    job_id = object_arr[1]  # get the job_id
+    job_id = job_id.replace(".csv", "")  # we just want the job_id
+    return job_id
 
+
+def read_s3_file(bucket_name, object_key, s3res):
+    """
+    This method runs during the 'regenerate job cache' task.
+    Note that in addition to retrieving the jobs and putting them
+    into the cache, this method also does some pre-processing by
+    putting a list of all phone numbers into the cache as well.
+
+    This means that when the report needs to be regenerated, it
+    can easily find the phone numbers in the cache through job_cache[<job_id>_phones]
+    and the personalization through job_cache[<job_id>_personalisation], which
+    in theory should make report generation a lot faster.
+
+    We are moving processing from the front end where the user can see it
+    in wait time, to this back end process.
+    """
+    try:
+        job_id = get_job_id_from_s3_object_key(object_key)
+        if job_cache.get(job_id) is None:
+            object = (
+                s3res.Object(bucket_name, object_key)
+                .get()["Body"]
+                .read()
+                .decode("utf-8")
+            )
+            set_job_cache(job_cache, job_id, object)
+            set_job_cache(job_cache, f"{job_id}_phones", extract_phones(object))
+            set_job_cache(
+                job_cache,
+                f"{job_id}_personalisation",
+                extract_personalisation(object),
+            )
+
+    except LookupError:
+        # perhaps our key is not formatted as we expected.  If so skip it.
+        current_app.logger.exception("LookupError #notify-admin-1200")
+
+
+def get_s3_files():
+    """
+    We're using the ThreadPoolExecutor here to speed up the retrieval of S3
+    csv files for scaling needs.
+    """
     bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
-    objects = list_s3_objects()
+    object_keys = list_s3_objects()
 
     s3res = get_s3_resource()
     current_app.logger.info(
-        f"JOBS cache length before regen: {len(JOBS)} #notify-admin-1200"
+        f"job_cache length before regen: {len(job_cache)} #notify-admin-1200"
     )
-    for object in objects:
-        # We put our csv files in the format "service-{service_id}-notify/{job_id}"
-        try:
-            object_arr = object.split("/")
-            job_id = object_arr[1]  # get the job_id
-            job_id = job_id.replace(".csv", "")  # we just want the job_id
-            if JOBS.get(job_id) is None:
-                object = (
-                    s3res.Object(bucket_name, object)
-                    .get()["Body"]
-                    .read()
-                    .decode("utf-8")
-                )
-                if "phone number" in object.lower():
-                    JOBS[job_id] = object
-        except LookupError:
-            # perhaps our key is not formatted as we expected.  If so skip it.
-            current_app.logger.exception("LookupError #notify-admin-1200")
+    try:
+        with ThreadPoolExecutor() as executor:
+            executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+    except Exception:
+        current_app.logger.exception("Connection pool issue")
 
     current_app.logger.info(
-        f"JOBS cache length after regen: {len(JOBS)} #notify-admin-1200"
+        f"job_cache length after regen: {len(job_cache)} #notify-admin-1200"
     )
 
 
@@ -303,20 +355,6 @@ def get_job_from_s3(service_id, job_id):
     return None
 
 
-def incr_jobs_cache_misses():
-    if not redis_store.get(JOBS_CACHE_MISSES):
-        redis_store.set(JOBS_CACHE_MISSES, 1)
-    else:
-        redis_store.incr(JOBS_CACHE_MISSES)
-
-
-def incr_jobs_cache_hits():
-    if not redis_store.get(JOBS_CACHE_HITS):
-        redis_store.set(JOBS_CACHE_HITS, 1)
-    else:
-        redis_store.incr(JOBS_CACHE_HITS)
-
-
 def extract_phones(job):
     job = job.split("\r\n")
     first_row = job[0]
@@ -325,7 +363,7 @@ def extract_phones(job):
     phone_index = 0
     for item in first_row:
         # Note: may contain a BOM and look like \ufeffphone number
-        if "phone number" in item.lower():
+        if item.lower() in ["phone number", "\\ufeffphone number"]:
             break
         phone_index = phone_index + 1
 
@@ -349,6 +387,8 @@ def extract_phones(job):
 
 
 def extract_personalisation(job):
+    if isinstance(job, dict):
+        job = job[0]
     job = job.split("\r\n")
     first_row = job[0]
     job.pop(0)
@@ -364,18 +404,15 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
-    # We don't want to constantly pull down a job from s3 every time we need a phone number.
-    # At the same time we don't want to store it in redis or the db
-    # So this is a little recycling mechanism to reduce the number of downloads.
-    job = JOBS.get(job_id)
+    job = job_cache.get(job_id)
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
-        JOBS[job_id] = job
-        incr_jobs_cache_misses()
+        set_job_cache(job_cache, job_id, job)
     else:
-        incr_jobs_cache_hits()
+        # skip expiration date from cache, we don't need it here
+        job = job[0]
 
     if job is None:
         current_app.logger.error(
@@ -383,24 +420,16 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    # If we look in the JOBS cache for the quick lookup dictionary of phones for a given job
-    # and that dictionary is not there, create it
-    if JOBS.get(f"{job_id}_phones") is None:
-        JOBS[f"{job_id}_phones"] = extract_phones(job)
+    phones = extract_phones(job)
+    set_job_cache(job_cache, f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
-    if JOBS.get(f"{job_id}_phones") is not None:
-        phone_to_return = JOBS.get(f"{job_id}_phones").get(job_row_number)
-        if phone_to_return:
-            return phone_to_return
-        else:
-            current_app.logger.warning(
-                f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
-            )
-            return "Unavailable"
+    phone_to_return = phones[job_row_number]
+    if phone_to_return:
+        return phone_to_return
     else:
-        current_app.logger.error(
-            f"Was unable to construct lookup dictionary for job {job_id}"
+        current_app.logger.warning(
+            f"Was unable to retrieve phone number from lookup dictionary for job {job_id}"
         )
         return "Unavailable"
 
@@ -409,14 +438,15 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need the personalisation.
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
-    job = JOBS.get(job_id)
+    job = job_cache.get(job_id)
     if job is None:
+        current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
-        JOBS[job_id] = job
-        incr_jobs_cache_misses()
+        # Even if it is None, put it here to avoid KeyErrors
+        set_job_cache(job_cache, job_id, job)
     else:
-        incr_jobs_cache_hits()
-
+        # skip expiration date from cache, we don't need it here
+        job = job[0]
     # If the job is None after our attempt to retrieve it from s3, it
     # probably means the job is old and has been deleted from s3, in
     # which case there is nothing we can do.  It's unlikely to run into
@@ -428,14 +458,11 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    # If we look in the JOBS cache for the quick lookup dictionary of personalisations for a given job
-    # and that dictionary is not there, create it
-    if JOBS.get(f"{job_id}_personalisation") is None:
-        JOBS[f"{job_id}_personalisation"] = extract_personalisation(job)
+    set_job_cache(job_cache, f"{job_id}_personalisation", extract_personalisation(job))
 
     # If we can find the quick dictionary, use it
-    if JOBS.get(f"{job_id}_personalisation") is not None:
-        personalisation_to_return = JOBS.get(f"{job_id}_personalisation").get(
+    if job_cache.get(f"{job_id}_personalisation") is not None:
+        personalisation_to_return = job_cache.get(f"{job_id}_personalisation")[0].get(
             job_row_number
         )
         if personalisation_to_return:
