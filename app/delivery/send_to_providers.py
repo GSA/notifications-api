@@ -13,11 +13,7 @@ from app import (
     notification_provider_clients,
     redis_store,
 )
-from app.aws.s3 import (
-    get_job_from_s3,
-    get_personalisation_from_s3,
-    get_phone_number_from_s3,
-)
+from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
@@ -47,27 +43,7 @@ def send_sms_to_provider(notification):
         notification.job_id,
         notification.job_row_number,
     )
-
-    # For one-off sends, they may not get into the cache
-    # by the time we get here, so do this slow direct-from-s3
-    # approach.  It is okay to be slow, since one-offs have
-    # to be typed in by hand.
-    if personalisation == {}:
-        job = get_job_from_s3(notification.service_id, notification.job_id)
-        job = job.split("\r\n")
-        first_row = job[0]
-        job.pop(0)
-        first_row = first_row.split(",")
-        personalisation = {}
-        job_row = 0
-        for row in job:
-            row = row.split(",")
-            temp = dict(zip(first_row, row))
-            personalisation[job_row] = temp
-            job_row = job_row + 1
-        notification.personalisation = personalisation[notification.job_row_number]
-    else:
-        notification.personalisation = personalisation
+    notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None

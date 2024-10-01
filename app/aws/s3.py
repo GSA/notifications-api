@@ -366,7 +366,9 @@ def extract_phones(job):
 
 
 def extract_personalisation(job):
-    job = job[0].split("\r\n")
+    if isinstance(job, dict):
+        job = job[0]
+    job = job.split("\r\n")
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
@@ -416,7 +418,14 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = job_cache.get(job_id)
-
+    if job is None:
+        current_app.logger.info(f"job {job_id} was not in the cache")
+        job = get_job_from_s3(service_id, job_id)
+        # Even if it is None, put it here to avoid KeyErrors
+        set_job_cache(job_cache, job_id, job)
+    else:
+        # skip expiration date from cache, we don't need it here
+        job = job[0]
     # If the job is None after our attempt to retrieve it from s3, it
     # probably means the job is old and has been deleted from s3, in
     # which case there is nothing we can do.  It's unlikely to run into
