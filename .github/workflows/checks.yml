@@ -54,7 +54,7 @@ jobs:
     - name: Check for dead code
       run: make dead-code
     - name: Run tests with coverage
-      run: poetry run coverage run --omit=*/migrations/* -m pytest --maxfail=10
+      run: poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
       env:
         SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
@@ -63,7 +63,7 @@ jobs:
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Check coverage threshold
       # TODO get this back up to 95
-      run: poetry run coverage report --fail-under=95
+      run: poetry run coverage report -m --fail-under=95
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
