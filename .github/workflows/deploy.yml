@@ -71,6 +71,7 @@ jobs:
         cf_org: gsa-tts-benefits-studio
         cf_space: notify-staging
         cf_command: >-
+          push -f manifest.yml
           --vars-file deploy-config/staging.yml
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
