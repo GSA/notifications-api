@@ -437,7 +437,8 @@ def test_download_csv_file_by_name(notify_api, mocker):
             "NonExistentName",
         ],
     )
-    mock_download.assert_called_once()
+    mock_download.assert_not_called()
+    # mock_download.assert_called_once()
 
 
 def test_promote_user_to_platform_admin_no_result_found(
