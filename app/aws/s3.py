@@ -318,11 +318,17 @@ def get_job_from_s3(service_id, job_id):
     while retries < max_retries:
 
         try:
-            obj = get_s3_object(*get_job_location(service_id, job_id))
-            # TODO remove this when we have fully transitioned to the NEW_FILE_LOCATION_STRUCTURE
-            if obj is None:
+            # TODO
+            # for transition on optimizing the s3 partition, we have
+            # to check for the file location using the new way and the
+            # old way.  After this has been on production for a few weeks
+            # we should remove the check for the old way.
+            try:
+                obj = get_s3_object(*get_job_location(service_id, job_id))
+                return obj.get()["Body"].read().decode("utf-8")
+            except botocore.exceptions.ClientError:
                 obj = get_s3_object(*get_old_job_location(service_id, job_id))
-            return obj.get()["Body"].read().decode("utf-8")
+                return obj.get()["Body"].read().decode("utf-8")
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] in [
                 "Throttling",
