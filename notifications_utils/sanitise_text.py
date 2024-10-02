@@ -152,33 +152,27 @@ class SanitiseText:
 
     @classmethod
     def _is_extended_language_group_two(cls, value):
-        if regex.search(r"\p{IsBuhid}", value):
-            return True
-        if regex.search(r"\p{IsCanadian_Aboriginal}", value):
-            return True
-        if regex.search(r"\p{IsCherokee}", value):
-            return True
-        if regex.search(r"\p{IsDevanagari}", value):
-            return True
-        if regex.search(r"\p{IsEthiopic}", value):
-            return True
-        if regex.search(r"\p{IsGeorgian}", value):
+        if (
+            regex.search(r"\p{IsBuhid}", value)
+            or regex.search(r"\p{IsCanadian_Aboriginal}", value)
+            or regex.search(r"\p{IsCherokee}", value)
+            or regex.search(r"\p{IsDevanagari}", value)
+            or regex.search(r"\p{IsEthiopic}", value)
+            or regex.search(r"\p{IsGeorgian}", value)
+        ):
             return True
         return False
 
     @classmethod
     def _is_extended_language_group_three(cls, value):
-        if regex.search(r"\p{IsGreek}", value):
-            return True
-        if regex.search(r"\p{IsGujarati}", value):
-            return True
-        if regex.search(r"\p{IsHanunoo}", value):
-            return True
-        if regex.search(r"\p{IsHebrew}", value):
-            return True
-        if regex.search(r"\p{IsLimbu}", value):
-            return True
-        if regex.search(r"\p{IsKannada}", value):
+        if (
+            regex.search(r"\p{IsGreek}", value)
+            or regex.search(r"\p{IsGujarati}", value)
+            or regex.search(r"\p{IsHanunoo}", value)
+            or regex.search(r"\p{IsHebrew}", value)
+            or regex.search(r"\p{IsLimbu}", value)
+            or regex.search(r"\p{IsKannada}", value)
+        ):
             return True
         return False
 
