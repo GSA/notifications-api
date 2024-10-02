@@ -162,28 +162,27 @@ def purge_functional_test_data(user_email_prefix):
 
 
 # TODO maintainability what is the purpose of this command?  Who would use it and why?
-# COMMENTING OUT UNTIL WE DETERMINE IF WE NEED IT OR NOT
-# @notify_command(name="insert-inbound-numbers")
-# @click.option(
-#     "-f",
-#     "--file_name",
-#     required=True,
-#     help="""Full path of the file to upload, file is a contains inbound numbers, one number per line.""",
-# )
-# def insert_inbound_numbers_from_file(file_name):
+@notify_command(name="insert-inbound-numbers")
+@click.option(
+    "-f",
+    "--file_name",
+    required=True,
+    help="""Full path of the file to upload, file is a contains inbound numbers, one number per line.""",
+)
+def insert_inbound_numbers_from_file(file_name):
 
-#     current_app.logger.info(f"Inserting inbound numbers from {file_name}")
-#     with open(file_name) as file:
-#         sql = text(
-#             "insert into inbound_numbers values(:uuid, :line, 'sns', null, True, now(), null);"
-#         )
+    current_app.logger.info(f"Inserting inbound numbers from {file_name}")
+    with open(file_name) as file:
+        sql = text(
+            "insert into inbound_numbers values(:uuid, :line, 'sns', null, True, now(), null);"
+        )
 
-#         for line in file:
-#             line = line.strip()
-#             if line:
-#                 current_app.logger.info(line)
-#                 db.session.execute(sql, {"uuid": str(uuid.uuid4()), "line": line})
-#                 db.session.commit()
+        for line in file:
+            line = line.strip()
+            if line:
+                current_app.logger.info(line)
+                db.session.execute(sql, {"uuid": str(uuid.uuid4()), "line": line})
+                db.session.commit()
 
 
 def setup_commands(application):
