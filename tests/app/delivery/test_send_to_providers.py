@@ -3,6 +3,7 @@ import os
 from contextlib import suppress
 from urllib import parse
 
+import pytest
 from cachetools import TTLCache, cached
 from flask import current_app
 
@@ -19,6 +20,7 @@ from app.dao.email_branding_dao import dao_get_email_branding_by_id
 from app.dao.notifications_dao import dao_update_notification
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
+from app.delivery.send_to_providers import _experimentally_validate_phone_numbers
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
@@ -306,3 +308,18 @@ def technical_failure(notification):
         f"Send {notification.notification_type} for notification id {notification.id} "
         f"to provider is not allowed: service {notification.service_id} is inactive"
     )
+
+
+@pytest.mark.parametrize(
+    ("recipient", "expected_invoke"),
+    [
+        ("15555555555", False),
+    ],
+)
+def test_experimentally_validate_phone_numbers(recipient, expected_invoke, mocker):
+    mock_pinpoint = mocker.patch("app.delivery.send_to_providers.aws_pinpoint_client")
+    _experimentally_validate_phone_numbers(recipient)
+    if expected_invoke:
+        mock_pinpoint.phone_number_validate.assert_called_once_with("foo")
+    else:
+        mock_pinpoint.phone_number_validate.assert_not_called()
