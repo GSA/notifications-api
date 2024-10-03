@@ -175,6 +175,7 @@ def create_job(service_id):
     original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
+        current_app.logger.info(f"#s3-partitioning DATA IN CREATE_JOB: {data}")
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
     except KeyError:
         raise InvalidRequest(

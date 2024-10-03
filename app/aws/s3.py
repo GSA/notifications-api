@@ -264,6 +264,9 @@ def file_exists(file_location):
 
 
 def get_job_location(service_id, job_id):
+    current_app.logger.info(
+        f"#s3-partitioning NEW JOB_LOCATION: {NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
+    )
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -279,6 +282,9 @@ def get_old_job_location(service_id, job_id):
     but it will take a few days where we have to support both formats.
     Remove this when everything works with the NEW_FILE_LOCATION_STRUCTURE.
     """
+    current_app.logger.info(
+        f"#s3-partitioning OLD JOB LOCATION: {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
+    )
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -486,6 +492,9 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
 
 
 def get_job_metadata_from_s3(service_id, job_id):
+    current_app.logger.info(
+        f"#s3-partitioning CALLING GET_JOB_METADATA with {service_id}, {job_id}"
+    )
     obj = get_s3_object(*get_job_location(service_id, job_id))
     return obj.get()["Metadata"]
 
