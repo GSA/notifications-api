@@ -1974,9 +1974,8 @@ def test_get_monthly_notification_stats_by_user(
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        path=(f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly"),
+        path=(f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly?year=2024"),
         headers=[auth_header],
-        year="2024",
     )
 
     resp = json.loads(response.get_data(as_text=True))
