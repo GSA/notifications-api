@@ -1975,9 +1975,12 @@ def test_get_monthly_notification_stats_by_user(
 
     response = client.get(
         path=(f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly"),
+        year=2024,
         headers=[auth_header],
     )
 
+    resp = json.loads(response.get_data(as_text=True))
+    print(f"RESP is {resp}")
     # TODO This test could be a little more complete
     assert response.status_code == 200
 
