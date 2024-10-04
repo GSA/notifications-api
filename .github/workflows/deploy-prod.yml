@@ -70,7 +70,7 @@ jobs:
         cf_space: notify-production
         cf_command: >-
           push -f manifest.yml
-          --vars-file deploy-config/staging.yml
+          --vars-file deploy-config/production.yml
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
           --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
