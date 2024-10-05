@@ -1242,6 +1242,17 @@ Notify.gov DNS records are maintained within [the 18f/dns repository](https://gi
 - Rename to `api_static_scan_DATE.zip` and add it to 🔒 https://drive.google.com/drive/folders/1dSe9H7Ag_hLfi5hmQDB2ktWaDwWSf4_R
 - Repeat for https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
 
+## Rotating the DANGEROUS_SALT
+
+
+  1. Start API locally `make run-procfile`
+  2. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt`
+  3. A random secret will appear in the tab
+  4. Go to github->settings->secrets and variables->actions in the admin project and find the DANGEROUS_SALT secret for the admin project for    staging.   Open it and paste the result of #3 into the secret and save.  Repeat for the API project, for staging.
+  5. Repeat #3 and #4 but do it for demo
+  6. Repeat #3 and #4 but do it for production
+
+The important thing is to use the same secret for Admin and API on each tier--i.e. you only generate three secrets.
 
 ## <a name="gotcha"></a> Known Gotchas
 
