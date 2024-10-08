@@ -52,20 +52,15 @@ from app.utils import (
 
 def dao_fetch_all_services(only_active=False):
 
-    stmt = (
-        select(Service)
-        .order_by(asc(Service.created_at))
-        .options(joinedload(Service.users))
-    )
+    stmt = select(Service)
+
     if only_active:
-        stmt = (
-            select(Service)
-            .where(Service.active is True)
-            .order_by(asc(Service.created_at))
-            .options(joinedload(Service.users))
-        )
-    result = db.session.execute(stmt).unique()
-    return result.scalars().all()
+        stmt = stmt.where(Service.active)
+
+    stmt = stmt.order_by(asc(Service.created_at)).options(joinedload(Service.users))
+
+    result = db.session.execute(stmt)
+    return result.unique().scalars().one()
 
 
 def get_services_by_partial_name(service_name):
