@@ -599,7 +599,6 @@ def fetch_user_by_email():
         fetched_user = get_user_by_email(email["email"])
         debug_not_production(hilite(f"fetched user is {fetched_user}"))
         result = fetched_user.serialize()
-        debug_not_production(hilite(f"result is serialized to {result}"))
         return jsonify(data=result)
     except Exception as e:
         debug_not_production(hilite(f"Failed with {e}!!"))

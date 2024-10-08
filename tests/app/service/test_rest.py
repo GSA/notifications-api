@@ -1974,7 +1974,9 @@ def test_get_monthly_notification_stats_by_user(
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        path=(f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly?year=2024"),
+        path=(
+            f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly?year=2024"
+        ),
         headers=[auth_header],
     )
 
@@ -1999,7 +2001,9 @@ def test_get_single_month_notification_stats_by_user(
     auth_header = create_admin_authorization_header()
 
     response = client.get(
-        path=(f"/service/{sample_service.id}/notifications/{sample_user.id}/month?year=2024&month=07"),
+        path=(
+            f"/service/{sample_service.id}/notifications/{sample_user.id}/month?year=2024&month=07"
+        ),
         headers=[auth_header],
     )
 

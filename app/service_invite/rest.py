@@ -86,7 +86,7 @@ def _create_service_invite(invited_user, invite_link_host):
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
-        ex=1800,
+        ex=2 * 24 * 60 * 60,
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
