@@ -75,7 +75,7 @@ def dao_count_live_services():
         Service.active, Service.count_as_live, Service.restricted is False
     )
     result = db.session.execute(stmt)
-    return result.scalar()
+    return result.scalars()
 
 
 def dao_fetch_live_services_data():
