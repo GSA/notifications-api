@@ -71,11 +71,11 @@ def get_services_by_partial_name(service_name):
 
 
 def dao_count_live_services():
-    return Service.query.filter_by(
-        active=True,
-        restricted=False,
-        count_as_live=True,
-    ).count()
+    stmt = select(Service).where(
+        Service.active, Service.count_as_live, Service.restricted is False
+    )
+    result = db.session.execute(stmt)
+    return result.scalars().count()
 
 
 def dao_fetch_live_services_data():
@@ -228,11 +228,11 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
 
 
 def dao_fetch_all_services_created_by_user(user_id):
-    query = Service.query.filter_by(created_by_id=user_id).order_by(
-        asc(Service.created_at)
+    stmt = (
+        select(Service).where(created_by_id=user_id).order_by(asc(Service.created_at))
     )
-
-    return query.all()
+    result = db.session.execute(stmt)
+    return result.scalars.all()
 
 
 @autocommit
