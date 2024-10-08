@@ -72,10 +72,10 @@ def get_services_by_partial_name(service_name):
 
 def dao_count_live_services():
     stmt = select(Service).where(
-        Service.active, Service.count_as_live, Service.restricted is False
+        Service.active, Service.count_as_live, Service.restricted == False
     )
     result = db.session.execute(stmt)
-    return result.scalars()
+    return result.scalar() # Retrieves the count
 
 
 def dao_fetch_live_services_data():
