@@ -64,7 +64,7 @@ def dao_fetch_all_services(only_active=False):
                 .order_by(asc(Service.created_at))
                 .options(joinedload(Service.users))
             )
-        result = db.session.execute(stmt)
+        result = session.execute(stmt)
         return result.scalars().all()
 
 
