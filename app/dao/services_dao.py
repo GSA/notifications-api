@@ -51,7 +51,7 @@ from app.utils import (
 
 
 def dao_fetch_all_services(only_active=False):
-    with Session() as session:
+    with Session(db.engine) as session:
         stmt = (
             select(Service)
             .order_by(asc(Service.created_at))
