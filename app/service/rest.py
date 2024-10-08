@@ -453,16 +453,6 @@ def get_all_notifications_for_service(service_id):
         data = notifications_filter_schema.load(MultiDict(request.get_json()))
         current_app.logger.debug(f"use POST, request {request.get_json()} data {data}")
 
-    if data.get("to"):
-        notification_type = (
-            data.get("template_type")[0] if data.get("template_type") else None
-        )
-        return search_for_notification_by_to_field(
-            service_id=service_id,
-            search_term=data["to"],
-            statuses=data.get("status"),
-            notification_type=notification_type,
-        )
     page = data["page"] if "page" in data else 1
     page_size = (
         data["page_size"]
@@ -578,53 +568,6 @@ def get_notification_for_service(service_id, notification_id):
     return (
         jsonify(
             notification_with_template_schema.dump(notification),
-        ),
-        200,
-    )
-
-
-def search_for_notification_by_to_field(
-    service_id, search_term, statuses, notification_type
-):
-    results = notifications_dao.dao_get_notifications_by_recipient_or_reference(
-        service_id=service_id,
-        search_term=search_term,
-        statuses=statuses,
-        notification_type=notification_type,
-        page=1,
-        page_size=current_app.config["PAGE_SIZE"],
-    )
-
-    # We try and get the next page of results to work out if we need provide a pagination link to the next page
-    # in our response. Note, this was previously be done by having
-    # notifications_dao.dao_get_notifications_by_recipient_or_reference use count=False when calling
-    # Flask-Sqlalchemys `paginate'. But instead we now use this way because it is much more performant for
-    # services with many results (unlike using Flask SqlAlchemy `paginate` with `count=True`, this approach
-    # doesn't do an additional query to count all the results of which there could be millions but instead only
-    # asks for a single extra page of results).
-    next_page_of_pagination = notifications_dao.dao_get_notifications_by_recipient_or_reference(
-        service_id=service_id,
-        search_term=search_term,
-        statuses=statuses,
-        notification_type=notification_type,
-        page=2,
-        page_size=current_app.config["PAGE_SIZE"],
-        error_out=False,  # False so that if there are no results, it doesn't end in aborting with a 404
-    )
-
-    return (
-        jsonify(
-            notifications=notification_with_template_schema.dump(
-                results.items, many=True
-            ),
-            links=get_prev_next_pagination_links(
-                1,
-                len(next_page_of_pagination.items),
-                ".get_all_notifications_for_service",
-                statuses=statuses,
-                notification_type=notification_type,
-                service_id=service_id,
-            ),
         ),
         200,
     )
