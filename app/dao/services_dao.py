@@ -60,7 +60,7 @@ def dao_fetch_all_services(only_active=False):
     stmt = stmt.order_by(asc(Service.created_at)).options(joinedload(Service.users))
 
     result = db.session.execute(stmt)
-    return result.unique().scalars().one()
+    return result.unique().scalars().all()
 
 
 def get_services_by_partial_name(service_name):
