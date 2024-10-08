@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast, select
-from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
