@@ -67,7 +67,7 @@ def get_services_by_partial_name(service_name):
     service_name = escape_special_characters(service_name)
     stmt = select(Service).where(Service.name.ilike("%{}%".format(service_name)))
     result = db.session.execute(stmt)
-    return result.scalars.all()
+    return result.scalars().all()
 
 
 def dao_count_live_services():
@@ -191,14 +191,18 @@ def dao_fetch_service_by_id(service_id, only_active=False):
 
 
 def dao_fetch_service_by_inbound_number(number):
-    inbound_number = InboundNumber.query.filter(
+    stmt = select(InboundNumber).where(
         InboundNumber.number == number, InboundNumber.active
-    ).first()
+    )
+    result = db.session.execute(stmt)
+    inbound_number = result.scalars().first()
 
     if not inbound_number:
         return None
 
-    return Service.query.filter(Service.id == inbound_number.service_id).first()
+    stmt = select(Service).where(Service.id == inbound_number.service_id)
+    result = db.session.execute(stmt)
+    return result.scalars().first()
 
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
