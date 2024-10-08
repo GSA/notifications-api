@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import Float, cast, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
 from app import db
@@ -51,21 +51,21 @@ from app.utils import (
 
 
 def dao_fetch_all_services(only_active=False):
-    with Session(db.engine) as session:
+
+    stmt = (
+        select(Service)
+        .order_by(asc(Service.created_at))
+        .options(joinedload(Service.users))
+    )
+    if only_active:
         stmt = (
             select(Service)
+            .where(Service.active is True)
             .order_by(asc(Service.created_at))
             .options(joinedload(Service.users))
         )
-        if only_active:
-            stmt = (
-                select(Service)
-                .where(Service.active is True)
-                .order_by(asc(Service.created_at))
-                .options(joinedload(Service.users))
-            )
-        result = session.execute(stmt).unique()
-        return result.scalars().all()
+    result = db.session.execute(stmt).unique()
+    return result.scalars().all()
 
 
 def get_services_by_partial_name(service_name):
