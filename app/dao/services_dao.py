@@ -71,7 +71,7 @@ def get_services_by_partial_name(service_name):
 
 
 def dao_count_live_services():
-    stmt = select(Service).where(
+    stmt = select(func.count()).select_from(Service).where(
         Service.active, Service.count_as_live, Service.restricted == False  # noqa
     )
     result = db.session.execute(stmt)
