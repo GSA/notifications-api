@@ -577,9 +577,7 @@ def dao_suspend_service(service_id):
 @version_class(Service)
 def dao_resume_service(service_id):
     # service = Service.query.get(service_id)
-    stmt = select(Service).where(id == service_id)
-    result = db.session.execute(stmt)
-    service = result.scalar_one()
+    service = db.session.get(Service, service_id)
 
     service.active = True
 
