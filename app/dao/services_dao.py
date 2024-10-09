@@ -191,7 +191,7 @@ def dao_fetch_service_by_id(service_id, only_active=False):
         stmt = stmt.where(Service.active)
 
     result = db.session.execute(stmt)
-    return result.unique().scalars().one()
+    return result.unique().scalars().unique().one()
 
 
 def dao_fetch_service_by_inbound_number(number):
@@ -244,7 +244,7 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
     )
     if only_active:
         stmt = stmt.filter(Service.active)
-    return db.session.execute(stmt).scalars().one()
+    return db.session.execute(stmt).scalars().unique().one()
 
 
 def dao_fetch_all_services_created_by_user(user_id):
