@@ -282,11 +282,10 @@ def dao_archive_service(service_id):
     #    .one()
     # )
     stmt = select(
-        Service.options(
+        Service).options(
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
-        )
-    ).filter(Service.id == service_id)
+        ).filter(Service.id == service_id)
     service = db.session.scalars(stmt.one())
 
     service.active = False
