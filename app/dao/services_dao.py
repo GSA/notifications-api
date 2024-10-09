@@ -261,7 +261,7 @@ def dao_fetch_all_services_created_by_user(user_id):
         .order_by(asc(Service.created_at))
     )
 
-    return db.session.scalars(stmt).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 @autocommit
@@ -286,7 +286,7 @@ def dao_archive_service(service_id):
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
         ).filter(Service.id == service_id)
-    service = db.session.scalars(stmt.one())
+    service = db.session.execute(stmt).scalars().one()
 
     service.active = False
     service.name = get_archived_db_column_value(service.name)
