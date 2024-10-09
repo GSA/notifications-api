@@ -232,8 +232,15 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
 
 
 def dao_fetch_all_services_created_by_user(user_id):
+
+    # query = Service.query.filter_by(created_by_id=user_id).order_by(asc(Service.created_at)
+
+    # return query.all()
+
     stmt = (
-        select(Service).where(created_by_id=user_id).order_by(asc(Service.created_at))
+        select(Service)
+        .filter_by(created_by_id=user_id)
+        .order_by(asc(Service.created_at))
     )
     result = db.session.execute(stmt)
     return result.scalars.all()
@@ -278,7 +285,8 @@ def dao_fetch_service_by_id_and_user(service_id, user_id):
     # )
 
     stmt = (
-        select(Service).filter(Service.users.any(id=user_id), Service.id == service_id)
+        select(Service)
+        .filter(Service.users.any(id=user_id), Service.id == service_id)
         .options(joinedload(Service.users))
     )
     result = db.session.execute(stmt).scalar_one()
