@@ -71,8 +71,12 @@ def get_services_by_partial_name(service_name):
 
 
 def dao_count_live_services():
-    stmt = select(func.count()).select_from(Service).where(
-        Service.active, Service.count_as_live, Service.restricted == False  # noqa
+    stmt = (
+        select(func.count())
+        .select_from(Service)
+        .where(
+            Service.active, Service.count_as_live, Service.restricted == False  # noqa
+        )
     )
     result = db.session.execute(stmt)
     return result.scalar()  # Retrieves the count
@@ -267,11 +271,19 @@ def dao_archive_service(service_id):
 
 
 def dao_fetch_service_by_id_and_user(service_id, user_id):
-    return (
-        Service.query.filter(Service.users.any(id=user_id), Service.id == service_id)
+    # return (
+    #    Service.query.filter(Service.users.any(id=user_id), Service.id == service_id)
+    #    .options(joinedload(Service.users))
+    #    .one()
+    # )
+
+    stmt = (
+        select(Service.users.any(id=user_id), Service.id == service_id)
+        .select_from(Service)
         .options(joinedload(Service.users))
-        .one()
     )
+    result = db.session.execute(stmt)
+    return result.scalars().one()
 
 
 @autocommit
@@ -565,14 +577,22 @@ def dao_suspend_service(service_id):
 @autocommit
 @version_class(Service)
 def dao_resume_service(service_id):
-    service = Service.query.get(service_id)
+    # service = Service.query.get(service_id)
+    stmt = select(Service).where(id == service_id)
+    result = db.session.execute(stmt)
+    service = result.scalars().one()
+
     service.active = True
 
 
 def dao_fetch_active_users_for_service(service_id):
-    query = User.query.filter(User.services.any(id=service_id), User.state == "active")
+    # query = User.query.filter(User.services.any(id=service_id), User.state == "active")
 
-    return query.all()
+    # return query.all()
+
+    stmt = select(User).where(User.services.any(id=service_id), User.state == "active")
+    result = db.session.execute(stmt)
+    return result.scalars().all()
 
 
 def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500):
