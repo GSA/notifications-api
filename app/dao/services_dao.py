@@ -704,23 +704,34 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
 
 
 def get_live_services_with_organization():
-    query = (
-        db.session.query(
-            Service.id.label("service_id"),
+    # query = (
+    #     db.session.query(
+    #         Service.id.label("service_id"),
+    #         Service.name.label("service_name"),
+    #         Organization.id.label("organization_id"),
+    #         Organization.name.label("organization_name"),
+    #     )
+    #     .outerjoin(Service.organization)
+    #     .filter(
+    #         Service.count_as_live.is_(True),
+    #         Service.active.is_(True),
+    #         Service.restricted.is_(False),
+    #     )
+    #     .order_by(Organization.name, Service.name)
+    # )
+
+    # return query.all()
+
+    stmt = select(Service.id.label("service_id"),
             Service.name.label("service_name"),
             Organization.id.label("organization_id"),
-            Organization.name.label("organization_name"),
-        )
-        .outerjoin(Service.organization)
-        .filter(
+            Organization.name.label("organization_name")).select_from(Service).outerjoin(Service.organization).filter(
             Service.count_as_live.is_(True),
             Service.active.is_(True),
             Service.restricted.is_(False),
-        )
-        .order_by(Organization.name, Service.name)
-    )
+        ).order_by(Organization.name, Service.name)
 
-    return query.all()
+    return db.session.execute(stmt).all()
 
 
 def fetch_notification_stats_for_service_by_month_by_user(
