@@ -281,11 +281,14 @@ def dao_archive_service(service_id):
     #    .filter(Service.id == service_id)
     #    .one()
     # )
-    stmt = select(
-        Service).options(
+    stmt = (
+        select(Service)
+        .options(
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
-        ).filter(Service.id == service_id)
+        )
+        .filter(Service.id == service_id)
+    )
     service = db.session.execute(stmt).scalars().unique().one()
 
     service.active = False
@@ -722,14 +725,22 @@ def get_live_services_with_organization():
 
     # return query.all()
 
-    stmt = select(Service.id.label("service_id"),
+    stmt = (
+        select(
+            Service.id.label("service_id"),
             Service.name.label("service_name"),
             Organization.id.label("organization_id"),
-            Organization.name.label("organization_name")).select_from(Service).outerjoin(Service.organization).filter(
+            Organization.name.label("organization_name"),
+        )
+        .select_from(Service)
+        .outerjoin(Service.organization)
+        .filter(
             Service.count_as_live.is_(True),
             Service.active.is_(True),
             Service.restricted.is_(False),
-        ).order_by(Organization.name, Service.name)
+        )
+        .order_by(Organization.name, Service.name)
+    )
 
     return db.session.execute(stmt).all()
 
