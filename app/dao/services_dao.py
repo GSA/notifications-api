@@ -278,12 +278,11 @@ def dao_fetch_service_by_id_and_user(service_id, user_id):
     # )
 
     stmt = (
-        select(Service.users.any(id=user_id), Service.id == service_id)
-        .select_from(Service)
+        select(Service).filter(Service.users.any(id=user_id), Service.id == service_id)
         .options(joinedload(Service.users))
     )
-    result = db.session.execute(stmt)
-    return result.scalars().one()
+    result = db.session.execute(stmt).scalar_one()
+    return result
 
 
 @autocommit
