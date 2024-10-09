@@ -286,7 +286,7 @@ def dao_archive_service(service_id):
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
         ).filter(Service.id == service_id)
-    service = db.session.execute(stmt).scalars().one()
+    service = db.session.execute(stmt).scalars().unique().one()
 
     service.active = False
     service.name = get_archived_db_column_value(service.name)
