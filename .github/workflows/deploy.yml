@@ -103,9 +103,10 @@ jobs:
     - name: Deploy egress proxy
       #if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
+      env:
+          CF_USERNAME: ${{ secrets.CF_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
       with:
-        cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
-        cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
         cf_org: gsa-tts-benefits-studio
         cf_space: notify-staging
         app: notify-api-staging

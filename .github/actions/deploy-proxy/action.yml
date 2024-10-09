@@ -1,12 +1,6 @@
 name: Deploy egress proxy
 description: Set egress space security groups and deploy proxy
 inputs:
-  cf_username:
-    description: The username to authenticate with.
-    required: true
-  cf_password:
-    description: The password to authenticate with.
-    required: true
   cf_org:
     description: The org the target app exists in.
     required: true
