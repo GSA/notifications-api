@@ -221,7 +221,7 @@ def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
     )
     if only_active:
         stmt = stmt.filter(Service.working)
-    return db.session.scalar(stmt.one())
+    return db.session.execute(stmt).scalar().one()
 
 
 def dao_fetch_all_services_by_user(user_id, only_active=False):
@@ -244,7 +244,7 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
     )
     if only_active:
         stmt = stmt.filter(Service.active)
-    return db.session.scalar(stmt.one())
+    return db.session.execute(stmt).scalar().one()
 
 
 def dao_fetch_all_services_created_by_user(user_id):
