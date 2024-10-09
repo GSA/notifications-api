@@ -579,7 +579,7 @@ def dao_resume_service(service_id):
     # service = Service.query.get(service_id)
     stmt = select(Service).where(id == service_id)
     result = db.session.execute(stmt)
-    service = result.scalars().one()
+    service = result.scalar_one()
 
     service.active = True
 
