@@ -210,25 +210,41 @@ def dao_fetch_service_by_inbound_number(number):
 
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
-    query = Service.query.filter_by(id=service_id).options(joinedload(Service.api_keys))
+    # query = Service.query.filter_by(id=service_id).options(joinedload(Service.api_keys))
 
+    # if only_active:
+    #    query = query.filter(Service.active)
+
+    # return query.one()
+    stmt = (
+        select(Service).filter_by(id=service_id).options(joinedload(Service.api_keys))
+    )
     if only_active:
-        query = query.filter(Service.active)
-
-    return query.one()
+        stmt = stmt.filter(Service.working)
+    return db.session.scalar(stmt.one())
 
 
 def dao_fetch_all_services_by_user(user_id, only_active=False):
-    query = (
-        Service.query.filter(Service.users.any(id=user_id))
+    # query = (
+    #    Service.query.filter(Service.users.any(id=user_id))
+    #    .order_by(asc(Service.created_at))
+    #    .options(joinedload(Service.users))
+    # )
+
+    # if only_active:
+    #    query = query.filter(Service.active)
+
+    # return query.all()
+
+    stmt = (
+        select(Service)
+        .filter(Service.users.any(id=user_id))
         .order_by(asc(Service.created_at))
         .options(joinedload(Service.users))
     )
-
     if only_active:
-        query = query.filter(Service.active)
-
-    return query.all()
+        stmt = stmt.filter(Service.active)
+    return db.session.scalar(stmt.one())
 
 
 def dao_fetch_all_services_created_by_user(user_id):
@@ -257,14 +273,21 @@ def dao_fetch_all_services_created_by_user(user_id):
 def dao_archive_service(service_id):
     # have to eager load templates and api keys so that we don't flush when we loop through them
     # to ensure that db.session still contains the models when it comes to creating history objects
-    service = (
-        Service.query.options(
+    # service = (
+    #    Service.query.options(
+    #        joinedload(Service.templates).subqueryload(Template.template_redacted),
+    #        joinedload(Service.api_keys),
+    #    )
+    #    .filter(Service.id == service_id)
+    #    .one()
+    # )
+    stmt = select(
+        Service.options(
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
         )
-        .filter(Service.id == service_id)
-        .one()
-    )
+    ).filter(Service.id == service_id)
+    service = db.session.scalars(stmt.one())
 
     service.active = False
     service.name = get_archived_db_column_value(service.name)
