@@ -233,17 +233,19 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
 
 def dao_fetch_all_services_created_by_user(user_id):
 
-    # query = Service.query.filter_by(created_by_id=user_id).order_by(asc(Service.created_at)
-
-    # return query.all()
-
-    stmt = (
-        select(Service)
-        .filter_by(created_by_id=user_id)
-        .order_by(asc(Service.created_at))
+    query = Service.query.filter_by(created_by_id=user_id).order_by(
+        asc(Service.created_at)
     )
-    result = db.session.execute(stmt)
-    return result.scalars.all()
+
+    return query.all()
+
+    # stmt = (
+    #     select(Service)
+    #     .filter_by(created_by_id=user_id)
+    #     .order_by(asc(Service.created_at))
+    # )
+    # result = db.session.execute(stmt)
+    # return result.scalars.all()
 
 
 @autocommit
