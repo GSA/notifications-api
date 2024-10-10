@@ -633,7 +633,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             func.date_trunc("day", NotificationAllTimeView.created_at),
         )
     )
-    return db.session.execute(stmt).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
