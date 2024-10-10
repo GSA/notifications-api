@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import Float, cast, select
+from sqlalchemy import Float, cast, delete, select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
@@ -515,22 +515,22 @@ def delete_service_and_all_associated_db_objects(service):
     # subq = db.session.query(Template.id).filter_by(service=service).subquery()
     subq = select(Template.id).filter_by(service=service).subquery()
 
-    stmt = select(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
+    stmt = delete(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
     _delete_commit(stmt)
 
-    _delete_commit(select(ServiceSmsSender).filter_by(service=service))
-    _delete_commit(select(ServiceEmailReplyTo).filter_by(service=service))
-    _delete_commit(select(InvitedUser).filter_by(service=service))
-    _delete_commit(select(Permission).filter_by(service=service))
-    _delete_commit(select(NotificationHistory).filter_by(service=service))
-    _delete_commit(select(Notification).filter_by(service=service))
-    _delete_commit(select(Job).filter_by(service=service))
-    _delete_commit(select(Template).filter_by(service=service))
-    _delete_commit(select(TemplateHistory).filter_by(service_id=service.id))
-    _delete_commit(select(ServicePermission).filter_by(service_id=service.id))
-    _delete_commit(select(ApiKey).filter_by(service=service))
-    _delete_commit(select(ApiKey.get_history_model()).filter_by(service_id=service.id))
-    _delete_commit(select(AnnualBilling).filter_by(service_id=service.id))
+    _delete_commit(delete(ServiceSmsSender).filter_by(service=service))
+    _delete_commit(delete(ServiceEmailReplyTo).filter_by(service=service))
+    _delete_commit(delete(InvitedUser).filter_by(service=service))
+    _delete_commit(delete(Permission).filter_by(service=service))
+    _delete_commit(delete(NotificationHistory).filter_by(service=service))
+    _delete_commit(delete(Notification).filter_by(service=service))
+    _delete_commit(delete(Job).filter_by(service=service))
+    _delete_commit(delete(Template).filter_by(service=service))
+    _delete_commit(delete(TemplateHistory).filter_by(service_id=service.id))
+    _delete_commit(delete(ServicePermission).filter_by(service_id=service.id))
+    _delete_commit(delete(ApiKey).filter_by(service=service))
+    _delete_commit(delete(ApiKey.get_history_model()).filter_by(service_id=service.id))
+    _delete_commit(delete(AnnualBilling).filter_by(service_id=service.id))
 
     stmt = (
         select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))
@@ -542,7 +542,7 @@ def delete_service_and_all_associated_db_objects(service):
     for user in users:
         user.organizations = []
         service.users.remove(user)
-    _delete_commit(select(Service.get_history_model()).filter_by(id=service.id))
+    _delete_commit(delete(Service.get_history_model()).filter_by(id=service.id))
     db.session.delete(service)
     db.session.commit()
     for user in users:
