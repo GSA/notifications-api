@@ -586,7 +586,7 @@ def dao_fetch_todays_stats_for_service(service_id):
             Notification.status,
         )
     )
-    return db.session.execute(stmt).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
