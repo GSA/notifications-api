@@ -34,7 +34,7 @@ def dao_get_sms_senders_by_service_id(service_id):
     # )
     stmt = (
         select(ServiceSmsSender)
-        .filter_by(ervice_id=service_id, archived=False)
+        .filter_by(service_id=service_id, archived=False)
         .order_by(desc(ServiceSmsSender.is_default))
     )
     return db.session.execute(stmt).scalars().all()
