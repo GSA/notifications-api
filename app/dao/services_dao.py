@@ -176,10 +176,14 @@ def dao_fetch_live_services_data():
         .subquery()
     )
 
-    this_year_ft_billing = select(FactBilling).filter(
-        FactBilling.local_date >= year_start_date,
-        FactBilling.local_date <= year_end_date,
-    ).subquery()
+    this_year_ft_billing = (
+        select(FactBilling)
+        .filter(
+            FactBilling.local_date >= year_start_date,
+            FactBilling.local_date <= year_end_date,
+        )
+        .subquery()
+    )
 
     stmt = (
         select(
@@ -249,8 +253,6 @@ def dao_fetch_live_services_data():
     )
 
     data = db.session.execute(stmt).scalars().all()
-
-
 
     results = []
     for row in data:
