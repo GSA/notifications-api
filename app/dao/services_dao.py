@@ -507,39 +507,42 @@ def dao_remove_user_from_service(service, user):
 
 
 def delete_service_and_all_associated_db_objects(service):
-    def _delete_commit(query):
-        query.delete(synchronize_session=False)
+    def _delete_commit(stmt):
+        # query.delete(synchronize_session=False)
+        db.session.execute(stmt)
         db.session.commit()
 
-    subq = db.session.query(Template.id).filter_by(service=service).subquery()
-    _delete_commit(
-        TemplateRedacted.query.filter(TemplateRedacted.template_id.in_(subq))
-    )
+    # subq = db.session.query(Template.id).filter_by(service=service).subquery()
+    subq = select(Template.id).filter_by(service=service).subquery()
 
-    _delete_commit(ServiceSmsSender.query.filter_by(service=service))
-    _delete_commit(ServiceEmailReplyTo.query.filter_by(service=service))
-    _delete_commit(InvitedUser.query.filter_by(service=service))
-    _delete_commit(Permission.query.filter_by(service=service))
-    _delete_commit(NotificationHistory.query.filter_by(service=service))
-    _delete_commit(Notification.query.filter_by(service=service))
-    _delete_commit(Job.query.filter_by(service=service))
-    _delete_commit(Template.query.filter_by(service=service))
-    _delete_commit(TemplateHistory.query.filter_by(service_id=service.id))
-    _delete_commit(ServicePermission.query.filter_by(service_id=service.id))
-    _delete_commit(ApiKey.query.filter_by(service=service))
-    _delete_commit(ApiKey.get_history_model().query.filter_by(service_id=service.id))
-    _delete_commit(AnnualBilling.query.filter_by(service_id=service.id))
+    stmt = select(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
+    _delete_commit(stmt)
 
-    verify_codes = VerifyCode.query.join(User).filter(
-        User.id.in_([x.id for x in service.users])
+    _delete_commit(select(ServiceSmsSender).filter_by(service=service))
+    _delete_commit(select(ServiceEmailReplyTo).filter_by(service=service))
+    _delete_commit(select(InvitedUser).filter_by(service=service))
+    _delete_commit(select(Permission).filter_by(service=service))
+    _delete_commit(select(NotificationHistory).filter_by(service=service))
+    _delete_commit(select(Notification).filter_by(service=service))
+    _delete_commit(select(Job).filter_by(service=service))
+    _delete_commit(select(Template).filter_by(service=service))
+    _delete_commit(select(TemplateHistory).filter_by(service_id=service.id))
+    _delete_commit(select(ServicePermission).filter_by(service_id=service.id))
+    _delete_commit(select(ApiKey).filter_by(service=service))
+    _delete_commit(select(ApiKey.get_history_model()).filter_by(service_id=service.id))
+    _delete_commit(select(AnnualBilling).filter_by(service_id=service.id))
+
+    stmt = (
+        select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))
     )
+    verify_codes = db.session.execute(stmt).scalar().all()
     list(map(db.session.delete, verify_codes))
     db.session.commit()
     users = [x for x in service.users]
     for user in users:
         user.organizations = []
         service.users.remove(user)
-    _delete_commit(Service.get_history_model().query.filter_by(id=service.id))
+    _delete_commit(select(Service.get_history_model()).filter_by(id=service.id))
     db.session.delete(service)
     db.session.commit()
     for user in users:
