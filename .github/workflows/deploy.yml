@@ -104,8 +104,8 @@ jobs:
       #if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
       env:
-          CF_USERNAME: ${{ secrets.CF_USERNAME }}
-          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
+          CF_USERNAME: ${{ secrets.CLOUDGOV_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CLOUDGOV_PASSWORD }}
       with:
         cf_org: gsa-tts-benefits-studio
         cf_space: notify-staging
