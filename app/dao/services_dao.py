@@ -752,7 +752,7 @@ def dao_suspend_service(service_id):
         .options(joinedload(Service.api_keys))
         .filter(Service.id == service_id)
     )
-    service = db.session.execute(stmt).unique().one()
+    service = db.session.execute(stmt).scalars().unique().one()
 
     for api_key in service.api_keys:
         if not api_key.expiry_date:
