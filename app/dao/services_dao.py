@@ -253,7 +253,7 @@ def dao_fetch_live_services_data():
     )
 
     data = db.session.execute(stmt).scalars().all()
-
+    print(f"DATA IS {data}")
     results = []
     for row in data:
         existing_service = next(
