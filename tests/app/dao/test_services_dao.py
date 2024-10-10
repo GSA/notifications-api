@@ -96,7 +96,7 @@ def _get_service_query_count():
 
 
 def _get_service_history_query_count():
-    stmt = select(Service.get_history_model())
+    stmt = select(func.count(Service.get_history_model().id))
     return db.session.execute(stmt).scalar() or 0
 
 
@@ -905,7 +905,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     assert db.session.execute(stmt).scalar() is None
 
     # the organization hasn't been deleted
-    stmt = select(Organization)
+    stmt = select(func.count(Organization.id))
     assert db.session.execute(stmt).scalar() == 1
 
 
