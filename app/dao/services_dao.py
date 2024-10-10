@@ -252,7 +252,7 @@ def dao_fetch_live_services_data():
         .order_by(asc(Service.go_live_at))
     )
 
-    data = db.session.execute(stmt).scalars().all()
+    data = db.session.execute(stmt).all()
     print(f"DATA IS {data}")
     results = []
     for row in data:
