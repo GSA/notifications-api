@@ -732,7 +732,7 @@ def dao_fetch_todays_stats_for_all_services(
     if only_active:
         stmt = stmt.filter(Service.active)
 
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()
 
 
 @autocommit
