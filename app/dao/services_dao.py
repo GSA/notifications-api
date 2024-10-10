@@ -695,7 +695,7 @@ def dao_fetch_todays_stats_for_all_services(
     end_date = get_midnight_in_utc(today + timedelta(days=1))
 
     subquery = (
-        db.session.query(
+        select(
             Notification.notification_type,
             Notification.status,
             Notification.service_id,
@@ -714,8 +714,8 @@ def dao_fetch_todays_stats_for_all_services(
 
     subquery = subquery.subquery()
 
-    query = (
-        db.session.query(
+    stmt = (
+        select(
             Service.id.label("service_id"),
             Service.name,
             Service.restricted,
@@ -730,9 +730,9 @@ def dao_fetch_todays_stats_for_all_services(
     )
 
     if only_active:
-        query = query.filter(Service.active)
+        stmt = stmt.filter(Service.active)
 
-    return query.all()
+    return db.session.execute(stmt).scalars().all()
 
 
 @autocommit
@@ -830,7 +830,7 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
 
 def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10000):
     subquery = (
-        db.session.query(
+        select(
             func.count(Notification.id).label("total_count"),
             Notification.service_id.label("service_id"),
         )
@@ -851,8 +851,8 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
 
     subquery = subquery.subquery()
 
-    query = (
-        db.session.query(
+    stmt = (
+        select(
             Notification.service_id.label("service_id"),
             func.count(Notification.id).label("permanent_failure_count"),
             subquery.c.total_count.label("total_count"),
@@ -880,7 +880,7 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
         )
     )
 
-    return query.all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_live_services_with_organization():
