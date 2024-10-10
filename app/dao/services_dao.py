@@ -880,7 +880,7 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
         )
     )
 
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()
 
 
 def get_live_services_with_organization():
