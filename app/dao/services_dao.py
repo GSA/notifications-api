@@ -253,7 +253,6 @@ def dao_fetch_live_services_data():
     )
 
     data = db.session.execute(stmt).all()
-    print(f"DATA IS {data}")
     results = []
     for row in data:
         existing_service = next(
@@ -551,8 +550,25 @@ def delete_service_and_all_associated_db_objects(service):
 def dao_fetch_todays_stats_for_service(service_id):
     today = utc_now().date()
     start_date = get_midnight_in_utc(today)
-    return (
-        db.session.query(
+    # return (
+    #     db.session.query(
+    #         Notification.notification_type,
+    #         Notification.status,
+    #         func.count(Notification.id).label("count"),
+    #     )
+    #     .filter(
+    #         Notification.service_id == service_id,
+    #         Notification.key_type != KeyType.TEST,
+    #         Notification.created_at >= start_date,
+    #     )
+    #     .group_by(
+    #         Notification.notification_type,
+    #         Notification.status,
+    #     )
+    #     .all()
+    # )
+    stmt = (
+        select(
             Notification.notification_type,
             Notification.status,
             func.count(Notification.id).label("count"),
@@ -566,16 +582,37 @@ def dao_fetch_todays_stats_for_service(service_id):
             Notification.notification_type,
             Notification.status,
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    return (
-        db.session.query(
+    # return (
+    #     db.session.query(
+    #         NotificationAllTimeView.notification_type,
+    #         NotificationAllTimeView.status,
+    #         func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+    #         func.count(NotificationAllTimeView.id).label("count"),
+    #     )
+    #     .filter(
+    #         NotificationAllTimeView.service_id == service_id,
+    #         NotificationAllTimeView.key_type != KeyType.TEST,
+    #         NotificationAllTimeView.created_at >= start_date,
+    #         NotificationAllTimeView.created_at < end_date,
+    #     )
+    #     .group_by(
+    #         NotificationAllTimeView.notification_type,
+    #         NotificationAllTimeView.status,
+    #         func.date_trunc("day", NotificationAllTimeView.created_at),
+    #     )
+    #     .all()
+    # )
+
+    stmt = (
+        select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
@@ -592,8 +629,8 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at),
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
@@ -703,13 +740,19 @@ def dao_fetch_todays_stats_for_all_services(
 def dao_suspend_service(service_id):
     # have to eager load api keys so that we don't flush when we loop through them
     # to ensure that db.session still contains the models when it comes to creating history objects
-    service = (
-        Service.query.options(
-            joinedload(Service.api_keys),
-        )
+    # service = (
+    #     Service.query.options(
+    #         joinedload(Service.api_keys),
+    #     )
+    #     .filter(Service.id == service_id)
+    #     .one()
+    # )
+    stmt = (
+        select(Service)
+        .options(joinedload(Service.api_keys))
         .filter(Service.id == service_id)
-        .one()
     )
+    service = db.session.execute(stmt).one()
 
     for api_key in service.api_keys:
         if not api_key.expiry_date:
@@ -738,8 +781,29 @@ def dao_fetch_active_users_for_service(service_id):
 
 
 def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500):
-    return (
-        db.session.query(
+    # return (
+    #     db.session.query(
+    #         Notification.service_id.label("service_id"),
+    #         func.count(Notification.id).label("notification_count"),
+    #     )
+    #     .filter(
+    #         Notification.service_id == Service.id,
+    #         Notification.created_at >= start_date,
+    #         Notification.created_at <= end_date,
+    #         Notification.key_type != KeyType.TEST,
+    #         Notification.notification_type == NotificationType.SMS,
+    #         func.substr(Notification.normalised_to, 3, 7) == "7700900",
+    #         Service.restricted == False,  # noqa
+    #         Service.active == True,  # noqa
+    #     )
+    #     .group_by(
+    #         Notification.service_id,
+    #     )
+    #     .having(func.count(Notification.id) > threshold)
+    #     .all()
+    # )
+    stmt = (
+        select(
             Notification.service_id.label("service_id"),
             func.count(Notification.id).label("notification_count"),
         )
@@ -757,8 +821,8 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
             Notification.service_id,
         )
         .having(func.count(Notification.id) > threshold)
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10000):
@@ -858,8 +922,29 @@ def get_live_services_with_organization():
 def fetch_notification_stats_for_service_by_month_by_user(
     start_date, end_date, service_id, user_id
 ):
-    return (
-        db.session.query(
+    # return (
+    #     db.session.query(
+    #         func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+    #         NotificationAllTimeView.notification_type,
+    #         (NotificationAllTimeView.status).label("notification_status"),
+    #         func.count(NotificationAllTimeView.id).label("count"),
+    #     )
+    #     .filter(
+    #         NotificationAllTimeView.service_id == service_id,
+    #         NotificationAllTimeView.created_at >= start_date,
+    #         NotificationAllTimeView.created_at < end_date,
+    #         NotificationAllTimeView.key_type != KeyType.TEST,
+    #         NotificationAllTimeView.created_by_id == user_id,
+    #     )
+    #     .group_by(
+    #         func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
+    #         NotificationAllTimeView.notification_type,
+    #         NotificationAllTimeView.status,
+    #     )
+    #     .all()
+    # )
+    stmt = (
+        select(
             func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
             NotificationAllTimeView.notification_type,
             (NotificationAllTimeView.status).label("notification_status"),
@@ -877,8 +962,8 @@ def fetch_notification_stats_for_service_by_month_by_user(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def get_specific_days_stats(data, start_date, days=None, end_date=None):
