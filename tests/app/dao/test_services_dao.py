@@ -822,7 +822,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
         .filter_by(name="service_name")
         .order_by("version")
     )
-    history = db.session.execute(stmt).all()
+    history = db.session.execute(stmt).scalars().all()
     assert len(history) == 3
     assert history[2].version == 3
 
