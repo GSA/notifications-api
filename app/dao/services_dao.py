@@ -535,7 +535,7 @@ def delete_service_and_all_associated_db_objects(service):
     stmt = (
         select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))
     )
-    verify_codes = db.session.execute(stmt).scalar().all()
+    verify_codes = db.session.execute(stmt).scalars().all()
     list(map(db.session.delete, verify_codes))
     db.session.commit()
     users = [x for x in service.users]
