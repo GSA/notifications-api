@@ -239,7 +239,7 @@
         "filename": "tests/app/dao/test_services_dao.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 282,
+        "line_number": 285,
         "is_secret": false
       }
     ],
@@ -384,5 +384,5 @@
       }
     ]
   },
-  "generated_at": "2024-10-10T20:35:29Z"
+  "generated_at": "2024-10-10T21:03:06Z"
 }
