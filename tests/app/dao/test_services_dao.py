@@ -102,8 +102,8 @@ def _get_first_service():
 
 
 def _get_service_by_id(service_id):
-    stmt = select(Service).where(id == service_id)
-    return db.session.execute(stmt).one()
+    stmt = select(Service).filter(id == service_id)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_create_service(notify_db_session):
