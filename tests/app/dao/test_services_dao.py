@@ -92,12 +92,12 @@ from tests.app.db import (
 
 def _get_service_query_count():
     stmt = select(func.count(Service.id))
-    return db.session.execute(stmt).scalar()
+    return db.session.execute(stmt).scalar() or 0
 
 
 def _get_service_history_query_count():
     stmt = select(Service.get_history_model())
-    return db.session.execute(stmt).scalar()
+    return db.session.execute(stmt).scalar() or 0
 
 
 def _get_first_service():
@@ -110,7 +110,6 @@ def _get_service_by_id(service_id):
     stmt = select(Service).filter(Service.id == service_id)
 
     service = db.session.execute(stmt).scalars().one()
-    print(f"SERVICE Is {service}")
     return service
 
 
@@ -880,30 +879,30 @@ def test_delete_service_and_associated_objects(notify_db_session):
 
     delete_service_and_all_associated_db_objects(service)
     stmt = select(VerifyCode)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(ApiKey)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(ApiKey.get_history_model())
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(Template)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(TemplateHistory)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(Job)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(Notification)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(Permission)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(User)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
     stmt = select(InvitedUser)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
 
     assert _get_service_query_count() == 0
     assert _get_service_history_query_count() == 0
     stmt = select(ServicePermission)
-    assert db.session.execute(stmt).scalar() == 0
+    assert db.session.execute(stmt).scalar() is None
 
     # the organization hasn't been deleted
     stmt = select(Organization)
