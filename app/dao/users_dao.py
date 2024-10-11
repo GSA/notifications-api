@@ -146,8 +146,8 @@ def count_user_verify_codes(user):
         VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
     )
-    result = db.session.execute(stmt)
-    return result.rowcount
+    result = db.session.execute(stmt).scalar()
+    return result or 0
 
 
 def get_user_by_id(user_id=None):
