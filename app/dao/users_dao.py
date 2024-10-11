@@ -208,7 +208,7 @@ def get_user_and_accounts(user_id):
             joinedload(User.organizations).subqueryload(Organization.services),
         )
     )
-    return db.session.execute(stmt).scalars().one()
+    return db.session.execute(stmt).scalars().unique().one()
 
 
 @autocommit
