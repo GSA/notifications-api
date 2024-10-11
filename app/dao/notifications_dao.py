@@ -465,9 +465,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
     stmt = (
         update(Notification)
         .filter(Notification.id.in_([n.id for n in notifications]))
-        .values(
-            {"status": new_status, "updated_at": updated_at}
-        )
+        .values({"status": new_status, "updated_at": updated_at})
     )
     db.session.execute(stmt)
 
@@ -482,7 +480,8 @@ def dao_update_notifications_by_reference(references, update_dict):
         .filter(Notification.reference.in_(references))
         .values(update_dict)
     )
-    updated_count = db.session.execute(stmt).scalar() or 0
+    result = db.session.execute(stmt)
+    updated_count = result.rowcount
 
     updated_history_count = 0
     if updated_count != len(references):
@@ -491,7 +490,8 @@ def dao_update_notifications_by_reference(references, update_dict):
             .filter(NotificationHistory.reference.in_(references))
             .values(update_dict)
         )
-        updated_history_count = db.session.execute(stmt).scalar() or 0
+        result = db.session.execute(stmt)
+        updated_history_count = result.rowcount
 
     return updated_count, updated_history_count
 
