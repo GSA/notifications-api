@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.sql.expression import func
 
 from app import db
@@ -6,14 +7,15 @@ from app.models import Domain, Organization, Service, User
 
 
 def dao_get_organizations():
-    return Organization.query.order_by(
+    stmt = select(Organization).order_by(
         Organization.active.desc(), Organization.name.asc()
-    ).all()
+    )
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_count_organizations_with_live_services():
-    return (
-        db.session.query(Organization.id)
+    stmt = (
+        select(func.count(Organization.id))
         .join(Organization.services)
         .filter(
             Service.active.is_(True),
@@ -21,8 +23,8 @@ def dao_count_organizations_with_live_services():
             Service.count_as_live.is_(True),
         )
         .distinct()
-        .count()
     )
+    return db.session.execute(stmt).scalar() or 0
 
 
 def dao_get_organization_services(organization_id):
