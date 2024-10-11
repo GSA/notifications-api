@@ -449,12 +449,12 @@ def test_save_notification_creates_sms(sample_template, sample_job):
 
 def _get_notification_query_all():
     stmt = select(Notification)
-    return db.execute(stmt).scalars().all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def _get_notification_query_one():
     stmt = select(Notification)
-    return db.execute(stmt).scalars().one()
+    return db.session.execute(stmt).scalars().one()
 
 
 def _get_notification_query_count():
