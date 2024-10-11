@@ -138,7 +138,7 @@ def test_dao_update_service_sms_sender(notify_db_session):
         sms_sender="updated",
     )
     stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
-    sms_senders = db.sessions.execute(stmt).scalars().all()
+    sms_senders = db.session.execute(stmt).scalars().all()
     assert len(sms_senders) == 1
     assert sms_senders[0].is_default
     assert sms_senders[0].sms_sender == "updated"
