@@ -143,7 +143,7 @@ def test_should_not_delete_verification_codes_less_than_one_day_old(sample_user)
         sample_user, age=timedelta(hours=23, minutes=59, seconds=59), code="12345"
     )
     make_verify_code(sample_user, age=timedelta(hours=24), code="54321")
-    stmt = select(func.count(VerifyCode))
+    stmt = select(func.count(VerifyCode.id))
     assert db.session.execute(stmt).scalar() == 2
     delete_codes_older_created_more_than_a_day_ago()
     stmt = select(VerifyCode)
