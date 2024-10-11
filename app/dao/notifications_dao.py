@@ -482,7 +482,7 @@ def dao_update_notifications_by_reference(references, update_dict):
         .filter(Notification.reference.in_(references))
         .values(update_dict)
     )
-    updated_count = db.session.execute(stmt)
+    updated_count = db.session.execute(stmt).scalar() or 0
 
     updated_history_count = 0
     if updated_count != len(references):
@@ -491,7 +491,7 @@ def dao_update_notifications_by_reference(references, update_dict):
             .filter(NotificationHistory.reference.in_(references))
             .values(update_dict)
         )
-        updated_history_count = db.session.execute(stmt)
+        updated_history_count = db.session.execute(stmt).scalar() or 0
 
     return updated_count, updated_history_count
 
