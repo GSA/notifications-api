@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
 from app.dao.service_sms_sender_dao import (
     archive_sms_sender,
     dao_add_sms_sender_for_service,
@@ -14,7 +15,6 @@ from app.dao.service_sms_sender_dao import (
 )
 from app.exceptions import ArchiveValidationError
 from app.models import ServiceSmsSender
-from tests.app import db
 from tests.app.db import (
     create_inbound_number,
     create_service,
