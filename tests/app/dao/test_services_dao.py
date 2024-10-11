@@ -338,7 +338,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
     other_service_folder = create_template_folder(other_service)
     folder_permissions = [str(other_service_folder.id)]
 
-    stmt = select(func.count(ServiceUser.id))
+    stmt = select(func.count(ServiceUser.service_id))
     assert db.session.execute(stmt).scalar() == 2
 
     with pytest.raises(IntegrityError) as e:
@@ -351,7 +351,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
         'insert or update on table "user_folder_permissions" violates foreign key constraint'
         in str(e.value)
     )
-    stmt = select(func.count(ServiceUser.id))
+    stmt = select(func.count(ServiceUser.service_id))
     assert db.session.execute(stmt).scalar() == 2
 
 
@@ -864,7 +864,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     create_notification(template=template, api_key=api_key)
     create_invited_user(service=service)
     user.organizations = [organization]
-    stmt = select(func.count(ServicePermission.id))
+    stmt = select(func.count(ServicePermission.service_id))
     assert db.session.execute(stmt).scalar() == len(
         (
             ServicePermissionType.SMS,
