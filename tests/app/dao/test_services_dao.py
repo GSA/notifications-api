@@ -710,7 +710,7 @@ def test_create_service_creates_a_history_record_with_current_data(notify_db_ses
 
     service_from_db = _get_first_service()
     stmt = select(Service.get_history_model())
-    service_history = db.session.execute(stmt).first()
+    service_history = db.session.execute(stmt).scalars().first()
 
     assert service_from_db.id == service_history.id
     assert service_from_db.name == service_history.name
@@ -749,7 +749,7 @@ def test_update_service_creates_a_history_record_with_current_data(notify_db_ses
     stmt = select(Service.get_history_model()).filter_by(name="service_name")
     assert db.session.execute(stmt).scalars().one().version == 1
     stmt = select(Service.get_history_model()).filter_by(name="updated_service_name")
-    assert db.session.execute(stmt).one().version == 2
+    assert db.session.execute(stmt).scalars().one().version == 2
 
 
 def test_update_service_permission_creates_a_history_record_with_current_data(
