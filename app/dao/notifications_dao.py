@@ -487,7 +487,7 @@ def dao_update_notifications_by_reference(references, update_dict):
     updated_history_count = 0
     if updated_count != len(references):
         stmt = (
-            select(NotificationHistory)
+            update(NotificationHistory)
             .filter(NotificationHistory.reference.in_(references))
             .values(update_dict)
         )
