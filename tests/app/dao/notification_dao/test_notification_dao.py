@@ -4,9 +4,11 @@ from functools import partial
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 
+from app import db
 from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
@@ -55,7 +57,10 @@ def test_should_by_able_to_update_status_by_reference(
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.get(notification.id).status == NotificationStatus.SENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.SENDING
+    )
     notification.reference = "reference"
     dao_update_notification(notification)
 
@@ -64,7 +69,8 @@ def test_should_by_able_to_update_status_by_reference(
     )
     assert updated.status == NotificationStatus.DELIVERED
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
 
 
@@ -81,7 +87,10 @@ def test_should_by_able_to_update_status_by_id(
         dao_create_notification(notification)
         assert notification.status == NotificationStatus.SENDING
 
-    assert Notification.query.get(notification.id).status == NotificationStatus.SENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.SENDING
+    )
 
     with freeze_time("2000-01-02 12:00:00"):
         updated = update_notification_status_by_id(
@@ -92,7 +101,8 @@ def test_should_by_able_to_update_status_by_id(
     assert updated.status == NotificationStatus.DELIVERED
     assert updated.updated_at == datetime(2000, 1, 2, 12, 0, 0)
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
     assert notification.updated_at == datetime(2000, 1, 2, 12, 0, 0)
     assert notification.status == NotificationStatus.DELIVERED
@@ -107,15 +117,17 @@ def test_should_not_update_status_by_id_if_not_sending_and_does_not_update_job(
         job=sample_job,
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
     assert not update_notification_status_by_id(
         notification.id, NotificationStatus.FAILED
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
-    assert sample_job == Job.query.get(notification.job_id)
+    assert sample_job == db.session.get(Job, notification.job_id)
 
 
 def test_should_not_update_status_by_reference_if_not_sending_and_does_not_update_job(
@@ -128,20 +140,22 @@ def test_should_not_update_status_by_reference_if_not_sending_and_does_not_updat
         job=sample_job,
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
     assert not update_notification_status_by_reference(
         "reference", NotificationStatus.FAILED
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
-    assert sample_job == Job.query.get(notification.job_id)
+    assert sample_job == db.session.get(Job, notification.job_id)
 
 
 def test_should_update_status_by_id_if_created(sample_template, sample_notification):
     assert (
-        Notification.query.get(sample_notification.id).status
+        db.session.get(Notification, sample_notification.id).status
         == NotificationStatus.CREATED
     )
     updated = update_notification_status_by_id(
@@ -149,7 +163,7 @@ def test_should_update_status_by_id_if_created(sample_template, sample_notificat
         NotificationStatus.FAILED,
     )
     assert (
-        Notification.query.get(sample_notification.id).status
+        db.session.get(Notification, sample_notification.id).status
         == NotificationStatus.FAILED
     )
     assert updated.status == NotificationStatus.FAILED
@@ -244,11 +258,17 @@ def test_should_not_update_status_by_reference_if_not_sending(sample_template):
         status=NotificationStatus.CREATED,
         reference="reference",
     )
-    assert Notification.query.get(notification.id).status == NotificationStatus.CREATED
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.CREATED
+    )
     updated = update_notification_status_by_reference(
         "reference", NotificationStatus.FAILED
     )
-    assert Notification.query.get(notification.id).status == NotificationStatus.CREATED
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.CREATED
+    )
     assert not updated
 
 
@@ -264,14 +284,18 @@ def test_should_by_able_to_update_status_by_id_from_pending_to_delivered(
     assert update_notification_status_by_id(
         notification_id=notification.id, status=NotificationStatus.PENDING
     )
-    assert Notification.query.get(notification.id).status == NotificationStatus.PENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.PENDING
+    )
 
     assert update_notification_status_by_id(
         notification.id,
         NotificationStatus.DELIVERED,
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
 
 
@@ -289,7 +313,10 @@ def test_should_by_able_to_update_status_by_id_from_pending_to_temporary_failure
         notification_id=notification.id,
         status=NotificationStatus.PENDING,
     )
-    assert Notification.query.get(notification.id).status == NotificationStatus.PENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.PENDING
+    )
 
     assert update_notification_status_by_id(
         notification.id,
@@ -297,7 +324,7 @@ def test_should_by_able_to_update_status_by_id_from_pending_to_temporary_failure
     )
 
     assert (
-        Notification.query.get(notification.id).status
+        db.session.get(Notification, notification.id).status
         == NotificationStatus.TEMPORARY_FAILURE
     )
 
@@ -312,14 +339,17 @@ def test_should_by_able_to_update_status_by_id_from_sending_to_permanent_failure
     )
     notification = Notification(**data)
     dao_create_notification(notification)
-    assert Notification.query.get(notification.id).status == NotificationStatus.SENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.SENDING
+    )
 
     assert update_notification_status_by_id(
         notification.id,
         status=NotificationStatus.PERMANENT_FAILURE,
     )
     assert (
-        Notification.query.get(notification.id).status
+        db.session.get(Notification, notification.id).status
         == NotificationStatus.PERMANENT_FAILURE
     )
 
@@ -331,7 +361,10 @@ def test_should_not_update_status_once_notification_status_is_delivered(
         template=sample_email_template,
         status=NotificationStatus.SENDING,
     )
-    assert Notification.query.get(notification.id).status == NotificationStatus.SENDING
+    assert (
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.SENDING
+    )
 
     notification.reference = "reference"
     dao_update_notification(notification)
@@ -340,7 +373,8 @@ def test_should_not_update_status_once_notification_status_is_delivered(
         NotificationStatus.DELIVERED,
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
 
     update_notification_status_by_reference(
@@ -348,7 +382,8 @@ def test_should_not_update_status_once_notification_status_is_delivered(
         NotificationStatus.FAILED,
     )
     assert (
-        Notification.query.get(notification.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification.id).status
+        == NotificationStatus.DELIVERED
     )
 
 
@@ -370,7 +405,7 @@ def test_create_notification_creates_notification_with_personalisation(
     sample_template_with_placeholders,
     sample_job,
 ):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
     data = create_notification(
         template=sample_template_with_placeholders,
@@ -379,8 +414,8 @@ def test_create_notification_creates_notification_with_personalisation(
         status=NotificationStatus.CREATED,
     )
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert data.to == notification_from_db.to
     assert data.job_id == notification_from_db.job_id
@@ -393,15 +428,15 @@ def test_create_notification_creates_notification_with_personalisation(
 
 
 def test_save_notification_creates_sms(sample_template, sample_job):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
     data = _notification_json(sample_template, job_id=sample_job.id)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
@@ -412,16 +447,36 @@ def test_save_notification_creates_sms(sample_template, sample_job):
     assert notification_from_db.status == NotificationStatus.CREATED
 
 
+def _get_notification_query_all():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().all()
+
+
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
+
+
+def _get_notification_query_count():
+    stmt = select(func.count(Notification.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
+def _get_notification_history_query_count():
+    stmt = select(func.count(NotificationHistory.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_save_notification_and_create_email(sample_email_template, sample_job):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
     data = _notification_json(sample_email_template, job_id=sample_job.id)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
@@ -433,29 +488,29 @@ def test_save_notification_and_create_email(sample_email_template, sample_job):
 
 
 def test_save_notification(sample_email_template, sample_job):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_email_template, job_id=sample_job.id)
 
     notification_1 = Notification(**data)
     notification_2 = Notification(**data)
     dao_create_notification(notification_1)
 
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
 
     dao_create_notification(notification_2)
 
-    assert Notification.query.count() == 2
+    assert _get_notification_query_count() == 2
 
 
 def test_save_notification_does_not_creates_history(sample_email_template, sample_job):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_email_template, job_id=sample_job.id)
 
     notification_1 = Notification(**data)
     dao_create_notification(notification_1)
 
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 1
+    assert _get_notification_history_query_count() == 0
 
 
 def test_update_notification_with_research_mode_service_does_not_create_or_update_history(
@@ -464,14 +519,14 @@ def test_update_notification_with_research_mode_service_does_not_create_or_updat
     sample_template.service.research_mode = True
     notification = create_notification(template=sample_template)
 
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 1
+    assert _get_notification_history_query_count() == 0
 
     notification.status = NotificationStatus.DELIVERED
     dao_update_notification(notification)
 
-    assert Notification.query.one().status == NotificationStatus.DELIVERED
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_one().status == NotificationStatus.DELIVERED
+    assert _get_notification_history_query_count() == 0
 
 
 def test_not_save_notification_and_not_create_stats_on_commit_error(
@@ -479,26 +534,26 @@ def test_not_save_notification_and_not_create_stats_on_commit_error(
 ):
     random_id = str(uuid.uuid4())
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_template, job_id=random_id)
 
     notification = Notification(**data)
     with pytest.raises(SQLAlchemyError):
         dao_create_notification(notification)
 
-    assert Notification.query.count() == 0
-    assert Job.query.get(sample_job.id).notifications_sent == 0
+    assert _get_notification_query_count() == 0
+    assert db.session.get(Job, sample_job.id).notifications_sent == 0
 
 
 def test_save_notification_and_increment_job(sample_template, sample_job, sns_provider):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_template, job_id=sample_job.id)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
@@ -510,21 +565,21 @@ def test_save_notification_and_increment_job(sample_template, sample_job, sns_pr
 
     notification_2 = Notification(**data)
     dao_create_notification(notification_2)
-    assert Notification.query.count() == 2
+    assert _get_notification_query_count() == 2
 
 
 def test_save_notification_and_increment_correct_job(sample_template, sns_provider):
     job_1 = create_job(sample_template)
     job_2 = create_job(sample_template)
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_template, job_id=job_1.id)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["job_id"] == notification_from_db.job_id
@@ -537,14 +592,14 @@ def test_save_notification_and_increment_correct_job(sample_template, sns_provid
 
 
 def test_save_notification_with_no_job(sample_template, sns_provider):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_template)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["service"] == notification_from_db.service
@@ -592,7 +647,7 @@ def test_get_notification_by_id_when_notification_exists_for_different_service(
 
 def test_get_notifications_by_reference(sample_template):
     client_reference = "some-client-ref"
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
     create_notification(sample_template, client_reference=client_reference)
     create_notification(sample_template, client_reference=client_reference)
     create_notification(sample_template, client_reference="other-ref")
@@ -603,14 +658,14 @@ def test_get_notifications_by_reference(sample_template):
 
 
 def test_save_notification_no_job_id(sample_template):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     data = _notification_json(sample_template)
 
     notification = Notification(**data)
     dao_create_notification(notification)
 
-    assert Notification.query.count() == 1
-    notification_from_db = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    notification_from_db = _get_notification_query_all()[0]
     assert notification_from_db.id
     assert "1" == notification_from_db.to
     assert data["service"] == notification_from_db.service
@@ -687,13 +742,13 @@ def test_update_notification_sets_status(sample_notification):
     assert sample_notification.status == NotificationStatus.CREATED
     sample_notification.status = NotificationStatus.FAILED
     dao_update_notification(sample_notification)
-    notification_from_db = Notification.query.get(sample_notification.id)
+    notification_from_db = db.session.get(Notification, sample_notification.id)
     assert notification_from_db.status == NotificationStatus.FAILED
 
 
 @freeze_time("2016-01-10")
 def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template):
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
 
     # create one notification a day between 1st and 9th,
     # with assumption that the local timezone is EST
@@ -706,7 +761,7 @@ def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template
                 status=NotificationStatus.FAILED,
             )
 
-    all_notifications = Notification.query.all()
+    all_notifications = _get_notification_query_all()
     assert len(all_notifications) == 10
 
     all_notifications = get_notifications_for_service(
@@ -722,19 +777,19 @@ def test_should_limit_notifications_return_by_day_limit_plus_one(sample_template
 
 def test_creating_notification_does_not_add_notification_history(sample_template):
     create_notification(template=sample_template)
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 1
+    assert _get_notification_history_query_count() == 0
 
 
 def test_should_delete_notification_for_id(sample_template):
     notification = create_notification(template=sample_template)
 
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 1
+    assert _get_notification_history_query_count() == 0
 
     dao_delete_notifications_by_id(notification.id)
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_delete_notification_and_ignore_history_for_research_mode(
@@ -744,31 +799,32 @@ def test_should_delete_notification_and_ignore_history_for_research_mode(
 
     notification = create_notification(template=sample_template)
 
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
 
     dao_delete_notifications_by_id(notification.id)
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_delete_only_notification_with_id(sample_template):
     notification_1 = create_notification(template=sample_template)
     notification_2 = create_notification(template=sample_template)
-    assert Notification.query.count() == 2
+    assert _get_notification_query_count() == 2
 
     dao_delete_notifications_by_id(notification_1.id)
 
-    assert Notification.query.count() == 1
-    assert Notification.query.first().id == notification_2.id
+    assert _get_notification_query_count() == 1
+    stmt = select(Notification)
+    assert db.session.execute(stmt).scalars().first().id == notification_2.id
 
 
 def test_should_delete_no_notifications_if_no_matching_ids(sample_template):
     create_notification(template=sample_template)
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
 
     dao_delete_notifications_by_id(uuid.uuid4())
 
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
 
 
 def _notification_json(sample_template, job_id=None, id=None, status=None):
@@ -814,16 +870,19 @@ def test_dao_timeout_notifications(sample_template):
     temporary_failure_notifications = dao_timeout_notifications(utc_now())
 
     assert len(temporary_failure_notifications) == 2
-    assert Notification.query.get(created.id).status == NotificationStatus.CREATED
+    assert db.session.get(Notification, created.id).status == NotificationStatus.CREATED
     assert (
-        Notification.query.get(sending.id).status
+        db.session.get(Notification, sending.id).status
         == NotificationStatus.TEMPORARY_FAILURE
     )
     assert (
-        Notification.query.get(pending.id).status
+        db.session.get(Notification, pending.id).status
         == NotificationStatus.TEMPORARY_FAILURE
     )
-    assert Notification.query.get(delivered.id).status == NotificationStatus.DELIVERED
+    assert (
+        db.session.get(Notification, delivered.id).status
+        == NotificationStatus.DELIVERED
+    )
 
 
 def test_dao_timeout_notifications_only_updates_for_older_notifications(
@@ -842,8 +901,8 @@ def test_dao_timeout_notifications_only_updates_for_older_notifications(
     temporary_failure_notifications = dao_timeout_notifications(utc_now())
 
     assert len(temporary_failure_notifications) == 0
-    assert Notification.query.get(sending.id).status == NotificationStatus.SENDING
-    assert Notification.query.get(pending.id).status == NotificationStatus.PENDING
+    assert db.session.get(Notification, sending.id).status == NotificationStatus.SENDING
+    assert db.session.get(Notification, pending.id).status == NotificationStatus.PENDING
 
 
 def test_should_return_notifications_excluding_jobs_by_default(
@@ -935,7 +994,7 @@ def test_get_notifications_created_by_api_or_csv_are_returned_correctly_excludin
         key_type=sample_test_api_key.key_type,
     )
 
-    all_notifications = Notification.query.all()
+    all_notifications = _get_notification_query_all()
     assert len(all_notifications) == 4
 
     # returns all real API derived notifications
@@ -982,7 +1041,7 @@ def test_get_notifications_with_a_live_api_key_type(
         key_type=sample_test_api_key.key_type,
     )
 
-    all_notifications = Notification.query.all()
+    all_notifications = _get_notification_query_all()
     assert len(all_notifications) == 4
 
     # only those created with normal API key, no jobs
@@ -1114,7 +1173,7 @@ def test_should_exclude_test_key_notifications_by_default(
         key_type=sample_test_api_key.key_type,
     )
 
-    all_notifications = Notification.query.all()
+    all_notifications = _get_notification_query_all()
     assert len(all_notifications) == 4
 
     all_notifications = get_notifications_for_service(
@@ -1757,10 +1816,10 @@ def test_dao_update_notifications_by_reference_updated_notifications(sample_temp
         update_dict={"status": NotificationStatus.DELIVERED, "billable_units": 2},
     )
     assert updated_count == 2
-    updated_1 = Notification.query.get(notification_1.id)
+    updated_1 = db.session.get(Notification, notification_1.id)
     assert updated_1.billable_units == 2
     assert updated_1.status == NotificationStatus.DELIVERED
-    updated_2 = Notification.query.get(notification_2.id)
+    updated_2 = db.session.get(Notification, notification_2.id)
     assert updated_2.billable_units == 2
     assert updated_2.status == NotificationStatus.DELIVERED
 
@@ -1823,10 +1882,11 @@ def test_dao_update_notifications_by_reference_updates_history_when_one_of_two_n
     assert updated_count == 1
     assert updated_history_count == 1
     assert (
-        Notification.query.get(notification2.id).status == NotificationStatus.DELIVERED
+        db.session.get(Notification, notification2.id).status
+        == NotificationStatus.DELIVERED
     )
     assert (
-        NotificationHistory.query.get(notification1.id).status
+        db.session.get(NotificationHistory, notification1.id).status
         == NotificationStatus.DELIVERED
     )
 
