@@ -6,7 +6,6 @@ from unittest.mock import Mock
 import pytest
 import sqlalchemy
 from freezegun import freeze_time
-from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -92,7 +91,7 @@ from tests.app.db import (
 
 def test_create_service(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -102,9 +101,8 @@ def test_create_service(notify_db_session):
         created_by=user,
     )
     dao_create_service(service, user)
-    assert service_query_count() == 1
-    stmt = select(Service)
-    service_db = db.session.execute(stmt).scalars().one()
+    assert Service.query.count() == 1
+    service_db = Service.query.one()
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == "email_from"
@@ -122,7 +120,7 @@ def test_create_service_with_organization(notify_db_session):
         organization_type=OrganizationType.STATE,
         domains=["local-authority.gov.uk"],
     )
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -132,10 +130,9 @@ def test_create_service_with_organization(notify_db_session):
         created_by=user,
     )
     dao_create_service(service, user)
-    assert service_query_count() == 1
-    stmt = select(Service)
-    service_db = db.session.execute(stmt).scalars().one()
-    organization = db.session.get(Organization, organization.id)
+    assert Service.query.count() == 1
+    service_db = Service.query.one()
+    organization = Organization.query.get(organization.id)
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == "email_from"
@@ -154,7 +151,7 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
         organization_type=OrganizationType.STATE,
         domains=["local-authority.gov.uk"],
     )
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -164,10 +161,9 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
         created_by=user,
     )
     dao_create_service(service, user)
-    assert service_query_count() == 1
-    stmt = select(Service)
-    service_db = db.session.execute(stmt).scalars().one()
-    organization = db.session.get(Organization, organization.id)
+    assert Service.query.count() == 1
+    service_db = Service.query.one()
+    organization = Organization.query.get(organization.id)
     assert service_db.name == "service_name"
     assert service_db.id == service.id
     assert service_db.email_from == "email_from"
@@ -187,7 +183,7 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
 
 def test_cannot_create_two_services_with_same_name(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service1 = Service(
         name="service_name",
         email_from="email_from1",
@@ -213,7 +209,7 @@ def test_cannot_create_two_services_with_same_name(notify_db_session):
 
 def test_cannot_create_two_services_with_same_email_from(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service1 = Service(
         name="service_name1",
         email_from="email_from",
@@ -239,7 +235,7 @@ def test_cannot_create_two_services_with_same_email_from(notify_db_session):
 
 def test_cannot_create_service_with_no_user(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
+    assert Service.query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -262,7 +258,7 @@ def test_should_add_user_to_service(notify_db_session):
         created_by=user,
     )
     dao_create_service(service, user)
-    assert user in service_query_first().users
+    assert user in Service.query.first().users
     new_user = User(
         name="Test User",
         email_address="new_user@digital.fake.gov",
@@ -271,7 +267,7 @@ def test_should_add_user_to_service(notify_db_session):
     )
     save_model_user(new_user, validated_email_access=True)
     dao_add_user_to_service(service, new_user)
-    assert new_user in service_query_first().users
+    assert new_user in Service.query.first().users
 
 
 def test_dao_add_user_to_service_sets_folder_permissions(sample_user, sample_service):
@@ -318,8 +314,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
     other_service_folder = create_template_folder(other_service)
     folder_permissions = [str(other_service_folder.id)]
 
-    stmt = select(func.count()).select_from(ServiceUser)
-    assert db.session.execute(stmt).scalar() == 2
+    assert ServiceUser.query.count() == 2
 
     with pytest.raises(IntegrityError) as e:
         dao_add_user_to_service(
@@ -331,8 +326,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
         'insert or update on table "user_folder_permissions" violates foreign key constraint'
         in str(e.value)
     )
-    stmt = select(func.count()).select_from(ServiceUser)
-    assert db.session.execute(stmt).scalar() == 2
+    assert ServiceUser.query.count() == 2
 
 
 def test_should_remove_user_from_service(notify_db_session):
@@ -353,9 +347,9 @@ def test_should_remove_user_from_service(notify_db_session):
     )
     save_model_user(new_user, validated_email_access=True)
     dao_add_user_to_service(service, new_user)
-    assert new_user in service_query_first().users
+    assert new_user in Service.query.first().users
     dao_remove_user_from_service(service, new_user)
-    assert new_user not in service_query_first().users
+    assert new_user not in Service.query.first().users
 
 
 def test_should_remove_user_from_service_exception(notify_db_session):
@@ -388,12 +382,11 @@ def test_should_remove_user_from_service_exception(notify_db_session):
 def test_removing_a_user_from_a_service_deletes_their_permissions(
     sample_user, sample_service
 ):
-    stmt = select(Permission)
-    assert len(db.session.execute(stmt).scalars().all()) == 7
+    assert len(Permission.query.all()) == 7
 
     dao_remove_user_from_service(sample_service, sample_user)
 
-    assert db.session.execute(stmt).scalars().all() == []
+    assert Permission.query.all() == []
 
 
 def test_removing_a_user_from_a_service_deletes_their_folder_permissions_for_that_service(
@@ -675,8 +668,8 @@ def test_removing_all_permission_returns_service_with_no_permissions(notify_db_s
 
 def test_create_service_creates_a_history_record_with_current_data(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -685,13 +678,11 @@ def test_create_service_creates_a_history_record_with_current_data(notify_db_ses
         created_by=user,
     )
     dao_create_service(service, user)
-    assert service_query_count() == 1
-    assert service_history_query_count() == 1
+    assert Service.query.count() == 1
+    assert Service.get_history_model().query.count() == 1
 
-    service_from_db = service_query_first()
-    stmt = select(Service.get_history_model())
-
-    service_history = db.session.execute(stmt).scalars().first()
+    service_from_db = Service.query.first()
+    service_history = Service.get_history_model().query.first()
 
     assert service_from_db.id == service_history.id
     assert service_from_db.name == service_history.name
@@ -701,25 +692,10 @@ def test_create_service_creates_a_history_record_with_current_data(notify_db_ses
     assert service_from_db.created_by.id == service_history.created_by_id
 
 
-def service_query_count():
-    stmt = select(func.count()).select_from(Service)
-    return db.session.execute(stmt).scalar() or 0
-
-
-def service_query_first():
-    stmt = select(Service)
-    return db.session.execute(stmt).scalars().first()
-
-
-def service_history_query_count():
-    stmt = select(func.count()).select_from(Service.get_history_model())
-    return db.session.execute(stmt).scalar() or 0
-
-
 def test_update_service_creates_a_history_record_with_current_data(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -729,32 +705,39 @@ def test_update_service_creates_a_history_record_with_current_data(notify_db_ses
     )
     dao_create_service(service, user)
 
-    assert service_query_count() == 1
-    assert service_query_first().version == 1
-    assert service_history_query_count() == 1
+    assert Service.query.count() == 1
+    assert Service.query.first().version == 1
+    assert Service.get_history_model().query.count() == 1
 
     service.name = "updated_service_name"
     dao_update_service(service)
 
-    assert service_query_count() == 1
-    assert service_history_query_count() == 2
+    assert Service.query.count() == 1
+    assert Service.get_history_model().query.count() == 2
 
-    service_from_db = service_query_first()
+    service_from_db = Service.query.first()
 
     assert service_from_db.version == 2
 
-    stmt = select(Service.get_history_model()).filter_by(name="service_name")
-    assert db.session.execute(stmt).scalars().one().version == 1
-    stmt = select(Service.get_history_model()).filter_by(name="updated_service_name")
-    assert db.session.execute(stmt).scalars().one().version == 2
+    assert (
+        Service.get_history_model().query.filter_by(name="service_name").one().version
+        == 1
+    )
+    assert (
+        Service.get_history_model()
+        .query.filter_by(name="updated_service_name")
+        .one()
+        .version
+        == 2
+    )
 
 
 def test_update_service_permission_creates_a_history_record_with_current_data(
     notify_db_session,
 ):
     user = create_user()
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
     service = Service(
         name="service_name",
         email_from="email_from",
@@ -772,17 +755,17 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
         ],
     )
 
-    assert service_query_count() == 1
+    assert Service.query.count() == 1
 
     service.permissions.append(
         ServicePermission(service_id=service.id, permission=ServicePermissionType.EMAIL)
     )
     dao_update_service(service)
 
-    assert service_query_count() == 1
-    assert service_history_query_count() == 2
+    assert Service.query.count() == 1
+    assert Service.get_history_model().query.count() == 2
 
-    service_from_db = service_query_first()
+    service_from_db = Service.query.first()
 
     assert service_from_db.version == 2
 
@@ -801,10 +784,10 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
     service.permissions.remove(permission)
     dao_update_service(service)
 
-    assert service_query_count() == 1
-    assert service_history_query_count() == 3
+    assert Service.query.count() == 1
+    assert Service.get_history_model().query.count() == 3
 
-    service_from_db = service_query_first()
+    service_from_db = Service.query.first()
     assert service_from_db.version == 3
     _assert_service_permissions(
         service.permissions,
@@ -814,12 +797,12 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
         ),
     )
 
-    stmt = (
-        select(Service.get_history_model())
-        .filter_by(name="service_name")
+    history = (
+        Service.get_history_model()
+        .query.filter_by(name="service_name")
         .order_by("version")
+        .all()
     )
-    history = db.session.execute(stmt).scalars().all()
 
     assert len(history) == 3
     assert history[2].version == 3
@@ -827,8 +810,8 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
 
 def test_create_service_and_history_is_transactional(notify_db_session):
     user = create_user()
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
     service = Service(
         name=None,
         email_from="email_from",
@@ -845,8 +828,8 @@ def test_create_service_and_history_is_transactional(notify_db_session):
             in str(seeei)
         )
 
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
 
 
 def test_delete_service_and_associated_objects(notify_db_session):
@@ -863,8 +846,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     create_invited_user(service=service)
     user.organizations = [organization]
 
-    stmt = select(func.count()).select_from(ServicePermission)
-    assert db.session.execute(stmt).scalar() == len(
+    assert ServicePermission.query.count() == len(
         (
             ServicePermissionType.SMS,
             ServicePermissionType.EMAIL,
@@ -873,41 +855,21 @@ def test_delete_service_and_associated_objects(notify_db_session):
     )
 
     delete_service_and_all_associated_db_objects(service)
-    stmt = select(VerifyCode)
-    assert db.session.execute(stmt).scalar() is None
-    stmt = select(ApiKey)
-    assert db.session.execute(stmt).scalar() is None
-    stmt = select(ApiKey.get_history_model())
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(Template)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(TemplateHistory)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(Job)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(Notification)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(Permission)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(User)
-    assert db.session.execute(stmt).scalar() is None
-
-    stmt = select(InvitedUser)
-    assert db.session.execute(stmt).scalar() is None
-    stmt = select(ServicePermission)
-    assert db.session.execute(stmt).scalar() is None
-
-    assert service_query_count() == 0
-    assert service_history_query_count() == 0
+    assert VerifyCode.query.count() == 0
+    assert ApiKey.query.count() == 0
+    assert ApiKey.get_history_model().query.count() == 0
+    assert Template.query.count() == 0
+    assert TemplateHistory.query.count() == 0
+    assert Job.query.count() == 0
+    assert Notification.query.count() == 0
+    assert Permission.query.count() == 0
+    assert User.query.count() == 0
+    assert InvitedUser.query.count() == 0
+    assert Service.query.count() == 0
+    assert Service.get_history_model().query.count() == 0
+    assert ServicePermission.query.count() == 0
     # the organization hasn't been deleted
-    stmt = select(func.count()).select_from(Organization)
-    assert db.session.execute(stmt).scalar() == 1
+    assert Organization.query.count() == 1
 
 
 def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
@@ -925,8 +887,9 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
 
     dao_create_service(service_one, user)
     assert user.id == service_one.users[0].id
-    stmt = select(Permission).filter_by(service=service_one, user=user)
-    test_user_permissions = db.session.execute(stmt).scalars().all()
+    test_user_permissions = Permission.query.filter_by(
+        service=service_one, user=user
+    ).all()
     assert len(test_user_permissions) == 7
 
     other_user = User(
@@ -946,11 +909,14 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
     dao_create_service(service_two, other_user)
 
     assert other_user.id == service_two.users[0].id
-    stmt = select(Permission).filter_by(service=service_two, user=other_user)
-    other_user_permissions = db.session.execute(stmt).scalars().all()
+    other_user_permissions = Permission.query.filter_by(
+        service=service_two, user=other_user
+    ).all()
     assert len(other_user_permissions) == 7
-    stmt = select(Permission).filter_by(service=service_one, user=other_user)
-    other_user_service_one_permissions = db.session.execute(stmt).scalars().all()
+
+    other_user_service_one_permissions = Permission.query.filter_by(
+        service=service_one, user=other_user
+    ).all()
     assert len(other_user_service_one_permissions) == 0
 
     # adding the other_user to service_one should leave all other_user permissions on service_two intact
@@ -960,12 +926,14 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
 
     dao_add_user_to_service(service_one, other_user, permissions=permissions)
 
-    stmt = select(Permission).filter_by(service=service_one, user=other_user)
-    other_user_service_one_permissions = db.session.execute(stmt).scalars().all()
+    other_user_service_one_permissions = Permission.query.filter_by(
+        service=service_one, user=other_user
+    ).all()
     assert len(other_user_service_one_permissions) == 2
 
-    stmt = select(Permission).filter_by(service=service_two, user=other_user)
-    other_user_service_two_permissions = db.session.execute(stmt).scalars().all()
+    other_user_service_two_permissions = Permission.query.filter_by(
+        service=service_two, user=other_user
+    ).all()
     assert len(other_user_service_two_permissions) == 7
 
 
@@ -988,10 +956,9 @@ def test_fetch_stats_filters_on_service(notify_db_session):
 
 def test_fetch_stats_ignores_historical_notification_data(sample_template):
     create_notification_history(template=sample_template)
-    stmt = select(Notification)
-    assert db.session.execute(stmt).scalar() is None
-    stmt = select(func.count()).select_from(NotificationHistory)
-    assert db.session.execute(stmt).scalar() == 1
+
+    assert Notification.query.count() == 0
+    assert NotificationHistory.query.count() == 1
 
     stats = dao_fetch_todays_stats_for_service(sample_template.service_id)
     assert len(stats) == 0
@@ -1349,7 +1316,7 @@ def test_dao_fetch_todays_stats_for_all_services_can_exclude_from_test_key(
 def test_dao_suspend_service_with_no_api_keys(notify_db_session):
     service = create_service()
     dao_suspend_service(service.id)
-    service = db.session.get(Service, service.id)
+    service = Service.query.get(service.id)
     assert not service.active
     assert service.name == service.name
     assert service.api_keys == []
@@ -1362,11 +1329,11 @@ def test_dao_suspend_service_marks_service_as_inactive_and_expires_api_keys(
     service = create_service()
     api_key = create_api_key(service=service)
     dao_suspend_service(service.id)
-    service = db.session.get(Service, service.id)
+    service = Service.query.get(service.id)
     assert not service.active
     assert service.name == service.name
 
-    api_key = db.session.get(ApiKey, api_key.id)
+    api_key = ApiKey.query.get(api_key.id)
     assert api_key.expiry_date == datetime(2001, 1, 1, 23, 59, 00)
 
 
@@ -1377,13 +1344,13 @@ def test_dao_resume_service_marks_service_as_active_and_api_keys_are_still_revok
     service = create_service()
     api_key = create_api_key(service=service)
     dao_suspend_service(service.id)
-    service = db.session.get(Service, service.id)
+    service = Service.query.get(service.id)
     assert not service.active
 
     dao_resume_service(service.id)
-    assert db.session.get(Service, service.id).active
+    assert Service.query.get(service.id).active
 
-    api_key = db.session.get(ApiKey, api_key.id)
+    api_key = ApiKey.query.get(api_key.id)
     assert api_key.expiry_date == datetime(2001, 1, 1, 23, 59, 00)
 
 
