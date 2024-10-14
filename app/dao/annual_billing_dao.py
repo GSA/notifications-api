@@ -1,4 +1,5 @@
 from flask import current_app
+from sqlalchemy import select, update
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -26,42 +27,51 @@ def dao_create_or_update_annual_billing_for_year(
 
 
 def dao_get_annual_billing(service_id):
-    return (
-        AnnualBilling.query.filter_by(
+    stmt = (
+        select(AnnualBilling)
+        .filter_by(
             service_id=service_id,
         )
         .order_by(AnnualBilling.financial_year_start)
-        .all()
     )
+    return db.session.execute(stmt).scalars().all()
 
 
 @autocommit
 def dao_update_annual_billing_for_future_years(
     service_id, free_sms_fragment_limit, financial_year_start
 ):
-    AnnualBilling.query.filter(
-        AnnualBilling.service_id == service_id,
-        AnnualBilling.financial_year_start > financial_year_start,
-    ).update({"free_sms_fragment_limit": free_sms_fragment_limit})
+    stmt = (
+        update(AnnualBilling)
+        .filter(
+            AnnualBilling.service_id == service_id,
+            AnnualBilling.financial_year_start > financial_year_start,
+        )
+        .values({"free_sms_fragment_limit": free_sms_fragment_limit})
+    )
+    db.session.execute(stmt)
+    db.session.commit()
 
 
 def dao_get_free_sms_fragment_limit_for_year(service_id, financial_year_start=None):
     if not financial_year_start:
         financial_year_start = get_current_calendar_year_start_year()
 
-    return AnnualBilling.query.filter_by(
+    stmt = select(AnnualBilling).filter_by(
         service_id=service_id, financial_year_start=financial_year_start
-    ).first()
+    )
+    return db.session.execute(stmt).scalars().first()
 
 
 def dao_get_all_free_sms_fragment_limit(service_id):
-    return (
-        AnnualBilling.query.filter_by(
+    stmt = (
+        select(AnnualBilling)
+        .filter_by(
             service_id=service_id,
         )
         .order_by(AnnualBilling.financial_year_start)
-        .all()
     )
+    return db.session.execute(stmt).scalars().all()
 
 
 def set_default_free_allowance_for_service(service, year_start=None):

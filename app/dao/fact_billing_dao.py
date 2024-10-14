@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from flask import current_app
-from sqlalchemy import Date, Integer, and_, desc, func, union
+from sqlalchemy import Date, Integer, and_, desc, func, select, union
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case, literal
 
@@ -334,9 +334,8 @@ def query_service_sms_usage_for_year(service_id, year):
     free_allowance_used = func.least(
         remaining_free_allowance_before_this_row, this_rows_chargeable_units
     )
-
-    return (
-        db.session.query(
+    stmt = (
+        select(
             FactBilling.local_date,
             FactBilling.notifications_sent,
             this_rows_chargeable_units.label("chargeable_units"),
@@ -346,6 +345,7 @@ def query_service_sms_usage_for_year(service_id, year):
             free_allowance_used.label("free_allowance_used"),
             charged_units.label("charged_units"),
         )
+        .select_from(FactBilling)
         .join(AnnualBilling, AnnualBilling.service_id == service_id)
         .filter(
             FactBilling.service_id == service_id,
@@ -355,6 +355,7 @@ def query_service_sms_usage_for_year(service_id, year):
             AnnualBilling.financial_year_start == year,
         )
     )
+    return stmt
 
 
 def delete_billing_data_for_service_for_day(process_day, service_id):
