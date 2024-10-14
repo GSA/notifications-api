@@ -63,7 +63,7 @@ def test_create_template(sample_service, sample_user, template_type, subject):
 
 def test_create_template_creates_redact_entry(sample_service):
     stmt = select(func.count()).select_from(TemplateRedacted)
-    assert db.session.execute(stmt).scalar() is None
+    assert db.session.execute(stmt).scalar() == 0
 
     template = create_template(sample_service)
 
