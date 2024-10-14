@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.sql.expression import func
 
 from app import db
@@ -69,7 +69,8 @@ def dao_create_organization(organization):
 @autocommit
 def dao_update_organization(organization_id, **kwargs):
     domains = kwargs.pop("domains", None)
-    num_updated = Organization.query.filter_by(id=organization_id).update(kwargs)
+    stmt = update(Organization).where(id=organization_id).values(**kwargs)
+    num_updated = db.session.execute(stmt).rowcount
 
     if isinstance(domains, list):
         stmt = delete(Domain).filter_by(organization_id=organization_id)
