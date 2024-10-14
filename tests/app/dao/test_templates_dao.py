@@ -21,12 +21,12 @@ from tests.app.db import create_template
 
 def template_query_count():
     stmt = select(func.count()).select_from(Template)
-    return db.session.execute(stmt).scalar or 0
+    return db.session.execute(stmt).scalar() or 0
 
 
 def template_history_query_count():
     stmt = select(func.count()).select_from(TemplateHistory)
-    return db.session.execute(stmt).scalar or 0
+    return db.session.execute(stmt).scalar() or 0
 
 
 @pytest.mark.parametrize(
