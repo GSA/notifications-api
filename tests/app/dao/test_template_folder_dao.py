@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from app import db
 from app.dao.service_user_dao import dao_get_service_user
 from app.dao.template_folder_dao import (
@@ -17,5 +19,5 @@ def test_dao_delete_template_folder_deletes_user_folder_permissions(
     dao_update_template_folder(folder)
 
     dao_delete_template_folder(folder)
-
-    assert db.session.query(user_folder_permissions).all() == []
+    stmt = select(user_folder_permissions)
+    assert db.session.execute(stmt).scalars().all() == []
