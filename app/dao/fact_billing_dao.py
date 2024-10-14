@@ -31,7 +31,7 @@ def fetch_sms_free_allowance_remainder_until_date(end_date):
     )
 
     query = (
-        db.session.query(
+        select(
             AnnualBilling.service_id.label("service_id"),
             AnnualBilling.free_sms_fragment_limit,
             billable_units.label("billable_units"),
@@ -40,6 +40,7 @@ def fetch_sms_free_allowance_remainder_until_date(end_date):
                 0,
             ).label("sms_remainder"),
         )
+        .select_from(AnnualBilling)
         .outerjoin(
             # if there are no ft_billing rows for a service we still want to return the annual billing so we can use the
             # free_sms_fragment_limit)
