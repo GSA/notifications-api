@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db
@@ -57,7 +58,8 @@ def test_get_organization_by_id_gets_correct_organization(notify_db_session):
 def test_update_organization(notify_db_session):
     create_organization()
 
-    organization = Organization.query.one()
+    stmt = select(Organization)
+    organization = db.session.execute(stmt).scalars().one()
     user = create_user()
     email_branding = create_email_branding()
 
@@ -78,7 +80,8 @@ def test_update_organization(notify_db_session):
 
     dao_update_organization(organization.id, **data)
 
-    organization = Organization.query.one()
+    stmt = select(Organization)
+    organization = db.session.execute(stmt).scalars().one()
 
     for attribute, value in data.items():
         assert getattr(organization, attribute) == value
@@ -102,7 +105,8 @@ def test_update_organization_domains_lowercases(
 ):
     create_organization()
 
-    organization = Organization.query.one()
+    stmt = select(Organization)
+    organization = db.session.execute(stmt).scalars().one()
 
     # Seed some domains
     dao_update_organization(organization.id, domains=["123", "456"])
@@ -121,7 +125,8 @@ def test_update_organization_domains_lowercases_integrity_error(
 ):
     create_organization()
 
-    organization = Organization.query.one()
+    stmt = select(Organization)
+    organization = db.session.execute(stmt).scalars().one()
 
     # Seed some domains
     dao_update_organization(organization.id, domains=["123", "456"])
@@ -175,11 +180,11 @@ def test_update_organization_updates_the_service_org_type_if_org_type_is_provide
 
     assert sample_organization.organization_type == OrganizationType.FEDERAL
     assert sample_service.organization_type == OrganizationType.FEDERAL
+    stmt = select(Service.get_history_model()).filter_by(
+        id=sample_service.id, version=2
+    )
     assert (
-        Service.get_history_model()
-        .query.filter_by(id=sample_service.id, version=2)
-        .one()
-        .organization_type
+        db.session.execute(stmt).scalars().one().organization_type
         == OrganizationType.FEDERAL
     )
 
@@ -229,11 +234,11 @@ def test_add_service_to_organization(sample_service, sample_organization):
     assert sample_organization.services[0].id == sample_service.id
 
     assert sample_service.organization_type == sample_organization.organization_type
+    stmt = select(Service.get_history_model()).filter_by(
+        id=sample_service.id, version=2
+    )
     assert (
-        Service.get_history_model()
-        .query.filter_by(id=sample_service.id, version=2)
-        .one()
-        .organization_type
+        db.session.execute(stmt).scalars().one().organization_type
         == sample_organization.organization_type
     )
     assert sample_service.organization_id == sample_organization.id
