@@ -315,7 +315,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
     other_service_folder = create_template_folder(other_service)
     folder_permissions = [str(other_service_folder.id)]
 
-    stmt = select(ServiceUser)
+    stmt = select(func.count()).select_from(ServiceUser)
     assert db.session.execute(stmt).scalar() == 2
 
     with pytest.raises(IntegrityError) as e:
@@ -328,7 +328,7 @@ def test_dao_add_user_to_service_raises_error_if_adding_folder_permissions_for_a
         'insert or update on table "user_folder_permissions" violates foreign key constraint'
         in str(e.value)
     )
-    stmt = select(ServiceUser)
+    stmt = select(func.count()).select_from(ServiceUser)
     assert db.session.execute(stmt).scalar() == 2
 
 
@@ -864,7 +864,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     create_invited_user(service=service)
     user.organizations = [organization]
 
-    stmt = select(ServicePermission)
+    stmt = select(func.count()).select_from(ServicePermission)
     assert db.session.execute(stmt).scalar() == len(
         (
             ServicePermissionType.SMS,
@@ -907,7 +907,7 @@ def test_delete_service_and_associated_objects(notify_db_session):
     assert service_query_count() == 0
     assert service_history_query_count() == 0
     # the organization hasn't been deleted
-    stmt = select(Organization)
+    stmt = select(func.count()).select_from(Organization)
     assert db.session.execute(stmt).scalar() == 1
 
 
@@ -997,7 +997,7 @@ def test_fetch_stats_ignores_historical_notification_data(sample_template):
     create_notification_history(template=sample_template)
     stmt = select(Notification)
     assert db.session.execute(stmt).scalar() is None
-    stmt = select(NotificationHistory)
+    stmt = select(func.count()).select_from(NotificationHistory)
     assert db.session.execute(stmt).scalar() == 1
 
     stats = dao_fetch_todays_stats_for_service(sample_template.service_id)
