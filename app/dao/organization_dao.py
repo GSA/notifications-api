@@ -15,7 +15,7 @@ def dao_get_organizations():
 
 def dao_count_organizations_with_live_services():
     stmt = (
-        select(func.count().distinct()).select_from(Organization)
+        select(func.count(func.distinct(Organization.id)))
         .join(Organization.services)
         .filter(
             Service.active.is_(True),
