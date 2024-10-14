@@ -845,8 +845,8 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
 def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
     # query to return the total notifications sent per day for each channel. NB start and end dates are inclusive
 
-    daily_volume_stats = (
-        db.session.query(
+    stmt = (
+        select(
             FactBilling.local_date,
             FactBilling.provider,
             func.sum(FactBilling.notifications_sent).label("sms_totals"),
@@ -860,6 +860,7 @@ def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
                 * FactBilling.rate
             ).label("sms_cost"),
         )
+        .select_from(FactBilling)
         .filter(
             FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= start_date,
@@ -873,10 +874,8 @@ def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
             FactBilling.local_date,
             FactBilling.provider,
         )
-        .all()
     )
-
-    return daily_volume_stats
+    return db.session.execute(stmt).scalars().all()
 
 
 def fetch_volumes_by_service(start_date, end_date):
@@ -885,7 +884,7 @@ def fetch_volumes_by_service(start_date, end_date):
     year_end_date = int(end_date.strftime("%Y"))
 
     volume_stats = (
-        db.session.query(
+        select(
             FactBilling.local_date,
             FactBilling.service_id,
             func.sum(
@@ -916,6 +915,7 @@ def fetch_volumes_by_service(start_date, end_date):
                 )
             ).label("email_totals"),
         )
+        .select_from(FactBilling)
         .filter(
             FactBilling.local_date >= start_date, FactBilling.local_date <= end_date
         )
@@ -928,18 +928,18 @@ def fetch_volumes_by_service(start_date, end_date):
     )
 
     annual_billing = (
-        db.session.query(
+        select(
             func.max(AnnualBilling.financial_year_start).label("financial_year_start"),
             AnnualBilling.service_id,
             AnnualBilling.free_sms_fragment_limit,
         )
+        .select_from(AnnualBilling)
         .filter(AnnualBilling.financial_year_start <= year_end_date)
         .group_by(AnnualBilling.service_id, AnnualBilling.free_sms_fragment_limit)
         .subquery()
     )
-
-    results = (
-        db.session.query(
+    stmt = (
+        select(
             Service.name.label("service_name"),
             Service.id.label("service_id"),
             Service.organization_id.label("organization_id"),
@@ -977,7 +977,7 @@ def fetch_volumes_by_service(start_date, end_date):
             Organization.name,
             Service.name,
         )
-        .all()
     )
+    results = db.session.execute(stmt).scalars().all()
 
     return results
