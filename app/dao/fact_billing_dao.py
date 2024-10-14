@@ -875,7 +875,7 @@ def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
             FactBilling.provider,
         )
     )
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()
 
 
 def fetch_volumes_by_service(start_date, end_date):
@@ -978,6 +978,6 @@ def fetch_volumes_by_service(start_date, end_date):
             Service.name,
         )
     )
-    results = db.session.execute(stmt).scalars().all()
+    results = db.session.execute(stmt).all()
 
     return results
