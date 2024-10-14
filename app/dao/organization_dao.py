@@ -23,7 +23,8 @@ def dao_count_organizations_with_live_services():
             Service.count_as_live.is_(True),
         )
     )
-    return db.session.execute(stmt).distinct().scalar() or 0
+    # TODO Need distinct here?
+    return db.session.execute(stmt).scalar() or 0
 
 
 def dao_get_organization_services(organization_id):
