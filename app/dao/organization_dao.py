@@ -69,7 +69,9 @@ def dao_create_organization(organization):
 @autocommit
 def dao_update_organization(organization_id, **kwargs):
     domains = kwargs.pop("domains", None)
-    stmt = update(Organization).where(Organization.id==organization_id).values(**kwargs)
+    stmt = (
+        update(Organization).where(Organization.id == organization_id).values(**kwargs)
+    )
     num_updated = db.session.execute(stmt).rowcount
 
     if isinstance(domains, list):
