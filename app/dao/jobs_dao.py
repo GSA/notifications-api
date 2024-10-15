@@ -65,10 +65,8 @@ def dao_get_jobs_by_service_id(
     if statuses is not None and statuses != [""]:
         query_filter.append(Job.job_status.in_(statuses))
 
-    stmt =(
-        select(*query_filter)
-        .order_by(Job.processing_started.desc(), Job.created_at.desc())
-
+    stmt = select(*query_filter).order_by(
+        Job.processing_started.desc(), Job.created_at.desc()
     )
     return db.session.execute(stmt).paginate(page=page, per_page=page_size)
 
