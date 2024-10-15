@@ -5,6 +5,7 @@ class Pagination:
         self.per_page = per_page
         self.total = total
         self.pages = (total + per_page - 1) // per_page
+        self.prev_num = page - 1 if page > 1 else None
 
     def has_next(self):
         return self.page < self.pages
