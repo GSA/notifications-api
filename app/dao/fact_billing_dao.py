@@ -471,8 +471,9 @@ def get_rates_for_billing():
 
 
 def get_service_ids_that_need_billing_populated(start_date, end_date):
-    return (
-        db.session.query(NotificationHistory.service_id)
+    stmt = (
+        select(NotificationHistory.service_id)
+        .select_from(NotificationHistory)
         .filter(
             NotificationHistory.created_at >= start_date,
             NotificationHistory.created_at <= end_date,
@@ -482,14 +483,11 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
             NotificationHistory.billable_units != 0,
         )
         .distinct()
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def get_rate(rates, notification_type, date):
-    print(
-        f"ENTER get_rate with rates {rates} and notification_type {notification_type}"
-    )
     start_of_day = get_midnight_in_utc(date)
 
     if notification_type == NotificationType.SMS:
@@ -560,7 +558,7 @@ def create_billing_record(data, rate, process_day):
 
 def fetch_email_usage_for_organization(organization_id, start_date, end_date):
     query = (
-        db.session.query(
+        select(
             Service.name.label("service_name"),
             Service.id.label("service_id"),
             func.sum(FactBilling.notifications_sent).label("emails_sent"),
@@ -583,7 +581,7 @@ def fetch_email_usage_for_organization(organization_id, start_date, end_date):
         )
         .order_by(Service.name)
     )
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_sms_billing_for_organization(organization_id, financial_year):
