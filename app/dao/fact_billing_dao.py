@@ -764,7 +764,6 @@ def fetch_billing_details_for_all_services():
         )
         .select_from(Service)
         .outerjoin(Service.organization)
-        .all()
     )
 
     return db.session.execute(billing_details).all()
