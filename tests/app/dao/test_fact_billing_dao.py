@@ -1225,8 +1225,8 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
     )
 
     # ----------
-
-    result = query_organization_sms_usage_for_year(org.id, 2022).all()
+    stmt = query_organization_sms_usage_for_year(org.id, 2022)
+    result = db.session.execute(stmt).all()
 
     service_1_rows = [row._asdict() for row in result if row.service_id == service_1.id]
     service_2_rows = [row._asdict() for row in result if row.service_id == service_2.id]
@@ -1296,10 +1296,9 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
         financial_year_start=current_year,
     )
 
-    result = [
-        row._asdict()
-        for row in query_organization_sms_usage_for_year(org.id, 2022).all()
-    ]
+    stmt = query_organization_sms_usage_for_year(org.id, 2022)
+    rows = db.session.execute(rows).all()
+    result = [row._asdict() for row in rows]
 
     # al lthe free allowance is used on the first day
     assert result[0]["local_date"] == date(2022, 4, 29)
