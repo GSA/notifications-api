@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
 from app import db
 from app.dao.fact_billing_dao import (
@@ -614,7 +615,8 @@ def test_delete_billing_data(notify_db_session):
 
     delete_billing_data_for_service_for_day("2018-01-01", service_1.id)
 
-    current_rows = FactBilling.query.all()
+    stmt = select(FactBilling)
+    current_rows = db.session.execute(stmt).all()
     assert sorted(x.billable_units for x in current_rows) == sorted(
         [other_day.billable_units, other_service.billable_units]
     )
@@ -974,8 +976,8 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
         free_sms_fragment_limit=10,
         financial_year_start=current_year,
     )
-
-    assert FactBilling.query.count() == 0
+    stmt = select(func.count()).select_from(FactBilling)
+    assert db.session.execute(stmt).scalar() == 0
 
     create_notification(template=template, status=NotificationStatus.DELIVERED)
 
@@ -983,7 +985,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
         organization_id=new_org.id, year=current_year
     )
     assert len(results) == 1
-    assert FactBilling.query.count() == 1
+    assert db.session.execute(stmt).scalar() == 1
 
 
 @freeze_time("2022-05-01 13:30")

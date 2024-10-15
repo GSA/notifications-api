@@ -773,7 +773,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
     # query to return the total notifications sent per day for each channel. NB start and end dates are inclusive
 
     daily_volume_stats = (
-        db.session.query(
+        select(
             FactBilling.local_date,
             func.sum(
                 case(
@@ -820,7 +820,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
     )
 
     aggregated_totals = (
-        db.session.query(
+        select(
             daily_volume_stats.c.local_date.cast(db.Text).label("local_date"),
             func.sum(daily_volume_stats.c.sms_totals).label("sms_totals"),
             func.sum(daily_volume_stats.c.sms_fragment_totals).label(
@@ -833,10 +833,9 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
         )
         .group_by(daily_volume_stats.c.local_date)
         .order_by(daily_volume_stats.c.local_date)
-        .all()
     )
 
-    return aggregated_totals
+    return db.session.execute(aggregated_totals).all()
 
 
 def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
