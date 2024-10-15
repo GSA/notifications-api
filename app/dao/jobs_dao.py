@@ -67,11 +67,12 @@ def dao_get_jobs_by_service_id(
         query_filter.append(Job.job_status.in_(statuses))
 
     total_items = db.session.execute(
-        select(func.count()).select_from(Job).filter(*query_filter).scalar_one()
-    )
+        select(func.count()).select_from(Job).filter(*query_filter)
+    ).scalar_one()
 
     stmt = (
-        select(Job).filter(*query_filter)
+        select(Job)
+        .filter(*query_filter)
         .order_by(Job.processing_started.desc(), Job.created_at.desc())
         .limit(page_size)
         .offset(page)
