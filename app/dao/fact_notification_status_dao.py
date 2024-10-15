@@ -307,24 +307,25 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
 
 
 def fetch_notification_statuses_for_job(job_id):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             FactNotificationStatus.notification_status.label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
+        .select_from(FactNotificationStatus)
         .filter(
             FactNotificationStatus.job_id == job_id,
         )
         .group_by(FactNotificationStatus.notification_status)
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def fetch_stats_for_all_services_by_date_range(
     start_date, end_date, include_from_test_key=True
 ):
     stats = (
-        db.session.query(
+        select(
             FactNotificationStatus.service_id.label("service_id"),
             Service.name.label("name"),
             Service.restricted.label("restricted"),
@@ -336,6 +337,7 @@ def fetch_stats_for_all_services_by_date_range(
             FactNotificationStatus.notification_status.cast(db.Text).label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
+        .select_from(FactNotificationStatus)
         .filter(
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
@@ -360,12 +362,13 @@ def fetch_stats_for_all_services_by_date_range(
     if start_date <= utc_now().date() <= end_date:
         today = get_midnight_in_utc(utc_now())
         subquery = (
-            db.session.query(
+            select(
                 Notification.notification_type.label("notification_type"),
                 Notification.status.label("status"),
                 Notification.service_id.label("service_id"),
                 func.count(Notification.id).label("count"),
             )
+            .select_from(Notification)
             .filter(Notification.created_at >= today)
             .group_by(
                 Notification.notification_type,
@@ -377,7 +380,7 @@ def fetch_stats_for_all_services_by_date_range(
             subquery = subquery.filter(Notification.key_type != KeyType.TEST)
         subquery = subquery.subquery()
 
-        stats_for_today = db.session.query(
+        stats_for_today = select(
             Service.id.label("service_id"),
             Service.name.label("name"),
             Service.restricted.label("restricted"),
@@ -390,7 +393,7 @@ def fetch_stats_for_all_services_by_date_range(
 
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = (
-            db.session.query(
+            select(
                 all_stats_table.c.service_id,
                 all_stats_table.c.name,
                 all_stats_table.c.restricted,
@@ -417,7 +420,7 @@ def fetch_stats_for_all_services_by_date_range(
         )
     else:
         query = stats
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
