@@ -392,7 +392,7 @@ def fetch_billing_data_for_day(process_day, service_id=None, check_permissions=F
 def _query_for_billing_data(notification_type, start_date, end_date, service):
     def _email_query():
         return (
-            db.session.query(
+            select(
                 NotificationAllTimeView.template_id,
                 literal(service.id).label("service_id"),
                 literal(notification_type).label("notification_type"),
@@ -402,6 +402,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
                 literal(0).label("billable_units"),
                 func.count().label("notifications_sent"),
             )
+            .select_from(NotificationAllTimeView)
             .filter(
                 NotificationAllTimeView.status.in_(
                     NotificationStatus.sent_email_types()
@@ -424,7 +425,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
         ).cast(Integer)
         international = func.coalesce(NotificationAllTimeView.international, False)
         return (
-            db.session.query(
+            select(
                 NotificationAllTimeView.template_id,
                 literal(service.id).label("service_id"),
                 literal(notification_type).label("notification_type"),
@@ -436,6 +437,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
                 ),
                 func.count().label("notifications_sent"),
             )
+            .select_from(NotificationAllTimeView)
             .filter(
                 NotificationAllTimeView.status.in_(
                     NotificationStatus.billable_sms_types()
@@ -460,12 +462,12 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
     }
 
     query = query_funcs[notification_type]()
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def get_rates_for_billing():
-    rates = Rate.query.order_by(desc(Rate.valid_from)).all()
-    return rates
+    stmt = select(Rate).order_by(desc(Rate.valid_from))
+    return db.session.execute(stmt).all()
 
 
 def get_service_ids_that_need_billing_populated(start_date, end_date):
