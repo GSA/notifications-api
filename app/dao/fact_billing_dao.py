@@ -462,7 +462,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
     }
 
     query = query_funcs[notification_type]()
-    return db.session.execute(query).all()
+    return db.session.execute(query).scalars().all()
 
 
 def get_rates_for_billing():
