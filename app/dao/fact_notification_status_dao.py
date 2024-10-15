@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import Date, case, cast, func, select, union_all
+from sqlalchemy import Date, case, cast, delete, func, select, union_all
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import extract, literal
@@ -33,14 +33,16 @@ def update_fact_notification_status(process_day, notification_type, service_id):
     end_date = get_midnight_in_utc(process_day + timedelta(days=1))
 
     # delete any existing rows in case some no longer exist e.g. if all messages are sent
-    FactNotificationStatus.query.filter(
+    stmt = delete(FactNotificationStatus).filter(
         FactNotificationStatus.local_date == process_day,
         FactNotificationStatus.notification_type == notification_type,
         FactNotificationStatus.service_id == service_id,
-    ).delete()
+    )
+    db.session.execute(stmt)
+    db.session.commit()
 
     query = (
-        db.session.query(
+        select(
             literal(process_day).label("process_day"),
             NotificationAllTimeView.template_id,
             literal(service_id).label("service_id"),
@@ -52,6 +54,7 @@ def update_fact_notification_status(process_day, notification_type, service_id):
             NotificationAllTimeView.status,
             func.count().label("notification_count"),
         )
+        .select_from(NotificationAllTimeView)
         .filter(
             NotificationAllTimeView.created_at >= start_date,
             NotificationAllTimeView.created_at < end_date,
@@ -86,13 +89,14 @@ def update_fact_notification_status(process_day, notification_type, service_id):
 
 
 def fetch_notification_status_for_service_by_month(start_date, end_date, service_id):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status.label("notification_status"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
+        .select_from(NotificationAllTimeView)
         .filter(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.created_at >= start_date,
@@ -104,8 +108,8 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def fetch_notification_status_for_service_for_day(fetch_day, service_id):
