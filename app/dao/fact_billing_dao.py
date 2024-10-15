@@ -467,7 +467,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
 
 def get_rates_for_billing():
     stmt = select(Rate).order_by(desc(Rate.valid_from))
-    return db.session.execute(stmt).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_service_ids_that_need_billing_populated(start_date, end_date):
@@ -487,6 +487,9 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
 
 
 def get_rate(rates, notification_type, date):
+    print(
+        f"ENTER get_rate with rates {rates} and notification_type {notification_type}"
+    )
     start_of_day = get_midnight_in_utc(date)
 
     if notification_type == NotificationType.SMS:
