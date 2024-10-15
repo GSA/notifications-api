@@ -616,7 +616,7 @@ def test_delete_billing_data(notify_db_session):
     delete_billing_data_for_service_for_day("2018-01-01", service_1.id)
 
     stmt = select(FactBilling)
-    current_rows = db.session.execute(stmt).all()
+    current_rows = db.session.execute(stmt).scalars().all()
     assert sorted(x.billable_units for x in current_rows) == sorted(
         [other_day.billable_units, other_service.billable_units]
     )
