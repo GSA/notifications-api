@@ -671,7 +671,8 @@ def test_fetch_sms_free_allowance_remainder_until_date_with_two_services(
         rate=0.11,
     )
 
-    results = fetch_sms_free_allowance_remainder_until_date(datetime(2016, 5, 1)).all()
+    stmt = fetch_sms_free_allowance_remainder_until_date(datetime(2016, 5, 1))
+    results = db.session.execute(stmt).all()
     assert len(results) == 2
     service_result = [row for row in results if row[0] == service.id]
     assert service_result[0] == (service.id, 10, 2, 8)
