@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from flask import current_app
-from sqlalchemy import Date, Integer, and_, desc, func, select, union
+from sqlalchemy import Date, Integer, and_, delete, desc, func, select, union
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case, literal
 
@@ -355,9 +355,12 @@ def delete_billing_data_for_service_for_day(process_day, service_id):
 
     Returns how many rows were deleted
     """
-    return FactBilling.query.filter(
+    stmt = delete(FactBilling).filter(
         FactBilling.local_date == process_day, FactBilling.service_id == service_id
-    ).delete()
+    )
+    result = db.session.execute(stmt)
+    db.session.commit()
+    return result.rowcount
 
 
 def fetch_billing_data_for_day(process_day, service_id=None, check_permissions=False):
