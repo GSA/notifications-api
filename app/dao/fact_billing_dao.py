@@ -88,7 +88,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
     sms_cost = chargeable_sms * FactBilling.rate
 
     query = (
-        db.session.query(
+        select(
             Organization.name.label("organization_name"),
             Organization.id.label("organization_id"),
             Service.name.label("service_name"),
@@ -127,7 +127,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
         .order_by(Organization.name, Service.name)
     )
 
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_billing_totals_for_year(service_id, year):
