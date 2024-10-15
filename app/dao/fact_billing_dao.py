@@ -604,7 +604,7 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
     sms_cost = func.sum(ft_billing_subquery.c.cost)
 
     query = (
-        db.session.query(
+        select(
             Service.name.label("service_name"),
             Service.id.label("service_id"),
             AnnualBilling.free_sms_fragment_limit,
@@ -630,7 +630,7 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
         .order_by(Service.name)
     )
 
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def query_organization_sms_usage_for_year(organization_id, year):
@@ -671,7 +671,7 @@ def query_organization_sms_usage_for_year(organization_id, year):
     )
 
     return (
-        db.session.query(
+        select(
             Service.id.label("service_id"),
             FactBilling.local_date,
             this_rows_chargeable_units.label("chargeable_units"),
@@ -746,7 +746,7 @@ def fetch_usage_year_for_organization(organization_id, year):
 
 def fetch_billing_details_for_all_services():
     billing_details = (
-        db.session.query(
+        select(
             Service.id.label("service_id"),
             func.coalesce(
                 Service.purchase_order_number, Organization.purchase_order_number
@@ -762,11 +762,12 @@ def fetch_billing_details_for_all_services():
                 Service.billing_reference, Organization.billing_reference
             ).label("billing_reference"),
         )
+        .select_from(Service)
         .outerjoin(Service.organization)
         .all()
     )
 
-    return billing_details
+    return db.session.execute(billing_details).all()
 
 
 def fetch_daily_volumes_for_platform(start_date, end_date):
