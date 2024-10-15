@@ -1297,7 +1297,7 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
     )
 
     stmt = query_organization_sms_usage_for_year(org.id, 2022)
-    rows = db.session.execute(rows).all()
+    rows = db.session.execute(stmt).all()
     result = [row._asdict() for row in rows]
 
     # al lthe free allowance is used on the first day
