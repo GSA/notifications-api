@@ -67,8 +67,7 @@ def dao_get_jobs_by_service_id(
 
     stmt = select(*query_filter).order_by(
         Job.processing_started.desc(),
-        Job.created_at.desc().limit(page_size).offset(page),
-    )
+        Job.created_at.desc()).limit(page_size).offset(page)
     return db.session.execute(stmt).scalars().all()
 
 
