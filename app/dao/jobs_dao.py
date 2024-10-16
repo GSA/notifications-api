@@ -6,7 +6,8 @@ from flask import current_app
 from sqlalchemy import and_, asc, desc, func, select
 
 from app import db
-from app.dao.pagination import Pagination
+
+# from app.dao.pagination import Pagination
 from app.enums import JobStatus
 from app.models import (
     FactNotificationStatus,
@@ -66,19 +67,25 @@ def dao_get_jobs_by_service_id(
     if statuses is not None and statuses != [""]:
         query_filter.append(Job.job_status.in_(statuses))
 
-    total_items = db.session.execute(
-        select(func.count()).select_from(Job).filter(*query_filter)
-    ).scalar_one()
+    # total_items = db.session.execute(
+    #    select(func.count()).select_from(Job).filter(*query_filter)
+    # ).scalar_one()
 
-    stmt = (
-        select(Job)
-        .filter(*query_filter)
+    # stmt = (
+    #     select(Job)
+    #     .filter(*query_filter)
+    #     .order_by(Job.processing_started.desc(), Job.created_at.desc())
+    #     .limit(page_size)
+    #     .offset(page)
+    # )
+    # items = db.session.execute(stmt).scalars().all()
+    # return Pagination(items, page, page_size, total_items)
+
+    return (
+        Job.query.filter(*query_filter)
         .order_by(Job.processing_started.desc(), Job.created_at.desc())
-        .limit(page_size)
-        .offset(page)
+        .paginate(page=page, per_page=page_size)
     )
-    items = db.session.execute(stmt).scalars().all()
-    return Pagination(items, page, page_size, total_items)
 
 
 def dao_get_scheduled_job_stats(
