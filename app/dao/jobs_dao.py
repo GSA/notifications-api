@@ -119,11 +119,11 @@ def dao_set_scheduled_jobs_to_pending():
         select(
             Job.job_status == JobStatus.SCHEDULED,
             Job.scheduled_for < utc_now(),
-        )
+        ).select_from(Job)
         .order_by(asc(Job.scheduled_for))
         .with_for_update()
     )
-    jobs = db.session.execute(stmt).all()
+    jobs = db.session.execute(stmt).scalars().all()
 
     for job in jobs:
         job.job_status = JobStatus.PENDING
