@@ -91,6 +91,7 @@ def dao_get_jobs_by_service_id(
 def dao_get_scheduled_job_stats(
     service_id,
 ):
+
     stmt = select(
         func.count(Job.id),
         func.min(Job.scheduled_for),
@@ -98,7 +99,7 @@ def dao_get_scheduled_job_stats(
         Job.service_id == service_id,
         Job.job_status == JobStatus.SCHEDULED,
     )
-    return db.session.execute(stmt).all()
+    return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_job_by_id(job_id):
