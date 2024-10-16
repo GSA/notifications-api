@@ -295,7 +295,11 @@ def get_old_job_location(service_id, job_id):
 
 
 def get_job_and_metadata_from_s3(service_id, job_id):
-    obj = get_s3_object(*get_job_location(service_id, job_id))
+    try:
+        obj = get_s3_object(*get_job_location(service_id, job_id))
+    except botocore.exceptions.ClientError:
+        obj = get_s3_object(*get_old_job_location(service_id, job_id))
+
     return obj.get()["Body"].read().decode("utf-8"), obj.get()["Metadata"]
 
 
