@@ -99,7 +99,7 @@ def dao_get_scheduled_job_stats(
         Job.service_id == service_id,
         Job.job_status == JobStatus.SCHEDULED,
     )
-    return db.session.execute(stmt).scalars().one()
+    return db.session.execute(stmt).one()
 
 
 def dao_get_job_by_id(job_id):
