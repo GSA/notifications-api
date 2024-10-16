@@ -1,6 +1,9 @@
 name: Deploy egress proxy
 description: Set egress space security groups and deploy proxy
 inputs:
+  cf_org:
+    description: The org the target app exists in.
+    required: true
   cf_space:
     description: The space the target app exists in.
     required: true
@@ -16,6 +19,19 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install cf-cli
+      shell: bash
+      run: |
+        curl -A "cg-deploy-action" -v -L -o cf-cli_amd64.deb 'https://packages.cloudfoundry.org/stable?release=debian64&version=v8&source=github'
+        sudo dpkg -i cf-cli_amd64.deb
+    - name: Login to cf-cli
+      shell: bash
+      run: |
+        cf api api.fr.cloud.gov
+        cf auth
+    - name: Target org and space
+      shell: bash
+      run: cf target -o ${{ inputs.cf_org }} -s ${{ inputs.cf_space }}
     - name: Set restricted space egress
       shell: bash
       run: ./terraform/set_space_egress.sh -t -s ${{ inputs.cf_space }}
