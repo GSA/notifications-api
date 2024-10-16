@@ -106,5 +106,5 @@ jobs:
           CF_PASSWORD: ${{ secrets.CLOUDGOV_PASSWORD }}
       with:
         cf_org: gsa-tts-benefits-studio
-        cf_space: notify-prod
-        app: notify-api-prod
+        cf_space: notify-production
+        app: notify-api-production
