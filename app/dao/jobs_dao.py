@@ -116,10 +116,11 @@ def dao_set_scheduled_jobs_to_pending():
     from completing until it commits.
     """
     stmt = (
-        select(
+        select(Job)
+        .filter(
             Job.job_status == JobStatus.SCHEDULED,
             Job.scheduled_for < utc_now(),
-        ).select_from(Job)
+        )
         .order_by(asc(Job.scheduled_for))
         .with_for_update()
     )
