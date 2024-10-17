@@ -46,7 +46,7 @@ def dao_set_inbound_number_active_flag(service_id, active):
 def dao_allocate_number_for_service(service_id, inbound_number_id):
     stmt = (
         update(InboundNumber)
-        .filter_by(id=inbound_number_id, active=True, service_id=None)
+        .where(id=inbound_number_id, active=True, service_id=None)
         .values({"service_id": service_id})
     )
     result = db.session.execute(stmt)
