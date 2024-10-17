@@ -193,8 +193,8 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
     LIMIT 50 OFFSET :page
     """
     t2 = aliased(InboundSms)
-    stmt = (
-        select(InboundSms)
+    q = (
+        db.session.query(InboundSms)
         .outerjoin(
             t2,
             and_(
@@ -210,19 +210,5 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
         )
         .order_by(InboundSms.created_at.desc())
     )
-    offset = (page - 1) * current_app.config["PAGE_SIZE"]
-    limit = current_app.config["PAGE_SIZE"]
-    paginated_stmt = stmt.limit(limit).offset(offset)
-    result = db.session.execute(paginated_stmt).all()
-    print(f"RESULT {result}")
-    total_count_stmt = (
-        select(func.count())
-        .select_from(InboundSms)
-        .filter(
-            t2.id == None,  # noqa
-            InboundSms.service_id == service_id,
-            InboundSms.created_at >= midnight_n_days_ago(limit_days),
-        )
-    )
-    total_count = db.session.execute(total_count_stmt).scalar()
-    return {"items": result, "total_count": total_count}
+
+    return q.paginate(page=page, per_page=current_app.config["PAGE_SIZE"])
