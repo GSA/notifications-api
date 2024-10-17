@@ -194,7 +194,7 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
     """
     t2 = aliased(InboundSms)
     stmt = (
-        db.session.query(InboundSms)
+        select(InboundSms)
         .outerjoin(
             t2,
             and_(
@@ -214,6 +214,7 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
     limit = current_app.config["PAGE_SIZE"]
     paginated_stmt = stmt.limit(limit).offset(offset)
     result = db.session.execute(paginated_stmt).scalars().all()
+    print(f"RESULT {result}")
     total_count_stmt = (
         select(func.count())
         .select_from(InboundSms)
