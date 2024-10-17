@@ -196,7 +196,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             )
             .order_by(desc(Job.created_at))
         )
-        jobs.extend(db.session.execute(stmt).all())
+        jobs.extend(db.session.execute(stmt).scalars().all())
 
     # notify-api-1287, make default data retention 7 days, 23 hours
     end_date = today - timedelta(days=7, hours=23)
@@ -217,7 +217,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             )
             .order_by(desc(Job.created_at))
         )
-        jobs.extend(db.session.execute(stmt).all())
+        jobs.extend(db.session.execute(stmt).scalars().all())
 
     return jobs
 
