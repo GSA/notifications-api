@@ -226,7 +226,7 @@ def find_jobs_with_missing_rows():
     ten_minutes_ago = utc_now() - timedelta(minutes=20)
     yesterday = utc_now() - timedelta(days=1)
     jobs_with_rows_missing = (
-        db.session.query(Job)
+        select(Job)
         .filter(
             Job.job_status == JobStatus.FINISHED,
             Job.processing_finished < ten_minutes_ago,
@@ -237,16 +237,16 @@ def find_jobs_with_missing_rows():
         .having(func.count(Notification.id) != Job.notification_count)
     )
 
-    return jobs_with_rows_missing.all()
+    return db.session.execute(jobs_with_rows_missing).all()
 
 
 def find_missing_row_for_job(job_id, job_size):
-    expected_row_numbers = db.session.query(
+    expected_row_numbers = select(
         func.generate_series(0, job_size - 1).label("row")
     ).subquery()
 
     query = (
-        db.session.query(
+        select(
             Notification.job_row_number, expected_row_numbers.c.row.label("missing_row")
         )
         .outerjoin(
@@ -258,4 +258,4 @@ def find_missing_row_for_job(job_id, job_size):
         )
         .filter(Notification.job_row_number == None)  # noqa
     )
-    return query.all()
+    return db.session.execute(query).all()
