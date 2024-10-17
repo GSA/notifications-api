@@ -1,4 +1,4 @@
-from sqlalchemy import and_, select, update
+from sqlalchemy import select
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -14,17 +14,15 @@ def dao_get_available_inbound_numbers():
     stmt = select(InboundNumber).filter(
         InboundNumber.active, InboundNumber.service_id.is_(None)
     )
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()
 
 
 def dao_get_inbound_number_for_service(service_id):
-    stmt = select(InboundNumber).filter(InboundNumber.service_id == service_id)
-    return db.session.execute(stmt).scalars().first()
+    return InboundNumber.query.filter(InboundNumber.service_id == service_id).first()
 
 
 def dao_get_inbound_number(inbound_number_id):
-    stmt = select(InboundNumber).filter(InboundNumber.id == inbound_number_id)
-    return db.session.execute(stmt).scalars().first()
+    return InboundNumber.query.filter(InboundNumber.id == inbound_number_id).first()
 
 
 @autocommit
@@ -35,8 +33,9 @@ def dao_set_inbound_number_to_service(service_id, inbound_number):
 
 @autocommit
 def dao_set_inbound_number_active_flag(service_id, active):
-    stmt = select(InboundNumber).filter(InboundNumber.service_id == service_id)
-    inbound_number = db.session.execute(stmt).scalars().first()
+    inbound_number = InboundNumber.query.filter(
+        InboundNumber.service_id == service_id
+    ).first()
     inbound_number.active = active
 
     db.session.add(inbound_number)
@@ -44,19 +43,9 @@ def dao_set_inbound_number_active_flag(service_id, active):
 
 @autocommit
 def dao_allocate_number_for_service(service_id, inbound_number_id):
-    stmt = (
-        update(InboundNumber)
-        .where(
-            and_(
-                InboundNumber.id == inbound_number_id,
-                InboundNumber.active is True,
-                InboundNumber.service_id is None,
-            )
-        )
-        .values({"service_id": service_id})
-    )
-    result = db.session.execute(stmt)
-    db.session.commit()
-    if not result.rowcount == 0:
+    updated = InboundNumber.query.filter_by(
+        id=inbound_number_id, active=True, service_id=None
+    ).update({"service_id": service_id})
+    if not updated:
         raise Exception("Inbound number: {} is not available".format(inbound_number_id))
-    return db.session.get(InboundNumber, inbound_number_id)
+    return InboundNumber.query.get(inbound_number_id)
