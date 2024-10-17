@@ -7,7 +7,7 @@ from app.models import InboundNumber
 
 def dao_get_inbound_numbers():
     stmt = select(InboundNumber).order_by(InboundNumber.updated_at)
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()
 
 
 def dao_get_available_inbound_numbers():
