@@ -64,7 +64,7 @@ def dao_count_inbound_sms_for_service(service_id, limit_days):
         InboundSms.service_id == service_id,
         InboundSms.created_at >= midnight_n_days_ago(limit_days),
     )
-    result = db.session.execute(stmt).all()
+    result = db.session.execute(stmt).scalar()
     return result.rowcount
 
 
