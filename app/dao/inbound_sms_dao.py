@@ -129,11 +129,13 @@ def delete_inbound_sms_older_than_retention():
         "Deleting inbound sms for services with flexible data retention"
     )
 
-    flexible_data_retention = (
-        ServiceDataRetention.query.join(ServiceDataRetention.service)
+    stmt = (
+        select(ServiceDataRetention)
+        .join(ServiceDataRetention.service)
         .filter(ServiceDataRetention.notification_type == NotificationType.SMS)
         .all()
     )
+    flexible_data_retention = db.session.execute(stmt).all()
 
     deleted = 0
 
@@ -166,7 +168,8 @@ def delete_inbound_sms_older_than_retention():
 
 
 def dao_get_inbound_sms_by_id(service_id, inbound_id):
-    return InboundSms.query.filter_by(id=inbound_id, service_id=service_id).one()
+    stmt = select(InboundSms).filter_by(id=inbound_id, service_id=service_id)
+    return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
