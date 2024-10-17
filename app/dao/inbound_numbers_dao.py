@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import and_, select, update
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -35,9 +35,7 @@ def dao_set_inbound_number_to_service(service_id, inbound_number):
 
 @autocommit
 def dao_set_inbound_number_active_flag(service_id, active):
-    stmt = select(InboundNumber).filter(
-        InboundNumber.service_id == service_id
-    )
+    stmt = select(InboundNumber).filter(InboundNumber.service_id == service_id)
     inbound_number = db.session.execute(stmt).scalars().first()
     inbound_number.active = active
 
@@ -46,9 +44,18 @@ def dao_set_inbound_number_active_flag(service_id, active):
 
 @autocommit
 def dao_allocate_number_for_service(service_id, inbound_number_id):
-    updated = InboundNumber.query.filter_by(
-        id=inbound_number_id, active=True, service_id=None
-    ).update({"service_id": service_id})
-    if not updated:
+    stmt = (
+        update(InboundNumber)
+        .where(
+            and_(
+                InboundNumber.id == inbound_number_id,  # noqa
+                InboundNumber.active == True,  # noqa
+                InboundNumber.service_id == None,  # noqa
+            )
+        )
+        .values({"service_id": service_id})
+    )
+    result = db.session.execute(stmt)
+    if result.rowcount == 0:
         raise Exception("Inbound number: {} is not available".format(inbound_number_id))
-    return InboundNumber.query.get(inbound_number_id)
+    return db.session.get(InboundNumber, inbound_number_id)
