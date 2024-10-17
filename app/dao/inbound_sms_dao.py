@@ -1,7 +1,7 @@
 from flask import current_app
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import aliased, select
+from sqlalchemy.orm import aliased
 
 from app import db
 from app.dao.dao_utils import autocommit
