@@ -1,7 +1,7 @@
 from flask import current_app
 from sqlalchemy import and_, desc
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, select
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -18,8 +18,10 @@ def dao_create_inbound_sms(inbound_sms):
 def dao_get_inbound_sms_for_service(
     service_id, user_number=None, *, limit_days=None, limit=None
 ):
-    q = InboundSms.query.filter(InboundSms.service_id == service_id).order_by(
-        InboundSms.created_at.desc()
+    q = (
+        select(InboundSms)
+        .filter(InboundSms.service_id == service_id)
+        .order_by(InboundSms.created_at.desc())
     )
     if limit_days is not None:
         start_date = midnight_n_days_ago(limit_days)
@@ -31,7 +33,7 @@ def dao_get_inbound_sms_for_service(
     if limit:
         q = q.limit(limit)
 
-    return q.all()
+    return db.session.execute(q).scalars().all()
 
 
 def dao_get_paginated_inbound_sms_for_service_for_public_api(
@@ -58,10 +60,12 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
 
 
 def dao_count_inbound_sms_for_service(service_id, limit_days):
-    return InboundSms.query.filter(
+    stmt = select(InboundSms).filter(
         InboundSms.service_id == service_id,
         InboundSms.created_at >= midnight_n_days_ago(limit_days),
-    ).count()
+    )
+    result = db.session.execute(stmt)
+    return result.rowcount
 
 
 def _insert_inbound_sms_history(subquery, query_limit=10000):
