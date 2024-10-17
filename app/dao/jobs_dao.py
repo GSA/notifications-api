@@ -180,7 +180,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
     stmt = select(ServiceDataRetention).filter(
         ServiceDataRetention.notification_type.in_(notification_types)
     )
-    flexible_data_retention = db.session.execute(stmt).all()
+    flexible_data_retention = db.session.execute(stmt).scalars().all()
     jobs = []
     today = utc_now().date()
     for f in flexible_data_retention:
