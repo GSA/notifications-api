@@ -133,7 +133,6 @@ def delete_inbound_sms_older_than_retention():
         select(ServiceDataRetention)
         .join(ServiceDataRetention.service)
         .filter(ServiceDataRetention.notification_type == NotificationType.SMS)
-        .all()
     )
     flexible_data_retention = db.session.execute(stmt).all()
 
