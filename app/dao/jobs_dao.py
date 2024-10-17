@@ -258,4 +258,4 @@ def find_missing_row_for_job(job_id, job_size):
         )
         .filter(Notification.job_row_number == None)  # noqa
     )
-    return db.session.execute(query).scalars().all()
+    return db.session.execute(query).all()
