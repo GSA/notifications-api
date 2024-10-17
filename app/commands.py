@@ -24,12 +24,6 @@ from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     set_default_free_allowance_for_service,
 )
-from app.dao.fact_billing_dao import (
-    delete_billing_data_for_service_for_day,
-    fetch_billing_data_for_day,
-    get_service_ids_that_need_billing_populated,
-    update_fact_billing,
-)
 from app.dao.jobs_dao import dao_get_job_by_id
 from app.dao.organization_dao import (
     dao_add_service_to_organization,
@@ -63,7 +57,7 @@ from app.models import (
     TemplateHistory,
     User,
 )
-from app.utils import get_midnight_in_utc, utc_now
+from app.utils import utc_now
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
 from tests.app.db import (
@@ -167,6 +161,7 @@ def purge_functional_test_data(user_email_prefix):
                 delete_model_user(usr)
 
 
+# TODO maintainability what is the purpose of this command?  Who would use it and why?
 @notify_command(name="insert-inbound-numbers")
 @click.option(
     "-f",
@@ -175,7 +170,6 @@ def purge_functional_test_data(user_email_prefix):
     help="""Full path of the file to upload, file is a contains inbound numbers, one number per line.""",
 )
 def insert_inbound_numbers_from_file(file_name):
-    # TODO maintainability what is the purpose of this command?  Who would use it and why?
 
     current_app.logger.info(f"Inserting inbound numbers from {file_name}")
     with open(file_name) as file:
@@ -193,50 +187,6 @@ def insert_inbound_numbers_from_file(file_name):
 
 def setup_commands(application):
     application.cli.add_command(command_group)
-
-
-@notify_command(name="rebuild-ft-billing-for-day")
-@click.option("-s", "--service_id", required=False, type=click.UUID)
-@click.option(
-    "-d",
-    "--day",
-    help="The date to recalculate, as YYYY-MM-DD",
-    required=True,
-    type=click_dt(format="%Y-%m-%d"),
-)
-def rebuild_ft_billing_for_day(service_id, day):
-    # TODO maintainability what is the purpose of this command?  Who would use it and why?
-
-    """
-    Rebuild the data in ft_billing for the given service_id and date
-    """
-
-    def rebuild_ft_data(process_day, service):
-        deleted_rows = delete_billing_data_for_service_for_day(process_day, service)
-        current_app.logger.info(
-            f"deleted {deleted_rows} existing billing rows for {service} on {process_day}"
-        )
-        transit_data = fetch_billing_data_for_day(
-            process_day=process_day, service_id=service
-        )
-        # transit_data = every row that should exist
-        for data in transit_data:
-            # upsert existing rows
-            update_fact_billing(data, process_day)
-        current_app.logger.info(
-            f"added/updated {len(transit_data)} billing rows for {service} on {process_day}"
-        )
-
-    if service_id:
-        # confirm the service exists
-        dao_fetch_service_by_id(service_id)
-        rebuild_ft_data(day, service_id)
-    else:
-        services = get_service_ids_that_need_billing_populated(
-            get_midnight_in_utc(day), get_midnight_in_utc(day + timedelta(days=1))
-        )
-        for row in services:
-            rebuild_ft_data(day, row.service_id)
 
 
 @notify_command(name="bulk-invite-user-to-service")
@@ -470,31 +420,6 @@ def associate_services_to_organizations():
             )
 
     current_app.logger.info("finished associating services to organizations")
-
-
-@notify_command(name="populate-service-volume-intentions")
-@click.option(
-    "-f",
-    "--file_name",
-    required=True,
-    help="Pipe delimited file containing service_id, SMS, email",
-)
-def populate_service_volume_intentions(file_name):
-    # [0] service_id
-    # [1] SMS:: volume intentions for service
-    # [2] Email:: volume intentions for service
-
-    # TODO maintainability what is the purpose of this command? Who would use it and why?
-
-    with open(file_name, "r") as f:
-        for line in itertools.islice(f, 1, None):
-            columns = line.split(",")
-            current_app.logger.info(columns)
-            service = dao_fetch_service_by_id(columns[0])
-            service.volume_sms = columns[1]
-            service.volume_email = columns[2]
-            dao_update_service(service)
-    current_app.logger.info("populate-service-volume-intentions complete")
 
 
 @notify_command(name="populate-go-live")
