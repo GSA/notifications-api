@@ -237,7 +237,7 @@ def find_jobs_with_missing_rows():
         .having(func.count(Notification.id) != Job.notification_count)
     )
 
-    return db.session.execute(jobs_with_rows_missing).all()
+    return db.session.execute(jobs_with_rows_missing).scalar().all()
 
 
 def find_missing_row_for_job(job_id, job_size):
@@ -258,4 +258,4 @@ def find_missing_row_for_job(job_id, job_size):
         )
         .filter(Notification.job_row_number == None)  # noqa
     )
-    return db.session.execute(query).all()
+    return db.session.execute(query).scalars().all()
