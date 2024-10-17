@@ -4,8 +4,10 @@ from functools import partial
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
+from app import db
 from app.dao.jobs_dao import (
     dao_create_job,
     dao_get_future_scheduled_job_by_id_and_service_id,
@@ -108,7 +110,8 @@ def test_should_return_notifications_only_for_this_service(
 
 
 def test_create_sample_job(sample_template):
-    assert Job.query.count() == 0
+    stmt = select(func.count()).select_from(Job)
+    assert db.session.execute(stmt).scalar() == 0
 
     job_id = uuid.uuid4()
     data = {
@@ -123,9 +126,9 @@ def test_create_sample_job(sample_template):
 
     job = Job(**data)
     dao_create_job(job)
-
-    assert Job.query.count() == 1
-    job_from_db = Job.query.get(job_id)
+    stmt = select(func.count()).select_from(Job)
+    assert db.session.execute(stmt).scalar() == 1
+    job_from_db = db.session.get(Job, job_id)
     assert job == job_from_db
     assert job_from_db.notifications_delivered == 0
     assert job_from_db.notifications_failed == 0
@@ -221,7 +224,7 @@ def test_update_job(sample_job):
 
     dao_update_job(sample_job)
 
-    job_from_db = Job.query.get(sample_job.id)
+    job_from_db = db.session.get(Job, sample_job.id)
 
     assert job_from_db.job_status == JobStatus.IN_PROGRESS
 
