@@ -213,7 +213,7 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
     offset = (page - 1) * current_app.config["PAGE_SIZE"]
     limit = current_app.config["PAGE_SIZE"]
     paginated_stmt = stmt.limit(limit).offset(offset)
-    result = db.session.execute(paginated_stmt).scalars().all()
+    result = db.session.execute(paginated_stmt).all()
     print(f"RESULT {result}")
     total_count_stmt = (
         select(func.count())
