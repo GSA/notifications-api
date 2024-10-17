@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import and_, select, update
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -46,7 +46,13 @@ def dao_set_inbound_number_active_flag(service_id, active):
 def dao_allocate_number_for_service(service_id, inbound_number_id):
     stmt = (
         update(InboundNumber)
-        .where(id=inbound_number_id, active=True, service_id=None)
+        .where(
+            and_(
+                InboundNumber.id == inbound_number_id,
+                InboundNumber.active is True,
+                InboundNumber.service_id is None,
+            )
+        )
         .values({"service_id": service_id})
     )
     result = db.session.execute(stmt)
