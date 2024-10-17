@@ -1,5 +1,5 @@
 from flask import current_app
-from sqlalchemy import and_, desc, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 
@@ -60,12 +60,16 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
 
 
 def dao_count_inbound_sms_for_service(service_id, limit_days):
-    stmt = select(InboundSms).filter(
-        InboundSms.service_id == service_id,
-        InboundSms.created_at >= midnight_n_days_ago(limit_days),
+    stmt = (
+        select(func.count())
+        .select_from(InboundSms)
+        .filter(
+            InboundSms.service_id == service_id,
+            InboundSms.created_at >= midnight_n_days_ago(limit_days),
+        )
     )
     result = db.session.execute(stmt).scalar()
-    return result.rowcount
+    return result
 
 
 def _insert_inbound_sms_history(subquery, query_limit=10000):
