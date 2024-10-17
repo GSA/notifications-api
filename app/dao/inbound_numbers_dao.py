@@ -35,9 +35,10 @@ def dao_set_inbound_number_to_service(service_id, inbound_number):
 
 @autocommit
 def dao_set_inbound_number_active_flag(service_id, active):
-    inbound_number = InboundNumber.query.filter(
+    stmt = select(InboundNumber).filter(
         InboundNumber.service_id == service_id
-    ).first()
+    )
+    inbound_number = db.session.execute(stmt).scalars().first()
     inbound_number.active = active
 
     db.session.add(inbound_number)
