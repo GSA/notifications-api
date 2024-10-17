@@ -177,16 +177,17 @@ def dao_update_job(job):
 
 
 def dao_get_jobs_older_than_data_retention(notification_types):
-    flexible_data_retention = ServiceDataRetention.query.filter(
+    stmt = select(ServiceDataRetention).filter(
         ServiceDataRetention.notification_type.in_(notification_types)
-    ).all()
+    )
+    flexible_data_retention = db.session.execute(stmt).all()
     jobs = []
     today = utc_now().date()
     for f in flexible_data_retention:
         end_date = today - timedelta(days=f.days_of_retention)
-
-        jobs.extend(
-            Job.query.join(Template)
+        stmt = (
+            select(Job)
+            .join(Template)
             .filter(
                 func.coalesce(Job.scheduled_for, Job.created_at) < end_date,
                 Job.archived == False,  # noqa
@@ -194,8 +195,8 @@ def dao_get_jobs_older_than_data_retention(notification_types):
                 Job.service_id == f.service_id,
             )
             .order_by(desc(Job.created_at))
-            .all()
         )
+        jobs.extend(db.session.execute(stmt).all())
 
     # notify-api-1287, make default data retention 7 days, 23 hours
     end_date = today - timedelta(days=7, hours=23)
@@ -205,8 +206,9 @@ def dao_get_jobs_older_than_data_retention(notification_types):
             for x in flexible_data_retention
             if x.notification_type == notification_type
         ]
-        jobs.extend(
-            Job.query.join(Template)
+        stmt = (
+            select(Job)
+            .join(Template)
             .filter(
                 func.coalesce(Job.scheduled_for, Job.created_at) < end_date,
                 Job.archived == False,  # noqa
@@ -214,8 +216,8 @@ def dao_get_jobs_older_than_data_retention(notification_types):
                 Job.service_id.notin_(services_with_data_retention),
             )
             .order_by(desc(Job.created_at))
-            .all()
         )
+        jobs.extend(db.session.execute(stmt).all())
 
     return jobs
 
