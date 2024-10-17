@@ -18,11 +18,13 @@ def dao_get_available_inbound_numbers():
 
 
 def dao_get_inbound_number_for_service(service_id):
-    return InboundNumber.query.filter(InboundNumber.service_id == service_id).first()
+    stmt = select(InboundNumber).filter(InboundNumber.service_id == service_id)
+    return db.session.execute(stmt).scalars().first()
 
 
 def dao_get_inbound_number(inbound_number_id):
-    return InboundNumber.query.filter(InboundNumber.id == inbound_number_id).first()
+    stmt = select(InboundNumber).filter(InboundNumber.id == inbound_number_id)
+    return db.session.execute(stmt).scalars().first()
 
 
 @autocommit
