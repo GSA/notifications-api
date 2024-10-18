@@ -391,7 +391,7 @@ def test_most_recent_inbound_sms_only_returns_most_recent_for_each_number(
             )  # noqa
 
     assert len(res.items) == 2
-    assert res.has_next is False
+    assert res.has_next() is False
     assert res.per_page == 3
     assert res.items[0].content == "111 5"
     assert res.items[1].content == "222 2"
@@ -454,7 +454,7 @@ def test_most_recent_inbound_sms_paginates_properly(notify_api, sample_service):
                 sample_service.id, limit_days=7, page=1
             )  # noqa
             assert len(res.items) == 2
-            assert res.has_next is True
+            assert res.has_next() is True
             assert res.per_page == 2
             assert res.items[0].content == "444 2"
             assert res.items[1].content == "333 2"
@@ -464,7 +464,7 @@ def test_most_recent_inbound_sms_paginates_properly(notify_api, sample_service):
                 sample_service.id, limit_days=7, page=2
             )  # noqa
             assert len(res.items) == 2
-            assert res.has_next is False
+            assert res.has_next() is False
             assert res.items[0].content == "222 2"
             assert res.items[1].content == "111 2"
 
