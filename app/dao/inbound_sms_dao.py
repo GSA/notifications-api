@@ -217,12 +217,15 @@ def dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
     paginated_results = result[offset : offset + page_size]
+    serialized_results = []
+    for item in paginated_results:
+        serialized_results.append(item.serialize())
     try:
-        json.dumps(paginated_results)
+        json.dumps(serialized_results)
     except TypeError as e:
         current_app.logger.exception("Serialization Error")
         raise e
-    pagination = Pagination(paginated_results, page, page_size, len(result))
+    pagination = Pagination(serialized_results, page, page_size, len(result))
     return pagination
 
 
