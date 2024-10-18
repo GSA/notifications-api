@@ -84,9 +84,8 @@ def _insert_inbound_sms_history(subquery, query_limit=10000):
         InboundSms.provider,
     ).where(InboundSms.id.in_(subquery_select))
 
-    count_query = select(func.count()).select_from(inbound_sms_query.subquery()).scalar()
-    print(f"COUNT QUERY {count_query}")
-    inbound_sms_count = db.session.execute(count_query) or 0
+    count_query = select(func.count()).select_from(inbound_sms_query.subquery())
+    inbound_sms_count = db.session.execute(count_query).scalar() or 0
 
     while offset < inbound_sms_count:
         statement = insert(InboundSmsHistory).from_select(
