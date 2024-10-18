@@ -1,5 +1,5 @@
 from flask import current_app
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, delete, desc, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 
@@ -103,7 +103,7 @@ def _delete_inbound_sms(datetime_to_delete_from, query_filter):
     query_limit = 10000
 
     subquery = (
-        db.session.query(InboundSms.id)
+        select(InboundSms.id)
         .filter(InboundSms.created_at < datetime_to_delete_from, *query_filter)
         .limit(query_limit)
         .subquery()
@@ -115,9 +115,9 @@ def _delete_inbound_sms(datetime_to_delete_from, query_filter):
     while number_deleted > 0:
         _insert_inbound_sms_history(subquery, query_limit=query_limit)
 
-        number_deleted = InboundSms.query.filter(InboundSms.id.in_(subquery)).delete(
-            synchronize_session="fetch"
-        )
+        stmt = delete(InboundSms).filter(InboundSms.id.in_(subquery))
+        number_deleted = db.session.execute(stmt).rowcount
+        db.session.commit()
         deleted += number_deleted
 
     return deleted
