@@ -1,4 +1,4 @@
-from flask import current_app, json
+from flask import current_app
 from sqlalchemy import and_, delete, desc, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
