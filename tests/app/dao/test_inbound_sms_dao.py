@@ -2,6 +2,7 @@ from datetime import datetime
 from itertools import product
 
 from freezegun import freeze_time
+from sqlalchemy import select
 
 from app import db
 from app.dao.inbound_sms_dao import (
@@ -141,7 +142,8 @@ def test_should_delete_inbound_sms_according_to_data_retention(notify_db_session
 
     deleted_count = delete_inbound_sms_older_than_retention()
 
-    history = InboundSmsHistory.query.all()
+    stmt = select(InboundSmsHistory)
+    history = db.session.execute(stmt).all()
     assert len(history) == 7
 
     # four deleted for the 3-day service, two for the default seven days one, one for the 30 day
@@ -171,7 +173,8 @@ def test_insert_into_inbound_sms_history_when_deleting_inbound_sms(sample_servic
     create_inbound_sms(sample_service, created_at=datetime(2019, 12, 19, 20, 19))
 
     delete_inbound_sms_older_than_retention()
-    history = InboundSmsHistory.query.all()
+    stmt = select(InboundSmsHistory)
+    history = db.session.execute(stmt).all()
     assert len(history) == 1
 
     for key_name in [
@@ -226,7 +229,8 @@ def test_delete_inbound_sms_older_than_retention_does_nothing_when_database_conf
 
     delete_inbound_sms_older_than_retention()
 
-    history = InboundSmsHistory.query.all()
+    stmt = select(InboundSmsHistory)
+    history = db.session.execute(stmt).all()
     assert len(history) == 1
 
     assert history[0].id == inbound_sms_id
