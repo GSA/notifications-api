@@ -45,6 +45,7 @@ def test_create_invited_user(
         permissions="send_messages,manage_service,manage_api_keys",
         auth_type=AuthType.EMAIL,
         folder_permissions=["folder_1", "folder_2", "folder_3"],
+        nonce="FakeNonce",
         **extra_args,
     )
 
@@ -108,6 +109,7 @@ def test_create_invited_user_without_auth_type(
         "from_user": str(invite_from.id),
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": [],
+        "nonce": "FakeNonce",
     }
 
     json_resp = admin_request.post(
@@ -131,6 +133,7 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
         "from_user": str(invite_from.id),
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": [fake_uuid, fake_uuid],
+        "nonce": "FakeNonce",
     }
 
     data = json.dumps(data)
