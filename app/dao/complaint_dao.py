@@ -5,6 +5,7 @@ from sqlalchemy import desc, func, select
 
 from app import db
 from app.dao.dao_utils import autocommit
+from app.dao.inbound_sms_dao import Pagination
 from app.models import Complaint
 from app.utils import get_midnight_in_utc
 
@@ -15,9 +16,16 @@ def save_complaint(complaint):
 
 
 def fetch_paginated_complaints(page=1):
-    return Complaint.query.order_by(desc(Complaint.created_at)).paginate(
-        page=page, per_page=current_app.config["PAGE_SIZE"]
-    )
+    # return Complaint.query.order_by(desc(Complaint.created_at)).paginate(
+    #    page=page, per_page=current_app.config["PAGE_SIZE"]
+    # )
+    page_size = current_app.config["PAGE_SIZE"]
+    total_count = db.session.scalar(select(func.count()).select_from(Complaint))
+    offset = (page - 1) * page_size
+    stmt = select(Complaint).order_by().offset(offset).limit(page_size)
+    result = db.session.execute(stmt).scalars()
+    pagination = Pagination(result, page=page, per_page=page_size, total=total_count)
+    return pagination
 
 
 def fetch_complaints_by_service(service_id):
