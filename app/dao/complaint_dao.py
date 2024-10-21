@@ -23,7 +23,7 @@ def fetch_paginated_complaints(page=1):
     total_count = db.session.scalar(select(func.count()).select_from(Complaint))
     offset = (page - 1) * page_size
     stmt = select(Complaint).order_by().offset(offset).limit(page_size)
-    result = db.session.execute(stmt).scalars()
+    result = db.session.execute(stmt).scalars().all()
     pagination = Pagination(result, page=page, per_page=page_size, total=total_count)
     return pagination
 
