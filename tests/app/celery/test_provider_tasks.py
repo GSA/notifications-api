@@ -52,7 +52,9 @@ def test_should_check_delivery_receipts_failure(sample_notification, mocker):
         "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
         return_value=False,
     )
-    mock_update = mocker.patch("app.celery.provider_tasks.update_notification_status_by_id")
+    mock_update = mocker.patch(
+        "app.celery.provider_tasks.update_notification_status_by_id"
+    )
     mocker.patch(
         "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
         return_value=("success", "okay", "AT&T"),
@@ -65,6 +67,7 @@ def test_should_check_delivery_receipts_failure(sample_notification, mocker):
     )
     mock_sanitize.assert_not_called()
     mock_update.assert_called_once()
+
 
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(
     sample_notification, mocker
