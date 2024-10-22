@@ -91,7 +91,8 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
             "Fake Personson",
         ],
     )
-    # The bad mobile phone number results in a bad parameter error, leading to a system exit 2 and no entry made in db
+    # The bad mobile phone number results in a bad parameter error,
+    # leading to a system exit 2 and no entry made in db
     assert "SystemExit(2)" in str(command_response)
     user_count = User.query.count()
     assert user_count == 0
