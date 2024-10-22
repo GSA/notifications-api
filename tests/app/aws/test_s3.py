@@ -13,6 +13,7 @@ from app.aws.s3 import (
     get_personalisation_from_s3,
     get_phone_number_from_s3,
     get_s3_file,
+    list_s3_objects,
     remove_csv_object,
     remove_s3_object,
 )
@@ -57,6 +58,23 @@ def test_cleanup_old_s3_objects(mocker):
     cleanup_old_s3_objects()
     mock_s3_client.list_objects_v2.assert_called_with(Bucket="Bucket")
     mock_remove_csv_object.assert_called_once_with("A")
+
+
+def test_list_s3_objects(mocker):
+
+    mock_s3_client = mocker.Mock()
+    mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
+    lastmod30 = aware_utcnow() - timedelta(days=30)
+    lastmod3 = aware_utcnow() - timedelta(days=3)
+
+    mock_s3_client.list_objects_v2.return_value = {
+        "Contents": [
+            {"Key": "A", "LastModified": lastmod30},
+            {"Key": "B", "LastModified": lastmod3},
+        ]
+    }
+    result = list_s3_objects()
+    assert result == ["B"]
 
 
 def test_get_s3_file_makes_correct_call(notify_api, mocker):
