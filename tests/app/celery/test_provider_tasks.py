@@ -98,6 +98,33 @@ def test_should_check_delivery_receipts_client_error(sample_notification, mocker
         mock_update.assert_called_once()
 
 
+def test_should_check_delivery_receipts_ntfe(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mock_update = mocker.patch(
+        "app.celery.provider_tasks.update_notification_status_by_id"
+    )
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        side_effect=NotificationTechnicalFailureException(),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    try:
+        check_sms_delivery_receipt(
+            "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+        )
+
+        assert 1 == 0
+    except NotificationTechnicalFailureException:
+        mock_sanitize.assert_not_called()
+        mock_update.assert_called_once()
+
+
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(
     sample_notification, mocker
 ):
