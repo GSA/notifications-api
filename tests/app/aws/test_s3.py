@@ -61,20 +61,22 @@ def test_cleanup_old_s3_objects(mocker):
 
 
 def test_list_s3_objects(mocker):
-
+    mocker.patch("app.aws.s3._get_bucket_name", return_value="Foo")
     mock_s3_client = mocker.Mock()
     mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
     lastmod30 = aware_utcnow() - timedelta(days=30)
     lastmod3 = aware_utcnow() - timedelta(days=3)
 
-    mock_s3_client.list_objects_v2.return_value = {
-        "Contents": [
-            {"Key": "A", "LastModified": lastmod30},
-            {"Key": "B", "LastModified": lastmod3},
-        ]
-    }
+    mock_s3_client.list_objects_v2.side_effect = [
+        {
+            "Contents": [
+                {"Key": "A", "LastModified": lastmod30},
+                {"Key": "B", "LastModified": lastmod3},
+            ]
+        }
+    ]
     result = list_s3_objects()
-    assert result == ["B"]
+    assert list(result) == ["B"]
 
 
 def test_get_s3_file_makes_correct_call(notify_api, mocker):
