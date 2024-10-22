@@ -57,7 +57,7 @@ def test_should_check_delivery_receipts_failure(sample_notification, mocker):
     )
     mocker.patch(
         "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
-        return_value=("success", "okay", "AT&T"),
+        return_value=("failure", "not okay", "AT&T"),
     )
     mock_sanitize = mocker.patch(
         "app.celery.provider_tasks.sanitize_successful_notification_by_id"
