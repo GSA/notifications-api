@@ -6,7 +6,11 @@ from celery.exceptions import MaxRetriesExceededError
 
 import app
 from app.celery import provider_tasks
-from app.celery.provider_tasks import deliver_email, deliver_sms
+from app.celery.provider_tasks import (
+    check_sms_delivery_receipt,
+    deliver_email,
+    deliver_sms,
+)
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import (
     AwsSesClientException,
@@ -20,6 +24,25 @@ from app.exceptions import NotificationTechnicalFailureException
 def test_should_have_decorated_tasks_functions():
     assert deliver_sms.__wrapped__.__name__ == "deliver_sms"
     assert deliver_email.__wrapped__.__name__ == "deliver_email"
+
+
+def test_should_check_delivery_receipts(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        return_value={"success", "hurray", "AT&T"},
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    check_sms_delivery_receipt(
+        "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+    )
+    mock_sanitize.assert_called_once_with("FOO")
 
 
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(
