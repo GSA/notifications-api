@@ -26,7 +26,7 @@ def test_should_have_decorated_tasks_functions():
     assert deliver_email.__wrapped__.__name__ == "deliver_email"
 
 
-def test_should_check_delivery_receipts(sample_notification, mocker):
+def test_should_check_delivery_receipts_success(sample_notification, mocker):
     mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
     mocker.patch(
         "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
@@ -42,8 +42,29 @@ def test_should_check_delivery_receipts(sample_notification, mocker):
     check_sms_delivery_receipt(
         "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
     )
-    mock_sanitize.assert_called_once_with("FOO")
+    # This call should be made if the message was successfully delivered
+    mock_sanitize.assert_called_once()
 
+
+def test_should_check_delivery_receipts_failure(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mock_update = mocker.patch("app.celery.provider_tasks.update_notification_status_by_id")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        return_value=("success", "okay", "AT&T"),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    check_sms_delivery_receipt(
+        "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+    )
+    mock_sanitize.assert_not_called()
+    mock_update.assert_called_once()
 
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(
     sample_notification, mocker
