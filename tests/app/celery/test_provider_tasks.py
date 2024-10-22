@@ -87,11 +87,15 @@ def test_should_check_delivery_receipts_client_error(sample_notification, mocker
     mock_sanitize = mocker.patch(
         "app.celery.provider_tasks.sanitize_successful_notification_by_id"
     )
-    check_sms_delivery_receipt(
-        "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
-    )
-    mock_sanitize.assert_not_called()
-    mock_update.assert_called_once()
+    try:
+        check_sms_delivery_receipt(
+            "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+        )
+
+        assert 1 == 0
+    except ClientError:
+        mock_sanitize.assert_not_called()
+        mock_update.assert_called_once()
 
 
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(
