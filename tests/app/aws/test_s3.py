@@ -16,6 +16,7 @@ from app.aws.s3 import (
     get_personalisation_from_s3,
     get_phone_number_from_s3,
     get_s3_file,
+    get_s3_files,
     list_s3_objects,
     read_s3_file,
     remove_csv_object,
@@ -347,3 +348,42 @@ def test_file_exists_false(notify_api, mocker):
         )
 
     get_s3_mock.assert_called_once()
+
+
+def test_get_s3_files_success(notify_api, mocker):
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"}}
+    mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
+    mock_read_s3_file = mocker.patch("app.aws.s3.read_s3_file")
+    mock_list_s3_objects = mocker.patch("app.aws.s3.list_s3_objects")
+    mock_get_s3_resource = mocker.patch("app.aws.s3.get_s3_resource")
+    mock_list_s3_objects.return_value = ["file1.csv", "file2.csv"]
+    mock_s3_resource = MagicMock()
+    mock_get_s3_resource.return_value = mock_s3_resource
+    mock_executor = MagicMock()
+
+    def mock_map(func, iterable):
+        for item in iterable:
+            func(item)
+
+    mock_executor.map.side_effect = mock_map
+    mock_thread_pool_executor.return_value.__enter__.return_value = mock_executor
+
+    get_s3_files()
+
+    # mock_current_app.config.__getitem__.assert_called_once_with("CSV_UPLOAD_BUCKET")
+    mock_list_s3_objects.assert_called_once()
+    mock_thread_pool_executor.assert_called_once()
+
+    mock_executor.map.assert_called_once()
+
+    calls = [
+        (("test-bucket", "file1.csv", mock_s3_resource),),
+        (("test-bucket", "file2.csv", mock_s3_resource),),
+    ]
+
+    mock_read_s3_file.assert_has_calls(calls, any_order=True)
+
+    # mock_current_app.info.assert_any_call("job_cache length before regen: 0 #notify-admin-1200")
+
+    # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-admin-1200")
