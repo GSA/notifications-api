@@ -534,7 +534,7 @@ def test_populate_go_live_success(notify_api, mocker):
     mock_logger.info.assert_any_call("Populate go live user and date")
 
 
-def test_process_row_from_job_success(mocker):
+def test_process_row_from_job_success(notify_api, mocker):
     mock_current_app = mocker.patch("app.commands.current_app")
     mock_logger = mock_current_app.logger
     mock_dao_get_job_by_id = mocker.patch("app.commands.dao_get_job_by_id")
@@ -559,10 +559,14 @@ def test_process_row_from_job_success(mocker):
     mock_dao_get_template_by_id.return_value = mock_template
     mock_get_job_from_s3.return_value = "some_csv_content"
     mock_process_row.return_value = "notification_123"
-    process_row_from_job("job_456", 2)
+
+    notify_api.test_cli_runner().invoke(
+        process_row_from_job,
+        ["-j", "job_456", "-n", "2"],
+    )
     mock_dao_get_job_by_id.assert_called_once_with("job_456")
     mock_dao_get_template_by_id.assert_called_once_with(
-        mock_job.tempalte_id, mock_job.template_version
+        mock_job.template_id, mock_job.template_version
     )
     mock_get_job_from_s3.assert_called_once_with(
         str(mock_job.service_id), str(mock_job.id)
