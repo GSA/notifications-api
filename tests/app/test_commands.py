@@ -17,6 +17,7 @@ from app.commands import (
     populate_go_live,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
+    process_row_from_job,
     promote_user_to_platform_admin,
     purge_functional_test_data,
     update_jobs_archived_flag,
@@ -531,3 +532,47 @@ def test_populate_go_live_success(notify_api, mocker):
     mock_dao_update_service.assert_called_once_with(mock_service)
 
     mock_logger.info.assert_any_call("Populate go live user and date")
+
+
+def test_process_row_from_job_success(mocker):
+    mock_current_app = mocker.patch("app.commands.current_app")
+    mock_logger = mock_current_app.logger
+    mock_dao_get_job_by_id = mocker.patch("app.commands.dao_get_job_by_id")
+    mock_dao_get_template_by_id = mocker.patch("app.commands.dao_get_template_by_id")
+    mock_get_job_from_s3 = mocker.patch("app.commands.dao_get_job_from_s3")
+    mock_recipient_csv = mocker.patch("app.commands.RecipientCSV")
+    mock_process_row = mocker.patch("app.commands.process_row")
+
+    mock_job = MagicMock()
+    mock_job.service_id = "service_123"
+    mock_job.id = "job_456"
+    mock_job.template_id = "template_789"
+    mock_job.template_version = 1
+    mock_template = MagicMock()
+    mock_template._as_utils_template.return_value = MagicMock(
+        template_type="sms", placeholders=["name", "date"]
+    )
+    mock_row = MagicMock()
+    mock_row.index = 2
+    mock_recipient_csv.return_value.get_rows.return_value = [mock_row]
+    mock_dao_get_job_by_id.return_value = mock_job
+    mock_dao_get_template_by_id.return_value = mock_template
+    mock_get_job_from_s3.return_value = "some_csv_content"
+    mock_process_row.return_value = "notification_123"
+    process_row_from_job("job_456", 2)
+    mock_dao_get_job_by_id.assert_called_once_with("job_456")
+    mock_dao_get_template_by_id.assert_called_once_with(
+        mock_job.tempalte_id, mock_job.template_version
+    )
+    mock_get_job_from_s3.assert_called_once_with(
+        str(mock_job.service_id), str(mock_job.id)
+    )
+    mock_recipient_csv.assert_called_once_with(
+        "some_csv_content", template_type="sms", placeholders=["name", "date"]
+    )
+    mock_process_row.assert_called_once_with(
+        mock_row, mock_template._as_utils_template(), mock_job, mock_job.service
+    )
+    mock_logger.infoassert_called_once_with(
+        "Process row 2 for job job_456 created notification_id: notification_123"
+    )
