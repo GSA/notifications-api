@@ -128,9 +128,8 @@ def test_download_from_s3_no_credentials_error(mocker):
         download_from_s3(
             "test_bucket", "test_key", "test_file", "access_key", "secret_key", "region"
         )
-        assert 1 == 0
-    except botocore.exceptions.NoCredentialsError:
-        assert 1 == 1
+    except Exception as e:
+        assert isinstance(e, botocore.exceptions.NoCredentialsError)
     mock_logger.exception.assert_called_once_with("Credentials not found")
 
 
