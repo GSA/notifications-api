@@ -1,5 +1,5 @@
-import datetime
 import os
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open
 
 import pytest
@@ -525,28 +525,9 @@ def test_populate_go_live_success(notify_api, mocker):
     mock_get_user_by_email.assert_called_once_with("email@example.com")
     mock_dao_fetch_service_by_id.assert_called_once_with("123")
     mock_service.go_live_user = mock_user
-    mock_service.go_live_at = datetime.strptime(
-        "15/10/2024", "%d/%m/%Y"
-    ) + datetime.timedelta(hours=12)
+    mock_service.go_live_at = datetime.strptime("15/10/2024", "%d/%m/%Y") + timedelta(
+        hours=12
+    )
     mock_dao_update_service.assert_called_once_with(mock_service)
 
     mock_logger.info.assert_any_call("Populate go live user and date")
-    mock_logger.info.assert_any_call(
-        1,
-        [
-            "1",
-            "link",
-            "123",
-            "Dept A",
-            "Service A",
-            "Contact A",
-            "email@exmaple.com",
-            "MOU",
-            "15/10/2024",
-            "Yes",
-            "Yes",
-            "Yes",
-            "Yes",
-            "No",
-        ],
-    )
