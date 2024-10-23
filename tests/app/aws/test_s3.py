@@ -128,7 +128,7 @@ def test_download_from_s3_no_credentials_error(mocker):
         download_from_s3(
             "test_bucket", "test_key", "test_file", "access_key", "secret_key", "region"
         )
-    except Exception as e:
+    except Exception:
         pass
     mock_logger.exception.assert_called_once_with("Credentials not found")
 
