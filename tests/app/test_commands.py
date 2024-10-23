@@ -1,5 +1,6 @@
 import datetime
 import os
+from unittest.mock import MagicMock, mock_open
 
 import pytest
 
@@ -13,6 +14,7 @@ from app.commands import (
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
+    populate_go_live,
     populate_organization_agreement_details_from_file,
     populate_organizations_from_file,
     promote_user_to_platform_admin,
@@ -457,3 +459,88 @@ def test_promote_user_to_platform_admin_no_result_found(
     )
     assert "NoResultFound" in str(result)
     assert sample_user.platform_admin is False
+
+
+def test_populate_go_live_success(mocker):
+    mock_csv_reader = mocker.patch("app.commands.csv.reader")
+    mocker.patch(
+        "app.commands.open",
+        new_callable=mock_open,
+        read_data="""count,Link,Service ID,DEPT,Service Name,Main contact,Contact detail,MOU,LIVE date,SMS,Email,Letters,CRM,Blue badge\n1,link,123,Dept A,Service A,Contact A,email@example.com,MOU,15/10/2024,Yes,Yes,Yes,Yes,No""",  # noqa
+    )
+    mock_current_app = mocker.patch("app.commands.current_app")
+    mock_logger = mock_current_app.logger
+    mock_dao_update_service = mocker.patch("app.commands.dao_update_service")
+    mock_dao_fetch_service_by_id = mocker.patch("app.commands.dao_fetch_service_by_id")
+    mock_get_user_by_email = mocker.patch("app.commands.get_user_by_email")
+    mock_csv_reader.return_value = iter(
+        [
+            [
+                "count",
+                "Link",
+                "Service ID",
+                "DEPT",
+                "Service Name",
+                "Main contract",
+                "Contact detail",
+                "MOU",
+                "LIVE date",
+                "SMS",
+                "Email",
+                "Letters",
+                "CRM",
+                "Blue badge",
+            ],
+            [
+                "1",
+                "link",
+                "123",
+                "Dept A",
+                "Service A",
+                "Contact A",
+                "email@example.com",
+                "MOU",
+                "15/10/2024",
+                "Yes",
+                "Yes",
+                "Yes",
+                "Yes",
+                "No",
+            ],
+        ]
+    )
+    mock_user = MagicMock()
+    mock_get_user_by_email.return_value = mock_user
+    mock_service = MagicMock()
+    mock_dao_fetch_service_by_id.return_value = mock_service
+
+    populate_go_live("dummy_file.csv")
+
+    mock_get_user_by_email.assert_called_once_with("email@example.com")
+    mock_dao_fetch_service_by_id.assert_called_once_with("123")
+    mock_service.go_live_user = mock_user
+    mock_service.go_live_at = datetime.strptime(
+        "15/10/2024", "%d/%m/%Y"
+    ) + datetime.timedelta(hours=12)
+    mock_dao_update_service.assert_called_once_with(mock_service)
+
+    mock_logger.info.assert_any_call("Populate go live user and date")
+    mock_logger.info.assert_any_call(
+        1,
+        [
+            "1",
+            "link",
+            "123",
+            "Dept A",
+            "Service A",
+            "Contact A",
+            "email@exmaple.com",
+            "MOU",
+            "15/10/2024",
+            "Yes",
+            "Yes",
+            "Yes",
+            "Yes",
+            "No",
+        ],
+    )
