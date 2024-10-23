@@ -539,7 +539,7 @@ def test_process_row_from_job_success(mocker):
     mock_logger = mock_current_app.logger
     mock_dao_get_job_by_id = mocker.patch("app.commands.dao_get_job_by_id")
     mock_dao_get_template_by_id = mocker.patch("app.commands.dao_get_template_by_id")
-    mock_get_job_from_s3 = mocker.patch("app.commands.get_job_from_s3")
+    mock_get_job_from_s3 = mocker.patch("app.commands.s3.get_job_from_s3")
     mock_recipient_csv = mocker.patch("app.commands.RecipientCSV")
     mock_process_row = mocker.patch("app.commands.process_row")
 
