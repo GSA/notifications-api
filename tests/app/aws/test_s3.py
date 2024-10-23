@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
+from unittest.mock import ANY, MagicMock, call
 
 import pytest
 from botocore.exceptions import ClientError
@@ -14,6 +15,7 @@ from app.aws.s3 import (
     get_phone_number_from_s3,
     get_s3_file,
     list_s3_objects,
+    read_s3_file,
     remove_csv_object,
     remove_s3_object,
 )
@@ -58,6 +60,39 @@ def test_cleanup_old_s3_objects(mocker):
     cleanup_old_s3_objects()
     mock_s3_client.list_objects_v2.assert_called_with(Bucket="Bucket")
     mock_remove_csv_object.assert_called_once_with("A")
+
+
+def test_read_s3_file_success(mocker):
+    mock_s3res = MagicMock()
+    mock_extract_personalisation = mocker.patch("app.aws.s3.extract_personalisation")
+    mock_extract_phones = mocker.patch("app.aws.s3.extract_phones")
+    mock_set_job_cache = mocker.patch("app.aws.s3.set_job_cache")
+    mock_get_job_id = mocker.patch("app.aws.s3.get_job_id_from_s3_object_key")
+    bucket_name = "test_bucket"
+    object_key = "test_object_key"
+    job_id = "12345"
+    file_content = "some file content"
+    mock_get_job_id.return_value = job_id
+    mock_s3_object = MagicMock()
+    mock_s3_object.get.return_value = {
+        "Body": MagicMock(read=MagicMock(return_value=file_content.encode("utf-8")))
+    }
+    mock_s3res.Object.return_value = mock_s3_object
+    mock_extract_phones.return_value = ["1234567890"]
+    mock_extract_personalisation.return_value = {"name": "John Doe"}
+
+    global job_cache
+    job_cache = {}
+
+    read_s3_file(bucket_name, object_key, mock_s3res)
+    mock_get_job_id.assert_called_once_with(object_key)
+    mock_s3res.Object.assert_called_once_with(bucket_name, object_key)
+    expected_calls = [
+        call(ANY, job_id, file_content),
+        call(ANY, f"{job_id}_phones", ["1234567890"]),
+        call(ANY, f"{job_id}_personalisation", {"name": "John Doe"}),
+    ]
+    mock_set_job_cache.assert_has_calls(expected_calls, any_order=True)
 
 
 def test_list_s3_objects(mocker):
