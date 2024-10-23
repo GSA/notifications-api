@@ -107,7 +107,7 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
     create_job(sms_template)
 
     right_now = utc_now()
-    tomorrow = right_now + datetime.timedelta(days=1)
+    tomorrow = right_now + timedelta(days=1)
 
     right_now = right_now.strftime("%Y-%m-%d")
     tomorrow = tomorrow.strftime("%Y-%m-%d")
