@@ -10,6 +10,8 @@ from app.commands import (
     create_new_service,
     create_test_user,
     download_csv_file_by_name,
+    dump_sms_senders,
+    dump_user_info,
     fix_billable_units,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
@@ -580,3 +582,45 @@ def test_process_row_from_job_success(notify_api, mocker):
     mock_logger.infoassert_called_once_with(
         "Process row 2 for job job_456 created notification_id: notification_123"
     )
+
+
+def test_dump_sms_senders_single_service(notify_api, mocker):
+    mock_get_services_by_partial_name = mocker.patch(
+        "app.commands.get_services_by_partial_name"
+    )
+    mock_dao_get_sms_senders_by_service_id = mocker.patch(
+        "app.commands.dao_get_sms_senders_by_service_id"
+    )
+
+    mock_service = MagicMock()
+    mock_service.id = "service_123"
+    mock_get_services_by_partial_name.return_value = [mock_service]
+    mock_sender_1 = MagicMock()
+    mock_sender_1.serialize.return_value = {"name": "Sender 1", "id": "sender_1"}
+    mock_sender_2 = MagicMock()
+    mock_sender_2.serialize.return_value = {"name": "Sender 2", "id": "sender_2"}
+    mock_dao_get_sms_senders_by_service_id.return_value = [mock_sender_1, mock_sender_2]
+
+    notify_api.test_cli_runner().invoke(
+        dump_sms_senders,
+        ["service_name"],
+    )
+
+    mock_get_services_by_partial_name.assert_called_once_with("service_name")
+    mock_dao_get_sms_senders_by_service_id.assert_called_once_with("service_123")
+
+
+def test_dump_user_info(notify_api, mocker):
+    mock_open_file = mocker.patch("app.commands.open", new_callable=mock_open)
+    mock_get_user_by_email = mocker.patch("app.commands.get_user_by_email")
+    mock_user = MagicMock()
+    mock_user.serialize.return_value = {"name": "John Doe", "email": "john@example.com"}
+    mock_get_user_by_email.return_value = mock_user
+
+    notify_api.test_cli_runner().invoke(
+        dump_user_info,
+        ["john@example.com"],
+    )
+
+    mock_get_user_by_email.assert_called_once_with("john@example.com")
+    mock_open_file.assert_called_once_with("user_download.json", "wb")
