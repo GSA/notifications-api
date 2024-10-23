@@ -3,11 +3,13 @@ from datetime import timedelta
 from os import getenv
 from unittest.mock import ANY, MagicMock, call
 
+import botocore
 import pytest
 from botocore.exceptions import ClientError
 
 from app.aws.s3 import (
     cleanup_old_s3_objects,
+    download_from_s3,
     file_exists,
     get_job_from_s3,
     get_job_id_from_s3_object_key,
@@ -93,6 +95,43 @@ def test_read_s3_file_success(mocker):
         call(ANY, f"{job_id}_personalisation", {"name": "John Doe"}),
     ]
     mock_set_job_cache.assert_has_calls(expected_calls, any_order=True)
+
+
+def test_download_from_s3_success(mocker):
+    mock_s3 = MagicMock()
+    mock_get_s3_client = mocker.patch("app.aws.s3.get_s3_client")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_logger = mock_current_app.logger
+    mock_get_s3_client.return_value = mock_s3
+    bucket_name = "test_bucket"
+    s3_key = "test_key"
+    local_filename = "test_file"
+    access_key = "access_key"
+    region = "test_region"
+    download_from_s3(
+        bucket_name, s3_key, local_filename, access_key, "secret_key", region
+    )
+    mock_s3.download_file.assert_called_once_with(bucket_name, s3_key, local_filename)
+    mock_logger.info.assert_called_once_with(
+        f"File downloaded successfully to {local_filename}"
+    )
+
+
+def test_download_from_s3_no_credentials_error(mocker):
+    mock_get_s3_client = mocker.patch("app.aws.s3.get_s3_client")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_logger = mock_current_app.logger
+    mock_s3 = MagicMock()
+    mock_s3.download_file.side_effect = botocore.exceptions.NoCredentialsError
+    mock_get_s3_client.return_value = mock_s3
+    try:
+        download_from_s3(
+            "test_bucket", "test_key", "test_file", "access_key", "secret_key", "region"
+        )
+        assert 1 == 0
+    except botocore.exceptions.NoCredentialsError:
+        assert 1 == 1
+    mock_logger.exception.assert_called_once_with("Credentials not found")
 
 
 def test_list_s3_objects(mocker):
