@@ -461,7 +461,7 @@ def test_promote_user_to_platform_admin_no_result_found(
     assert sample_user.platform_admin is False
 
 
-def test_populate_go_live_success(mocker):
+def test_populate_go_live_success(notify_api, mocker):
     mock_csv_reader = mocker.patch("app.commands.csv.reader")
     mocker.patch(
         "app.commands.open",
@@ -514,7 +514,13 @@ def test_populate_go_live_success(mocker):
     mock_service = MagicMock()
     mock_dao_fetch_service_by_id.return_value = mock_service
 
-    populate_go_live("dummy_file.csv")
+    notify_api.test_cli_runner().invoke(
+        populate_go_live,
+        [
+            "-f",
+            "dummy_file.csv",
+        ],
+    )
 
     mock_get_user_by_email.assert_called_once_with("email@example.com")
     mock_dao_fetch_service_by_id.assert_called_once_with("123")
