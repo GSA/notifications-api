@@ -418,7 +418,6 @@ def test_get_s3_client(mocker):
     mock_session.return_value.client.return_value = mock_s3_client
     result = get_s3_client()
 
-
     mock_session.return_value.client.assert_called_once_with("s3")
     assert result == mock_s3_client
 
@@ -440,7 +439,6 @@ def test_get_s3_resource(mocker):
     mock_s3_resource = MagicMock()
     mock_session.return_value.resource.return_value = mock_s3_resource
     result = get_s3_resource()
-
 
     mock_session.return_value.resource.assert_called_once_with(
         "s3", config=AWS_CLIENT_CONFIG
