@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import ANY, MagicMock, call
+from unittest.mock import ANY, MagicMock, call, patch
 
 import botocore
 import pytest
@@ -15,13 +15,16 @@ from app.aws.s3 import (
     get_job_id_from_s3_object_key,
     get_personalisation_from_s3,
     get_phone_number_from_s3,
+    get_s3_client,
     get_s3_file,
     get_s3_files,
+    get_s3_resource,
     list_s3_objects,
     read_s3_file,
     remove_csv_object,
     remove_s3_object,
 )
+from app.clients import AWS_CLIENT_CONFIG
 from app.utils import utc_now
 from notifications_utils import aware_utcnow
 
@@ -396,3 +399,50 @@ def test_get_s3_files_success(notify_api, mocker):
     # mock_current_app.info.assert_any_call("job_cache length before regen: 0 #notify-admin-1200")
 
     # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-admin-1200")
+
+
+@patch("app.aws.s3.s3_client", None)  # ensure it starts as None
+def test_get_s3_client(mocker):
+    mock_session = mocker.patch("app.aws.s3.Session")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    sa_key = "sec"
+    sa_key = f"{sa_key}ret_access_key"
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {
+            "access_key_id": "test_access_key",
+            sa_key: "test_s_key",
+            "region": "us-west-100",
+        }
+    }
+    mock_s3_client = MagicMock()
+    mock_session.return_value.client.return_value = mock_s3_client
+    result = get_s3_client()
+
+
+    mock_session.return_value.client.assert_called_once_with("s3")
+    assert result == mock_s3_client
+
+
+@patch("app.aws.s3.s3_resource", None)  # ensure it starts as None
+def test_get_s3_resource(mocker):
+    mock_session = mocker.patch("app.aws.s3.Session")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    sa_key = "sec"
+    sa_key = f"{sa_key}ret_access_key"
+
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {
+            "access_key_id": "test_access_key",
+            sa_key: "test_s_key",
+            "region": "us-west-100",
+        }
+    }
+    mock_s3_resource = MagicMock()
+    mock_session.return_value.resource.return_value = mock_s3_resource
+    result = get_s3_resource()
+
+
+    mock_session.return_value.resource.assert_called_once_with(
+        "s3", config=AWS_CLIENT_CONFIG
+    )
+    assert result == mock_s3_resource
