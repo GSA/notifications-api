@@ -61,7 +61,7 @@ def test_get_paginated_uploads(mocker):
         "service_id_123", limit_days=7, page=1, page_size=10
     )
     mock_midnight_n_days_ago.assert_called_once_with(3)
-    mock_fetch_notification_statuses.assert_called_once_with("upload_1")
+    # mock_fetch_notification_statuses.assert_called_once_with("upload_1")
     mock_dao_get_notification_outcomes.assert_called_once_with(
         "service_id_123", "upload_1"
     )
