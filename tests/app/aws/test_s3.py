@@ -11,6 +11,7 @@ from app.aws.s3 import (
     cleanup_old_s3_objects,
     download_from_s3,
     file_exists,
+    get_job_and_metadata_from_s3,
     get_job_from_s3,
     get_job_id_from_s3_object_key,
     get_personalisation_from_s3,
@@ -444,3 +445,45 @@ def test_get_s3_resource(mocker):
         "s3", config=AWS_CLIENT_CONFIG
     )
     assert result == mock_s3_resource
+
+
+def test_get_job_and_medata_from_s3(mocker):
+    mock_get_s3_object = mocker.patch("app.aws.s3.get_s3_object")
+    mock_get_job_location = mocker.patch("app.aws.s3.get_job_location")
+
+    mock_get_job_location.return_value = {"bucket_name", "new_key"}
+    mock_s3_object = MagicMock()
+    mock_s3_object.get.return_value = {
+        "Body": MagicMock(read=MagicMock(return_value=b"job data")),
+        "Metadata": {"key": "value"},
+    }
+    mock_get_s3_object.return_value = mock_s3_object
+    result = get_job_and_metadata_from_s3("service_id", "job_id")
+
+    mock_get_job_location.assert_called_once_with("service_id", "job_id")
+    mock_get_s3_object.assert_called_once_with("bucket_name", "new_key")
+    assert result == ("job data", {"key": "value"})
+
+
+def test_get_job_and_metadata_from_s3_fallback_to_old_location(mocker):
+    mock_get_job_location = mocker.patch("app.aws.s3.get_job_location")
+    mock_get_old_job_location = mocker.patch("app.aws.s3.get_old_job_location")
+    mock_get_job_location.return_value = {"bucket_name", "new_key"}
+    mock_get_s3_object = mocker.patch("app.aws.s3.get_s3_object")
+    # mock_get_s3_object.side_effect = [ClientError({"Error": {}}, "GetObject"), mock_s3_object]
+    mock_get_old_job_location.return_value = {"bucket_name", "old_key"}
+    mock_s3_object = MagicMock()
+    mock_s3_object.get.return_value = {
+        "Body": MagicMock(read=MagicMock(return_value=b"old job data")),
+        "Metadata": {"old_key": "old_value"},
+    }
+    mock_get_s3_object.side_effect = [
+        ClientError({"Error": {}}, "GetObject"),
+        mock_s3_object,
+    ]
+    result = get_job_and_metadata_from_s3("service_id", "job_id")
+    mock_get_job_location.assert_called_once_with("service_id", "job_id")
+    mock_get_old_job_location.assert_called_once_with("service_id", "job_id")
+    mock_get_s3_object.assert_any_call("bucket_name", "new_key")
+    mock_get_s3_object.assert_any_call("bucket_name", "old_key")
+    assert result == ("old job data", {"old_key": "old_value"})
