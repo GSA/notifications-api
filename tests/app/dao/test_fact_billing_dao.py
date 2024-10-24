@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
 from app import db
 from app.dao.fact_billing_dao import (
@@ -614,7 +615,8 @@ def test_delete_billing_data(notify_db_session):
 
     delete_billing_data_for_service_for_day("2018-01-01", service_1.id)
 
-    current_rows = FactBilling.query.all()
+    stmt = select(FactBilling)
+    current_rows = db.session.execute(stmt).scalars().all()
     assert sorted(x.billable_units for x in current_rows) == sorted(
         [other_day.billable_units, other_service.billable_units]
     )
@@ -671,7 +673,8 @@ def test_fetch_sms_free_allowance_remainder_until_date_with_two_services(
         rate=0.11,
     )
 
-    results = fetch_sms_free_allowance_remainder_until_date(datetime(2016, 5, 1)).all()
+    stmt = fetch_sms_free_allowance_remainder_until_date(datetime(2016, 5, 1))
+    results = db.session.execute(stmt).all()
     assert len(results) == 2
     service_result = [row for row in results if row[0] == service.id]
     assert service_result[0] == (service.id, 10, 2, 8)
@@ -973,8 +976,8 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
         free_sms_fragment_limit=10,
         financial_year_start=current_year,
     )
-
-    assert FactBilling.query.count() == 0
+    stmt = select(func.count()).select_from(FactBilling)
+    assert db.session.execute(stmt).scalar() == 0
 
     create_notification(template=template, status=NotificationStatus.DELIVERED)
 
@@ -982,7 +985,7 @@ def test_fetch_usage_year_for_organization_populates_ft_billing_for_today(
         organization_id=new_org.id, year=current_year
     )
     assert len(results) == 1
-    assert FactBilling.query.count() == 1
+    assert db.session.execute(stmt).scalar() == 1
 
 
 @freeze_time("2022-05-01 13:30")
@@ -1224,8 +1227,8 @@ def test_query_organization_sms_usage_for_year_handles_multiple_services(
     )
 
     # ----------
-
-    result = query_organization_sms_usage_for_year(org.id, 2022).all()
+    stmt = query_organization_sms_usage_for_year(org.id, 2022)
+    result = db.session.execute(stmt).all()
 
     service_1_rows = [row._asdict() for row in result if row.service_id == service_1.id]
     service_2_rows = [row._asdict() for row in result if row.service_id == service_2.id]
@@ -1295,10 +1298,9 @@ def test_query_organization_sms_usage_for_year_handles_multiple_rates(
         financial_year_start=current_year,
     )
 
-    result = [
-        row._asdict()
-        for row in query_organization_sms_usage_for_year(org.id, 2022).all()
-    ]
+    stmt = query_organization_sms_usage_for_year(org.id, 2022)
+    rows = db.session.execute(stmt).all()
+    result = [row._asdict() for row in rows]
 
     # al lthe free allowance is used on the first day
     assert result[0]["local_date"] == date(2022, 4, 29)

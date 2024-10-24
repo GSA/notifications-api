@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import Date, case, cast, func, select, union_all
+from sqlalchemy import Date, case, cast, delete, func, select, union_all
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import extract, literal
@@ -33,14 +33,16 @@ def update_fact_notification_status(process_day, notification_type, service_id):
     end_date = get_midnight_in_utc(process_day + timedelta(days=1))
 
     # delete any existing rows in case some no longer exist e.g. if all messages are sent
-    FactNotificationStatus.query.filter(
+    stmt = delete(FactNotificationStatus).filter(
         FactNotificationStatus.local_date == process_day,
         FactNotificationStatus.notification_type == notification_type,
         FactNotificationStatus.service_id == service_id,
-    ).delete()
+    )
+    db.session.execute(stmt)
+    db.session.commit()
 
     query = (
-        db.session.query(
+        select(
             literal(process_day).label("process_day"),
             NotificationAllTimeView.template_id,
             literal(service_id).label("service_id"),
@@ -52,6 +54,7 @@ def update_fact_notification_status(process_day, notification_type, service_id):
             NotificationAllTimeView.status,
             func.count().label("notification_count"),
         )
+        .select_from(NotificationAllTimeView)
         .filter(
             NotificationAllTimeView.created_at >= start_date,
             NotificationAllTimeView.created_at < end_date,
@@ -86,13 +89,14 @@ def update_fact_notification_status(process_day, notification_type, service_id):
 
 
 def fetch_notification_status_for_service_by_month(start_date, end_date, service_id):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status.label("notification_status"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
+        .select_from(NotificationAllTimeView)
         .filter(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.created_at >= start_date,
@@ -104,19 +108,20 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def fetch_notification_status_for_service_for_day(fetch_day, service_id):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             # return current month as a datetime so the data has the same shape as the ft_notification_status query
             literal(fetch_day.replace(day=1), type_=DateTime).label("month"),
             Notification.notification_type,
             Notification.status.label("notification_status"),
             func.count().label("count"),
         )
+        .select_from(Notification)
         .filter(
             Notification.created_at >= get_midnight_in_utc(fetch_day),
             Notification.created_at
@@ -125,8 +130,8 @@ def fetch_notification_status_for_service_for_day(fetch_day, service_id):
             Notification.key_type != KeyType.TEST,
         )
         .group_by(Notification.notification_type, Notification.status)
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def fetch_notification_status_for_service_for_today_and_7_previous_days(
@@ -246,7 +251,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
 
 def fetch_notification_status_totals_for_all_services(start_date, end_date):
     stats = (
-        db.session.query(
+        select(
             FactNotificationStatus.notification_type.cast(db.Text).label(
                 "notification_type"
             ),
@@ -254,6 +259,7 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
             FactNotificationStatus.key_type.cast(db.Text).label("key_type"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
+        .select_from(FactNotificationStatus)
         .filter(
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
@@ -267,7 +273,7 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
     today = get_midnight_in_utc(utc_now())
     if start_date <= utc_now().date() <= end_date:
         stats_for_today = (
-            db.session.query(
+            select(
                 Notification.notification_type.cast(db.Text).label("notification_type"),
                 Notification.status.cast(db.Text),
                 Notification.key_type.cast(db.Text),
@@ -282,7 +288,7 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
         )
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = (
-            db.session.query(
+            select(
                 all_stats_table.c.notification_type,
                 all_stats_table.c.status,
                 all_stats_table.c.key_type,
@@ -297,28 +303,29 @@ def fetch_notification_status_totals_for_all_services(start_date, end_date):
         )
     else:
         query = stats.order_by(FactNotificationStatus.notification_type)
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_notification_statuses_for_job(job_id):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             FactNotificationStatus.notification_status.label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
+        .select_from(FactNotificationStatus)
         .filter(
             FactNotificationStatus.job_id == job_id,
         )
         .group_by(FactNotificationStatus.notification_status)
-        .all()
     )
+    return db.session.execute(stmt).all()
 
 
 def fetch_stats_for_all_services_by_date_range(
     start_date, end_date, include_from_test_key=True
 ):
     stats = (
-        db.session.query(
+        select(
             FactNotificationStatus.service_id.label("service_id"),
             Service.name.label("name"),
             Service.restricted.label("restricted"),
@@ -330,6 +337,7 @@ def fetch_stats_for_all_services_by_date_range(
             FactNotificationStatus.notification_status.cast(db.Text).label("status"),
             func.sum(FactNotificationStatus.notification_count).label("count"),
         )
+        .select_from(FactNotificationStatus)
         .filter(
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
@@ -354,12 +362,13 @@ def fetch_stats_for_all_services_by_date_range(
     if start_date <= utc_now().date() <= end_date:
         today = get_midnight_in_utc(utc_now())
         subquery = (
-            db.session.query(
+            select(
                 Notification.notification_type.label("notification_type"),
                 Notification.status.label("status"),
                 Notification.service_id.label("service_id"),
                 func.count(Notification.id).label("count"),
             )
+            .select_from(Notification)
             .filter(Notification.created_at >= today)
             .group_by(
                 Notification.notification_type,
@@ -371,7 +380,7 @@ def fetch_stats_for_all_services_by_date_range(
             subquery = subquery.filter(Notification.key_type != KeyType.TEST)
         subquery = subquery.subquery()
 
-        stats_for_today = db.session.query(
+        stats_for_today = select(
             Service.id.label("service_id"),
             Service.name.label("name"),
             Service.restricted.label("restricted"),
@@ -384,7 +393,7 @@ def fetch_stats_for_all_services_by_date_range(
 
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = (
-            db.session.query(
+            select(
                 all_stats_table.c.service_id,
                 all_stats_table.c.name,
                 all_stats_table.c.restricted,
@@ -411,13 +420,13 @@ def fetch_stats_for_all_services_by_date_range(
         )
     else:
         query = stats
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
     # services_dao.replaces dao_fetch_monthly_historical_usage_by_template_for_service
     stats = (
-        db.session.query(
+        select(
             FactNotificationStatus.template_id.label("template_id"),
             Template.name.label("name"),
             Template.template_type.label("template_type"),
@@ -452,7 +461,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         month = get_month_from_utc_column(Notification.created_at)
 
         stats_for_today = (
-            db.session.query(
+            select(
                 Notification.template_id.label("template_id"),
                 Template.name.label("name"),
                 Template.template_type.label("template_type"),
@@ -481,7 +490,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = (
-            db.session.query(
+            select(
                 all_stats_table.c.template_id,
                 all_stats_table.c.name,
                 all_stats_table.c.template_type,
@@ -502,12 +511,12 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
         )
     else:
         query = stats
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def get_total_notifications_for_date_range(start_date, end_date):
     query = (
-        db.session.query(
+        select(
             FactNotificationStatus.local_date.label("local_date"),
             func.sum(
                 case(
@@ -541,12 +550,12 @@ def get_total_notifications_for_date_range(start_date, end_date):
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
         )
-    return query.all()
+    return db.session.execute(query).all()
 
 
 def fetch_monthly_notification_statuses_per_service(start_date, end_date):
-    return (
-        db.session.query(
+    stmt = (
+        select(
             func.date_trunc("month", FactNotificationStatus.local_date)
             .cast(Date)
             .label("date_created"),
@@ -639,5 +648,5 @@ def fetch_monthly_notification_statuses_per_service(start_date, end_date):
             Service.id,
             FactNotificationStatus.notification_type,
         )
-        .all()
     )
+    return db.session.execute(stmt).all()
