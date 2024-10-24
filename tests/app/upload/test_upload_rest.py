@@ -56,7 +56,7 @@ def test_get_paginated_uploads(mocker):
         MagicMock(status="delivered", count=60),
     ]
     mock_pagination_links.return_value = {"self": "/uploads?page=1"}
-    result = get_paginated_uploads("service_id_123", limit_day=7, page=1)
+    result = get_paginated_uploads("service_id_123", limit_days=7, page=1)
     mock_dao_get_uploads.assert_called_once_with(
         "service_id_123", limit_days=7, page=1, page_size=10
     )
