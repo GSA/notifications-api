@@ -6,7 +6,11 @@ from celery.exceptions import MaxRetriesExceededError
 
 import app
 from app.celery import provider_tasks
-from app.celery.provider_tasks import deliver_email, deliver_sms
+from app.celery.provider_tasks import (
+    check_sms_delivery_receipt,
+    deliver_email,
+    deliver_sms,
+)
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import (
     AwsSesClientException,
@@ -20,6 +24,105 @@ from app.exceptions import NotificationTechnicalFailureException
 def test_should_have_decorated_tasks_functions():
     assert deliver_sms.__wrapped__.__name__ == "deliver_sms"
     assert deliver_email.__wrapped__.__name__ == "deliver_email"
+
+
+def test_should_check_delivery_receipts_success(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        return_value=("success", "okay", "AT&T"),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    check_sms_delivery_receipt(
+        "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+    )
+    # This call should be made if the message was successfully delivered
+    mock_sanitize.assert_called_once()
+
+
+def test_should_check_delivery_receipts_failure(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mock_update = mocker.patch(
+        "app.celery.provider_tasks.update_notification_status_by_id"
+    )
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        return_value=("failure", "not okay", "AT&T"),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    check_sms_delivery_receipt(
+        "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+    )
+    mock_sanitize.assert_not_called()
+    mock_update.assert_called_once()
+
+
+def test_should_check_delivery_receipts_client_error(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mock_update = mocker.patch(
+        "app.celery.provider_tasks.update_notification_status_by_id"
+    )
+    error_response = {"Error": {"Code": "SomeCode", "Message": "Some Message"}}
+    operation_name = "SomeOperation"
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        side_effect=ClientError(error_response, operation_name),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    try:
+        check_sms_delivery_receipt(
+            "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+        )
+
+        assert 1 == 0
+    except ClientError:
+        mock_sanitize.assert_not_called()
+        mock_update.assert_called_once()
+
+
+def test_should_check_delivery_receipts_ntfe(sample_notification, mocker):
+    mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.is_localstack",
+        return_value=False,
+    )
+    mock_update = mocker.patch(
+        "app.celery.provider_tasks.update_notification_status_by_id"
+    )
+    mocker.patch(
+        "app.celery.provider_tasks.aws_cloudwatch_client.check_sms",
+        side_effect=NotificationTechnicalFailureException(),
+    )
+    mock_sanitize = mocker.patch(
+        "app.celery.provider_tasks.sanitize_successful_notification_by_id"
+    )
+    try:
+        check_sms_delivery_receipt(
+            "message_id", sample_notification.id, "2024-10-20 00:00:00+0:00"
+        )
+
+        assert 1 == 0
+    except NotificationTechnicalFailureException:
+        mock_sanitize.assert_not_called()
+        mock_update.assert_called_once()
 
 
 def test_should_call_send_sms_to_provider_from_deliver_sms_task(

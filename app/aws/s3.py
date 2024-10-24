@@ -70,9 +70,13 @@ def get_s3_resource():
     return s3_resource
 
 
+def _get_bucket_name():
+    return current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+
+
 def list_s3_objects():
 
-    bucket_name = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+    bucket_name = _get_bucket_name()
     s3_client = get_s3_client()
     # Our reports only support 7 days, but pull 8 days to avoid
     # any edge cases
