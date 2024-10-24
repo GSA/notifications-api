@@ -248,6 +248,15 @@ def test_get_job_from_s3_exponential_backoff_on_throttling(mocker):
     assert mock_get_object.call_count == 8
 
 
+def test_get_job_from_s3_exponential_backoff_on_random_exception(mocker):
+    # We try multiple times to retrieve the job, and if we can't we return None
+    mock_get_object = mocker.patch("app.aws.s3.get_s3_object", side_effect=Exception())
+    mocker.patch("app.aws.s3.file_exists", return_value=True)
+    job = get_job_from_s3("service_id", "job_id")
+    assert job is None
+    assert mock_get_object.call_count == 1
+
+
 def test_get_job_from_s3_exponential_backoff_file_not_found(mocker):
     mock_get_object = mocker.patch("app.aws.s3.get_s3_object", return_value=None)
     mocker.patch("app.aws.s3.file_exists", return_value=False)
