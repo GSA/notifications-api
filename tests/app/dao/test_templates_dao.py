@@ -2,8 +2,10 @@ from datetime import datetime
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.orm.exc import NoResultFound
 
+from app import db
 from app.dao.templates_dao import (
     dao_create_template,
     dao_get_all_templates_for_service,
@@ -15,6 +17,16 @@ from app.dao.templates_dao import (
 from app.enums import TemplateProcessType, TemplateType
 from app.models import Template, TemplateHistory, TemplateRedacted
 from tests.app.db import create_template
+
+
+def template_query_count():
+    stmt = select(func.count()).select_from(Template)
+    return db.session.execute(stmt).scalar() or 0
+
+
+def template_history_query_count():
+    stmt = select(func.count()).select_from(TemplateHistory)
+    return db.session.execute(stmt).scalar() or 0
 
 
 @pytest.mark.parametrize(
@@ -37,7 +49,7 @@ def test_create_template(sample_service, sample_user, template_type, subject):
     template = Template(**data)
     dao_create_template(template)
 
-    assert Template.query.count() == 1
+    assert template_query_count() == 1
     assert len(dao_get_all_templates_for_service(sample_service.id)) == 1
     assert (
         dao_get_all_templates_for_service(sample_service.id)[0].name
@@ -50,11 +62,13 @@ def test_create_template(sample_service, sample_user, template_type, subject):
 
 
 def test_create_template_creates_redact_entry(sample_service):
-    assert TemplateRedacted.query.count() == 0
+    stmt = select(func.count()).select_from(TemplateRedacted)
+    assert db.session.execute(stmt).scalar() == 0
 
     template = create_template(sample_service)
 
-    redacted = TemplateRedacted.query.one()
+    stmt = select(TemplateRedacted)
+    redacted = db.session.execute(stmt).scalars().one()
     assert redacted.template_id == template.id
     assert redacted.redact_personalisation is False
     assert redacted.updated_by_id == sample_service.created_by_id
@@ -79,7 +93,8 @@ def test_update_template(sample_service, sample_user):
 
 
 def test_redact_template(sample_template):
-    redacted = TemplateRedacted.query.one()
+    stmt = select(TemplateRedacted)
+    redacted = db.session.execute(stmt).scalars().one()
     assert redacted.template_id == sample_template.id
     assert redacted.redact_personalisation is False
 
@@ -96,7 +111,7 @@ def test_get_all_templates_for_service(service_factory):
     service_1 = service_factory.get("service 1", email_from="service.1")
     service_2 = service_factory.get("service 2", email_from="service.2")
 
-    assert Template.query.count() == 2
+    assert template_query_count() == 2
     assert len(dao_get_all_templates_for_service(service_1.id)) == 1
     assert len(dao_get_all_templates_for_service(service_2.id)) == 1
 
@@ -119,7 +134,7 @@ def test_get_all_templates_for_service(service_factory):
         content="Template content",
     )
 
-    assert Template.query.count() == 5
+    assert template_query_count() == 5
     assert len(dao_get_all_templates_for_service(service_1.id)) == 3
     assert len(dao_get_all_templates_for_service(service_2.id)) == 2
 
@@ -144,7 +159,7 @@ def test_get_all_templates_for_service_is_alphabetised(sample_service):
         service=sample_service,
     )
 
-    assert Template.query.count() == 3
+    assert template_query_count() == 3
     assert (
         dao_get_all_templates_for_service(sample_service.id)[0].name
         == "Sample Template 1"
@@ -171,7 +186,7 @@ def test_get_all_templates_for_service_is_alphabetised(sample_service):
 
 
 def test_get_all_returns_empty_list_if_no_templates(sample_service):
-    assert Template.query.count() == 0
+    assert template_query_count() == 0
     assert len(dao_get_all_templates_for_service(sample_service.id)) == 0
 
 
@@ -257,8 +272,8 @@ def test_get_template_by_id_and_service_returns_none_if_no_template(
 def test_create_template_creates_a_history_record_with_current_data(
     sample_service, sample_user
 ):
-    assert Template.query.count() == 0
-    assert TemplateHistory.query.count() == 0
+    assert template_query_count() == 0
+    assert template_history_query_count() == 0
     data = {
         "name": "Sample Template",
         "template_type": TemplateType.EMAIL,
@@ -270,10 +285,12 @@ def test_create_template_creates_a_history_record_with_current_data(
     template = Template(**data)
     dao_create_template(template)
 
-    assert Template.query.count() == 1
+    assert template_query_count() == 1
 
-    template_from_db = Template.query.first()
-    template_history = TemplateHistory.query.first()
+    stmt = select(Template)
+    template_from_db = db.session.execute(stmt).scalars().first()
+    stmt = select(TemplateHistory)
+    template_history = db.session.execute(stmt).scalars().first()
 
     assert template_from_db.id == template_history.id
     assert template_from_db.name == template_history.name
@@ -286,8 +303,8 @@ def test_create_template_creates_a_history_record_with_current_data(
 def test_update_template_creates_a_history_record_with_current_data(
     sample_service, sample_user
 ):
-    assert Template.query.count() == 0
-    assert TemplateHistory.query.count() == 0
+    assert template_query_count() == 0
+    assert template_history_query_count() == 0
     data = {
         "name": "Sample Template",
         "template_type": TemplateType.EMAIL,
@@ -301,22 +318,26 @@ def test_update_template_creates_a_history_record_with_current_data(
 
     created = dao_get_all_templates_for_service(sample_service.id)[0]
     assert created.name == "Sample Template"
-    assert Template.query.count() == 1
-    assert Template.query.first().version == 1
-    assert TemplateHistory.query.count() == 1
+    assert template_query_count() == 1
+    stmt = select(Template)
+    assert db.session.execute(stmt).scalars().first().version == 1
+    assert template_history_query_count() == 1
 
     created.name = "new name"
     dao_update_template(created)
 
-    assert Template.query.count() == 1
-    assert TemplateHistory.query.count() == 2
+    assert template_query_count() == 1
+    assert template_history_query_count() == 2
 
-    template_from_db = Template.query.first()
+    stmt = select(Template)
+    template_from_db = db.session.execute(stmt).scalars().first()
 
     assert template_from_db.version == 2
 
-    assert TemplateHistory.query.filter_by(name="Sample Template").one().version == 1
-    assert TemplateHistory.query.filter_by(name="new name").one().version == 2
+    stmt = select(TemplateHistory).filter_by(name="Sample Template")
+    assert db.session.execute(stmt).scalars().one().version == 1
+    stmt = select(TemplateHistory).filter_by(name="new name")
+    assert db.session.execute(stmt).scalars().one().version == 2
 
 
 def test_get_template_history_version(sample_user, sample_service, sample_template):
