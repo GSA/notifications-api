@@ -7,7 +7,7 @@ from app.upload.rest import get_paginated_uploads
 # TODO
 def test_get_paginated_uploads(mocker):
     mock_current_app = mocker.patch("app.upload.rest.current_app")
-    mock_dao_get_uploads = mocker.patch("app.upload.rest.dao_get_uploads_by_id")
+    mock_dao_get_uploads = mocker.patch("app.upload.rest.dao_get_uploads_by_service_id")
     mock_pagination_links = mocker.patch("app.upload.rest.pagination_links")
     mock_fetch_notification_statuses = mocker.patch(
         "app.upload.rest.fetch_notification_statuses_for_job"
