@@ -56,8 +56,6 @@ def _create_service_invite(invited_user, nonce, state):
 
     url = url.replace("NONCE", nonce)  # handed from data sent from admin.
 
-    user_data_url_safe = get_user_data_url_safe(data)
-
     url = url.replace("STATE", state)
 
     personalisation = {
@@ -216,9 +214,3 @@ def validate_service_invitation_token(token):
 
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=invited_user_schema.dump(invited_user)), 200
-
-
-def get_user_data_url_safe(data):
-    data = json.dumps(data)
-    data = base64.b64encode(data.encode("utf8"))
-    return data.decode("utf8")
