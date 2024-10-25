@@ -443,22 +443,44 @@ Rules for use:
    - Delete the apps and routes shown in `cf apps` by running `cf delete APP_NAME -r`
    - Delete the space deployer you created by following the instructions within `terraform/sandbox/secrets.auto.tfvars`
 
-### Deploying to the sandbox
+### Setting up the sandbox infrastructure
 
 If this is the first time you have used Terraform in this repository, you will first have to hook your copy of Terraform up to our remote state. Follow [Retrieving existing bucket credentials](https://github.com/GSA/notifications-api/tree/main/terraform#retrieving-existing-bucket-credentials).
 
 :anchor: The Admin app depends upon the API app, so set up the API first.
 
 1. Set up services:
-   ```bash
-   $ cd terraform/sandbox
-   $ ../create_service_account.sh -s notify-sandbox -u <your-name>-terraform -m > secrets.auto.tfvars
-   $ terraform init
-   $ terraform plan
-   $ terraform apply
-   ```
-   Check [Terraform troubleshooting](https://github.com/GSA/notifications-api/tree/main/terraform#troubleshooting) if you encounter problems.
-1. Change back to the project root directory: `cd ../..`
+    ```bash
+    $ cd terraform/sandbox
+    $ ../create_service_account.sh -s notify-sandbox -u <your-name>-terraform -m > secrets.auto.tfvars
+    $ terraform init
+    $ terraform plan
+    $ terraform apply
+    ```
+    Check [Terraform troubleshooting](https://github.com/GSA/notifications-api/tree/main/terraform#troubleshooting) if you encounter problems.
+
+Note that you'll have to do this for both the API and the Admin.  Once this is complete we shouldn't have to do it again (unless we're setting up a new sandbox environment).
+
+### Deploying to the sandbox
+
+To deploy either the API or the Admin apps to the sandbox, the process is largely the same, but the Admin requires a bit of additional work.
+
+#### Deploying the API to the sandbox
+
+1. Make sure you are in the API project's root directory.
+1. Authenticate with cloud.gov in the command line: `cf login -a api.fr.cloud.gov --sso`
+1. Run `./scripts/deploy_to_sandbox.sh` from the project root directory.
+
+At this point your target org and space will change with cloud.gov to be the `notify-sandbox` environment and the application will be pushed for deployment.
+
+The script does a few things to make sure the deployment flows smoothly with miniminal work on your part:
+
+* Sets the target org and space in cloud.gov for you.
+* Creates a `requirements.txt` file for the Python dependencies so that the deployment picks up on the dependencies properly.
+* Pushes the application with the correct environment variables set based on what is supplied by the `deploy-config/sandbox.yml` file.
+
+#### Deploying the Admin to the sandbox
+
 1. Start a poetry shell as a shortcut to load `.env` file variables by running `poetry shell`. (You'll have to restart this any time you change the file.)
 1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Ensure you are using the correct CloudFoundry target
