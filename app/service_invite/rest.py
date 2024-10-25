@@ -32,7 +32,7 @@ service_invite = Blueprint("service_invite", __name__)
 register_errors(service_invite)
 
 
-def _create_service_invite(invited_user, nonce):
+def _create_service_invite(invited_user, nonce, state):
 
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
@@ -58,7 +58,7 @@ def _create_service_invite(invited_user, nonce):
 
     user_data_url_safe = get_user_data_url_safe(data)
 
-    url = url.replace("STATE", user_data_url_safe)
+    url = url.replace("STATE", state)
 
     personalisation = {
         "user_name": invited_user.from_user.name,
@@ -94,11 +94,16 @@ def create_invited_user(service_id):
     except KeyError:
         current_app.logger.exception("nonce not found in submitted data.")
         raise
+    try:
+        state = request_json.pop("state")
+    except KeyError:
+        current_app.logger.exception("state not found in submitted data.")
+        raise
 
     invited_user = invited_user_schema.load(request_json)
     save_invited_user(invited_user)
 
-    _create_service_invite(invited_user, nonce)
+    _create_service_invite(invited_user, nonce, state)
 
     return jsonify(data=invited_user_schema.dump(invited_user)), 201
 
