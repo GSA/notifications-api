@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -37,6 +38,21 @@ from tests.app.db import (
 )
 
 
+def _get_user_query_count():
+    stmt = select(func.count(User.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
+def _get_user_query_first():
+    stmt = select(User)
+    return db.session.execute(stmt).scalars().first()
+
+
+def _get_verify_code_query_count():
+    stmt = select(func.count(VerifyCode.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
 @freeze_time("2020-01-28T12:00:00")
 @pytest.mark.parametrize(
     "phone_number, expected_phone_number",
@@ -55,8 +71,8 @@ def test_create_user(notify_db_session, phone_number, expected_phone_number):
     }
     user = User(**data)
     save_model_user(user, password="password", validated_email_access=True)
-    assert User.query.count() == 1
-    user_query = User.query.first()
+    assert _get_user_query_count() == 1
+    user_query = _get_user_query_first()
     assert user_query.email_address == email
     assert user_query.id == user.id
     assert user_query.mobile_number == expected_phone_number
@@ -68,7 +84,7 @@ def test_get_all_users(notify_db_session):
     create_user(email="1@test.com")
     create_user(email="2@test.com")
 
-    assert User.query.count() == 2
+    assert _get_user_query_count() == 2
     assert len(get_user_by_id()) == 2
 
 
@@ -89,9 +105,9 @@ def test_get_user_invalid_id(notify_db_session):
 
 
 def test_delete_users(sample_user):
-    assert User.query.count() == 1
+    assert _get_user_query_count() == 1
     delete_model_user(sample_user)
-    assert User.query.count() == 0
+    assert _get_user_query_count() == 0
 
 
 def test_increment_failed_login_should_increment_failed_logins(sample_user):
@@ -127,9 +143,9 @@ def test_get_user_by_email_is_case_insensitive(sample_user):
 def test_should_delete_all_verification_codes_more_than_one_day_old(sample_user):
     make_verify_code(sample_user, age=timedelta(hours=24), code="54321")
     make_verify_code(sample_user, age=timedelta(hours=24), code="54321")
-    assert VerifyCode.query.count() == 2
+    assert _get_verify_code_query_count() == 2
     delete_codes_older_created_more_than_a_day_ago()
-    assert VerifyCode.query.count() == 0
+    assert _get_verify_code_query_count() == 0
 
 
 def test_should_not_delete_verification_codes_less_than_one_day_old(sample_user):
@@ -138,9 +154,10 @@ def test_should_not_delete_verification_codes_less_than_one_day_old(sample_user)
     )
     make_verify_code(sample_user, age=timedelta(hours=24), code="54321")
 
-    assert VerifyCode.query.count() == 2
+    assert _get_verify_code_query_count() == 2
     delete_codes_older_created_more_than_a_day_ago()
-    assert VerifyCode.query.one()._code == "12345"
+    stmt = select(VerifyCode)
+    assert db.session.execute(stmt).scalars().one()._code == "12345"
 
 
 def make_verify_code(user, age=None, expiry_age=None, code="12335", code_used=False):
