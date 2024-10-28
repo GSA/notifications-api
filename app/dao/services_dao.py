@@ -85,88 +85,6 @@ def dao_count_live_services():
 def dao_fetch_live_services_data():
     year_start_date, year_end_date = get_current_calendar_year()
 
-    # most_recent_annual_billing = (
-    #     db.session.query(
-    #         AnnualBilling.service_id,
-    #         func.max(AnnualBilling.financial_year_start).label("year"),
-    #     )
-    #     .group_by(AnnualBilling.service_id)
-    #     .subquery()
-    # )
-
-    # this_year_ft_billing = FactBilling.query.filter(
-    #     FactBilling.local_date >= year_start_date,
-    #     FactBilling.local_date <= year_end_date,
-    # ).subquery()
-
-    # data = (
-    #     db.session.query(
-    #         Service.id.label("service_id"),
-    #         Service.name.label("service_name"),
-    #         Organization.name.label("organization_name"),
-    #         Organization.organization_type.label("organization_type"),
-    #         Service.consent_to_research.label("consent_to_research"),
-    #         User.name.label("contact_name"),
-    #         User.email_address.label("contact_email"),
-    #         User.mobile_number.label("contact_mobile"),
-    #         Service.go_live_at.label("live_date"),
-    #         Service.volume_sms.label("sms_volume_intent"),
-    #         Service.volume_email.label("email_volume_intent"),
-    #         case(
-    #             (
-    #                 this_year_ft_billing.c.notification_type == NotificationType.EMAIL,
-    #                 func.sum(this_year_ft_billing.c.notifications_sent),
-    #             ),
-    #             else_=0,
-    #         ).label("email_totals"),
-    #         case(
-    #             (
-    #                 this_year_ft_billing.c.notification_type == NotificationType.SMS,
-    #                 func.sum(this_year_ft_billing.c.notifications_sent),
-    #             ),
-    #             else_=0,
-    #         ).label("sms_totals"),
-    #         AnnualBilling.free_sms_fragment_limit,
-    #     )
-    #     .join(Service.annual_billing)
-    #     .join(
-    #         most_recent_annual_billing,
-    #         and_(
-    #             Service.id == most_recent_annual_billing.c.service_id,
-    #             AnnualBilling.financial_year_start == most_recent_annual_billing.c.year,
-    #         ),
-    #     )
-    #     .outerjoin(Service.organization)
-    #     .outerjoin(
-    #         this_year_ft_billing, Service.id == this_year_ft_billing.c.service_id
-    #     )
-    #     .outerjoin(User, Service.go_live_user_id == User.id)
-    #     .filter(
-    #         Service.count_as_live.is_(True),
-    #         Service.active.is_(True),
-    #         Service.restricted.is_(False),
-    #     )
-    #     .group_by(
-    #         Service.id,
-    #         Organization.name,
-    #         Organization.organization_type,
-    #         Service.name,
-    #         Service.consent_to_research,
-    #         Service.count_as_live,
-    #         Service.go_live_user_id,
-    #         User.name,
-    #         User.email_address,
-    #         User.mobile_number,
-    #         Service.go_live_at,
-    #         Service.volume_sms,
-    #         Service.volume_email,
-    #         this_year_ft_billing.c.notification_type,
-    #         AnnualBilling.free_sms_fragment_limit,
-    #     )
-    #     .order_by(asc(Service.go_live_at))
-    #     .all()
-    # )
-
     most_recent_annual_billing = (
         select(
             AnnualBilling.service_id,
@@ -297,12 +215,6 @@ def dao_fetch_service_by_inbound_number(number):
 
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
-    # query = Service.query.filter_by(id=service_id).options(joinedload(Service.api_keys))
-
-    # if only_active:
-    #    query = query.filter(Service.active)
-
-    # return query.one()
     stmt = (
         select(Service).filter_by(id=service_id).options(joinedload(Service.api_keys))
     )
@@ -312,16 +224,6 @@ def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
 
 
 def dao_fetch_all_services_by_user(user_id, only_active=False):
-    # query = (
-    #    Service.query.filter(Service.users.any(id=user_id))
-    #    .order_by(asc(Service.created_at))
-    #    .options(joinedload(Service.users))
-    # )
-
-    # if only_active:
-    #    query = query.filter(Service.active)
-
-    # return query.all()
 
     stmt = (
         select(Service)
@@ -335,12 +237,6 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
 
 
 def dao_fetch_all_services_created_by_user(user_id):
-
-    # query = Service.query.filter_by(created_by_id=user_id).order_by(
-    #    asc(Service.created_at)
-    # )
-
-    # return query.all()
 
     stmt = (
         select(Service)
@@ -358,16 +254,6 @@ def dao_fetch_all_services_created_by_user(user_id):
     VersionOptions(Template, history_class=TemplateHistory, must_write_history=False),
 )
 def dao_archive_service(service_id):
-    # have to eager load templates and api keys so that we don't flush when we loop through them
-    # to ensure that db.session still contains the models when it comes to creating history objects
-    # service = (
-    #    Service.query.options(
-    #        joinedload(Service.templates).subqueryload(Template.template_redacted),
-    #        joinedload(Service.api_keys),
-    #    )
-    #    .filter(Service.id == service_id)
-    #    .one()
-    # )
     stmt = (
         select(Service)
         .options(
@@ -392,11 +278,6 @@ def dao_archive_service(service_id):
 
 
 def dao_fetch_service_by_id_and_user(service_id, user_id):
-    # return (
-    #    Service.query.filter(Service.users.any(id=user_id), Service.id == service_id)
-    #    .options(joinedload(Service.users))
-    #    .one()
-    # )
 
     stmt = (
         select(Service)
@@ -508,11 +389,9 @@ def dao_remove_user_from_service(service, user):
 
 def delete_service_and_all_associated_db_objects(service):
     def _delete_commit(stmt):
-        # query.delete(synchronize_session=False)
         db.session.execute(stmt)
         db.session.commit()
 
-    # subq = db.session.query(Template.id).filter_by(service=service).subquery()
     subq = select(Template.id).filter_by(service=service).subquery()
 
     stmt = delete(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
@@ -553,23 +432,6 @@ def delete_service_and_all_associated_db_objects(service):
 def dao_fetch_todays_stats_for_service(service_id):
     today = utc_now().date()
     start_date = get_midnight_in_utc(today)
-    # return (
-    #     db.session.query(
-    #         Notification.notification_type,
-    #         Notification.status,
-    #         func.count(Notification.id).label("count"),
-    #     )
-    #     .filter(
-    #         Notification.service_id == service_id,
-    #         Notification.key_type != KeyType.TEST,
-    #         Notification.created_at >= start_date,
-    #     )
-    #     .group_by(
-    #         Notification.notification_type,
-    #         Notification.status,
-    #     )
-    #     .all()
-    # )
     stmt = (
         select(
             Notification.notification_type,
@@ -592,27 +454,6 @@ def dao_fetch_todays_stats_for_service(service_id):
 def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
-
-    # return (
-    #     db.session.query(
-    #         NotificationAllTimeView.notification_type,
-    #         NotificationAllTimeView.status,
-    #         func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-    #         func.count(NotificationAllTimeView.id).label("count"),
-    #     )
-    #     .filter(
-    #         NotificationAllTimeView.service_id == service_id,
-    #         NotificationAllTimeView.key_type != KeyType.TEST,
-    #         NotificationAllTimeView.created_at >= start_date,
-    #         NotificationAllTimeView.created_at < end_date,
-    #     )
-    #     .group_by(
-    #         NotificationAllTimeView.notification_type,
-    #         NotificationAllTimeView.status,
-    #         func.date_trunc("day", NotificationAllTimeView.created_at),
-    #     )
-    #     .all()
-    # )
 
     stmt = (
         select(
@@ -642,27 +483,6 @@ def dao_fetch_stats_for_service_from_days_for_user(
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    # return (
-    #     db.session.query(
-    #         NotificationAllTimeView.notification_type,
-    #         NotificationAllTimeView.status,
-    #         func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-    #         func.count(NotificationAllTimeView.id).label("count"),
-    #     )
-    #     .filter(
-    #         NotificationAllTimeView.service_id == service_id,
-    #         NotificationAllTimeView.key_type != KeyType.TEST,
-    #         NotificationAllTimeView.created_at >= start_date,
-    #         NotificationAllTimeView.created_at < end_date,
-    #         NotificationAllTimeView.created_by_id == user_id,
-    #     )
-    #     .group_by(
-    #         NotificationAllTimeView.notification_type,
-    #         NotificationAllTimeView.status,
-    #         func.date_trunc("day", NotificationAllTimeView.created_at),
-    #     )
-    #     .all()
-    # )
     stmt = (
         select(
             NotificationAllTimeView.notification_type,
@@ -741,15 +561,7 @@ def dao_fetch_todays_stats_for_all_services(
     VersionOptions(Service),
 )
 def dao_suspend_service(service_id):
-    # have to eager load api keys so that we don't flush when we loop through them
-    # to ensure that db.session still contains the models when it comes to creating history objects
-    # service = (
-    #     Service.query.options(
-    #         joinedload(Service.api_keys),
-    #     )
-    #     .filter(Service.id == service_id)
-    #     .one()
-    # )
+
     stmt = (
         select(Service)
         .options(joinedload(Service.api_keys))
@@ -767,16 +579,12 @@ def dao_suspend_service(service_id):
 @autocommit
 @version_class(Service)
 def dao_resume_service(service_id):
-    # service = Service.query.get(service_id)
     service = db.session.get(Service, service_id)
 
     service.active = True
 
 
 def dao_fetch_active_users_for_service(service_id):
-    # query = User.query.filter(User.services.any(id=service_id), User.state == "active")
-
-    # return query.all()
 
     stmt = select(User).where(User.services.any(id=service_id), User.state == "active")
     result = db.session.execute(stmt)
@@ -784,27 +592,7 @@ def dao_fetch_active_users_for_service(service_id):
 
 
 def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500):
-    # return (
-    #     db.session.query(
-    #         Notification.service_id.label("service_id"),
-    #         func.count(Notification.id).label("notification_count"),
-    #     )
-    #     .filter(
-    #         Notification.service_id == Service.id,
-    #         Notification.created_at >= start_date,
-    #         Notification.created_at <= end_date,
-    #         Notification.key_type != KeyType.TEST,
-    #         Notification.notification_type == NotificationType.SMS,
-    #         func.substr(Notification.normalised_to, 3, 7) == "7700900",
-    #         Service.restricted == False,  # noqa
-    #         Service.active == True,  # noqa
-    #     )
-    #     .group_by(
-    #         Notification.service_id,
-    #     )
-    #     .having(func.count(Notification.id) > threshold)
-    #     .all()
-    # )
+
     stmt = (
         select(
             Notification.service_id.label("service_id"),
@@ -884,23 +672,6 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
 
 
 def get_live_services_with_organization():
-    # query = (
-    #     db.session.query(
-    #         Service.id.label("service_id"),
-    #         Service.name.label("service_name"),
-    #         Organization.id.label("organization_id"),
-    #         Organization.name.label("organization_name"),
-    #     )
-    #     .outerjoin(Service.organization)
-    #     .filter(
-    #         Service.count_as_live.is_(True),
-    #         Service.active.is_(True),
-    #         Service.restricted.is_(False),
-    #     )
-    #     .order_by(Organization.name, Service.name)
-    # )
-
-    # return query.all()
 
     stmt = (
         select(
@@ -925,27 +696,7 @@ def get_live_services_with_organization():
 def fetch_notification_stats_for_service_by_month_by_user(
     start_date, end_date, service_id, user_id
 ):
-    # return (
-    #     db.session.query(
-    #         func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
-    #         NotificationAllTimeView.notification_type,
-    #         (NotificationAllTimeView.status).label("notification_status"),
-    #         func.count(NotificationAllTimeView.id).label("count"),
-    #     )
-    #     .filter(
-    #         NotificationAllTimeView.service_id == service_id,
-    #         NotificationAllTimeView.created_at >= start_date,
-    #         NotificationAllTimeView.created_at < end_date,
-    #         NotificationAllTimeView.key_type != KeyType.TEST,
-    #         NotificationAllTimeView.created_by_id == user_id,
-    #     )
-    #     .group_by(
-    #         func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),
-    #         NotificationAllTimeView.notification_type,
-    #         NotificationAllTimeView.status,
-    #     )
-    #     .all()
-    # )
+
     stmt = (
         select(
             func.date_trunc("month", NotificationAllTimeView.created_at).label("month"),

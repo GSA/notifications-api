@@ -17,9 +17,6 @@ def insert_service_sms_sender(service, sms_sender):
 
 
 def dao_get_service_sms_senders_by_id(service_id, service_sms_sender_id):
-    # return ServiceSmsSender.query.filter_by(
-    #     id=service_sms_sender_id, service_id=service_id, archived=False
-    # ).one()
     stmt = select(ServiceSmsSender).filter_by(
         id=service_sms_sender_id, service_id=service_id, archived=False
     )
@@ -27,11 +24,7 @@ def dao_get_service_sms_senders_by_id(service_id, service_sms_sender_id):
 
 
 def dao_get_sms_senders_by_service_id(service_id):
-    # return (
-    #     ServiceSmsSender.query.filter_by(service_id=service_id, archived=False)
-    #     .order_by(desc(ServiceSmsSender.is_default))
-    #     .all()
-    # )
+
     stmt = (
         select(ServiceSmsSender)
         .filter_by(service_id=service_id, archived=False)
