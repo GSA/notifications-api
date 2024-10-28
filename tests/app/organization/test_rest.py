@@ -934,7 +934,7 @@ def test_get_organization_services_usage_returns_400_if_year_is_empty(admin_requ
 
 def test_valid_request_args():
     request = Mock()
-    request.args = {"ord_id": "123", "name": "Test Org"}
+    request.args = {"org_id": "123", "name": "Test Org"}
     org_id, name = check_request_args(request)
     assert org_id == "123"
     assert name == "Test Org"
