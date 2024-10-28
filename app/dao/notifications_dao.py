@@ -629,7 +629,6 @@ def notifications_not_yet_sent(should_be_sending_after_seconds, notification_typ
         Notification.status == NotificationStatus.CREATED,
     )
     notifications = db.session.execute(stmt).scalars().all()
-    print(f"WE RETURN THIS FOR NOTIFICATIONS {notifications}")
     return notifications
 
 
