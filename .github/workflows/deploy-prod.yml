@@ -53,7 +53,7 @@ jobs:
       run: poetry export --without-hashes --format=requirements.txt > requirements.txt
 
     - name: Deploy to cloud.gov
-      uses: 18f/cg-deploy-action@main
+      uses: cloud-gov/cg-cli-tools@main
       env:
         DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -68,7 +68,8 @@ jobs:
         cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
         cf_org: gsa-tts-benefits-studio
         cf_space: notify-production
-        push_arguments: >-
+        cf_command: >-
+          push -f manifest.yml
           --vars-file deploy-config/production.yml
           --var DANGEROUS_SALT="$DANGEROUS_SALT"
           --var SECRET_KEY="$SECRET_KEY"
@@ -77,6 +78,7 @@ jobs:
           --var NOTIFY_E2E_TEST_EMAIL="$NOTIFY_E2E_TEST_EMAIL"
           --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
+          --strategy rolling
 
     - name: Check for changes to templates.json
       id: changed-templates
@@ -99,6 +101,10 @@ jobs:
     - name: Deploy egress proxy
       if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
+      env:
+          CF_USERNAME: ${{ secrets.CLOUDGOV_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CLOUDGOV_PASSWORD }}
       with:
+        cf_org: gsa-tts-benefits-studio
         cf_space: notify-production
         app: notify-api-production

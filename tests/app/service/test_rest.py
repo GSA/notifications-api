@@ -1959,6 +1959,84 @@ def test_get_all_notifications_for_service_including_ones_made_by_jobs(
     assert response.status_code == 200
 
 
+def test_get_monthly_notification_stats_by_user(
+    client,
+    sample_service,
+    sample_user,
+    mocker,
+):
+    mock_s3 = mocker.patch("app.service.rest.get_phone_number_from_s3")
+    mock_s3.return_value = ""
+
+    mock_s3 = mocker.patch("app.service.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {}
+
+    auth_header = create_admin_authorization_header()
+
+    response = client.get(
+        path=(
+            f"/service/{sample_service.id}/notifications/{sample_user.id}/monthly?year=2024"
+        ),
+        headers=[auth_header],
+    )
+
+    resp = json.loads(response.get_data(as_text=True))
+    print(f"RESP is {resp}")
+    # TODO This test could be a little more complete
+    assert response.status_code == 200
+
+
+def test_get_single_month_notification_stats_by_user(
+    client,
+    sample_service,
+    sample_user,
+    mocker,
+):
+    mock_s3 = mocker.patch("app.service.rest.get_phone_number_from_s3")
+    mock_s3.return_value = ""
+
+    mock_s3 = mocker.patch("app.service.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {}
+
+    auth_header = create_admin_authorization_header()
+
+    response = client.get(
+        path=(
+            f"/service/{sample_service.id}/notifications/{sample_user.id}/month?year=2024&month=07"
+        ),
+        headers=[auth_header],
+    )
+
+    resp = json.loads(response.get_data(as_text=True))
+    print(f"RESP is {resp}")
+    # TODO This test could be a little more complete
+    assert response.status_code == 200
+
+
+def test_get_single_month_notification_stats_for_service(
+    client,
+    sample_service,
+    mocker,
+):
+    mock_s3 = mocker.patch("app.service.rest.get_phone_number_from_s3")
+    mock_s3.return_value = ""
+
+    mock_s3 = mocker.patch("app.service.rest.get_personalisation_from_s3")
+    mock_s3.return_value = {}
+
+    auth_header = create_admin_authorization_header()
+
+    response = client.get(
+        path=(f"/service/{sample_service.id}/notifications/month?year=2024&month=07"),
+        headers=[auth_header],
+    )
+
+    resp = json.loads(response.get_data(as_text=True))
+    print(f"RESP is {resp}")
+    # TODO This test could be a little more complete
+    assert response.status_code == 200
+
+
 def test_get_only_api_created_notifications_for_service(
     admin_request,
     sample_job,

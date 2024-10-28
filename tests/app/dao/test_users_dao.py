@@ -38,6 +38,21 @@ from tests.app.db import (
 )
 
 
+def _get_user_query_count():
+    stmt = select(func.count(User.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
+def _get_user_query_first():
+    stmt = select(User)
+    return db.session.execute(stmt).scalars().first()
+
+
+def _get_verify_code_query_count():
+    stmt = select(func.count(VerifyCode.id))
+    return db.session.execute(stmt).scalar() or 0
+
+
 @freeze_time("2020-01-28T12:00:00")
 @pytest.mark.parametrize(
     "phone_number, expected_phone_number",
