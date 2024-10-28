@@ -63,7 +63,7 @@ jobs:
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
     - name: Check coverage threshold
       # TODO get this back up to 95
-      run: poetry run coverage report -m --fail-under=91
+      run: poetry run coverage report -m --fail-under=93
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
