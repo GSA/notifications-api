@@ -1,8 +1,10 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
 from app.dao.service_sms_sender_dao import (
     archive_sms_sender,
     dao_add_sms_sender_for_service,
@@ -97,10 +99,8 @@ def test_dao_add_sms_sender_for_service(notify_db_session):
         is_default=False,
         inbound_number_id=None,
     )
-
-    service_sms_senders = ServiceSmsSender.query.order_by(
-        ServiceSmsSender.created_at
-    ).all()
+    stmt = select(ServiceSmsSender).order_by(ServiceSmsSender.created_at)
+    service_sms_senders = db.session.execute(stmt).scalars().all()
     assert len(service_sms_senders) == 2
     assert service_sms_senders[0].sms_sender == "testing"
     assert service_sms_senders[0].is_default
@@ -116,10 +116,8 @@ def test_dao_add_sms_sender_for_service_switches_default(notify_db_session):
         is_default=True,
         inbound_number_id=None,
     )
-
-    service_sms_senders = ServiceSmsSender.query.order_by(
-        ServiceSmsSender.created_at
-    ).all()
+    stmt = select(ServiceSmsSender).order_by(ServiceSmsSender.created_at)
+    service_sms_senders = db.session.execute(stmt).scalars().all()
     assert len(service_sms_senders) == 2
     assert service_sms_senders[0].sms_sender == "testing"
     assert not service_sms_senders[0].is_default
@@ -128,7 +126,8 @@ def test_dao_add_sms_sender_for_service_switches_default(notify_db_session):
 
 def test_dao_update_service_sms_sender(notify_db_session):
     service = create_service()
-    service_sms_senders = ServiceSmsSender.query.filter_by(service_id=service.id).all()
+    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    service_sms_senders = db.session.execute(stmt).scalars().all()
     assert len(service_sms_senders) == 1
     sms_sender_to_update = service_sms_senders[0]
 
@@ -138,7 +137,8 @@ def test_dao_update_service_sms_sender(notify_db_session):
         is_default=True,
         sms_sender="updated",
     )
-    sms_senders = ServiceSmsSender.query.filter_by(service_id=service.id).all()
+    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    sms_senders = db.session.execute(stmt).scalars().all()
     assert len(sms_senders) == 1
     assert sms_senders[0].is_default
     assert sms_senders[0].sms_sender == "updated"
@@ -159,7 +159,8 @@ def test_dao_update_service_sms_sender_switches_default(notify_db_session):
         is_default=True,
         sms_sender="updated",
     )
-    sms_senders = ServiceSmsSender.query.filter_by(service_id=service.id).all()
+    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    sms_senders = db.session.execute(stmt).scalars().all()
 
     expected = {("testing", False), ("updated", True)}
     results = {(sender.sms_sender, sender.is_default) for sender in sms_senders}
@@ -190,7 +191,8 @@ def test_update_existing_sms_sender_with_inbound_number(notify_db_session):
     service = create_service()
     inbound_number = create_inbound_number(number="12345", service_id=service.id)
 
-    existing_sms_sender = ServiceSmsSender.query.filter_by(service_id=service.id).one()
+    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    existing_sms_sender = db.session.execute(stmt).scalars().one()
     sms_sender = update_existing_sms_sender_with_inbound_number(
         service_sms_sender=existing_sms_sender,
         sms_sender=inbound_number.number,
@@ -206,7 +208,8 @@ def test_update_existing_sms_sender_with_inbound_number_raises_exception_if_inbo
     notify_db_session,
 ):
     service = create_service()
-    existing_sms_sender = ServiceSmsSender.query.filter_by(service_id=service.id).one()
+    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    existing_sms_sender = db.session.execute(stmt).scalars().one()
     with pytest.raises(expected_exception=SQLAlchemyError):
         update_existing_sms_sender_with_inbound_number(
             service_sms_sender=existing_sms_sender,

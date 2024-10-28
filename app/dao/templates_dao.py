@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, select
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
@@ -46,24 +46,29 @@ def dao_redact_template(template, user_id):
 
 def dao_get_template_by_id_and_service_id(template_id, service_id, version=None):
     if version is not None:
-        return TemplateHistory.query.filter_by(
+        stmt = select(TemplateHistory).filter_by(
             id=template_id, hidden=False, service_id=service_id, version=version
-        ).one()
-    return Template.query.filter_by(
+        )
+        return db.session.execute(stmt).scalars().one()
+    stmt = select(Template).filter_by(
         id=template_id, hidden=False, service_id=service_id
-    ).one()
+    )
+    return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_template_by_id(template_id, version=None):
     if version is not None:
-        return TemplateHistory.query.filter_by(id=template_id, version=version).one()
-    return Template.query.filter_by(id=template_id).one()
+        stmt = select(TemplateHistory).filter_by(id=template_id, version=version)
+        return db.session.execute(stmt).scalars().one()
+    stmt = select(Template).filter_by(id=template_id)
+    return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_all_templates_for_service(service_id, template_type=None):
     if template_type is not None:
-        return (
-            Template.query.filter_by(
+        stmt = (
+            select(Template)
+            .filter_by(
                 service_id=service_id,
                 template_type=template_type,
                 hidden=False,
@@ -73,26 +78,27 @@ def dao_get_all_templates_for_service(service_id, template_type=None):
                 asc(Template.name),
                 asc(Template.template_type),
             )
-            .all()
         )
-
-    return (
-        Template.query.filter_by(service_id=service_id, hidden=False, archived=False)
+        return db.session.execute(stmt).scalars().all()
+    stmt = (
+        select(Template)
+        .filter_by(service_id=service_id, hidden=False, archived=False)
         .order_by(
             asc(Template.name),
             asc(Template.template_type),
         )
-        .all()
     )
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_get_template_versions(service_id, template_id):
-    return (
-        TemplateHistory.query.filter_by(
+    stmt = (
+        select(TemplateHistory)
+        .filter_by(
             service_id=service_id,
             id=template_id,
             hidden=False,
         )
         .order_by(desc(TemplateHistory.version))
-        .all()
     )
+    return db.session.execute(stmt).scalars().all()
