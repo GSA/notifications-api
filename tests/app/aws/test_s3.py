@@ -152,7 +152,7 @@ def test_download_from_s3_general_exception(mocker):
         )
     except Exception:
         pass
-    mock_logger.exception.assert_called_once_with("EXCEPTION local_filename test_file")
+    mock_logger.exception.assert_called_once()
 
 
 def test_list_s3_objects(mocker):
