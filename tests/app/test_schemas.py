@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from marshmallow import ValidationError
 from sqlalchemy import desc
@@ -7,6 +9,7 @@ from app.dao.provider_details_dao import (
     get_provider_details_by_identifier,
 )
 from app.models import ProviderDetailsHistory
+from app.schema_validation import validate_schema_date_with_hour
 from tests.app.db import create_api_key
 
 
@@ -152,3 +155,35 @@ def test_provider_details_history_schema_returns_user_details(
     data = provider_details_schema.dump(current_sms_provider_in_history)
 
     assert sorted(data["created_by"].keys()) == sorted(["id", "email_address", "name"])
+
+
+def test_valid_date_within_24_hours(mocker):
+    mocker.patch(
+        "app.schema_validations.utc_now", return_value=datetime(2024, 10, 27, 15, 0, 0)
+    )
+    valid_datetime = "2024-10-28T14:00:00Z"
+    assert validate_schema_date_with_hour(valid_datetime)
+
+
+def test_date_in_past(mocker):
+    mocker.patch(
+        "app.schema_validations.utc_now", return_value=datetime(2024, 10, 27, 15, 0, 0)
+    )
+    past_datetime = "2024-10-26T14:00:00Z"
+    try:
+        validate_schema_date_with_hour(past_datetime)
+        assert 1 == 0
+    except Exception as e:
+        assert "datetime can not be in the past" in str(e)
+
+
+def test_date_more_than_24_hours_in_future(mocker):
+    mocker.patch(
+        "app.schema_validations.utc_now", return_value=datetime(2024, 10, 27, 15, 0, 0)
+    )
+    past_datetime = "2024-10-31T14:00:00Z"
+    try:
+        validate_schema_date_with_hour(past_datetime)
+        assert 1 == 0
+    except Exception as e:
+        assert "datetime can only be 24 hours in the future" in str(e)
