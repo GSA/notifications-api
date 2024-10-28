@@ -159,7 +159,8 @@ def test_provider_details_history_schema_returns_user_details(
 
 def test_valid_date_within_24_hours(mocker):
     mocker.patch(
-        "app.schema_validation.utc_now", return_value=datetime.datetime(2024, 10, 27, 15, 0, 0)
+        "app.schema_validation.utc_now",
+        return_value=datetime.datetime(2024, 10, 27, 15, 0, 0),
     )
     valid_datetime = "2024-10-28T14:00:00Z"
     assert validate_schema_date_with_hour(valid_datetime)
@@ -167,7 +168,8 @@ def test_valid_date_within_24_hours(mocker):
 
 def test_date_in_past(mocker):
     mocker.patch(
-        "app.schema_validation.utc_now", return_value=datetime.datetime(2024, 10, 27, 15, 0, 0)
+        "app.schema_validation.utc_now",
+        return_value=datetime.datetime(2024, 10, 27, 15, 0, 0),
     )
     past_datetime = "2024-10-26T14:00:00Z"
     try:
@@ -179,7 +181,8 @@ def test_date_in_past(mocker):
 
 def test_date_more_than_24_hours_in_future(mocker):
     mocker.patch(
-        "app.schema_validation.utc_now", return_value=datetime.datetime(2024, 10, 27, 15, 0, 0)
+        "app.schema_validation.utc_now",
+        return_value=datetime.datetime(2024, 10, 27, 15, 0, 0),
     )
     past_datetime = "2024-10-31T14:00:00Z"
     try:

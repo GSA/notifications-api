@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -19,6 +19,7 @@ from app.aws.s3 import (
     get_s3_client,
     get_s3_file,
     get_s3_files,
+    get_s3_object,
     get_s3_resource,
     list_s3_objects,
     read_s3_file,
@@ -136,6 +137,22 @@ def test_download_from_s3_no_credentials_error(mocker):
     except Exception:
         pass
     mock_logger.exception.assert_called_once_with("Credentials not found")
+
+
+def test_download_from_s3_general_exception(mocker):
+    mock_get_s3_client = mocker.patch("app.aws.s3.get_s3_client")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_logger = mock_current_app.logger
+    mock_s3 = MagicMock()
+    mock_s3.download_file.side_effect = Exception()
+    mock_get_s3_client.return_value = mock_s3
+    try:
+        download_from_s3(
+            "test_bucket", "test_key", "test_file", "access_key", "secret_key", "region"
+        )
+    except Exception:
+        pass
+    mock_logger.exception.assert_called_once_with("EXCEPTION local_filename test_file")
 
 
 def test_list_s3_objects(mocker):
@@ -487,3 +504,27 @@ def test_get_job_and_metadata_from_s3_fallback_to_old_location(mocker):
     # mock_get_s3_object.assert_any_call("bucket_name", "new_key")
     # mock_get_s3_object.assert_any_call("bucket_name", "old_key")
     assert result == ("old job data", {"old_key": "old_value"})
+
+
+def test_get_s3_object_client_error(mocker):
+    mock_get_s3_resource = mocker.patch("app.aws.s3.get_s3_resource")
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_logger = mock_current_app.logger
+    mock_s3 = Mock()
+    mock_s3.Object.side_effect = botocore.exceptions.ClientError(
+        error_response={"Error": {"Code": "404", "Message": "Not Found"}},
+        operation_name="GetObject",
+    )
+    mock_get_s3_resource.return_value = mock_s3
+
+    bucket_name = "test-bucket"
+    file_location = "nonexistent-file.txt"
+    access_key = "test-access-key"
+    skey = "skey"
+    region = "us-west-200"
+    result = get_s3_object(bucket_name, file_location, access_key, skey, region)
+    assert result is None
+    mock_s3.Object.assert_called_once_with(bucket_name, file_location)
+    mock_logger.exception.assert_called_once_with(
+        f"Can't retrieve S3 Object from {file_location}"
+    )
