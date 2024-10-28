@@ -101,7 +101,7 @@ jobs:
           .github/actions/deploy-proxy/action.yml
           .github/workflows/deploy.yml
     - name: Deploy egress proxy
-      #if: steps.changed-egress-config.outputs.any_changed == 'true'
+      if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
       env:
           CF_USERNAME: ${{ secrets.CLOUDGOV_USERNAME }}
