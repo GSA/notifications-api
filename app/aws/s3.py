@@ -476,23 +476,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
 
     set_job_cache(job_cache, f"{job_id}_personalisation", extract_personalisation(job))
 
-    # If we can find the quick dictionary, use it
-    if job_cache.get(f"{job_id}_personalisation") is not None:
-        personalisation_to_return = job_cache.get(f"{job_id}_personalisation")[0].get(
-            job_row_number
-        )
-        if personalisation_to_return:
-            return personalisation_to_return
-        else:
-            current_app.logger.warning(
-                f"Was unable to retrieve personalisation from lookup dictionary for job {job_id}"
-            )
-            return {}
-    else:
-        current_app.logger.error(
-            f"Was unable to construct lookup dictionary for job {job_id}"
-        )
-        return {}
+    return job_cache.get(f"{job_id}_personalisation")[0].get(job_row_number)
 
 
 def get_job_metadata_from_s3(service_id, job_id):

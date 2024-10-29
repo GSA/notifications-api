@@ -4,7 +4,7 @@ from secrets import randbelow
 
 import sqlalchemy
 from flask import current_app
-from sqlalchemy import func, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import joinedload
 
 from app import db
@@ -37,8 +37,8 @@ def get_login_gov_user(login_uuid, email_address):
     login.gov uuids are.  Eventually the code that checks by email address
     should be removed.
     """
-
-    user = User.query.filter_by(login_uuid=login_uuid).first()
+    stmt = select(User).filter_by(login_uuid=login_uuid)
+    user = db.session.execute(stmt).scalars().first()
     if user:
         if user.email_address != email_address:
             try:
@@ -54,7 +54,8 @@ def get_login_gov_user(login_uuid, email_address):
 
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
-    user = User.query.filter(User.email_address.ilike(email_address)).first()
+    stmt = select(User).filter(User.email_address.ilike(email_address))
+    user = db.session.execute(stmt).scalars().first()
 
     if user:
         save_user_attribute(user, {"login_uuid": login_uuid})
@@ -102,24 +103,27 @@ def create_user_code(user, code, code_type):
 def get_user_code(user, code, code_type):
     # Get the most recent codes to try and reduce the
     # time searching for the correct code.
-    codes = VerifyCode.query.filter_by(user=user, code_type=code_type).order_by(
-        VerifyCode.created_at.desc()
+    stmt = (
+        select(VerifyCode)
+        .filter_by(user=user, code_type=code_type)
+        .order_by(VerifyCode.created_at.desc())
     )
+    codes = db.session.execute(stmt).scalars().all()
     return next((x for x in codes if x.check_code(code)), None)
 
 
 def delete_codes_older_created_more_than_a_day_ago():
-    deleted = (
-        db.session.query(VerifyCode)
-        .filter(VerifyCode.created_at < utc_now() - timedelta(hours=24))
-        .delete()
+    stmt = delete(VerifyCode).filter(
+        VerifyCode.created_at < utc_now() - timedelta(hours=24)
     )
+
+    deleted = db.session.execute(stmt)
     db.session.commit()
     return deleted
 
 
 def use_user_code(id):
-    verify_code = VerifyCode.query.get(id)
+    verify_code = db.session.get(VerifyCode, id)
     verify_code.code_used = True
     db.session.add(verify_code)
     db.session.commit()
@@ -131,36 +135,42 @@ def delete_model_user(user):
 
 
 def delete_user_verify_codes(user):
-    VerifyCode.query.filter_by(user=user).delete()
+    stmt = delete(VerifyCode).filter_by(user=user)
+    db.session.execute(stmt)
     db.session.commit()
 
 
 def count_user_verify_codes(user):
-    query = VerifyCode.query.filter(
+    stmt = select(func.count(VerifyCode.id)).filter(
         VerifyCode.user == user,
         VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
     )
-    return query.count()
+    result = db.session.execute(stmt).scalar()
+    return result or 0
 
 
 def get_user_by_id(user_id=None):
     if user_id:
-        return User.query.filter_by(id=user_id).one()
-    return User.query.filter_by().all()
+        stmt = select(User).filter_by(id=user_id)
+        return db.session.execute(stmt).scalars().one()
+    return get_users()
 
 
 def get_users():
-    return User.query.all()
+    stmt = select(User)
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_user_by_email(email):
-    return User.query.filter(func.lower(User.email_address) == func.lower(email)).one()
+    stmt = select(User).filter(func.lower(User.email_address) == func.lower(email))
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_users_by_partial_email(email):
     email = escape_special_characters(email)
-    return User.query.filter(User.email_address.ilike("%{}%".format(email))).all()
+    stmt = select(User).filter(User.email_address.ilike("%{}%".format(email)))
+    return db.session.execute(stmt).scalars().all()
 
 
 def increment_failed_login_count(user):
@@ -188,16 +198,17 @@ def get_user_and_accounts(user_id):
     # TODO: With sqlalchemy 2.0 change as below because of the breaking change
     # at User.organizations.services, we need to verify that the below subqueryload
     # that we have put is functionally doing the same thing as before
-    return (
-        User.query.filter(User.id == user_id)
+    stmt = (
+        select(User)
+        .filter(User.id == user_id)
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)
             joinedload(User.services).joinedload(Service.organization),
             joinedload(User.organizations).subqueryload(Organization.services),
         )
-        .one()
     )
+    return db.session.execute(stmt).scalars().unique().one()
 
 
 @autocommit

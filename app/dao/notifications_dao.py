@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import asc, desc, or_, select, text, union
+from sqlalchemy import asc, delete, desc, func, or_, select, text, union, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -109,11 +109,12 @@ def _update_notification_status(
 def update_notification_status_by_id(
     notification_id, status, sent_by=None, provider_response=None, carrier=None
 ):
-    notification = (
-        Notification.query.with_for_update()
+    stmt = (
+        select(Notification)
+        .with_for_update()
         .filter(Notification.id == notification_id)
-        .first()
     )
+    notification = db.session.execute(stmt).scalars().first()
 
     if not notification:
         current_app.logger.info(
@@ -156,9 +157,8 @@ def update_notification_status_by_id(
 @autocommit
 def update_notification_status_by_reference(reference, status):
     # this is used to update emails
-    notification = Notification.query.filter(
-        Notification.reference == reference
-    ).first()
+    stmt = select(Notification).filter(Notification.reference == reference)
+    notification = db.session.execute(stmt).scalars().first()
 
     if not notification:
         current_app.logger.error(
@@ -200,19 +200,20 @@ def get_notifications_for_job(
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
-    return Notification.query.filter_by(job_id=job_id).count()
+    stmt = select(func.count(Notification.id)).filter_by(job_id=job_id)
+    return db.session.execute(stmt).scalar()
 
 
 def dao_get_notification_count_for_service(*, service_id):
-    notification_count = Notification.query.filter_by(service_id=service_id).count()
-    return notification_count
+    stmt = select(func.count(Notification.id)).filter_by(service_id=service_id)
+    return db.session.execute(stmt).scalar()
 
 
 def dao_get_failed_notification_count():
-    failed_count = Notification.query.filter_by(
+    stmt = select(func.count(Notification.id)).filter_by(
         status=NotificationStatus.FAILED
-    ).count()
-    return failed_count
+    )
+    return db.session.execute(stmt).scalar()
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
@@ -220,11 +221,12 @@ def get_notification_with_personalisation(service_id, notification_id, key_type)
     if key_type:
         filter_dict["key_type"] = key_type
 
-    return (
-        Notification.query.filter_by(**filter_dict)
+    stmt = (
+        select(Notification)
+        .filter_by(**filter_dict)
         .options(joinedload(Notification.template))
-        .one()
     )
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_notification_by_id(notification_id, service_id=None, _raise=False):
@@ -233,9 +235,13 @@ def get_notification_by_id(notification_id, service_id=None, _raise=False):
     if service_id:
         filters.append(Notification.service_id == service_id)
 
-    query = Notification.query.filter(*filters)
+    stmt = select(Notification).filter(*filters)
 
-    return query.one() if _raise else query.first()
+    return (
+        db.session.execute(stmt).scalars().one()
+        if _raise
+        else db.session.execute(stmt).scalars().first()
+    )
 
 
 def get_notifications_for_service(
@@ -415,12 +421,13 @@ def move_notifications_to_notification_history(
         deleted += delete_count_per_call
 
     # Deleting test Notifications, test notifications are not persisted to NotificationHistory
-    Notification.query.filter(
+    stmt = delete(Notification).filter(
         Notification.notification_type == notification_type,
         Notification.service_id == service_id,
         Notification.created_at < timestamp_to_delete_backwards_from,
         Notification.key_type == KeyType.TEST,
-    ).delete(synchronize_session=False)
+    )
+    db.session.execute(stmt)
     db.session.commit()
 
     return deleted
@@ -442,8 +449,9 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
     current_statuses = [NotificationStatus.SENDING, NotificationStatus.PENDING]
     new_status = NotificationStatus.TEMPORARY_FAILURE
 
-    notifications = (
-        Notification.query.filter(
+    stmt = (
+        select(Notification)
+        .filter(
             Notification.created_at < cutoff_time,
             Notification.status.in_(current_statuses),
             Notification.notification_type.in_(
@@ -451,14 +459,15 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
             ),
         )
         .limit(limit)
-        .all()
     )
+    notifications = db.session.execute(stmt).scalars().all()
 
-    Notification.query.filter(
-        Notification.id.in_([n.id for n in notifications]),
-    ).update(
-        {"status": new_status, "updated_at": updated_at}, synchronize_session=False
+    stmt = (
+        update(Notification)
+        .filter(Notification.id.in_([n.id for n in notifications]))
+        .values({"status": new_status, "updated_at": updated_at})
     )
+    db.session.execute(stmt)
 
     db.session.commit()
     return notifications
@@ -466,15 +475,23 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
 
 @autocommit
 def dao_update_notifications_by_reference(references, update_dict):
-    updated_count = Notification.query.filter(
-        Notification.reference.in_(references)
-    ).update(update_dict, synchronize_session=False)
+    stmt = (
+        update(Notification)
+        .filter(Notification.reference.in_(references))
+        .values(update_dict)
+    )
+    result = db.session.execute(stmt)
+    updated_count = result.rowcount
 
     updated_history_count = 0
     if updated_count != len(references):
-        updated_history_count = NotificationHistory.query.filter(
-            NotificationHistory.reference.in_(references)
-        ).update(update_dict, synchronize_session=False)
+        stmt = (
+            update(NotificationHistory)
+            .filter(NotificationHistory.reference.in_(references))
+            .values(update_dict)
+        )
+        result = db.session.execute(stmt)
+        updated_history_count = result.rowcount
 
     return updated_count, updated_history_count
 
@@ -541,18 +558,21 @@ def dao_get_notifications_by_recipient_or_reference(
 
 
 def dao_get_notification_by_reference(reference):
-    return Notification.query.filter(Notification.reference == reference).one()
+    stmt = select(Notification).filter(Notification.reference == reference)
+    return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_notification_history_by_reference(reference):
     try:
         # This try except is necessary because in test keys and research mode does not create notification history.
         # Otherwise we could just search for the NotificationHistory object
-        return Notification.query.filter(Notification.reference == reference).one()
+        stmt = select(Notification).filter(Notification.reference == reference)
+        return db.session.execute(stmt).scalars().one()
     except NoResultFound:
-        return NotificationHistory.query.filter(
+        stmt = select(NotificationHistory).filter(
             NotificationHistory.reference == reference
-        ).one()
+        )
+        return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_notifications_processing_time_stats(start_date, end_date):
@@ -590,11 +610,12 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
 
 
 def dao_get_last_notification_added_for_job_id(job_id):
-    last_notification_added = (
-        Notification.query.filter(Notification.job_id == job_id)
+    stmt = (
+        select(Notification)
+        .filter(Notification.job_id == job_id)
         .order_by(Notification.job_row_number.desc())
-        .first()
     )
+    last_notification_added = db.session.execute(stmt).scalars().first()
 
     return last_notification_added
 
@@ -602,11 +623,12 @@ def dao_get_last_notification_added_for_job_id(job_id):
 def notifications_not_yet_sent(should_be_sending_after_seconds, notification_type):
     older_than_date = utc_now() - timedelta(seconds=should_be_sending_after_seconds)
 
-    notifications = Notification.query.filter(
+    stmt = select(Notification).filter(
         Notification.created_at <= older_than_date,
         Notification.notification_type == notification_type,
         Notification.status == NotificationStatus.CREATED,
-    ).all()
+    )
+    notifications = db.session.execute(stmt).scalars().all()
     return notifications
 
 

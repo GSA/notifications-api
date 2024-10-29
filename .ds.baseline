@@ -239,7 +239,7 @@
         "filename": "tests/app/dao/test_services_dao.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 265,
+        "line_number": 289,
         "is_secret": false
       }
     ],
@@ -249,7 +249,7 @@
         "filename": "tests/app/dao/test_users_dao.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 52,
+        "line_number": 69,
         "is_secret": false
       },
       {
@@ -257,7 +257,7 @@
         "filename": "tests/app/dao/test_users_dao.py",
         "hashed_secret": "f2c57870308dc87f432e5912d4de6f8e322721ba",
         "is_verified": false,
-        "line_number": 176,
+        "line_number": 199,
         "is_secret": false
       }
     ],
@@ -384,5 +384,5 @@
       }
     ]
   },
-  "generated_at": "2024-09-27T16:42:53Z"
+  "generated_at": "2024-10-28T20:26:27Z"
 }
