@@ -81,7 +81,6 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     )
 
     assert len(results) == 4
-    print(results)
 
     assert results[0].month.date() == date(2018, 1, 1)
     assert results[0].notification_type == NotificationType.EMAIL
