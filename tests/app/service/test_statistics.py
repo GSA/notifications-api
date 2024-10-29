@@ -1,4 +1,5 @@
 import collections
+from collections import namedtuple
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -12,6 +13,7 @@ from app.service.statistics import (
     create_stats_dict,
     create_zeroed_stats_dicts,
     format_admin_stats,
+    format_monthly_template_notification_stats,
     format_statistics,
 )
 
@@ -337,3 +339,81 @@ def test_add_monthly_notification_status_stats():
         },
         "2018-06": {NotificationType.SMS: {}, NotificationType.EMAIL: {}},
     }
+
+
+def test_format_monthly_template_notification_stats():
+    Row = namedtuple(
+        "Row", ["month", "template_id", "name", "template_type", "status", "count"]
+    )
+    year = 2024
+    rows = [
+        Row(
+            datetime(2024, 4, 1), "1", "Template 1", "email", NotificationStatus.SENT, 5
+        ),
+        Row(
+            datetime(2024, 4, 1),
+            "1",
+            "Template 1",
+            "email",
+            NotificationStatus.FAILED,
+            2,
+        ),
+        Row(datetime(2024, 5, 1), "2", "Template 2", "sms", NotificationStatus.SENT, 3),
+    ]
+    expected_output = {
+        "2024-04": {
+            "1": {
+                "name": "Template 1",
+                "type": "email",
+                "counts": {
+                    NotificationStatus.CANCELLED: 0,
+                    NotificationStatus.CREATED: 0,
+                    NotificationStatus.DELIVERED: 0,
+                    NotificationStatus.SENT: 5,
+                    NotificationStatus.FAILED: 2,
+                    NotificationStatus.PENDING: 0,
+                    NotificationStatus.PENDING_VIRUS_CHECK: 0,
+                    NotificationStatus.PERMANENT_FAILURE: 0,
+                    NotificationStatus.SENDING: 0,
+                    NotificationStatus.TECHNICAL_FAILURE: 0,
+                    NotificationStatus.TEMPORARY_FAILURE: 0,
+                    NotificationStatus.VALIDATION_FAILED: 0,
+                    NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                },
+            }
+        },
+        "2024-05": {
+            "2": {
+                "name": "Template 2",
+                "type": "sms",
+                "counts": {
+                    NotificationStatus.CANCELLED: 0,
+                    NotificationStatus.CREATED: 0,
+                    NotificationStatus.DELIVERED: 0,
+                    NotificationStatus.SENT: 3,
+                    NotificationStatus.FAILED: 0,
+                    NotificationStatus.PENDING: 0,
+                    NotificationStatus.PENDING_VIRUS_CHECK: 0,
+                    NotificationStatus.PERMANENT_FAILURE: 0,
+                    NotificationStatus.SENDING: 0,
+                    NotificationStatus.TECHNICAL_FAILURE: 0,
+                    NotificationStatus.TEMPORARY_FAILURE: 0,
+                    NotificationStatus.VALIDATION_FAILED: 0,
+                    NotificationStatus.VIRUS_SCAN_FAILED: 0,
+                },
+            }
+        },
+        "2024-06": {},
+        "2024-07": {},
+        "2024-08": {},
+        "2024-09": {},
+        "2024-10": {},
+        "2024-11": {},
+        "2024-12": {},
+        "2025-01": {},
+        "2025-02": {},
+        "2025-03": {},
+    }
+
+    result = format_monthly_template_notification_stats(year, rows)
+    assert result == expected_output

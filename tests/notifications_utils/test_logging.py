@@ -64,3 +64,26 @@ def test_pii_filter():
     pii_filter = logging.PIIFilter()
     clean_msg = "phone1: 1XXXXXXXXXX, phone2: 1XXXXXXXXXX, email1: XXXXX@XXXXXXX, email2: XXXXX@XXXXXXX"
     assert pii_filter.filter(record).msg == clean_msg
+
+
+def test_process_log_record_successful(mocker):
+    mock_warning = mocker.patch("notifications_utils.logging.logger.warning")
+    log_record = {
+        "asctime": "2024-10-27 15:00:00",
+        "request_id": "12345",
+        "app_name": "test_app",
+        "service_id": "service_01",
+        "message": "Request 12345 received by test_app",
+    }
+    expected_output = {
+        "time": "2024-10-27 15:00:00",
+        "requestId": "12345",
+        "application": "test_app",
+        "service_id": "service_01",
+        "message": "Request 12345 received by test_app",
+        "logType": "application",
+    }
+    json_formatter = logging.JSONFormatter()
+    result = json_formatter.process_log_record(log_record)
+    assert result == expected_output
+    mock_warning.assert_not_called()
