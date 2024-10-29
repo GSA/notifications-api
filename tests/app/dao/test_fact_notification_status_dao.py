@@ -3,7 +3,9 @@ from uuid import UUID
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_notification_statuses_per_service,
     fetch_monthly_template_usage_for_service,
@@ -1126,9 +1128,10 @@ def test_update_fact_notification_status_respects_gmt_bst(
         process_day, NotificationType.SMS, sample_service.id
     )
 
-    assert (
-        FactNotificationStatus.query.filter_by(
-            service_id=sample_service.id, local_date=process_day
-        ).count()
-        == expected_count
+    stmt = (
+        select(func.count())
+        .select_from(FactNotificationStatus)
+        .filter_by(service_id=sample_service.id, local_date=process_day)
     )
+    result = db.session.execute(stmt)
+    assert result.rowcount == expected_count
