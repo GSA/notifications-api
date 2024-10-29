@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import Mock
 
 import pytest
 from flask import current_app
@@ -12,6 +13,7 @@ from app.dao.organization_dao import (
 from app.dao.services_dao import dao_archive_service
 from app.enums import OrganizationType
 from app.models import AnnualBilling, Organization
+from app.organization.rest import check_request_args
 from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
@@ -928,3 +930,47 @@ def test_get_organization_services_usage_returns_400_if_year_is_empty(admin_requ
         _expected_status=400,
     )
     assert response["message"] == "No valid year provided"
+
+
+def test_valid_request_args():
+    request = Mock()
+    request.args = {"org_id": "123", "name": "Test Org"}
+    org_id, name = check_request_args(request)
+    assert org_id == "123"
+    assert name == "Test Org"
+
+
+def test_missing_org_id():
+    request = Mock()
+    request.args = {"name": "Test Org"}
+    try:
+        check_request_args(request)
+        assert 1 == 0
+    except Exception as e:
+        assert e.status_code == 400
+        assert e.message == [{"org_id": ["Can't be empty"]}]
+
+
+def test_missing_name():
+    request = Mock()
+    request.args = {"org_id": "123"}
+    try:
+        check_request_args(request)
+        assert 1 == 0
+    except Exception as e:
+        assert e.status_code == 400
+        assert e.message == [{"name": ["Can't be empty"]}]
+
+
+def test_missing_both():
+    request = Mock()
+    request.args = {}
+    try:
+        check_request_args(request)
+        assert 1 == 0
+    except Exception as e:
+        assert e.status_code == 400
+        assert e.message == [
+            {"org_id": ["Can't be empty"]},
+            {"name": ["Can't be empty"]},
+        ]
