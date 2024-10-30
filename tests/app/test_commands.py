@@ -118,7 +118,7 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
     tomorrow = tomorrow.strftime("%Y-%m-%d")
 
     stmt = select(Job).where(Job.archived is True)
-    archived_jobs = db.session.execute(stmt).scalar()
+    archived_jobs = db.session.execute(stmt).scalar() or 0
     assert archived_jobs == 0
 
     notify_api.test_cli_runner().invoke(
@@ -245,7 +245,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     assert User.query.count() == user_count + 1
 
     # that user should be the one we added
-    stmt = select(User).where(name="Fake Personson")
+    stmt = select(User).where(User.name == "Fake Personson")
     user = db.session.execute(stmt).first()
     assert user.email_address == "somebody@fake.gov"
     assert user.auth_type == AuthType.SMS
@@ -419,7 +419,7 @@ def test_create_service_command(notify_db_session, notify_api):
 
     # that service should be the one we added
     stmt = select(Service).where(Service.name == "Fake Service")
-    service = db.session.execute(stmt).first()
+    service = db.session.execute(stmt).scalars().first()
     assert service.email_from == "somebody@fake.gov"
     assert service.restricted is False
     assert service.message_limit == 40000
