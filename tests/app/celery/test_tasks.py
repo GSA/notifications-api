@@ -1379,7 +1379,7 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     create_notification(sample_email_template, job, 0)
     create_notification(sample_email_template, job, 1)
 
-    stmt = select(Notification).where(Notification.job_id == job.id)
+    stmt = select(func.count()).select_from(Notification).where(Notification.job_id == job.id)
     assert db.session.execute(stmt).scalar() == 2
 
     process_incomplete_job(str(job.id))
