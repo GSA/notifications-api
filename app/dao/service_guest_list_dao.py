@@ -1,11 +1,12 @@
+from sqlalchemy import delete, select
+
 from app import db
 from app.models import ServiceGuestList
 
 
 def dao_fetch_service_guest_list(service_id):
-    return ServiceGuestList.query.filter(
-        ServiceGuestList.service_id == service_id
-    ).all()
+    stmt = select(ServiceGuestList).where(ServiceGuestList.service_id == service_id)
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_add_and_commit_guest_list_contacts(objs):
@@ -14,6 +15,7 @@ def dao_add_and_commit_guest_list_contacts(objs):
 
 
 def dao_remove_service_guest_list(service_id):
-    return ServiceGuestList.query.filter(
-        ServiceGuestList.service_id == service_id
-    ).delete()
+    stmt = delete(ServiceGuestList).where(ServiceGuestList.service_id == service_id)
+    result = db.session.execute(stmt)
+    db.session.commit()
+    return result.rowcount
