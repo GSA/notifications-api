@@ -8,9 +8,10 @@ import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
 from requests import RequestException
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import encryption
+from app import db, encryption
 from app.celery import provider_tasks, tasks
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
@@ -1166,7 +1167,13 @@ def test_process_incomplete_job_sms(mocker, sample_template):
     create_notification(sample_template, job, 0)
     create_notification(sample_template, job, 1)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    result = db.session.execute(stmt)
+    assert result.rowcount == 2
 
     process_incomplete_job(str(job.id))
 
