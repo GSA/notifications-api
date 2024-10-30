@@ -142,7 +142,7 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
 
 
 def _get_organization_query_count():
-    stmt = select(Organization)
+    stmt = select(func.count()).select_from(Organization)
     return db.session.execute(stmt).scalar() or 0
 
 

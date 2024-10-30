@@ -17,5 +17,4 @@ def dao_add_and_commit_guest_list_contacts(objs):
 def dao_remove_service_guest_list(service_id):
     stmt = delete(ServiceGuestList).where(ServiceGuestList.service_id == service_id)
     result = db.session.execute(stmt)
-    db.session.commit()
     return result.rowcount
