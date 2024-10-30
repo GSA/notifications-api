@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app import db
 from app.commands import (
@@ -56,8 +56,13 @@ from tests.app.db import (
 )
 
 
+def _get_user_query_count():
+    stmt = select(func.count()).select_from(User)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_purge_functional_test_data(notify_db_session, notify_api):
-    orig_user_count = User.query.count()
+    orig_user_count = _get_user_query_count()
 
     notify_api.test_cli_runner().invoke(
         create_test_user,
@@ -73,16 +78,16 @@ def test_purge_functional_test_data(notify_db_session, notify_api):
         ],
     )
 
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == orig_user_count + 1
     notify_api.test_cli_runner().invoke(purge_functional_test_data, ["-u", "somebody"])
     # if the email address has a uuid, it is test data so it should be purged and there should be
     # zero users.  Otherwise, it is real data so there should be one user.
-    assert User.query.count() == orig_user_count
+    assert _get_user_query_count() == orig_user_count
 
 
 def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == 0
     # run the command
     command_response = notify_api.test_cli_runner().invoke(
@@ -101,7 +106,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
     # The bad mobile phone number results in a bad parameter error,
     # leading to a system exit 2 and no entry made in db
     assert "SystemExit(2)" in str(command_response)
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == 0
 
 
@@ -136,8 +141,13 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
         assert job.archived is True
 
 
+def _get_organization_query_count():
+    stmt = select(Organization)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_populate_organizations_from_file(notify_db_session, notify_api):
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 0
 
     file_name = "./tests/app/orgs1.csv"
@@ -152,7 +162,7 @@ def test_populate_organizations_from_file(notify_db_session, notify_api):
     os.remove(file_name)
     print(f"command_response = {command_response}")
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
 
 
@@ -161,10 +171,10 @@ def test_populate_organization_agreement_details_from_file(
 ):
     file_name = "./tests/app/orgs.csv"
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 0
     create_organization()
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
 
     org = Organization.query.one()
@@ -183,7 +193,7 @@ def test_populate_organization_agreement_details_from_file(
     )
     print(f"command_response = {command_response}")
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
     org = Organization.query.one()
     assert org.agreement_signed_on_behalf_of_name == "bob"
@@ -224,7 +234,7 @@ def test_bulk_invite_user_to_service(
 
 def test_create_test_user_command(notify_db_session, notify_api):
     # number of users before adding ours
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
 
     # run the command
     notify_api.test_cli_runner().invoke(
@@ -242,7 +252,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     )
 
     # there should be one more user
-    assert User.query.count() == user_count + 1
+    assert _get_user_query_count() == user_count + 1
 
     # that user should be the one we added
     stmt = select(User).where(User.name == "Fake Personson")
