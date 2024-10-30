@@ -372,11 +372,10 @@ def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_pr
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    stmt = select(AnnualBilling).where(
+    results = AnnualBilling.query.filter(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    )
-    results = db.session.execute(stmt).scalars().all()
+    ).all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == 0
