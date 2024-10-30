@@ -60,9 +60,13 @@ def get_most_recent_inbound_sms_for_service(service_id):
     results = dao_get_paginated_most_recent_inbound_sms_by_user_number_for_service(
         service_id, int(page), limit_days
     )
-    return jsonify(
-        data=[row.serialize() for row in results.items], has_next=results.has_next
-    )
+    try:
+        x = jsonify(
+            data=[row.serialize() for row in results.items], has_next=results.has_next()
+        )
+    except Exception as e:
+        raise e
+    return x
 
 
 @inbound_sms.route("/summary")

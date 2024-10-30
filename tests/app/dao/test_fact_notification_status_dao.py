@@ -86,8 +86,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
 
     assert results[0].month.date() == date(2018, 1, 1)
     assert results[0].notification_type == NotificationType.EMAIL
-    # TODO fix/investigate
-    # assert results[0].notification_status == NotificationStatus.DELIVERED
+    assert results[0].notification_status == NotificationStatus.DELIVERED
     assert results[0].count == 1
 
     assert results[1].month.date() == date(2018, 1, 1)
