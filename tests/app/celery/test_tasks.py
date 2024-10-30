@@ -1172,12 +1172,13 @@ def test_process_incomplete_job_sms(mocker, sample_template):
         .select_from(Notification)
         .where(Notification.job_id == job.id)
     )
-    result = db.session.execute(stmt)
-    assert result.rowcount == 2
+    count = db.session.execute(stmt).scalar()
+    assert count == 2
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1213,11 +1214,17 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
     create_notification(sample_template, job, 8)
     create_notification(sample_template, job, 9)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 10
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 10
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1245,7 +1252,12 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     create_notification(sample_template, job, 1)
     create_notification(sample_template, job, 2)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 3
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 3
 
     job2 = create_job(
         template=sample_template,
@@ -1262,13 +1274,21 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     create_notification(sample_template, job2, 3)
     create_notification(sample_template, job2, 4)
 
-    assert Notification.query.filter(Notification.job_id == job2.id).count() == 5
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job2.id)
+    )
+
+    assert db.session.execute(stmt).scalar() == 5
 
     jobs = [job.id, job2.id]
     process_incomplete_jobs(jobs)
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
-    completed_job2 = Job.query.filter(Job.id == job2.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
+    stmt = select(Job).where(Job.id == job2.id)
+    completed_job2 = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1294,12 +1314,16 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
         processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
-
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 0
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 0
 
     process_incomplete_job(job.id)
-
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1355,11 +1379,13 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     create_notification(sample_email_template, job, 0)
     create_notification(sample_email_template, job, 1)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
+    stmt = select(Notification).where(Notification.job_id == job.id)
+    assert db.session.execute(stmt).scalar() == 2
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
