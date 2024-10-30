@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 _phone_regex = re.compile("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d")
 
+
 def _scrub(msg: Any) -> Any:
     # Sometimes just an exception object is passed in for the message, skip those.
     if not isinstance(msg, str):
