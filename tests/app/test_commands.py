@@ -418,7 +418,7 @@ def test_create_service_command(notify_db_session, notify_api):
     assert Service.query.count() == service_count + 1
 
     # that service should be the one we added
-    stmt = select(Service).where(name="Fake Service")
+    stmt = select(Service).where(Service.name == "Fake Service")
     service = db.session.execute(stmt).first()
     assert service.email_from == "somebody@fake.gov"
     assert service.restricted is False
