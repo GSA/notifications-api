@@ -1,6 +1,8 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app import db
 from app.dao.inbound_numbers_dao import (
     dao_allocate_number_for_service,
     dao_get_available_inbound_numbers,
@@ -35,7 +37,8 @@ def test_set_service_id_on_inbound_number(notify_db_session, sample_inbound_numb
 
     dao_set_inbound_number_to_service(service.id, numbers[0])
 
-    res = InboundNumber.query.filter(InboundNumber.service_id == service.id).all()
+    stmt = select(InboundNumber).filter(InboundNumber.service_id == service.id)
+    res = db.session.execute(stmt).scalars().all()
 
     assert len(res) == 1
     assert res[0].service_id == service.id
