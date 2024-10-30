@@ -6,8 +6,10 @@ from unittest.mock import ANY
 import pytest
 from flask import current_app, url_for
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
 from app.dao.organization_dao import dao_add_service_to_organization
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.dao.service_user_dao import dao_get_service_user
@@ -424,9 +426,8 @@ def test_create_service(
 
     assert json_resp["data"]["name"] == "created service"
 
-    service_sms_senders = ServiceSmsSender.query.filter_by(
-        service_id=service_db.id
-    ).all()
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service_db.id)
+    service_sms_senders = db.session.execute(stmt).scalars().all()
     assert len(service_sms_senders) == 1
     assert service_sms_senders[0].sms_sender == current_app.config["FROM_NUMBER"]
 
@@ -530,7 +531,13 @@ def test_create_service_should_raise_exception_and_not_create_service_if_annual_
 
     annual_billing = AnnualBilling.query.all()
     assert len(annual_billing) == 0
-    assert len(Service.query.filter(Service.name == "created service").all()) == 0
+    stmt = (
+        select(func.count())
+        .select_from(Service)
+        .where(Service.name == "created service")
+    )
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 def test_create_service_inherits_branding_from_organization(
@@ -933,7 +940,8 @@ def test_update_service_flags_will_remove_service_permissions(
     assert resp.status_code == 200
     assert ServicePermissionType.INTERNATIONAL_SMS not in result["data"]["permissions"]
 
-    permissions = ServicePermission.query.filter_by(service_id=service.id).all()
+    stmt = select(ServicePermission).where(ServicePermission.service_id == service.id)
+    permissions = db.session.execute(stmt).scalars().all()
     assert {p.permission for p in permissions} == {
         ServicePermissionType.SMS,
         ServicePermissionType.EMAIL,
@@ -1004,9 +1012,10 @@ def test_add_service_permission_will_add_permission(
         headers=[("Content-Type", "application/json"), auth_header],
     )
 
-    permissions = ServicePermission.query.filter_by(
-        service_id=service_with_no_permissions.id
-    ).all()
+    stmt = select(ServicePermission).where(
+        ServicePermission.service_id == service_with_no_permissions.id
+    )
+    permissions = db.session.execute(stmt).scalars().all()
 
     assert resp.status_code == 200
     assert [p.permission for p in permissions] == [permission_to_add]
@@ -3318,8 +3327,13 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_inserts_new_sms_sen
     assert resp_json["inbound_number_id"] == str(inbound_number.id)
     assert resp_json["is_default"]
 
-    senders = ServiceSmsSender.query.filter_by(service_id=service.id).all()
-    assert len(senders) == 3
+    stmt = (
+        select(func.count())
+        .select_from(ServiceSmsSender)
+        .where(ServiceSmsSender.service_id == service.id)
+    )
+    senders = db.session.execute(stmt).scalar() or 0
+    assert senders == 3
 
 
 def test_add_service_sms_sender_switches_default(client, notify_db_session):
@@ -3341,7 +3355,8 @@ def test_add_service_sms_sender_switches_default(client, notify_db_session):
     assert resp_json["sms_sender"] == "second"
     assert not resp_json["inbound_number_id"]
     assert resp_json["is_default"]
-    sms_senders = ServiceSmsSender.query.filter_by(sms_sender="first").first()
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.sms_sender == "first")
+    sms_senders = db.session.execute(stmt).scalars().first()
     assert not sms_senders.is_default
 
 
@@ -3407,7 +3422,8 @@ def test_update_service_sms_sender_switches_default(client, notify_db_session):
     assert resp_json["sms_sender"] == "second"
     assert not resp_json["inbound_number_id"]
     assert resp_json["is_default"]
-    sms_senders = ServiceSmsSender.query.filter_by(sms_sender="first").first()
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.sms_sender == "first")
+    sms_senders = db.session.execute(stmt).scalars().first()
     assert not sms_senders.is_default
 
 

@@ -2,7 +2,9 @@ import uuid
 from datetime import datetime, timedelta
 
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.notifications_dao import (
     insert_notification_history_delete_notifications,
     move_notifications_to_notification_history,
@@ -172,12 +174,13 @@ def test_move_notifications_just_deletes_test_key_notifications(sample_template)
 
     assert Notification.query.count() == 0
     assert NotificationHistory.query.count() == 2
-    assert (
-        NotificationHistory.query.filter(
-            NotificationHistory.key_type == KeyType.TEST
-        ).count()
-        == 0
+    stmt = (
+        select(func.count())
+        .select_from(NotificationHistory)
+        .where(NotificationHistory.key_type == KeyType.TEST)
     )
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @freeze_time("2020-03-20 14:00")
