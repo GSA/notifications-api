@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open
 
 import pytest
+from sqlalchemy import select
 
+from app import db
 from app.commands import (
     _update_template,
     bulk_invite_user_to_service,
@@ -115,7 +117,8 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
     right_now = right_now.strftime("%Y-%m-%d")
     tomorrow = tomorrow.strftime("%Y-%m-%d")
 
-    archived_jobs = Job.query.filter(Job.archived is True).count()
+    stmt = select(Job).where(Job.archived is True)
+    archived_jobs = db.session.execute(stmt).scalar()
     assert archived_jobs == 0
 
     notify_api.test_cli_runner().invoke(
@@ -242,7 +245,8 @@ def test_create_test_user_command(notify_db_session, notify_api):
     assert User.query.count() == user_count + 1
 
     # that user should be the one we added
-    user = User.query.filter_by(name="Fake Personson").first()
+    stmt = select(User).where(name="Fake Personson")
+    user = db.session.execute(stmt).first()
     assert user.email_address == "somebody@fake.gov"
     assert user.auth_type == AuthType.SMS
     assert user.state == "active"
@@ -281,10 +285,11 @@ def test_populate_annual_billing_with_defaults(
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
@@ -306,10 +311,11 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
@@ -318,10 +324,11 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
         populate_annual_billing_with_the_previous_years_allowance, ["-y", 2023]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2023,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
@@ -355,10 +362,11 @@ def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_pr
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == 0
@@ -410,7 +418,8 @@ def test_create_service_command(notify_db_session, notify_api):
     assert Service.query.count() == service_count + 1
 
     # that service should be the one we added
-    service = Service.query.filter_by(name="Fake Service").first()
+    stmt = select(Service).where(name="Fake Service")
+    service = db.session.execute(stmt).first()
     assert service.email_from == "somebody@fake.gov"
     assert service.restricted is False
     assert service.message_limit == 40000
