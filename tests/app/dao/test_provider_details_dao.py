@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun import freeze_time
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from app import db, notification_provider_clients
 from app.dao.provider_details_dao import (
@@ -69,7 +69,6 @@ def test_should_not_error_if_any_provider_in_code_not_in_database(
     stmt = delete(ProviderDetails).where(ProviderDetails.identifier == "sns")
     db.session.execute(stmt)
     db.session.commit()
-    # ProviderDetails.query.filter_by(identifier="sns").delete()
 
     assert notification_provider_clients.get_sms_client("sns")
 
@@ -135,9 +134,13 @@ def test_get_alternative_sms_provider_fails_if_unrecognised():
 
 @freeze_time("2016-01-01 01:00")
 def test_get_sms_providers_for_update_returns_providers(restore_provider_details):
-    ProviderDetails.query.filter(ProviderDetails.identifier == "sns").update(
-        {"updated_at": None}
+    stmt = (
+        update(ProviderDetails)
+        .where(ProviderDetails.identifier == "sns")
+        .values({"updated_at": None})
     )
+    db.session.execute(stmt)
+    db.session.commit()
 
     resp = _get_sms_providers_for_update(timedelta(hours=1))
 
@@ -149,9 +152,13 @@ def test_get_sms_providers_for_update_returns_nothing_if_recent_updates(
     restore_provider_details,
 ):
     fifty_nine_minutes_ago = datetime(2016, 1, 1, 0, 1)
-    ProviderDetails.query.filter(ProviderDetails.identifier == "sns").update(
-        {"updated_at": fifty_nine_minutes_ago}
+    stmt = (
+        update(ProviderDetails)
+        .where(ProviderDetails.identifier == "sns")
+        .values({"updated_at": fifty_nine_minutes_ago})
     )
+    db.session.execute(stmt)
+    db.session.commit()
 
     resp = _get_sms_providers_for_update(timedelta(hours=1))
 

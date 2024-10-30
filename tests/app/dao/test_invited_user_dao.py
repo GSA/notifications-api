@@ -2,6 +2,7 @@ import uuid
 from datetime import timedelta
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
@@ -123,23 +124,17 @@ def test_should_delete_all_invitations_more_than_one_day_old(
 ):
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
     make_invitation(sample_user, sample_service, age=timedelta(hours=48))
-    assert (
-        len(
-            InvitedUser.query.filter(
-                InvitedUser.status != InvitedUserStatus.EXPIRED
-            ).all()
-        )
-        == 2
-    )
+    stmt = select(InvitedUser).where(InvitedUser.status != InvitedUserStatus.EXPIRED)
+    result = db.session.execute(stmt).scalars().all()
+    assert len(result) == 2
     expire_invitations_created_more_than_two_days_ago()
-    assert (
-        len(
-            InvitedUser.query.filter(
-                InvitedUser.status != InvitedUserStatus.EXPIRED
-            ).all()
-        )
-        == 0
+    stmt = (
+        select(func.count())
+        .select_from(InvitedUser)
+        .where(InvitedUser.status != InvitedUserStatus.EXPIRED)
     )
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 def test_should_not_delete_invitations_less_than_two_days_old(
@@ -160,35 +155,28 @@ def test_should_not_delete_invitations_less_than_two_days_old(
         email_address="expired@1.com",
     )
 
-    assert (
-        len(
-            InvitedUser.query.filter(
-                InvitedUser.status != InvitedUserStatus.EXPIRED
-            ).all()
-        )
-        == 2
+    stmt = (
+        select(func.count())
+        .select_from(InvitedUser)
+        .where(InvitedUser.status != InvitedUserStatus.EXPIRED)
     )
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 2
     expire_invitations_created_more_than_two_days_ago()
-    assert (
-        len(
-            InvitedUser.query.filter(
-                InvitedUser.status != InvitedUserStatus.EXPIRED
-            ).all()
-        )
-        == 1
+    stmt = (
+        select(func.count())
+        .select_from(InvitedUser)
+        .where(InvitedUser.status != InvitedUserStatus.EXPIRED)
     )
-    assert (
-        InvitedUser.query.filter(InvitedUser.status != InvitedUserStatus.EXPIRED)
-        .first()
-        .email_address
-        == "valid@2.com"
-    )
-    assert (
-        InvitedUser.query.filter(InvitedUser.status == InvitedUserStatus.EXPIRED)
-        .first()
-        .email_address
-        == "expired@1.com"
-    )
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
+    stmt = select(InvitedUser).where(InvitedUser.status != InvitedUserStatus.EXPIRED)
+    invited_user = db.session.execute(stmt).scalars().first()
+    assert invited_user.email_address == "valid@2.com"
+    stmt = select(InvitedUser).where(InvitedUser.status == InvitedUserStatus.EXPIRED)
+    invited_user = db.session.execute(stmt).scalars().first()
+
+    assert invited_user.email_address == "expired@1.com"
 
 
 def make_invitation(user, service, age=None, email_address="test@test.com"):
