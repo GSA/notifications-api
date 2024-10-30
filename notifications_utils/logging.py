@@ -18,12 +18,13 @@ TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 logger = logging.getLogger(__name__)
 
+_phone_regex = re.compile("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d")
 
 def _scrub(msg: Any) -> Any:
     # Sometimes just an exception object is passed in for the message, skip those.
     if not isinstance(msg, str):
         return msg
-    phones = re.findall("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d", msg)
+    phones = _phone_regex.findall(msg)
 
     phones = [phone.replace("-", "").replace(" ", "") for phone in phones]
     for phone in phones:
