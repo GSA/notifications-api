@@ -531,7 +531,12 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
         encryption.encrypt(notification),
     )
     assert provider_tasks.deliver_sms.apply_async.called is False
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
+
+
+def _get_notification_query_count():
+    stmt = select(func.count()).select_from(Notification)
+    return db.session.execute(stmt).scalar() or 0
 
 
 def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
@@ -553,7 +558,7 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
         encryption.encrypt(notification),
     )
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
@@ -593,7 +598,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
 def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
     notify_db_session, mocker
 ):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
@@ -611,7 +616,7 @@ def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
         encryption.encrypt(notification),
     )
     assert provider_tasks.deliver_sms.apply_async.called is False
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_use_email_template_and_persist(
@@ -836,7 +841,7 @@ def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, m
     assert provider_tasks.deliver_sms.apply_async.called is False
     tasks.save_sms.retry.assert_called_with(exc=expected_exception, queue="retry-tasks")
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_save_email_should_go_to_retry_queue_if_database_errors(
@@ -866,7 +871,7 @@ def test_save_email_should_go_to_retry_queue_if_database_errors(
         exc=expected_exception, queue="retry-tasks"
     )
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_save_email_does_not_send_duplicate_and_does_not_put_in_retry_queue(
@@ -888,7 +893,7 @@ def test_save_email_does_not_send_duplicate_and_does_not_put_in_retry_queue(
         notification_id,
         encryption.encrypt(json),
     )
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
     assert not deliver_email.called
     assert not retry.called
 
@@ -912,7 +917,7 @@ def test_save_sms_does_not_send_duplicate_and_does_not_put_in_retry_queue(
         notification_id,
         encryption.encrypt(json),
     )
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
     assert not deliver_sms.called
     assert not retry.called
 

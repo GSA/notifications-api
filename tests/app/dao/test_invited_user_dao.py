@@ -19,8 +19,13 @@ from app.utils import utc_now
 from tests.app.db import create_invited_user
 
 
+def _get_invited_user_count():
+    stmt = select(func.count()).select_from(InvitedUser)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_create_invited_user(notify_db_session, sample_service):
-    assert InvitedUser.query.count() == 0
+    assert _get_invited_user_count() == 0
     email_address = "invited_user@service.gov.uk"
     invite_from = sample_service.users[0]
 
@@ -35,7 +40,7 @@ def test_create_invited_user(notify_db_session, sample_service):
     invited_user = InvitedUser(**data)
     save_invited_user(invited_user)
 
-    assert InvitedUser.query.count() == 1
+    assert _get_invited_user_count() == 1
     assert invited_user.email_address == email_address
     assert invited_user.from_user == invite_from
     permissions = invited_user.get_permissions()
@@ -48,7 +53,7 @@ def test_create_invited_user(notify_db_session, sample_service):
 def test_create_invited_user_sets_default_folder_permissions_of_empty_list(
     sample_service,
 ):
-    assert InvitedUser.query.count() == 0
+    assert _get_invited_user_count() == 0
     invite_from = sample_service.users[0]
 
     data = {
@@ -61,7 +66,7 @@ def test_create_invited_user_sets_default_folder_permissions_of_empty_list(
     invited_user = InvitedUser(**data)
     save_invited_user(invited_user)
 
-    assert InvitedUser.query.count() == 1
+    assert _get_invited_user_count() == 1
     assert invited_user.folder_permissions == []
 
 
@@ -109,12 +114,12 @@ def test_get_invited_users_for_service_that_has_no_invites(
 def test_save_invited_user_sets_status_to_cancelled(
     notify_db_session, sample_invited_user
 ):
-    assert InvitedUser.query.count() == 1
+    assert _get_invited_user_count() == 1
     saved = InvitedUser.query.get(sample_invited_user.id)
     assert saved.status == InvitedUserStatus.PENDING
     saved.status = InvitedUserStatus.CANCELLED
     save_invited_user(saved)
-    assert InvitedUser.query.count() == 1
+    assert _get_invited_user_count() == 1
     cancelled_invited_user = InvitedUser.query.get(sample_invited_user.id)
     assert cancelled_invited_user.status == InvitedUserStatus.CANCELLED
 
