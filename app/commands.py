@@ -655,7 +655,8 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                     AnnualBilling.financial_year_start == year,
                 ),
             )
-            .where(Service.active, AnnualBilling.id == None)  # noqa
+            .where(Service.active)
+            .where(AnnualBilling.id == None)  # noqa
         )
         active_services = db.session.execute(stmt).scalars().all()
     else:
