@@ -646,8 +646,8 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
     This is useful to ensure all services start the new year with the correct annual billing.
     """
     if missing_services_only:
-        stmt = (
-            select(Service)
+        active_services = (
+            Service.query.filter(Service.active)
             .outerjoin(
                 AnnualBilling,
                 and_(
@@ -655,19 +655,20 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                     AnnualBilling.financial_year_start == year,
                 ),
             )
-            .where(Service.active)
-            .where(AnnualBilling.id == None)  # noqa
+            .filter(AnnualBilling.id == None)  # noqa
+            .all()
         )
-        active_services = db.session.execute(stmt).scalars().all()
     else:
-        stmt = select(Service).where(Service.active)
-        active_services = db.session.execute(stmt).scalars().all()
+        active_services = Service.query.filter(Service.active).all()
     previous_year = year - 1
-    stmt = select(AnnualBilling.id).where(
-        AnnualBilling.financial_year_start == previous_year,
-        AnnualBilling.free_sms_fragment_limit == 0,
+    services_with_zero_free_allowance = (
+        db.session.query(AnnualBilling.service_id)
+        .filter(
+            AnnualBilling.financial_year_start == previous_year,
+            AnnualBilling.free_sms_fragment_limit == 0,
+        )
+        .all()
     )
-    services_with_zero_free_allowance = db.session.execute(stmt).scalars().all()
 
     for service in active_services:
         # If a service has free_sms_fragment_limit for the previous year
