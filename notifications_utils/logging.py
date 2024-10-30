@@ -19,7 +19,7 @@ TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 logger = logging.getLogger(__name__)
 
 _phone_regex = re.compile("(?:\\+ *)?\\d[\\d\\- ]{7,}\\d")
-
+_email_regex = re.compile(r"[\w\.-]+@[\w\.-]+")  # ['alice@google.com', 'bob@abc.com']
 
 def _scrub(msg: Any) -> Any:
     # Sometimes just an exception object is passed in for the message, skip those.
@@ -31,9 +31,7 @@ def _scrub(msg: Any) -> Any:
     for phone in phones:
         msg = msg.replace(phone, "1XXXXXXXXXX")
 
-    emails = re.findall(
-        r"[\w\.-]+@[\w\.-]+", msg
-    )  # ['alice@google.com', 'bob@abc.com']
+    emails = _email_regex.findall(msg)
     for email in emails:
         # do something with each found email string
         masked_email = "XXXXX@XXXXXXX"
