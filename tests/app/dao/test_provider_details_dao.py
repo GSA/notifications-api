@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import delete, select
 
-from app import notification_provider_clients
+from app import db, notification_provider_clients
 from app.dao.provider_details_dao import (
     _get_sms_providers_for_update,
     dao_get_provider_stats,
@@ -65,17 +66,20 @@ def test_can_get_email_providers(notify_db_session):
 def test_should_not_error_if_any_provider_in_code_not_in_database(
     restore_provider_details,
 ):
-    ProviderDetails.query.filter_by(identifier="sns").delete()
+    stmt = delete(ProviderDetails).where(ProviderDetails.identifier == "sns")
+    db.session.execute(stmt)
+    db.session.commit()
+    # ProviderDetails.query.filter_by(identifier="sns").delete()
 
     assert notification_provider_clients.get_sms_client("sns")
 
 
 @freeze_time("2000-01-01T00:00:00")
 def test_update_adds_history(restore_provider_details):
-    ses = ProviderDetails.query.filter(ProviderDetails.identifier == "ses").one()
-    ses_history = ProviderDetailsHistory.query.filter(
-        ProviderDetailsHistory.id == ses.id
-    ).one()
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == "ses")
+    ses = db.session.execute(stmt).scalars().one()
+    stmt = select(ProviderDetailsHistory).where(ProviderDetailsHistory.id == ses.id)
+    ses_history = db.session.execute(stmt).scalars().one()
 
     assert ses.version == 1
     assert ses_history.version == 1
@@ -88,11 +92,12 @@ def test_update_adds_history(restore_provider_details):
     assert not ses.active
     assert ses.updated_at == datetime(2000, 1, 1, 0, 0, 0)
 
-    ses_history = (
-        ProviderDetailsHistory.query.filter(ProviderDetailsHistory.id == ses.id)
+    stmt = (
+        select(ProviderDetailsHistory)
+        .where(ProviderDetailsHistory.id == ses.id)
         .order_by(ProviderDetailsHistory.version)
-        .all()
     )
+    ses_history = db.session.execute(stmt).scalars().all()
 
     assert ses_history[0].active
     assert ses_history[0].version == 1
