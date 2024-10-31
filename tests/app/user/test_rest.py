@@ -336,7 +336,8 @@ def test_post_user_attribute_with_updated_by_sends_notification_to_international
         _data=update_dict,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     assert (
         notification.reply_to_text
         == current_app.config["NOTIFY_INTERNATIONAL_SMS_SENDER"]
@@ -526,7 +527,9 @@ def test_set_user_permissions_remove_old(admin_request, sample_user, sample_serv
     )
     count = db.session.execute(query).scalar() or 0
     assert count == 1
-    assert query.first().permission == PermissionType.MANAGE_SETTINGS
+    query = select(Permission).where(Permission.user == sample_user)
+    first_permission = db.session.execute(query).scalars().first()
+    assert first_permission.permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_folder_permissions(admin_request, sample_user, sample_service):
@@ -658,7 +661,8 @@ def test_send_already_registered_email(
         _expected_status=204,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )
@@ -696,8 +700,8 @@ def test_send_user_confirm_new_email_returns_204(
         _data=data,
         _expected_status=204,
     )
-
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )

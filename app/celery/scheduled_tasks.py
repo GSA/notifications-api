@@ -105,24 +105,23 @@ def check_job_status():
     thirty_minutes_ago = utc_now() - timedelta(minutes=30)
     thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
-    stmt = select(Job).where(
+    incomplete_in_progress_jobs = select(Job).where(
         Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
-    incomplete_in_progress_jobs = db.session.execute(stmt).scalars().all()
+    # incomplete_in_progress_jobs = db.session.execute(stmt).scalars().all()
 
-    stmt = select(Job).where(
+    incomplete_pending_jobs = select(Job).where(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
-    incomplete_pending_jobs = db.session.execute(stmt).scalars().all()
+    # incomplete_pending_jobs = db.session.execute(stmt).scalars().all()
 
-    jobs_not_complete_after_30_minutes = (
-        incomplete_in_progress_jobs.union(incomplete_pending_jobs)
-        .order_by(Job.processing_started, Job.scheduled_for)
-        .all()
+    stmt = incomplete_in_progress_jobs.union(incomplete_pending_jobs).order_by(
+        Job.processing_started, Job.scheduled_for
     )
+    jobs_not_complete_after_30_minutes = db.session.execute(stmt).scalars().all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
