@@ -28,7 +28,7 @@ def get_expired_invite_by_service_and_id(service_id, invited_user_id):
         InvitedUser.id == invited_user_id,
         InvitedUser.status == InvitedUserStatus.EXPIRED,
     )
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_invited_user_by_id(invited_user_id):

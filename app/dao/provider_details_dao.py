@@ -30,9 +30,10 @@ def dao_get_provider_versions(provider_id):
         select(ProviderDetailsHistory)
         .where(ProviderDetailsHistory.id == provider_id)
         .order_by(desc(ProviderDetailsHistory.version))
+        .limit(100)
     )
     # limit results instead of adding pagination
-    return db.session.execute(stmt).limit(100).scalars().all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def _get_sms_providers_for_update(time_threshold):
