@@ -15,7 +15,7 @@ def get_provider_details_by_id(provider_details_id):
 
 
 def get_provider_details_by_identifier(identifier):
-    stmt = select(ProviderDetails).where(identifier=identifier)
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == identifier)
     return db.session.execute(stmt).scalars().one()
 
 
@@ -26,12 +26,13 @@ def get_alternative_sms_provider(identifier):
 
 
 def dao_get_provider_versions(provider_id):
-    return (
-        ProviderDetailsHistory.query.filter_by(id=provider_id)
+    stmt = (
+        select(ProviderDetailsHistory)
+        .where(ProviderDetailsHistory.id == provider_id)
         .order_by(desc(ProviderDetailsHistory.version))
-        .limit(100)  # limit results instead of adding pagination
-        .all()
     )
+    # limit results instead of adding pagination
+    return db.session.execute(stmt).limit(100).scalars().all()
 
 
 def _get_sms_providers_for_update(time_threshold):
@@ -43,14 +44,15 @@ def _get_sms_providers_for_update(time_threshold):
     release the transaction in that case
     """
     # get current priority of both providers
-    q = (
-        ProviderDetails.query.filter(
+    stmt = (
+        select(ProviderDetails)
+        .where(
             ProviderDetails.notification_type == NotificationType.SMS,
             ProviderDetails.active,
         )
         .with_for_update()
-        .all()
     )
+    q = db.session.execute(stmt).scalars().all()
 
     # if something updated recently, don't update again. If the updated_at is null, treat it as min time
     if any(
@@ -73,7 +75,8 @@ def get_provider_details_by_notification_type(
     if supports_international:
         filters.append(ProviderDetails.supports_international == supports_international)
 
-    return ProviderDetails.query.filter(*filters).all()
+    stmt = select(ProviderDetails).where(*filters)
+    return db.session.execute(stmt).scalars().all()
 
 
 @autocommit
