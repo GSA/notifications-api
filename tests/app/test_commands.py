@@ -414,17 +414,20 @@ def test_create_service_command(notify_db_session, notify_api):
 
     user = User.query.first()
 
-    service_count = Service.query.count()
+    stmt = select(func.count()).select_from(Service)
+    service_count = db.session.execute(stmt).scalar() or 0
 
     # run the command
-    result = notify_api.test_cli_runner().invoke(
+    notify_api.test_cli_runner().invoke(
         create_new_service,
         ["-e", "somebody@fake.gov", "-n", "Fake Service", "-c", user.id],
     )
-    print(result)
 
     # there should be one more service
-    assert Service.query.count() == service_count + 1
+
+    stmt = select(func.count()).select_from(Service)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == service_count + 1
 
     # that service should be the one we added
     stmt = select(Service).where(Service.name == "Fake Service")

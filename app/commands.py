@@ -646,8 +646,9 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
     This is useful to ensure all services start the new year with the correct annual billing.
     """
     if missing_services_only:
-        active_services = (
-            Service.query.filter(Service.active)
+        stmt = (
+            select(Service)
+            .where(Service.active)
             .outerjoin(
                 AnnualBilling,
                 and_(
@@ -656,10 +657,11 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                 ),
             )
             .filter(AnnualBilling.id == None)  # noqa
-            .all()
         )
+        active_services = db.session.execute(stmt).scalars().all()
     else:
-        active_services = Service.query.filter(Service.active).all()
+        stmt = select(Service).where(Service.active)
+        active_services = db.session.execute(stmt).scalars().all()
     previous_year = year - 1
     services_with_zero_free_allowance = (
         db.session.query(AnnualBilling.service_id)

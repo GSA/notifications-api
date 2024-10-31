@@ -42,10 +42,15 @@ def test_move_notifications_does_nothing_if_notification_history_row_already_exi
         1,
     )
 
-    assert Notification.query.count() == 0
+    assert _get_notification_count() == 0
     history = NotificationHistory.query.all()
     assert len(history) == 1
     assert history[0].status == NotificationStatus.DELIVERED
+
+
+def _get_notification_count():
+    stmt = select(func.count()).select_from(Notification)
+    return db.session.execute(stmt).scalar() or 0
 
 
 def test_move_notifications_only_moves_notifications_older_than_provided_timestamp(
@@ -172,8 +177,10 @@ def test_move_notifications_just_deletes_test_key_notifications(sample_template)
 
     assert result == 2
 
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 2
+    assert _get_notification_count() == 0
+    stmt = select(func.count()).select_from(NotificationHistory)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 2
     stmt = (
         select(func.count())
         .select_from(NotificationHistory)
