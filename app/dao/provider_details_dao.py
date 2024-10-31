@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import current_app
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, select
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -11,11 +11,12 @@ from app.utils import utc_now
 
 
 def get_provider_details_by_id(provider_details_id):
-    return ProviderDetails.query.get(provider_details_id)
+    return db.session.get(ProviderDetails, provider_details_id)
 
 
 def get_provider_details_by_identifier(identifier):
-    return ProviderDetails.query.filter_by(identifier=identifier).one()
+    stmt = select(ProviderDetails).where(identifier=identifier)
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_alternative_sms_provider(identifier):
