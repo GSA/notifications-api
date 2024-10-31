@@ -4,7 +4,9 @@ from unittest import mock
 
 import pytest
 from flask import json
+from sqlalchemy import func, select
 
+from app import db
 from app.enums import ServicePermissionType
 from app.models import InboundSms
 from app.notifications.receive_notifications import (
@@ -99,7 +101,9 @@ def test_receive_notification_from_sns_without_permissions_does_not_persist(
     parsed_response = json.loads(response.get_data(as_text=True))
     assert parsed_response["result"] == "success"
 
-    assert InboundSms.query.count() == 0
+    stmt = select(func.count()).select_from(InboundSms)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
     assert mocked.called is False
 
 
@@ -285,7 +289,10 @@ def test_receive_notification_error_if_not_single_matching_service(
     # we still return 'RECEIVED' to MMG
     assert response.status_code == 200
     assert response.get_data(as_text=True) == "RECEIVED"
-    assert InboundSms.query.count() == 0
+
+    stmt = select(func.count()).select_from(InboundSms)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
