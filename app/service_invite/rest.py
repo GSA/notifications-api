@@ -155,6 +155,9 @@ def resend_service_invite(service_id, invited_user_id):
         invited_user_id=invited_user_id,
     )
 
+    nonce = request.json["nonce"]
+    state = request.json["state"]
+
     fetched.created_at = utc_now()
     fetched.status = InvitedUserStatus.PENDING
 
@@ -163,7 +166,7 @@ def resend_service_invite(service_id, invited_user_id):
 
     save_invited_user(update_dict)
 
-    _create_service_invite(fetched, current_app.config["ADMIN_BASE_URL"])
+    _create_service_invite(fetched, nonce, state)
 
     return jsonify(data=invited_user_schema.dump(fetched)), 200
 
