@@ -16,7 +16,9 @@ AWS_CLIENT_CONFIG = Config(
     # This is the default but just for doc sake
     # there may come a time when increasing this helps
     # with job cache management.
-    max_pool_connections=10,
+    # max_pool_connections=10,
+    # Reducing to 4 connections due to BrokenPipeErrors
+    max_pool_connections=4,
 )
 
 
