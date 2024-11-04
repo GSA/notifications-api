@@ -84,7 +84,7 @@ test: ## Run tests and create coverage report
 	poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
 
     ## TODO set this back to 95 asap
-	poetry run coverage report -m --fail-under=91
+	poetry run coverage report -m --fail-under=94
 	poetry run coverage html -d .coverage_cache
 
 .PHONY: py-lock

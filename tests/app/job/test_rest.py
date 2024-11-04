@@ -837,7 +837,7 @@ def test_get_jobs_should_paginate(admin_request, sample_template):
     assert resp_json["page_size"] == 2
     assert resp_json["total"] == 10
     assert "links" in resp_json
-    assert set(resp_json["links"].keys()) == {"next", "last"}
+    assert set(resp_json["links"].keys()) == {"next", "last", "prev"}
 
 
 def test_get_jobs_accepts_page_parameter(admin_request, sample_template):

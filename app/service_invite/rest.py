@@ -32,19 +32,13 @@ service_invite = Blueprint("service_invite", __name__)
 register_errors(service_invite)
 
 
-def _create_service_invite(invited_user, invite_link_host):
+def _create_service_invite(invited_user, nonce):
 
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
     template = dao_get_template_by_id(template_id)
 
     service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
-
-    token = generate_token(
-        str(invited_user.email_address),
-        current_app.config["SECRET_KEY"],
-        current_app.config["DANGEROUS_SALT"],
-    )
 
     # The raw permissions are in the form "a,b,c,d"
     # but need to be in the form ["a", "b", "c", "d"]
@@ -59,7 +53,8 @@ def _create_service_invite(invited_user, invite_link_host):
     data["invited_user_email"] = invited_user.email_address
 
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
-    url = url.replace("NONCE", token)
+
+    url = url.replace("NONCE", nonce)  # handed from data sent from admin.
 
     user_data_url_safe = get_user_data_url_safe(data)
 
@@ -86,7 +81,7 @@ def _create_service_invite(invited_user, invite_link_host):
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
-        ex=2*24*60*60,
+        ex=2 * 24 * 60 * 60,
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
@@ -94,10 +89,16 @@ def _create_service_invite(invited_user, invite_link_host):
 @service_invite.route("/service/<service_id>/invite", methods=["POST"])
 def create_invited_user(service_id):
     request_json = request.get_json()
+    try:
+        nonce = request_json.pop("nonce")
+    except KeyError:
+        current_app.logger.exception("nonce not found in submitted data.")
+        raise
+
     invited_user = invited_user_schema.load(request_json)
     save_invited_user(invited_user)
 
-    _create_service_invite(invited_user, request_json.get("invite_link_host"))
+    _create_service_invite(invited_user, nonce)
 
     return jsonify(data=invited_user_schema.dump(invited_user)), 201
 

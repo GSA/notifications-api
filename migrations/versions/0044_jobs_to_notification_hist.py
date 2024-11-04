@@ -31,10 +31,10 @@ def upgrade():
     #
     # go_live = datetime.datetime.strptime('2016-05-18', '%Y-%m-%d')
     # notifications_history_start_date = datetime.datetime.strptime('2016-06-26 23:21:55', '%Y-%m-%d %H:%M:%S')
-    # jobs = session.query(Job).join(Template).filter(Job.service_id == '95316ff0-e555-462d-a6e7-95d26fbfd091',
+    # stmt = select(Job).join(Template).filter(Job.service_id == '95316ff0-e555-462d-a6e7-95d26fbfd091',
     #                                                 Job.created_at >= go_live,
     #                                                 Job.created_at < notifications_history_start_date).all()
-    #
+    # jobs = db.session.execute(stmt).scalars().all()
     # for job in jobs:
     #     for i in range(0, job.notifications_delivered):
     #         notification = NotificationHistory(id=uuid.uuid4(),
@@ -76,12 +76,11 @@ def downgrade():
     #
     # go_live = datetime.datetime.strptime('2016-05-18', '%Y-%m-%d')
     # notifications_history_start_date = datetime.datetime.strptime('2016-06-26 23:21:55', '%Y-%m-%d %H:%M:%S')
-    #
-    # session.query(NotificationHistory).filter(
+    # stmt = delete(NotificationHistory).where(
     #     NotificationHistory.created_at >= go_live,
     #     NotificationHistory.service_id == '95316ff0-e555-462d-a6e7-95d26fbfd091',
-    #     NotificationHistory.created_at < notifications_history_start_date).delete()
-    #
+    #     NotificationHistory.created_at < notifications_history_start_date)
+    # session.execute(stmt)
     # session.commit()
     # ### end Alembic commands ###
     pass

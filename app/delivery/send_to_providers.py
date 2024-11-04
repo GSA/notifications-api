@@ -98,17 +98,7 @@ def send_sms_to_provider(notification):
 
                 # TODO This is temporary to test the capability of validating phone numbers
                 # The future home of the validation is TBD
-                if "+" not in recipient:
-                    recipient_lookup = f"+{recipient}"
-                else:
-                    recipient_lookup = recipient
-                if recipient_lookup in current_app.config[
-                    "SIMULATED_SMS_NUMBERS"
-                ] and os.getenv("NOTIFY_ENVIRONMENT") in ["development", "test"]:
-                    current_app.logger.info(hilite("#validate-phone-number fired"))
-                    aws_pinpoint_client.validate_phone_number("01", recipient)
-                else:
-                    current_app.logger.info(hilite("#validate-phone-number not fired"))
+                _experimentally_validate_phone_numbers(recipient)
 
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
@@ -143,6 +133,18 @@ def send_sms_to_provider(notification):
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
     return message_id
+
+
+def _experimentally_validate_phone_numbers(recipient):
+    if "+" not in recipient:
+        recipient_lookup = f"+{recipient}"
+    else:
+        recipient_lookup = recipient
+    if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"] and os.getenv(
+        "NOTIFY_ENVIRONMENT"
+    ) in ["development", "test"]:
+        current_app.logger.info(hilite("#validate-phone-number fired"))
+        aws_pinpoint_client.validate_phone_number("01", recipient)
 
 
 def _get_verify_code(notification):
