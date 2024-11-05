@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import ANY, MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -379,7 +379,10 @@ def test_file_exists_false(notify_api, mocker):
 
 def test_get_s3_files_success(client, mocker):
     mock_current_app = mocker.patch("app.aws.s3.current_app")
-    mock_current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"}, "job_cache": {}}
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"},
+        "job_cache": {},
+    }
     mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
     mock_read_s3_file = mocker.patch("app.aws.s3.read_s3_file")
     mock_list_s3_objects = mocker.patch("app.aws.s3.list_s3_objects")
