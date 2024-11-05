@@ -23,18 +23,26 @@ s3_resource = None
 
 
 def set_job_cache(key, value):
+    current_app.logger.info(f"Setting {key} in the job_cache.")
     job_cache = current_app.config["job_cache"]
     job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
 
 def get_job_cache(key):
     job_cache = current_app.config["job_cache"]
-    return job_cache.get(key)
+    ret = job_cache.get(key)
+    if ret is None:
+        current_app.logger.warning(f"Could not find {key} in the job_cache.")
+    else:
+        current_app.logger.info(f"Got {key} from job_cache.")
+    return ret
 
 
 def len_job_cache():
     job_cache = current_app.config["job_cache"]
-    return len(job_cache)
+    ret = len(job_cache)
+    current_app.logger.info(f"Length of job_cache is {ret}")
+    return ret
 
 
 def clean_cache():
@@ -45,6 +53,9 @@ def clean_cache():
         if expiry_time < current_time:
             keys_to_delete.append(key)
 
+    current_app.logger.info(
+        f"Deleting the following keys from the job_cache: {keys_to_delete}"
+    )
     for key in keys_to_delete:
         del job_cache[key]
 
