@@ -70,7 +70,7 @@ def test_cleanup_old_s3_objects(mocker):
     mock_remove_csv_object.assert_called_once_with("A")
 
 
-def test_read_s3_file_success(mocker):
+def test_read_s3_file_success(client, mocker):
     mock_s3res = MagicMock()
     mock_extract_personalisation = mocker.patch("app.aws.s3.extract_personalisation")
     mock_extract_phones = mocker.patch("app.aws.s3.extract_phones")
@@ -89,16 +89,13 @@ def test_read_s3_file_success(mocker):
     mock_extract_phones.return_value = ["1234567890"]
     mock_extract_personalisation.return_value = {"name": "John Doe"}
 
-    global job_cache
-    job_cache = {}
-
     read_s3_file(bucket_name, object_key, mock_s3res)
     mock_get_job_id.assert_called_once_with(object_key)
     mock_s3res.Object.assert_called_once_with(bucket_name, object_key)
     expected_calls = [
-        call(ANY, job_id, file_content),
-        call(ANY, f"{job_id}_phones", ["1234567890"]),
-        call(ANY, f"{job_id}_personalisation", {"name": "John Doe"}),
+        call(job_id, file_content),
+        call(f"{job_id}_phones", ["1234567890"]),
+        call(f"{job_id}_personalisation", {"name": "John Doe"}),
     ]
     mock_set_job_cache.assert_has_calls(expected_calls, any_order=True)
 
@@ -380,9 +377,9 @@ def test_file_exists_false(notify_api, mocker):
     get_s3_mock.assert_called_once()
 
 
-def test_get_s3_files_success(notify_api, mocker):
+def test_get_s3_files_success(client, mocker):
     mock_current_app = mocker.patch("app.aws.s3.current_app")
-    mock_current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"}}
+    mock_current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"}, "job_cache": {}}
     mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
     mock_read_s3_file = mocker.patch("app.aws.s3.read_s3_file")
     mock_list_s3_objects = mocker.patch("app.aws.s3.list_s3_objects")

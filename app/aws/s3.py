@@ -2,7 +2,6 @@ import datetime
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import Manager
 
 import botocore
 from boto3 import Session
@@ -16,8 +15,6 @@ NEW_FILE_LOCATION_STRUCTURE = "{}-service-notify/{}.csv"
 
 # Temporarily extend cache to 7 days
 ttl = 60 * 60 * 24 * 7
-manager = Manager()
-job_cache = manager.dict()
 
 
 # Global variable
@@ -25,11 +22,23 @@ s3_client = None
 s3_resource = None
 
 
-def set_job_cache(job_cache, key, value):
+def set_job_cache(key, value):
+    job_cache = current_app.config["job_cache"]
     job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
 
+def get_job_cache(key):
+    job_cache = current_app.config["job_cache"]
+    return job_cache.get(key)
+
+
+def len_job_cache():
+    job_cache = current_app.config["job_cache"]
+    return len(job_cache)
+
+
 def clean_cache():
+    job_cache = current_app.config["job_cache"]
     current_time = time.time()
     keys_to_delete = []
     for key, (_, expiry_time) in job_cache.items():
@@ -162,17 +171,16 @@ def read_s3_file(bucket_name, object_key, s3res):
     """
     try:
         job_id = get_job_id_from_s3_object_key(object_key)
-        if job_cache.get(job_id) is None:
+        if get_job_cache(job_id) is None:
             object = (
                 s3res.Object(bucket_name, object_key)
                 .get()["Body"]
                 .read()
                 .decode("utf-8")
             )
-            set_job_cache(job_cache, job_id, object)
-            set_job_cache(job_cache, f"{job_id}_phones", extract_phones(object))
+            set_job_cache(job_id, object)
+            set_job_cache(f"{job_id}_phones", extract_phones(object))
             set_job_cache(
-                job_cache,
                 f"{job_id}_personalisation",
                 extract_personalisation(object),
             )
@@ -192,7 +200,7 @@ def get_s3_files():
 
     s3res = get_s3_resource()
     current_app.logger.info(
-        f"job_cache length before regen: {len(job_cache)} #notify-admin-1200"
+        f"job_cache length before regen: {len_job_cache()} #notify-admin-1200"
     )
     try:
         with ThreadPoolExecutor() as executor:
@@ -201,7 +209,7 @@ def get_s3_files():
         current_app.logger.exception("Connection pool issue")
 
     current_app.logger.info(
-        f"job_cache length after regen: {len(job_cache)} #notify-admin-1200"
+        f"job_cache length after regen: {len_job_cache()} #notify-admin-1200"
     )
 
 
@@ -424,12 +432,12 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
-    job = job_cache.get(job_id)
+    job = get_job_cache(job_id)
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
-        set_job_cache(job_cache, job_id, job)
+        set_job_cache(job_id, job)
     else:
         # skip expiration date from cache, we don't need it here
         job = job[0]
@@ -441,7 +449,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         return "Unavailable"
 
     phones = extract_phones(job)
-    set_job_cache(job_cache, f"{job_id}_phones", phones)
+    set_job_cache(f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
     phone_to_return = phones[job_row_number]
@@ -458,12 +466,12 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # We don't want to constantly pull down a job from s3 every time we need the personalisation.
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
-    job = job_cache.get(job_id)
+    job = get_job_cache(job_id)
     if job is None:
         current_app.logger.info(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
-        set_job_cache(job_cache, job_id, job)
+        set_job_cache(job_id, job)
     else:
         # skip expiration date from cache, we don't need it here
         job = job[0]
@@ -478,9 +486,9 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    set_job_cache(job_cache, f"{job_id}_personalisation", extract_personalisation(job))
+    set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
 
-    return job_cache.get(f"{job_id}_personalisation")[0].get(job_row_number)
+    return get_job_cache(f"{job_id}_personalisation")[0].get(job_row_number)
 
 
 def get_job_metadata_from_s3(service_id, job_id):
