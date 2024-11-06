@@ -1,6 +1,6 @@
 env: production
 web_instances: 2
-web_memory: 2G
+web_memory: 3G
 worker_instances: 4
 worker_memory: 3G
 scheduler_memory: 256M
