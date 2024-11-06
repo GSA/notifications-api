@@ -4,6 +4,7 @@ import string
 import time
 import uuid
 from contextlib import contextmanager
+from multiprocessing import Manager
 from time import monotonic
 
 from celery import Celery, Task, current_task
@@ -118,6 +119,9 @@ def create_app(application):
     encryption.init_app(application)
     redis_store.init_app(application)
     document_download_client.init_app(application)
+
+    manager = Manager()
+    application.config["job_cache"] = manager.dict()
 
     register_blueprint(application)
 
