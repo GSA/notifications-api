@@ -1,5 +1,7 @@
+import base64
 import json
 import os
+from urllib.parse import unquote
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
@@ -50,6 +52,9 @@ def _create_service_invite(invited_user, nonce, state):
     data["folder_permissions"] = invited_user.folder_permissions
     data["invited_user_id"] = str(invited_user.id)
     data["invited_user_email"] = invited_user.email_address
+
+    invite_redis_key = f"invite-data-{unquote(state)}"
+    redis_store.set(invite_redis_key, get_user_data_url_safe(data))
 
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
 
@@ -216,3 +221,9 @@ def validate_service_invitation_token(token):
 
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=invited_user_schema.dump(invited_user)), 200
+
+
+def get_user_data_url_safe(data):
+    data = json.dumps(data)
+    data = base64.b64encode(data.encode("utf8"))
+    return data.decode("utf8")
