@@ -373,7 +373,7 @@ def add_user_to_service(service_id, user_id):
     service = dao_fetch_service_by_id(service_id)
     user = get_user_by_id(user_id=user_id)
     if user in service.users:
-        error = "User id: {} already part of service id: {}".format(user_id, service_id)
+        error = f"User id: {user_id} already part of service id: {service_id}"
         raise InvalidRequest(error, status_code=400)
 
     data = request.get_json()
