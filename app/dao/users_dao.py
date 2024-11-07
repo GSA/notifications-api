@@ -52,21 +52,14 @@ def get_login_gov_user(login_uuid, email_address):
                 current_app.logger.exception("Error getting login.gov user")
                 db.session.rollback()
 
-        print("In here instead!")
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
     stmt = select(User).filter(User.email_address.ilike(email_address))
     user = db.session.execute(stmt).scalars().first()
 
-    print("*" * 80)
-    print(user)
-
     if user:
-        print(f"login_uuid: {login_uuid}")
         save_user_attribute(user, {"login_uuid": login_uuid})
         return user
-
-    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% WTF")
 
     return None
 

@@ -87,6 +87,8 @@ def _create_service_invite(invited_user, nonce, state):
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
+    return data
+
 
 @service_invite.route("/service/<service_id>/invite", methods=["POST"])
 def create_invited_user(service_id):
@@ -105,9 +107,9 @@ def create_invited_user(service_id):
     invited_user = invited_user_schema.load(request_json)
     save_invited_user(invited_user)
 
-    _create_service_invite(invited_user, nonce, state)
+    invite_data = _create_service_invite(invited_user, nonce, state)
 
-    return jsonify(data=invited_user_schema.dump(invited_user)), 201
+    return jsonify(data=invited_user_schema.dump(invited_user), invite=invite_data), 201
 
 
 @service_invite.route("/service/<service_id>/invite/expired", methods=["GET"])
