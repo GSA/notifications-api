@@ -3634,3 +3634,43 @@ def test_get_monthly_notification_data_by_service(sample_service, admin_request)
             0,
         ],
     ]
+
+
+def test_get_service_notification_statistics_by_day(
+    admin_request, mocker, sample_service
+):
+    mock_data = [
+        {
+            "notification_type": "email",
+            "status": "sent",
+            "day": "2024-11-01",
+            "count": 10,
+        },
+        {
+            "notification_type": "sms",
+            "status": "failed",
+            "day": "2024-11-02",
+            "count": 5,
+        },
+        {
+            "notification_type": "sms",
+            "status": "delivered",
+            "day": "2024-11-03",
+            "count": 11,
+        },
+    ]
+
+    mock_get_service_statistics_for_specific_days = mocker.patch(
+        "app.service.rest.get_service_statistics_for_specific_days",
+        return_value=mock_data,
+    )
+
+    response = admin_request.get(
+        "service.get_service_notification_statistics_by_day",
+        service_id=sample_service.id,
+        start="2024-11-03",
+        days="1",
+    )["data"]
+
+    assert mock_get_service_statistics_for_specific_days.assert_called_once
+    assert response == mock_data
