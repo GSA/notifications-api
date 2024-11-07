@@ -41,7 +41,7 @@
 - [Pull Requests](#pull-requests)
   - [Getting Started](#getting-started)
   - [Description](#description)
-  - [TODO (optional)](#todo-(optional))
+  - [TODO (optional)](<#todo-(optional)>)
   - [Security Considerations](#security-considerations)
 - [Code Reviews](#code-reviews)
   - [For the reviewer](#for-the-reviewer)
@@ -69,7 +69,6 @@
     - [Routes cannot be mapped to destinations in different spaces](#routes-cannot-be-mapped-to-destinations-in-different-spaces)
     - [API request failed](#api-request-failed)
 
-
 # Infrastructure overview
 
 A diagram of the system is available [in our compliance repo](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png).
@@ -84,9 +83,9 @@ Application, infrastructure, and compliance work is spread across several reposi
 
 ### Application
 
-* [notifications-api](https://github.com/GSA/notifications-api) for the API app
-* [notifications-admin](https://github.com/GSA/notifications-admin) for the Admin UI app
-* [notifications-utils](https://github.com/GSA/notifications-utils) for common library functions
+- [notifications-api](https://github.com/GSA/notifications-api) for the API app
+- [notifications-admin](https://github.com/GSA/notifications-admin) for the Admin UI app
+- [notifications-utils](https://github.com/GSA/notifications-utils) for common library functions
 
 ### Infrastructure
 
@@ -94,17 +93,17 @@ In addition to terraform directories in the api and admin apps above:
 
 #### We maintain:
 
-* [usnotify-ssb](https://github.com/GSA/usnotify-ssb) A supplemental service broker that provisions SES and SNS for us
-* [ttsnotify-brokerpak-sms](https://github.com/GSA/ttsnotify-brokerpak-sms) The brokerpak defining SNS (SMS sending)
+- [usnotify-ssb](https://github.com/GSA/usnotify-ssb) A supplemental service broker that provisions SES and SNS for us
+- [ttsnotify-brokerpak-sms](https://github.com/GSA/ttsnotify-brokerpak-sms) The brokerpak defining SNS (SMS sending)
 
 #### We use:
 
-* [datagov-brokerpak-smtp](https://github.com/GSA-TTS/datagov-brokerpak-smtp) The brokerpak defining SES
-* [cg-egress-proxy](https://github.com/GSA-TTS/cg-egress-proxy/) The caddy proxy that allows external API calls
+- [datagov-brokerpak-smtp](https://github.com/GSA-TTS/datagov-brokerpak-smtp) The brokerpak defining SES
+- [cg-egress-proxy](https://github.com/GSA-TTS/cg-egress-proxy/) The caddy proxy that allows external API calls
 
 ### Compliance
 
-* [us-notify-compliance](https://github.com/GSA/us-notify-compliance) for OSCAL control documentation and diagrams
+- [us-notify-compliance](https://github.com/GSA/us-notify-compliance) for OSCAL control documentation and diagrams
 
 ## Terraform
 
@@ -116,9 +115,9 @@ Our Terraform configurations manage components via cloud.gov. This means that th
 
 There are several remote services required for local development:
 
-* S3
-* SES
-* SNS
+- S3
+- SES
+- SNS
 
 Credentials for these services are created by running:
 
@@ -188,24 +187,24 @@ These steps are required for new cloud.gov environments. Local development borro
 Steps for deploying production from scratch. These can be updated for a new cloud.gov environment by subbing out `prod` or `production` for your desired environment within the steps.
 
 1. Deploy API app
-    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
-    1. Ensure that the `domain` module is commented out in `terraform/production/main.tf`
-    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
-    1. Create any necessary DNS records (check `notify-api-ses-production` service credentials for instructions) within https://github.com/18f/dns
-    1. Follow the `Steps to prepare SES` below
-    1. (Optional) if using a public API route, uncomment the `domain` module and re-trigger a deploy
+   1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+   1. Ensure that the `domain` module is commented out in `terraform/production/main.tf`
+   1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+   1. Create any necessary DNS records (check `notify-api-ses-production` service credentials for instructions) within https://github.com/18f/dns
+   1. Follow the `Steps to prepare SES` below
+   1. (Optional) if using a public API route, uncomment the `domain` module and re-trigger a deploy
 1. Deploy Admin app
-    1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
-    1. Ensure that the `api_network_route` and `domain` modules are commented out in `terraform/production/main.tf`
-    1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
-    1. Create DNS records for `domain` module within https://github.com/18f/dns
-    1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
+   1. Update `terraform-production.yml` and `deploy-prod.yml` to point to the correct space and git branch.
+   1. Ensure that the `api_network_route` and `domain` modules are commented out in `terraform/production/main.tf`
+   1. Run CI/CD pipeline on the `production` branch by opening a PR from `main` to `production`
+   1. Create DNS records for `domain` module within https://github.com/18f/dns
+   1. Uncomment the `api_network_route` and `domain` modules and re-trigger a deploy
 
 ### Steps to prepare SES
 
 1. After the first deploy of the application with the SSB-brokered SES service completes:
-    1. Log into the SES console and navigate to the SNS subscription page.
-    1. Select "Request confirmation" for any subscriptions still in "Pending Confirmation" state
+   1. Log into the SES console and navigate to the SNS subscription page.
+   1. Select "Request confirmation" for any subscriptions still in "Pending Confirmation" state
 1. Find and replace instances in the repo of "testsender", "testreceiver" and "dispostable.com", with your origin and destination email addresses, which you verified in step 1 above.
 
 TODO: create env vars for these origin and destination email addresses for the root service, and create new migrations to update postgres seed fixtures
@@ -217,8 +216,8 @@ TODO: create env vars for these origin and destination email addresses for the r
 This should be complete for all regions Notify.gov has been deployed to or is currently planned to be deployed to.
 
 1. Visit the SNS console for the region you will be sending from. Notes:
-    1. SNS settings are per-region, so each environment must have its own region
-    1. Pinpoint and SNS have confusing regional availability, so ensure both are available before submitting any requests.
+   1. SNS settings are per-region, so each environment must have its own region
+   1. Pinpoint and SNS have confusing regional availability, so ensure both are available before submitting any requests.
 1. Choose `Text messaging (SMS)` from the sidebar
 1. Click the `Exit SMS Sandbox` button and submit the support request. This request should take at most a day to complete. Be sure to request a higher sending limit at the same time.
 
@@ -243,7 +242,7 @@ If you're using the `cf` CLI, you can run `cf logs notify-api-ENV` and/or `cf lo
 
 For general log searching, [the cloud.gov Kibana instance](https://logs.fr.cloud.gov/) is powerful, though quite complex to get started. For shortcuts to errors, some team members have New Relic access.
 
-The links below will open a filtered view with logs from both applications, which can then be filtered further. However, for the links to work, you need to paste them into the URL bar while *already* logged into and viewing the Kibana page. If not, you'll just be redirected to the generic dashboard.
+The links below will open a filtered view with logs from both applications, which can then be filtered further. However, for the links to work, you need to paste them into the URL bar while _already_ logged into and viewing the Kibana page. If not, you'll just be redirected to the generic dashboard.
 
 Production: https://logs.fr.cloud.gov/app/discover#/view/218a6790-596d-11ee-a43a-090d426b9a38
 Demo: https://logs.fr.cloud.gov/app/discover#/view/891392a0-596e-11ee-921a-1b6b2f4d89ed
@@ -274,11 +273,13 @@ make test
 ```
 
 This will run:
+
 - flake8 for code styling
 - isort for import styling
 - pytest for the test suite
 
 On GitHub, in addition to these tests, we run:
+
 - bandit for code security
 - pip-audit for dependency vulnerabilities
 - OWASP for dynamic scanning
@@ -292,7 +293,6 @@ In addition to commit-triggered scans, the `daily_checks.yml` workflow runs the 
 ### Nightly Scans
 
 Within GitHub Actions, several scans take place every day to ensure security and compliance.
-
 
 #### [daily-checks.yml](../.github/workflows/daily_checks.yml)
 
@@ -308,7 +308,7 @@ If you're checking out the system locally, you may want to create a user quickly
 
 `poetry run flask command create-test-user`
 
-This will run an interactive prompt to create a user, and then mark that user as active. *Use a real mobile number* if you want to log in, as the SMS auth code will be sent here.
+This will run an interactive prompt to create a user, and then mark that user as active. _Use a real mobile number_ if you want to log in, as the SMS auth code will be sent here.
 
 ## To run a local OWASP scan
 
@@ -329,7 +329,7 @@ docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t 
 
 In order to run end-to-end (E2E) tests, which are managed and handled in the
 admin project, a bit of extra configuration needs to be accounted for here on
-the API side as well.  These instructions are in the README as they are
+the API side as well. These instructions are in the README as they are
 necessary for project setup, and they're copied here for reference.
 
 In the `.env` file, you should see this section:
@@ -352,9 +352,17 @@ variable to something else, preferably a lengthy passphrase.**
 With those two environment variable set, the database migrations will run
 properly and an E2E test user will be ready to go for use in the admin project.
 
-_Note:  Whatever you set these two environment variables to, you'll need to
-match their values on the admin side.  Please see the admin README and
+_Note: Whatever you set these two environment variables to, you'll need to
+match their values on the admin side. Please see the admin README and
 documentation for more details._
+
+# Feature Flagging
+
+Feature flagging is now implemented in the Admin application to allow conditional enabling of features. The current setup uses environment variables, which can be configured via the command line with Cloud Foundry (CF). These settings should be defined in each relevant .yml file and committed to source control.
+
+To adjust a feature flag, update the corresponding environment variable and redeploy as needed. This setup provides flexibility for enabling or disabling features without modifying the core application code.
+
+Specifics on the commands can be found in the [Admin Feature Flagging readme](https://github.com/GSA/notifications-admin/blob/main/docs/feature-flagging.md).
 
 # Deploying
 
@@ -395,7 +403,7 @@ and deploying an updated version of the application throught he normal deploy pr
 
 ## Managing environment variables
 
-For an environment variable to make its way into the cloud.gov environment, it *must* end up in the `manifest.yml` file. Based on the deployment approach described above, there are 2 ways for this to happen.
+For an environment variable to make its way into the cloud.gov environment, it _must_ end up in the `manifest.yml` file. Based on the deployment approach described above, there are 2 ways for this to happen.
 
 ### Secret environment variables
 
@@ -431,9 +439,9 @@ Rules for use:
 
 1. Ensure that no other developer is using the environment, as there is nothing stopping changes from overwriting each other.
 1. Clean up when you are done:
-    - `terraform destroy` from within the `terraform/sandbox` directory will take care of the provisioned services
-    - Delete the apps and routes shown in `cf apps` by running `cf delete APP_NAME -r`
-    - Delete the space deployer you created by following the instructions within `terraform/sandbox/secrets.auto.tfvars`
+   - `terraform destroy` from within the `terraform/sandbox` directory will take care of the provisioned services
+   - Delete the apps and routes shown in `cf apps` by running `cf delete APP_NAME -r`
+   - Delete the space deployer you created by following the instructions within `terraform/sandbox/secrets.auto.tfvars`
 
 ### Deploying to the sandbox
 
@@ -442,30 +450,35 @@ If this is the first time you have used Terraform in this repository, you will f
 :anchor: The Admin app depends upon the API app, so set up the API first.
 
 1. Set up services:
-    ```bash
-    $ cd terraform/sandbox
-    $ ../create_service_account.sh -s notify-sandbox -u <your-name>-terraform -m > secrets.auto.tfvars
-    $ terraform init
-    $ terraform plan
-    $ terraform apply
-    ```
-    Check [Terraform troubleshooting](https://github.com/GSA/notifications-api/tree/main/terraform#troubleshooting) if you encounter problems.
+   ```bash
+   $ cd terraform/sandbox
+   $ ../create_service_account.sh -s notify-sandbox -u <your-name>-terraform -m > secrets.auto.tfvars
+   $ terraform init
+   $ terraform plan
+   $ terraform apply
+   ```
+   Check [Terraform troubleshooting](https://github.com/GSA/notifications-api/tree/main/terraform#troubleshooting) if you encounter problems.
 1. Change back to the project root directory: `cd ../..`
 1. Start a poetry shell as a shortcut to load `.env` file variables by running `poetry shell`. (You'll have to restart this any time you change the file.)
 1. Output requirements.txt file: `poetry export --without-hashes --format=requirements.txt > requirements.txt`
 1. Ensure you are using the correct CloudFoundry target
-  ```bash
-  cf target -o gsa-tts-benefits-studio -s notify-sandbox
-  ```
+
+```bash
+cf target -o gsa-tts-benefits-studio -s notify-sandbox
+```
+
 1. Deploy the application:
-  ```bash
-  cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
-  ```
-  The real `push` command has more var arguments than the single one above. Get their values from a Notify team member.
+
+```bash
+cf push --vars-file deploy-config/sandbox.yml --var NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
+```
+
+The real `push` command has more var arguments than the single one above. Get their values from a Notify team member.
 
 1. Visit the URL(s) of the app you just deployed
-  * Admin https://notify-sandbox.app.cloud.gov/
-  * API https://notify-api-sandbox.app.cloud.gov/
+
+- Admin https://notify-sandbox.app.cloud.gov/
+- API https://notify-api-sandbox.app.cloud.gov/
 
 # Database management
 
@@ -527,7 +540,6 @@ Running on cloud.gov:
 cf run-task notify-api --command "flask command purge_functional_test_data -u <functional tests user name prefix>"
 ```
 
-
 # One-off tasks
 
 For these, we're using Flask commands, which live in [`/app/commands.py`](../app/commands.py).
@@ -545,7 +557,7 @@ To run a command on cloud.gov, use this format:
 
 `cf run-task CLOUD-GOV-APP --commmand "YOUR COMMAND HERE" --name YOUR-COMMAND-NAME`
 
-**NOTE:** Do not include `poetry run` in the command you provide for `cf run-task`!  cloud.gov is already aware
+**NOTE:** Do not include `poetry run` in the command you provide for `cf run-task`! cloud.gov is already aware
 of the Python virtual environment and Python dependencies; it's all handled through the Python brokerpak we use
 to deploy the application.
 
@@ -573,16 +585,17 @@ cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command upda
 All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
 
 ## Test commands list
+
 - `add-test-organizations-to-db`
 - `add-test-services-to-db`
 - `add-test-jobs-to-db`
 - `add-test-notifications-to-db`
 - `add-test-users-to-db` (extra options include `-s` or `--state` and `-d` or `--admin`)
 
-
 # How messages are queued and sent
 
 Services used during message-send flow:
+
 1. AWS S3
 2. AWS SNS
 3. AWS Cloudwatch
@@ -614,9 +627,8 @@ Public APIs are intended for use by services and are all located under `app/v2/`
 New and existing APIs should be documented within [openapi.yml](./openapi.yml). Tools to help
 with editing this file:
 
-* [OpenAPI Editor for VSCode](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
-* [OpenAPI specification](https://spec.openapis.org/oas/v3.0.2)
-
+- [OpenAPI Editor for VSCode](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
+- [OpenAPI specification](https://spec.openapis.org/oas/v3.0.2)
 
 ## New APIs
 
@@ -673,8 +685,7 @@ An API key can be created at https://HOSTNAME/services/YOUR_SERVICE_ID/api/keys.
 
 ## Postman Documentation
 
-Internal-only  [documentation for exploring the API using Postman](https://docs.google.com/document/d/1S5c-LxuQLhAtZQKKsECmsllVGmBe34Z195sbRVEzUgw/edit#heading=h.134fqdup8d3m)
-
+Internal-only [documentation for exploring the API using Postman](https://docs.google.com/document/d/1S5c-LxuQLhAtZQKKsECmsllVGmBe34Z195sbRVEzUgw/edit#heading=h.134fqdup8d3m)
 
 ## Using OpenAPI documentation
 
@@ -710,13 +721,12 @@ Because jwt tokens expire so quickly, the development server can be set to allow
 env ALLOW_EXPIRED_API_TOKEN=1 make run-flask
 ```
 
-
-
 # Queues and tasks
 
 The API puts tasks into Celery queues for dispatch.
 
 There are a bunch of queues:
+
 - priority tasks
 - database tasks
 - send sms tasks
@@ -735,6 +745,7 @@ There are a bunch of queues:
 - save api sms tasks
 
 And these tasks:
+
 - check for missing rows in completed jobs
 - check for services with high failure rates or sending to tv numbers
 - check if letters still in created
@@ -803,12 +814,9 @@ After scheduling some tasks, run celery beat to get them moving:
 make run-celery-beat
 ```
 
+# Notify.gov
 
-Notify.gov
-=========
-
-System Description
-------------------
+## System Description
 
 Notify.gov is a service being developed by the TTS Public Benefits Studio to increase the availability of
 SMS and email notifications to Federal, State, and Local Benefits agencies.
@@ -820,77 +828,74 @@ or services.
 
 The templates are sent by the agency using one of two methods:
 
-* using the Notify.gov API to send a message to a given recipient with given personalization values
-* using the Notify.gov website to upload a CSV file of recipients and their personalization values, one row per message
+- using the Notify.gov API to send a message to a given recipient with given personalization values
+- using the Notify.gov website to upload a CSV file of recipients and their personalization values, one row per message
 
 ### Environment
 
 Notify.gov is comprised of two applications both running on cloud.gov:
 
-* Admin, a Flask website running on the python_buildpack which hosts agency user-facing UI
-* API, a Flask application running on the python_buildpack hosting the Notify.gov API
+- Admin, a Flask website running on the python_buildpack which hosts agency user-facing UI
+- API, a Flask application running on the python_buildpack hosting the Notify.gov API
 
 Notify.gov utilizes several cloud.gov-provided services:
 
-* S3 buckets for temporary file storage
-* Elasticache (redis) for cacheing data and enqueueing background tasks
-* RDS (PostgreSQL) for system data storage
+- S3 buckets for temporary file storage
+- Elasticache (redis) for cacheing data and enqueueing background tasks
+- RDS (PostgreSQL) for system data storage
 
 Notify.gov also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
 
-* [SNS](https://aws.amazon.com/sns/) for sending SMS messages
-* [SES](https://aws.amazon.com/ses/) for sending email messages
+- [SNS](https://aws.amazon.com/sns/) for sending SMS messages
+- [SES](https://aws.amazon.com/ses/) for sending email messages
 
 For further details of the system and how it connects to supporting services, see the [application boundary diagram](https://github.com/GSA/us-notify-compliance/blob/main/diagrams/rendered/apps/application.boundary.png)
 
-
-Pull Requests
-=============
+# Pull Requests
 
 Changes are made to our applications via pull requests, which show a diff
 (the before and after state of all proposed changes in the code) of of the work
-done for that particular branch.  We use pull requests as the basis for working
+done for that particular branch. We use pull requests as the basis for working
 on Notify.gov and modifying the application over time for improvements, bug
 fixes, new features, and more.
 
 There are several things that make for a good and complete pull request:
 
-* An appropriate and descriptive title
-* A detailed description of what's being changed, including any outstanding work
+- An appropriate and descriptive title
+- A detailed description of what's being changed, including any outstanding work
   (TODOs)
-* A list of security considerations, which contains information about anything
+- A list of security considerations, which contains information about anything
   we need to be mindful of from a security compliance perspective
-* The proper labels, assignee, code reviewer, and other project metadata set
-
+- The proper labels, assignee, code reviewer, and other project metadata set
 
 ### Getting Started
 
 When you first open a pull request, start off by making sure the metadata for it
 is in place:
 
-* Provide an appropriate and descriptive title for the pull request
-* Link the pull request to its corresponding issue (must be done after creating
+- Provide an appropriate and descriptive title for the pull request
+- Link the pull request to its corresponding issue (must be done after creating
   the pull request itself)
-* Assign yourself as the author
-* Attach the appropriate labels to it
-* Set it to be on the Notify.gov project board
-* Select one or more reviewers from the team or mark the pull request as a draft
+- Assign yourself as the author
+- Attach the appropriate labels to it
+- Set it to be on the Notify.gov project board
+- Select one or more reviewers from the team or mark the pull request as a draft
   depending on its current state
-   * If the pull request is a draft, please be sure to add reviewers once it is
-     ready for review and mark it ready for review
+  - If the pull request is a draft, please be sure to add reviewers once it is
+    ready for review and mark it ready for review
 
 ### Description
 
 Please enter a clear description about your proposed changes and what the
-expected outcome(s) is/are from there.  If there are complex implementation
+expected outcome(s) is/are from there. If there are complex implementation
 details within the changes, this is a great place to explain those details using
 plain language.
 
 This should include:
 
-* Links to issues that this PR addresses (especially if more than one)
-* Screenshots or screen captures of any visible changes, especially for UI work
-* Dependency changes
+- Links to issues that this PR addresses (especially if more than one)
+- Screenshots or screen captures of any visible changes, especially for UI work
+- Dependency changes
 
 If there are any caveats, known issues, follow-up items, etc., make a quick note
 of them here as well, though more details are probably warranted in the issue
@@ -900,46 +905,44 @@ itself in this case.
 
 If you're opening a draft PR, it might be helpful to list any outstanding work,
 especially if you're asking folks to take a look before it's ready for full
-review.  In this case, create a small checklist with the outstanding items:
+review. In this case, create a small checklist with the outstanding items:
 
-* [ ] TODO item 1
-* [ ] TODO item 2
-* [ ] TODO item ...
+- [ ] TODO item 1
+- [ ] TODO item 2
+- [ ] TODO item ...
 
 ### Security Considerations
 
 Please think about the security compliance aspect of your changes and what the
 potential impacts might be.
 
-**NOTE:  Please be mindful of sharing sensitive information here!  If you're not sure of what to write, please ask the team first before writing anything here.**
+**NOTE: Please be mindful of sharing sensitive information here! If you're not sure of what to write, please ask the team first before writing anything here.**
 
 Relevant details could include (and are not limited to) the following:
 
-* Handling secrets/credential management (or specifically calling out that there
+- Handling secrets/credential management (or specifically calling out that there
   is nothing to handle)
-* Any adjustments to the flow of data in and out the system, or even within it
-* Connecting or disconnecting any external services to the application
-* Handling of any sensitive information, such as PII
-* Handling of information within log statements or other application monitoring
+- Any adjustments to the flow of data in and out the system, or even within it
+- Connecting or disconnecting any external services to the application
+- Handling of any sensitive information, such as PII
+- Handling of information within log statements or other application monitoring
   services/hooks
-* The inclusion of a new external dependency or the removal of an existing one
-* ... (anything else relevant from a security compliance perspective)
+- The inclusion of a new external dependency or the removal of an existing one
+- ... (anything else relevant from a security compliance perspective)
 
 There are some cases where there are no security considerations to be had, e.g.,
-updating our documentation with publicly available information.  In those cases
+updating our documentation with publicly available information. In those cases
 it is fine to simply put something like this:
 
-* None; this is a documentation update with publicly available information.
+- None; this is a documentation update with publicly available information.
 
 This way it shows that we still gave this section consideration and that nothing
 happens to apply in this scenario.
 
-
-Code Reviews
-============
+# Code Reviews
 
 When conducting a code review there are several things to keep in mind to ensure
-a quality and valuable review.  Remember, we're trying to improve Notify.gov as
+a quality and valuable review. Remember, we're trying to improve Notify.gov as
 best we can; it does us no good if we do not double check that our work meets
 our standards, especially before going out the door!
 
@@ -957,36 +960,36 @@ the reviewer and the author.
 ### For the reviewer
 
 When performing a code review, please be curious and critical while also being
-respectful and appreciative of the work submitted.  Code reviews are a chance
+respectful and appreciative of the work submitted. Code reviews are a chance
 to check that things meet our standards and provide learning opportunities.
 They are not places for belittling or disparaging someone's work or approach to
 a task, and absolutely not the person(s) themselves.
 
 That said, any responses to the code review should also be respectful and
-considerate.  Remember, this is a chance to not only improve our work and the
+considerate. Remember, this is a chance to not only improve our work and the
 state of Notify.gov, it's also a chance to learn something new!
 
 **Note: If a response is condescending, derogatory, disrespectful, etc., please
 do not hesitate to either speak with the author(s) directly about this or reach
-out to a team lead/supervisor for additional help to rectify the issue.  Such
+out to a team lead/supervisor for additional help to rectify the issue. Such
 behavior and lack of professionalism is not acceptable or tolerated.**
 
 When performing a code review, it is helpful to keep the following guidelines in
 mind:
 
-* Be on the lookout for any sensitive information and/or leaked credentials,
+- Be on the lookout for any sensitive information and/or leaked credentials,
   secrets, PII, etc.
-* Ask and call out things that aren't clear to you; it never hurts to double
+- Ask and call out things that aren't clear to you; it never hurts to double
   check your understanding of something!
-* Check that things are named descriptively and appropriately and call out
+- Check that things are named descriptively and appropriately and call out
   anything that is not.
-* Check that comments are present for complex areas when needed.
-* Make sure the pull request itself is properly prepared - it has a clear
+- Check that comments are present for complex areas when needed.
+- Make sure the pull request itself is properly prepared - it has a clear
   description, calls out security concerns, and has the necessary labels, flags,
   issue link, etc., set on it.
-* Do not be shy about using the suggested changes feature in GitHub pull request
+- Do not be shy about using the suggested changes feature in GitHub pull request
   comments; this can help save a lot of time!
-* Do not be shy about marking a review with the `Request Changes` status - yes,
+- Do not be shy about marking a review with the `Request Changes` status - yes,
   it looks big and red when it shows up, but this is completely fine and not to
   be taken as a personal mark against the author(s) of the pull request!
 
@@ -999,40 +1002,38 @@ This can save folks a lot of misunderstanding and back-and-forth!
 
 When receiving a code review, please remember that someone took the time to look
 over all of your work with a critical eye to make sure our standards are being
-met and that we're producing the best quality work possible.  It's completely
+met and that we're producing the best quality work possible. It's completely
 fine if there are specific changes requested and/or other parts are sent back
 for additional work!
 
 That said, the review should also be respectful, helpful, and a learning
-opportunity where possible.  Remember, this is a chance to not only improve your
+opportunity where possible. Remember, this is a chance to not only improve your
 work and the state of Notify.gov, it's also a chance to learn something new!
 
 **Note: If a review is condescending, derogatory, disrespectful, etc., please do
 not hesitate to either speak with the reviewer(s) directly about this or reach
-out to a team lead/supervisor for additional help to rectify the issue.  Such
+out to a team lead/supervisor for additional help to rectify the issue. Such
 behavior and lack of professionalism is not acceptable or tolerated.**
 
 When going over a review, it may be helpful to keep these perspectives in mind:
 
-* Approach the review with an open mind, curiosity, and appreciation.
-* If anything the reviewer(s) mentions is unclear to you, please ask for
+- Approach the review with an open mind, curiosity, and appreciation.
+- If anything the reviewer(s) mentions is unclear to you, please ask for
   clarification and engage them in further dialogue!
-* If you disagree with a suggestion or request, please say so and engage in an
+- If you disagree with a suggestion or request, please say so and engage in an
   open and respecful dialogue to come to a mutual understanding of what the
   appropriate next step(S) should be - accept the change, reject the change,
   take a different path entirely, etc.
-* If there are no issues with any suggested edits or requested changes, make
+- If there are no issues with any suggested edits or requested changes, make
   the necessary adjustments and let the reviewer(s) know when the work is ready
   for review again.
 
 Additionally, if you find yourself responding to a lot of things and questioning
 the feedback received throughout much of the code review, it will likely be
 helpful to schedule time to speak with the reviewer(s) directly and talk through
-everything.  This can save folks a lot of misunderstanding and back-and-forth!
+everything. This can save folks a lot of misunderstanding and back-and-forth!
 
-
-Run Book
-========
+# Run Book
 
 Policies and Procedures needed before and during Notify.gov Operations. Many of these policies are taken from the Notify.gov System Security & Privacy Plan (SSPP).
 
@@ -1060,9 +1061,8 @@ Operational alerts are posted to the [#pb-notify-alerts](https://gsa-tts.slack.c
 
 In addition to the application logs, there are several tables in the application that store useful information for audit logging purposes:
 
-* `events`
-* the various `*_history` tables
-
+- `events`
+- the various `*_history` tables
 
 ## <a name="restaging-apps"></a> Restaging Apps
 
@@ -1098,7 +1098,6 @@ When `ssb-devel-sms` and/or `ssb-devel-smtp` need to be restaged:
 1. Select the `development` environment from the dropdown
 1. Click `Run workflow` within the popup
 
-
 ## <a name="deploying-to-production"></a> Deploying to Production
 
 Deploying to production involves 3 steps that must be done in order, and can be done for just the API, just the Admin, or both at the same time:
@@ -1111,25 +1110,25 @@ Additionally, you may have to monitor the GitHub Actions as they take place to t
 
 ### Create a new pull request
 
-This is done entirely in GitHub.  First, go to the pull requests section of the API and/or Admin repository, then click on the `New pull request` button.
+This is done entirely in GitHub. First, go to the pull requests section of the API and/or Admin repository, then click on the `New pull request` button.
 
-In the screen that appears, change the `base: main` target branch on the left side of the arrow to `base: production` instead.  You want to merge all of the latest changes in `main` to the `production` branch.  After you've made the switch, click on the `Create pull request` button.
+In the screen that appears, change the `base: main` target branch on the left side of the arrow to `base: production` instead. You want to merge all of the latest changes in `main` to the `production` branch. After you've made the switch, click on the `Create pull request` button.
 
 When the pull request details page appears, you'll need to set a few things:
 
 Title: `<current> Production Deploy`, e.g., `9/9/2024 Production Deploy`
-Description:  feel free to copy from a previous production deploy PR; note that you'll have to change the links to the release notes if applicable!
-Labels:  `Engineering`
-Author:  set to yourself
-Reviewers:  assign folks or the @notify-contributors team
+Description: feel free to copy from a previous production deploy PR; note that you'll have to change the links to the release notes if applicable!
+Labels: `Engineering`
+Author: set to yourself
+Reviewers: assign folks or the @notify-contributors team
 
 Please link it to the project board as well, then click on the `Create pull request` button to finalize it all.
 
 ### Create a new release tag
 
-On the main page of the repository, click on the small heading that says `Releases` on the right to get to the release listing page.  Once there, click on the `Draft a new release` button.
+On the main page of the repository, click on the small heading that says `Releases` on the right to get to the release listing page. Once there, click on the `Draft a new release` button.
 
-You'll first have to choose a tag or create a new one:  use the current date as the tag name, e.g., `9/9/2024`.  Keep the target set to `main` and then click on the `Generate release notes button`.
+You'll first have to choose a tag or create a new one: use the current date as the tag name, e.g., `9/9/2024`. Keep the target set to `main` and then click on the `Generate release notes button`.
 
 Add a title in the format of `<current date>` Production Deploy, e.g., `9/9/2024 Production Deploy`.
 
@@ -1139,16 +1138,15 @@ Once everything is complete, cick on the `Publish release` button and then link 
 
 ### Review and approve the pull request(s)
 
-When everything is good to go, two people will need to approve the pull request for merging into the `production` branch.  Once they do, then merge the pull request.
+When everything is good to go, two people will need to approve the pull request for merging into the `production` branch. Once they do, then merge the pull request.
 
-At this point everything is mostly automatic.  The deploy will update both the `demo` and `production` environments.  Once the deploys are done and successful, go back into the pre-release release notes and switch the checkboxes to turn it into the latest release and save the change.
+At this point everything is mostly automatic. The deploy will update both the `demo` and `production` environments. Once the deploys are done and successful, go back into the pre-release release notes and switch the checkboxes to turn it into the latest release and save the change.
 
 ### Troubleshooting production deploys
 
-Sometimes a deploy will fail and you will have to look at the GitHub Action deployment logs to see what the cause is.  In many cases it will be an out of memory error because of the two environments going out at the same time.  Whenever the successful deploy is finished, re-run the failed jobs in the other deployment action again.
+Sometimes a deploy will fail and you will have to look at the GitHub Action deployment logs to see what the cause is. In many cases it will be an out of memory error because of the two environments going out at the same time. Whenever the successful deploy is finished, re-run the failed jobs in the other deployment action again.
 
 Once the deploys are finished it's also a good idea to just poke around the site to make sure things are working fine and as expected!
-
 
 ## <a name="smoke-testing"></a> Smoke-testing the App
 
@@ -1164,20 +1162,19 @@ Assuming that you have followed all steps to set up localstack successfully (see
 
 1. Create an sms template that requires no inputs from the user (i.e. the csv file will only have phone numbers)
 2. Uncomment the test 'test_generate_csv_for_bulk_testing' in app/test_utils.py
-3. Run `make test` on this project.  This will generate the csv file for the bulk test.
+3. Run `make test` on this project. This will generate the csv file for the bulk test.
 4. If you are not a platform admin for your service when you run locally, do the following:
-   - >psql -d notification_api
+   - > psql -d notification_api
    - update users set platform_admin='t';
    - \q
    - sign out
    - sign in.
    - Go to settings and set the organization for your service to 'Broadcast services' (scroll down to platform admin)
    - Go to settings and set your service to 'live' (scroll down to platform admin)
-5. Run your app 'locally'.  I.e. run `make run-procfile` on this project and `make run-flask` on the admin project
-6. Sign in.  Verify you are running with localstack.  I.e., you do NOT receive a text message on sign in.  Instead,
+5. Run your app 'locally'. I.e. run `make run-procfile` on this project and `make run-flask` on the admin project
+6. Sign in. Verify you are running with localstack. I.e., you do NOT receive a text message on sign in. Instead,
    you see your authentication code in green in the api logs
 7. Go to send messages and upload your csv file and send your 100000 messages
-
 
 ## <a name="cm"></a> Configuration Management
 
@@ -1214,11 +1211,11 @@ Also known as: **How to move code from my machine to production**
 
 US_Notify Administrators are responsible for ensuring that remediations for vulnerabilities are implemented. Response times vary based on the level of vulnerability as follows:
 
-* Critical (Very High) - 15 days
-* High - 30 days
-* Medium - 90 days
-* Low - 180 days
-* Informational - 365 days (depending on the analysis of the issue)
+- Critical (Very High) - 15 days
+- High - 30 days
+- Medium - 90 days
+- Low - 180 days
+- Informational - 365 days (depending on the analysis of the issue)
 
 ## <a name="dns"></a> DNS Changes
 
@@ -1244,13 +1241,12 @@ Notify.gov DNS records are maintained within [the 18f/dns repository](https://gi
 
 ## Rotating the DANGEROUS_SALT
 
-
-  1. Start API locally `make run-procfile`
-  2. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt`
-  3. A random secret will appear in the tab
-  4. Go to github->settings->secrets and variables->actions in the admin project and find the DANGEROUS_SALT secret for the admin project for    staging.   Open it and paste the result of #3 into the secret and save.  Repeat for the API project, for staging.
-  5. Repeat #3 and #4 but do it for demo
-  6. Repeat #3 and #4 but do it for production
+1. Start API locally `make run-procfile`
+2. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt`
+3. A random secret will appear in the tab
+4. Go to github->settings->secrets and variables->actions in the admin project and find the DANGEROUS_SALT secret for the admin project for staging. Open it and paste the result of #3 into the secret and save. Repeat for the API project, for staging.
+5. Repeat #3 and #4 but do it for demo
+6. Repeat #3 and #4 but do it for production
 
 The important thing is to use the same secret for Admin and API on each tier--i.e. you only generate three secrets.
 
@@ -1278,40 +1274,40 @@ The important thing is to use the same secret for Admin and API on each tier--i.
 
 Important policies:
 
-* Infrastructure Accounts and Application Platform Administrators must be approved by the System Owner (Amy) before creation, but people with `Administrator` role can actually do the creation and role assignments.
-* At least one agency partner must act as the `User Manager` for their service, with permissions to manage their team according to their agency's policies and procedures.
-* All users must utilize `.gov` email addresses.
-* Users who leave the team or otherwise have role changes must have their accounts updated to reflect the new roles required (or disabled) within 14 days.
-* SpaceDeployer credentials must be rotated within 14 days of anyone with SpaceDeveloper cloud.gov access leaving the team.
-* A user report must be created annually (See AC-2(j)). `make cloudgov-user-report` can be used to create a full report of all cloud.gov users.
+- Infrastructure Accounts and Application Platform Administrators must be approved by the System Owner (Amy) before creation, but people with `Administrator` role can actually do the creation and role assignments.
+- At least one agency partner must act as the `User Manager` for their service, with permissions to manage their team according to their agency's policies and procedures.
+- All users must utilize `.gov` email addresses.
+- Users who leave the team or otherwise have role changes must have their accounts updated to reflect the new roles required (or disabled) within 14 days.
+- SpaceDeployer credentials must be rotated within 14 days of anyone with SpaceDeveloper cloud.gov access leaving the team.
+- A user report must be created annually (See AC-2(j)). `make cloudgov-user-report` can be used to create a full report of all cloud.gov users.
 
 ### Types of Infrastructure Users
 
-| Role Name | System | Permissions | Who | Responsibilities |
-| --------- | ------ | ----------- | --- | ---------------- |
-| Administrator | GitHub | Admin | PBS Fed | Approve & Merge PRs into main and production |
-| Administrator | AWS | `NotifyAdministrators` IAM UserGroup | PBS Fed | Read audit logs, verify & fix any AWS service issues within Production AWS account |
-| Administrator | Cloud.gov | `OrgManager` | PBS Fed | Manage cloud.gov roles and permissions. Access to production spaces |
-| DevOps Engineer | Cloud.gov | `SpaceManager` | PBS Fed or Contractor | Access to non-production spaces |
-| DevOps Engineer | AWS | `NotifyAdministrators` IAM UserGroup | PBS Fed or Contractor | Access to non-production AWS accounts to verify & fix any AWS issues in the lower environments |
-| Engineer | GitHub | Write | PBS Fed or Contractor | Write code & issues, submit PRs |
+| Role Name       | System    | Permissions                          | Who                   | Responsibilities                                                                               |
+| --------------- | --------- | ------------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------- |
+| Administrator   | GitHub    | Admin                                | PBS Fed               | Approve & Merge PRs into main and production                                                   |
+| Administrator   | AWS       | `NotifyAdministrators` IAM UserGroup | PBS Fed               | Read audit logs, verify & fix any AWS service issues within Production AWS account             |
+| Administrator   | Cloud.gov | `OrgManager`                         | PBS Fed               | Manage cloud.gov roles and permissions. Access to production spaces                            |
+| DevOps Engineer | Cloud.gov | `SpaceManager`                       | PBS Fed or Contractor | Access to non-production spaces                                                                |
+| DevOps Engineer | AWS       | `NotifyAdministrators` IAM UserGroup | PBS Fed or Contractor | Access to non-production AWS accounts to verify & fix any AWS issues in the lower environments |
+| Engineer        | GitHub    | Write                                | PBS Fed or Contractor | Write code & issues, submit PRs                                                                |
 
 ### Types of Application Users
 
-| Role Name | Permissions | Who | Responsibilities |
-| --------- | ----------- | --- | ---------------- |
-| Platform Administrator | `platform_admin` | PBS Fed | Administer system settings within Notify.gov across Services |
-| User Manager | `MANAGE_USERS` | Agency Partner | Manage service team members |
-| User | any except `MANAGE_USERS` | Agency Partner | Use Notify.gov |
+| Role Name              | Permissions               | Who            | Responsibilities                                             |
+| ---------------------- | ------------------------- | -------------- | ------------------------------------------------------------ |
+| Platform Administrator | `platform_admin`          | PBS Fed        | Administer system settings within Notify.gov across Services |
+| User Manager           | `MANAGE_USERS`            | Agency Partner | Manage service team members                                  |
+| User                   | any except `MANAGE_USERS` | Agency Partner | Use Notify.gov                                               |
 
 ### Service Accounts
 
-| Role Name | System | Permissions | Notes |
-| --------- | ------ | ----------- | ----- |
-| Cloud.gov Service Account | Cloud.gov | `OrgManager` and `SpaceDeveloper` | Creds stored in GitHub Environment secrets within api and admin app repos |
-| SSB Deployment Account | AWS | `IAMFullAccess` | Creds stored in GitHub Environment secrets within usnotify-ssb repo |
-| SSB Cloud.gov Service Account | Cloud.gov | `SpaceDeveloper` | Creds stored in GitHub Environment secrets within usnotify-ssb repo |
-| SSB AWS Accounts | AWS | `sms_broker` or `smtp_broker` IAM role | Creds created and maintained by usnotify-ssb terraform |
+| Role Name                     | System    | Permissions                            | Notes                                                                     |
+| ----------------------------- | --------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| Cloud.gov Service Account     | Cloud.gov | `OrgManager` and `SpaceDeveloper`      | Creds stored in GitHub Environment secrets within api and admin app repos |
+| SSB Deployment Account        | AWS       | `IAMFullAccess`                        | Creds stored in GitHub Environment secrets within usnotify-ssb repo       |
+| SSB Cloud.gov Service Account | Cloud.gov | `SpaceDeveloper`                       | Creds stored in GitHub Environment secrets within usnotify-ssb repo       |
+| SSB AWS Accounts              | AWS       | `sms_broker` or `smtp_broker` IAM role | Creds created and maintained by usnotify-ssb terraform                    |
 
 ## <a name="phone-numbers"></a> SMS Phone Number Management
 
@@ -1319,48 +1315,44 @@ See [Infrastructure Overview](./infra-overview.md#request-new-phone-numbers) for
 
 Once you have a number, it must be set in the app in one of two ways:
 
-* For the default phone number, to be used by Notify itself for OTP codes and the default from number for services, set the phone number as the `AWS_US_TOLL_FREE_NUMBER` ENV variable in the environment you are creating
-* For service-specific phone numbers, set the phone number in the Service's `Text message senders` in the settings tab.
+- For the default phone number, to be used by Notify itself for OTP codes and the default from number for services, set the phone number as the `AWS_US_TOLL_FREE_NUMBER` ENV variable in the environment you are creating
+- For service-specific phone numbers, set the phone number in the Service's `Text message senders` in the settings tab.
 
 ### Current Production Phone Numbers
 
-* +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number (Also the number for the live service: Federal Test Service)
-* +18447891134 - Montgomery County / Ride On
-* +18888402596 - Norfolk / DHS
-* +18555317292 - Washington State  / DHS
-* +18889046435 - State Department / Consular Affairs
-* +18447342791
-* +18447525067
-* +18336917230
-* +18335951552
-* +18333792033
-* +18338010522
+- +18447952263 - in use as default number. Notify's OTP messages and trial service messages are sent from this number (Also the number for the live service: Federal Test Service)
+- +18447891134 - Montgomery County / Ride On
+- +18888402596 - Norfolk / DHS
+- +18555317292 - Washington State / DHS
+- +18889046435 - State Department / Consular Affairs
+- +18447342791
+- +18447525067
+- +18336917230
+- +18335951552
+- +18333792033
+- +18338010522
 
 For a full list of phone numbers in trial and production, team members can access a [tracking list here](https://docs.google.com/spreadsheets/d/1lq3Wi_up7EkcKvmwO3oTw30m7kVt1iXvdS3KAp0smh4/edit#gid=0).
 
+# Data Storage Policies & Procedures
 
-Data Storage Policies & Procedures
-==================================
-
-
-Potential PII Locations
------------------------
+## Potential PII Locations
 
 ### Tables
 
 #### users<sup>1</sup>
 
-* name
-* email_address
-* mobile_number
+- name
+- email_address
+- mobile_number
 
 #### invited_users<sup>1</sup>
 
-* email_address
+- email_address
 
 #### invited_organization_users<sup>1</sup>
 
-* email_address
+- email_address
 
 #### jobs
 
@@ -1368,23 +1360,23 @@ No db data is PII, but each job has a csv file in s3 containing phone numbers an
 
 #### notifications
 
-* to
-* normalized_to
-* _personalization<sup>2</sup>
-* phone_prefix<sup>3</sup>
+- to
+- normalized_to
+- \_personalization<sup>2</sup>
+- phone_prefix<sup>3</sup>
 
 #### notification_history
 
-* phone_prefix<sup>3</sup>
+- phone_prefix<sup>3</sup>
 
 #### inbound_sms
 
-* content<sup>2</sup>
-* user_number
+- content<sup>2</sup>
+- user_number
 
 #### events
 
-* data (contains user IP addresses)<sup>1</sup>
+- data (contains user IP addresses)<sup>1</sup>
 
 ### Notes
 
@@ -1402,9 +1394,7 @@ Details on encryption schemes and algorithms can be found in [SC-28(1)](https://
 
 Probably not PII, this is the country code of the phone.
 
-
-Data Retention Policy
----------------------
+## Data Retention Policy
 
 Seven (7) days by default. Each service can be set with a custom policy via `ServiceDataRetention` by a Platform Admin. The `ServiceDataRetention` setting applies per-service and per-message type and controls both entries in the `notifications` table as well as `csv` contact files uploaded to s3
 
@@ -1414,20 +1404,17 @@ Data cleanup is controlled by several tasks in the `nightly_tasks.py` file, kick
 
 ## Debug messages not being sent
 
-
 ### Getting the file location and tracing what happens
 
+Ask the user to provide the csv file name. Either the csv file they uploaded, or the one that is autogenerated when they do a one-off send and is visible in the UI
 
-Ask the user to provide the csv file name.  Either the csv file they uploaded, or the one that is autogenerated when they do a one-off send and is visible in the UI
+Starting with the admin logs, search for this file name. When you find it, the log line should have the file name linked to the job_id and the csv file location. Save both of these.
 
-Starting with the admin logs, search for this file name.  When you find it, the log line should have the file name linked to the job_id and the csv file location.  Save both of these.
-
-In the api logs, search by job_id.  Either you will see evidence of the job failing and retrying over and over (in which case search for a stack trace using timestamp), or you will ultimately get to a log line that links the job_id to a message_id.  In this case, now search by message_id.  You should be able to find the actual result from AWS, either success or failure, with hopefully some helpful info.
+In the api logs, search by job_id. Either you will see evidence of the job failing and retrying over and over (in which case search for a stack trace using timestamp), or you will ultimately get to a log line that links the job_id to a message_id. In this case, now search by message_id. You should be able to find the actual result from AWS, either success or failure, with hopefully some helpful info.
 
 ### Viewing the csv file
 
 If you need to view the questionable csv file on production, run the following command:
-
 
 ```
 cf run-task notify-api-production --command "flask command download-csv-file-by-name -f <file location found in admin logs>"
@@ -1443,10 +1430,10 @@ poetry run flask command download-csv-file-by-name <file location in admin logs>
 
 1. Either send a message and capture the csv file name, or get a csv file name from a user
 2. Using the log tool at logs.fr.cloud.gov, use filters to limit what you're searching on (cf.app is 'notify-admin-production' for example) and then search with the csv file name in double quotes over the relevant time period (last 5 minutes if you just sent a message, or else whatever time the user sent at)
-3. When you find the log line, you should also find the job_id and the s3 file location.  Save these somewhere.
-4. To get the csv file contents, you can run the command above.  This command currently prints to the notify-api log, so after you run the command,
-you need to search in notify-api-production for the last 5 minutes with the logs sorted by timestamp.  The contents of the csv file unfortunately appear on separate lines so it's very important to sort by time.
-5. If you want to see where the message actually failed, search with cf.app is notify-api-production using the job_id that you saved in step #3.   If you get far enough, you might see one of the log lines has a message_id.  If you see it, you can switch and search on that, which should tell you what happened in AWS (success or failure).
+3. When you find the log line, you should also find the job_id and the s3 file location. Save these somewhere.
+4. To get the csv file contents, you can run the command above. This command currently prints to the notify-api log, so after you run the command,
+   you need to search in notify-api-production for the last 5 minutes with the logs sorted by timestamp. The contents of the csv file unfortunately appear on separate lines so it's very important to sort by time.
+5. If you want to see where the message actually failed, search with cf.app is notify-api-production using the job_id that you saved in step #3. If you get far enough, you might see one of the log lines has a message_id. If you see it, you can switch and search on that, which should tell you what happened in AWS (success or failure).
 
 ## Deployment / app push problems
 
