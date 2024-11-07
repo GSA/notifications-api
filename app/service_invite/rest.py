@@ -157,13 +157,22 @@ def resend_service_invite(service_id, invited_user_id):
     Note:
         This ignores the POST data entirely.
     """
+    request_json = request.get_json()
+    try:
+        nonce = request_json.pop("nonce")
+    except KeyError:
+        current_app.logger.exception("nonce not found in submitted data.")
+        raise
+    try:
+        state = request_json.pop("state")
+    except KeyError:
+        current_app.logger.exception("state not found in submitted data.")
+        raise
+
     fetched = get_expired_invite_by_service_and_id(
         service_id=service_id,
         invited_user_id=invited_user_id,
     )
-
-    nonce = request.json["nonce"]
-    state = request.json["state"]
 
     fetched.created_at = utc_now()
     fetched.status = InvitedUserStatus.PENDING
@@ -173,9 +182,9 @@ def resend_service_invite(service_id, invited_user_id):
 
     save_invited_user(update_dict)
 
-    _create_service_invite(fetched, nonce, state)
+    invite_data = _create_service_invite(fetched, nonce, state)
 
-    return jsonify(data=invited_user_schema.dump(fetched)), 200
+    return jsonify(data=invited_user_schema.dump(fetched), invite=invite_data), 200
 
 
 def invited_user_url(invited_user_id, invite_link_host=None):
