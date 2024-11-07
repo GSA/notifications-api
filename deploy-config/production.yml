@@ -1,8 +1,8 @@
 env: production
 web_instances: 2
-web_memory: 2G
+web_memory: 3G
 worker_instances: 4
-worker_memory: 3G
+worker_memory: 2G
 scheduler_memory: 256M
 public_api_route: notify-api.app.cloud.gov
 admin_base_url: https://beta.notify.gov
