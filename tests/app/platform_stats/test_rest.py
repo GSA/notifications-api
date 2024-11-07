@@ -226,16 +226,61 @@ def test_volumes_by_service_report(
     notify_db_session, sample_template, sample_email_template, admin_request
 ):
     fixture = set_up_usage_data(datetime(2022, 3, 1))
+    mocker = admin_request.mocker
+    mock_fetch_volumes = mocker.patch('app.platform_stats.rest.fetch_volumes_by_service')
+    mock_fetch_volumes.return_value.all.return_value = [
+        mocker.Mock(
+            service_id=fixture['service_1_sms_and_letter'].id,
+            service_name=fixture['service_1_sms_and_letter'].name,
+            organization_id=fixture['org_1'].id,
+            organization_name=fixture['org_1'].name,
+            free_allowance=10,
+            sms_notifications=1,
+            sms_chargeable_units=2,
+            email_totals=0
+        ),
+        mocker.Mock(
+            service_id=fixture['service_with_out_ft_billing_this_year'].id,
+            service_name=fixture['service_with_out_ft_billing_this_year'].name,
+            organization_id=fixture['org_1'].id,
+            organization_name=fixture['org_1'].name,
+            free_allowance=10,
+            sms_notifications=0,
+            sms_chargeable_units=0,
+            email_totals=0
+        ),
+        mocker.Mock(
+            service_id=fixture['service_with_sms_without_org'].id,
+            service_name=fixture['service_with_sms_without_org'].name,
+            organization_id=None,
+            organization_name=None,
+            free_allowance=10,
+            sms_notifications=0,
+            sms_chargeable_units=0,
+            email_totals=0
+        ),
+        mocker.Mock(
+            service_id=fixture['service_with_sms_within_allowance'].id,
+            service_name=fixture['service_with_sms_within_allowance'].name,
+            organization_id=None,
+            organization_name=None,
+            free_allowance=10,
+            sms_notifications=0,
+            sms_chargeable_units=0,
+            email_totals=0
+        )
+    ]
     response = admin_request.get(
         "platform_stats.volumes_by_service_report",
         start_date="2022-03-01",
         end_date="2022-03-01",
     )
 
-    assert len(response) == 5
+    assert len(response) == 4
 
-    # since we are using a pre-set up fixture, we only care about some of the results
-    assert response[0] == {
+    # Verify that mock_fetch_volumes was called with the correct parameters
+    mock_fetch_volumes.assert_called_once_with(date(2022, 3, 1), date(2022, 3, 1))
+    # Verify the response content
         "email_totals": 0,
         "free_allowance": 10,
         "organization_id": str(fixture["org_1"].id),
@@ -255,7 +300,7 @@ def test_volumes_by_service_report(
         "sms_chargeable_units": 0,
         "sms_notifications": 0,
     }
-    assert response[3] == {
+    assert response[2] == {
         "email_totals": 0,
         "free_allowance": 10,
         "organization_id": "",
@@ -265,7 +310,7 @@ def test_volumes_by_service_report(
         "sms_chargeable_units": 0,
         "sms_notifications": 0,
     }
-    assert response[4] == {
+    assert response[3] == {
         "email_totals": 0,
         "free_allowance": 10,
         "organization_id": "",

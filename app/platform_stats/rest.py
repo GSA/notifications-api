@@ -83,7 +83,7 @@ def get_data_for_billing_report():
         start_date, end_date
     )
 
-    sms_costs = fetch_sms_billing_for_all_services(start_date, end_date)
+    volumes_by_service = fetch_volumes_by_service(start_date, end_date).all()
 
     combined = {}
     for s in sms_costs:
