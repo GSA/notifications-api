@@ -136,6 +136,8 @@ def test_dao_get_annual_billing(mocker):
     result = dao_get_annual_billing(service_id)
     mock_db_session.assert_called_once()
     stmt = mock_db_session.call_args[0][0]
+    print(f"stmt = {stmt}")
+    print(f"params = {stmt.compile().params}")
     assert stmt.compile().params["service_id"] == service_id
 
     assert result == ["billing_entry1", "billing_entry2"]
