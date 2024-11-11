@@ -155,7 +155,8 @@ def test_dao_get_all_free_sms_fragment_limit(mocker):
 
     mock_db_session.assert_called_once()
 
-    stmt = mock_db_session.call_arg[0][0]
+    stmt = mock_db_session.call_args[0][0]
+    print(f"stmt = {stmt}")
     print(f"params = {stmt.compile().params}")
     assert stmt.compile().params["service_id"] == service_id
     assert result == ["sms_limit1", "sms_limit2"]
