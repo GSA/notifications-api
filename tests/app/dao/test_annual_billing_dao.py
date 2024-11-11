@@ -3,6 +3,7 @@ from freezegun import freeze_time
 
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
+    dao_get_all_free_sms_fragment_limit,
     dao_get_annual_billing,
     dao_get_free_sms_fragment_limit_for_year,
     dao_update_annual_billing_for_future_years,
@@ -140,9 +141,13 @@ def test_dao_get_annual_billing(mocker):
 
     assert result == ["billing_entry1", "billing_entry2"]
 
+
 def test_dao_get_all_free_sms_fragment_limit(mocker):
     mock_db_session = mocker.patch("app.dao.db.session.execute")
-    mock_db_session.return_value.scalars.return_value.all.return_value = ["sms_limit1", "sms_limit2"]
+    mock_db_session.return_value.scalars.return_value.all.return_value = [
+        "sms_limit1",
+        "sms_limit2",
+    ]
 
     service_id = "test_service_id"
 
