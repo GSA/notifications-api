@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import Mock, call
+from unittest.mock import MagicMock, Mock, call
 
 import pytest
 import requests_mock
@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import encryption
 from app.celery import provider_tasks, tasks
 from app.celery.tasks import (
+    __total_sending_limits_for_job_exceeded,
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_job,
     process_incomplete_jobs,
@@ -1634,3 +1635,28 @@ def test_save_api_tasks_use_cache(
 
     assert len(Notification.query.all()) == 3
     assert len(mock_provider_task.call_args_list) == 3
+
+
+def test_total_sending_limits_exceeded(mocker):
+    mock_service = MagicMock()
+    mock_service.total_message_limit = 1000
+    mock_job = MagicMock()
+    mock_job.notification_count = 300
+    job_id = "test_job_id"
+
+    mock_check_service_limit = mocker.patch(
+        "app.celery.tasks.check_service_over_total_message_limit"
+    )
+    mock_check_service_limit.return_value = 800
+
+    mock_utc_now = mocker.patch("app.celery.tasks.utc_now")
+    mock_utc_now.return_value = datetime(2024, 11, 10, 12, 0, 0)
+
+    mock_dao_update_job = mocker.patch("app.celery.tasks.dao_update_job")
+
+    result = __total_sending_limits_for_job_exceeded(mock_service, mock_job, job_id)
+    assert result is True
+
+    assert mock_job.job_status == "sensding limits exceeded"
+    assert mock_job.processing_finished == datetime(2024, 11, 10, 12, 0, 0)
+    mock_dao_update_job.assert_called_once_with(mock_job)
