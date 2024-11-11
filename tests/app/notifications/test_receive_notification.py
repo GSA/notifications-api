@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from flask import json
+from flask import current_app, json
 
 from app.enums import ServicePermissionType
 from app.models import InboundSms
@@ -373,10 +373,7 @@ def test_fetch_potential_service_cant_find_it(mock_dao):
 
 
 def test_receive_sns_sms_inbound_disabled(mocker):
-    mocker.patch(
-        "app.notifications.receive_notifications.current_app.config",
-        {"RECEIVE_INBOUND_SMS": False},
-    )
+    current_app.config["RECEIVE_INBOUND_SMS"] = False
     response, status_code = receive_sns_sms()
 
     assert status_code == 200
