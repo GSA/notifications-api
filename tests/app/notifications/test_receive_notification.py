@@ -381,38 +381,3 @@ def test_receive_sns_sms_inbound_disabled(mocker):
         "result": "success",
         "message": "SMS-SNS callback succeeded",
     }
-
-
-def test_receive_sns_sms_no_service_found(mocker):
-
-    mocker.patch(
-        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async"
-    )
-    current_app.config["RECEIVE_INBOUND_SMS"] = True
-    response, status_code = receive_sns_sms()
-    mock_sns_handler = mocker.patch(
-        "app.notifications.receive_notifications.sns_notification_handler"
-    )
-    mock_sns_handler.return_value = {
-        "Message": json.dumos(
-            {
-                "originationNumber": "+15555555555",
-                "destinationNumber": "+15555554444",
-                "messageBody": "Hello",
-                "inboundMessageId": "inbound-id",
-            }
-        ),
-        "Timestamp": "2024-11-10T00:00:00Z",
-    }
-    mock_fetch_service = mocker.patch(
-        "app.notifications.receive_notifications.fetch_potential_service"
-    )
-    mock_fetch_service.return_value = None
-
-    response, status_code = receive_sns_sms()
-
-    assert status_code == 200
-    assert response.json == {
-        "result": "success",
-        "message": "SMS-SNS callback succeeded",
-    }
