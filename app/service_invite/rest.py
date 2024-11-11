@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+from urllib.parse import unquote
 
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
@@ -32,7 +33,7 @@ service_invite = Blueprint("service_invite", __name__)
 register_errors(service_invite)
 
 
-def _create_service_invite(invited_user, nonce):
+def _create_service_invite(invited_user, nonce, state):
 
     template_id = current_app.config["INVITATION_EMAIL_TEMPLATE_ID"]
 
@@ -52,13 +53,14 @@ def _create_service_invite(invited_user, nonce):
     data["invited_user_id"] = str(invited_user.id)
     data["invited_user_email"] = invited_user.email_address
 
+    invite_redis_key = f"invite-data-{unquote(state)}"
+    redis_store.set(invite_redis_key, get_user_data_url_safe(data))
+
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
 
     url = url.replace("NONCE", nonce)  # handed from data sent from admin.
 
-    user_data_url_safe = get_user_data_url_safe(data)
-
-    url = url.replace("STATE", user_data_url_safe)
+    url = url.replace("STATE", state)
 
     personalisation = {
         "user_name": invited_user.from_user.name,
@@ -85,6 +87,8 @@ def _create_service_invite(invited_user, nonce):
     )
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
+    return data
+
 
 @service_invite.route("/service/<service_id>/invite", methods=["POST"])
 def create_invited_user(service_id):
@@ -94,13 +98,18 @@ def create_invited_user(service_id):
     except KeyError:
         current_app.logger.exception("nonce not found in submitted data.")
         raise
+    try:
+        state = request_json.pop("state")
+    except KeyError:
+        current_app.logger.exception("state not found in submitted data.")
+        raise
 
     invited_user = invited_user_schema.load(request_json)
     save_invited_user(invited_user)
 
-    _create_service_invite(invited_user, nonce)
+    invite_data = _create_service_invite(invited_user, nonce, state)
 
-    return jsonify(data=invited_user_schema.dump(invited_user)), 201
+    return jsonify(data=invited_user_schema.dump(invited_user), invite=invite_data), 201
 
 
 @service_invite.route("/service/<service_id>/invite/expired", methods=["GET"])
@@ -148,6 +157,18 @@ def resend_service_invite(service_id, invited_user_id):
     Note:
         This ignores the POST data entirely.
     """
+    request_json = request.get_json()
+    try:
+        nonce = request_json.pop("nonce")
+    except KeyError:
+        current_app.logger.exception("nonce not found in submitted data.")
+        raise
+    try:
+        state = request_json.pop("state")
+    except KeyError:
+        current_app.logger.exception("state not found in submitted data.")
+        raise
+
     fetched = get_expired_invite_by_service_and_id(
         service_id=service_id,
         invited_user_id=invited_user_id,
@@ -161,9 +182,9 @@ def resend_service_invite(service_id, invited_user_id):
 
     save_invited_user(update_dict)
 
-    _create_service_invite(fetched, current_app.config["ADMIN_BASE_URL"])
+    invite_data = _create_service_invite(fetched, nonce, state)
 
-    return jsonify(data=invited_user_schema.dump(fetched)), 200
+    return jsonify(data=invited_user_schema.dump(fetched), invite=invite_data), 200
 
 
 def invited_user_url(invited_user_id, invite_link_host=None):
