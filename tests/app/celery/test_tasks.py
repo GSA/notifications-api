@@ -1657,6 +1657,6 @@ def test_total_sending_limits_exceeded(mocker):
     result = __total_sending_limits_for_job_exceeded(mock_service, mock_job, job_id)
     assert result is True
 
-    assert mock_job.job_status == "sensding limits exceeded"
+    assert mock_job.job_status == "sending limits exceeded"
     assert mock_job.processing_finished == datetime(2024, 11, 10, 12, 0, 0)
     mock_dao_update_job.assert_called_once_with(mock_job)
