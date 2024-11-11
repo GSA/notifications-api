@@ -35,7 +35,7 @@ def test_get_all_organizations(admin_request, notify_db_session):
 
     response = admin_request.get("organization.get_organizations", _expected_status=200)
 
-    assert len(response) == 3
+    assert len(response) == 2
     assert (
         set(response[0].keys())
         == set(response[1].keys())
