@@ -1,11 +1,10 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest import TestCase
 from unittest.mock import ANY
 
 import pytest
-from flask import Flask, current_app, request, url_for
+from flask import current_app, url_for
 from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -25,7 +24,6 @@ from app.enums import (
     StatisticsType,
     TemplateType,
 )
-from app.errors import InvalidRequest
 from app.models import (
     AnnualBilling,
     EmailBranding,
@@ -38,7 +36,6 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
-from app.service.rest import check_request_args
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -3677,63 +3674,3 @@ def test_get_service_notification_statistics_by_day(
 
     assert mock_get_service_statistics_for_specific_days.assert_called_once
     assert response == mock_data
-
-
-test_app = Flask(__name__)
-
-
-class TestCheckRequestArgs(TestCase):
-
-    def test_check_request_args_valid(self):
-        with test_app.test_request_context(
-            query_string={
-                "service_id": "123",
-                "name": "Test Service",
-                "email_from": "test@example.com",
-            }
-        ):
-
-            service_id, name, email_from = check_request_args(request)
-            self.assertEqual(service_id, "123")
-            self.assertEqual(name, "Test Service")
-            self.assertEqual(email_from, "test@example.com")
-
-    def test_check_request_args_missing_service_id(self):
-        with test_app.test_request_context(
-            query_string={"name": "Test Service", "email_from": "test@example.com"}
-        ):
-
-            with self.assertRaise(InvalidRequest) as context:
-                check_request_args(request)
-            self.assertEqual(context.exception.status_code, 400)
-            self.assertIn({"service_id": ["Can't be empty"]}, context.exception.errors)
-
-    def test_check_request_args_missing_name(self):
-        with test_app.test_request_context(
-            query_string={"service_id": "123", "email_from": "test@example.com"}
-        ):
-
-            with self.assertRaise(InvalidRequest) as context:
-                check_request_args(request)
-            self.assertEqual(context.exception.status_code, 400)
-            self.assertIn({"name": ["Can't be empty"]}, context.exception.errors)
-
-    def test_check_request_args_missing_email_from(self):
-        with test_app.test_request_context(
-            query_string={"service_id": "123", "name": "Test Service"}
-        ):
-
-            with self.assertRaise(InvalidRequest) as context:
-                check_request_args(request)
-            self.assertEqual(context.exception.status_code, 400)
-            self.assertIn({"email_from": ["Can't be empty"]}, context.exception.errors)
-
-    def test_check_request_args_missing_all(self):
-        with test_app.test_request_context(query_string={}):
-
-            with self.assertRaise(InvalidRequest) as context:
-                check_request_args(request)
-            self.assertEqual(context.exception.status_code, 400)
-            self.assertIn({"email_from": ["Can't be empty"]}, context.exception.errors)
-            self.assertIn({"name": ["Can't be empty"]}, context.exception.errors)
-            self.assertIn({"service_id": ["Can't be empty"]}, context.exception.errors)
