@@ -11,6 +11,7 @@ from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     fetch_potential_service,
     has_inbound_sms_permissions,
+    receive_sns_sms,
     unescape_string,
 )
 from tests.app.db import (
@@ -369,3 +370,17 @@ def test_fetch_potential_service_cant_find_it(mock_dao):
     mock_dao.return_value = create_service()
     found_service = fetch_potential_service(234, "sns")
     assert found_service is False
+
+
+def test_receive_sns_sms_inbound_disabled(mocker):
+    mocker.patch(
+        "app.notifications.receive_notifications.current_app.config",
+        {"RECEIVE_INBOUND_SMS": False},
+    )
+    response, status_code = receive_sns_sms()
+
+    assert status_code == 200
+    assert response.json == {
+        "result": "success",
+        "message": "SMS-SNS callback succeeded",
+    }
