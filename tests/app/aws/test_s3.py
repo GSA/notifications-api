@@ -255,7 +255,28 @@ def mock_s3_get_object_slowdown(*args, **kwargs):
     raise ClientError(error_response, "GetObject")
 
 
+def mock_s3_get_object_no_such_key(*args, **kwargs):
+    error_response = {
+        "Error": {
+            "Code": "NoSuchKey",
+            "Message": "Couldn't find it",
+        }
+    }
+    raise ClientError(error_response, "GetObject")
+
+
 def test_get_job_from_s3_exponential_backoff_on_throttling(mocker):
+    # We try multiple times to retrieve the job, and if we can't we return None
+    mock_get_object = mocker.patch(
+        "app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown
+    )
+    mocker.patch("app.aws.s3.file_exists", return_value=True)
+    job = get_job_from_s3("service_id", "job_id")
+    assert job is None
+    assert mock_get_object.call_count == 8
+
+
+def test_get_job_from_s3_exponential_backoff_on_no_such_key(mocker):
     # We try multiple times to retrieve the job, and if we can't we return None
     mock_get_object = mocker.patch(
         "app.aws.s3.get_s3_object", side_effect=mock_s3_get_object_slowdown
