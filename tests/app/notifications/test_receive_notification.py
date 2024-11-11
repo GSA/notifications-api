@@ -384,6 +384,10 @@ def test_receive_sns_sms_inbound_disabled(mocker):
 
 
 def test_receive_sns_sms_no_service_found(mocker):
+
+    mocker.patch(
+        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async"
+    )
     current_app.config["RECEIVE_INBOUND_SMS"] = True
     response, status_code = receive_sns_sms()
     mock_sns_handler = mocker.patch(
