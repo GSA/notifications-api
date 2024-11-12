@@ -64,11 +64,15 @@ class AwsSnsClient(SmsClient):
             }
 
             if self._valid_sender_number(sender):
+                self.current_app.logger.info("aws_sns found a valid sender number!")
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": sender,
                 }
             else:
+                self.current_app.logger.info(
+                    "aws_sns did not find a valid sender number, defaulting to the toll free one"
+                )
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": self.current_app.config["AWS_US_TOLL_FREE_NUMBER"],
