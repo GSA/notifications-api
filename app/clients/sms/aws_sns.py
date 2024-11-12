@@ -68,8 +68,8 @@ class AwsSnsClient(SmsClient):
                     "aws_sns found a valid sender number here it is wait for it!"
                 )
                 # To defeat scrubbing, sender numbers are not PII.
-                for number in sender:
-                    self.current_app.logger.info(number)
+                non_scrubbable = " ".join(sender)
+                self.current_app.logger.info(non_scrubbable)
 
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
