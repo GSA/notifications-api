@@ -63,11 +63,10 @@ class AwsSnsClient(SmsClient):
                 }
             }
 
+            default_num = " ".join(self.current_app.config["AWS_US_TOLL_FREE_NUMBER"])
             if isinstance(sender, str):
                 non_scrubbable = " ".join(sender)
-                default_num = " ".join(
-                    self.current_app.config["AWS_US_TOLL_FREE_NUMBER"]
-                )
+
                 self.current_app.logger.info(
                     f"notify-api-1385 sender {non_scrubbable} is a {type(sender)} default is a {type(default_num)}"
                 )
