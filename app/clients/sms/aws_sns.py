@@ -63,11 +63,18 @@ class AwsSnsClient(SmsClient):
                 }
             }
 
-            non_scrubbable = " ".join(sender)
-            default_num = " ".join(self.current_app.config["AWS_US_TOLL_FREE_NUMBER"])
-            self.current_app.logger.info(
-                f"notify-api-1385 sender {non_scrubbable} is a {type(sender)} default is a {type(default_num)}"
-            )
+            if isinstance(sender, str):
+                non_scrubbable = " ".join(sender)
+                default_num = " ".join(
+                    self.current_app.config["AWS_US_TOLL_FREE_NUMBER"]
+                )
+                self.current_app.logger.info(
+                    f"notify-api-1385 sender {non_scrubbable} is a {type(sender)} default is a {type(default_num)}"
+                )
+            else:
+                self.current_app.logger.warning(
+                    f"notify-api-1385 sender is type {type(sender)}!! {sender}"
+                )
             if self._valid_sender_number(sender):
                 self.current_app.logger.info(
                     f"notify-api-1385 use valid sender {non_scrubbable} instead of default {default_num}"
@@ -79,7 +86,7 @@ class AwsSnsClient(SmsClient):
                 }
             else:
                 self.current_app.logger.info(
-                    f"notify-api-1385 use default {default_num} instead of invalid sender {non_scrubbable}"
+                    f"notify-api-1385 use default {default_num} instead of invalid sender"
                 )
 
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
