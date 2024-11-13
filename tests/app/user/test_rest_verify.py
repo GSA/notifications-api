@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 from flask import current_app, url_for
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
 import app.celery.tasks
 from app import db
@@ -295,7 +296,7 @@ def test_send_sms_code_returns_204_when_too_many_codes_already_created(
         )
         db.session.add(verify_code)
         db.session.commit()
-    assert VerifyCode.query.count() == 5
+    assert _get_verify_code_count() == 5
     auth_header = create_admin_authorization_header()
     resp = client.post(
         url_for(
@@ -307,7 +308,12 @@ def test_send_sms_code_returns_204_when_too_many_codes_already_created(
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 204
-    assert VerifyCode.query.count() == 5
+    assert _get_verify_code_count() == 5
+
+
+def _get_verify_code_count():
+    stmt = select(func.count()).select_from(VerifyCode)
+    return db.session.execute(stmt).scalar() or 0
 
 
 @pytest.mark.parametrize(
@@ -341,7 +347,7 @@ def test_send_new_user_email_verification(
     notify_service = email_verification_template.service
     assert resp.status_code == 204
     notification = Notification.query.first()
-    assert VerifyCode.query.count() == 0
+    assert _get_verify_code_count() == 0
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )

@@ -1,6 +1,8 @@
 import pytest
 from flask import current_app
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.services_dao import dao_add_user_to_service
 from app.enums import NotificationType, TemplateType
 from app.models import Notification
@@ -23,7 +25,9 @@ def test_send_notification_to_service_users_persists_notifications_correctly(
 
     notification = Notification.query.one()
 
-    assert Notification.query.count() == 1
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
     assert notification.to == "1"
     assert str(notification.service_id) == current_app.config["NOTIFY_SERVICE_ID"]
     assert notification.template.id == template.id
@@ -89,4 +93,6 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
 
     send_notification_to_service_users(service_id=service.id, template_id=template.id)
 
-    assert Notification.query.count() == 2
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 2

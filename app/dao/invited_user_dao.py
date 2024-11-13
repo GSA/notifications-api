@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from app import db
 from app.enums import InvitedUserStatus
 from app.models import InvitedUser
@@ -12,30 +14,37 @@ def save_invited_user(invited_user):
 
 
 def get_invited_user_by_service_and_id(service_id, invited_user_id):
-    return InvitedUser.query.filter(
+
+    stmt = select(InvitedUser).where(
         InvitedUser.service_id == service_id,
         InvitedUser.id == invited_user_id,
-    ).one()
+    )
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_expired_invite_by_service_and_id(service_id, invited_user_id):
-    return InvitedUser.query.filter(
+    stmt = select(InvitedUser).where(
         InvitedUser.service_id == service_id,
         InvitedUser.id == invited_user_id,
         InvitedUser.status == InvitedUserStatus.EXPIRED,
-    ).one()
+    )
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_invited_user_by_id(invited_user_id):
-    return InvitedUser.query.filter(InvitedUser.id == invited_user_id).one()
+    stmt = select(InvitedUser).where(InvitedUser.id == invited_user_id)
+    return db.session.execute(stmt).scalars().one()
 
 
 def get_expired_invited_users_for_service(service_id):
-    return InvitedUser.query.filter(InvitedUser.service_id == service_id).all()
+    # TODO why does this return all invited users?
+    stmt = select(InvitedUser).where(InvitedUser.service_id == service_id)
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_invited_users_for_service(service_id):
-    return InvitedUser.query.filter(InvitedUser.service_id == service_id).all()
+    stmt = select(InvitedUser).where(InvitedUser.service_id == service_id)
+    return db.session.execute(stmt).scalars().all()
 
 
 def expire_invitations_created_more_than_two_days_ago():
