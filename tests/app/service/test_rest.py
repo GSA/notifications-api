@@ -501,10 +501,11 @@ def test_create_service_should_create_annual_billing_for_service(
         "email_from": "created.service",
         "created_by": str(sample_user.id),
     }
-    assert len(AnnualBilling.query.all()) == 0
+
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     admin_request.post("service.create_service", _data=data, _expected_status=201)
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 1
 
 
@@ -525,11 +526,11 @@ def test_create_service_should_raise_exception_and_not_create_service_if_annual_
         "email_from": "created.service",
         "created_by": str(sample_user.id),
     }
-    assert len(AnnualBilling.query.all()) == 0
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
         admin_request.post("service.create_service", _data=data)
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 0
     stmt = (
         select(func.count())
@@ -3060,7 +3061,7 @@ def test_add_service_reply_to_email_address(admin_request, sample_service):
         _expected_status=201,
     )
 
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 1
     assert response["data"] == results[0].serialize()
 
@@ -3100,7 +3101,7 @@ def test_add_service_reply_to_email_address_can_add_multiple_addresses(
         _data=second,
         _expected_status=201,
     )
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 2
     default = [x for x in results if x.is_default]
     assert response["data"] == default[0].serialize()
@@ -3151,7 +3152,7 @@ def test_update_service_reply_to_email_address(admin_request, sample_service):
         _expected_status=200,
     )
 
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 1
     assert response["data"] == results[0].serialize()
 
@@ -3263,7 +3264,7 @@ def test_add_service_sms_sender_can_add_multiple_senders(client, notify_db_sessi
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == "second"
     assert not resp_json["is_default"]
-    senders = ServiceSmsSender.query.all()
+    senders = db.session.execute(select(ServiceSmsSender)).scalars().all()
     assert len(senders) == 2
 
 
