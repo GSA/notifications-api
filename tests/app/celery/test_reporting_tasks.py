@@ -4,7 +4,7 @@ from uuid import UUID
 
 import pytest
 from freezegun import freeze_time
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app import db
 from app.celery.reporting_tasks import (
@@ -363,9 +363,12 @@ def test_create_nightly_billing_for_day_use_BST(
         rate_multiplier=1.0,
         billable_units=4,
     )
-
-    assert Notification.query.count() == 3
-    assert FactBilling.query.count() == 0
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 3
+    stmt = select(func.count()).select_from(FactBilling)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
     create_nightly_billing_for_day("2018-03-25")
     records = FactBilling.query.order_by(FactBilling.local_date).all()

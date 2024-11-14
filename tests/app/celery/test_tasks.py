@@ -412,7 +412,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_template_with_placeholders.id
     assert (
@@ -429,6 +429,11 @@ def test_should_send_template_to_correct_sms_task_and_persist(
     mocked_deliver_sms.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks"
     )
+
+
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_should_save_sms_if_restricted_service_and_valid_number(
@@ -451,7 +456,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
         encrypt_notification,
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
@@ -490,7 +495,7 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "reply_to@digital.fake.gov"
 
 
@@ -510,7 +515,7 @@ def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "12345"
 
 
@@ -577,7 +582,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.template_id == sample_job.template.id
@@ -642,7 +647,7 @@ def test_should_use_email_template_and_persist(
             encryption.encrypt(notification),
         )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
@@ -689,7 +694,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.template_version == version_on_notification
@@ -718,7 +723,7 @@ def test_should_use_email_template_subject_placeholders(
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
@@ -759,7 +764,7 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
         encryption.encrypt(notification),
         sender_id=other_email_reply_to.id,
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "other@example.com"
 
@@ -784,7 +789,7 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
         encryption.encrypt(notification),
         sender_id=None,
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "default@example.com"
 
@@ -803,7 +808,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.created_at >= now
@@ -936,7 +941,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "+12028675309"
 
 
@@ -962,7 +967,7 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(
         sender_id=new_sender.id,
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "new-sender"
 
 

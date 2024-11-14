@@ -1,9 +1,11 @@
 from datetime import timedelta
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
+from app import db
 from app.dao.api_key_dao import (
     expire_api_key,
     get_model_api_keys,
@@ -128,8 +130,13 @@ def test_save_api_key_can_create_key_with_same_name_if_other_is_expired(sample_s
 def test_save_api_key_should_not_create_new_service_history(sample_service):
     from app.models import Service
 
-    assert Service.query.count() == 1
-    assert Service.get_history_model().query.count() == 1
+    stmt = select(func.count()).select_from(Service)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
+
+    stmt = select(func.count()).select_from(Service.get_history_model())
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
 
     api_key = ApiKey(
         **{
@@ -141,7 +148,9 @@ def test_save_api_key_should_not_create_new_service_history(sample_service):
     )
     save_model_api_key(api_key)
 
-    assert Service.get_history_model().query.count() == 1
+    stmt = select(func.count()).select_from(Service.get_history_model())
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
 
 
 @pytest.mark.parametrize("days_old, expected_length", [(5, 1), (8, 0)])
