@@ -195,6 +195,8 @@ def test_populate_organization_agreement_details_from_file(
     org_count = _get_organization_query_count()
     assert org_count == 1
 
+    orgY = Organization.query.one()
+    print(f"ORG Y = {orgY.agreement_signed_on_behalf_of_name}")
     orgX = db.session.execute(select(Organization)).scalar_one()
     print(f"ORG X = {orgX.agreement_signed_on_behalf_of_name}")
     org = _get_organization_query_one()
