@@ -192,6 +192,7 @@ def get_notifications_for_job(
 ):
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
+
     query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
     query = _filter_query(query, filter_dict)
     return query.order_by(asc(Notification.job_row_number)).paginate(

@@ -1,13 +1,16 @@
+from sqlalchemy import select
+
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import WebauthnCredential
 
 
 def dao_get_webauthn_credential_by_user_and_id(user_id, webauthn_credential_id):
-    return WebauthnCredential.query.filter(
+    stmt = select(WebauthnCredential).where(
         WebauthnCredential.user_id == user_id,
         WebauthnCredential.id == webauthn_credential_id,
-    ).one()
+    )
+    return db.session.execute(stmt).scalars().one()
 
 
 @autocommit

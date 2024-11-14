@@ -1,7 +1,9 @@
 import json
 
 from flask import url_for
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.api_key_dao import expire_api_key
 from app.enums import KeyType
 from app.models import ApiKey
@@ -60,10 +62,15 @@ def test_create_api_key_without_key_type_rejects(client, sample_service):
     assert json_resp["message"] == {"key_type": ["Missing data for required field."]}
 
 
+def _get_api_key_count():
+    stmt = select(func.count()).select_from(ApiKey)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_revoke_should_expire_api_key_for_service(notify_api, sample_api_key):
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
-            assert ApiKey.query.count() == 1
+            assert _get_api_key_count() == 1
             auth_header = create_admin_authorization_header()
             response = client.post(
                 url_for(
@@ -83,7 +90,7 @@ def test_api_key_should_create_multiple_new_api_key_for_service(
 ):
     with notify_api.test_request_context():
         with notify_api.test_client() as client:
-            assert ApiKey.query.count() == 0
+            assert _get_api_key_count() == 0
             data = {
                 "name": "some secret name",
                 "created_by": str(sample_service.created_by.id),
@@ -96,7 +103,7 @@ def test_api_key_should_create_multiple_new_api_key_for_service(
                 headers=[("Content-Type", "application/json"), auth_header],
             )
             assert response.status_code == 201
-            assert ApiKey.query.count() == 1
+            assert _get_api_key_count() == 1
 
             data["name"] = "another secret name"
             auth_header = create_admin_authorization_header()
@@ -109,7 +116,7 @@ def test_api_key_should_create_multiple_new_api_key_for_service(
             assert json.loads(response.get_data(as_text=True)) != json.loads(
                 response2.get_data(as_text=True)
             )
-            assert ApiKey.query.count() == 2
+            assert _get_api_key_count() == 2
 
 
 def test_get_api_keys_should_return_all_keys_for_service(notify_api, sample_api_key):
@@ -130,7 +137,7 @@ def test_get_api_keys_should_return_all_keys_for_service(notify_api, sample_api_
                 service_id=one_to_expire.service_id, api_key_id=one_to_expire.id
             )
 
-            assert ApiKey.query.count() == 4
+            assert _get_api_key_count() == 4
 
             auth_header = create_admin_authorization_header()
             response = client.get(

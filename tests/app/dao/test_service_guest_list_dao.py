@@ -1,5 +1,8 @@
 import uuid
 
+from sqlalchemy import func, select
+
+from app import db
 from app.dao.service_guest_list_dao import (
     dao_add_and_commit_guest_list_contacts,
     dao_fetch_service_guest_list,
@@ -27,7 +30,8 @@ def test_add_and_commit_guest_list_contacts_saves_data(sample_service):
 
     dao_add_and_commit_guest_list_contacts([guest_list])
 
-    db_contents = ServiceGuestList.query.all()
+    stmt = select(ServiceGuestList)
+    db_contents = db.session.execute(stmt).scalars().all()
     assert len(db_contents) == 1
     assert db_contents[0].id == guest_list.id
 
@@ -60,4 +64,6 @@ def test_remove_service_guest_list_does_not_commit(
     # since dao_remove_service_guest_list doesn't commit, we can still rollback its changes
     notify_db_session.rollback()
 
-    assert ServiceGuestList.query.count() == 1
+    stmt = select(func.count()).select_from(ServiceGuestList)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1

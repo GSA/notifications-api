@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.dao.templates_dao import dao_get_template_by_id, dao_redact_template
 from app.enums import ServicePermissionType, TemplateProcessType, TemplateType
 from app.models import Template, TemplateHistory
@@ -86,7 +88,8 @@ def test_create_a_new_template_for_a_service_adds_folder_relationship(
         data=data,
     )
     assert response.status_code == 201
-    template = Template.query.filter(Template.name == "my template").first()
+    stmt = select(Template).where(Template.name == "my template")
+    template = db.session.execute(stmt).scalars().first()
     assert template.folder == parent_folder
 
 

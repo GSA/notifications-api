@@ -2,8 +2,9 @@ import datetime
 
 import pytest
 from marshmallow import ValidationError
-from sqlalchemy import desc
+from sqlalchemy import desc, select
 
+from app import db
 from app.dao.provider_details_dao import (
     dao_update_provider_details,
     get_provider_details_by_identifier,
@@ -145,13 +146,13 @@ def test_provider_details_history_schema_returns_user_details(
 
     dao_update_provider_details(current_sms_provider)
 
-    current_sms_provider_in_history = (
-        ProviderDetailsHistory.query.filter(
-            ProviderDetailsHistory.id == current_sms_provider.id
-        )
+    stmt = (
+        select(ProviderDetailsHistory)
+        .where(ProviderDetailsHistory.id == current_sms_provider.id)
         .order_by(desc(ProviderDetailsHistory.version))
-        .first()
     )
+    current_sms_provider_in_history = db.session.execute(stmt).scalars().first()
+
     data = provider_details_schema.dump(current_sms_provider_in_history)
 
     assert sorted(data["created_by"].keys()) == sorted(["id", "email_address", "name"])

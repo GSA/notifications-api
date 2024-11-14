@@ -8,9 +8,10 @@ import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
 from requests import RequestException
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import encryption
+from app import db, encryption
 from app.celery import provider_tasks, tasks
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
@@ -530,7 +531,12 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
         encryption.encrypt(notification),
     )
     assert provider_tasks.deliver_sms.apply_async.called is False
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
+
+
+def _get_notification_query_count():
+    stmt = select(func.count()).select_from(Notification)
+    return db.session.execute(stmt).scalar() or 0
 
 
 def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
@@ -552,7 +558,7 @@ def test_should_not_save_email_if_restricted_service_and_invalid_email_address(
         encryption.encrypt(notification),
     )
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker):
@@ -592,7 +598,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
 def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
     notify_db_session, mocker
 ):
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
     user = create_user(mobile_number="2028675309")
     service = create_service(user=user, restricted=True)
     template = create_template(service=service)
@@ -610,7 +616,7 @@ def test_should_not_save_sms_if_team_key_and_recipient_not_in_team(
         encryption.encrypt(notification),
     )
     assert provider_tasks.deliver_sms.apply_async.called is False
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_should_use_email_template_and_persist(
@@ -835,7 +841,7 @@ def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, m
     assert provider_tasks.deliver_sms.apply_async.called is False
     tasks.save_sms.retry.assert_called_with(exc=expected_exception, queue="retry-tasks")
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_save_email_should_go_to_retry_queue_if_database_errors(
@@ -865,7 +871,7 @@ def test_save_email_should_go_to_retry_queue_if_database_errors(
         exc=expected_exception, queue="retry-tasks"
     )
 
-    assert Notification.query.count() == 0
+    assert _get_notification_query_count() == 0
 
 
 def test_save_email_does_not_send_duplicate_and_does_not_put_in_retry_queue(
@@ -887,7 +893,7 @@ def test_save_email_does_not_send_duplicate_and_does_not_put_in_retry_queue(
         notification_id,
         encryption.encrypt(json),
     )
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
     assert not deliver_email.called
     assert not retry.called
 
@@ -911,7 +917,7 @@ def test_save_sms_does_not_send_duplicate_and_does_not_put_in_retry_queue(
         notification_id,
         encryption.encrypt(json),
     )
-    assert Notification.query.count() == 1
+    assert _get_notification_query_count() == 1
     assert not deliver_sms.called
     assert not retry.called
 
@@ -1166,11 +1172,18 @@ def test_process_incomplete_job_sms(mocker, sample_template):
     create_notification(sample_template, job, 0)
     create_notification(sample_template, job, 1)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    count = db.session.execute(stmt).scalar()
+    assert count == 2
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1206,11 +1219,17 @@ def test_process_incomplete_job_with_notifications_all_sent(mocker, sample_templ
     create_notification(sample_template, job, 8)
     create_notification(sample_template, job, 9)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 10
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 10
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1238,7 +1257,12 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     create_notification(sample_template, job, 1)
     create_notification(sample_template, job, 2)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 3
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 3
 
     job2 = create_job(
         template=sample_template,
@@ -1255,13 +1279,21 @@ def test_process_incomplete_jobs_sms(mocker, sample_template):
     create_notification(sample_template, job2, 3)
     create_notification(sample_template, job2, 4)
 
-    assert Notification.query.filter(Notification.job_id == job2.id).count() == 5
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job2.id)
+    )
+
+    assert db.session.execute(stmt).scalar() == 5
 
     jobs = [job.id, job2.id]
     process_incomplete_jobs(jobs)
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
-    completed_job2 = Job.query.filter(Job.id == job2.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
+    stmt = select(Job).where(Job.id == job2.id)
+    completed_job2 = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1287,12 +1319,16 @@ def test_process_incomplete_jobs_no_notifications_added(mocker, sample_template)
         processing_started=utc_now() - timedelta(minutes=31),
         job_status=JobStatus.ERROR,
     )
-
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 0
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 0
 
     process_incomplete_job(job.id)
-
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 
@@ -1348,11 +1384,17 @@ def test_process_incomplete_job_email(mocker, sample_email_template):
     create_notification(sample_email_template, job, 0)
     create_notification(sample_email_template, job, 1)
 
-    assert Notification.query.filter(Notification.job_id == job.id).count() == 2
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.job_id == job.id)
+    )
+    assert db.session.execute(stmt).scalar() == 2
 
     process_incomplete_job(str(job.id))
 
-    completed_job = Job.query.filter(Job.id == job.id).one()
+    stmt = select(Job).where(Job.id == job.id)
+    completed_job = db.session.execute(stmt).scalars().one()
 
     assert completed_job.job_status == JobStatus.FINISHED
 

@@ -9,5 +9,10 @@ admin_base_url: https://notify-sandbox.app.cloud.gov
 redis_enabled: 1
 default_toll_free_number: "+18885989205"
 ADMIN_CLIENT_SECRET: sandbox-notify-secret-key
+API_HOST_NAME: https://notify-api-sandbox.app.cloud.gov
 DANGEROUS_SALT: sandbox-notify-salt
+LOGIN_DOT_GOV_REGISTRATION_URL: https://idp.int.identitysandbox.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:test_notify_gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-sandbox.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE
+NEW_RELIC_LICENSE_KEY: ""
+NOTIFY_E2E_TEST_EMAIL: fake.user@example.com
+NOTIFY_E2E_TEST_PASSWORD: "don't write secrets to the sample file"
 SECRET_KEY: sandbox-notify-secret-key

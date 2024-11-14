@@ -46,6 +46,7 @@ def test_create_invited_user(
         auth_type=AuthType.EMAIL,
         folder_permissions=["folder_1", "folder_2", "folder_3"],
         nonce="FakeNonce",
+        state="FakeState",
         **extra_args,
     )
 
@@ -110,6 +111,7 @@ def test_create_invited_user_without_auth_type(
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": [],
         "nonce": "FakeNonce",
+        "state": "FakeState",
     }
 
     json_resp = admin_request.post(
@@ -134,6 +136,7 @@ def test_create_invited_user_invalid_email(client, sample_service, mocker, fake_
         "permissions": "send_messages,manage_service,manage_api_keys",
         "folder_permissions": [fake_uuid, fake_uuid],
         "nonce": "FakeNonce",
+        "state": "FakeState",
     }
 
     data = json.dumps(data)
@@ -235,6 +238,7 @@ def test_resend_expired_invite(
     response = client.post(
         url,
         headers=[("Content-Type", "application/json"), auth_header],
+        data='{"nonce": "FakeNonce", "state": "FakeState"}',
     )
 
     assert response.status_code == 200

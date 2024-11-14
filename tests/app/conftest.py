@@ -6,6 +6,7 @@ import pytest
 import pytz
 import requests_mock
 from flask import current_app, url_for
+from sqlalchemy import select
 from sqlalchemy.orm.session import make_transient
 
 from app import db
@@ -100,9 +101,10 @@ def create_sample_notification(
 
     if job is None and api_key is None:
         # we didn't specify in test - lets create it
-        api_key = ApiKey.query.filter(
+        stmt = select(ApiKey).where(
             ApiKey.service == template.service, ApiKey.key_type == key_type
-        ).first()
+        )
+        api_key = db.session.execute(stmt).scalars().first()
         if not api_key:
             api_key = create_api_key(template.service, key_type=key_type)
 
@@ -227,7 +229,8 @@ def sample_service(sample_user):
         "email_from": email_from,
         "created_by": sample_user,
     }
-    service = Service.query.filter_by(name=service_name).first()
+    stmt = select(Service).where(Service.name == service_name)
+    service = db.session.execute(stmt).scalars().first()
     if not service:
         service = Service(**data)
         dao_create_service(service, sample_user, service_permissions=None)
@@ -442,9 +445,10 @@ def sample_notification(notify_db_session):
     service = create_service(check_if_service_exists=True)
     template = create_template(service=service)
 
-    api_key = ApiKey.query.filter(
+    stmt = select(ApiKey).where(
         ApiKey.service == template.service, ApiKey.key_type == KeyType.NORMAL
-    ).first()
+    )
+    api_key = db.session.execute(stmt).scalars().first()
     if not api_key:
         api_key = create_api_key(template.service, key_type=KeyType.NORMAL)
 
@@ -595,9 +599,12 @@ def sample_user_service_permission(sample_user):
     permission = PermissionType.MANAGE_SETTINGS
 
     data = {"user": sample_user, "service": service, "permission": permission}
-    p_model = Permission.query.filter_by(
-        user=sample_user, service=service, permission=permission
-    ).first()
+    stmt = select(Permission).where(
+        Permission.user == sample_user,
+        Permission.service == service,
+        Permission.permission == permission,
+    )
+    p_model = db.session.execute(stmt).scalars().first()
     if not p_model:
         p_model = Permission(**data)
         db.session.add(p_model)
@@ -612,12 +619,14 @@ def fake_uuid():
 
 @pytest.fixture(scope="function")
 def ses_provider():
-    return ProviderDetails.query.filter_by(identifier="ses").one()
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == "ses")
+    return db.session.execute(stmt).scalars().one()
 
 
 @pytest.fixture(scope="function")
 def sns_provider():
-    return ProviderDetails.query.filter_by(identifier="sns").one()
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == "sns")
+    return db.session.execute(stmt).scalars().one()
 
 
 @pytest.fixture(scope="function")

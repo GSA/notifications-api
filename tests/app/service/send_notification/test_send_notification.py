@@ -5,8 +5,10 @@ import pytest
 from flask import current_app, json
 from freezegun import freeze_time
 from notifications_python_client.authentication import create_jwt_token
+from sqlalchemy import func, select
 
 import app
+from app import db
 from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
@@ -883,7 +885,9 @@ def test_should_not_persist_notification_or_send_email_if_simulated_email(
 
     assert response.status_code == 201
     apply_async.assert_not_called()
-    assert Notification.query.count() == 0
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.parametrize("to_sms", ["+14254147755", "+14254147167"])
@@ -906,7 +910,10 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
 
     assert response.status_code == 201
     apply_async.assert_not_called()
-    assert Notification.query.count() == 0
+
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])

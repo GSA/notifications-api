@@ -4,7 +4,9 @@ from uuid import UUID
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.celery.reporting_tasks import (
     create_nightly_billing,
     create_nightly_billing_for_day,
@@ -132,16 +134,21 @@ def test_create_nightly_billing_for_day_checks_history(
         status=NotificationStatus.DELIVERED,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
 
     create_nightly_billing_for_day(str(yesterday.date()))
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 1
 
     record = records[0]
     assert record.notification_type == NotificationType.SMS
     assert record.notifications_sent == 2
+
+
+def _get_fact_billing_records():
+    stmt = select(FactBilling)
+    return db.session.execute(stmt).scalars().all()
 
 
 @pytest.mark.parametrize(
@@ -181,7 +188,7 @@ def test_create_nightly_billing_for_day_sms_rate_multiplier(
         billable_units=1,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
 
     create_nightly_billing_for_day(str(yesterday.date()))
@@ -221,7 +228,7 @@ def test_create_nightly_billing_for_day_different_templates(
         billable_units=0,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
     create_nightly_billing_for_day(str(yesterday.date()))
 
@@ -265,7 +272,7 @@ def test_create_nightly_billing_for_day_same_sent_by(
         billable_units=1,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
     create_nightly_billing_for_day(str(yesterday.date()))
 
@@ -296,11 +303,11 @@ def test_create_nightly_billing_for_day_null_sent_by_sms(
         billable_units=1,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
 
     create_nightly_billing_for_day(str(yesterday.date()))
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 1
 
     record = records[0]
@@ -384,7 +391,7 @@ def test_create_nightly_billing_for_day_update_when_record_exists(
         billable_units=1,
     )
 
-    records = FactBilling.query.all()
+    records = _get_fact_billing_records()
     assert len(records) == 0
 
     create_nightly_billing_for_day("2018-01-14")

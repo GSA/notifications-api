@@ -6,7 +6,9 @@ from unittest import mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.enums import AuthType, KeyType, NotificationType, PermissionType
 from app.models import Notification, Permission, User
@@ -153,10 +155,15 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
 
-    assert User.query.count() == 0
+    assert _get_user_count() == 0
     assert {"email_address": ["Missing data for required field."]} == json_resp[
         "message"
     ]
+
+
+def _get_user_count():
+    stmt = select(func.count()).select_from(User)
+    return db.session.execute(stmt).scalar() or 0
 
 
 def test_create_user_missing_attribute_password(admin_request, notify_db_session):
@@ -174,7 +181,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
         "permissions": {},
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
-    assert User.query.count() == 0
+    assert _get_user_count() == 0
     assert {"password": ["Missing data for required field."]} == json_resp["message"]
 
 
@@ -329,7 +336,8 @@ def test_post_user_attribute_with_updated_by_sends_notification_to_international
         _data=update_dict,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     assert (
         notification.reply_to_text
         == current_app.config["NOTIFY_INTERNATIONAL_SMS_SENDER"]
@@ -512,9 +520,16 @@ def test_set_user_permissions_remove_old(admin_request, sample_user, sample_serv
         _expected_status=204,
     )
 
-    query = Permission.query.filter_by(user=sample_user)
-    assert query.count() == 1
-    assert query.first().permission == PermissionType.MANAGE_SETTINGS
+    query = (
+        select(func.count())
+        .select_from(Permission)
+        .where(Permission.user == sample_user)
+    )
+    count = db.session.execute(query).scalar() or 0
+    assert count == 1
+    query = select(Permission).where(Permission.user == sample_user)
+    first_permission = db.session.execute(query).scalars().first()
+    assert first_permission.permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_folder_permissions(admin_request, sample_user, sample_service):
@@ -646,7 +661,8 @@ def test_send_already_registered_email(
         _expected_status=204,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )
@@ -684,8 +700,8 @@ def test_send_user_confirm_new_email_returns_204(
         _data=data,
         _expected_status=204,
     )
-
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
     )
