@@ -195,10 +195,10 @@ def test_populate_organization_agreement_details_from_file(
     org_count = _get_organization_query_count()
     assert org_count == 1
     stmt = select(Organization)
-    orgX = db.session.execute(stmt).scalars().one()
-    print(f"ORG X = {orgX}")
+    orgX = db.session.execute(stmt).one()
+    print(f"ORG X = {orgX.agreement_signed_on_behalf_of_name}")
     org = _get_organization_query_one()
-    print(f"ORG A = {org}")
+    print(f"ORG A = {org.agreement_signed_on_behalf_of_name}")
     assert org.agreement_signed_on_behalf_of_name == "bob"
     os.remove(file_name)
 
