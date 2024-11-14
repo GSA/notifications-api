@@ -177,8 +177,7 @@ def test_populate_organization_agreement_details_from_file(
     org_count = _get_organization_query_count()
     assert org_count == 1
 
-    org = Organization.query.one()
-    org.agreement_signed = True
+    org = _get_organization_query_one()
     notify_db_session.commit()
 
     text = (
@@ -195,9 +194,14 @@ def test_populate_organization_agreement_details_from_file(
 
     org_count = _get_organization_query_count()
     assert org_count == 1
-    org = Organization.query.one()
+    org = _get_organization_query_one()
     assert org.agreement_signed_on_behalf_of_name == "bob"
     os.remove(file_name)
+
+
+def _get_organization_query_one():
+    stmt = select(Organization)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_bulk_invite_user_to_service(
@@ -344,9 +348,14 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
     assert results[0].free_sms_fragment_limit == expected_allowance
 
 
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
+
+
 def test_fix_billable_units(notify_db_session, notify_api, sample_template):
     create_notification(template=sample_template)
-    notification = Notification.query.one()
+    notification = _get_notification_query_one()
     notification.billable_units = 0
     notification.notification_type = NotificationType.SMS
     notification.status = NotificationStatus.DELIVERED
@@ -357,7 +366,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 
     notify_api.test_cli_runner().invoke(fix_billable_units, [])
 
-    notification = Notification.query.one()
+    notification = _get_notification_query_one()
     assert notification.billable_units == 1
 
 

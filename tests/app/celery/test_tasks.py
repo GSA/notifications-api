@@ -539,6 +539,11 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
     assert _get_notification_query_count() == 0
 
 
+def _get_notification_query_all():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().all()
+
+
 def _get_notification_query_count():
     stmt = select(func.count()).select_from(Notification)
     return db.session.execute(stmt).scalar() or 0
@@ -1481,12 +1486,12 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
 
     encrypted = encryption.encrypt(data)
 
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     assert str(notifications[0].id) == data["id"]
     assert notifications[0].created_at == datetime(2020, 3, 25, 14, 30)
@@ -1534,20 +1539,20 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
 
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     # call the task again with the same notification
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     assert str(notifications[0].id) == data["id"]
     assert notifications[0].created_at == datetime(2020, 3, 25, 14, 30)
@@ -1611,7 +1616,7 @@ def test_save_tasks_use_cached_service_and_template(
     ]
 
     # But we save 2 notifications and enqueue 2 tasks
-    assert len(Notification.query.all()) == 2
+    assert len(_get_notification_query_all()) == 2
     assert len(delivery_mock.call_args_list) == 2
 
 
@@ -1672,12 +1677,12 @@ def test_save_api_tasks_use_cache(
             }
         )
 
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
 
     for _ in range(3):
         task_function(encrypted_notification=create_encrypted_notification())
 
     assert service_dict_mock.call_args_list == [call(str(template.service_id))]
 
-    assert len(Notification.query.all()) == 3
+    assert len(_get_notification_query_all()) == 3
     assert len(mock_provider_task.call_args_list) == 3
