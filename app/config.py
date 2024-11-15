@@ -166,7 +166,7 @@ class Config(object):
     current_minute = (datetime.now().minute + 1) % 60
 
     CELERY = {
-        "worker_max_tasks_per_child": 20,
+        "worker_max_tasks_per_child": 200,
         "broker_url": REDIS_URL,
         "broker_transport_options": {
             "visibility_timeout": 310,
