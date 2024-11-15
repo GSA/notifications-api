@@ -224,7 +224,7 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
     assert mocked.call_count == 1
     assert db.session.execute(select(VerifyCode)).scalars().one().check_code("11111")
 
-    notification = db.session.execute(select(Notification)).one()
+    notification = db.session.execute(select(Notification)).scalars().one()
     assert notification.personalisation == {"verify_code": "11111"}
     assert notification.to == "1"
     assert str(notification.service_id) == current_app.config["NOTIFY_SERVICE_ID"]
