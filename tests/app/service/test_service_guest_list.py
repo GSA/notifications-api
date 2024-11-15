@@ -1,6 +1,9 @@
 import json
 import uuid
 
+from sqlalchemy import select
+
+from app import db
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.enums import RecipientType
 from app.models import ServiceGuestList
@@ -87,7 +90,12 @@ def test_update_guest_list_replaces_old_guest_list(client, sample_service_guest_
     )
 
     assert response.status_code == 204
-    guest_list = ServiceGuestList.query.order_by(ServiceGuestList.recipient).all()
+    guest_list = (
+        db.session.execute(select(ServiceGuestList))
+        .order_by(ServiceGuestList.recipient)
+        .scalars()
+        .all()
+    )
     assert len(guest_list) == 2
     assert guest_list[0].recipient == "+12028765309"
     assert guest_list[1].recipient == "foo@bar.com"
@@ -112,5 +120,5 @@ def test_update_guest_list_doesnt_remove_old_guest_list_if_error(
         "result": "error",
         "message": 'Invalid guest list: "" is not a valid email address or phone number',
     }
-    guest_list = ServiceGuestList.query.one()
+    guest_list = db.session.execute(select(ServiceGuestList)).scalars().one()
     assert guest_list.id == sample_service_guest_list.id

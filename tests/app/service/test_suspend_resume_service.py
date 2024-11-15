@@ -3,7 +3,9 @@ from datetime import datetime
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.models import Service
 from tests import create_admin_authorization_header
 
@@ -77,8 +79,10 @@ def test_service_history_is_created(client, sample_service, action, original_sta
     )
     ServiceHistory = Service.get_history_model()
     history = (
-        ServiceHistory.query.filter_by(id=sample_service.id)
+        db.session.execute(select(ServiceHistory))
+        .filter_by(id=sample_service.id)
         .order_by(ServiceHistory.version.desc())
+        .scalars()
         .first()
     )
 

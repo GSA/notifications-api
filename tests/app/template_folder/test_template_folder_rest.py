@@ -270,7 +270,7 @@ def test_delete_template_folder(admin_request, sample_service):
         template_folder_id=existing_folder.id,
     )
 
-    assert TemplateFolder.query.all() == []
+    assert db.session.execute(select(TemplateFolder)).scalars().all() == []
 
 
 def test_delete_template_folder_fails_if_folder_has_subfolders(

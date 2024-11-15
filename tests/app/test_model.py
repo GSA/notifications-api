@@ -1,8 +1,9 @@
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app import encryption
+from app import db, encryption
 from app.enums import (
     AgreementStatus,
     AgreementType,
@@ -408,7 +409,7 @@ def test_annual_billing_serialize():
 
 def test_repr():
     service = create_service()
-    sps = ServicePermission.query.all()
+    sps = db.session.execute(select(ServicePermission)).scalars().all()
     for sp in sps:
         assert "has service permission" in sp.__repr__()
 

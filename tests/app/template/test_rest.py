@@ -60,7 +60,7 @@ def test_should_create_a_new_template_for_a_service(
     else:
         assert not json_resp["data"]["subject"]
 
-    template = Template.query.get(json_resp["data"]["id"])
+    template = db.session.get(Template, json_resp["data"]["id"])
     from app.schemas import template_schema
 
     assert sorted(json_resp["data"]) == sorted(template_schema.dump(template))
@@ -352,7 +352,8 @@ def test_update_should_update_a_template(client, sample_user):
 
     assert update_json_resp["data"]["created_by"] == str(sample_user.id)
     template_created_by_users = [
-        template.created_by_id for template in TemplateHistory.query.all()
+        template.created_by_id
+        for template in db.session.execute(select(TemplateHistory)).scalars().all()
     ]
     assert len(template_created_by_users) == 2
     assert service.created_by.id in template_created_by_users
@@ -380,7 +381,7 @@ def test_should_be_able_to_archive_template(client, sample_template):
     )
 
     assert resp.status_code == 200
-    assert Template.query.first().archived
+    assert db.session.execute(select(Template)).scalars().first().archived
 
 
 def test_should_be_able_to_archive_template_should_remove_template_folders(
@@ -402,7 +403,7 @@ def test_should_be_able_to_archive_template_should_remove_template_folders(
         data=json.dumps(data),
     )
 
-    updated_template = Template.query.get(template.id)
+    updated_template = db.session.get(Template, template.id)
     assert updated_template.archived
     assert not updated_template.folder
 
