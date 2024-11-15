@@ -79,9 +79,11 @@ def test_service_history_is_created(client, sample_service, action, original_sta
     )
     ServiceHistory = Service.get_history_model()
     history = (
-        db.session.execute(select(ServiceHistory)
-        .filter_by(id=sample_service.id)
-        .order_by(ServiceHistory.version.desc()))
+        db.session.execute(
+            select(ServiceHistory)
+            .filter_by(id=sample_service.id)
+            .order_by(ServiceHistory.version.desc())
+        )
         .scalars()
         .first()
     )
