@@ -91,8 +91,8 @@ def test_update_guest_list_replaces_old_guest_list(client, sample_service_guest_
 
     assert response.status_code == 204
     guest_list = (
-        db.session.execute(select(ServiceGuestList))
-        .order_by(ServiceGuestList.recipient)
+        db.session.execute(select(ServiceGuestList)
+        .order_by(ServiceGuestList.recipient))
         .scalars()
         .all()
     )
