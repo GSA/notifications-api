@@ -238,7 +238,7 @@ def test_create_nightly_billing_for_day_different_templates(
 
     records = (
         db.session.execute(select(FactBilling).order_by("rate_multiplier"))
-        .query()
+        .scalars()
         .all()
     )
     assert len(records) == 2
