@@ -115,7 +115,13 @@ def test_post_user(admin_request, notify_db_session):
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+    user = (
+        db.session.execute(
+            select(User).filter_by(email_address="user@digital.fake.gov")
+        )
+        .scalars()
+        .first()
+    )
     assert user.check_password("password")
     assert json_resp["data"]["email_address"] == user.email_address
     assert json_resp["data"]["id"] == str(user.id)
@@ -134,7 +140,13 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+    user = (
+        db.session.execute(
+            select(User).filter_by(User.email_address == "user@digital.fake.gov")
+        )
+        .scalars()
+        .first()
+    )
     assert json_resp["data"]["id"] == str(user.id)
     assert user.auth_type == AuthType.SMS
 
@@ -472,9 +484,15 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_SETTINGS
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).filter_by(
+                Permission.permission == PermissionType.MANAGE_SETTINGS
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_SETTINGS
@@ -495,15 +513,27 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_SETTINGS
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).filter_by(
+                Permission.permission == PermissionType.MANAGE_SETTINGS
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_SETTINGS
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_TEMPLATES
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).filter_by(
+                Permission.permission == PermissionType.MANAGE_TEMPLATES
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_TEMPLATES
