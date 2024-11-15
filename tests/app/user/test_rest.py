@@ -142,7 +142,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     user = (
         db.session.execute(
-            select(User).filter_by(User.email_address == "user@digital.fake.gov")
+            select(User).filter_by(email_address="user@digital.fake.gov")
         )
         .scalars()
         .first()
@@ -486,9 +486,7 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
 
     permission = (
         db.session.execute(
-            select(Permission).filter_by(
-                permission=PermissionType.MANAGE_SETTINGS
-            )
+            select(Permission).filter_by(permission=PermissionType.MANAGE_SETTINGS)
         )
         .scalars()
         .first()
@@ -515,9 +513,7 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
 
     permission = (
         db.session.execute(
-            select(Permission).filter_by(
-                Permission.permission == PermissionType.MANAGE_SETTINGS
-            )
+            select(Permission).filter_by(permission=PermissionType.MANAGE_SETTINGS)
         )
         .scalars()
         .first()
@@ -527,9 +523,7 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
     assert permission.permission == PermissionType.MANAGE_SETTINGS
     permission = (
         db.session.execute(
-            select(Permission).filter_by(
-                Permission.permission == PermissionType.MANAGE_TEMPLATES
-            )
+            select(Permission).filter_by(permission=PermissionType.MANAGE_TEMPLATES)
         )
         .scalars()
         .first()
