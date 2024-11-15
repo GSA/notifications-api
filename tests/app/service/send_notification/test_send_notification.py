@@ -855,7 +855,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
 
     mocked.assert_called_once_with([fake_uuid], queue=queue_name)
     assert not notifications_dao.get_notification_by_id(fake_uuid)
-    assert not NotificationHistory.query.get(fake_uuid)
+    assert not db.session.get(NotificationHistory, fake_uuid)
 
 
 @pytest.mark.parametrize(
@@ -1065,7 +1065,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
 def test_create_template_raises_invalid_request_exception_with_missing_personalisation(
     sample_template_with_placeholders,
 ):
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     from app.notifications.rest import create_template_object_for_notification
 
     with pytest.raises(InvalidRequest) as e:
@@ -1078,7 +1078,7 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
 ):
     from app.notifications.rest import create_template_object_for_notification
 
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     create_template_object_for_notification(template, {"name": "Jo", "extra": "stuff"})
 
 
@@ -1095,7 +1095,7 @@ def test_create_template_raises_invalid_request_when_content_too_large(
     sample = create_template(
         sample_service, template_type=template_type, content="((long_text))"
     )
-    template = Template.query.get(sample.id)
+    template = db.session.get(Template, sample.id)
     from app.notifications.rest import create_template_object_for_notification
 
     try:
@@ -1377,5 +1377,5 @@ def test_send_notification_should_set_client_reference_from_placeholder(
 
     notification_id = send_one_off_notification(sample_letter_template.service_id, data)
     assert deliver_mock.called
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     assert notification.client_reference == reference_paceholder

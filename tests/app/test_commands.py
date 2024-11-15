@@ -135,7 +135,7 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
             right_now,
         ],
     )
-    jobs = Job.query.all()
+    jobs = db.session.execute(select(Job)).scalars().all()
     assert len(jobs) == 1
     for job in jobs:
         assert job.archived is True
@@ -177,7 +177,7 @@ def test_populate_organization_agreement_details_from_file(
     org_count = _get_organization_query_count()
     assert org_count == 1
 
-    org = Organization.query.one()
+    org = db.session.execute(select(Organization)).scalars().one()
     org.agreement_signed = True
     notify_db_session.commit()
 
@@ -195,7 +195,7 @@ def test_populate_organization_agreement_details_from_file(
 
     org_count = _get_organization_query_count()
     assert org_count == 1
-    org = Organization.query.one()
+    org = db.session.execute(select(Organization)).scalars().one()
     assert org.agreement_signed_on_behalf_of_name == "bob"
     os.remove(file_name)
 
@@ -382,10 +382,16 @@ def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_pr
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
-        AnnualBilling.financial_year_start == 2022,
-        AnnualBilling.service_id == service.id,
-    ).all()
+    results = (
+        db.session.execute(
+            select(AnnualBilling).where(
+                AnnualBilling.financial_year_start == 2022,
+                AnnualBilling.service_id == service.id,
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == 0
@@ -402,7 +408,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
         "",
     )
 
-    t = Template.query.all()
+    t = db.session.execute(select(Template)).scalars().all()
 
     assert t[0].name == "Example text message template!"
 
@@ -422,7 +428,7 @@ def test_create_service_command(notify_db_session, notify_api):
         ],
     )
 
-    user = User.query.first()
+    user = db.session.execute(select(User)).scalars().first()
 
     stmt = select(func.count()).select_from(Service)
     service_count = db.session.execute(stmt).scalar() or 0

@@ -415,7 +415,7 @@ def test_create_service(
     assert json_resp["data"]["email_from"] == "created.service"
     assert json_resp["data"]["count_as_live"] is expected_count_as_live
 
-    service_db = Service.query.get(json_resp["data"]["id"])
+    service_db = db.session.get(Service, json_resp["data"]["id"])
     assert service_db.name == "created service"
 
     json_resp = admin_request.get(
@@ -2832,7 +2832,7 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
         _expected_status=201,
     )
 
-    noti = Notification.query.one()
+    noti = db.session.execute(select(Notification)).scalars().one()
     assert response["id"] == str(noti.id)
 
 
@@ -3022,7 +3022,7 @@ def test_verify_reply_to_email_address_should_send_verification_email(
         _expected_status=201,
     )
 
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
     assert notification.template_id == verify_reply_to_address_email_template.id
     assert response["data"] == {"id": str(notification.id)}
     mocked.assert_called_once_with(
@@ -3290,7 +3290,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_updates_the_only_ex
         ],
     )
     assert response.status_code == 201
-    updated_number = InboundNumber.query.get(inbound_number.id)
+    updated_number = db.session.get(InboundNumber, inbound_number.id)
     assert updated_number.service_id == service.id
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == inbound_number.number
@@ -3321,7 +3321,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_inserts_new_sms_sen
         ],
     )
     assert response.status_code == 201
-    updated_number = InboundNumber.query.get(inbound_number.id)
+    updated_number = db.session.get(InboundNumber, inbound_number.id)
     assert updated_number.service_id == service.id
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == inbound_number.number
