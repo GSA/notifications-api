@@ -1188,7 +1188,7 @@ def test_should_allow_store_original_number_on_sms_notification(
     mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
     assert response.status_code == 201
     assert notification_id
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert "1" == notifications[0].to
 
@@ -1349,7 +1349,7 @@ def test_post_notification_should_set_reply_to_text(
         ],
     )
     assert response.status_code == 201
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert notifications[0].reply_to_text == expected_reply_to
 

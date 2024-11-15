@@ -1,9 +1,10 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import encryption
+from app import db, encryption
 from app.dao.service_inbound_api_dao import (
     get_service_inbound_api,
     get_service_inbound_api_for_service,
@@ -24,7 +25,7 @@ def test_save_service_inbound_api(sample_service):
 
     save_service_inbound_api(service_inbound_api)
 
-    results = ServiceInboundApi.query.all()
+    results = db.session.execute(select(ServiceInboundApi)).scalars().all()
     assert len(results) == 1
     inbound_api = results[0]
     assert inbound_api.id is not None
@@ -68,7 +69,7 @@ def test_update_service_inbound_api(sample_service):
     )
 
     save_service_inbound_api(service_inbound_api)
-    results = ServiceInboundApi.query.all()
+    results = db.session.execute(select(ServiceInboundApi)).scalars().all()
     assert len(results) == 1
     saved_inbound_api = results[0]
 
@@ -77,7 +78,7 @@ def test_update_service_inbound_api(sample_service):
         updated_by_id=sample_service.users[0].id,
         url="https://some_service/changed_url",
     )
-    updated_results = ServiceInboundApi.query.all()
+    updated_results = db.session.execute(select(ServiceInboundApi)).scalars().all()
     assert len(updated_results) == 1
     updated = updated_results[0]
     assert updated.id is not None

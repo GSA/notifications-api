@@ -464,7 +464,7 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         create_notification(template=first_template)
         create_notification_history(template=second_template)
 
-    assert len(FactNotificationStatus.query.all()) == 0
+    assert len(db.session.execute(select(FactNotificationStatus)).scalars().all()) == 0
 
     create_nightly_notification_status_for_service_and_day(
         str(process_day),
@@ -540,7 +540,7 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
         NotificationType.SMS,
     )
 
-    new_fact_data = FactNotificationStatus.query.all()
+    new_fact_data = db.session.execute(select(FactNotificationStatus)).scalars().all()
 
     assert len(new_fact_data) == 1
     assert new_fact_data[0].notification_count == 1

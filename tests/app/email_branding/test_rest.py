@@ -1,5 +1,7 @@
 import pytest
+from sqlalchemy import select
 
+from app import db
 from app.enums import BrandType
 from app.models import EmailBranding
 from tests.app.db import create_email_branding
@@ -198,7 +200,7 @@ def test_post_update_email_branding_updates_field(
         email_branding_id=email_branding_id,
     )
 
-    email_branding = EmailBranding.query.all()
+    email_branding = db.session.execute(select(EmailBranding)).scalars().all()
 
     assert len(email_branding) == 1
     assert str(email_branding[0].id) == email_branding_id
@@ -231,7 +233,7 @@ def test_post_update_email_branding_updates_field_with_text(
         email_branding_id=email_branding_id,
     )
 
-    email_branding = EmailBranding.query.all()
+    email_branding = db.session.execute(select(EmailBranding)).scalars().all()
 
     assert len(email_branding) == 1
     assert str(email_branding[0].id) == email_branding_id

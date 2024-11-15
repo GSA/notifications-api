@@ -1,9 +1,10 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import encryption
+from app import db, encryption
 from app.dao.service_callback_api_dao import (
     get_service_callback_api,
     get_service_delivery_status_callback_api_for_service,
@@ -25,7 +26,7 @@ def test_save_service_callback_api(sample_service):
 
     save_service_callback_api(service_callback_api)
 
-    results = ServiceCallbackApi.query.all()
+    results = db.session.execute(select(ServiceCallbackApi)).scalars().all()
     assert len(results) == 1
     callback_api = results[0]
     assert callback_api.id is not None
@@ -114,7 +115,7 @@ def test_update_service_callback_api(sample_service):
     )
 
     save_service_callback_api(service_callback_api)
-    results = ServiceCallbackApi.query.all()
+    results = db.session.execute(select(ServiceCallbackApi)).scalars().all()
     assert len(results) == 1
     saved_callback_api = results[0]
 
@@ -123,7 +124,7 @@ def test_update_service_callback_api(sample_service):
         updated_by_id=sample_service.users[0].id,
         url="https://some_service/changed_url",
     )
-    updated_results = ServiceCallbackApi.query.all()
+    updated_results = db.session.execute(select(ServiceCallbackApi)).scalars().all()
     assert len(updated_results) == 1
     updated = updated_results[0]
     assert updated.id is not None
