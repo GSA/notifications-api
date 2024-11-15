@@ -37,8 +37,9 @@ def test_save_service_inbound_api(sample_service):
     assert inbound_api.updated_at is None
 
     versioned = (
-        db.session.execute(select(ServiceInboundApi.get_history_model()))
-        .filter_by(id=inbound_api.id)
+        db.session.execute(
+            select(ServiceInboundApi.get_history_model()).filter_by(id=inbound_api.id)
+        )
         .scalars()
         .one()
     )
@@ -94,9 +95,9 @@ def test_update_service_inbound_api(sample_service):
 
     versioned_results = (
         db.session.execute(
-            select(ServiceInboundApi)
-            .get_history_model()
-            .filter_by(id=saved_inbound_api.id)
+            select(ServiceInboundApi.get_history_model()).filter_by(
+                id=saved_inbound_api.id
+            )
         )
         .scalars()
         .all()

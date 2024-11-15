@@ -1,10 +1,10 @@
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import between, select
+from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db, notify_celery, zendesk_client
+from app import notify_celery, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -105,28 +105,14 @@ def check_job_status():
     thirty_minutes_ago = utc_now() - timedelta(minutes=30)
     thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
-    incomplete_in_progress_jobs = (
-        db.session.execute(
-            select(Job).where(
-                Job.job_status == JobStatus.IN_PROGRESS,
-                between(
-                    Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago
-                ),
-            )
-        )
-        .scalars()
-        .all()
+    incomplete_in_progress_jobs = Job.query.filter(
+        Job.job_status == JobStatus.IN_PROGRESS,
+        between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
-    incomplete_pending_jobs = (
-        db.session.execute(
-            select(Job).where(
-                Job.job_status == JobStatus.PENDING,
-                Job.scheduled_for.isnot(None),
-                between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
-            )
-        )
-        .scalars()
-        .all()
+    incomplete_pending_jobs = Job.query.filter(
+        Job.job_status == JobStatus.PENDING,
+        Job.scheduled_for.isnot(None),
+        between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
 
     jobs_not_complete_after_30_minutes = (
