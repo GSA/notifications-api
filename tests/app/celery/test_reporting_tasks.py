@@ -192,7 +192,11 @@ def test_create_nightly_billing_for_day_sms_rate_multiplier(
     assert len(records) == 0
 
     create_nightly_billing_for_day(str(yesterday.date()))
-    records = FactBilling.query.order_by("rate_multiplier").all()
+    records = (
+        db.session.execute(select(FactBilling).order_by("rate_multiplier"))
+        .scalars()
+        .all()
+    )
     assert len(records) == records_num
 
     for i, record in enumerate(records):
@@ -232,7 +236,11 @@ def test_create_nightly_billing_for_day_different_templates(
     assert len(records) == 0
     create_nightly_billing_for_day(str(yesterday.date()))
 
-    records = FactBilling.query.order_by("rate_multiplier").all()
+    records = (
+        db.session.execute(select(FactBilling).order_by("rate_multiplier"))
+        .query()
+        .all()
+    )
     assert len(records) == 2
     multiplier = [0, 1]
     billable_units = [0, 1]
@@ -276,7 +284,11 @@ def test_create_nightly_billing_for_day_same_sent_by(
     assert len(records) == 0
     create_nightly_billing_for_day(str(yesterday.date()))
 
-    records = FactBilling.query.order_by("rate_multiplier").all()
+    records = (
+        db.session.execute(select(FactBilling).order_by("rate_multiplier"))
+        .scalars()
+        .all()
+    )
     assert len(records) == 1
 
     for _, record in enumerate(records):
@@ -371,7 +383,11 @@ def test_create_nightly_billing_for_day_use_BST(
     assert count == 0
 
     create_nightly_billing_for_day("2018-03-25")
-    records = FactBilling.query.order_by(FactBilling.local_date).all()
+    records = (
+        db.session.execute(select(FactBilling).order_by(FactBilling.local_date))
+        .scalars()
+        .all()
+    )
 
     assert len(records) == 1
     assert records[0].local_date == date(2018, 3, 25)
@@ -398,7 +414,11 @@ def test_create_nightly_billing_for_day_update_when_record_exists(
     assert len(records) == 0
 
     create_nightly_billing_for_day("2018-01-14")
-    records = FactBilling.query.order_by(FactBilling.local_date).all()
+    records = (
+        db.session.execute(select(FactBilling).order_by(FactBilling.local_date))
+        .scalars()
+        .all()
+    )
 
     assert len(records) == 1
     assert records[0].local_date == date(2018, 1, 14)
@@ -477,10 +497,16 @@ def test_create_nightly_notification_status_for_service_and_day(notify_db_sessio
         NotificationType.EMAIL,
     )
 
-    new_fact_data = FactNotificationStatus.query.order_by(
-        FactNotificationStatus.notification_type,
-        FactNotificationStatus.notification_status,
-    ).all()
+    new_fact_data = (
+        db.session.execute(
+            select(FactNotificationStatus).order_by(
+                FactNotificationStatus.notification_type,
+                FactNotificationStatus.notification_status,
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     assert len(new_fact_data) == 4
 
@@ -555,9 +581,15 @@ def test_create_nightly_notification_status_for_service_and_day_overwrites_old_d
         NotificationType.SMS,
     )
 
-    updated_fact_data = FactNotificationStatus.query.order_by(
-        FactNotificationStatus.notification_status
-    ).all()
+    updated_fact_data = (
+        db.session.execute(
+            select(FactNotificationStatus).order_by(
+                FactNotificationStatus.notification_status
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     assert len(updated_fact_data) == 2
     assert updated_fact_data[0].notification_count == 1
@@ -600,9 +632,13 @@ def test_create_nightly_notification_status_for_service_and_day_respects_bst(
         NotificationType.SMS,
     )
 
-    noti_status = FactNotificationStatus.query.order_by(
-        FactNotificationStatus.local_date
-    ).all()
+    noti_status = (
+        db.session.execute(
+            select(FactNotificationStatus).order_by(FactNotificationStatus.local_date)
+        )
+        .scalars()
+        .all()
+    )
     assert len(noti_status) == 1
 
     assert noti_status[0].local_date == date(2019, 4, 1)

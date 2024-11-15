@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -101,7 +101,9 @@ def test_post_user(admin_request, notify_db_session):
     """
     Tests POST endpoint '/' to create a user.
     """
-    User.query.delete()
+    db.session.execute(delete(User))
+    db.session.commit()
+
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
@@ -129,7 +131,9 @@ def test_post_user(admin_request, notify_db_session):
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
@@ -155,7 +159,9 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
     """
     Tests POST endpoint '/' missing attribute email.
     """
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "password": "password",
@@ -182,7 +188,9 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
     """
     Tests POST endpoint '/' missing attribute password.
     """
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
