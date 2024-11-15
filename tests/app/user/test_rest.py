@@ -487,7 +487,7 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
     permission = (
         db.session.execute(
             select(Permission).filter_by(
-                Permission.permission == PermissionType.MANAGE_SETTINGS
+                permission=PermissionType.MANAGE_SETTINGS
             )
         )
         .scalars()
