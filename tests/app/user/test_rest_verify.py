@@ -20,7 +20,7 @@ from tests import create_admin_authorization_header
 @freeze_time("2016-01-01T12:00:00")
 def test_user_verify_sms_code(client, sample_sms_code):
     sample_sms_code.user.logged_in_at = utc_now() - timedelta(days=1)
-    assert not VerifyCode.query.first().code_used
+    assert not db.session.execute(select(VerifyCode)).scalars().first().code_used
     assert sample_sms_code.user.current_session_id is None
     data = json.dumps(
         {"code_type": sample_sms_code.code_type, "code": sample_sms_code.txt_code}
@@ -32,14 +32,14 @@ def test_user_verify_sms_code(client, sample_sms_code):
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 204
-    assert VerifyCode.query.first().code_used
+    assert db.session.execute(select(VerifyCode)).scalars().first().code_used
     assert sample_sms_code.user.logged_in_at == utc_now()
     assert sample_sms_code.user.email_access_validated_at != utc_now()
     assert sample_sms_code.user.current_session_id is not None
 
 
 def test_user_verify_code_missing_code(client, sample_sms_code):
-    assert not VerifyCode.query.first().code_used
+    assert not db.session.execute(select(VerifyCode)).scalars().first().code_used
     data = json.dumps({"code_type": sample_sms_code.code_type})
     auth_header = create_admin_authorization_header()
     resp = client.post(
@@ -48,14 +48,14 @@ def test_user_verify_code_missing_code(client, sample_sms_code):
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 400
-    assert not VerifyCode.query.first().code_used
-    assert User.query.get(sample_sms_code.user.id).failed_login_count == 0
+    assert not db.session.execute(select(VerifyCode)).scalars().first().code_used
+    assert db.session.get(User, sample_sms_code.user.id).failed_login_count == 0
 
 
 def test_user_verify_code_bad_code_and_increments_failed_login_count(
     client, sample_sms_code
 ):
-    assert not VerifyCode.query.first().code_used
+    assert not db.session.execute(select(VerifyCode)).scalars().first().code_used
     data = json.dumps({"code_type": sample_sms_code.code_type, "code": "blah"})
     auth_header = create_admin_authorization_header()
     resp = client.post(
@@ -64,8 +64,8 @@ def test_user_verify_code_bad_code_and_increments_failed_login_count(
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 404
-    assert not VerifyCode.query.first().code_used
-    assert User.query.get(sample_sms_code.user.id).failed_login_count == 1
+    assert not db.session.execute(select(VerifyCode)).scalars().first().code_used
+    assert db.session.get(User, sample_sms_code.user.id).failed_login_count == 1
 
 
 @pytest.mark.parametrize(
@@ -134,7 +134,7 @@ def test_user_verify_password(client, sample_user):
         headers=[("Content-Type", "application/json"), auth_header],
     )
     assert resp.status_code == 204
-    assert User.query.get(sample_user.id).logged_in_at == yesterday
+    assert db.session.get(User, sample_user.id).logged_in_at == yesterday
 
 
 def test_user_verify_password_invalid_password(client, sample_user):
@@ -222,9 +222,9 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
     assert resp.status_code == 204
 
     assert mocked.call_count == 1
-    assert VerifyCode.query.one().check_code("11111")
+    assert db.session.execute(select(VerifyCode)).scalars().one().check_code("11111")
 
-    notification = Notification.query.one()
+    notification = db.session.execute(select(Notification)).one()
     assert notification.personalisation == {"verify_code": "11111"}
     assert notification.to == "1"
     assert str(notification.service_id) == current_app.config["NOTIFY_SERVICE_ID"]
@@ -264,7 +264,7 @@ def test_send_user_code_for_sms_with_optional_to_field(
 
     assert resp.status_code == 204
     assert mocked.call_count == 1
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
     assert notification.to == "1"
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
@@ -346,7 +346,7 @@ def test_send_new_user_email_verification(
     )
     notify_service = email_verification_template.service
     assert resp.status_code == 204
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
     assert _get_verify_code_count() == 0
     mocked.assert_called_once_with(
         ([str(notification.id)]), queue="notify-internal-tasks"
@@ -487,7 +487,7 @@ def test_send_user_email_code(
         _data=data,
         _expected_status=204,
     )
-    noti = Notification.query.one()
+    noti = db.session.execute(select(Notification)).scalars().one()
     assert (
         noti.reply_to_text
         == email_2fa_code_template.service.get_default_reply_to_email_address()
@@ -608,7 +608,7 @@ def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     )
     assert resp.status_code == 204
 
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
     assert (
         notification.reply_to_text
         == current_app.config["NOTIFY_INTERNATIONAL_SMS_SENDER"]

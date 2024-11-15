@@ -5,9 +5,10 @@ from unittest.mock import ANY
 import pytest
 from flask import current_app
 from requests import HTTPError
+from sqlalchemy import select
 
 import app
-from app import aws_sns_client, notification_provider_clients
+from app import aws_sns_client, db, notification_provider_clients
 from app.cloudfoundry_config import cloud_config
 from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
@@ -108,7 +109,11 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
         international=False,
     )
 
-    notification = Notification.query.filter_by(id=db_notification.id).one()
+    notification = (
+        db.session.execute(select(Notification).filter_by(id=db_notification.id))
+        .scalars()
+        .one()
+    )
 
     assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= utc_now()
@@ -152,7 +157,11 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
         in app.aws_ses_client.send_email.call_args[1]["html_body"]
     )
 
-    notification = Notification.query.filter_by(id=db_notification.id).one()
+    notification = (
+        db.session.execute(select(Notification).filter_by(id=db_notification.id))
+        .scalars()
+        .one()
+    )
     assert notification.status == NotificationStatus.SENDING
     assert notification.sent_at <= utc_now()
     assert notification.sent_by == "ses"

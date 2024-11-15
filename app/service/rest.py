@@ -2,10 +2,12 @@ import itertools
 from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
+from app import db
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -419,14 +421,26 @@ def get_service_history(service_id):
         template_history_schema,
     )
 
-    service_history = Service.get_history_model().query.filter_by(id=service_id).all()
+    service_history = (
+        db.session.execute(select(Service.get_history_model()).filter_by(id=service_id))
+        .scalars()
+        .all()
+    )
     service_data = service_history_schema.dump(service_history, many=True)
     api_key_history = (
-        ApiKey.get_history_model().query.filter_by(service_id=service_id).all()
+        db.session.execute(
+            select(ApiKey.get_history_model()).filter_by(service_id=service_id)
+        )
+        .scalars()
+        .all()
     )
     api_keys_data = api_key_history_schema.dump(api_key_history, many=True)
 
-    template_history = TemplateHistory.query.filter_by(service_id=service_id).all()
+    template_history = (
+        db.session.execute(select(TemplateHistory).filter_by(service_id=service_id))
+        .scalars()
+        .all()
+    )
     template_data = template_history_schema.dump(template_history, many=True)
 
     data = {
