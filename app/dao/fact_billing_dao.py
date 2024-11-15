@@ -65,7 +65,7 @@ def fetch_sms_free_allowance_remainder_until_date(end_date):
 
 def fetch_sms_billing_for_all_services(start_date, end_date):
     # ASSUMPTION: AnnualBilling has been populated for year.
-    allowance_left_at_start_date_query = fetch_sms_free_allowance_remainder_until_date(
+    allowance_left_at_start_date_querie = fetch_sms_free_allowance_remainder_until_date(
         start_date
     ).subquery()
 
@@ -76,14 +76,14 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
     # subtract sms_billable_units units accrued since report's start date to get up-to-date
     # allowance remainder
     sms_allowance_left = func.greatest(
-        allowance_left_at_start_date_query.c.sms_remainder - sms_billable_units, 0
+        allowance_left_at_start_date_querie.c.sms_remainder - sms_billable_units, 0
     )
 
     # billable units here are for period between start date and end date only, so to see
     # how many are chargeable, we need to see how much free allowance was used up in the
     # period up until report's start date and then do a subtraction
     chargeable_sms = func.greatest(
-        sms_billable_units - allowance_left_at_start_date_query.c.sms_remainder, 0
+        sms_billable_units - allowance_left_at_start_date_querie.c.sms_remainder, 0
     )
     sms_cost = chargeable_sms * FactBilling.rate
 
@@ -93,7 +93,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
             Organization.id.label("organization_id"),
             Service.name.label("service_name"),
             Service.id.label("service_id"),
-            allowance_left_at_start_date_query.c.free_sms_fragment_limit,
+            allowance_left_at_start_date_querie.c.free_sms_fragment_limit,
             FactBilling.rate.label("sms_rate"),
             sms_allowance_left.label("sms_remainder"),
             sms_billable_units.label("sms_billable_units"),
@@ -102,8 +102,8 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
         )
         .select_from(Service)
         .outerjoin(
-            allowance_left_at_start_date_query,
-            Service.id == allowance_left_at_start_date_query.c.service_id,
+            allowance_left_at_start_date_querie,
+            Service.id == allowance_left_at_start_date_querie.c.service_id,
         )
         .outerjoin(Service.organization)
         .join(
@@ -120,8 +120,8 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
             Organization.id,
             Service.id,
             Service.name,
-            allowance_left_at_start_date_query.c.free_sms_fragment_limit,
-            allowance_left_at_start_date_query.c.sms_remainder,
+            allowance_left_at_start_date_querie.c.free_sms_fragment_limit,
+            allowance_left_at_start_date_querie.c.sms_remainder,
             FactBilling.rate,
         )
         .order_by(Organization.name, Service.name)
@@ -151,15 +151,15 @@ def fetch_billing_totals_for_year(service_id, year):
         union(
             *[
                 select(
-                    query.c.notification_type.label("notification_type"),
-                    query.c.rate.label("rate"),
-                    func.sum(query.c.notifications_sent).label("notifications_sent"),
-                    func.sum(query.c.chargeable_units).label("chargeable_units"),
-                    func.sum(query.c.cost).label("cost"),
-                    func.sum(query.c.free_allowance_used).label("free_allowance_used"),
-                    func.sum(query.c.charged_units).label("charged_units"),
-                ).group_by(query.c.rate, query.c.notification_type)
-                for query in [
+                    querie.c.notification_type.label("notification_type"),
+                    querie.c.rate.label("rate"),
+                    func.sum(querie.c.notifications_sent).label("notifications_sent"),
+                    func.sum(querie.c.chargeable_units).label("chargeable_units"),
+                    func.sum(querie.c.cost).label("cost"),
+                    func.sum(querie.c.free_allowance_used).label("free_allowance_used"),
+                    func.sum(querie.c.charged_units).label("charged_units"),
+                ).group_by(querie.c.rate, querie.c.notification_type)
+                for querie in [
                     query_service_sms_usage_for_year(service_id, year).subquery(),
                     query_service_email_usage_for_year(service_id, year).subquery(),
                 ]
@@ -206,22 +206,22 @@ def fetch_monthly_billing_for_year(service_id, year):
         union(
             *[
                 select(
-                    query.c.rate.label("rate"),
-                    query.c.notification_type.label("notification_type"),
-                    func.date_trunc("month", query.c.local_date)
+                    querie.c.rate.label("rate"),
+                    querie.c.notification_type.label("notification_type"),
+                    func.date_trunc("month", querie.c.local_date)
                     .cast(Date)
                     .label("month"),
-                    func.sum(query.c.notifications_sent).label("notifications_sent"),
-                    func.sum(query.c.chargeable_units).label("chargeable_units"),
-                    func.sum(query.c.cost).label("cost"),
-                    func.sum(query.c.free_allowance_used).label("free_allowance_used"),
-                    func.sum(query.c.charged_units).label("charged_units"),
+                    func.sum(querie.c.notifications_sent).label("notifications_sent"),
+                    func.sum(querie.c.chargeable_units).label("chargeable_units"),
+                    func.sum(querie.c.cost).label("cost"),
+                    func.sum(querie.c.free_allowance_used).label("free_allowance_used"),
+                    func.sum(querie.c.charged_units).label("charged_units"),
                 ).group_by(
-                    query.c.rate,
-                    query.c.notification_type,
+                    querie.c.rate,
+                    querie.c.notification_type,
                     "month",
                 )
-                for query in [
+                for querie in [
                     query_service_sms_usage_for_year(service_id, year).subquery(),
                     query_service_email_usage_for_year(service_id, year).subquery(),
                 ]
@@ -371,9 +371,9 @@ def fetch_billing_data_for_day(process_day, service_id=None, check_permissions=F
     )
     transit_data = []
     if not service_id:
-        services = Service.query.all()
+        services = db.session.execute(select(Service)).scalars().all()
     else:
-        services = [Service.query.get(service_id)]
+        services = [db.session.get(Service, service_id)]
 
     for service in services:
         for notification_type in (NotificationType.SMS, NotificationType.EMAIL):
@@ -586,12 +586,12 @@ def fetch_email_usage_for_organization(organization_id, start_date, end_date):
 
 def fetch_sms_billing_for_organization(organization_id, financial_year):
     # ASSUMPTION: AnnualBilling has been populated for year.
-    ft_billing_subquery = query_organization_sms_usage_for_year(
+    ft_billing_subquerie = query_organization_sms_usage_for_year(
         organization_id, financial_year
     ).subquery()
 
     sms_billable_units = func.sum(
-        func.coalesce(ft_billing_subquery.c.chargeable_units, 0)
+        func.coalesce(ft_billing_subquerie.c.chargeable_units, 0)
     )
 
     # subtract sms_billable_units units accrued since report's start date to get up-to-date
@@ -600,8 +600,8 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
         AnnualBilling.free_sms_fragment_limit - sms_billable_units, 0
     )
 
-    chargeable_sms = func.sum(ft_billing_subquery.c.charged_units)
-    sms_cost = func.sum(ft_billing_subquery.c.cost)
+    chargeable_sms = func.sum(ft_billing_subquerie.c.charged_units)
+    sms_cost = func.sum(ft_billing_subquerie.c.cost)
 
     query = (
         select(
@@ -622,7 +622,9 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
                 AnnualBilling.financial_year_start == financial_year,
             ),
         )
-        .outerjoin(ft_billing_subquery, Service.id == ft_billing_subquery.c.service_id)
+        .outerjoin(
+            ft_billing_subquerie, Service.id == ft_billing_subquerie.c.service_id
+        )
         .filter(
             Service.organization_id == organization_id, Service.restricted.is_(False)
         )

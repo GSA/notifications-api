@@ -100,9 +100,9 @@ def test_persist_notification_creates_and_save_to_db(
         reply_to_text=sample_template.service.get_default_sms_sender(),
     )
 
-    assert Notification.query.get(notification.id) is not None
+    assert db.session.get(Notification, notification.id) is not None
 
-    notification_from_db = Notification.query.one()
+    notification_from_db = db.session.execute(select(Notification)).scalars().one()
 
     assert notification_from_db.id == notification.id
     assert notification_from_db.template_id == notification.template_id
