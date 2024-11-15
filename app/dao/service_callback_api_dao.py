@@ -3,7 +3,7 @@ from app.dao.dao_utils import autocommit, version_class
 from app.enums import CallbackType
 from app.models import ServiceCallbackApi
 from app.utils import utc_now
-
+from sqlalchemy import select
 
 @autocommit
 @version_class(ServiceCallbackApi)
@@ -29,23 +29,23 @@ def reset_service_callback_api(
 
 
 def get_service_callback_api(service_callback_api_id, service_id):
-    return ServiceCallbackApi.query.filter_by(
+    return db.session.execute(select(ServiceCallbackApi).filter_by(
         id=service_callback_api_id, service_id=service_id
-    ).first()
+    )).scalars().first()
 
 
 def get_service_delivery_status_callback_api_for_service(service_id):
-    return ServiceCallbackApi.query.filter_by(
+    return db.session.execute(select(ServiceCallbackApi).filter_by(
         service_id=service_id,
         callback_type=CallbackType.DELIVERY_STATUS,
-    ).first()
+    )).scalars().first()
 
 
 def get_service_complaint_callback_api_for_service(service_id):
-    return ServiceCallbackApi.query.filter_by(
+    return db.session.execute(select(ServiceCallbackApi).filter_by(
         service_id=service_id,
         callback_type=CallbackType.COMPLAINT,
-    ).first()
+    )).scalars().first()
 
 
 @autocommit
