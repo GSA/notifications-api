@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import case
 
@@ -34,7 +35,7 @@ def insert_update_processing_time(processing_time):
 
 def get_processing_time_percentage_for_date_range(start_date, end_date):
     query = (
-        db.session.query(
+        select(
             FactProcessingTime.local_date.cast(db.Text).label("date"),
             FactProcessingTime.messages_total,
             FactProcessingTime.messages_within_10_secs,
@@ -52,11 +53,11 @@ def get_processing_time_percentage_for_date_range(start_date, end_date):
                 (FactProcessingTime.messages_total == 0, 100.0),
             ).label("percentage"),
         )
-        .filter(
+        .where(
             FactProcessingTime.local_date >= start_date,
             FactProcessingTime.local_date <= end_date,
         )
         .order_by(FactProcessingTime.local_date)
     )
 
-    return query.all()
+    return db.session.execute(query).scalars().all()

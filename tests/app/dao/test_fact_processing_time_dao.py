@@ -38,7 +38,7 @@ def test_insert_update_processing_time(notify_db_session):
     with freeze_time("2021-02-23 13:23:33"):
         fact_processing_time_dao.insert_update_processing_time(data)
 
-    result = FactProcessingTime.query.all()
+    result = db.session.execute(select(FactProcessingTime)).scalars().all()
 
     assert len(result) == 1
     assert result[0].local_date == datetime(2021, 2, 22).date()
