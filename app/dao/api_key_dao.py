@@ -44,13 +44,19 @@ def get_model_api_keys(service_id, id=None):
             .one()
         )
     seven_days_ago = utc_now() - timedelta(days=7)
-    return ApiKey.query.filter(
-        or_(
-            ApiKey.expiry_date == None,  # noqa
-            func.date(ApiKey.expiry_date) > seven_days_ago,  # noqa
-        ),
-        ApiKey.service_id == service_id,
-    ).all()
+    return (
+        db.session.execute(
+            select(ApiKey).where(
+                or_(
+                    ApiKey.expiry_date == None,  # noqa
+                    func.date(ApiKey.expiry_date) > seven_days_ago,  # noqa
+                ),
+                ApiKey.service_id == service_id,
+            )
+        )
+        .scalars()
+        .all()
+    )
 
 
 def get_unsigned_secrets(service_id):

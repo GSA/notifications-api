@@ -53,9 +53,19 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
         filters.append(InboundSms.created_at < older_than_created_at)
 
     # As part of the move to sqlalchemy 2.0, we do this manual pagination
-    query = db.session.query(InboundSms).filter(*filters)
-    paginated_items = query.order_by(desc(InboundSms.created_at)).limit(page_size).all()
-    return paginated_items
+    stmt = (
+        select(InboundSms)
+        .filter(*filters)
+        .order_by(desc(InboundSms.created_at))
+        .limit(page_size)
+    )
+    paginated_items = db.session.execute(stmt).scalars().all()
+
+    page = 1  # ?
+    offset = (page - 1) * page_size
+    paginated_results = paginated_items[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(paginated_results))
+    return pagination
 
 
 def dao_count_inbound_sms_for_service(service_id, limit_days):

@@ -59,4 +59,4 @@ def get_processing_time_percentage_for_date_range(start_date, end_date):
         .order_by(FactProcessingTime.local_date)
     )
 
-    return query.all()
+    return db.session.execute(query).scalars().all()
