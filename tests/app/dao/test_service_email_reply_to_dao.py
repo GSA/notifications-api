@@ -1,10 +1,8 @@
 import uuid
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db
 from app.dao.service_email_reply_to_dao import (
     add_reply_to_email_address_for_service,
     archive_reply_to_email_address,
@@ -188,7 +186,9 @@ def test_update_reply_to_email_address(sample_service):
         email_address="change_address@email.com",
         is_default=True,
     )
-    updated_reply_to = db.session.get(ServiceEmailReplyTo, first_reply_to.id)
+    updated_reply_to = ServiceEmailReplyTo.query.get(
+        ServiceEmailReplyTo, first_reply_to.id
+    )
 
     assert updated_reply_to.email_address == "change_address@email.com"
     assert updated_reply_to.updated_at
@@ -208,7 +208,7 @@ def test_update_reply_to_email_address_set_updated_to_default(sample_service):
         is_default=True,
     )
 
-    results = db.session.execute(select(ServiceEmailReplyTo)).all()
+    results = ServiceEmailReplyTo.query.all()
     assert len(results) == 2
     for x in results:
         if x.email_address == "change_address@email.com":
