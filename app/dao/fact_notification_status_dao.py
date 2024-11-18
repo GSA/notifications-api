@@ -191,7 +191,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     all_stats_alias = aliased(all_stats_union, name="all_stats")
 
     # Final query with optional template joins
-    query = select(
+    querie = select(
         *(
             [
                 TemplateFolder.name.label("folder"),
@@ -214,8 +214,8 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     )
 
     if by_template:
-        query = (
-            query.join(Template, all_stats_alias.c.template_id == Template.id)
+        querie = (
+            querie.join(Template, all_stats_alias.c.template_id == Template.id)
             .join(User, Template.created_by_id == User.id)
             .outerjoin(
                 template_folder_map, Template.id == template_folder_map.c.template_id
@@ -227,7 +227,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
         )
 
     # Group by all necessary fields except date_used
-    query = query.group_by(
+    querie = querie.group_by(
         *(
             [
                 TemplateFolder.name,
@@ -245,7 +245,7 @@ def fetch_notification_status_for_service_for_today_and_7_previous_days(
     )
 
     # Execute the query using Flask-SQLAlchemy's session
-    result = db.session.execute(query)
+    result = db.session.execute(querie)
     return result.mappings().all()
 
 
@@ -361,7 +361,7 @@ def fetch_stats_for_all_services_by_date_range(
 
     if start_date <= utc_now().date() <= end_date:
         today = get_midnight_in_utc(utc_now())
-        subquery = (
+        subquerie = (
             select(
                 Notification.notification_type.label("notification_type"),
                 Notification.status.label("status"),
@@ -377,8 +377,8 @@ def fetch_stats_for_all_services_by_date_range(
             )
         )
         if not include_from_test_key:
-            subquery = subquery.filter(Notification.key_type != KeyType.TEST)
-        subquery = subquery.subquery()
+            subquerie = subquerie.filter(Notification.key_type != KeyType.TEST)
+        subquerie = subquerie.subquery()
 
         stats_for_today = select(
             Service.id.label("service_id"),
@@ -386,10 +386,10 @@ def fetch_stats_for_all_services_by_date_range(
             Service.restricted.label("restricted"),
             Service.active.label("active"),
             Service.created_at.label("created_at"),
-            subquery.c.notification_type.cast(db.Text).label("notification_type"),
-            subquery.c.status.cast(db.Text).label("status"),
-            subquery.c.count.label("count"),
-        ).outerjoin(subquery, subquery.c.service_id == Service.id)
+            subquerie.c.notification_type.cast(db.Text).label("notification_type"),
+            subquerie.c.status.cast(db.Text).label("status"),
+            subquerie.c.count.label("count"),
+        ).outerjoin(subquerie, subquerie.c.service_id == Service.id)
 
         all_stats_table = stats.union_all(stats_for_today).subquery()
         query = (
@@ -515,7 +515,7 @@ def fetch_monthly_template_usage_for_service(start_date, end_date, service_id):
 
 
 def get_total_notifications_for_date_range(start_date, end_date):
-    query = (
+    querie = (
         select(
             FactNotificationStatus.local_date.label("local_date"),
             func.sum(
@@ -546,11 +546,11 @@ def get_total_notifications_for_date_range(start_date, end_date):
         .order_by(FactNotificationStatus.local_date)
     )
     if start_date and end_date:
-        query = query.filter(
+        querie = querie.filter(
             FactNotificationStatus.local_date >= start_date,
             FactNotificationStatus.local_date <= end_date,
         )
-    return db.session.execute(query).all()
+    return db.session.execute(querie).all()
 
 
 def fetch_monthly_notification_statuses_per_service(start_date, end_date):

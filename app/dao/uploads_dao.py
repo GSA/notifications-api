@@ -93,7 +93,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
             Notification.created_at >= midnight_n_days_ago(limit_days)
         )
 
-    letters_subquery = (
+    letters_subquerie = (
         db.session.query(
             func.count().label("notification_count"),
             _naive_gmt_to_utc(_get_printing_datetime(Notification.created_at)).label(
@@ -117,18 +117,18 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
     letters_query = db.session.query(
         literal(None).label("id"),
         literal("Uploaded letters").label("original_file_name"),
-        letters_subquery.c.notification_count.label("notification_count"),
+        letters_subquerie.c.notification_count.label("notification_count"),
         literal("letter").label("template_type"),
         literal(None).label("days_of_retention"),
-        letters_subquery.c.printing_at.label("created_at"),
+        letters_subquerie.c.printing_at.label("created_at"),
         literal(None).label("scheduled_for"),
-        letters_subquery.c.printing_at.label("processing_started"),
+        letters_subquerie.c.printing_at.label("processing_started"),
         literal(None).label("status"),
         literal("letter_day").label("upload_type"),
         literal(None).label("recipient"),
     ).group_by(
-        letters_subquery.c.notification_count,
-        letters_subquery.c.printing_at,
+        letters_subquerie.c.notification_count,
+        letters_subquerie.c.printing_at,
     )
 
     return (
