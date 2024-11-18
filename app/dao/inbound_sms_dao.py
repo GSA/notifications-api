@@ -64,7 +64,7 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
     page = 1  # ?
     offset = (page - 1) * page_size
     paginated_results = paginated_items[offset : offset + page_size]
-    pagination = Pagination(paginated_results, page, page_size, len(paginated_results))
+    pagination = Pagination(paginated_results, page, page_size, len(paginated_items))
     return pagination
 
 
