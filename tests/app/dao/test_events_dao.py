@@ -20,5 +20,5 @@ def test_create_event(notify_db_session):
     stmt = select(func.count()).select_from(Event)
     count = db.session.execute(stmt).scalar() or 0
     assert count == 1
-    event_from_db = Event.query.first()
+    event_from_db = db.session.execute(select(Event)).scalars().first()
     assert event == event_from_db

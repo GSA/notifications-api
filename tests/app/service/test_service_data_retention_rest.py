@@ -1,6 +1,9 @@
 import json
 import uuid
 
+from sqlalchemy import select
+
+from app import db
 from app.enums import NotificationType
 from app.models import ServiceDataRetention
 from tests import create_admin_authorization_header
@@ -106,7 +109,7 @@ def test_create_service_data_retention(client, sample_service):
 
     assert response.status_code == 201
     json_resp = json.loads(response.get_data(as_text=True))["result"]
-    results = ServiceDataRetention.query.all()
+    results = db.session.execute(select(ServiceDataRetention)).scalars().all()
     assert len(results) == 1
     data_retention = results[0]
     assert json_resp == data_retention.serialize()
