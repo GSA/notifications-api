@@ -314,7 +314,7 @@ def update_service(service_id):
         service.email_branding = (
             None
             if not email_branding_id
-            else EmailBranding.query.get(email_branding_id)
+            else db.session.get(EmailBranding, email_branding_id)
         )
     dao_update_service(service)
 
@@ -892,7 +892,7 @@ def verify_reply_to_email_address(service_id):
     template = dao_get_template_by_id(
         current_app.config["REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID"]
     )
-    notify_service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    notify_service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,

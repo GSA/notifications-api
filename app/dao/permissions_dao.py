@@ -1,3 +1,5 @@
+from sqlalchemy import delete, select
+
 from app import db
 from app.dao import DAOClass
 from app.enums import PermissionType
@@ -14,22 +16,29 @@ class PermissionDAO(DAOClass):
             self.create_instance(permission, _commit=False)
 
     def remove_user_service_permissions(self, user, service):
-        query = self.Meta.model.query.filter_by(user=user, service=service)
-        query.delete()
+        db.session.execute(
+            delete(self.Meta.model.filter_by(user=user, service=service))
+        )
+        db.session.commit()
 
     def remove_user_service_permissions_for_all_services(self, user):
-        query = self.Meta.model.query.filter_by(user=user)
-        query.delete()
+        db.session.execute(delete(self.Meta.model.filter_by(user=user)))
+        db.session.commit()
 
     def set_user_service_permission(
         self, user, service, permissions, _commit=False, replace=False
     ):
         try:
             if replace:
-                query = self.Meta.model.query.filter(
-                    self.Meta.model.user == user, self.Meta.model.service == service
+                db.session.execute(
+                    delete(
+                        self.Meta.model.filter(
+                            self.Meta.model.user == user,
+                            self.Meta.model.service == service,
+                        )
+                    )
                 )
-                query.delete()
+                db.session.commit()
             for p in permissions:
                 p.user = user
                 p.service = service
@@ -44,17 +53,27 @@ class PermissionDAO(DAOClass):
 
     def get_permissions_by_user_id(self, user_id):
         return (
-            self.Meta.model.query.filter_by(user_id=user_id)
-            .join(Permission.service)
-            .filter_by(active=True)
+            db.session.execute(
+                select(
+                    self.Meta.model.filter_by(user_id=user_id)
+                    .join(Permission.service)
+                    .filter_by(active=True)
+                )
+            )
+            .scalars()
             .all()
         )
 
     def get_permissions_by_user_id_and_service_id(self, user_id, service_id):
         return (
-            self.Meta.model.query.filter_by(user_id=user_id)
-            .join(Permission.service)
-            .filter_by(active=True, id=service_id)
+            db.session.commit(
+                select(
+                    self.Meta.model.filter_by(user_id=user_id)
+                    .join(Permission.service)
+                    .filter_by(active=True, id=service_id)
+                )
+            )
+            .scalars()
             .all()
         )
 
