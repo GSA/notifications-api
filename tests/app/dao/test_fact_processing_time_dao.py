@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.dao import fact_processing_time_dao
 from app.dao.fact_processing_time_dao import (
     get_processing_time_percentage_for_date_range,
