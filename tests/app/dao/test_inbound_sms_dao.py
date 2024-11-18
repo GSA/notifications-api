@@ -254,7 +254,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api(sample_service
         inbound_sms.service.id
     )
 
-    assert inbound_sms == inbound_from_db[0]
+    assert inbound_sms == inbound_from_db.items[0]
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_return_only_for_service(
@@ -268,8 +268,8 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_return_only_fo
         inbound_sms.service.id
     )
 
-    assert inbound_sms in inbound_from_db
-    assert another_inbound_sms not in inbound_from_db
+    assert inbound_sms in inbound_from_db.items
+    assert another_inbound_sms not in inbound_from_db.items
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_no_inbound_sms_returns_empty_list(
@@ -320,7 +320,8 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_ret
     )
 
     expected_inbound_sms = reversed_inbound_sms[2:]
-
+    print(f"EXPECTED {expected_inbound_sms}")
+    print(f"ACTUAL {inbound_from_db.items}")
     assert expected_inbound_sms == inbound_from_db
 
 
@@ -338,7 +339,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_end
     inbound_from_db = dao_get_paginated_inbound_sms_for_service_for_public_api(
         sample_service.id, older_than=reversed_inbound_sms[1].id, page_size=2
     )
-
+    print(f"HERE IS INBOUND FROM DB {inbound_from_db.items}")
     assert inbound_from_db.has_next is False
 
 
