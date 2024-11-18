@@ -38,7 +38,11 @@ def test_save_service_callback_api(sample_service):
     assert callback_api.updated_at is None
 
     versioned = (
-        ServiceCallbackApi.get_history_model().query.filter_by(id=callback_api.id).one()
+        db.session.execute(
+            select(ServiceCallbackApi.get_history_model()).filter_by(id=callback_api.id)
+        )
+        .scalars()
+        .one()
     )
     assert versioned.id == callback_api.id
     assert versioned.service_id == sample_service.id
@@ -98,7 +102,13 @@ def test_update_service_callback_can_add_two_api_of_different_types(sample_servi
         callback_type=CallbackType.COMPLAINT,
     )
     save_service_callback_api(complaint)
-    results = ServiceCallbackApi.query.order_by(ServiceCallbackApi.callback_type).all()
+    results = (
+        db.session.execute(
+            select(ServiceCallbackApi).order_by(ServiceCallbackApi.callback_type)
+        )
+        .scalars()
+        .all()
+    )
     assert len(results) == 2
 
     callbacks = [complaint.serialize(), delivery_status.serialize()]
@@ -136,8 +146,12 @@ def test_update_service_callback_api(sample_service):
     assert updated.updated_at is not None
 
     versioned_results = (
-        ServiceCallbackApi.get_history_model()
-        .query.filter_by(id=saved_callback_api.id)
+        db.session.execute(
+            select(ServiceCallbackApi.get_history_model()).filter_by(
+                id=saved_callback_api.id
+            )
+        )
+        .scalars()
         .all()
     )
     assert len(versioned_results) == 2
