@@ -23,7 +23,7 @@ def test_send_notification_to_service_users_persists_notifications_correctly(
         service_id=sample_service.id, template_id=template.id
     )
 
-    notification = Notification.query.one()
+    notification = db.session.execute(select(Notification)).scalars().one()
 
     stmt = select(func.count()).select_from(Notification)
     count = db.session.execute(stmt).scalar() or 0

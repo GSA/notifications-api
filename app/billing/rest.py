@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 
+from app import db
 from app.billing.billing_schemas import (
     create_or_update_free_sms_fragment_limit_schema,
     serialize_ft_billing_remove_emails,
@@ -60,7 +61,7 @@ def get_free_sms_fragment_limit(service_id):
     )
 
     if annual_billing is None:
-        service = Service.query.get(service_id)
+        service = db.session.get(Service, service_id)
         # An entry does not exist in annual_billing table for that service and year.
         # Set the annual billing to the default free allowance based on the organization type of the service.
 
