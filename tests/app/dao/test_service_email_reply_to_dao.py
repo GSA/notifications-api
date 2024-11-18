@@ -208,7 +208,7 @@ def test_update_reply_to_email_address_set_updated_to_default(sample_service):
         is_default=True,
     )
 
-    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).all()
     assert len(results) == 2
     for x in results:
         if x.email_address == "change_address@email.com":
