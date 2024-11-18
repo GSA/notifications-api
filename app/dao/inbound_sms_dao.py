@@ -63,7 +63,7 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
         .offset(offset)
     )
     paginated_items = db.session.execute(stmt).scalars().all()
-    total_items = db.session.execute(select(func.count())).where(*filters).scalar() or 0
+    total_items = db.session.execute(select(func.count()).where(*filters)).scalar() or 0
     pagination = Pagination(paginated_items, page, page_size, total_items)
     return pagination
 
