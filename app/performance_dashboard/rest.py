@@ -99,7 +99,7 @@ def transform_into_notification_by_type_json(total_notifications):
 
 def transform_processing_time_results_to_json(processing_time_results):
     j = []
-    for x in processing_time_results:
+    for x in processing_time_results.items:
         j.append({"date": x.date, "percentage_under_10_seconds": x.percentage})
 
     return j
