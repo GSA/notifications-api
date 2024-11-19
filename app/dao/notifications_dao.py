@@ -10,6 +10,7 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
+from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
@@ -193,11 +194,17 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
+    query = select(Notification).filter_by(service_id=service_id, job_id=job_id)
     query = _filter_query(query, filter_dict)
-    return query.order_by(asc(Notification.job_row_number)).paginate(
-        page=page, per_page=page_size
-    )
+    query = query.order_by(asc(Notification.job_row_number))
+
+    results = db.session.execute(query).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
