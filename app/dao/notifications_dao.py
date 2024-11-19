@@ -298,17 +298,19 @@ def get_notifications_for_service(
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
 
-    query = Notification.query.filter(*filters)
+    query = select(Notification).where(*filters)
     query = _filter_query(query, filter_dict)
     if personalisation:
         query = query.options(joinedload(Notification.template))
 
-    return query.order_by(desc(Notification.created_at)).paginate(
-        page=page,
-        per_page=page_size,
-        count=count_pages,
-        error_out=error_out,
-    )
+    query = query.order_by(desc(Notification.created_at))
+    results = db.session.execute(query).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
 def _filter_query(query, filter_dict=None):
