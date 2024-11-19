@@ -311,9 +311,9 @@ def get_notifications_for_service(
     )
 
 
-def _filter_query(query, filter_dict=None):
+def _filter_query(querie, filter_dict=None):
     if filter_dict is None:
-        return query
+        return querie
 
     multidict = MultiDict(filter_dict)
 
@@ -321,14 +321,14 @@ def _filter_query(query, filter_dict=None):
     statuses = multidict.getlist("status")
 
     if statuses:
-        query = query.filter(Notification.status.in_(statuses))
+        querie = querie.where(Notification.status.in_(statuses))
 
     # filter by template
     template_types = multidict.getlist("template_type")
     if template_types:
-        query = query.filter(Notification.notification_type.in_(template_types))
+        querie = querie.where(Notification.notification_type.in_(template_types))
 
-    return query
+    return querie
 
 
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
