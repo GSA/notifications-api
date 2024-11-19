@@ -305,7 +305,7 @@ def get_notifications_for_service(
 
     querie = querie.order_by(desc(Notification.created_at))
     print(f"QUERIE IS {querie}")
-    results = db.session.execute(querie).scalars()
+    results = db.session.execute(querie).scalars().all()
     print(f"RESULTS ARE {results}")
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
