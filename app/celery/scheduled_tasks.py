@@ -108,11 +108,14 @@ def check_job_status():
         Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
+    print(f"QUERY 1 {incomplete_in_progress_jobs}")
     incomplete_pending_jobs = select(Job).filter(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
+
+    print(f"QUERY 2 {incomplete_pending_jobs}")
 
     jobs_not_complete_after_30_minutes = (
         db.session.execute(
