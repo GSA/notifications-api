@@ -307,7 +307,6 @@ def get_notifications_for_service(
     print(f"QUERIE IS {querie}")
     results = db.session.execute(querie).scalars().all()
     print(f"RESULTS ARE {results}")
-    page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
     paginated_results = results[offset : offset + page_size]
     pagination = Pagination(paginated_results, page, page_size, len(results))
