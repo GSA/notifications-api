@@ -124,14 +124,18 @@ def check_job_status():
         .scalars()
         .all()
     )
+    print(f"HERE IS JOBS {jobs_not_complete_after_30_minutes}")
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_30_minutes:
+        print(f"HERE IS A JOB {job}")
         job.job_status = JobStatus.ERROR
+        print("CHANGED JOB STATUS TO ERROR")
         dao_update_job(job)
         job_ids.append(str(job.id))
+        print(f"APPENDED NEW JOB ID TO LIST WHICH IS {job_ids}")
 
     if job_ids:
         current_app.logger.info("Job(s) {} have not completed.".format(job_ids))
