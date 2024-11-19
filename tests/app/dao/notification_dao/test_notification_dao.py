@@ -952,11 +952,8 @@ def test_should_return_notifications_including_one_offs_by_default(
     assert len(include_one_offs_by_default) == 2
 
 
-# TODO this test fails with the sqlalchemy 2.0 upgrade, but
-# it seems like it was wrong to begin with.  Clearly 2 notifications
-# are created, so it seems like the count should be 2, and there is
-# no reason to null out or override the pagination object just because
-# a flag is being passed.
+# TODO this test seems a little bogus.  Why are we messing with the pagination object
+# based on a flag?
 def test_should_not_count_pages_when_given_a_flag(sample_user, sample_template):
     create_notification(sample_template)
     notification = create_notification(sample_template)
@@ -965,6 +962,8 @@ def test_should_not_count_pages_when_given_a_flag(sample_user, sample_template):
         sample_template.service_id, count_pages=False, page_size=1
     )
     assert len(pagination.items) == 1
+    # In the original test this was set to None, but pagination has completely changed
+    # in sqlalchemy 2 so updating the test to what it delivers.
     assert pagination.total == 2
     assert pagination.items[0].id == notification.id
 
