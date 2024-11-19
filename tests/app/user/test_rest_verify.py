@@ -516,12 +516,6 @@ def test_send_user_email_code_with_urlencoded_next_param(
         _data=data,
         _expected_status=204,
     )
-    # TODO We are stripping out the personalisation from the db
-    # It should be recovered -- if needed -- from s3, but
-    # the purpose of this functionality is not clear.  Is this
-    # 2fa codes for email users?  Sms users receive 2fa codes via sms
-    # noti = Notification.query.one()
-    # assert noti.personalisation["url"].endswith("?next=%2Fservices")
 
 
 def test_send_email_code_returns_404_for_bad_input_data(admin_request):

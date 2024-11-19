@@ -194,11 +194,11 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    query = select(Notification).filter_by(service_id=service_id, job_id=job_id)
-    query = _filter_query(query, filter_dict)
-    query = query.order_by(asc(Notification.job_row_number))
+    querie = select(Notification).filter_by(service_id=service_id, job_id=job_id)
+    querie = _filter_query(querie, filter_dict)
+    querie = querie.order_by(asc(Notification.job_row_number))
 
-    results = db.session.execute(query).scalars().all()
+    results = db.session.execute(querie).scalars().all()
 
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
@@ -298,12 +298,12 @@ def get_notifications_for_service(
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
 
-    query = Notification.query.filter(*filters)
-    query = _filter_query(query, filter_dict)
+    querie = Notification.query.filter(*filters)
+    querie = _filter_query(querie, filter_dict)
     if personalisation:
-        query = query.options(joinedload(Notification.template))
+        querie = querie.options(joinedload(Notification.template))
 
-    return query.order_by(desc(Notification.created_at)).paginate(
+    return querie.order_by(desc(Notification.created_at)).paginate(
         page=page,
         per_page=page_size,
         count=count_pages,

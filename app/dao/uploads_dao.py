@@ -1,9 +1,10 @@
 from os import getenv
 
 from flask import current_app
-from sqlalchemy import String, and_, desc, func, literal, text
+from sqlalchemy import String, and_, desc, func, literal, select, text, union
 
 from app import db
+from app.dao.inbound_sms_dao import Pagination
 from app.enums import JobStatus, NotificationStatus, NotificationType
 from app.models import Job, Notification, ServiceDataRetention, Template
 from app.utils import midnight_n_days_ago, utc_now
@@ -51,8 +52,8 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
     if limit_days is not None:
         jobs_query_filter.append(Job.created_at >= midnight_n_days_ago(limit_days))
 
-    jobs_query = (
-        db.session.query(
+    jobs_querie = (
+        select(
             Job.id,
             Job.original_file_name,
             Job.notification_count,
@@ -67,6 +68,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
             literal("job").label("upload_type"),
             literal(None).label("recipient"),
         )
+        .select_from(Job)
         .join(Template, Job.template_id == Template.id)
         .outerjoin(
             ServiceDataRetention,
@@ -76,7 +78,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
                 == func.cast(ServiceDataRetention.notification_type, String),
             ),
         )
-        .filter(*jobs_query_filter)
+        .where(*jobs_query_filter)
     )
 
     letters_query_filter = [
@@ -94,12 +96,13 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         )
 
     letters_subquerie = (
-        db.session.query(
+        select(
             func.count().label("notification_count"),
             _naive_gmt_to_utc(_get_printing_datetime(Notification.created_at)).label(
                 "printing_at"
             ),
         )
+        .select_from(Notification)
         .join(Template, Notification.template_id == Template.id)
         .outerjoin(
             ServiceDataRetention,
@@ -109,30 +112,39 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
                 == func.cast(ServiceDataRetention.notification_type, String),
             ),
         )
-        .filter(*letters_query_filter)
+        .where(*letters_query_filter)
         .group_by("printing_at")
         .subquery()
     )
 
-    letters_query = db.session.query(
-        literal(None).label("id"),
-        literal("Uploaded letters").label("original_file_name"),
-        letters_subquerie.c.notification_count.label("notification_count"),
-        literal("letter").label("template_type"),
-        literal(None).label("days_of_retention"),
-        letters_subquerie.c.printing_at.label("created_at"),
-        literal(None).label("scheduled_for"),
-        letters_subquerie.c.printing_at.label("processing_started"),
-        literal(None).label("status"),
-        literal("letter_day").label("upload_type"),
-        literal(None).label("recipient"),
-    ).group_by(
-        letters_subquerie.c.notification_count,
-        letters_subquerie.c.printing_at,
+    letters_querie = (
+        select(
+            literal(None).label("id"),
+            literal("Uploaded letters").label("original_file_name"),
+            letters_subquerie.c.notification_count.label("notification_count"),
+            literal("letter").label("template_type"),
+            literal(None).label("days_of_retention"),
+            letters_subquerie.c.printing_at.label("created_at"),
+            literal(None).label("scheduled_for"),
+            letters_subquerie.c.printing_at.label("processing_started"),
+            literal(None).label("status"),
+            literal("letter_day").label("upload_type"),
+            literal(None).label("recipient"),
+        )
+        .select_from(Notification)
+        .group_by(
+            letters_subquerie.c.notification_count,
+            letters_subquerie.c.printing_at,
+        )
     )
 
-    return (
-        jobs_query.union_all(letters_query)
-        .order_by(desc("processing_started"), desc("created_at"))
-        .paginate(page=page, per_page=page_size)
+    stmt = union(jobs_querie, letters_querie).order_by(
+        desc("processing_started"), desc("created_at")
     )
+
+    results = db.session.execute(stmt).scalars().all()
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
