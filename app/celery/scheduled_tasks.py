@@ -123,7 +123,6 @@ def check_job_status():
                 Job.processing_started, Job.scheduled_for
             )
         )
-        .scalars()
         .all()
     )
     print(f"HERE IS JOBS {jobs_not_complete_after_30_minutes}")
