@@ -304,13 +304,10 @@ def get_notifications_for_service(
         querie = querie.options(joinedload(Notification.template))
 
     querie = querie.order_by(desc(Notification.created_at))
-    print(f"QUERIE IS {querie}")
     results = db.session.execute(querie).scalars().all()
-    print(f"RESULTS ARE {results}")
     offset = (page - 1) * page_size
     paginated_results = results[offset : offset + page_size]
     pagination = Pagination(paginated_results, page, page_size, len(results))
-    print(f"PAGINATION IS {pagination}")
     return pagination
 
 
