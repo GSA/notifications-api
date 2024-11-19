@@ -142,7 +142,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         desc("processing_started"), desc("created_at")
     )
 
-    results = db.session.execute(stmt).scalars().all()
+    results = db.session.execute(stmt).all()
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
     paginated_results = results[offset : offset + page_size]
