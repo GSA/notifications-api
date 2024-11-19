@@ -18,7 +18,6 @@ from app.dao.invited_org_user_dao import (
 from app.dao.invited_user_dao import expire_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
-    dao_update_job,
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
@@ -124,18 +123,20 @@ def check_job_status():
         .scalars()
         .all()
     )
-    #print(f"HERE IS JOBS {jobs_not_complete_after_30_minutes}")
+    # print(f"HERE IS JOBS {jobs_not_complete_after_30_minutes}")
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_30_minutes:
-        #print(f"HERE IS A JOB {job}")
-        #job.job_status = JobStatus.ERROR
-        #print("CHANGED JOB STATUS TO ERROR")
-        #dao_update_job(job)
+        # print(f"HERE IS A JOB {job}")
+        # job.job_status = JobStatus.ERROR
+        # print("CHANGED JOB STATUS TO ERROR")
+        # dao_update_job(job)
 
-        db.session.execute(update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR))
+        db.session.execute(
+            update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR)
+        )
         db.session.commit()
 
         job_ids.append(str(job.id))
