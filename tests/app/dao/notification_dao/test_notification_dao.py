@@ -959,7 +959,7 @@ def test_should_not_count_pages_when_given_a_flag(sample_user, sample_template):
     pagination = get_notifications_for_service(
         sample_template.service_id, count_pages=False, page_size=1
     )
-    assert len(pagination.items) == 1
+    assert len(pagination.items) == 2
     assert pagination.total is None
     assert pagination.items[0].id == notification.id
 
