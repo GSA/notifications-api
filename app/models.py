@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Enum,
     Float,
     ForeignKey,
     Index,
@@ -417,7 +418,7 @@ class Organization(Base):
         Float, nullable=True
     )
     organization_type: Mapped[Optional[OrganizationType]] = mapped_column(
-        OrganizationType, nullable=True
+        Enum(OrganizationType, name="organization_type_enum"), nullable=True
     )
     request_to_go_live_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
