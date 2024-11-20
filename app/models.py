@@ -6,7 +6,6 @@ from flask import current_app, url_for
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
-    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -19,7 +18,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import declarative_base, relationship, validates
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    mapped_column,
+    relationship,
+    validates,
+)
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
@@ -377,47 +382,61 @@ Base = declarative_base()
 class Organization(Base):
     __tablename__ = "organization"
 
-    id: UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name: str = Column(String(255), nullable=False, unique=True, index=True)
-    active: bool = Column(Boolean, nullable=False, default=True)
-    created_at: DateTime = Column(DateTime, nullable=False, default=func.now())
-    updated_at: Optional[DateTime] = Column(
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime, nullable=False, default=func.now()
+    )
+    updated_at: Mapped[Optional[DateTime]] = mapped_column(
         DateTime, nullable=True, onupdate=func.now()
     )
-    agreement_signed: Optional[bool] = Column(Boolean, nullable=True)
-    agreement_signed_at: Optional[DateTime] = Column(DateTime, nullable=True)
-    agreement_signed_by_id: Optional[UUID] = Column(
+    agreement_signed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    agreement_signed_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime, nullable=True
+    )
+    agreement_signed_by_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users_id"),
         nullable=True,
     )
     agreement_signed_by = relationship("User", lazy="select")
-    agreement_signed_on_behalf_of_name: Optional[str] = Column(
+    agreement_signed_on_behalf_of_name: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True,
     )
-    agreement_signed_on_behalf_of_email_address: Optional[str] = Column(
+    agreement_signed_on_behalf_of_email_address: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True,
     )
-    agreement_signed_version: Optional[float] = Column(Float, nullable=True)
-    organization_type: Optional[OrganizationType] = enum_column(
+    agreement_signed_version: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
+    organization_type: Mapped[Optional[OrganizationType]] = mapped_column(
         OrganizationType, nullable=True
     )
-    request_to_go_live_notes: Optional[str] = Column(Text, nullable=True)
+    request_to_go_live_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     domains: List["Domain"] = relationship("Domain", lazy="select")
     email_branding: Optional["EmailBranding"] = relationship(
         "EmailBranding", lazy="select"
     )
-    email_branding_id: Optional[UUID] = Column(
+    email_branding_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("email_branding_id"), nullable=True
     )
-    notes: Optional[str] = Column(Text, nullable=True)
-    purchase_order_number: Optional[str] = Column(String(255), nullable=True)
-    billing_contact_names: Optional[str] = Column(Text, nullable=True)
-    billing_contact_email_address: Optional[str] = Column(Text, nullable=True)
-    billing_reference: Optional[str] = Column(String(255), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    purchase_order_number: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    billing_contact_names: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    billing_contact_email_address: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )
+    billing_reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     @property
     def live_services(self) -> List["Service"]:
