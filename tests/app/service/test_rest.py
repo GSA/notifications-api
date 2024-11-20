@@ -28,7 +28,7 @@ from app.enums import (
 )
 from app.models import (
     AnnualBilling,
-    EmailBranding,
+    Email_Branding,
     InboundNumber,
     Notification,
     Permission,
@@ -711,7 +711,7 @@ def test_create_service_should_throw_duplicate_key_constraint_for_existing_email
 
 
 def test_update_service(client, notify_db_session, sample_service):
-    brand = EmailBranding(
+    brand = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -765,7 +765,7 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
 def test_update_service_remove_email_branding(
     admin_request, notify_db_session, sample_service
 ):
-    brand = EmailBranding(
+    brand = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -784,12 +784,12 @@ def test_update_service_remove_email_branding(
 def test_update_service_change_email_branding(
     admin_request, notify_db_session, sample_service
 ):
-    brand1 = EmailBranding(
+    brand1 = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
     )
-    brand2 = EmailBranding(colour="#111111", logo="avengers.png", name="Avengers")
+    brand2 = Email_Branding(colour="#111111", logo="avengers.png", name="Avengers")
     notify_db_session.add_all([brand1, brand2])
     sample_service.email_branding = brand1
     notify_db_session.commit()

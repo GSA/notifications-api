@@ -1,15 +1,15 @@
 import pytest
 
 from app.enums import BrandType
-from app.models import EmailBranding
+from app.models import Email_Branding
 from tests.app.db import create_email_branding
 
 
 def test_get_email_branding_options(admin_request, notify_db_session):
-    email_branding1 = EmailBranding(
+    email_branding1 = Email_Branding(
         colour="#FFFFFF", logo="/path/image.png", name="Org1"
     )
-    email_branding2 = EmailBranding(
+    email_branding2 = Email_Branding(
         colour="#000000", logo="/path/other.png", name="Org2"
     )
     notify_db_session.add_all([email_branding1, email_branding2])
@@ -27,7 +27,7 @@ def test_get_email_branding_options(admin_request, notify_db_session):
 
 
 def test_get_email_branding_by_id(admin_request, notify_db_session):
-    email_branding = EmailBranding(
+    email_branding = Email_Branding(
         colour="#FFFFFF", logo="/path/image.png", name="Some Org", text="My Org"
     )
     notify_db_session.add(email_branding)
@@ -198,7 +198,7 @@ def test_post_update_email_branding_updates_field(
         email_branding_id=email_branding_id,
     )
 
-    email_branding = EmailBranding.query.all()
+    email_branding = Email_Branding.query.all()
 
     assert len(email_branding) == 1
     assert str(email_branding[0].id) == email_branding_id
@@ -231,7 +231,7 @@ def test_post_update_email_branding_updates_field_with_text(
         email_branding_id=email_branding_id,
     )
 
-    email_branding = EmailBranding.query.all()
+    email_branding = Email_Branding.query.all()
 
     assert len(email_branding) == 1
     assert str(email_branding[0].id) == email_branding_id

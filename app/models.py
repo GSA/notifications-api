@@ -319,9 +319,11 @@ user_folder_permissions = db.Table(
 )
 
 
-class EmailBranding(db.Model):
+class Email_Branding(db.Model):
     __tablename__ = "email_branding"
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     colour = db.Column(db.String(7), nullable=True)
     logo = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
@@ -433,13 +435,12 @@ class Organization(db.Model):
     request_to_go_live_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     domains: Mapped[List["Domain"]] = relationship("Domain", lazy="select")
-    email_branding: Mapped[Optional["EmailBranding"]] = relationship(
-        "EmailBranding",
-
+    email_branding: Mapped[Optional["Email_Branding"]] = relationship(
+        "Email_Branding",
         primaryjoin="Organization.email_branding_id == Email_Branding.id",
     )
     email_branding_id: Mapped[Optional[UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("emailbranding.id"), nullable=True
+        UUID(as_uuid=True), ForeignKey("email_branding.id"), nullable=True
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     purchase_order_number: Mapped[Optional[str]] = mapped_column(
@@ -596,7 +597,7 @@ class Service(db.Model, Versioned):
     billing_reference = db.Column(db.String(255), nullable=True)
 
     email_branding = db.relationship(
-        "EmailBranding",
+        "Email_Branding",
         secondary=service_email_branding,
         uselist=False,
         backref=db.backref("services", lazy="dynamic"),

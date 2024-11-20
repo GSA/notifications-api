@@ -11,7 +11,7 @@ from app.email_branding.email_branding_schema import (
     post_update_email_branding_schema,
 )
 from app.errors import register_errors
-from app.models import EmailBranding
+from app.models import Email_Branding
 from app.schema_validation import validate
 
 email_branding_blueprint = Blueprint("email_branding", __name__)
@@ -36,7 +36,7 @@ def create_email_branding():
 
     validate(data, post_create_email_branding_schema)
 
-    email_branding = EmailBranding(**data)
+    email_branding = Email_Branding(**data)
     if "text" not in data.keys():
         email_branding.text = email_branding.name
 

@@ -45,7 +45,7 @@ from app.models import (
     ApiKey,
     Complaint,
     Domain,
-    EmailBranding,
+    Email_Branding,
     FactBilling,
     FactNotificationStatus,
     FactProcessingTime,
@@ -523,7 +523,7 @@ def create_email_branding(
     }
     if id:
         data["id"] = id
-    email_branding = EmailBranding(**data)
+    email_branding = Email_Branding(**data)
     dao_create_email_branding(email_branding)
 
     return email_branding
