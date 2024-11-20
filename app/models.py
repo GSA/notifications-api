@@ -447,7 +447,7 @@ class Organization(db.Model):
         String(255), nullable=True
     )
     billing_contact_names: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    billing_contact_email_address: Mapped[Optional[str]] = mapped_column(
+    billing_contact_email_addresses: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )
     billing_reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -509,7 +509,7 @@ class Organization(db.Model):
             "notes": self.notes,
             "purchase_order_number": self.purchase_order_number,
             "billing_contact_names": self.billing_contact_names,
-            "billing_contact_email_address": self.billing_contact_email_address,
+            "billing_contact_email_addresses": self.billing_contact_email_addresses,
             "billing_reference": self.billing_reference,
         }
 
