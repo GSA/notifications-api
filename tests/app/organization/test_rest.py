@@ -31,7 +31,7 @@ from tests.app.db import (
 
 def test_get_all_organizations(admin_request, notify_db_session):
     create_organization(
-        name="inactive org", active=False, organization_type=OrganizationType.FEDERAL
+        name="inactive org", active=False, organization_type=OrganizationType.federal
     )
     create_organization(name="active org", domains=["example.com"])
 
@@ -59,7 +59,7 @@ def test_get_all_organizations(admin_request, notify_db_session):
     assert response[1]["active"] is False
     assert response[1]["count_of_live_services"] == 0
     assert response[1]["domains"] == []
-    assert response[1]["organization_type"] == OrganizationType.FEDERAL
+    assert response[1]["organization_type"] == OrganizationType.federal
 
 
 def test_get_organization_by_id(admin_request, notify_db_session):
@@ -170,7 +170,7 @@ def test_post_create_organization(admin_request, notify_db_session):
     data = {
         "name": "test organization",
         "active": True,
-        "organization_type": OrganizationType.STATE,
+        "organization_type": OrganizationType.state,
     }
 
     response = admin_request.post(
@@ -225,7 +225,7 @@ def test_post_create_organization_existing_name_raises_400(
     data = {
         "name": sample_organization.name,
         "active": True,
-        "organization_type": OrganizationType.FEDERAL,
+        "organization_type": OrganizationType.federal,
     }
 
     response = admin_request.post(
@@ -245,7 +245,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
     data = {
         "name": "org 2",
         "active": True,
-        "organization_type": OrganizationType.FEDERAL,
+        "organization_type": OrganizationType.federal,
     }
 
     admin_request.post(
@@ -263,7 +263,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
         (
             {
                 "active": False,
-                "organization_type": OrganizationType.FEDERAL,
+                "organization_type": OrganizationType.federal,
             },
             "name is a required property",
         ),
@@ -307,7 +307,7 @@ def test_post_update_organization_updates_fields(
     data = {
         "name": "new organization name",
         "active": False,
-        "organization_type": OrganizationType.FEDERAL,
+        "organization_type": OrganizationType.federal,
     }
 
     admin_request.post(
@@ -324,7 +324,7 @@ def test_post_update_organization_updates_fields(
     assert organization[0].name == data["name"]
     assert organization[0].active == data["active"]
     assert organization[0].domains == []
-    assert organization[0].organization_type == OrganizationType.FEDERAL
+    assert organization[0].organization_type == OrganizationType.federal
 
 
 @pytest.mark.parametrize(
@@ -580,7 +580,7 @@ def test_post_update_organization_set_mou_emails_signed_by(
 
 def test_post_link_service_to_organization(admin_request, sample_service):
     data = {"service_id": str(sample_service.id)}
-    organization = create_organization(organization_type=OrganizationType.FEDERAL)
+    organization = create_organization(organization_type=OrganizationType.federal)
 
     admin_request.post(
         "organization.link_service_to_organization",
@@ -589,7 +589,7 @@ def test_post_link_service_to_organization(admin_request, sample_service):
         _expected_status=204,
     )
     assert len(organization.services) == 1
-    assert sample_service.organization_type == OrganizationType.FEDERAL
+    assert sample_service.organization_type == OrganizationType.federal
 
 
 @freeze_time("2021-09-24 13:30")
@@ -597,7 +597,7 @@ def test_post_link_service_to_organization_inserts_annual_billing(
     admin_request, sample_service
 ):
     data = {"service_id": str(sample_service.id)}
-    organization = create_organization(organization_type=OrganizationType.FEDERAL)
+    organization = create_organization(organization_type=OrganizationType.federal)
     assert len(organization.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     admin_request.post(
@@ -622,7 +622,7 @@ def test_post_link_service_to_organization_rollback_service_if_annual_billing_up
     data = {"service_id": str(sample_service.id)}
     assert not sample_service.organization_type
 
-    organization = create_organization(organization_type=OrganizationType.FEDERAL)
+    organization = create_organization(organization_type=OrganizationType.federal)
     assert len(organization.services) == 0
     assert len(AnnualBilling.query.all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
@@ -653,7 +653,7 @@ def test_post_link_service_to_another_org(
     assert len(sample_organization.services) == 1
     assert not sample_service.organization_type
 
-    new_org = create_organization(organization_type=OrganizationType.FEDERAL)
+    new_org = create_organization(organization_type=OrganizationType.federal)
     admin_request.post(
         "organization.link_service_to_organization",
         _data=data,
@@ -662,7 +662,7 @@ def test_post_link_service_to_another_org(
     )
     assert not sample_organization.services
     assert len(new_org.services) == 1
-    assert sample_service.organization_type == OrganizationType.FEDERAL
+    assert sample_service.organization_type == OrganizationType.federal
     annual_billing = AnnualBilling.query.all()
     assert len(annual_billing) == 1
     assert annual_billing[0].free_sms_fragment_limit == 150000
