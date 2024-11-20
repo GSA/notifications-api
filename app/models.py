@@ -407,7 +407,7 @@ class Organization(db.Model):
 
     agreement_signed_by_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users_id"),
+        ForeignKey("users.id"),
         nullable=True,
     )
     # Specify the relationship with explicity primaryjoin
