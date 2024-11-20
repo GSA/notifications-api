@@ -341,7 +341,7 @@
         "filename": "tests/app/user/test_rest.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 109,
+        "line_number": 110,
         "is_secret": false
       },
       {
@@ -349,7 +349,7 @@
         "filename": "tests/app/user/test_rest.py",
         "hashed_secret": "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
         "is_verified": false,
-        "line_number": 836,
+        "line_number": 837,
         "is_secret": false
       }
     ],
@@ -384,5 +384,5 @@
       }
     ]
   },
-  "generated_at": "2024-11-20T22:01:58Z"
+  "generated_at": "2024-11-20T22:41:41Z"
 }
