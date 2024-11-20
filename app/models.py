@@ -179,10 +179,11 @@ class User(db.Model):
     )
 
     services = db.relationship("Service", secondary="user_to_service", backref="users")
-    organizations = db.relationship(
+    organizations: Mapped[List["Organization"]] = relationship(
         "Organization",
         secondary="user_to_organization",
         backref="users",
+        lazy="select"
     )
 
     @validates("mobile_number")
