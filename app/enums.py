@@ -31,9 +31,9 @@ class CallbackType(StrEnum):
 
 
 class OrganizationType(StrEnum):
-    FEDERAL = "federal"
-    STATE = "state"
-    OTHER = "other"
+    federal = "federal"
+    state = "state"
+    other = "other"
 
 
 class NotificationStatus(StrEnum):

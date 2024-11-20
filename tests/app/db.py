@@ -122,7 +122,7 @@ def create_service(
     prefix_sms=True,
     message_limit=1000,
     total_message_limit=250000,
-    organization_type=OrganizationType.FEDERAL,
+    organization_type=OrganizationType.federal,
     check_if_service_exists=False,
     go_live_user=None,
     go_live_at=None,
