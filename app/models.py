@@ -1,12 +1,25 @@
 import itertools
 import uuid
+from typing import List, Optional
 
 from flask import current_app, url_for
-from sqlalchemy import CheckConstraint, Index, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import declarative_base, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
@@ -358,56 +371,56 @@ class Domain(db.Model):
     )
 
 
-class Organization(db.Model):
+Base = declarative_base()
+
+
+class Organization(Base):
     __tablename__ = "organization"
-    id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
+
+    id: UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: str = Column(String(255), nullable=False, unique=True, index=True)
+    active: bool = Column(Boolean, nullable=False, default=True)
+    created_at: DateTime = Column(DateTime, nullable=False, default=func.now())
+    updated_at: Optional[DateTime] = Column(
+        DateTime, nullable=True, onupdate=func.now()
     )
-    name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    active = db.Column(db.Boolean, nullable=False, default=True)
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=utc_now(),
-    )
-    updated_at = db.Column(
-        db.DateTime,
-        nullable=True,
-        onupdate=utc_now(),
-    )
-    agreement_signed = db.Column(db.Boolean, nullable=True)
-    agreement_signed_at = db.Column(db.DateTime, nullable=True)
-    agreement_signed_by_id = db.Column(
+    agreement_signed: Optional[bool] = Column(Boolean, nullable=True)
+    agreement_signed_at: Optional[DateTime] = Column(DateTime, nullable=True)
+    agreement_signed_by_id: Optional[UUID] = Column(
         UUID(as_uuid=True),
-        db.ForeignKey("users.id"),
+        ForeignKey("users_id"),
         nullable=True,
     )
-    agreement_signed_by = db.relationship("User")
-    agreement_signed_on_behalf_of_name = db.Column(db.String(255), nullable=True)
-    agreement_signed_on_behalf_of_email_address = db.Column(
-        db.String(255), nullable=True
-    )
-    agreement_signed_version = db.Column(db.Float, nullable=True)
-    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
-    request_to_go_live_notes = db.Column(db.Text)
-
-    domains = db.relationship("Domain")
-
-    email_branding = db.relationship("EmailBranding")
-    email_branding_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("email_branding.id"),
+    agreement_signed_by = relationship("User", lazy="select")
+    agreement_signed_on_behalf_of_name: Optional[str] = Column(
+        String(255),
         nullable=True,
     )
+    agreement_signed_on_behalf_of_email_address: Optional[str] = Column(
+        String(255),
+        nullable=True,
+    )
+    agreement_signed_version: Optional[float] = Column(Float, nullable=True)
+    organization_type: Optional[OrganizationType] = enum_column(
+        OrganizationType, nullable=True
+    )
+    request_to_go_live_notes: Optional[str] = Column(Text, nullable=True)
 
-    notes = db.Column(db.Text, nullable=True)
-    purchase_order_number = db.Column(db.String(255), nullable=True)
-    billing_contact_names = db.Column(db.Text, nullable=True)
-    billing_contact_email_addresses = db.Column(db.Text, nullable=True)
-    billing_reference = db.Column(db.String(255), nullable=True)
+    domains: List["Domain"] = relationship("Domain", lazy="select")
+    email_branding: Optional["EmailBranding"] = relationship(
+        "EmailBranding", lazy="select"
+    )
+    email_branding_id: Optional[UUID] = Column(
+        UUID(as_uuid=True), ForeignKey("email_branding_id"), nullable=True
+    )
+    notes: Optional[str] = Column(Text, nullable=True)
+    purchase_order_number = Optional[str] = Column(String(255), nullable=True)
+    billing_contact_names: Optional[str] = Column(Text, nullable=True)
+    billing_contact_email_address: Optional[str] = Column(Text, nullable=True)
+    billing_reference: Optional[str] = Column(String(255), nullable=True)
 
     @property
-    def live_services(self):
+    def live_services(self) -> List["Service"]:
         return [
             service
             for service in self.services
@@ -415,11 +428,11 @@ class Organization(db.Model):
         ]
 
     @property
-    def domain_list(self):
+    def domain_list(self) -> List[str]:
         return [domain.domain for domain in self.domains]
 
     @property
-    def agreement(self):
+    def agreement(self) -> Optional["Agreement"]:
         try:
             active_agreements = [
                 agreement
@@ -431,20 +444,20 @@ class Organization(db.Model):
             return None
 
     @property
-    def agreement_active(self):
+    def agreement_active(self) -> bool:
         try:
             return self.agreement.status == AgreementStatus.ACTIVE
         except AttributeError:
             return False
 
     @property
-    def has_mou(self):
+    def has_mou(self) -> bool:
         try:
             return self.agreement.type == AgreementType.MOU
         except AttributeError:
             return False
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {
             "id": str(self.id),
             "name": self.name,
@@ -453,7 +466,7 @@ class Organization(db.Model):
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
             "agreement_signed_at": self.agreement_signed_at,
-            "agreement_signed_by_id": self.agreement_signed_by_id,
+            "agreement_signed_by_id": self.agreemnt_signed_by_id,
             "agreement_signed_on_behalf_of_name": self.agreement_signed_on_behalf_of_name,
             "agreement_signed_on_behalf_of_email_address": self.agreement_signed_on_behalf_of_email_address,
             "agreement_signed_version": self.agreement_signed_version,
@@ -467,7 +480,7 @@ class Organization(db.Model):
             "billing_reference": self.billing_reference,
         }
 
-    def serialize_for_list(self):
+    def serialize_for_list(self) -> dict:
         return {
             "name": self.name,
             "id": str(self.id),
