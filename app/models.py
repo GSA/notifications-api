@@ -414,7 +414,7 @@ class Organization(db.Model):
     agreement_signed_by = relationship(
         "User",
         back_populates="organizations",
-        primary_join="Organization.agreement_signed_by_id == User.id",
+        primaryjoin="Organization.agreement_signed_by_id == User.id",
     )
     agreement_signed_on_behalf_of_name: Mapped[Optional[str]] = mapped_column(
         String(255),
