@@ -918,41 +918,42 @@ def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
     sample_user.organizations = [org1, org2]
     sample_user.services = [service1, service2, service3, service4, service5]
 
-    resp = admin_request.get(
-        "user.get_organizations_and_services_for_user", user_id=sample_user.id
-    )
+    with db.session.no_autoflush:
+        resp = admin_request.get(
+            "user.get_organizations_and_services_for_user", user_id=sample_user.id
+        )
 
-    assert set(resp.keys()) == {
-        "organizations",
-        "services",
-    }
-    assert resp["organizations"] == [
-        {
-            "name": org1.name,
-            "id": str(org1.id),
-            "count_of_live_services": 1,
+        assert set(resp.keys()) == {
+            "organizations",
+            "services",
         }
-    ]
-    assert resp["services"] == [
-        {
-            "name": service1.name,
-            "id": str(service1.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        },
-        {
-            "name": service3.name,
-            "id": str(service3.id),
-            "restricted": False,
-            "organization": str(org2.id),
-        },
-        {
-            "name": service4.name,
-            "id": str(service4.id),
-            "restricted": False,
-            "organization": None,
-        },
-    ]
+        assert resp["organizations"] == [
+            {
+                "name": org1.name,
+                "id": str(org1.id),
+                "count_of_live_services": 1,
+            }
+        ]
+        assert resp["services"] == [
+            {
+                "name": service1.name,
+                "id": str(service1.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            },
+            {
+                "name": service3.name,
+                "id": str(service3.id),
+                "restricted": False,
+                "organization": str(org2.id),
+            },
+            {
+                "name": service4.name,
+                "id": str(service4.id),
+                "restricted": False,
+                "organization": None,
+            },
+        ]
 
 
 def test_get_orgs_and_services_only_shows_users_orgs_and_services(
@@ -973,31 +974,32 @@ def test_get_orgs_and_services_only_shows_users_orgs_and_services(
     other_user.organizations = [org1, org2]
     other_user.services = [service1, service2]
 
-    resp = admin_request.get(
-        "user.get_organizations_and_services_for_user", user_id=sample_user.id
-    )
+    with db.session.no_autoflush:
+        resp = admin_request.get(
+            "user.get_organizations_and_services_for_user", user_id=sample_user.id
+        )
 
-    assert set(resp.keys()) == {
-        "organizations",
-        "services",
-    }
-    assert resp["organizations"] == [
-        {
-            "name": org2.name,
-            "id": str(org2.id),
-            "count_of_live_services": 0,
+        assert set(resp.keys()) == {
+            "organizations",
+            "services",
         }
-    ]
-    # 'services' always returns the org_id no matter whether the user
-    # belongs to that org or not
-    assert resp["services"] == [
-        {
-            "name": service1.name,
-            "id": str(service1.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        }
-    ]
+        assert resp["organizations"] == [
+            {
+                "name": org2.name,
+                "id": str(org2.id),
+                "count_of_live_services": 0,
+            }
+        ]
+        # 'services' always returns the org_id no matter whether the user
+        # belongs to that org or not
+        assert resp["services"] == [
+            {
+                "name": service1.name,
+                "id": str(service1.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            }
+        ]
 
 
 def test_find_users_by_email_finds_user_by_partial_email(
