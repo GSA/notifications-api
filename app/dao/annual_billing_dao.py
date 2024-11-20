@@ -76,17 +76,17 @@ def dao_get_all_free_sms_fragment_limit(service_id):
 
 def set_default_free_allowance_for_service(service, year_start=None):
     default_free_sms_fragment_limits = {
-        OrganizationType.FEDERAL: {
+        OrganizationType.federal: {
             2020: 250_000,
             2021: 150_000,
             2022: 40_000,
         },
-        OrganizationType.STATE: {
+        OrganizationType.state: {
             2020: 250_000,
             2021: 150_000,
             2022: 40_000,
         },
-        OrganizationType.OTHER: {
+        OrganizationType.other: {
             2020: 250_000,
             2021: 150_000,
             2022: 40_000,
@@ -108,7 +108,7 @@ def set_default_free_allowance_for_service(service, year_start=None):
             f"no organization type for service {service.id}. Using other default of "
             f"{default_free_sms_fragment_limits['other'][year_start]}"
         )
-        free_allowance = default_free_sms_fragment_limits[OrganizationType.OTHER][
+        free_allowance = default_free_sms_fragment_limits[OrganizationType.other][
             year_start
         ]
 
