@@ -499,7 +499,7 @@ class Organization(db.Model):
             "email_branding_id": self.email_branding_id,
             "agreement_signed": self.agreement_signed,
             "agreement_signed_at": self.agreement_signed_at,
-            "agreement_signed_by_id": self.agreemnt_signed_by_id,
+            "agreement_signed_by_id": self.agreement_signed_by_id,
             "agreement_signed_on_behalf_of_name": self.agreement_signed_on_behalf_of_name,
             "agreement_signed_on_behalf_of_email_address": self.agreement_signed_on_behalf_of_email_address,
             "agreement_signed_version": self.agreement_signed_version,
