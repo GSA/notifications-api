@@ -87,14 +87,15 @@ def test_get_user_doesnt_return_inactive_services_and_orgs(
     sample_user = sample_service.users[0]
     sample_user.organizations = [sample_organization]
 
-    json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
+    with db.session.no_flush:
+        json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
-    fetched = json_resp["data"]
+        fetched = json_resp["data"]
 
-    assert fetched["id"] == str(sample_user.id)
-    assert fetched["services"] == []
-    assert fetched["organizations"] == []
-    assert fetched["permissions"] == {}
+        assert fetched["id"] == str(sample_user.id)
+        assert fetched["services"] == []
+        assert fetched["organizations"] == []
+        assert fetched["permissions"] == {}
 
 
 def test_post_user(admin_request, notify_db_session):
@@ -113,13 +114,16 @@ def test_post_user(admin_request, notify_db_session):
         "permissions": {},
         "auth_type": AuthType.EMAIL,
     }
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
+    with db.session.no_flush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=201
+        )
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
-    assert user.check_password("password")
-    assert json_resp["data"]["email_address"] == user.email_address
-    assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == AuthType.EMAIL
+        user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+        assert user.check_password("password")
+        assert json_resp["data"]["email_address"] == user.email_address
+        assert json_resp["data"]["id"] == str(user.id)
+        assert user.auth_type == AuthType.EMAIL
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
@@ -132,11 +136,14 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
         "permissions": {},
     }
 
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
+    with db.session.no_flush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=201
+        )
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
-    assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == AuthType.SMS
+        user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+        assert json_resp["data"]["id"] == str(user.id)
+        assert user.auth_type == AuthType.SMS
 
 
 def test_post_user_missing_attribute_email(admin_request, notify_db_session):
@@ -153,12 +160,15 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
         "failed_login_count": 0,
         "permissions": {},
     }
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
+    with db.session.no_flush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=400
+        )
 
-    assert _get_user_count() == 0
-    assert {"email_address": ["Missing data for required field."]} == json_resp[
-        "message"
-    ]
+        assert _get_user_count() == 0
+        assert {"email_address": ["Missing data for required field."]} == json_resp[
+            "message"
+        ]
 
 
 def _get_user_count():
