@@ -414,7 +414,7 @@ class Organization(Base):
         UUID(as_uuid=True), ForeignKey("email_branding_id"), nullable=True
     )
     notes: Optional[str] = Column(Text, nullable=True)
-    purchase_order_number = Optional[str] = Column(String(255), nullable=True)
+    purchase_order_number: Optional[str] = Column(String(255), nullable=True)
     billing_contact_names: Optional[str] = Column(Text, nullable=True)
     billing_contact_email_address: Optional[str] = Column(Text, nullable=True)
     billing_reference: Optional[str] = Column(String(255), nullable=True)
