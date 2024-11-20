@@ -125,7 +125,9 @@ class HistoryModel:
 class User(db.Model):
     __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     name = db.Column(db.String, nullable=False, index=True, unique=False)
     email_address = db.Column(db.String(255), nullable=False, index=True, unique=True)
     login_uuid = db.Column(db.Text, nullable=True, index=True, unique=True)
@@ -180,10 +182,7 @@ class User(db.Model):
 
     services = db.relationship("Service", secondary="user_to_service", backref="users")
     organizations: Mapped[List["Organization"]] = relationship(
-        "Organization",
-        secondary="user_to_organization",
-        backref="users",
-        lazy="select"
+        "Organization", secondary="user_to_organization", backref="users", lazy="select"
     )
 
     @validates("mobile_number")
@@ -381,7 +380,11 @@ class Domain(db.Model):
 Base = declarative_base()
 
 
-class Organization(Base):
+class Organization(db.Model):
+
+    # TODO When everything in this file is upgraded to 2.0 syntax,
+    # replace all uses of db.Model with Base
+    # class Organization(Base):
     __tablename__ = "organization"
 
     id: Mapped[UUID] = mapped_column(
