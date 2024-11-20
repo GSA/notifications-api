@@ -404,12 +404,18 @@ class Organization(db.Model):
     agreement_signed_at: Mapped[Optional[DateTime]] = mapped_column(
         DateTime, nullable=True
     )
+
     agreement_signed_by_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users_id"),
         nullable=True,
     )
-    agreement_signed_by = relationship("User", lazy="select")
+    # Specify the relationship with explicity primaryjoin
+    agreement_signed_by = relationship(
+        "User",
+        back_populates="organizations",
+        primary_join="Organization.agreement_signed_by_id == User.id",
+    )
     agreement_signed_on_behalf_of_name: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True,
