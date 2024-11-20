@@ -422,8 +422,8 @@ class Organization(Base):
     )
     request_to_go_live_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    domains: List["Domain"] = relationship("Domain", lazy="select")
-    email_branding: Optional["EmailBranding"] = relationship(
+    domains: Mapped[List["Domain"]] = relationship("Domain", lazy="select")
+    email_branding: Mapped[Optional["EmailBranding"]] = relationship(
         "EmailBranding", lazy="select"
     )
     email_branding_id: Mapped[Optional[UUID]] = mapped_column(
