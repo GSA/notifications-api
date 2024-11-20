@@ -436,7 +436,7 @@ class Organization(db.Model):
     email_branding: Mapped[Optional["EmailBranding"]] = relationship(
         "EmailBranding",
 
-        primaryjoin="Organization.email_branding_id == EmailBranding.id",
+        primaryjoin="Organization.email_branding_id == Email_Branding.id",
     )
     email_branding_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("emailbranding.id"), nullable=True
