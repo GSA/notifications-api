@@ -87,7 +87,7 @@ def test_get_user_doesnt_return_inactive_services_and_orgs(
     sample_user = sample_service.users[0]
     sample_user.organizations = [sample_organization]
 
-    with db.session.no_flush:
+    with db.session.no_autoflush:
         json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
         fetched = json_resp["data"]
@@ -114,7 +114,7 @@ def test_post_user(admin_request, notify_db_session):
         "permissions": {},
         "auth_type": AuthType.EMAIL,
     }
-    with db.session.no_flush:
+    with db.session.no_autoflush:
         json_resp = admin_request.post(
             "user.create_user", _data=data, _expected_status=201
         )
@@ -136,7 +136,7 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
         "permissions": {},
     }
 
-    with db.session.no_flush:
+    with db.session.no_autoflush:
         json_resp = admin_request.post(
             "user.create_user", _data=data, _expected_status=201
         )
@@ -160,7 +160,7 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
         "failed_login_count": 0,
         "permissions": {},
     }
-    with db.session.no_flush:
+    with db.session.no_autoflush:
         json_resp = admin_request.post(
             "user.create_user", _data=data, _expected_status=400
         )
