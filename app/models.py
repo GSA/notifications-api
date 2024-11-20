@@ -509,7 +509,7 @@ class Organization(db.Model):
             "notes": self.notes,
             "purchase_order_number": self.purchase_order_number,
             "billing_contact_names": self.billing_contact_names,
-            "billing_contact_email_addresses": self.billing_contact_email_addresses,
+            "billing_contact_email_address": self.billing_contact_email_address,
             "billing_reference": self.billing_reference,
         }
 
