@@ -125,7 +125,7 @@ class HistoryModel:
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String, nullable=False, index=True, unique=False)
     email_address = db.Column(db.String(255), nullable=False, index=True, unique=True)
     login_uuid = db.Column(db.Text, nullable=True, index=True, unique=True)
