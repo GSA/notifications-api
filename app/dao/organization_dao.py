@@ -132,9 +132,10 @@ def dao_add_user_to_organization(organization_id, user_id):
     organization = dao_get_organization_by_id(organization_id)
     stmt = select(User).filter_by(id=user_id)
     user = db.session.execute(stmt).scalars().one()
-    user.organizations.append(organization)
-    db.session.add(organization)
-    db.session.flush()
+    print(f"ORG TO ADD {organization} USER ORGS {user.organizations}")
+    if organization not in user.organizations:
+        user.organizations.append(organization)
+        db.session.add(organization)
     return user
 
 
