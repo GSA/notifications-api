@@ -850,13 +850,13 @@ def test_get_orgs_and_services_nests_services(admin_request, sample_user):
     service2 = create_service(service_name="service2")
     service3 = create_service(service_name="service3")
 
-    org1.services = [service1, service2]
-    org2.services = []
-
-    sample_user.organizations = [org1, org2]
-    sample_user.services = [service1, service2, service3]
-
     with db.session.no_autoflush:
+        org1.services = [service1, service2]
+        org2.services = []
+
+        sample_user.organizations = [org1, org2]
+        sample_user.services = [service1, service2, service3]
+
         resp = admin_request.get(
             "user.get_organizations_and_services_for_user", user_id=sample_user.id
         )
