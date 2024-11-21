@@ -788,6 +788,12 @@ def test_add_user_to_organization_returns_404_if_user_does_not_exist(
 
 def test_remove_user_from_organization(admin_request, sample_organization, sample_user):
     with db.session.no_autoflush:
+        admin_request.delete(
+            "organization.remove_user_from_organization",
+            organization_id=sample_organization.id,
+            user_id=sample_user.id,
+        )
+
         dao_add_user_to_organization(
             organization_id=sample_organization.id, user_id=sample_user.id
         )
