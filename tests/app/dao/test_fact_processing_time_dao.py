@@ -79,7 +79,6 @@ def test_get_processing_time_percentage_for_date_range_handles_zero_cases(
     )
 
     results = get_processing_time_percentage_for_date_range("2021-02-21", "2021-02-22")
-    print(f"HERE ARE THE RESULTS {results}")
     assert len(results) == 2
     assert results[0].date == "2021-02-21"
     assert results[0].messages_total == 0
