@@ -28,7 +28,7 @@ from app.enums import (
 )
 from app.models import (
     AnnualBilling,
-    EmailBranding,
+    Email_Branding,
     InboundNumber,
     Notification,
     Permission,
@@ -711,7 +711,7 @@ def test_create_service_should_throw_duplicate_key_constraint_for_existing_email
 
 
 def test_update_service(client, notify_db_session, sample_service):
-    brand = EmailBranding(
+    brand = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -726,7 +726,7 @@ def test_update_service(client, notify_db_session, sample_service):
         "email_from": "updated.service.name",
         "created_by": str(sample_service.created_by.id),
         "email_branding": str(brand.id),
-        "organization_type": OrganizationType.FEDERAL,
+        "organization_type": OrganizationType.federal,
     }
 
     auth_header = create_admin_authorization_header()
@@ -741,7 +741,7 @@ def test_update_service(client, notify_db_session, sample_service):
     assert result["data"]["name"] == "updated service name"
     assert result["data"]["email_from"] == "updated.service.name"
     assert result["data"]["email_branding"] == str(brand.id)
-    assert result["data"]["organization_type"] == OrganizationType.FEDERAL
+    assert result["data"]["organization_type"] == OrganizationType.federal
 
 
 def test_cant_update_service_org_type_to_random_value(client, sample_service):
@@ -765,7 +765,7 @@ def test_cant_update_service_org_type_to_random_value(client, sample_service):
 def test_update_service_remove_email_branding(
     admin_request, notify_db_session, sample_service
 ):
-    brand = EmailBranding(
+    brand = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
@@ -784,12 +784,12 @@ def test_update_service_remove_email_branding(
 def test_update_service_change_email_branding(
     admin_request, notify_db_session, sample_service
 ):
-    brand1 = EmailBranding(
+    brand1 = Email_Branding(
         colour="#000000",
         logo="justice-league.png",
         name="Justice League",
     )
-    brand2 = EmailBranding(colour="#111111", logo="avengers.png", name="Avengers")
+    brand2 = Email_Branding(colour="#111111", logo="avengers.png", name="Avengers")
     notify_db_session.add_all([brand1, brand2])
     sample_service.email_branding = brand1
     notify_db_session.commit()

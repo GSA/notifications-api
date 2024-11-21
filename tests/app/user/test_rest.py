@@ -55,24 +55,25 @@ def test_get_user(admin_request, sample_service, sample_organization):
     """
     sample_user = sample_service.users[0]
     sample_user.organizations = [sample_organization]
-    json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
+    with db.session.no_autoflush:
+        json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
-    expected_permissions = PermissionType.defaults()
-    fetched = json_resp["data"]
+        expected_permissions = PermissionType.defaults()
+        fetched = json_resp["data"]
 
-    assert fetched["id"] == str(sample_user.id)
-    assert fetched["name"] == sample_user.name
-    assert fetched["mobile_number"] == sample_user.mobile_number
-    assert fetched["email_address"] == sample_user.email_address
-    assert fetched["state"] == sample_user.state
-    assert fetched["auth_type"] == AuthType.SMS
-    assert fetched["permissions"].keys() == {str(sample_service.id)}
-    assert fetched["services"] == [str(sample_service.id)]
-    assert fetched["organizations"] == [str(sample_organization.id)]
-    assert fetched["can_use_webauthn"] is False
-    assert sorted(fetched["permissions"][str(sample_service.id)]) == sorted(
-        expected_permissions
-    )
+        assert fetched["id"] == str(sample_user.id)
+        assert fetched["name"] == sample_user.name
+        assert fetched["mobile_number"] == sample_user.mobile_number
+        assert fetched["email_address"] == sample_user.email_address
+        assert fetched["state"] == sample_user.state
+        assert fetched["auth_type"] == AuthType.SMS
+        assert fetched["permissions"].keys() == {str(sample_service.id)}
+        assert fetched["services"] == [str(sample_service.id)]
+        assert fetched["organizations"] == [str(sample_organization.id)]
+        assert fetched["can_use_webauthn"] is False
+        assert sorted(fetched["permissions"][str(sample_service.id)]) == sorted(
+            expected_permissions
+        )
 
 
 def test_get_user_doesnt_return_inactive_services_and_orgs(
@@ -87,14 +88,15 @@ def test_get_user_doesnt_return_inactive_services_and_orgs(
     sample_user = sample_service.users[0]
     sample_user.organizations = [sample_organization]
 
-    json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
+    with db.session.no_autoflush:
+        json_resp = admin_request.get("user.get_user", user_id=sample_user.id)
 
-    fetched = json_resp["data"]
+        fetched = json_resp["data"]
 
-    assert fetched["id"] == str(sample_user.id)
-    assert fetched["services"] == []
-    assert fetched["organizations"] == []
-    assert fetched["permissions"] == {}
+        assert fetched["id"] == str(sample_user.id)
+        assert fetched["services"] == []
+        assert fetched["organizations"] == []
+        assert fetched["permissions"] == {}
 
 
 def test_post_user(admin_request, notify_db_session):
@@ -113,13 +115,16 @@ def test_post_user(admin_request, notify_db_session):
         "permissions": {},
         "auth_type": AuthType.EMAIL,
     }
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
+    with db.session.no_autoflush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=201
+        )
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
-    assert user.check_password("password")
-    assert json_resp["data"]["email_address"] == user.email_address
-    assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == AuthType.EMAIL
+        user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+        assert user.check_password("password")
+        assert json_resp["data"]["email_address"] == user.email_address
+        assert json_resp["data"]["id"] == str(user.id)
+        assert user.auth_type == AuthType.EMAIL
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
@@ -132,11 +137,14 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
         "permissions": {},
     }
 
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
+    with db.session.no_autoflush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=201
+        )
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
-    assert json_resp["data"]["id"] == str(user.id)
-    assert user.auth_type == AuthType.SMS
+        user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+        assert json_resp["data"]["id"] == str(user.id)
+        assert user.auth_type == AuthType.SMS
 
 
 def test_post_user_missing_attribute_email(admin_request, notify_db_session):
@@ -153,12 +161,15 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
         "failed_login_count": 0,
         "permissions": {},
     }
-    json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
+    with db.session.no_autoflush:
+        json_resp = admin_request.post(
+            "user.create_user", _data=data, _expected_status=400
+        )
 
-    assert _get_user_count() == 0
-    assert {"email_address": ["Missing data for required field."]} == json_resp[
-        "message"
-    ]
+        assert _get_user_count() == 0
+        assert {"email_address": ["Missing data for required field."]} == json_resp[
+            "message"
+        ]
 
 
 def _get_user_count():
@@ -839,52 +850,53 @@ def test_get_orgs_and_services_nests_services(admin_request, sample_user):
     service2 = create_service(service_name="service2")
     service3 = create_service(service_name="service3")
 
-    org1.services = [service1, service2]
-    org2.services = []
+    with db.session.no_autoflush:
+        org1.services = [service1, service2]
+        org2.services = []
 
-    sample_user.organizations = [org1, org2]
-    sample_user.services = [service1, service2, service3]
+        sample_user.organizations = [org1, org2]
+        sample_user.services = [service1, service2, service3]
 
-    resp = admin_request.get(
-        "user.get_organizations_and_services_for_user", user_id=sample_user.id
-    )
+        resp = admin_request.get(
+            "user.get_organizations_and_services_for_user", user_id=sample_user.id
+        )
 
-    assert set(resp.keys()) == {
-        "organizations",
-        "services",
-    }
-    assert resp["organizations"] == [
-        {
-            "name": org1.name,
-            "id": str(org1.id),
-            "count_of_live_services": 2,
-        },
-        {
-            "name": org2.name,
-            "id": str(org2.id),
-            "count_of_live_services": 0,
-        },
-    ]
-    assert resp["services"] == [
-        {
-            "name": service1.name,
-            "id": str(service1.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        },
-        {
-            "name": service2.name,
-            "id": str(service2.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        },
-        {
-            "name": service3.name,
-            "id": str(service3.id),
-            "restricted": False,
-            "organization": None,
-        },
-    ]
+        assert set(resp.keys()) == {
+            "organizations",
+            "services",
+        }
+        assert resp["organizations"] == [
+            {
+                "name": org1.name,
+                "id": str(org1.id),
+                "count_of_live_services": 2,
+            },
+            {
+                "name": org2.name,
+                "id": str(org2.id),
+                "count_of_live_services": 0,
+            },
+        ]
+        assert resp["services"] == [
+            {
+                "name": service1.name,
+                "id": str(service1.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            },
+            {
+                "name": service2.name,
+                "id": str(service2.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            },
+            {
+                "name": service3.name,
+                "id": str(service3.id),
+                "restricted": False,
+                "organization": None,
+            },
+        ]
 
 
 def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
@@ -903,44 +915,45 @@ def test_get_orgs_and_services_only_returns_active(admin_request, sample_user):
     org1.services = [service1, service2]
     org2.services = [service3]
 
-    sample_user.organizations = [org1, org2]
-    sample_user.services = [service1, service2, service3, service4, service5]
+    with db.session.no_autoflush:
+        sample_user.organizations = [org1, org2]
+        sample_user.services = [service1, service2, service3, service4, service5]
 
-    resp = admin_request.get(
-        "user.get_organizations_and_services_for_user", user_id=sample_user.id
-    )
+        resp = admin_request.get(
+            "user.get_organizations_and_services_for_user", user_id=sample_user.id
+        )
 
-    assert set(resp.keys()) == {
-        "organizations",
-        "services",
-    }
-    assert resp["organizations"] == [
-        {
-            "name": org1.name,
-            "id": str(org1.id),
-            "count_of_live_services": 1,
+        assert set(resp.keys()) == {
+            "organizations",
+            "services",
         }
-    ]
-    assert resp["services"] == [
-        {
-            "name": service1.name,
-            "id": str(service1.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        },
-        {
-            "name": service3.name,
-            "id": str(service3.id),
-            "restricted": False,
-            "organization": str(org2.id),
-        },
-        {
-            "name": service4.name,
-            "id": str(service4.id),
-            "restricted": False,
-            "organization": None,
-        },
-    ]
+        assert resp["organizations"] == [
+            {
+                "name": org1.name,
+                "id": str(org1.id),
+                "count_of_live_services": 1,
+            }
+        ]
+        assert resp["services"] == [
+            {
+                "name": service1.name,
+                "id": str(service1.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            },
+            {
+                "name": service3.name,
+                "id": str(service3.id),
+                "restricted": False,
+                "organization": str(org2.id),
+            },
+            {
+                "name": service4.name,
+                "id": str(service4.id),
+                "restricted": False,
+                "organization": None,
+            },
+        ]
 
 
 def test_get_orgs_and_services_only_shows_users_orgs_and_services(
@@ -955,37 +968,38 @@ def test_get_orgs_and_services_only_shows_users_orgs_and_services(
 
     org1.services = [service1]
 
-    sample_user.organizations = [org2]
-    sample_user.services = [service1]
+    with db.session.no_autoflush:
+        sample_user.organizations = [org2]
+        sample_user.services = [service1]
 
-    other_user.organizations = [org1, org2]
-    other_user.services = [service1, service2]
+        other_user.organizations = [org1, org2]
+        other_user.services = [service1, service2]
 
-    resp = admin_request.get(
-        "user.get_organizations_and_services_for_user", user_id=sample_user.id
-    )
+        resp = admin_request.get(
+            "user.get_organizations_and_services_for_user", user_id=sample_user.id
+        )
 
-    assert set(resp.keys()) == {
-        "organizations",
-        "services",
-    }
-    assert resp["organizations"] == [
-        {
-            "name": org2.name,
-            "id": str(org2.id),
-            "count_of_live_services": 0,
+        assert set(resp.keys()) == {
+            "organizations",
+            "services",
         }
-    ]
-    # 'services' always returns the org_id no matter whether the user
-    # belongs to that org or not
-    assert resp["services"] == [
-        {
-            "name": service1.name,
-            "id": str(service1.id),
-            "restricted": False,
-            "organization": str(org1.id),
-        }
-    ]
+        assert resp["organizations"] == [
+            {
+                "name": org2.name,
+                "id": str(org2.id),
+                "count_of_live_services": 0,
+            }
+        ]
+        # 'services' always returns the org_id no matter whether the user
+        # belongs to that org or not
+        assert resp["services"] == [
+            {
+                "name": service1.name,
+                "id": str(service1.id),
+                "restricted": False,
+                "organization": str(org1.id),
+            }
+        ]
 
 
 def test_find_users_by_email_finds_user_by_partial_email(

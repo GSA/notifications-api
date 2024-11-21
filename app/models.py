@@ -1,12 +1,31 @@
 import itertools
 import uuid
+from typing import List, Optional
 
 from flask import current_app, url_for
-from sqlalchemy import CheckConstraint, Index, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    mapped_column,
+    relationship,
+    validates,
+)
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app import db, encryption
@@ -106,7 +125,9 @@ class HistoryModel:
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     name = db.Column(db.String, nullable=False, index=True, unique=False)
     email_address = db.Column(db.String(255), nullable=False, index=True, unique=True)
     login_uuid = db.Column(db.Text, nullable=True, index=True, unique=True)
@@ -160,10 +181,8 @@ class User(db.Model):
     )
 
     services = db.relationship("Service", secondary="user_to_service", backref="users")
-    organizations = db.relationship(
-        "Organization",
-        secondary="user_to_organization",
-        backref="users",
+    organizations: Mapped[List["Organization"]] = relationship(
+        "Organization", secondary="user_to_organization", backref="users", lazy="select"
     )
 
     @validates("mobile_number")
@@ -300,9 +319,11 @@ user_folder_permissions = db.Table(
 )
 
 
-class EmailBranding(db.Model):
+class Email_Branding(db.Model):
     __tablename__ = "email_branding"
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     colour = db.Column(db.String(7), nullable=True)
     logo = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
@@ -358,56 +379,81 @@ class Domain(db.Model):
     )
 
 
+Base = declarative_base()
+
+
 class Organization(db.Model):
+
+    # TODO When everything in this file is upgraded to 2.0 syntax,
+    # replace all uses of db.Model with Base
+    # class Organization(Base):
     __tablename__ = "organization"
-    id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=False
+
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    active = db.Column(db.Boolean, nullable=False, default=True)
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=utc_now(),
+    name: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
     )
-    updated_at = db.Column(
-        db.DateTime,
-        nullable=True,
-        onupdate=utc_now(),
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime, nullable=False, default=func.now()
     )
-    agreement_signed = db.Column(db.Boolean, nullable=True)
-    agreement_signed_at = db.Column(db.DateTime, nullable=True)
-    agreement_signed_by_id = db.Column(
+    updated_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime, nullable=True, onupdate=func.now()
+    )
+    agreement_signed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    agreement_signed_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime, nullable=True
+    )
+
+    agreement_signed_by_id: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True),
-        db.ForeignKey("users.id"),
+        ForeignKey("users.id"),
         nullable=True,
     )
-    agreement_signed_by = db.relationship("User")
-    agreement_signed_on_behalf_of_name = db.Column(db.String(255), nullable=True)
-    agreement_signed_on_behalf_of_email_address = db.Column(
-        db.String(255), nullable=True
+    # Specify the relationship with explicity primaryjoin
+    agreement_signed_by = relationship(
+        "User",
+        back_populates="organizations",
+        primaryjoin="Organization.agreement_signed_by_id == User.id",
     )
-    agreement_signed_version = db.Column(db.Float, nullable=True)
-    organization_type = enum_column(OrganizationType, unique=False, nullable=True)
-    request_to_go_live_notes = db.Column(db.Text)
-
-    domains = db.relationship("Domain")
-
-    email_branding = db.relationship("EmailBranding")
-    email_branding_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("email_branding.id"),
+    agreement_signed_on_behalf_of_name: Mapped[Optional[str]] = mapped_column(
+        String(255),
         nullable=True,
     )
+    agreement_signed_on_behalf_of_email_address: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    agreement_signed_version: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
+    organization_type: Mapped[Optional[OrganizationType]] = mapped_column(
+        Enum(OrganizationType, name="organization_type_enum"), nullable=True
+    )
+    request_to_go_live_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    notes = db.Column(db.Text, nullable=True)
-    purchase_order_number = db.Column(db.String(255), nullable=True)
-    billing_contact_names = db.Column(db.Text, nullable=True)
-    billing_contact_email_addresses = db.Column(db.Text, nullable=True)
-    billing_reference = db.Column(db.String(255), nullable=True)
+    domains: Mapped[List["Domain"]] = relationship("Domain", lazy="select")
+    email_branding: Mapped[Optional["Email_Branding"]] = relationship(
+        "Email_Branding",
+        primaryjoin="Organization.email_branding_id == Email_Branding.id",
+    )
+    email_branding_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("email_branding.id"), nullable=True
+    )
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    purchase_order_number: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    billing_contact_names: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    billing_contact_email_addresses: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )
+    billing_reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     @property
-    def live_services(self):
+    def live_services(self) -> List["Service"]:
         return [
             service
             for service in self.services
@@ -415,11 +461,11 @@ class Organization(db.Model):
         ]
 
     @property
-    def domain_list(self):
+    def domain_list(self) -> List[str]:
         return [domain.domain for domain in self.domains]
 
     @property
-    def agreement(self):
+    def agreement(self) -> Optional["Agreement"]:
         try:
             active_agreements = [
                 agreement
@@ -431,20 +477,20 @@ class Organization(db.Model):
             return None
 
     @property
-    def agreement_active(self):
+    def agreement_active(self) -> bool:
         try:
             return self.agreement.status == AgreementStatus.ACTIVE
         except AttributeError:
             return False
 
     @property
-    def has_mou(self):
+    def has_mou(self) -> bool:
         try:
             return self.agreement.type == AgreementType.MOU
         except AttributeError:
             return False
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {
             "id": str(self.id),
             "name": self.name,
@@ -467,7 +513,7 @@ class Organization(db.Model):
             "billing_reference": self.billing_reference,
         }
 
-    def serialize_for_list(self):
+    def serialize_for_list(self) -> dict:
         return {
             "name": self.name,
             "id": str(self.id),
@@ -551,7 +597,7 @@ class Service(db.Model, Versioned):
     billing_reference = db.Column(db.String(255), nullable=True)
 
     email_branding = db.relationship(
-        "EmailBranding",
+        "Email_Branding",
         secondary=service_email_branding,
         uselist=False,
         backref=db.backref("services", lazy="dynamic"),

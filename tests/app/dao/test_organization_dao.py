@@ -65,7 +65,7 @@ def test_update_organization(notify_db_session):
 
     data = {
         "name": "new name",
-        "organization_type": OrganizationType.STATE,
+        "organization_type": OrganizationType.state,
         "agreement_signed": True,
         "agreement_signed_at": utc_now(),
         "agreement_signed_by_id": user.id,
@@ -144,8 +144,8 @@ def test_update_organization_does_not_update_the_service_if_certain_attributes_n
 ):
     email_branding = create_email_branding()
 
-    sample_service.organization_type = OrganizationType.STATE
-    sample_organization.organization_type = OrganizationType.FEDERAL
+    sample_service.organization_type = OrganizationType.state
+    sample_organization.organization_type = OrganizationType.federal
     sample_organization.email_branding = email_branding
 
     sample_organization.services.append(sample_service)
@@ -157,8 +157,8 @@ def test_update_organization_does_not_update_the_service_if_certain_attributes_n
 
     assert sample_organization.name == "updated org name"
 
-    assert sample_organization.organization_type == OrganizationType.FEDERAL
-    assert sample_service.organization_type == OrganizationType.STATE
+    assert sample_organization.organization_type == OrganizationType.federal
+    assert sample_service.organization_type == OrganizationType.state
 
     assert sample_organization.email_branding == email_branding
     assert sample_service.email_branding is None
@@ -168,24 +168,24 @@ def test_update_organization_updates_the_service_org_type_if_org_type_is_provide
     sample_service,
     sample_organization,
 ):
-    sample_service.organization_type = OrganizationType.STATE
-    sample_organization.organization_type = OrganizationType.STATE
+    sample_service.organization_type = OrganizationType.state
+    sample_organization.organization_type = OrganizationType.state
 
     sample_organization.services.append(sample_service)
     db.session.commit()
 
     dao_update_organization(
-        sample_organization.id, organization_type=OrganizationType.FEDERAL
+        sample_organization.id, organization_type=OrganizationType.federal
     )
 
-    assert sample_organization.organization_type == OrganizationType.FEDERAL
-    assert sample_service.organization_type == OrganizationType.FEDERAL
+    assert sample_organization.organization_type == OrganizationType.federal
+    assert sample_service.organization_type == OrganizationType.federal
     stmt = select(Service.get_history_model()).filter_by(
         id=sample_service.id, version=2
     )
     assert (
         db.session.execute(stmt).scalars().one().organization_type
-        == OrganizationType.FEDERAL
+        == OrganizationType.federal
     )
 
 
@@ -225,8 +225,8 @@ def test_update_organization_does_not_override_service_branding(
 def test_add_service_to_organization(sample_service, sample_organization):
     assert sample_organization.services == []
 
-    sample_service.organization_type = OrganizationType.FEDERAL
-    sample_organization.organization_type = OrganizationType.STATE
+    sample_service.organization_type = OrganizationType.federal
+    sample_organization.organization_type = OrganizationType.state
 
     dao_add_service_to_organization(sample_service, sample_organization.id)
 

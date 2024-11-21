@@ -281,7 +281,7 @@ def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir)
 
 @pytest.mark.parametrize(
     "organization_type, expected_allowance",
-    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
+    [(OrganizationType.federal, 40000), (OrganizationType.state, 40000)],
 )
 def test_populate_annual_billing_with_defaults(
     notify_db_session, notify_api, organization_type, expected_allowance
@@ -307,7 +307,7 @@ def test_populate_annual_billing_with_defaults(
 
 @pytest.mark.parametrize(
     "organization_type, expected_allowance",
-    [(OrganizationType.FEDERAL, 40000), (OrganizationType.STATE, 40000)],
+    [(OrganizationType.federal, 40000), (OrganizationType.state, 40000)],
 )
 def test_populate_annual_billing_with_the_previous_years_allowance(
     notify_db_session, notify_api, organization_type, expected_allowance
@@ -364,7 +364,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_previous_year_is_zero(
     notify_db_session, notify_api
 ):
-    service = create_service(organization_type=OrganizationType.FEDERAL)
+    service = create_service(organization_type=OrganizationType.federal)
     create_annual_billing(
         service_id=service.id, free_sms_fragment_limit=0, financial_year_start=2021
     )

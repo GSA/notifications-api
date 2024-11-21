@@ -121,7 +121,7 @@ def test_create_service(notify_db_session):
         email_from="email_from",
         message_limit=1000,
         restricted=False,
-        organization_type=OrganizationType.FEDERAL,
+        organization_type=OrganizationType.federal,
         created_by=user,
     )
     dao_create_service(service, user)
@@ -133,7 +133,7 @@ def test_create_service(notify_db_session):
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
-    assert service_db.organization_type == OrganizationType.FEDERAL
+    assert service_db.organization_type == OrganizationType.federal
     assert not service.organization_id
 
 
@@ -141,7 +141,7 @@ def test_create_service_with_organization(notify_db_session):
     user = create_user(email="local.authority@local-authority.gov.uk")
     organization = create_organization(
         name="Some local authority",
-        organization_type=OrganizationType.STATE,
+        organization_type=OrganizationType.state,
         domains=["local-authority.gov.uk"],
     )
     assert _get_service_query_count() == 0
@@ -150,7 +150,7 @@ def test_create_service_with_organization(notify_db_session):
         email_from="email_from",
         message_limit=1000,
         restricted=False,
-        organization_type=OrganizationType.FEDERAL,
+        organization_type=OrganizationType.federal,
         created_by=user,
     )
     dao_create_service(service, user)
@@ -163,7 +163,7 @@ def test_create_service_with_organization(notify_db_session):
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
-    assert service_db.organization_type == OrganizationType.STATE
+    assert service_db.organization_type == OrganizationType.state
     assert service.organization_id == organization.id
     assert service.organization == organization
 
@@ -172,7 +172,7 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
     user = create_user(email="local.authority@local-authority.gov.uk")
     organization = create_organization(
         name="Some local authority",
-        organization_type=OrganizationType.STATE,
+        organization_type=OrganizationType.state,
         domains=["local-authority.gov.uk"],
     )
     assert _get_service_query_count() == 0
@@ -181,7 +181,7 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
         email_from="email_from",
         message_limit=1000,
         restricted=False,
-        organization_type=OrganizationType.FEDERAL,
+        organization_type=OrganizationType.federal,
         created_by=user,
     )
     dao_create_service(service, user)
@@ -194,7 +194,7 @@ def test_fetch_service_by_id_with_api_keys(notify_db_session):
     assert service_db.prefix_sms is True
     assert service.active is True
     assert user in service_db.users
-    assert service_db.organization_type == OrganizationType.STATE
+    assert service_db.organization_type == OrganizationType.state
     assert service.organization_id == organization.id
     assert service.organization == organization
 
@@ -530,7 +530,7 @@ def test_get_all_user_services_should_return_empty_list_if_no_services_for_user(
 
 @freeze_time("2019-04-23T10:00:00")
 def test_dao_fetch_live_services_data(sample_user):
-    org = create_organization(organization_type=OrganizationType.FEDERAL)
+    org = create_organization(organization_type=OrganizationType.federal)
     service = create_service(go_live_user=sample_user, go_live_at="2014-04-20T10:00:00")
     sms_template = create_template(service=service)
     service_2 = create_service(
@@ -569,7 +569,7 @@ def test_dao_fetch_live_services_data(sample_user):
             "service_id": mock.ANY,
             "service_name": "Sample service",
             "organization_name": "test_org_1",
-            "organization_type": OrganizationType.FEDERAL,
+            "organization_type": OrganizationType.federal,
             "consent_to_research": None,
             "contact_name": "Test User",
             "contact_email": "notify@digital.fake.gov",

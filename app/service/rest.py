@@ -79,7 +79,7 @@ from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.enums import KeyType
 from app.errors import InvalidRequest, register_errors
-from app.models import EmailBranding, Permission, Service
+from app.models import Email_Branding, Permission, Service
 from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
@@ -312,7 +312,7 @@ def update_service(service_id):
         service.email_branding = (
             None
             if not email_branding_id
-            else EmailBranding.query.get(email_branding_id)
+            else Email_Branding.query.get(email_branding_id)
         )
     dao_update_service(service)
 

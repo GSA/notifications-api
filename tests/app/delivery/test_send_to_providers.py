@@ -19,7 +19,7 @@ from app.delivery.send_to_providers import (
 )
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
-from app.models import EmailBranding, Notification
+from app.models import Email_Branding, Notification
 from app.serialised_models import SerialisedService
 from app.utils import utc_now
 from tests.app.db import (
@@ -466,7 +466,7 @@ def test_get_html_email_renderer_should_return_for_normal_service(sample_service
 def test_get_html_email_renderer_with_branding_details(
     branding_type, govuk_banner, notify_db_session, sample_service
 ):
-    email_branding = EmailBranding(
+    email_branding = Email_Branding(
         brand_type=branding_type,
         colour="#000000",
         logo="justice-league.png",
@@ -504,12 +504,12 @@ def test_get_html_email_renderer_with_branding_details_and_render_govuk_banner_o
 
 def test_get_html_email_renderer_prepends_logo_path(notify_api):
     Service = namedtuple("Service", ["email_branding"])
-    EmailBranding = namedtuple(
-        "EmailBranding",
+    Email_Branding = namedtuple(
+        "Email_Branding",
         ["brand_type", "colour", "name", "logo", "text"],
     )
 
-    email_branding = EmailBranding(
+    email_branding = Email_Branding(
         brand_type=BrandType.ORG,
         colour="#000000",
         logo="justice-league.png",
@@ -529,12 +529,12 @@ def test_get_html_email_renderer_prepends_logo_path(notify_api):
 
 def test_get_html_email_renderer_handles_email_branding_without_logo(notify_api):
     Service = namedtuple("Service", ["email_branding"])
-    EmailBranding = namedtuple(
-        "EmailBranding",
+    Email_Branding = namedtuple(
+        "Email_Branding",
         ["brand_type", "colour", "name", "logo", "text"],
     )
 
-    email_branding = EmailBranding(
+    email_branding = Email_Branding(
         brand_type=BrandType.ORG_BANNER,
         colour="#000000",
         logo=None,

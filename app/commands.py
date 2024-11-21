@@ -49,7 +49,7 @@ from app.enums import AuthType, KeyType, NotificationStatus, NotificationType
 from app.models import (
     AnnualBilling,
     Domain,
-    EmailBranding,
+    Email_Branding,
     Notification,
     Organization,
     Service,
@@ -338,8 +338,8 @@ def populate_organizations_from_file(file_name):
             email_branding = None
             email_branding_column = columns[5].strip()
             if len(email_branding_column) > 0:
-                stmt = select(EmailBranding).where(
-                    EmailBranding.name == email_branding_column
+                stmt = select(Email_Branding).where(
+                    Email_Branding.name == email_branding_column
                 )
                 email_branding = db.session.execute(stmt).scalars().one()
             data = {

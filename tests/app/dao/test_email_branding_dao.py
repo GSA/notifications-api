@@ -3,7 +3,7 @@ from app.dao.email_branding_dao import (
     dao_get_email_branding_by_name,
     dao_update_email_branding,
 )
-from app.models import EmailBranding
+from app.models import Email_Branding
 from tests.app.db import create_email_branding
 
 
@@ -27,14 +27,14 @@ def test_update_email_branding(notify_db_session):
     updated_name = "new name"
     create_email_branding()
 
-    email_branding = EmailBranding.query.all()
+    email_branding = Email_Branding.query.all()
 
     assert len(email_branding) == 1
     assert email_branding[0].name != updated_name
 
     dao_update_email_branding(email_branding[0], name=updated_name)
 
-    email_branding = EmailBranding.query.all()
+    email_branding = Email_Branding.query.all()
 
     assert len(email_branding) == 1
     assert email_branding[0].name == updated_name
@@ -42,5 +42,5 @@ def test_update_email_branding(notify_db_session):
 
 def test_email_branding_has_no_domain(notify_db_session):
     create_email_branding()
-    email_branding = EmailBranding.query.all()
+    email_branding = Email_Branding.query.all()
     assert not hasattr(email_branding, "domain")
