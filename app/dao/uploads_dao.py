@@ -52,7 +52,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
     if limit_days is not None:
         jobs_query_filter.append(Job.created_at >= midnight_n_days_ago(limit_days))
 
-    jobs_querie = (
+    jobs_stmt = (
         select(
             Job.id,
             Job.original_file_name,
@@ -95,7 +95,7 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
             Notification.created_at >= midnight_n_days_ago(limit_days)
         )
 
-    letters_subquerie = (
+    letters_substmt = (
         select(
             func.count().label("notification_count"),
             _naive_gmt_to_utc(_get_printing_datetime(Notification.created_at)).label(
@@ -117,28 +117,28 @@ def dao_get_uploads_by_service_id(service_id, limit_days=None, page=1, page_size
         .subquery()
     )
 
-    letters_querie = (
+    letters_stmt = (
         select(
             literal(None).label("id"),
             literal("Uploaded letters").label("original_file_name"),
-            letters_subquerie.c.notification_count.label("notification_count"),
+            letters_substmt.c.notification_count.label("notification_count"),
             literal("letter").label("template_type"),
             literal(None).label("days_of_retention"),
-            letters_subquerie.c.printing_at.label("created_at"),
+            letters_substmt.c.printing_at.label("created_at"),
             literal(None).label("scheduled_for"),
-            letters_subquerie.c.printing_at.label("processing_started"),
+            letters_substmt.c.printing_at.label("processing_started"),
             literal(None).label("status"),
             literal("letter_day").label("upload_type"),
             literal(None).label("recipient"),
         )
         .select_from(Notification)
         .group_by(
-            letters_subquerie.c.notification_count,
-            letters_subquerie.c.printing_at,
+            letters_substmt.c.notification_count,
+            letters_substmt.c.printing_at,
         )
     )
 
-    stmt = union(jobs_querie, letters_querie).order_by(
+    stmt = union(jobs_stmt, letters_stmt).order_by(
         desc("processing_started"), desc("created_at")
     )
 

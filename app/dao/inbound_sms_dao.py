@@ -84,7 +84,7 @@ def dao_count_inbound_sms_for_service(service_id, limit_days):
 def _insert_inbound_sms_history(subquery, query_limit=10000):
     offset = 0
     subquery_select = select(subquery)
-    inbound_sms_querie = select(
+    inbound_sms_stmt = select(
         InboundSms.id,
         InboundSms.created_at,
         InboundSms.service_id,
@@ -94,13 +94,13 @@ def _insert_inbound_sms_history(subquery, query_limit=10000):
         InboundSms.provider,
     ).where(InboundSms.id.in_(subquery_select))
 
-    count_query = select(func.count()).select_from(inbound_sms_querie.subquery())
+    count_query = select(func.count()).select_from(inbound_sms_stmt.subquery())
     inbound_sms_count = db.session.execute(count_query).scalar() or 0
 
     while offset < inbound_sms_count:
         statement = insert(InboundSmsHistory).from_select(
             InboundSmsHistory.__table__.c,
-            inbound_sms_querie.limit(query_limit).offset(offset),
+            inbound_sms_stmt.limit(query_limit).offset(offset),
         )
 
         statement = statement.on_conflict_do_nothing(

@@ -194,11 +194,11 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    querie = select(Notification).filter_by(service_id=service_id, job_id=job_id)
-    querie = _filter_query(querie, filter_dict)
-    querie = querie.order_by(asc(Notification.job_row_number))
+    stmt = select(Notification).filter_by(service_id=service_id, job_id=job_id)
+    stmt = _filter_query(stmt, filter_dict)
+    stmt = stmt.order_by(asc(Notification.job_row_number))
 
-    results = db.session.execute(querie).scalars().all()
+    results = db.session.execute(stmt).scalars().all()
 
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
@@ -298,22 +298,22 @@ def get_notifications_for_service(
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
 
-    querie = select(Notification).where(*filters)
-    querie = _filter_query(querie, filter_dict)
+    stmt = select(Notification).where(*filters)
+    stmt = _filter_query(stmt, filter_dict)
     if personalisation:
-        querie = querie.options(joinedload(Notification.template))
+        stmt = stmt.options(joinedload(Notification.template))
 
-    querie = querie.order_by(desc(Notification.created_at))
-    results = db.session.execute(querie).scalars().all()
+    stmt = stmt.order_by(desc(Notification.created_at))
+    results = db.session.execute(stmt).scalars().all()
     offset = (page - 1) * page_size
     paginated_results = results[offset : offset + page_size]
     pagination = Pagination(paginated_results, page, page_size, len(results))
     return pagination
 
 
-def _filter_query(querie, filter_dict=None):
+def _filter_query(stmt, filter_dict=None):
     if filter_dict is None:
-        return querie
+        return stmt
 
     multidict = MultiDict(filter_dict)
 
@@ -321,14 +321,14 @@ def _filter_query(querie, filter_dict=None):
     statuses = multidict.getlist("status")
 
     if statuses:
-        querie = querie.where(Notification.status.in_(statuses))
+        stmt = stmt.where(Notification.status.in_(statuses))
 
     # filter by template
     template_types = multidict.getlist("template_type")
     if template_types:
-        querie = querie.where(Notification.notification_type.in_(template_types))
+        stmt = stmt.where(Notification.notification_type.in_(template_types))
 
-    return querie
+    return stmt
 
 
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
