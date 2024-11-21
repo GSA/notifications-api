@@ -968,13 +968,13 @@ def test_get_orgs_and_services_only_shows_users_orgs_and_services(
 
     org1.services = [service1]
 
-    sample_user.organizations = [org2]
-    sample_user.services = [service1]
-
-    other_user.organizations = [org1, org2]
-    other_user.services = [service1, service2]
-
     with db.session.no_autoflush:
+        sample_user.organizations = [org2]
+        sample_user.services = [service1]
+
+        other_user.organizations = [org1, org2]
+        other_user.services = [service1, service2]
+
         resp = admin_request.get(
             "user.get_organizations_and_services_for_user", user_id=sample_user.id
         )
