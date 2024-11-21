@@ -762,16 +762,17 @@ def test_rest_get_organization_services_inactive_services_at_end(
 def test_add_user_to_organization_returns_added_user(
     admin_request, sample_organization, sample_user
 ):
-    response = admin_request.post(
-        "organization.add_user_to_organization",
-        organization_id=str(sample_organization.id),
-        user_id=str(sample_user.id),
-        _expected_status=200,
-    )
+    with db.session.no_autoflush:
+        response = admin_request.post(
+            "organization.add_user_to_organization",
+            organization_id=str(sample_organization.id),
+            user_id=str(sample_user.id),
+            _expected_status=200,
+        )
 
-    assert response["data"]["id"] == str(sample_user.id)
-    assert len(response["data"]["organizations"]) == 1
-    assert response["data"]["organizations"][0] == str(sample_organization.id)
+        assert response["data"]["id"] == str(sample_user.id)
+        assert len(response["data"]["organizations"]) == 1
+        assert response["data"]["organizations"][0] == str(sample_organization.id)
 
 
 def test_add_user_to_organization_returns_404_if_user_does_not_exist(
@@ -786,17 +787,18 @@ def test_add_user_to_organization_returns_404_if_user_does_not_exist(
 
 
 def test_remove_user_from_organization(admin_request, sample_organization, sample_user):
-    dao_add_user_to_organization(
-        organization_id=sample_organization.id, user_id=sample_user.id
-    )
+    with db.session.no_autoflush:
+        dao_add_user_to_organization(
+            organization_id=sample_organization.id, user_id=sample_user.id
+        )
 
-    admin_request.delete(
-        "organization.remove_user_from_organization",
-        organization_id=sample_organization.id,
-        user_id=sample_user.id,
-    )
+        admin_request.delete(
+            "organization.remove_user_from_organization",
+            organization_id=sample_organization.id,
+            user_id=sample_user.id,
+        )
 
-    assert sample_organization.users == []
+        assert sample_organization.users == []
 
 
 def test_remove_user_from_organization_when_user_is_not_an_org_member(
@@ -815,23 +817,24 @@ def test_remove_user_from_organization_when_user_is_not_an_org_member(
 def test_get_organization_users_returns_users_for_organization(
     admin_request, sample_organization
 ):
-    first = create_user(email="first@invited.com")
-    second = create_user(email="another@invited.com")
-    dao_add_user_to_organization(
-        organization_id=sample_organization.id, user_id=first.id
-    )
-    dao_add_user_to_organization(
-        organization_id=sample_organization.id, user_id=second.id
-    )
+    with db.session.no_autoflush:
+        first = create_user(email="first@invited.com")
+        second = create_user(email="another@invited.com")
+        dao_add_user_to_organization(
+            organization_id=sample_organization.id, user_id=first.id
+        )
+        dao_add_user_to_organization(
+            organization_id=sample_organization.id, user_id=second.id
+        )
 
-    response = admin_request.get(
-        "organization.get_organization_users",
-        organization_id=sample_organization.id,
-        _expected_status=200,
-    )
+        response = admin_request.get(
+            "organization.get_organization_users",
+            organization_id=sample_organization.id,
+            _expected_status=200,
+        )
 
-    assert len(response["data"]) == 2
-    assert response["data"][0]["id"] == str(first.id)
+        assert len(response["data"]) == 2
+        assert response["data"][0]["id"] == str(first.id)
 
 
 @freeze_time("2019-12-24 13:30")
