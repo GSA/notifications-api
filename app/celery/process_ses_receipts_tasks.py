@@ -29,7 +29,7 @@ from app.utils import utc_now
     name="process-ses-result",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=Exception,
+    autoretry_for=(Exception,),
 )
 def process_ses_results(self, response):
     try:
