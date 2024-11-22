@@ -12,7 +12,7 @@ from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
-from app.dao.notifications_dao import dao_get_last_notification_added_for_job_id
+from app.dao.notifications_dao import dao_get_last_notification_added_for_job_id, get_notification_by_id
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
@@ -219,7 +219,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             )
         )
         current_app.logger.debug(
-            "SMS {} failed as restricted service".format(notification_id)
+            f"SMS {notification_id} failed as restricted service"
         )
         return
 
@@ -259,20 +259,17 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         )
 
         current_app.logger.debug(
-            "SMS {} created at {} for job {}".format(
-                saved_notification.id,
-                saved_notification.created_at,
-                notification.get("job", None),
-            )
+            f"SMS {saved_notification.id} created at {saved_notification.created_at} for job {notification.get('job', None)}"
         )
 
     except SQLAlchemyError:
-        retry_msg = (
-            f"{self.__name__} notification for job {notification.get("job", None)} "
-        )
-        f"row number {notification.get("row_number", None)} and notification id {notification_id}"
-        current_app.logger.exception(retry_msg)
-        raise
+        if not get_notification_by_id(notification_id):
+            retry_msg = (
+                f"{self.__name__} notification for job {notification.get("job", None)} "
+            )
+            f"row number {notification.get("row_number", None)} and notification id {notification_id}"
+            current_app.logger.exception(retry_msg)
+            raise
 
 
 @_save_task_hander
@@ -297,9 +294,7 @@ def save_email(
         reply_to_text = template.reply_to_text
 
     if not service_allowed_to_send_to(notification["to"], service, KeyType.NORMAL):
-        current_app.logger.info(
-            "Email {} failed as restricted service".format(notification_id)
-        )
+        current_app.logger.info(f"Email {notification_id} failed as restricted service")
         return
 
     try:
@@ -324,17 +319,16 @@ def save_email(
         )
 
         current_app.logger.debug(
-            "Email {} created at {}".format(
-                saved_notification.id, saved_notification.created_at
-            )
+            f"Email {saved_notification.id} created at {saved_notification.created_at}"
         )
     except SQLAlchemyError:
-        retry_msg = (
-            f"{self.__name__} notification for job {notification.get("job", None)} "
-            f"row number {notification.get("row_number", None)} and notification id {notification_id}"
-        )
-        current_app.logger.exception(retry_msg)
-        raise
+        if not get_notification_by_id(notification_id):
+            retry_msg = (
+                f"{self.__name__} notification for job {notification.get("job", None)} "
+                f"row number {notification.get("row_number", None)} and notification id {notification_id}"
+            )
+            current_app.logger.exception(retry_msg)
+            raise
 
 
 def _save_api_task_handler(func):
