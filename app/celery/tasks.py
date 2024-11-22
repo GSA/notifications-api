@@ -12,7 +12,10 @@ from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
-from app.dao.notifications_dao import dao_get_last_notification_added_for_job_id, get_notification_by_id
+from app.dao.notifications_dao import (
+    dao_get_last_notification_added_for_job_id,
+    get_notification_by_id,
+)
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
@@ -190,7 +193,13 @@ def _save_task_hander(func):
 
 
 @_save_task_hander
-@notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
+@notify_celery.task(
+    bind=True,
+    name="save-sms",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=SQLAlchemyError,
+)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
     notification = encryption.decrypt(encrypted_notification)
@@ -218,9 +227,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
                 f"service not allowed to send for job_id {notification.get('job', None)}, aborting"
             )
         )
-        current_app.logger.debug(
-            f"SMS {notification_id} failed as restricted service"
-        )
+        current_app.logger.debug(f"SMS {notification_id} failed as restricted service")
         return
 
     try:
@@ -259,7 +266,8 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         )
 
         current_app.logger.debug(
-            f"SMS {saved_notification.id} created at {saved_notification.created_at} for job {notification.get('job', None)}"
+            f"SMS {saved_notification.id} created at {saved_notification.created_at} for job "
+            f"{notification.get('job', None)}"
         )
 
     except SQLAlchemyError:
@@ -274,7 +282,11 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
 
 @_save_task_hander
 @notify_celery.task(
-    bind=True, name="save-email", max_retries=5, default_retry_delay=300
+    bind=True,
+    name="save-email",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=SQLAlchemyError,
 )
 def save_email(
     self, service_id, notification_id, encrypted_notification, sender_id=None

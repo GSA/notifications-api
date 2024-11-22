@@ -53,7 +53,11 @@ def _send_to_service_task_handler(func):
 
 @_send_to_service_task_handler
 @notify_celery.task(
-    bind=True, name="send-delivery-status", max_retries=5, default_retry_delay=300
+    bind=True,
+    name="send-delivery-status",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=HTTPError,
 )
 def send_delivery_status_to_service(self, notification_id, encrypted_status_update):
     status_update = encryption.decrypt(encrypted_status_update)
@@ -82,7 +86,11 @@ def send_delivery_status_to_service(self, notification_id, encrypted_status_upda
 
 @_send_to_service_task_handler
 @notify_celery.task(
-    bind=True, name="send-complaint", max_retries=5, default_retry_delay=300
+    bind=True,
+    name="send-complaint",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=HTTPError,
 )
 def send_complaint_to_service(self, complaint_data):
     complaint = encryption.decrypt(complaint_data)
