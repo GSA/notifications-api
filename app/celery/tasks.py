@@ -365,7 +365,11 @@ def _save_api_task_handler(func):
 
 @_save_api_task_handler
 @notify_celery.task(
-    bind=True, name="save-api-email", max_retries=5, default_retry_delay=300, autoretry_for=SQLAlchemyError,
+    bind=True,
+    name="save-api-email",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=SQLAlchemyError,
 )
 def save_api_email(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
@@ -373,7 +377,11 @@ def save_api_email(self, encrypted_notification):
 
 @_save_api_task_handler
 @notify_celery.task(
-    bind=True, name="save-api-sms", max_retries=5, default_retry_delay=300, autoretry_for=SQLAlchemyError,
+    bind=True,
+    name="save-api-sms",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=SQLAlchemyError,
 )
 def save_api_sms(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
@@ -441,7 +449,11 @@ def _send_inbound_sms_to_service_handler(func):
 
 @_send_inbound_sms_to_service_handler
 @notify_celery.task(
-    bind=True, name="send-inbound-sms", max_retries=5, default_retry_delay=300, autoretry_for=RequestException,
+    bind=True,
+    name="send-inbound-sms",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=RequestException,
 )
 def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
     inbound_api = get_service_inbound_api_for_service(service_id=service_id)
