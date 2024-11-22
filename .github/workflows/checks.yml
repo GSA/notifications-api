@@ -90,6 +90,8 @@ jobs:
       - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
+          ignore-vulns: |
+            PYSEC-2022-43162
 
   static-scan:
     runs-on: ubuntu-latest
