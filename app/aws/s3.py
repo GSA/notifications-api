@@ -23,7 +23,7 @@ s3_resource = None
 
 
 def set_job_cache(key, value):
-    current_app.logger.info(f"Setting {key} in the job_cache.")
+    current_app.logger.debug(f"Setting {key} in the job_cache.")
     job_cache = current_app.config["job_cache"]
     job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
@@ -34,14 +34,14 @@ def get_job_cache(key):
     if ret is None:
         current_app.logger.warning(f"Could not find {key} in the job_cache.")
     else:
-        current_app.logger.info(f"Got {key} from job_cache.")
+        current_app.logger.debug(f"Got {key} from job_cache.")
     return ret
 
 
 def len_job_cache():
     job_cache = current_app.config["job_cache"]
     ret = len(job_cache)
-    current_app.logger.info(f"Length of job_cache is {ret}")
+    current_app.logger.debug(f"Length of job_cache is {ret}")
     return ret
 
 
@@ -53,7 +53,7 @@ def clean_cache():
         if expiry_time < current_time:
             keys_to_delete.append(key)
 
-    current_app.logger.info(
+    current_app.logger.debug(
         f"Deleting the following keys from the job_cache: {keys_to_delete}"
     )
     for key in keys_to_delete:
@@ -139,7 +139,7 @@ def cleanup_old_s3_objects():
 
                     try:
                         remove_csv_object(obj["Key"])
-                        current_app.logger.info(
+                        current_app.logger.debug(
                             f"#delete-old-s3-objects Deleted: {obj['LastModified']} {obj['Key']}"
                         )
                     except botocore.exceptions.ClientError:
@@ -287,7 +287,7 @@ def file_exists(file_location):
 
 
 def get_job_location(service_id, job_id):
-    current_app.logger.info(
+    current_app.logger.debug(
         f"#s3-partitioning NEW JOB_LOCATION: {NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
     )
     return (
@@ -305,7 +305,7 @@ def get_old_job_location(service_id, job_id):
     but it will take a few days where we have to support both formats.
     Remove this when everything works with the NEW_FILE_LOCATION_STRUCTURE.
     """
-    current_app.logger.info(
+    current_app.logger.debug(
         f"#s3-partitioning OLD JOB LOCATION: {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
     )
     return (
@@ -445,7 +445,7 @@ def extract_personalisation(job):
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.info(f"job {job_id} was not in the cache")
+        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -479,7 +479,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.info(f"job {job_id} was not in the cache")
+        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -503,7 +503,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
 
 
 def get_job_metadata_from_s3(service_id, job_id):
-    current_app.logger.info(
+    current_app.logger.debug(
         f"#s3-partitioning CALLING GET_JOB_METADATA with {service_id}, {job_id}"
     )
     obj = get_s3_object(*get_job_location(service_id, job_id))
