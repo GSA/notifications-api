@@ -52,9 +52,11 @@ def send_notification_to_service_users(
             json.dumps(personalisation),
             ex=24 * 60 * 60,
         )
+        print(hilite("GOT PAST FIRST SET"))
         redis_store.set(
             f"email-recipient-{notification.id}", notification.to, ex=24 * 60 * 60
         )
+        print(hilite("GOT PAST SECOND SET"))
 
         send_notification_to_queue(notification, queue=QueueNames.NOTIFY)
         return notification
