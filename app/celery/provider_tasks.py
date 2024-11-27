@@ -19,7 +19,7 @@ from app.dao.notifications_dao import (
 from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
@@ -188,9 +188,7 @@ def deliver_email(self, notification_id):
         if recipient:
             notification.recipient = json.loads(recipient)
 
-        print(hilite(f"HERE IS THE NOTIFICATION {notification.serialize_for_csv()}"))
-        if recipient:
-            send_to_providers.send_email_to_provider(notification)
+        send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException:
         current_app.logger.exception(f"Email notification {notification_id} failed")
         update_notification_status_by_id(notification_id, "technical-failure")
