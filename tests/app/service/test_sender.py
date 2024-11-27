@@ -58,6 +58,7 @@ def test_send_notification_to_service_users_includes_user_fields_in_personalisat
 ):
     persist_mock = mocker.patch("app.service.sender.persist_notification")
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store")
 
     user = sample_service.users[0]
 
