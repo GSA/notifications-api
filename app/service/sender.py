@@ -59,7 +59,7 @@ def send_notification_to_service_users(
         print(hilite("GOT PAST SECOND SET"))
 
         send_notification_to_queue(notification, queue=QueueNames.NOTIFY)
-        return notification
+
 
 
 def _add_user_fields(user, personalisation, fields):
