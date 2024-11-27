@@ -61,7 +61,6 @@ def send_notification_to_service_users(
         send_notification_to_queue(notification, queue=QueueNames.NOTIFY)
 
 
-
 def _add_user_fields(user, personalisation, fields):
     for field in fields:
         personalisation[field] = getattr(user, field)
