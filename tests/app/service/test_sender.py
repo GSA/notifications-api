@@ -83,6 +83,7 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
     notify_service, mocker
 ):
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store")
 
     first_active_user = create_user(email="foo@bar.com", state="active")
     second_active_user = create_user(email="foo1@bar.com", state="active")
