@@ -25,6 +25,7 @@ def send_notification_to_service_users(
     template = dao_get_template_by_id(template_id)
     service = dao_fetch_service_by_id(service_id)
     active_users = dao_fetch_active_users_for_service(service.id)
+    print(hilite(f"ACTIVE USERS ARE {active_users}"))
     notify_service = dao_fetch_service_by_id(current_app.config["NOTIFY_SERVICE_ID"])
 
     for user in active_users:
