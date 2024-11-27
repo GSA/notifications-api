@@ -19,7 +19,7 @@ from app.dao.notifications_dao import (
 from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
-from app.utils import utc_now
+from app.utils import hilite, utc_now
 
 # This is the amount of time to wait after sending an sms message before we check the aws logs and look for delivery
 # receipts
@@ -170,7 +170,7 @@ def deliver_sms(self, notification_id):
 
 
 @notify_celery.task(
-    bind=True, name="deliver_email", max_retries=48, default_retry_delay=300
+    bind=True, name="deliver_email", max_retries=48, default_retry_delay=30
 )
 def deliver_email(self, notification_id):
     try:
@@ -182,9 +182,15 @@ def deliver_email(self, notification_id):
         if not notification:
             raise NoResultFound()
         personalisation = redis_store.get(f"email-personalisation-{notification_id}")
+        recipient = redis_store.get(f"email-recipient-{notification_id}")
+        if personalisation:
+            notification.personalisation = json.loads(personalisation)
+        if recipient:
+            notification.recipient = json.loads(recipient)
 
-        notification.personalisation = json.loads(personalisation)
-        send_to_providers.send_email_to_provider(notification)
+        print(hilite(f"HERE IS THE NOTIFICATION {notification.serialize_for_csv()}"))
+        if recipient:
+            send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException:
         current_app.logger.exception(f"Email notification {notification_id} failed")
         update_notification_status_by_id(notification_id, "technical-failure")
