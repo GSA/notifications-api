@@ -3,14 +3,10 @@ from flask import current_app
 from sqlalchemy import func, select
 
 from app import db
-from app.dao.services_dao import (
-    dao_add_user_to_service,
-    dao_fetch_active_users_for_service,
-)
+from app.dao.services_dao import dao_add_user_to_service
 from app.enums import NotificationType, TemplateType
 from app.models import Notification
 from app.service.sender import send_notification_to_service_users
-from app.utils import hilite
 from tests.app.db import create_service, create_template, create_user
 
 
@@ -93,15 +89,10 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
     second_active_user = create_user(email="foo1@bar.com", state="active")
     pending_user = create_user(email="foo2@bar.com", state="pending")
     service = create_service(user=first_active_user)
-    print(hilite(f"CREATED THE SERVICE {service} with user {first_active_user}"))
     dao_add_user_to_service(service, second_active_user)
-    print(hilite(f"ADDED user {second_active_user}"))
 
     dao_add_user_to_service(service, pending_user)
-    print(hilite(f"ADDED PENDING USER {pending_user}"))
 
-    active_users = dao_fetch_active_users_for_service(service.id)
-    print(hilite(f"ACTIVE USERS IN THE TEST {active_users}"))
     template = create_template(service, template_type=TemplateType.EMAIL)
 
     send_notification_to_service_users(service_id=service.id, template_id=template.id)
