@@ -14,6 +14,7 @@ from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
 )
+from app.utils import hilite
 
 
 def send_notification_to_service_users(
@@ -28,6 +29,7 @@ def send_notification_to_service_users(
 
     for user in active_users:
         personalisation = _add_user_fields(user, personalisation, include_user_fields)
+        print(hilite(f"PERSONALISATION IS {personalisation}"))
         notification = persist_notification(
             template_id=template.id,
             template_version=template.version,
@@ -43,6 +45,7 @@ def send_notification_to_service_users(
             key_type=KeyType.NORMAL,
             reply_to_text=notify_service.get_default_reply_to_email_address(),
         )
+        print(hilite(f"NOTIFICATION IS {notification.serialize_for_csv()}"))
         redis_store.set(
             f"email-personalisation-{notification.id}",
             json.dumps(personalisation),
