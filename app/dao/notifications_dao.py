@@ -10,6 +10,7 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
+from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
@@ -193,11 +194,17 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
-    query = _filter_query(query, filter_dict)
-    return query.order_by(asc(Notification.job_row_number)).paginate(
-        page=page, per_page=page_size
-    )
+    stmt = select(Notification).filter_by(service_id=service_id, job_id=job_id)
+    stmt = _filter_query(stmt, filter_dict)
+    stmt = stmt.order_by(asc(Notification.job_row_number))
+
+    results = db.session.execute(stmt).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
@@ -291,22 +298,22 @@ def get_notifications_for_service(
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
 
-    query = Notification.query.filter(*filters)
-    query = _filter_query(query, filter_dict)
+    stmt = select(Notification).where(*filters)
+    stmt = _filter_query(stmt, filter_dict)
     if personalisation:
-        query = query.options(joinedload(Notification.template))
+        stmt = stmt.options(joinedload(Notification.template))
 
-    return query.order_by(desc(Notification.created_at)).paginate(
-        page=page,
-        per_page=page_size,
-        count=count_pages,
-        error_out=error_out,
-    )
+    stmt = stmt.order_by(desc(Notification.created_at))
+    results = db.session.execute(stmt).scalars().all()
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
-def _filter_query(query, filter_dict=None):
+def _filter_query(stmt, filter_dict=None):
     if filter_dict is None:
-        return query
+        return stmt
 
     multidict = MultiDict(filter_dict)
 
@@ -314,14 +321,14 @@ def _filter_query(query, filter_dict=None):
     statuses = multidict.getlist("status")
 
     if statuses:
-        query = query.filter(Notification.status.in_(statuses))
+        stmt = stmt.where(Notification.status.in_(statuses))
 
     # filter by template
     template_types = multidict.getlist("template_type")
     if template_types:
-        query = query.filter(Notification.notification_type.in_(template_types))
+        stmt = stmt.where(Notification.notification_type.in_(template_types))
 
-    return query
+    return stmt
 
 
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):

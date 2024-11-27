@@ -514,7 +514,7 @@ def dao_fetch_todays_stats_for_all_services(
     start_date = get_midnight_in_utc(today)
     end_date = get_midnight_in_utc(today + timedelta(days=1))
 
-    subquery = (
+    substmt = (
         select(
             Notification.notification_type,
             Notification.status,
@@ -530,9 +530,9 @@ def dao_fetch_todays_stats_for_all_services(
     )
 
     if not include_from_test_key:
-        subquery = subquery.filter(Notification.key_type != KeyType.TEST)
+        substmt = substmt.filter(Notification.key_type != KeyType.TEST)
 
-    subquery = subquery.subquery()
+    substmt = substmt.subquery()
 
     stmt = (
         select(
@@ -541,11 +541,11 @@ def dao_fetch_todays_stats_for_all_services(
             Service.restricted,
             Service.active,
             Service.created_at,
-            subquery.c.notification_type,
-            subquery.c.status,
-            subquery.c.count,
+            substmt.c.notification_type,
+            substmt.c.status,
+            substmt.c.count,
         )
-        .outerjoin(subquery, subquery.c.service_id == Service.id)
+        .outerjoin(substmt, substmt.c.service_id == Service.id)
         .order_by(Service.id)
     )
 
@@ -617,7 +617,7 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
 
 
 def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10000):
-    subquery = (
+    substmt = (
         select(
             func.count(Notification.id).label("total_count"),
             Notification.service_id.label("service_id"),
@@ -637,19 +637,19 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
         .having(func.count(Notification.id) >= threshold)
     )
 
-    subquery = subquery.subquery()
+    substmt = substmt.subquery()
 
     stmt = (
         select(
             Notification.service_id.label("service_id"),
             func.count(Notification.id).label("permanent_failure_count"),
-            subquery.c.total_count.label("total_count"),
+            substmt.c.total_count.label("total_count"),
             (
                 cast(func.count(Notification.id), Float)
-                / cast(subquery.c.total_count, Float)
+                / cast(substmt.c.total_count, Float)
             ).label("permanent_failure_rate"),
         )
-        .join(subquery, subquery.c.service_id == Notification.service_id)
+        .join(substmt, substmt.c.service_id == Notification.service_id)
         .filter(
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
@@ -660,10 +660,10 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )
-        .group_by(Notification.service_id, subquery.c.total_count)
+        .group_by(Notification.service_id, substmt.c.total_count)
         .having(
             cast(func.count(Notification.id), Float)
-            / cast(subquery.c.total_count, Float)
+            / cast(substmt.c.total_count, Float)
             >= 0.25
         )
     )
