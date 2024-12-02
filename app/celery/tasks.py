@@ -347,14 +347,13 @@ def save_api_email_or_sms(self, encrypted_notification):
             document_download_count=notification["document_download_count"],
         )
 
-        provider_task.apply_async([notification["id"]], queue=q)
-        current_app.logger.debug(
-            f"{notification['notification_type']} {notification['id']} has been persisted and sent to delivery queue."
-        )
     except IntegrityError:
         current_app.logger.info(
             f"{notification['notification_type']} {notification['id']} already exists."
         )
+        # If we don't have the return statement here, we will fall through and end
+        # up retrying because IntegrityError is a subclass of SQLAlchemyError
+        return
 
     except SQLAlchemyError:
         try:
@@ -363,6 +362,10 @@ def save_api_email_or_sms(self, encrypted_notification):
             current_app.logger.exception(
                 f"Max retry failed Failed to persist notification {notification['id']}",
             )
+    provider_task.apply_async([notification["id"]], queue=q)
+    current_app.logger.debug(
+        f"{notification['notification_type']} {notification['id']} has been persisted and sent to delivery queue."
+    )
 
 
 def handle_exception(task, notification, notification_id, exc):
