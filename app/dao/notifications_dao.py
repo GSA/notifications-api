@@ -71,7 +71,9 @@ def dao_create_notification(notification):
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
-    db.session.add(notification)
+
+    # notify-api-1454 change to an upsert
+    db.session.merge(notification)
 
 
 def country_records_delivery(phone_prefix):
