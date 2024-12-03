@@ -136,7 +136,7 @@ def _deliver_sms_task_handler(func):
     name="deliver_sms",
     max_retries=48,
     default_retry_delay=300,
-    autoretry_for=Exception,
+    autoretry_for=(Exception,),
 )
 def deliver_sms(self, notification_id):
     """Branch off to the final step in delivering the notification to sns and get delivery receipts."""
@@ -217,8 +217,8 @@ def _deliver_email_task_handler(func):
     name="deliver_email",
     max_retries=48,
     default_retry_delay=30,
-    autoretry_for=Exception,
-    dont_autoretry_for=EmailClientNonRetryableException,
+    autoretry_for=(Exception,),
+    dont_autoretry_for=(EmailClientNonRetryableException,),
 )
 def deliver_email(self, notification_id):
     try:

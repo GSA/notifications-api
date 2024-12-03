@@ -198,7 +198,7 @@ def _save_task_hander(func):
     name="save-sms",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=SQLAlchemyError,
+    autoretry_for=(SQLAlchemyError,),
 )
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
@@ -286,7 +286,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
     name="save-email",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=SQLAlchemyError,
+    autoretry_for=(SQLAlchemyError,),
 )
 def save_email(
     self, service_id, notification_id, encrypted_notification, sender_id=None
@@ -369,7 +369,7 @@ def _save_api_task_handler(func):
     name="save-api-email",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=SQLAlchemyError,
+    autoretry_for=(SQLAlchemyError,),
 )
 def save_api_email(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
@@ -381,7 +381,7 @@ def save_api_email(self, encrypted_notification):
     name="save-api-sms",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=SQLAlchemyError,
+    autoretry_for=(SQLAlchemyError,),
 )
 def save_api_sms(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
@@ -453,7 +453,7 @@ def _send_inbound_sms_to_service_handler(func):
     name="send-inbound-sms",
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=RequestException,
+    autoretry_for=(RequestException,),
 )
 def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
     inbound_api = get_service_inbound_api_for_service(service_id=service_id)
