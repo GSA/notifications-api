@@ -72,7 +72,7 @@ def dao_create_notification(notification):
     notification.to = "1"
     notification.normalised_to = "1"
 
-    # notify-api-1454 change to an upsert
+    # notify-api-1454 insert only if it doesn't exist
     stmt = select(Notification).where(Notification.id == notification.id)
     result = db.session.execute(stmt).scalar()
     if result is None:

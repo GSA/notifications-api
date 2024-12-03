@@ -20,7 +20,10 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
-from app.notifications.process_notifications import persist_notification
+from app.notifications.process_notifications import (
+    get_notification,
+    persist_notification,
+)
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
@@ -329,6 +332,8 @@ def save_api_email_or_sms(self, encrypted_notification):
         if notification["notification_type"] == NotificationType.EMAIL
         else provider_tasks.deliver_sms
     )
+
+    original_notification = get_notification(notification["id"])
     try:
         persist_notification(
             notification_id=notification["id"],
@@ -347,10 +352,11 @@ def save_api_email_or_sms(self, encrypted_notification):
             document_download_count=notification["document_download_count"],
         )
         # Only get here if save to the db was successful (i.e. first time)
-        provider_task.apply_async([notification["id"]], queue=q)
-        current_app.logger.debug(
-            f"{notification['notification_type']} {notification['id']} has been persisted and sent to delivery queue."
-        )
+        if original_notification is None:
+            provider_task.apply_async([notification["id"]], queue=q)
+            current_app.logger.debug(
+                f"{notification['id']} has been persisted and sent to delivery queue."
+            )
 
     except IntegrityError:
         current_app.logger.warning(
