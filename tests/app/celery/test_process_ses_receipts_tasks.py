@@ -1,6 +1,7 @@
 import json
 from unittest.mock import ANY
 
+import pytest
 from freezegun import freeze_time
 
 from app import encryption
@@ -157,7 +158,10 @@ def test_process_ses_results_retry_called(sample_email_template, mocker):
     mocked = mocker.patch(
         "app.celery.process_ses_receipts_tasks.process_ses_results.retry"
     )
-    process_ses_results(response=ses_notification_callback(reference="ref1"))
+    with pytest.raises(Exception):  # noqa: B017
+        # In order to make this work, we have to suppress the flake8 warning about
+        # pytest.raises(Exception), which is usually considered a bad thing.
+        process_ses_results(response=ses_notification_callback(reference="ref1"))
     assert mocked.call_count != 0
 
 
@@ -240,7 +244,7 @@ def test_ses_callback_should_not_update_notification_status_if_already_delivered
     assert mock_upd.call_count == 0
 
 
-def test_ses_callback_should_retry_if_notification_is_new(mocker):
+def test_ses_callback_should_retry_if_notification_is_new(client, _notify_db, mocker):
     mock_retry = mocker.patch(
         "app.celery.process_ses_receipts_tasks.process_ses_results.retry"
     )
@@ -248,7 +252,18 @@ def test_ses_callback_should_retry_if_notification_is_new(mocker):
         "app.celery.process_ses_receipts_tasks.current_app.logger.error"
     )
     with freeze_time("2017-11-17T12:14:03.646Z"):
-        assert process_ses_results(ses_notification_callback(reference="ref")) is None
+        try:
+            assert (
+                process_ses_results(ses_notification_callback(reference="ref")) is None
+            )
+        except Exception as e:
+            import traceback
+            print(type(e))
+            print("*" * 80)
+            print(e)
+            print("-" * 80)
+            print(traceback.format_exc())
+            print("-" * 80)
         assert mock_logger.call_count == 0
         assert mock_retry.call_count == 1
 

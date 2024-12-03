@@ -9,7 +9,10 @@ from app import encryption, notify_celery
 from app.utils import DATETIME_FORMAT
 
 
-def _send_to_service_task_handler(func):
+def _send_to_service_task_handler(cls):
+
+    func = cls.__call__
+
     @wraps(func)
     def send_to_service_task_wrapper(*args, **kwargs):
         sig = signature(func)
@@ -48,7 +51,9 @@ def _send_to_service_task_handler(func):
             )
             raise
 
-    return send_to_service_task_wrapper
+    cls.__call__ = send_to_service_task_wrapper
+
+    return cls
 
 
 @_send_to_service_task_handler
