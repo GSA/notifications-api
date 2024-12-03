@@ -1,4 +1,6 @@
 import json
+from functools import wraps
+from inspect import signature
 
 from flask import current_app
 from requests import HTTPError, RequestException, request
@@ -10,10 +12,7 @@ from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
-from app.dao.notifications_dao import (
-    dao_get_last_notification_added_for_job_id,
-    get_notification_by_id,
-)
+from app.dao.notifications_dao import dao_get_last_notification_added_for_job_id
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
@@ -166,6 +165,31 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         return True
 
 
+def _save_task_hander(func):
+    @wraps(func)
+    def save_task_wrapper(*args, **kwargs):
+        sig = signature(func)
+        bargs = sig.bind(*args, **kwargs)
+        bargs.apply_defaults()
+
+        task = bargs.arguments["self"]
+        notification_id = bargs.arguments["notification_id"]
+        notification = encryption.decrypt(bargs.arguments["encrypted_notification"])
+
+        try:
+            return func(*args, **kwargs)
+        except task.MaxRetriesExceededError:
+            retry_msg = (
+                f"{task.__name__} notification for job {notification.get("job", None)} "
+            )
+            f"row number {notification.get("row_number", None)} and notification id {notification_id}"
+            current_app.logger.exception("Max retry failed" + retry_msg)
+            raise
+
+    return save_task_wrapper
+
+
+@_save_task_hander
 @notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
@@ -242,10 +266,16 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             )
         )
 
-    except SQLAlchemyError as e:
-        handle_exception(self, notification, notification_id, e)
+    except SQLAlchemyError:
+        retry_msg = (
+            f"{self.__name__} notification for job {notification.get("job", None)} "
+        )
+        f"row number {notification.get("row_number", None)} and notification id {notification_id}"
+        current_app.logger.exception(retry_msg)
+        raise
 
 
+@_save_task_hander
 @notify_celery.task(
     bind=True, name="save-email", max_retries=5, default_retry_delay=300
 )
@@ -298,10 +328,35 @@ def save_email(
                 saved_notification.id, saved_notification.created_at
             )
         )
-    except SQLAlchemyError as e:
-        handle_exception(self, notification, notification_id, e)
+    except SQLAlchemyError:
+        retry_msg = (
+            f"{self.__name__} notification for job {notification.get("job", None)} "
+            f"row number {notification.get("row_number", None)} and notification id {notification_id}"
+        )
+        current_app.logger.exception(retry_msg)
+        raise
 
 
+def _save_api_task_handler(func):
+    @wraps(func)
+    def save_api_task_wrapper(*args, **kwargs):
+        sig = signature(func)
+        bargs = sig.bind(*args, **kwargs)
+        bargs.apply_defaults()
+
+        self_ = bargs.argument["self"]
+        notification = encryption.decrypt[bargs.arguments["encrypted_notification"]]
+        try:
+            return func(*args, **kwargs)
+        except self_.MaxRetriesExceededError:
+            current_app.logger.exception(
+                f"Max retry failed Failed to persist notification {notification['id']}",
+            )
+
+    return save_api_task_wrapper
+
+
+@_save_api_task_handler
 @notify_celery.task(
     bind=True, name="save-api-email", max_retries=5, default_retry_delay=300
 )
@@ -309,6 +364,7 @@ def save_api_email(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
 
 
+@_save_api_task_handler
 @notify_celery.task(
     bind=True, name="save-api-sms", max_retries=5, default_retry_delay=300
 )
@@ -360,34 +416,23 @@ def save_api_email_or_sms(self, encrypted_notification):
         # up retrying because IntegrityError is a subclass of SQLAlchemyError
         return
 
-    except SQLAlchemyError:
+
+def _send_inbound_sms_to_service_handler(func):
+    @wraps(func)
+    def send_inbound_sms_to_service_wrapper(self, inbound_sms_id, service_id):
         try:
-            self.retry(queue=QueueNames.RETRY)
+            return func(self, inbound_sms_id, service_id)
         except self.MaxRetriesExceededError:
             current_app.logger.exception(
-                f"Max retry failed Failed to persist notification {notification['id']}",
+                "Retry: send_inbound_sms_to_service has retried the max number of"
+                + f"times for service: {service_id} and inbound_sms {inbound_sms_id}"
             )
+            raise
+
+    return send_inbound_sms_to_service_wrapper
 
 
-def handle_exception(task, notification, notification_id, exc):
-    if not get_notification_by_id(notification_id):
-        retry_msg = "{task} notification for job {job} row number {row} and notification id {noti}".format(
-            task=task.__name__,
-            job=notification.get("job", None),
-            row=notification.get("row_number", None),
-            noti=notification_id,
-        )
-        # Sometimes, SQS plays the same message twice. We should be able to catch an IntegrityError, but it seems
-        # SQLAlchemy is throwing a FlushError. So we check if the notification id already exists then do not
-        # send to the retry queue.
-        # This probably (hopefully) is not an issue with Redis as the celery backing store
-        current_app.logger.exception("Retry" + retry_msg)
-        try:
-            task.retry(queue=QueueNames.RETRY, exc=exc)
-        except task.MaxRetriesExceededError:
-            current_app.logger.exception("Max retry failed" + retry_msg)
-
-
+@_send_inbound_sms_to_service_handler
 @notify_celery.task(
     bind=True, name="send-inbound-sms", max_retries=5, default_retry_delay=300
 )
@@ -431,13 +476,7 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
             + f"and url: {inbound_api.url}. exception: {e}"
         )
         if not isinstance(e, HTTPError) or e.response.status_code >= 500:
-            try:
-                self.retry(queue=QueueNames.RETRY)
-            except self.MaxRetriesExceededError:
-                current_app.logger.exception(
-                    "Retry: send_inbound_sms_to_service has retried the max number of"
-                    + f"times for service: {service_id} and inbound_sms {inbound_sms_id}"
-                )
+            raise
         else:
             current_app.logger.warning(
                 f"send_inbound_sms_to_service is not being retried for service_id: {service_id} for "

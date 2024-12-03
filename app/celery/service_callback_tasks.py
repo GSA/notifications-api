@@ -1,13 +1,57 @@
 import json
+from functools import wraps
+from inspect import signature
 
 from flask import current_app
 from requests import HTTPError, RequestException, request
 
 from app import encryption, notify_celery
-from app.config import QueueNames
 from app.utils import DATETIME_FORMAT
 
 
+def _send_to_service_task_handler(func):
+    @wraps(func)
+    def send_to_service_task_wrapper(*args, **kwargs):
+        sig = signature(func)
+        bargs = sig.bind(*args, **kwargs)
+        bargs.apply_defaults()
+
+        function_name = func.__name__
+
+        if function_name == "send_delivery_status_to_service":
+            encrypted_status_update = bargs.arguments["encrypted_status_update"]
+
+            status_update = encryption.decrypt(encrypted_status_update)
+            service_callback_url = status_update["service_callback_api_url"]
+
+            notification_id = bargs.arguments["notification_id"]
+
+        elif function_name == "send_complaint_to_service":
+            complaint_data = bargs.arguments["complaint_data"]
+
+            notification_id = complaint_data["notification_id"]
+            service_callback_url = complaint_data["service_callback_api_url"]
+
+        else:
+            raise ValueError(
+                f"Incorrect send to service function name found: {function_name}"
+            )
+
+        self_ = bargs.arguments["self"]
+
+        try:
+            return func(*args, **kwargs)
+        except self_.MaxRetriesExceededError:
+            current_app.logger.warning(
+                f"Retry: {function_name} has retried the max num of times for callback url "
+                f"{service_callback_url} and notification_id: {notification_id}"
+            )
+            raise
+
+    return send_to_service_task_wrapper
+
+
+@_send_to_service_task_handler
 @notify_celery.task(
     bind=True, name="send-delivery-status", max_retries=5, default_retry_delay=300
 )
@@ -36,6 +80,7 @@ def send_delivery_status_to_service(self, notification_id, encrypted_status_upda
     )
 
 
+@_send_to_service_task_handler
 @notify_celery.task(
     bind=True, name="send-complaint", max_retries=5, default_retry_delay=300
 )
@@ -72,43 +117,29 @@ def _send_data_to_service_callback_api(
             data=json.dumps(data),
             headers={
                 "Content-Type": "application/json",
-                "Authorization": "Bearer {}".format(token),
+                "Authorization": f"Bearer {token}",
             },
             timeout=5,
         )
         current_app.logger.info(
-            "{} sending {} to {}, response {}".format(
-                function_name,
-                notification_id,
-                service_callback_url,
-                response.status_code,
-            )
+            f"{function_name} sending {notification_id} to {service_callback_url}, response {response.status_code}"
         )
         response.raise_for_status()
     except RequestException as e:
         current_app.logger.warning(
-            "{} request failed for notification_id: {} and url: {}. exception: {}".format(
-                function_name, notification_id, service_callback_url, e
-            )
+            f"{function_name} request failed for notification_id: {notification_id} and "
+            f"url: {service_callback_url}. exception: {e}"
         )
         if (
             not isinstance(e, HTTPError)
             or e.response.status_code >= 500
             or e.response.status_code == 429
         ):
-            try:
-                self.retry(queue=QueueNames.CALLBACKS_RETRY)
-            except self.MaxRetriesExceededError:
-                current_app.logger.warning(
-                    "Retry: {} has retried the max num of times for callback url {} and notification_id: {}".format(
-                        function_name, service_callback_url, notification_id
-                    )
-                )
+            raise
         else:
             current_app.logger.warning(
-                "{} callback is not being retried for notification_id: {} and url: {}. exception: {}".format(
-                    function_name, notification_id, service_callback_url, e
-                )
+                f"{function_name} callback is not being retried for notification_id: "
+                f"{notification_id} and url: {service_callback_url}. exception: {e}"
             )
 
 

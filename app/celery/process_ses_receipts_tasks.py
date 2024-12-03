@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import iso8601
-from celery.exceptions import Retry
 from flask import current_app, json
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -26,7 +25,11 @@ from app.utils import utc_now
 
 
 @notify_celery.task(
-    bind=True, name="process-ses-result", max_retries=5, default_retry_delay=300
+    bind=True,
+    name="process-ses-result",
+    max_retries=5,
+    default_retry_delay=300,
+    autoretry_for=Exception,
 )
 def process_ses_results(self, response):
     try:
@@ -65,7 +68,7 @@ def process_ses_results(self, response):
                     f"Callback may have arrived before notification was"
                     f"persisted to the DB. Adding task to retry queue"
                 )
-                self.retry(queue=QueueNames.RETRY)
+                raise
             else:
                 current_app.logger.warning(
                     f"Notification not found for reference: {reference} "
@@ -110,12 +113,9 @@ def process_ses_results(self, response):
 
         return True
 
-    except Retry:
-        raise
-
     except Exception:
         current_app.logger.exception("Error processing SES results")
-        self.retry(queue=QueueNames.RETRY)
+        raise
 
 
 def determine_notification_bounce_type(ses_message):
