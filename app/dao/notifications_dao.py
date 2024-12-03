@@ -71,7 +71,12 @@ def dao_create_notification(notification):
     # notify-api-742 remove phone numbers from db
     notification.to = "1"
     notification.normalised_to = "1"
-    db.session.add(notification)
+
+    # notify-api-1454 insert only if it doesn't exist
+    stmt = select(Notification).where(Notification.id == notification.id)
+    result = db.session.execute(stmt).scalar()
+    if result is None:
+        db.session.add(notification)
 
 
 def country_records_delivery(phone_prefix):

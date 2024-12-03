@@ -8,6 +8,7 @@ from app.config import QueueNames
 from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
+    get_notification_by_id,
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.errors import BadRequestError
@@ -51,6 +52,10 @@ def check_placeholders(template_object):
             ", ".join(template_object.missing_data)
         )
         raise BadRequestError(fields=[{"template": message}], message=message)
+
+
+def get_notification(notification_id):
+    return get_notification_by_id(notification_id)
 
 
 def persist_notification(
