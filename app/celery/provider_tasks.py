@@ -107,8 +107,10 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
         )
 
 
-def _deliver_sms_task_handler(func):
+def _deliver_sms_task_handler(cls):
     """Handle the max retries exceeded error case for delivering sms notifications."""
+
+    func = cls.__call__
 
     @wraps(func)
     def deliver_sms_task_wrapper(self, notification_id):
@@ -127,7 +129,9 @@ def _deliver_sms_task_handler(func):
             )
             raise NotificationTechnicalFailureException(message)
 
-    return deliver_sms_task_wrapper
+    cls.__call__ = deliver_sms_task_wrapper
+
+    return cls
 
 
 @_deliver_sms_task_handler
@@ -189,8 +193,10 @@ def deliver_sms(self, notification_id):
         raise
 
 
-def _deliver_email_task_handler(func):
+def _deliver_email_task_handler(cls):
     """Handle the max retries exceeded error case for delivering email notifications."""
+
+    func = cls.__call__
 
     @wraps(func)
     def deliver_email_task_wrapper(self, notification_id):
@@ -208,7 +214,9 @@ def _deliver_email_task_handler(func):
             )
             raise NotificationTechnicalFailureException(message)
 
-    return deliver_email_task_wrapper
+    cls.__call__ = deliver_email_task_wrapper
+
+    return cls
 
 
 @_deliver_email_task_handler

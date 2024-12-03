@@ -27,9 +27,10 @@ from app.utils import utc_now
 @notify_celery.task(
     bind=True,
     name="process-ses-result",
+    throws=(Exception,),
+    autoretry_for=(Exception,),
     max_retries=5,
     default_retry_delay=300,
-    autoretry_for=(Exception,),
 )
 def process_ses_results(self, response):
     try:
@@ -58,9 +59,11 @@ def process_ses_results(self, response):
                 reference
             )
         except NoResultFound:
+            print("&"*80)
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(
                 tzinfo=None
             )
+            print("&"*80)
             if utc_now() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
                     f"Notification not found for reference: {reference}"
@@ -68,6 +71,7 @@ def process_ses_results(self, response):
                     f"Callback may have arrived before notification was"
                     f"persisted to the DB. Adding task to retry queue"
                 )
+                print("&"*80)
                 raise
             else:
                 current_app.logger.warning(
@@ -113,7 +117,11 @@ def process_ses_results(self, response):
 
         return True
 
-    except Exception:
+    except Exception as e:
+        print("^"*80)
+        print(type(e))
+        print(e)
+        print("^"*80)
         current_app.logger.exception("Error processing SES results")
         raise
 
