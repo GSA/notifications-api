@@ -73,7 +73,10 @@ def dao_create_notification(notification):
     notification.normalised_to = "1"
 
     # notify-api-1454 change to an upsert
-    db.session.merge(notification)
+    stmt = select(Notification).where(Notification.id == notification.id)
+    result = db.session.execute(stmt).scalar()
+    if result is None:
+        db.session.add(notification)
 
 
 def country_records_delivery(phone_prefix):
