@@ -274,7 +274,7 @@ def save_email(
             "Email {} failed as restricted service".format(notification_id)
         )
         return
-
+    original_notification = get_notification(notification_id)
     try:
         saved_notification = persist_notification(
             template_id=notification["template"],
@@ -291,10 +291,11 @@ def save_email(
             notification_id=notification_id,
             reply_to_text=reply_to_text,
         )
-
-        provider_tasks.deliver_email.apply_async(
-            [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
-        )
+        # we only want to send once
+        if original_notification is None:
+            provider_tasks.deliver_email.apply_async(
+                [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
+            )
 
         current_app.logger.debug(
             "Email {} created at {}".format(
