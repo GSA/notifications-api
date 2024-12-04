@@ -10,7 +10,7 @@ from app import aws_cloudwatch_client, notify_celery, redis_store
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
-from app.config import QueueNames
+from app.config import Config, QueueNames
 from app.dao import notifications_dao
 from app.dao.notifications_dao import (
     sanitize_successful_notification_by_id,
@@ -152,9 +152,15 @@ def deliver_sms(self, notification_id):
 
         try:
             if self.request.retries == 0:
-                self.retry(queue=QueueNames.RETRY, countdown=0)
+                self.retry(
+                    queue=QueueNames.RETRY,
+                    countdown=0,
+                    expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
+                )
             else:
-                self.retry(queue=QueueNames.RETRY)
+                self.retry(
+                    queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME
+                )
         except self.MaxRetriesExceededError:
             message = (
                 "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. "
@@ -203,7 +209,7 @@ def deliver_email(self, notification_id):
                     f"RETRY: Email notification {notification_id} failed"
                 )
 
-            self.retry(queue=QueueNames.RETRY)
+            self.retry(queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME)
         except self.MaxRetriesExceededError:
             message = (
                 "RETRY FAILED: Max retries reached. "
