@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import Mock, call
+from unittest.mock import ANY, Mock, call
 
 import pytest
 import requests_mock
@@ -115,6 +115,7 @@ def test_should_process_sms_job(sample_job, mocker):
         (str(sample_job.service_id), "uuid", "something_encrypted"),
         {},
         queue="database-tasks",
+        expires=ANY,
     )
     job = jobs_dao.dao_get_job_by_id(sample_job.id)
     assert job.job_status == JobStatus.FINISHED
@@ -135,6 +136,7 @@ def test_should_process_sms_job_with_sender_id(sample_job, mocker, fake_uuid):
         (str(sample_job.service_id), "uuid", "something_encrypted"),
         {"sender_id": fake_uuid},
         queue="database-tasks",
+        expires=ANY,
     )
 
 
@@ -179,6 +181,7 @@ def test_should_process_job_if_send_limits_are_not_exceeded(
         ),
         {},
         queue="database-tasks",
+        expires=ANY,
     )
 
 
@@ -237,6 +240,7 @@ def test_should_process_email_job(email_job_with_placeholders, mocker):
         ),
         {},
         queue="database-tasks",
+        expires=ANY,
     )
     job = jobs_dao.dao_get_job_by_id(email_job_with_placeholders.id)
     assert job.job_status == JobStatus.FINISHED
@@ -262,6 +266,7 @@ def test_should_process_email_job_with_sender_id(
         (str(email_job_with_placeholders.service_id), "uuid", "something_encrypted"),
         {"sender_id": fake_uuid},
         queue="database-tasks",
+        expires=ANY,
     )
 
 
@@ -387,6 +392,7 @@ def test_process_row_when_sender_id_is_provided(mocker, fake_uuid):
         ),
         {"sender_id": fake_uuid},
         queue="database-tasks",
+        expires=ANY,
     )
 
 
@@ -839,7 +845,9 @@ def test_save_sms_should_go_to_retry_queue_if_database_errors(sample_template, m
             encryption.encrypt(notification),
         )
     assert provider_tasks.deliver_sms.apply_async.called is False
-    tasks.save_sms.retry.assert_called_with(exc=expected_exception, queue="retry-tasks")
+    tasks.save_sms.retry.assert_called_with(
+        exc=expected_exception, queue="retry-tasks", expires=ANY
+    )
 
     assert _get_notification_query_count() == 0
 
@@ -868,7 +876,7 @@ def test_save_email_should_go_to_retry_queue_if_database_errors(
         )
     assert not provider_tasks.deliver_email.apply_async.called
     tasks.save_email.retry.assert_called_with(
-        exc=expected_exception, queue="retry-tasks"
+        exc=expected_exception, queue="retry-tasks", expires=ANY
     )
 
     assert _get_notification_query_count() == 0
