@@ -53,7 +53,7 @@ class TaskNames(object):
 
 class Config(object):
     NOTIFY_APP_NAME = "api"
-    DEFAULT_REDIS_EXPIRE_TIME = 8 * 24 * 60 * 60
+    DEFAULT_REDIS_EXPIRE_TIME = 4 * 24 * 60 * 60
     NOTIFY_ENVIRONMENT = getenv("NOTIFY_ENVIRONMENT", "development")
     # URL of admin app
     ADMIN_BASE_URL = getenv("ADMIN_BASE_URL", "http://localhost:6012")
