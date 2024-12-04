@@ -356,6 +356,7 @@ def test_process_row_sends_letter_task(
         ),
         {},
         queue=expected_queue,
+        expires=ANY
     )
 
 
