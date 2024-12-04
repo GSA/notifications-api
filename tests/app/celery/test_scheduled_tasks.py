@@ -415,7 +415,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         ),
         {},
         queue="database-tasks",
-        expires=ANY
+        expires=ANY,
     )
 
 
