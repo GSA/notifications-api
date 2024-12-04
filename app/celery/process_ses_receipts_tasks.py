@@ -12,7 +12,7 @@ from app.celery.service_callback_tasks import (
     send_complaint_to_service,
     send_delivery_status_to_service,
 )
-from app.config import QueueNames
+from app.config import Config, QueueNames
 from app.dao import notifications_dao
 from app.dao.complaint_dao import save_complaint
 from app.dao.notifications_dao import dao_get_notification_history_by_reference
@@ -65,7 +65,9 @@ def process_ses_results(self, response):
                     f"Callback may have arrived before notification was"
                     f"persisted to the DB. Adding task to retry queue"
                 )
-                self.retry(queue=QueueNames.RETRY)
+                self.retry(
+                    queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME
+                )
             else:
                 current_app.logger.warning(
                     f"Notification not found for reference: {reference} "
@@ -115,7 +117,7 @@ def process_ses_results(self, response):
 
     except Exception:
         current_app.logger.exception("Error processing SES results")
-        self.retry(queue=QueueNames.RETRY)
+        self.retry(queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME)
 
 
 def determine_notification_bounce_type(ses_message):

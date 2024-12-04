@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app import create_uuid, encryption, notify_celery
 from app.aws import s3
 from app.celery import provider_tasks
-from app.config import QueueNames
+from app.config import Config, QueueNames
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
@@ -146,6 +146,7 @@ def process_row(row, template, job, service, sender_id=None):
         ),
         task_kwargs,
         queue=QueueNames.DATABASE,
+        expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
     )
     return notification_id
 
@@ -369,7 +370,7 @@ def save_api_email_or_sms(self, encrypted_notification):
 
     except SQLAlchemyError:
         try:
-            self.retry(queue=QueueNames.RETRY)
+            self.retry(queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME)
         except self.MaxRetriesExceededError:
             current_app.logger.exception(
                 f"Max retry failed Failed to persist notification {notification['id']}",
@@ -390,7 +391,11 @@ def handle_exception(task, notification, notification_id, exc):
         # This probably (hopefully) is not an issue with Redis as the celery backing store
         current_app.logger.exception("Retry" + retry_msg)
         try:
-            task.retry(queue=QueueNames.RETRY, exc=exc)
+            task.retry(
+                queue=QueueNames.RETRY,
+                exc=exc,
+                expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
+            )
         except task.MaxRetriesExceededError:
             current_app.logger.exception("Max retry failed" + retry_msg)
 
@@ -439,7 +444,9 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
         )
         if not isinstance(e, HTTPError) or e.response.status_code >= 500:
             try:
-                self.retry(queue=QueueNames.RETRY)
+                self.retry(
+                    queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME
+                )
             except self.MaxRetriesExceededError:
                 current_app.logger.exception(
                     "Retry: send_inbound_sms_to_service has retried the max number of"
