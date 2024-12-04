@@ -50,7 +50,8 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
-		--concurrency=4
+		--pool=threads
+		--concurrency=10
 
 
 .PHONY: dead-code
