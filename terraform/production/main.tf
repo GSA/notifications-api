@@ -27,7 +27,7 @@ module "redis-v70" {
   cf_org_name     = local.cf_org_name
   cf_space_name   = local.cf_space_name
   name            = "${local.app_name}-redis-v70-${local.env}"
-  redis_plan_name = "redis-3node-large"
+  redis_plan_name = "redis-5node-large"
   json_params = jsonencode(
     {
       "engineVersion" : "7.0",

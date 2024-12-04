@@ -20,7 +20,10 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
-from app.notifications.process_notifications import persist_notification
+from app.notifications.process_notifications import (
+    get_notification,
+    persist_notification,
+)
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
@@ -271,7 +274,7 @@ def save_email(
             "Email {} failed as restricted service".format(notification_id)
         )
         return
-
+    original_notification = get_notification(notification_id)
     try:
         saved_notification = persist_notification(
             template_id=notification["template"],
@@ -288,10 +291,11 @@ def save_email(
             notification_id=notification_id,
             reply_to_text=reply_to_text,
         )
-
-        provider_tasks.deliver_email.apply_async(
-            [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
-        )
+        # we only want to send once
+        if original_notification is None:
+            provider_tasks.deliver_email.apply_async(
+                [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
+            )
 
         current_app.logger.debug(
             "Email {} created at {}".format(
@@ -329,6 +333,8 @@ def save_api_email_or_sms(self, encrypted_notification):
         if notification["notification_type"] == NotificationType.EMAIL
         else provider_tasks.deliver_sms
     )
+
+    original_notification = get_notification(notification["id"])
     try:
         persist_notification(
             notification_id=notification["id"],
@@ -347,10 +353,11 @@ def save_api_email_or_sms(self, encrypted_notification):
             document_download_count=notification["document_download_count"],
         )
         # Only get here if save to the db was successful (i.e. first time)
-        provider_task.apply_async([notification["id"]], queue=q)
-        current_app.logger.debug(
-            f"{notification['notification_type']} {notification['id']} has been persisted and sent to delivery queue."
-        )
+        if original_notification is None:
+            provider_task.apply_async([notification["id"]], queue=q)
+            current_app.logger.debug(
+                f"{notification['id']} has been persisted and sent to delivery queue."
+            )
 
     except IntegrityError:
         current_app.logger.warning(
