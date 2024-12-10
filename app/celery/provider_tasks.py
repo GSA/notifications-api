@@ -63,7 +63,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
                 provider_response=provider_response,
             )
             base_delay = 3600  # one hour
-            jitter = random.randint(-1200, +1200)  # noqa
+            jitter = random.randint(-1200, +1200)  # nosec B311
             retry_delay = base_delay + jitter
             raise self.retry(countdown=retry_delay, exc=ntfe)
         except ClientError as err:
@@ -81,7 +81,7 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
                 provider_response=provider_response,
             )
             base_delay = 3600  # one hour
-            jitter = random.randint(-1200, +1200)  # noqa
+            jitter = random.randint(-1200, +1200)  # nosec B311
             retry_delay = base_delay + jitter
             raise self.retry(countdown=retry_delay, exc=err)
 
