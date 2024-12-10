@@ -27,8 +27,8 @@ from app.utils import utc_now
 @notify_celery.task(
     bind=True,
     name="process-ses-result",
-    throws=(Exception,),
     autoretry_for=(Exception,),
+    # throws=(Exception,),  # Been attempted, did nothing.
     max_retries=5,
     default_retry_delay=300,
 )
@@ -59,11 +59,9 @@ def process_ses_results(self, response):
                 reference
             )
         except NoResultFound:
-            print("&"*80)
             message_time = iso8601.parse_date(ses_message["mail"]["timestamp"]).replace(
                 tzinfo=None
             )
-            print("&"*80)
             if utc_now() - message_time < timedelta(minutes=5):
                 current_app.logger.info(
                     f"Notification not found for reference: {reference}"
@@ -71,7 +69,6 @@ def process_ses_results(self, response):
                     f"Callback may have arrived before notification was"
                     f"persisted to the DB. Adding task to retry queue"
                 )
-                print("&"*80)
                 raise
             else:
                 current_app.logger.warning(
@@ -102,15 +99,13 @@ def process_ses_results(self, response):
 
         if not aws_response_dict["success"]:
             current_app.logger.info(
-                "SES delivery failed: notification id {} and reference {} has error found. Status {}".format(
-                    notification.id, reference, aws_response_dict["message"]
-                )
+                f"SES delivery failed: notification id {notification.id} and reference "
+                f"{reference} has error found. Status {aws_response_dict['message']}"
             )
         else:
             current_app.logger.info(
-                "SES callback return status of {} for notification: {}".format(
-                    notification_status, notification.id
-                )
+                f"SES callback return status of {notification_status} "
+                f"for notification: {notification.id}"
             )
 
         check_and_queue_callback_task(notification)
@@ -118,10 +113,9 @@ def process_ses_results(self, response):
         return True
 
     except Exception as e:
-        print("^"*80)
+        print("Exception REACHED")
         print(type(e))
         print(e)
-        print("^"*80)
         current_app.logger.exception("Error processing SES results")
         raise
 
