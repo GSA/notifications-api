@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from datetime import timedelta
 
 from botocore.exceptions import ClientError
@@ -29,8 +30,7 @@ DELIVERY_RECEIPT_DELAY_IN_SECONDS = 30
 @notify_celery.task(
     bind=True,
     name="check_sms_delivery_receipt",
-    max_retries=48,
-    default_retry_delay=300,
+    max_retries=72,
 )
 def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
     """
@@ -62,7 +62,10 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
                 carrier=carrier,
                 provider_response=provider_response,
             )
-            raise self.retry(exc=ntfe)
+            base_delay = 3600  # one hour
+            jitter = random.randint(-1200, +1200)  # nosec B311
+            retry_delay = base_delay + jitter
+            raise self.retry(countdown=retry_delay, exc=ntfe)
         except ClientError as err:
             # Probably a ThrottlingException but could be something else
             error_code = err.response["Error"]["Code"]
@@ -77,7 +80,10 @@ def check_sms_delivery_receipt(self, message_id, notification_id, sent_at):
                 carrier=carrier,
                 provider_response=provider_response,
             )
-            raise self.retry(exc=err)
+            base_delay = 3600  # one hour
+            jitter = random.randint(-1200, +1200)  # nosec B311
+            retry_delay = base_delay + jitter
+            raise self.retry(countdown=retry_delay, exc=err)
 
     if status == "success":
         status = NotificationStatus.DELIVERED
