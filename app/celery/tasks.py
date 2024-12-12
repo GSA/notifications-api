@@ -170,7 +170,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         return True
 
 
-@notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
+@notify_celery.task(bind=True, name="save-sms", max_retries=2, default_retry_delay=600)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
     notification = encryption.decrypt(encrypted_notification)
@@ -315,7 +315,7 @@ def save_api_email(self, encrypted_notification):
 
 
 @notify_celery.task(
-    bind=True, name="save-api-sms", max_retries=5, default_retry_delay=300
+    bind=True, name="save-api-sms", max_retries=2, default_retry_delay=600
 )
 def save_api_sms(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
