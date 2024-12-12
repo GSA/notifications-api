@@ -21,7 +21,11 @@ def dao_get_active_service_users(service_id):
 
 
 def dao_get_service_users_by_user_id(user_id):
-    return ServiceUser.query.filter_by(user_id=user_id).all()
+    return (
+        db.session.execute(select(ServiceUser).filter_by(user_id=user_id))
+        .scalars()
+        .all()
+    )
 
 
 @autocommit
