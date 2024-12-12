@@ -158,7 +158,7 @@ class AwsCloudwatchClient(Client):
                 message["delivery"].get("phoneCarrier", "Unknown Carrier"),
             )
 
-        if time_now > (created_at + timedelta(hours=73)):
+        if time_now > (created_at + timedelta(hours=3)):
             # see app/models.py Notification. This message corresponds to "permanent-failure",
             # but we are copy/pasting here to avoid circular imports.
             return "failure", "Unable to find carrier response."
