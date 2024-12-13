@@ -131,6 +131,7 @@ def test_should_call_send_sms_to_provider_from_deliver_sms_task(
 ):
     mocker.patch("app.delivery.send_to_providers.send_sms_to_provider")
     mocker.patch("app.celery.provider_tasks.check_sms_delivery_receipt")
+    mocker.patch("app.celery.provider_tasks.update_notification_message_id")
 
     deliver_sms(sample_notification.id)
     app.delivery.send_to_providers.send_sms_to_provider.assert_called_with(
