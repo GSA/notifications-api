@@ -707,3 +707,27 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
             union(notification_table_query, ft_status_table_query).subquery()
         ).distinct()
     }
+
+
+def dao_update_delivery_receipts(receipts):
+    id_to_status = {r["notification.messageId"]: r["status"] for r in receipts}
+    id_to_carrier = {
+        r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
+    }
+    id_to_provider_response = {
+        r["notification.messageId"]: r["delivery.providerResponse"] for r in receipts
+    }
+    id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
+
+    stmt = (
+        update(Notification)
+        .where(Notification.c.message_id.in_(id_to_carrier.keys()))
+        .values(
+            carrier=case(id_to_carrier),
+            status=case(id_to_status),
+            notification_status=case(id_to_status),
+            sent_at=case(id_to_timestamp),
+        )
+    )
+    db.session.execute(stmt)
+    db.session.commit()

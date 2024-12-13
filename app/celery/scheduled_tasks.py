@@ -11,6 +11,7 @@ from app.celery.tasks import (
     process_job,
     process_row,
 )
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
@@ -231,3 +232,11 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
                 technical_ticket=True,
             )
             zendesk_client.send_ticket_to_zendesk(ticket)
+
+
+@notify_celery.task(name="process_delivery_receipts_first_wave")
+def process_delivery_receipts_first_wave():
+    cloudwatch = AwsCloudwatchClient()
+    start_time = utc_now() - timedelta(hours=1)
+    end_time = utc_now()
+    receipts = cloudwatch.check_delivery_receipts(start_time, end_time)
