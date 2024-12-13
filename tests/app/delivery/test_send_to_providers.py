@@ -93,6 +93,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_personalisation = mocker.patch(
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
@@ -233,6 +234,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_s3_p = mocker.patch(
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
@@ -327,6 +329,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     # ī, grapes, tabs, zero width space and ellipsis are not
     # ó isn't in GSM, but it is in the welsh alphabet so will still be sent
 
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
