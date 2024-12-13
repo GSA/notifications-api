@@ -628,6 +628,10 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
+    )
+    mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
     )
     notification = create_notification(
@@ -636,6 +640,11 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         status=NotificationStatus.CREATED,
         key_type=key_type,
         reply_to_text="testing",
+    )
+
+    mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
     )
     mocker.patch("app.aws_sns_client.send_sms")
     mocker.patch(
@@ -707,6 +716,10 @@ def test_should_send_sms_to_international_providers(
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "601117224412"
 
+    mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
+    )
     mock_personalisation = mocker.patch(
         "app.delivery.send_to_providers.get_personalisation_from_s3"
     )
@@ -744,6 +757,11 @@ def test_should_handle_sms_sender_and_prefix_message(
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
+
+    mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
+    )
     service = create_service_with_defined_sms_sender(
         sms_sender_value=sms_sender, prefix_sms=prefix_sms
     )
@@ -802,6 +820,11 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
+
+    mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
     )
     send_mock = mocker.patch("app.aws_sns_client.send_sms")
     notification = create_notification(
@@ -865,6 +888,11 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
     mocker.patch(
         "app.delivery.send_to_providers.get_sender_numbers", return_value=["testing"]
+    )
+
+    mocker.patch(
+        "app.delivery.send_to_providers.update_notification_message_id",
+        return_value=None,
     )
     from app.schemas import service_schema, template_schema
 
