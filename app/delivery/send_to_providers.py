@@ -16,7 +16,7 @@ from app import (
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
-from app.dao.notifications_dao import dao_update_notification
+from app.dao.notifications_dao import dao_update_notification, update_notification_message_id
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
@@ -117,6 +117,7 @@ def send_sms_to_provider(notification):
 
                 message_id = provider.send_sms(**send_sms_kwargs)
                 current_app.logger.info(f"got message_id {message_id}")
+                update_notification_message_id(notification.id, message_id)
             except Exception as e:
                 n = notification
                 msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"

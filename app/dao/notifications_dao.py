@@ -114,7 +114,7 @@ def update_notification_message_id(notification_id, message_id):
     stmt = (
         update(Notification)
         .where(Notification.id == notification_id)
-        .values({"message_id": message_id})
+        .values(message_id=message_id)
     )
     db.session.execute(stmt)
     db.session.commit()

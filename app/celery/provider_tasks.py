@@ -14,7 +14,6 @@ from app.config import Config, QueueNames
 from app.dao import notifications_dao
 from app.dao.notifications_dao import (
     sanitize_successful_notification_by_id,
-    update_notification_message_id,
     update_notification_status_by_id,
 )
 from app.delivery import send_to_providers
@@ -129,8 +128,6 @@ def deliver_sms(self, notification_id):
             )
         # Code branches off to send_to_providers.py
         message_id = send_to_providers.send_sms_to_provider(notification)
-        if message_id is not None:  # can be none if technical failure happens
-            update_notification_message_id(notification_id, message_id)
 
         # DEPRECATED
         # We have to put it in UTC.  For other timezones, the delay
