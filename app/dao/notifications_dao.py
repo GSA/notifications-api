@@ -111,6 +111,16 @@ def _update_notification_status(
 
 
 @autocommit
+def update_notification_message_id(notification_id, message_id):
+    stmt = (
+        update(Notification)
+        .where(Notification.id == notification_id)
+        .values({"message_id": message_id})
+    )
+    db.session.execute(stmt)
+
+
+@autocommit
 def update_notification_status_by_id(
     notification_id, status, sent_by=None, provider_response=None, carrier=None
 ):
