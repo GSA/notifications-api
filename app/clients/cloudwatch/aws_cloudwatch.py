@@ -110,65 +110,6 @@ class AwsCloudwatchClient(Client):
                 return logline
         return None
 
-    # DEPRECATED
-    def check_sms(self, message_id, notification_id, created_at):
-        region = cloud_config.sns_region
-        # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
-        account_number = self._extract_account_number(cloud_config.ses_domain_arn)
-
-        time_now = utc_now()
-        log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
-        filter_pattern = '{$.notification.messageId="XXXXX"}'
-        filter_pattern = filter_pattern.replace("XXXXX", message_id)
-        all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
-        if all_log_events and len(all_log_events) > 0:
-            event = all_log_events[0]
-            message = json.loads(event["message"])
-            self.warn_if_dev_is_opted_out(
-                message["delivery"]["providerResponse"], notification_id
-            )
-            # Here we map the answer from aws to the message_id.
-            # Previously, in send_to_providers, we mapped the job_id and row number
-            # to the message id.  And on the admin side we mapped the csv filename
-            # to the job_id.  So by tracing through all the logs we can go:
-            # filename->job_id->message_id->what really happened
-            current_app.logger.info(
-                hilite(f"DELIVERED: {message} for message_id {message_id}")
-            )
-            return (
-                "success",
-                message["delivery"]["providerResponse"],
-                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
-            )
-
-        log_group_name = (
-            f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
-        )
-        all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
-        if all_failed_events and len(all_failed_events) > 0:
-            event = all_failed_events[0]
-            message = json.loads(event["message"])
-            self.warn_if_dev_is_opted_out(
-                message["delivery"]["providerResponse"], notification_id
-            )
-
-            current_app.logger.info(
-                hilite(f"FAILED: {message} for message_id {message_id}")
-            )
-            return (
-                "failure",
-                message["delivery"]["providerResponse"],
-                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
-            )
-
-        if time_now > (created_at + timedelta(hours=3)):
-            # see app/models.py Notification. This message corresponds to "permanent-failure",
-            # but we are copy/pasting here to avoid circular imports.
-            return "failure", "Unable to find carrier response."
-        raise NotificationTechnicalFailureException(
-            f"No event found for message_id {message_id} notification_id {notification_id}"
-        )
-
 
 def do_log_insights(self):
     region = cloud_config.sns_region
