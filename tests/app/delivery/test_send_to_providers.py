@@ -365,6 +365,7 @@ def test_send_sms_should_use_service_sms_sender(
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
     mocker.patch("app.aws_sns_client.send_sms")
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
 
     sms_sender = create_service_sms_sender(
         service=sample_service, sms_sender="123456", is_default=False
@@ -405,6 +406,8 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     )
     mocker.patch("app.aws_ses_client.send_email")
     mocker.patch("app.delivery.send_to_providers.send_email_response")
+
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
 
@@ -656,6 +659,8 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         sample_template.service.research_mode = True
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_phone.return_value = "15555555555"
 
     mock_personalisation = mocker.patch(
@@ -679,6 +684,8 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
     assert sample_notification.sent_by is None
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_phone.return_value = "15555555555"
 
     mock_personalisation = mocker.patch(
@@ -714,6 +721,8 @@ def test_should_send_sms_to_international_providers(
     )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
+
+    mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
     mock_s3.return_value = "601117224412"
 
     mocker.patch(
