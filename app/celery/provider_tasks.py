@@ -129,7 +129,8 @@ def deliver_sms(self, notification_id):
             )
         # Code branches off to send_to_providers.py
         message_id = send_to_providers.send_sms_to_provider(notification)
-        update_notification_message_id(notification_id, message_id)
+        if message_id is not None:  # can be none if technical failure happens
+            update_notification_message_id(notification_id, message_id)
 
         # DEPRECATED
         # We have to put it in UTC.  For other timezones, the delay
