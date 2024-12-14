@@ -240,6 +240,7 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
 @notify_celery.task(name="process-delivery-receipts")
 def process_delivery_receipts():
     cloudwatch = AwsCloudwatchClient()
+    cloudwatch.init_app(current_app)
     start_time = utc_now() - timedelta(minutes=10)
     end_time = utc_now()
     receipts = cloudwatch.check_delivery_receipts(start_time, end_time)
