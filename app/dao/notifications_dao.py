@@ -727,6 +727,7 @@ def dao_update_delivery_receipts(receipts):
             status=case(id_to_status),
             notification_status=case(id_to_status),
             sent_at=case(id_to_timestamp),
+            provider_response=case(id_to_provider_response),
         )
     )
     db.session.execute(stmt)

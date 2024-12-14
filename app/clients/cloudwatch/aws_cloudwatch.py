@@ -1,7 +1,5 @@
-import json
 import os
 import re
-from datetime import timedelta
 from time import sleep
 
 from boto3 import client
@@ -10,8 +8,7 @@ from flask import current_app
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
 from app.dao.notifications_dao import dao_update_delivery_receipts
-from app.exceptions import NotificationTechnicalFailureException
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 
 
 class AwsCloudwatchClient(Client):
@@ -111,7 +108,7 @@ class AwsCloudwatchClient(Client):
         return None
 
 
-def do_log_insights(self):
+def check_delivery_receipts(self, start, end):
     region = cloud_config.sns_region
     account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
@@ -121,11 +118,10 @@ def do_log_insights(self):
     )
 
     query = """
-    fields @timestamp, status, delivery.providerResponse, delivery.destination, notification.messageId, delivery.phoneCarrier
+    fields @timestamp, status, delivery.providerResponse, delivery.destination,
+      notification.messageId, delivery.phoneCarrier
     | sort @timestamp asc
     """
-    start = utc_now() - timedelta(hours=1)
-    end = utc_now()
 
     response = client._client.start_query(
         logGroupName=log_group_name,

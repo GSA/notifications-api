@@ -23,7 +23,10 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import notifications_not_yet_sent
+from app.dao.notifications_dao import (
+    dao_update_delivery_receipts,
+    notifications_not_yet_sent,
+)
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
@@ -234,9 +237,10 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
             zendesk_client.send_ticket_to_zendesk(ticket)
 
 
-@notify_celery.task(name="process_delivery_receipts_first_wave")
-def process_delivery_receipts_first_wave():
+@notify_celery.task(name="process-delivery-receipts")
+def process_delivery_receipts():
     cloudwatch = AwsCloudwatchClient()
-    start_time = utc_now() - timedelta(hours=1)
+    start_time = utc_now() - timedelta(minutes=10)
     end_time = utc_now()
     receipts = cloudwatch.check_delivery_receipts(start_time, end_time)
+    dao_update_delivery_receipts(receipts)
