@@ -244,4 +244,7 @@ def process_delivery_receipts():
     start_time = utc_now() - timedelta(minutes=10)
     end_time = utc_now()
     receipts = cloudwatch.check_delivery_receipts(start_time, end_time)
-    dao_update_delivery_receipts(receipts)
+    batch_size = 100
+    for i in range(0, len(receipts), batch_size):
+        batch = receipts[i : i + batch_size]
+        dao_update_delivery_receipts(batch)

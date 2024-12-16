@@ -69,10 +69,6 @@ class AwsCloudwatchClient(Client):
 
     def check_delivery_receipts(self, start, end):
 
-        result = self._client.describe_log_groups()
-        print(result)
-        return
-
         region = cloud_config.sns_region
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
