@@ -198,7 +198,7 @@ class Config(object):
             },
             "process-delivery-receipts": {
                 "task": "process-delivery-receipts",
-                "schedule": timedelta(minutes=1),
+                "schedule": timedelta(minutes=8),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "expire-or-delete-invitations": {
