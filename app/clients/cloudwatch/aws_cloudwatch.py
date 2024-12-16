@@ -7,7 +7,6 @@ from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
-from app.utils import utc_now
 
 
 class AwsCloudwatchClient(Client):
@@ -47,44 +46,6 @@ class AwsCloudwatchClient(Client):
     def is_localstack(self):
         return self._is_localstack
 
-    def _get_log(self, my_filter, log_group_name, sent_at):
-        # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
-        now = utc_now()
-        beginning = sent_at
-        next_token = None
-        all_log_events = []
-        current_app.logger.info(f"START TIME {beginning} END TIME {now}")
-        # There has been a change somewhere and the time range we were previously using has become too
-        # narrow or wrong in some way, so events can't be found.  For the time being, adjust by adding
-        # a buffer on each side of 12 hours.
-        TWELVE_HOURS = 12 * 60 * 60 * 1000
-        while True:
-            if next_token:
-                response = self._client.filter_log_events(
-                    logGroupName=log_group_name,
-                    filterPattern=my_filter,
-                    nextToken=next_token,
-                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
-                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
-                )
-            else:
-                response = self._client.filter_log_events(
-                    logGroupName=log_group_name,
-                    filterPattern=my_filter,
-                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
-                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
-                )
-            log_events = response.get("events", [])
-            all_log_events.extend(log_events)
-            if len(log_events) > 0:
-                # We found it
-
-                break
-            next_token = response.get("nextToken")
-            if not next_token:
-                break
-        return all_log_events
-
     def _extract_account_number(self, ses_domain_arn):
         account_number = ses_domain_arn.split(":")
         return account_number
@@ -107,6 +68,11 @@ class AwsCloudwatchClient(Client):
         return None
 
     def check_delivery_receipts(self, start, end):
+
+        result = self._client.describe_log_groups()
+        print(result)
+        return
+
         region = cloud_config.sns_region
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
 
