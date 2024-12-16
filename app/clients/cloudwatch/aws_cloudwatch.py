@@ -121,6 +121,11 @@ class AwsCloudwatchClient(Client):
         | sort @timestamp asc
         """
 
+        delivered = self.run_log_insights_query(log_group_name, start, end, query)
+        failed = self.run_log_insights_query(log_group_name_failed, start, end, query)
+        return delivered + failed
+
+    def run_log_insights_query(self, log_group_name, start, end, query):
         response = self._client.start_query(
             logGroupName=log_group_name,
             startTime=int(start.timestamp()),
@@ -129,7 +134,7 @@ class AwsCloudwatchClient(Client):
         )
         query_id = response["queryId"]
         while True:
-            result = client._client.get_query_results(queryId=query_id)
+            result = self._client.get_query_results(queryId=query_id)
             if result["status"] == "Complete":
                 break
             sleep(1)
@@ -138,28 +143,4 @@ class AwsCloudwatchClient(Client):
         for log in result["results"]:
             receipt = {field["field"]: field["value"] for field in log}
             delivery_receipts.append(receipt)
-            print(receipt)
-
-        delivered = delivery_receipts
-
-        response = client._client.start_query(
-            logGroupName=log_group_name_failed,
-            startTime=int(start.timestamp()),
-            endTime=int(end.timestamp()),
-            queryString=query,
-        )
-        query_id = response["queryId"]
-        while True:
-            result = client._client.get_query_results(queryId=query_id)
-            if result["status"] == "Complete":
-                break
-            sleep(1)
-
-        delivery_receipts = []
-        for log in result["results"]:
-            receipt = {field["field"]: field["value"] for field in log}
-            delivery_receipts.append(receipt)
-            print(receipt)
-
-        failed = delivery_receipts
-        return delivered + failed
+        return delivery_receipts
