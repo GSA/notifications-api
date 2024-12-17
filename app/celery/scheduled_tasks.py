@@ -35,7 +35,8 @@ from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
-from app.utils import utc_now
+from app.utils import hilite, utc_now
+from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
@@ -239,12 +240,21 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
 
 @notify_celery.task(name="process-delivery-receipts")
 def process_delivery_receipts():
+    print(hilite("ENTER PROCESS DELIVERY RECEIPTS"))
     cloudwatch = AwsCloudwatchClient()
     cloudwatch.init_app(current_app)
-    start_time = utc_now() - timedelta(minutes=10)
-    end_time = utc_now()
-    receipts = cloudwatch.check_delivery_receipts(start_time, end_time)
+    start_time = aware_utcnow() - timedelta(minutes=10)
+    end_time = aware_utcnow()
+    delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
+        start_time, end_time
+    )
+    delivered_receipts = list(delivered_receipts)
     batch_size = 100
-    for i in range(0, len(receipts), batch_size):
-        batch = receipts[i : i + batch_size]
-        dao_update_delivery_receipts(batch)
+    for i in range(0, len(delivered_receipts), batch_size):
+        batch = delivered_receipts[i : i + batch_size]
+        dao_update_delivery_receipts(batch, True)
+    failed_receipts = list(failed_receipts)
+    batch_size = 100
+    for i in range(0, len(failed_receipts), batch_size):
+        batch = failed_receipts[i : i + batch_size]
+        dao_update_delivery_receipts(batch, False)

@@ -1,7 +1,20 @@
+import json
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import asc, delete, desc, func, or_, select, text, union, update
+from sqlalchemy import (
+    TIMESTAMP,
+    asc,
+    cast,
+    delete,
+    desc,
+    func,
+    or_,
+    select,
+    text,
+    union,
+    update,
+)
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -709,8 +722,25 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
     }
 
 
-def dao_update_delivery_receipts(receipts):
-    id_to_status = {r["notification.messageId"]: r["status"] for r in receipts}
+def dao_update_delivery_receipts(receipts, delivered):
+    new_receipts = []
+    for r in receipts:
+        if isinstance(r, str):
+            r = json.loads(r)
+        new_receipts.append(r)
+
+    receipts = new_receipts
+    print(receipts)
+
+    statuses = {}
+    for r in receipts:
+        if r["status"].lower() == "success":
+            statuses[r["notification.messageId"]] = NotificationStatus.DELIVERED
+        else:
+            statuses[r["notification.messageId"]] = NotificationStatus.FAILED
+
+    print(f"HERE ARE STATUSES {statuses}")
+
     id_to_carrier = {
         r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
     }
@@ -719,16 +749,34 @@ def dao_update_delivery_receipts(receipts):
     }
     id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
 
+    status_to_update_with = NotificationStatus.DELIVERED
+    if not delivered:
+        status_to_update_with = NotificationStatus.FAILED
     stmt = (
         update(Notification)
-        .where(Notification.c.message_id.in_(id_to_carrier.keys()))
+        .where(Notification.message_id.in_(id_to_carrier.keys()))
         .values(
-            carrier=case(id_to_carrier),
-            status=case(id_to_status),
-            notification_status=case(id_to_status),
-            sent_at=case(id_to_timestamp),
-            provider_response=case(id_to_provider_response),
+            carrier=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_carrier.items()
+                ]
+            ),
+            status=status_to_update_with,
+            sent_at=case(
+                *[
+                    (Notification.message_id == key, cast(value, TIMESTAMP))
+                    for key, value in id_to_timestamp.items()
+                ]
+            ),
+            provider_response=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_provider_response.items()
+                ]
+            ),
         )
     )
+    print(stmt)
     db.session.execute(stmt)
     db.session.commit()
