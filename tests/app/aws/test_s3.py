@@ -219,6 +219,16 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             2,
             "5555555552",
         ),
+        (
+            # simulate file saved with utf8withbom
+            "\\ufeffPHONE NUMBER\n",
+            "5555555552",
+        ),
+        (
+            # simulate file saved without utf8withbom
+            "\\PHONE NUMBER\n",
+            "5555555552",
+        ),
     ],
 )
 def test_get_phone_number_from_s3(

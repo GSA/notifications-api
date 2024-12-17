@@ -402,7 +402,12 @@ def extract_phones(job):
     phone_index = 0
     for item in first_row:
         # Note: may contain a BOM and look like \ufeffphone number
-        if item.lower() in ["phone number", "\\ufeffphone number", "phone number\n"]:
+        if item.lower() in [
+            "phone number",
+            "\\ufeffphone number",
+            "\\ufeffphone number\n",
+            "phone number\n",
+        ]:
             break
         phone_index = phone_index + 1
 
