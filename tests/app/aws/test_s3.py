@@ -222,11 +222,15 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
         (
             # simulate file saved with utf8withbom
             "\\ufeffPHONE NUMBER\n",
+            "eee",
+            2,
             "5555555552",
         ),
         (
             # simulate file saved without utf8withbom
             "\\PHONE NUMBER\n",
+            "eee",
+            2,
             "5555555552",
         ),
     ],
