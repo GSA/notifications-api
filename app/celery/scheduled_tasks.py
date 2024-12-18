@@ -35,7 +35,7 @@ from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
@@ -238,23 +238,43 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
             zendesk_client.send_ticket_to_zendesk(ticket)
 
 
-@notify_celery.task(name="process-delivery-receipts")
-def process_delivery_receipts():
-    print(hilite("ENTER PROCESS DELIVERY RECEIPTS"))
-    cloudwatch = AwsCloudwatchClient()
-    cloudwatch.init_app(current_app)
-    start_time = aware_utcnow() - timedelta(minutes=10)
-    end_time = aware_utcnow()
-    delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
-        start_time, end_time
-    )
-    delivered_receipts = list(delivered_receipts)
-    batch_size = 100
-    for i in range(0, len(delivered_receipts), batch_size):
-        batch = delivered_receipts[i : i + batch_size]
-        dao_update_delivery_receipts(batch, True)
-    failed_receipts = list(failed_receipts)
-    batch_size = 100
-    for i in range(0, len(failed_receipts), batch_size):
-        batch = failed_receipts[i : i + batch_size]
-        dao_update_delivery_receipts(batch, False)
+@notify_celery.task(
+    bind=True, max_retries=7, default_retry_delay=3600, name="process-delivery-receipts"
+)
+def process_delivery_receipts(self):
+    """
+    Every eight minutes or so (see config.py) we run this task, which searches the last ten
+    minutes of logs for delivery receipts and batch updates the db with the results.  The overlap
+    is intentional.  We don't mind re-updating things, it is better than losing data.
+
+    We also set this to retry with exponential backoff in the case of failure.  The only way this would
+    fail is if, for example the db went down, or redis filled causing the app to stop processing.  But if
+    it does fail, we need to go back over at some point when things are running again and process those results.
+    """
+    try:
+        batch_size = 200  # in theory with postgresql this could be 10k to 20k?
+
+        cloudwatch = AwsCloudwatchClient()
+        cloudwatch.init_app(current_app)
+        start_time = aware_utcnow() - timedelta(minutes=10)
+        end_time = aware_utcnow()
+        delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
+            start_time, end_time
+        )
+        delivered_receipts = list(delivered_receipts)
+        for i in range(0, len(delivered_receipts), batch_size):
+            batch = delivered_receipts[i : i + batch_size]
+            dao_update_delivery_receipts(batch, True)
+        failed_receipts = list(failed_receipts)
+        for i in range(0, len(failed_receipts), batch_size):
+            batch = failed_receipts[i : i + batch_size]
+            dao_update_delivery_receipts(batch, False)
+    except Exception as ex:
+        retry_count = self.request.retries
+        wait_time = 3600 * 2**retry_count
+        try:
+            raise self.retry(ex=ex, countdown=wait_time)
+        except self.MaxRetriesExceededError:
+            current_app.logger.error(
+                "Failed process delivery receipts after max retries"
+            )

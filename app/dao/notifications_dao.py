@@ -730,16 +730,6 @@ def dao_update_delivery_receipts(receipts, delivered):
         new_receipts.append(r)
 
     receipts = new_receipts
-    print(receipts)
-
-    statuses = {}
-    for r in receipts:
-        if r["status"].lower() == "success":
-            statuses[r["notification.messageId"]] = NotificationStatus.DELIVERED
-        else:
-            statuses[r["notification.messageId"]] = NotificationStatus.FAILED
-
-    print(f"HERE ARE STATUSES {statuses}")
 
     id_to_carrier = {
         r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
@@ -777,6 +767,5 @@ def dao_update_delivery_receipts(receipts, delivered):
             ),
         )
     )
-    print(stmt)
     db.session.execute(stmt)
     db.session.commit()

@@ -3,6 +3,7 @@ import os
 import re
 
 from boto3 import client
+from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
@@ -136,13 +137,13 @@ class AwsCloudwatchClient(Client):
     # and run this on a schedule.
     def check_delivery_receipts(self, start, end):
         region = cloud_config.sns_region
-        # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
         delivered_event_set = set()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
-        print(hilite(f"LOG GROUP NAME {log_group_name}"))
         all_delivered_events = self._get_log(log_group_name, start, end)
-        print(f"ALL DELIVEREDS {len(all_delivered_events)}")
+        current_app.logger.info(
+            f"Delivered count {len(all_delivered_events)} over range {start} to {end}"
+        )
 
         for event in all_delivered_events:
             actual_event = self.event_to_db_format(event["message"])
@@ -153,7 +154,9 @@ class AwsCloudwatchClient(Client):
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
         all_failed_events = self._get_log(log_group_name, start, end)
-        print(f"ALL FAILEDS {len(all_failed_events)}")
+        current_app.logger.info(
+            f"Failed count {len(all_delivered_events)} over range {start} to {end}"
+        )
         for event in all_failed_events:
             actual_event = self.event_to_db_format(event["message"])
             failed_event_set.add(json.dumps(actual_event))
