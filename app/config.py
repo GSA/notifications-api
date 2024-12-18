@@ -168,6 +168,9 @@ class Config(object):
 
     CELERY = {
         "worker_max_tasks_per_child": 500,
+        "task_ignore_result": True,
+        "result_expires": 0,
+        "result_persistent": False,
         "broker_url": REDIS_URL,
         "broker_transport_options": {
             "visibility_timeout": 310,
