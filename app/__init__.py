@@ -1,3 +1,4 @@
+import logging as real_logging
 import os
 import secrets
 import string
@@ -36,6 +37,9 @@ class NotifyCelery(Celery):
 
         # Configure Celery app with options from the main app config.
         self.config_from_object(app.config["CELERY"])
+        self.conf.worker_hijack_root_logger = False
+        logger = real_logging.getLogger("celery")
+        logger.propagate = False
 
     def send_task(self, name, args=None, kwargs=None, **other_kwargs):
         other_kwargs["headers"] = other_kwargs.get("headers") or {}

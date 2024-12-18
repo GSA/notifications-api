@@ -70,10 +70,12 @@ def init_app(app):
     for logger_instance, handler in product(loggers, handlers):
         logger_instance.addHandler(handler)
         logger_instance.setLevel(loglevel)
+        logger_instance.propagate = False
     warning_loggers = [logging.getLogger("boto3"), logging.getLogger("s3transfer")]
     for logger_instance, handler in product(warning_loggers, handlers):
         logger_instance.addHandler(handler)
         logger_instance.setLevel(logging.WARNING)
+        logger_instance.propagate = False
 
     # Suppress specific loggers to prevent leaking sensitive info
     logging.getLogger("boto3").setLevel(logging.ERROR)
