@@ -155,27 +155,18 @@ class AwsCloudwatchClient(Client):
     def check_delivery_receipts(self, start, end):
         region = cloud_config.sns_region
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
-        delivered_event_set = set()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
-        all_delivered_events = self._get_log(log_group_name, start, end)
-        current_app.logger.info(
-            f"Delivered count {len(all_delivered_events)} over range {start} to {end}"
-        )
-
-        for event in all_delivered_events:
-            actual_event = self.event_to_db_format(event["message"])
-            delivered_event_set.add(json.dumps(actual_event))
-
-        failed_event_set = set()
+        delivered_event_set = self._get_receipts(log_group_name, start, end)
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
-        all_failed_events = self._get_log(log_group_name, start, end)
-        current_app.logger.info(
-            f"Failed count {len(all_delivered_events)} over range {start} to {end}"
-        )
-        for event in all_failed_events:
-            actual_event = self.event_to_db_format(event["message"])
-            failed_event_set.add(json.dumps(actual_event))
-
+        failed_event_set = self._get_receipts(log_group_name, start, end)
         return delivered_event_set, failed_event_set
+
+    def _get_receipts(self, log_group_name, start, end):
+        event_set = set()
+        all_events = self._get_log(log_group_name, start, end)
+        for event in all_events:
+            actual_event = self.event_to_db_format(event["message"])
+            event_set.add(json.dumps(actual_event))
+        return event_set
