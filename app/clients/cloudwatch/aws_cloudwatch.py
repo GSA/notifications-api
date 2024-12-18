@@ -74,6 +74,23 @@ class AwsCloudwatchClient(Client):
                 break
         return all_log_events
 
+    def warn_if_dev_is_opted_out(self, provider_response, notification_id):
+        if (
+            "is opted out" in provider_response.lower()
+            or "has blocked sms" in provider_response.lower()
+        ):
+            if os.getenv("NOTIFY_ENVIRONMENT") in ["development", "test"]:
+                ansi_red = "\033[31m"
+                ansi_reset = "\033[0m"
+                logline = (
+                    ansi_red
+                    + f"The phone number for notification_id {notification_id} is OPTED OUT. You need to opt back in"
+                    + ansi_reset
+                )
+                current_app.logger.warning(logline)
+                return logline
+        return None
+
     def _extract_account_number(self, ses_domain_arn):
         account_number = ses_domain_arn.split(":")
         return account_number
