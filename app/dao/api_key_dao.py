@@ -46,7 +46,7 @@ def get_model_api_keys(service_id, id=None):
                     ApiKey.expiry_date == None, # noqa
                 )
             )
-            # .scalars()
+            .scalars()
             .one()
         )
     seven_days_ago = utc_now() - timedelta(days=7)
@@ -75,7 +75,7 @@ def get_unsigned_secrets(service_id):
                 ApiKey.service_id == service_id, ApiKey.expiry_date == None  # noqa
             )
         )
-        # .scalars()
+        .scalars()
         .all()
     )
     keys = [x.secret for x in api_keys]
@@ -90,7 +90,7 @@ def get_unsigned_secret(key_id):
         db.session.execute(
             select(ApiKey).where(ApiKey.id == key_id, ApiKey.expiry_date == None)  # noqa
         )
-        # .scalars()
+        .scalars()
         .one()
     )
     return api_key.secret
