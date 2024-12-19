@@ -1,4 +1,5 @@
-from sqlalchemy import alias, delete, select
+from sqlalchemy import delete, select
+from sqlalchemy.orm import aliased
 
 from app import db
 from app.dao import DAOClass
@@ -52,7 +53,7 @@ class PermissionDAO(DAOClass):
                 db.session.commit()
 
     def get_permissions_by_user_id(self, user_id):
-        PermissionAlias = alias(Permission)
+        PermissionAlias = aliased(Permission)
         return (
             db.session.execute(
                 select(self.Meta.model)
