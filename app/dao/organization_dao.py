@@ -61,7 +61,7 @@ def dao_get_organization_by_service_id(service_id):
     stmt = (
         select(Organization)
         .join(Organization.services)
-        .where(Organization.id == service_id)
+        .where(Service.id == service_id)
     )
     return db.session.execute(stmt).scalars().first()
 
