@@ -244,18 +244,24 @@ def dao_get_failed_notification_count():
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
-    filter_dict = {
-        "Notification.service_id": service_id,
-        "Notification.id": notification_id,
-    }
-    if key_type:
-        filter_dict["Notification.key_type"] = key_type
 
     stmt = (
         select(Notification)
-        .where(**filter_dict)
+        .where(
+            Notification.service_id == service_id, Notification.id == notification_id
+        )
         .options(joinedload(Notification.template))
     )
+    if key_type:
+        stmt = (
+            select(Notification)
+            .where(
+                Notification.service_id == service_id,
+                Notification.id == notification_id,
+                Notification.key_type == key_type,
+            )
+            .options(joinedload(Notification.template))
+        )
     return db.session.execute(stmt).scalars().one()
 
 
