@@ -3,7 +3,7 @@ from sqlalchemy import delete, select
 from app import db
 from app.dao import DAOClass
 from app.enums import PermissionType
-from app.models import Permission
+from app.models import Permission, Service
 
 
 class PermissionDAO(DAOClass):
@@ -56,8 +56,9 @@ class PermissionDAO(DAOClass):
             db.session.execute(
                 select(self.Meta.model)
                 .where(self.Meta.model.user_id == user_id)
-                .join(Permission.service)
-                .where(Permission.service.active == True)  # noqa
+                .join(Permission)
+                .join(Service, Permission.service_id == Service.id)
+                .where(Service.active == True)  # noqa
             )
             .scalars()
             .all()
