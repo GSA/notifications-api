@@ -61,7 +61,11 @@ class PermissionDAO(DAOClass):
                 .join(
                     PermissionAlias, PermissionAlias.user_id == self.Meta.model.user_id
                 )
-                .join(Service, Service.id == PermissionAlias.service_id)
+                .join(
+                    Service,
+                    (Service.id == PermissionAlias.service_id)
+                    & (Service.active.is_(True)),
+                )
                 .where(Service.active.is_(True))
             )
             .scalars()
