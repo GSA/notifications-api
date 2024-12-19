@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app import create_uuid, encryption, notify_celery
 from app.aws import s3
 from app.celery import provider_tasks
-from app.config import QueueNames
+from app.config import Config, QueueNames
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
@@ -20,7 +20,10 @@ from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
-from app.notifications.process_notifications import persist_notification
+from app.notifications.process_notifications import (
+    get_notification,
+    persist_notification,
+)
 from app.notifications.validators import check_service_over_total_message_limit
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
@@ -143,6 +146,7 @@ def process_row(row, template, job, service, sender_id=None):
         ),
         task_kwargs,
         queue=QueueNames.DATABASE,
+        expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
     )
     return notification_id
 
@@ -166,7 +170,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         return True
 
 
-@notify_celery.task(bind=True, name="save-sms", max_retries=5, default_retry_delay=300)
+@notify_celery.task(bind=True, name="save-sms", max_retries=2, default_retry_delay=600)
 def save_sms(self, service_id, notification_id, encrypted_notification, sender_id=None):
     """Persist notification to db and place notification in queue to send to sns."""
     notification = encryption.decrypt(encrypted_notification)
@@ -271,7 +275,7 @@ def save_email(
             "Email {} failed as restricted service".format(notification_id)
         )
         return
-
+    original_notification = get_notification(notification_id)
     try:
         saved_notification = persist_notification(
             template_id=notification["template"],
@@ -288,10 +292,11 @@ def save_email(
             notification_id=notification_id,
             reply_to_text=reply_to_text,
         )
-
-        provider_tasks.deliver_email.apply_async(
-            [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
-        )
+        # we only want to send once
+        if original_notification is None:
+            provider_tasks.deliver_email.apply_async(
+                [str(saved_notification.id)], queue=QueueNames.SEND_EMAIL
+            )
 
         current_app.logger.debug(
             "Email {} created at {}".format(
@@ -310,7 +315,7 @@ def save_api_email(self, encrypted_notification):
 
 
 @notify_celery.task(
-    bind=True, name="save-api-sms", max_retries=5, default_retry_delay=300
+    bind=True, name="save-api-sms", max_retries=2, default_retry_delay=600
 )
 def save_api_sms(self, encrypted_notification):
     save_api_email_or_sms(self, encrypted_notification)
@@ -329,6 +334,8 @@ def save_api_email_or_sms(self, encrypted_notification):
         if notification["notification_type"] == NotificationType.EMAIL
         else provider_tasks.deliver_sms
     )
+
+    original_notification = get_notification(notification["id"])
     try:
         persist_notification(
             notification_id=notification["id"],
@@ -346,19 +353,24 @@ def save_api_email_or_sms(self, encrypted_notification):
             status=notification["status"],
             document_download_count=notification["document_download_count"],
         )
+        # Only get here if save to the db was successful (i.e. first time)
+        if original_notification is None:
+            provider_task.apply_async([notification["id"]], queue=q)
+            current_app.logger.debug(
+                f"{notification['id']} has been persisted and sent to delivery queue."
+            )
 
-        provider_task.apply_async([notification["id"]], queue=q)
-        current_app.logger.debug(
-            f"{notification['notification_type']} {notification['id']} has been persisted and sent to delivery queue."
-        )
     except IntegrityError:
-        current_app.logger.info(
+        current_app.logger.warning(
             f"{notification['notification_type']} {notification['id']} already exists."
         )
+        # If we don't have the return statement here, we will fall through and end
+        # up retrying because IntegrityError is a subclass of SQLAlchemyError
+        return
 
     except SQLAlchemyError:
         try:
-            self.retry(queue=QueueNames.RETRY)
+            self.retry(queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME)
         except self.MaxRetriesExceededError:
             current_app.logger.exception(
                 f"Max retry failed Failed to persist notification {notification['id']}",
@@ -379,7 +391,11 @@ def handle_exception(task, notification, notification_id, exc):
         # This probably (hopefully) is not an issue with Redis as the celery backing store
         current_app.logger.exception("Retry" + retry_msg)
         try:
-            task.retry(queue=QueueNames.RETRY, exc=exc)
+            task.retry(
+                queue=QueueNames.RETRY,
+                exc=exc,
+                expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
+            )
         except task.MaxRetriesExceededError:
             current_app.logger.exception("Max retry failed" + retry_msg)
 
@@ -428,7 +444,9 @@ def send_inbound_sms_to_service(self, inbound_sms_id, service_id):
         )
         if not isinstance(e, HTTPError) or e.response.status_code >= 500:
             try:
-                self.retry(queue=QueueNames.RETRY)
+                self.retry(
+                    queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME
+                )
             except self.MaxRetriesExceededError:
                 current_app.logger.exception(
                     "Retry: send_inbound_sms_to_service has retried the max number of"

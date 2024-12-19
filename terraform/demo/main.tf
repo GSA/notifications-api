@@ -18,7 +18,7 @@ module "database" {
   cf_org_name   = local.cf_org_name
   cf_space_name = local.cf_space_name
   name          = "${local.app_name}-rds-${local.env}"
-  rds_plan_name = "micro-psql"
+  rds_plan_name = "small-psql"
 }
 
 module "redis-v70" {

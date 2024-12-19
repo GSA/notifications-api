@@ -10,7 +10,7 @@ from app import aws_cloudwatch_client, notify_celery, redis_store
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
-from app.config import QueueNames
+from app.config import Config, QueueNames
 from app.dao import notifications_dao
 from app.dao.notifications_dao import (
     sanitize_successful_notification_by_id,
@@ -128,6 +128,8 @@ def deliver_sms(self, notification_id):
             )
         # Code branches off to send_to_providers.py
         message_id = send_to_providers.send_sms_to_provider(notification)
+
+        # DEPRECATED
         # We have to put it in UTC.  For other timezones, the delay
         # will be ignored and it will fire immediately (although this probably only affects developer testing)
         my_eta = utc_now() + timedelta(seconds=DELIVERY_RECEIPT_DELAY_IN_SECONDS)
@@ -152,9 +154,15 @@ def deliver_sms(self, notification_id):
 
         try:
             if self.request.retries == 0:
-                self.retry(queue=QueueNames.RETRY, countdown=0)
+                self.retry(
+                    queue=QueueNames.RETRY,
+                    countdown=0,
+                    expires=Config.DEFAULT_REDIS_EXPIRE_TIME,
+                )
             else:
-                self.retry(queue=QueueNames.RETRY)
+                self.retry(
+                    queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME
+                )
         except self.MaxRetriesExceededError:
             message = (
                 "RETRY FAILED: Max retries reached. The task send_sms_to_provider failed for notification {}. "
@@ -170,7 +178,7 @@ def deliver_sms(self, notification_id):
 
 
 @notify_celery.task(
-    bind=True, name="deliver_email", max_retries=48, default_retry_delay=300
+    bind=True, name="deliver_email", max_retries=48, default_retry_delay=30
 )
 def deliver_email(self, notification_id):
     try:
@@ -182,8 +190,12 @@ def deliver_email(self, notification_id):
         if not notification:
             raise NoResultFound()
         personalisation = redis_store.get(f"email-personalisation-{notification_id}")
+        recipient = redis_store.get(f"email-recipient-{notification_id}")
+        if personalisation:
+            notification.personalisation = json.loads(personalisation)
+        if recipient:
+            notification.recipient = json.loads(recipient)
 
-        notification.personalisation = json.loads(personalisation)
         send_to_providers.send_email_to_provider(notification)
     except EmailClientNonRetryableException:
         current_app.logger.exception(f"Email notification {notification_id} failed")
@@ -199,7 +211,7 @@ def deliver_email(self, notification_id):
                     f"RETRY: Email notification {notification_id} failed"
                 )
 
-            self.retry(queue=QueueNames.RETRY)
+            self.retry(queue=QueueNames.RETRY, expires=Config.DEFAULT_REDIS_EXPIRE_TIME)
         except self.MaxRetriesExceededError:
             message = (
                 "RETRY FAILED: Max retries reached. "

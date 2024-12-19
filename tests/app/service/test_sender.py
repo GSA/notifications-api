@@ -58,6 +58,7 @@ def test_send_notification_to_service_users_includes_user_fields_in_personalisat
 ):
     persist_mock = mocker.patch("app.service.sender.persist_notification")
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store")
 
     user = sample_service.users[0]
 
@@ -82,13 +83,16 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
     notify_service, mocker
 ):
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store", autospec=True)
 
     first_active_user = create_user(email="foo@bar.com", state="active")
     second_active_user = create_user(email="foo1@bar.com", state="active")
     pending_user = create_user(email="foo2@bar.com", state="pending")
     service = create_service(user=first_active_user)
     dao_add_user_to_service(service, second_active_user)
+
     dao_add_user_to_service(service, pending_user)
+
     template = create_template(service, template_type=TemplateType.EMAIL)
 
     send_notification_to_service_users(service_id=service.id, template_id=template.id)
