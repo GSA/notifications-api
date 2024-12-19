@@ -55,7 +55,7 @@ class PermissionDAO(DAOClass):
         return (
             db.session.execute(
                 select(Permission)
-                .join(Service, Service.id == Permission.service_id)
+                .join(Service)
                 .where(Permission.user_id == user_id)
                 .where(Service.active.is_(True))
             )
