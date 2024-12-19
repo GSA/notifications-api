@@ -52,10 +52,20 @@ def dao_get_paginated_inbound_sms_for_service_for_public_api(
         )
         filters.append(InboundSms.created_at < older_than_created_at)
 
+    page = 1  # ?
+    offset = (page - 1) * page_size
     # As part of the move to sqlalchemy 2.0, we do this manual pagination
-    query = db.session.query(InboundSms).filter(*filters)
-    paginated_items = query.order_by(desc(InboundSms.created_at)).limit(page_size).all()
-    return paginated_items
+    stmt = (
+        select(InboundSms)
+        .where(*filters)
+        .order_by(desc(InboundSms.created_at))
+        .limit(page_size)
+        .offset(offset)
+    )
+    paginated_items = db.session.execute(stmt).scalars().all()
+    total_items = db.session.execute(select(func.count()).where(*filters)).scalar() or 0
+    pagination = Pagination(paginated_items, page, page_size, total_items)
+    return pagination
 
 
 def dao_count_inbound_sms_for_service(service_id, limit_days):
@@ -74,7 +84,7 @@ def dao_count_inbound_sms_for_service(service_id, limit_days):
 def _insert_inbound_sms_history(subquery, query_limit=10000):
     offset = 0
     subquery_select = select(subquery)
-    inbound_sms_query = select(
+    inbound_sms_stmt = select(
         InboundSms.id,
         InboundSms.created_at,
         InboundSms.service_id,
@@ -84,13 +94,13 @@ def _insert_inbound_sms_history(subquery, query_limit=10000):
         InboundSms.provider,
     ).where(InboundSms.id.in_(subquery_select))
 
-    count_query = select(func.count()).select_from(inbound_sms_query.subquery())
+    count_query = select(func.count()).select_from(inbound_sms_stmt.subquery())
     inbound_sms_count = db.session.execute(count_query).scalar() or 0
 
     while offset < inbound_sms_count:
         statement = insert(InboundSmsHistory).from_select(
             InboundSmsHistory.__table__.c,
-            inbound_sms_query.limit(query_limit).offset(offset),
+            inbound_sms_stmt.limit(query_limit).offset(offset),
         )
 
         statement = statement.on_conflict_do_nothing(
@@ -170,7 +180,9 @@ def delete_inbound_sms_older_than_retention():
 
 
 def dao_get_inbound_sms_by_id(service_id, inbound_id):
-    stmt = select(InboundSms).filter_by(id=inbound_id, service_id=service_id)
+    stmt = select(InboundSms).where(
+        InboundSms.id == inbound_id, InboundSms.service_id == service_id
+    )
     return db.session.execute(stmt).scalars().one()
 
 

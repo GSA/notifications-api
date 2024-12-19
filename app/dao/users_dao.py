@@ -37,7 +37,7 @@ def get_login_gov_user(login_uuid, email_address):
     login.gov uuids are.  Eventually the code that checks by email address
     should be removed.
     """
-    stmt = select(User).filter_by(login_uuid=login_uuid)
+    stmt = select(User).where(User.login_uuid == login_uuid)
     user = db.session.execute(stmt).scalars().first()
     if user:
         if user.email_address != email_address:
@@ -65,7 +65,7 @@ def get_login_gov_user(login_uuid, email_address):
 
 
 def save_user_attribute(usr, update_dict=None):
-    db.session.query(User).filter_by(id=usr.id).update(update_dict or {})
+    db.session.query(User).where(User.id == usr.id).update(update_dict or {})
     db.session.commit()
 
 
@@ -82,7 +82,7 @@ def save_model_user(
         user.email_access_validated_at = utc_now()
     if update_dict:
         _remove_values_for_keys_if_present(update_dict, ["id", "password_changed_at"])
-        db.session.query(User).filter_by(id=user.id).update(update_dict or {})
+        db.session.query(User).where(User.id == user.id).update(update_dict or {})
     else:
         db.session.add(user)
     db.session.commit()
@@ -105,7 +105,7 @@ def get_user_code(user, code, code_type):
     # time searching for the correct code.
     stmt = (
         select(VerifyCode)
-        .filter_by(user=user, code_type=code_type)
+        .where(VerifyCode.user == user, VerifyCode.code_type == code_type)
         .order_by(VerifyCode.created_at.desc())
     )
     codes = db.session.execute(stmt).scalars().all()
@@ -135,7 +135,7 @@ def delete_model_user(user):
 
 
 def delete_user_verify_codes(user):
-    stmt = delete(VerifyCode).filter_by(user=user)
+    stmt = delete(VerifyCode).where(VerifyCode.user == user)
     db.session.execute(stmt)
     db.session.commit()
 
@@ -152,7 +152,7 @@ def count_user_verify_codes(user):
 
 def get_user_by_id(user_id=None):
     if user_id:
-        stmt = select(User).filter_by(id=user_id)
+        stmt = select(User).where(User.id == user_id)
         return db.session.execute(stmt).scalars().one()
     return get_users()
 

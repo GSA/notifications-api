@@ -1,8 +1,10 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app import db
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
     fetch_service_data_retention_by_id,
@@ -97,7 +99,7 @@ def test_insert_service_data_retention(sample_service):
         days_of_retention=3,
     )
 
-    results = ServiceDataRetention.query.all()
+    results = db.session.execute(select(ServiceDataRetention)).scalars().all()
     assert len(results) == 1
     assert results[0].service_id == sample_service.id
     assert results[0].notification_type == NotificationType.EMAIL
@@ -131,7 +133,7 @@ def test_update_service_data_retention(sample_service):
         days_of_retention=5,
     )
     assert updated_count == 1
-    results = ServiceDataRetention.query.all()
+    results = db.session.execute(select(ServiceDataRetention)).scalars().all()
     assert len(results) == 1
     assert results[0].id == data_retention.id
     assert results[0].service_id == sample_service.id
@@ -150,7 +152,7 @@ def test_update_service_data_retention_does_not_update_if_row_does_not_exist(
         days_of_retention=5,
     )
     assert updated_count == 0
-    assert len(ServiceDataRetention.query.all()) == 0
+    assert len(db.session.execute(select(ServiceDataRetention)).scalars().all()) == 0
 
 
 def test_update_service_data_retention_does_not_update_row_if_data_retention_is_for_different_service(

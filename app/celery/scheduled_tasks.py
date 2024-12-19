@@ -1,10 +1,10 @@
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import between
+from sqlalchemy import between, select, union, update
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, zendesk_client
+from app import db, notify_celery, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -18,7 +18,6 @@ from app.dao.invited_org_user_dao import (
 from app.dao.invited_user_dao import expire_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
-    dao_update_job,
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
@@ -105,30 +104,32 @@ def check_job_status():
     thirty_minutes_ago = utc_now() - timedelta(minutes=30)
     thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
-    incomplete_in_progress_jobs = Job.query.filter(
+    incomplete_in_progress_jobs = select(Job).filter(
         Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
-    incomplete_pending_jobs = Job.query.filter(
+    incomplete_pending_jobs = select(Job).filter(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
     )
 
-    jobs_not_complete_after_30_minutes = (
-        incomplete_in_progress_jobs.union(incomplete_pending_jobs)
-        .order_by(Job.processing_started, Job.scheduled_for)
-        .all()
-    )
+    jobs_not_complete_after_30_minutes = db.session.execute(
+        union(incomplete_in_progress_jobs, incomplete_pending_jobs).order_by(
+            Job.processing_started, Job.scheduled_for
+        )
+    ).all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_30_minutes:
-        job.job_status = JobStatus.ERROR
-        dao_update_job(job)
-        job_ids.append(str(job.id))
+        db.session.execute(
+            update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR)
+        )
+        db.session.commit()
 
+        job_ids.append(str(job.id))
     if job_ids:
         current_app.logger.info("Job(s) {} have not completed.".format(job_ids))
         process_incomplete_jobs.apply_async([job_ids], queue=QueueNames.JOBS)
@@ -158,6 +159,7 @@ def replay_created_notifications():
 
 @notify_celery.task(name="check-for-missing-rows-in-completed-jobs")
 def check_for_missing_rows_in_completed_jobs():
+
     jobs = find_jobs_with_missing_rows()
     for job in jobs:
         (

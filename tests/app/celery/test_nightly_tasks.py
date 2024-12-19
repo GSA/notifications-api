@@ -3,8 +3,10 @@ from unittest.mock import ANY, call
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
 from app.celery import nightly_tasks
 from app.celery.nightly_tasks import (
     _delete_notifications_older_than_retention_by_type,
@@ -230,7 +232,7 @@ def test_save_daily_notification_processing_time(
 
     save_daily_notification_processing_time(date_provided)
 
-    persisted_to_db = FactProcessingTime.query.all()
+    persisted_to_db = db.session.execute(select(FactProcessingTime)).scalars().all()
     assert len(persisted_to_db) == 1
     assert persisted_to_db[0].local_date == date(2021, 1, 17)
     assert persisted_to_db[0].messages_total == 2
@@ -269,7 +271,7 @@ def test_save_daily_notification_processing_time_when_in_est(
 
     save_daily_notification_processing_time(date_provided)
 
-    persisted_to_db = FactProcessingTime.query.all()
+    persisted_to_db = db.session.execute(select(FactProcessingTime)).scalars().all()
     assert len(persisted_to_db) == 1
     assert persisted_to_db[0].local_date == date(2021, 4, 17)
     assert persisted_to_db[0].messages_total == 2
