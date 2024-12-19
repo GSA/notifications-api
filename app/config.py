@@ -208,7 +208,7 @@ class Config(object):
             },
             "check-for-missing-rows-in-completed-jobs": {
                 "task": "check-for-missing-rows-in-completed-jobs",
-                "schedule": crontab(minute="*/10"),
+                "schedule": crontab(minute="*/2"),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "replay-created-notifications": {

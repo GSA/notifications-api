@@ -422,14 +422,20 @@ def get_service_history(service_id):
     )
 
     service_history = (
-        db.session.execute(select(Service.get_history_model()).filter_by(id=service_id))
+        db.session.execute(
+            select(Service.get_history_model()).where(
+                Service.get_history_model().id == service_id
+            )
+        )
         .scalars()
         .all()
     )
     service_data = service_history_schema.dump(service_history, many=True)
     api_key_history = (
         db.session.execute(
-            select(ApiKey.get_history_model()).filter_by(service_id=service_id)
+            select(ApiKey.get_history_model()).where(
+                ApiKey.get_history_model().service_id == service_id
+            )
         )
         .scalars()
         .all()
@@ -437,7 +443,9 @@ def get_service_history(service_id):
     api_keys_data = api_key_history_schema.dump(api_key_history, many=True)
 
     template_history = (
-        db.session.execute(select(TemplateHistory).filter_by(service_id=service_id))
+        db.session.execute(
+            select(TemplateHistory).where(TemplateHistory.service_id == service_id)
+        )
         .scalars()
         .all()
     )

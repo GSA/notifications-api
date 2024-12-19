@@ -33,8 +33,9 @@ def reset_service_callback_api(
 def get_service_callback_api(service_callback_api_id, service_id):
     return (
         db.session.execute(
-            select(ServiceCallbackApi).filter_by(
-                id=service_callback_api_id, service_id=service_id
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.id == service_callback_api_id,
+                ServiceCallbackApi.service_id == service_id,
             )
         )
         .scalars()
@@ -45,9 +46,9 @@ def get_service_callback_api(service_callback_api_id, service_id):
 def get_service_delivery_status_callback_api_for_service(service_id):
     return (
         db.session.execute(
-            select(ServiceCallbackApi).filter_by(
-                service_id=service_id,
-                callback_type=CallbackType.DELIVERY_STATUS,
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.service_id == service_id,
+                ServiceCallbackApi.callback_type == CallbackType.DELIVERY_STATUS,
             )
         )
         .scalars()
@@ -58,9 +59,9 @@ def get_service_delivery_status_callback_api_for_service(service_id):
 def get_service_complaint_callback_api_for_service(service_id):
     return (
         db.session.execute(
-            select(ServiceCallbackApi).filter_by(
-                service_id=service_id,
-                callback_type=CallbackType.COMPLAINT,
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.service_id == service_id,
+                ServiceCallbackApi.callback_type == CallbackType.COMPLAINT,
             )
         )
         .scalars()

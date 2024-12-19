@@ -33,7 +33,7 @@ def fetch_paginated_complaints(page=1):
 def fetch_complaints_by_service(service_id):
     stmt = (
         select(Complaint)
-        .filter_by(service_id=service_id)
+        .where(Complaint.service_id == service_id)
         .order_by(desc(Complaint.created_at))
     )
     return db.session.execute(stmt).scalars().all()

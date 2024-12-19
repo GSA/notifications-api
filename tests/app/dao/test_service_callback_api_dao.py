@@ -39,7 +39,9 @@ def test_save_service_callback_api(sample_service):
 
     versioned = (
         db.session.execute(
-            select(ServiceCallbackApi.get_history_model()).filter_by(id=callback_api.id)
+            select(ServiceCallbackApi.get_history_model()).where(
+                ServiceCallbackApi.get_history_model().id == callback_api.id
+            )
         )
         .scalars()
         .one()
@@ -147,8 +149,8 @@ def test_update_service_callback_api(sample_service):
 
     versioned_results = (
         db.session.execute(
-            select(ServiceCallbackApi.get_history_model()).filter_by(
-                id=saved_callback_api.id
+            select(ServiceCallbackApi.get_history_model()).where(
+                ServiceCallbackApi.get_history_model().id == saved_callback_api.id
             )
         )
         .scalars()

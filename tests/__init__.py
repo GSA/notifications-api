@@ -15,7 +15,9 @@ def create_service_authorization_header(service_id, key_type=KeyType.NORMAL):
     client_id = str(service_id)
     secrets = (
         db.session.execute(
-            select(ApiKey).filter_by(service_id=service_id, key_type=key_type)
+            select(ApiKey).where(
+                ApiKey.service_id == service_id, ApiKey.key_type == key_type
+            )
         )
         .scalars()
         .all()

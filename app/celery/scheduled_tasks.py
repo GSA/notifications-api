@@ -159,6 +159,7 @@ def replay_created_notifications():
 
 @notify_celery.task(name="check-for-missing-rows-in-completed-jobs")
 def check_for_missing_rows_in_completed_jobs():
+
     jobs = find_jobs_with_missing_rows()
     for job in jobs:
         (

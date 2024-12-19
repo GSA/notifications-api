@@ -43,7 +43,7 @@ def get_model_api_keys(service_id, id=None):
                 select(ApiKey).where(
                     ApiKey.id == id,
                     ApiKey.service_id == service_id,
-                    ApiKey.expiry_date == None, # noqa
+                    ApiKey.expiry_date == None,  # noqa
                 )
             )
             .scalars()
@@ -88,7 +88,9 @@ def get_unsigned_secret(key_id):
     """
     api_key = (
         db.session.execute(
-            select(ApiKey).where(ApiKey.id == key_id, ApiKey.expiry_date == None)  # noqa
+            select(ApiKey).where(
+                ApiKey.id == key_id, ApiKey.expiry_date == None  # noqa
+            )
         )
         .scalars()
         .one()

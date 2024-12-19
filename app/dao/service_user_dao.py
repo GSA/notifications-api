@@ -6,7 +6,9 @@ from app.models import ServiceUser, User
 
 
 def dao_get_service_user(user_id, service_id):
-    stmt = select(ServiceUser).filter_by(user_id=user_id, service_id=service_id)
+    stmt = select(ServiceUser).where(
+        ServiceUser.user_id == user_id, ServiceUser.service_id == service_id
+    )
     return db.session.execute(stmt).scalars().one_or_none()
 
 
@@ -22,7 +24,7 @@ def dao_get_active_service_users(service_id):
 
 def dao_get_service_users_by_user_id(user_id):
     return (
-        db.session.execute(select(ServiceUser).filter_by(user_id=user_id))
+        db.session.execute(select(ServiceUser).where(ServiceUser.user_id == user_id))
         .scalars()
         .all()
     )

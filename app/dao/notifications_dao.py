@@ -209,7 +209,9 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    stmt = select(Notification).filter_by(service_id=service_id, job_id=job_id)
+    stmt = select(Notification).where(
+        Notification.service_id == service_id, Notification.job_id == job_id
+    )
     stmt = _filter_query(stmt, filter_dict)
     stmt = stmt.order_by(asc(Notification.job_row_number))
 
@@ -223,30 +225,35 @@ def get_notifications_for_job(
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
-    stmt = select(func.count(Notification.id)).filter_by(job_id=job_id)
+    stmt = select(func.count(Notification.id)).where(Notification.job_id == job_id)
     return db.session.execute(stmt).scalar()
 
 
 def dao_get_notification_count_for_service(*, service_id):
-    stmt = select(func.count(Notification.id)).filter_by(service_id=service_id)
+    stmt = select(func.count(Notification.id)).where(
+        Notification.service_id == service_id
+    )
     return db.session.execute(stmt).scalar()
 
 
 def dao_get_failed_notification_count():
-    stmt = select(func.count(Notification.id)).filter_by(
-        status=NotificationStatus.FAILED
+    stmt = select(func.count(Notification.id)).where(
+        Notification.status == NotificationStatus.FAILED
     )
     return db.session.execute(stmt).scalar()
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
-    filter_dict = {"service_id": service_id, "id": notification_id}
+    filter_dict = {
+        "Notification.service_id": service_id,
+        "Notification.id": notification_id,
+    }
     if key_type:
-        filter_dict["key_type"] = key_type
+        filter_dict["Notification.key_type"] = key_type
 
     stmt = (
         select(Notification)
-        .filter_by(**filter_dict)
+        .where(**filter_dict)
         .options(joinedload(Notification.template))
     )
     return db.session.execute(stmt).scalars().one()

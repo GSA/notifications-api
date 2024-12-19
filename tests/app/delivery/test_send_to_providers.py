@@ -111,7 +111,9 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
     )
 
     notification = (
-        db.session.execute(select(Notification).filter_by(id=db_notification.id))
+        db.session.execute(
+            select(Notification).where(Notification.id == db_notification.id)
+        )
         .scalars()
         .one()
     )
@@ -159,7 +161,9 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     )
 
     notification = (
-        db.session.execute(select(Notification).filter_by(id=db_notification.id))
+        db.session.execute(
+            select(Notification).where(Notification.id == db_notification.id)
+        )
         .scalars()
         .one()
     )

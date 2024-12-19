@@ -17,12 +17,14 @@ class PermissionDAO(DAOClass):
 
     def remove_user_service_permissions(self, user, service):
         db.session.execute(
-            delete(self.Meta.model).filter_by(user=user, service=service)
+            delete(self.Meta.model).where(
+                self.Meta.model.user == user, self.Meta.model.service == service
+            )
         )
         db.session.commit()
 
     def remove_user_service_permissions_for_all_services(self, user):
-        db.session.execute(delete(self.Meta.model).filter_by(user=user))
+        db.session.execute(delete(self.Meta.model).where(self.Meta.model.user == user))
         db.session.commit()
 
     def set_user_service_permission(
@@ -53,9 +55,9 @@ class PermissionDAO(DAOClass):
         return (
             db.session.execute(
                 select(self.Meta.model)
-                .filter_by(user_id=user_id)
+                .where(self.Meta.model.user_id == user_id)
                 .join(Permission.service)
-                .filter_by(active=True)
+                .where(Permission.active == True)  # noqa
             )
             .scalars()
             .all()
@@ -65,9 +67,9 @@ class PermissionDAO(DAOClass):
         return (
             db.session.execute(
                 select(self.Meta.model)
-                .filter_by(user_id=user_id)
+                .where(self.Meta.model.user_id == user_id)
                 .join(Permission.service)
-                .filter_by(active=True, id=service_id)
+                .where(Permission.active == True, Permission.id == service_id)  # noqa
             )
             .scalars()
             .all()

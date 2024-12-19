@@ -216,7 +216,9 @@ def dao_fetch_service_by_inbound_number(number):
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
     stmt = (
-        select(Service).filter_by(id=service_id).options(joinedload(Service.api_keys))
+        select(Service)
+        .where(Service.id == service_id)
+        .options(joinedload(Service.api_keys))
     )
     if only_active:
         stmt = stmt.filter(Service.active)
@@ -240,7 +242,7 @@ def dao_fetch_all_services_created_by_user(user_id):
 
     stmt = (
         select(Service)
-        .filter_by(created_by_id=user_id)
+        .where(Service.created_by_id == user_id)
         .order_by(asc(Service.created_at))
     )
 
@@ -392,24 +394,26 @@ def delete_service_and_all_associated_db_objects(service):
         db.session.execute(stmt)
         db.session.commit()
 
-    subq = select(Template.id).filter_by(service=service).subquery()
+    subq = select(Template.id).where(Service.service == service).subquery()
 
     stmt = delete(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
     _delete_commit(stmt)
 
-    _delete_commit(delete(ServiceSmsSender).filter_by(service=service))
-    _delete_commit(delete(ServiceEmailReplyTo).filter_by(service=service))
-    _delete_commit(delete(InvitedUser).filter_by(service=service))
-    _delete_commit(delete(Permission).filter_by(service=service))
-    _delete_commit(delete(NotificationHistory).filter_by(service=service))
-    _delete_commit(delete(Notification).filter_by(service=service))
-    _delete_commit(delete(Job).filter_by(service=service))
-    _delete_commit(delete(Template).filter_by(service=service))
-    _delete_commit(delete(TemplateHistory).filter_by(service_id=service.id))
-    _delete_commit(delete(ServicePermission).filter_by(service_id=service.id))
-    _delete_commit(delete(ApiKey).filter_by(service=service))
-    _delete_commit(delete(ApiKey.get_history_model()).filter_by(service_id=service.id))
-    _delete_commit(delete(AnnualBilling).filter_by(service_id=service.id))
+    _delete_commit(delete(ServiceSmsSender).where(Service.service == service))
+    _delete_commit(delete(ServiceEmailReplyTo).where(Service.service == service))
+    _delete_commit(delete(InvitedUser).where(Service.service == service))
+    _delete_commit(delete(Permission).where(Service.service == service))
+    _delete_commit(delete(NotificationHistory).where(Service.service == service))
+    _delete_commit(delete(Notification).where(Service.service == service))
+    _delete_commit(delete(Job).where(Service.service == service))
+    _delete_commit(delete(Template).where(Service.service == service))
+    _delete_commit(delete(TemplateHistory).where(Service.service_id == service.id))
+    _delete_commit(delete(ServicePermission).where(Service.service_id == service.id))
+    _delete_commit(delete(ApiKey).where(Service.service == service))
+    _delete_commit(
+        delete(ApiKey.get_history_model()).where(Service.service_id == service.id)
+    )
+    _delete_commit(delete(AnnualBilling).where(Service.service_id == service.id))
 
     stmt = (
         select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))
@@ -421,7 +425,7 @@ def delete_service_and_all_associated_db_objects(service):
     for user in users:
         user.organizations = []
         service.users.remove(user)
-    _delete_commit(delete(Service.get_history_model()).filter_by(id=service.id))
+    _delete_commit(delete(Service.get_history_model()).where(Service.id == service.id))
     db.session.delete(service)
     db.session.commit()
     for user in users:

@@ -27,17 +27,19 @@ def dao_count_organizations_with_live_services():
 
 
 def dao_get_organization_services(organization_id):
-    stmt = select(Organization).filter_by(id=organization_id)
+    stmt = select(Organization).where(Organization.id == organization_id)
     return db.session.execute(stmt).scalars().one().services
 
 
 def dao_get_organization_live_services(organization_id):
-    stmt = select(Service).filter_by(organization_id=organization_id, restricted=False)
+    stmt = select(Service).where(
+        Service.organization_id == organization_id, Service.restricted == False  # noqa
+    )
     return db.session.execute(stmt).scalars().all()
 
 
 def dao_get_organization_by_id(organization_id):
-    stmt = select(Organization).filter_by(id=organization_id)
+    stmt = select(Organization).where(Organization.id == organization_id)
     return db.session.execute(stmt).scalars().one()
 
 
@@ -49,14 +51,18 @@ def dao_get_organization_by_email_address(email_address):
         if email_address.endswith(
             "@{}".format(domain.domain)
         ) or email_address.endswith(".{}".format(domain.domain)):
-            stmt = select(Organization).filter_by(id=domain.organization_id)
+            stmt = select(Organization).where(Organization.id == domain.organization_id)
             return db.session.execute(stmt).scalars().one()
 
     return None
 
 
 def dao_get_organization_by_service_id(service_id):
-    stmt = select(Organization).join(Organization.services).filter_by(id=service_id)
+    stmt = (
+        select(Organization)
+        .join(Organization.services)
+        .where(Organization.id == service_id)
+    )
     return db.session.execute(stmt).scalars().first()
 
 
@@ -74,7 +80,7 @@ def dao_update_organization(organization_id, **kwargs):
     num_updated = db.session.execute(stmt).rowcount
 
     if isinstance(domains, list):
-        stmt = delete(Domain).filter_by(organization_id=organization_id)
+        stmt = delete(Domain).where(Domain.organization_id == organization_id)
         db.session.execute(stmt)
         db.session.bulk_save_objects(
             [
@@ -108,7 +114,7 @@ def _update_organization_services(organization, attribute, only_where_none=True)
 @autocommit
 @version_class(Service)
 def dao_add_service_to_organization(service, organization_id):
-    stmt = select(Organization).filter_by(id=organization_id)
+    stmt = select(Organization).where(Organization.id == organization_id)
     organization = db.session.execute(stmt).scalars().one()
 
     service.organization_id = organization_id
@@ -130,7 +136,7 @@ def dao_get_users_for_organization(organization_id):
 @autocommit
 def dao_add_user_to_organization(organization_id, user_id):
     organization = dao_get_organization_by_id(organization_id)
-    stmt = select(User).filter_by(id=user_id)
+    stmt = select(User).where(User.id == user_id)
     user = db.session.execute(stmt).scalars().one()
     user.organizations.append(organization)
     db.session.add(organization)

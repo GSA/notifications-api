@@ -29,7 +29,7 @@ def test_api_key_should_create_new_api_key_for_service(notify_api, sample_servic
             assert "data" in json.loads(response.get_data(as_text=True))
             saved_api_key = (
                 db.session.execute(
-                    select(ApiKey).filter_by(service_id=sample_service.id)
+                    select(ApiKey).where(ApiKey.service_id == sample_service.id)
                 )
                 .scalars()
                 .first()

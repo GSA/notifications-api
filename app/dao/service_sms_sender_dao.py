@@ -17,8 +17,10 @@ def insert_service_sms_sender(service, sms_sender):
 
 
 def dao_get_service_sms_senders_by_id(service_id, service_sms_sender_id):
-    stmt = select(ServiceSmsSender).filter_by(
-        id=service_sms_sender_id, service_id=service_id, archived=False
+    stmt = select(ServiceSmsSender).where(
+        ServiceSmsSender.id == service_sms_sender_id,
+        ServiceSmsSender.service_id == service_id,
+        ServiceSmsSender.archived == False,  # noqa
     )
     return db.session.execute(stmt).scalars().one()
 
@@ -27,7 +29,10 @@ def dao_get_sms_senders_by_service_id(service_id):
 
     stmt = (
         select(ServiceSmsSender)
-        .filter_by(service_id=service_id, archived=False)
+        .where(
+            ServiceSmsSender.service_id == service_id,
+            ServiceSmsSender.archived == False,  # noqa
+        )
         .order_by(desc(ServiceSmsSender.is_default))
     )
     return db.session.execute(stmt).scalars().all()
@@ -87,7 +92,10 @@ def update_existing_sms_sender_with_inbound_number(
 def archive_sms_sender(service_id, sms_sender_id):
     sms_sender_to_archive = (
         db.session.execute(
-            select(ServiceSmsSender).filter_by(id=sms_sender_id, service_id=service_id)
+            select(ServiceSmsSender).where(
+                ServiceSmsSender.id == sms_sender_id,
+                ServiceSmsSender.service_id == service_id,
+            )
         )
         .scalars()
         .one()

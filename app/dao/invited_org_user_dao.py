@@ -15,8 +15,9 @@ def save_invited_org_user(invited_org_user):
 def get_invited_org_user(organization_id, invited_org_user_id):
     return (
         db.session.execute(
-            select(InvitedOrganizationUser).filter_by(
-                organization_id=organization_id, id=invited_org_user_id
+            select(InvitedOrganizationUser).where(
+                InvitedOrganizationUser.organization_id == organization_id,
+                InvitedOrganizationUser.id == invited_org_user_id,
             )
         )
         .scalars()
@@ -27,7 +28,9 @@ def get_invited_org_user(organization_id, invited_org_user_id):
 def get_invited_org_user_by_id(invited_org_user_id):
     return (
         db.session.execute(
-            select(InvitedOrganizationUser).filter_by(id=invited_org_user_id)
+            select(InvitedOrganizationUser).where(
+                InvitedOrganizationUser.id == invited_org_user_id
+            )
         )
         .scalars()
         .one()
@@ -37,7 +40,9 @@ def get_invited_org_user_by_id(invited_org_user_id):
 def get_invited_org_users_for_organization(organization_id):
     return (
         db.session.execute(
-            select(InvitedOrganizationUser).filter_by(organization_id=organization_id)
+            select(InvitedOrganizationUser).where(
+                InvitedOrganizationUser.organization_id == organization_id
+            )
         )
         .scalars()
         .all()

@@ -73,7 +73,10 @@ def update_reply_to_email_address(service_id, reply_to_id, email_address, is_def
 def archive_reply_to_email_address(service_id, reply_to_id):
     reply_to_archive = (
         db.session.execute(
-            select(ServiceEmailReplyTo).filter_by(id=reply_to_id, service_id=service_id)
+            select(ServiceEmailReplyTo).where(
+                ServiceEmailReplyTo.id == reply_to_id,
+                ServiceEmailReplyTo.service_id == service_id,
+            )
         )
         .scalars()
         .one()

@@ -39,7 +39,7 @@ def dao_get_notification_outcomes_for_job(service_id, job_id):
 
 
 def dao_get_job_by_service_id_and_job_id(service_id, job_id):
-    stmt = select(Job).filter_by(service_id=service_id, id=job_id)
+    stmt = select(Job).where(Job.service_id == service_id, Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
 
 
@@ -97,7 +97,7 @@ def dao_get_scheduled_job_stats(
 
 
 def dao_get_job_by_id(job_id):
-    stmt = select(Job).filter_by(id=job_id)
+    stmt = select(Job).where(Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
 
 

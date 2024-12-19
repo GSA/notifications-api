@@ -11,7 +11,9 @@ def dao_get_email_branding_options():
 
 def dao_get_email_branding_by_id(email_branding_id):
     return (
-        db.session.execute(select(EmailBranding).filter_by(id=email_branding_id))
+        db.session.execute(
+            select(EmailBranding).where(EmailBranding.id == email_branding_id)
+        )
         .scalars()
         .one()
     )
@@ -19,7 +21,9 @@ def dao_get_email_branding_by_id(email_branding_id):
 
 def dao_get_email_branding_by_name(email_branding_name):
     return (
-        db.session.execute(select(EmailBranding).filter_by(name=email_branding_name))
+        db.session.execute(
+            select(EmailBranding).where(EmailBranding.name == email_branding_name)
+        )
         .scalars()
         .first()
     )

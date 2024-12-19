@@ -88,7 +88,7 @@ def test_deactivating_service_creates_history(archived_service):
     history = (
         db.session.execute(
             select(ServiceHistory)
-            .filter_by(id=archived_service.id)
+            .where(ServiceHistory.id == archived_service.id)
             .order_by(ServiceHistory.version.desc())
         )
         .scalars()

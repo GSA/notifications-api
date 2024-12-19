@@ -180,7 +180,9 @@ def delete_inbound_sms_older_than_retention():
 
 
 def dao_get_inbound_sms_by_id(service_id, inbound_id):
-    stmt = select(InboundSms).filter_by(id=inbound_id, service_id=service_id)
+    stmt = select(InboundSms).where(
+        InboundSms.id == inbound_id, InboundSms.service_id == service_id
+    )
     return db.session.execute(stmt).scalars().one()
 
 

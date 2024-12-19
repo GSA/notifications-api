@@ -32,8 +32,9 @@ def reset_service_inbound_api(
 def get_service_inbound_api(service_inbound_api_id, service_id):
     return (
         db.session.execute(
-            select(ServiceInboundApi).filter_by(
-                id=service_inbound_api_id, service_id=service_id
+            select(ServiceInboundApi).where(
+                ServiceInboundApi.id == service_inbound_api_id,
+                ServiceInboundApi.service_id == service_id,
             )
         )
         .scalars()
@@ -43,7 +44,9 @@ def get_service_inbound_api(service_inbound_api_id, service_id):
 
 def get_service_inbound_api_for_service(service_id):
     return (
-        db.session.execute(select(ServiceInboundApi).filter_by(service_id=service_id))
+        db.session.execute(
+            select(ServiceInboundApi).where(ServiceInboundApi.service_id == service_id)
+        )
         .scalars()
         .first()
     )
