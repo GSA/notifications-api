@@ -29,7 +29,7 @@ def expire_api_key(service_id, api_key_id):
                 ApiKey.id == api_key_id, ApiKey.service_id == service_id
             )
         )
-        # .scalars()
+        .scalars()
         .one()
     )
     api_key.expiry_date = utc_now()
