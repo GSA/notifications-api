@@ -1,7 +1,20 @@
+import json
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import asc, delete, desc, func, or_, select, text, union, update
+from sqlalchemy import (
+    TIMESTAMP,
+    asc,
+    cast,
+    delete,
+    desc,
+    func,
+    or_,
+    select,
+    text,
+    union,
+    update,
+)
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -707,3 +720,52 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
             union(notification_table_query, ft_status_table_query).subquery()
         ).distinct()
     }
+
+
+def dao_update_delivery_receipts(receipts, delivered):
+    new_receipts = []
+    for r in receipts:
+        if isinstance(r, str):
+            r = json.loads(r)
+        new_receipts.append(r)
+
+    receipts = new_receipts
+
+    id_to_carrier = {
+        r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
+    }
+    id_to_provider_response = {
+        r["notification.messageId"]: r["delivery.providerResponse"] for r in receipts
+    }
+    id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
+
+    status_to_update_with = NotificationStatus.DELIVERED
+    if not delivered:
+        status_to_update_with = NotificationStatus.FAILED
+    stmt = (
+        update(Notification)
+        .where(Notification.message_id.in_(id_to_carrier.keys()))
+        .values(
+            carrier=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_carrier.items()
+                ]
+            ),
+            status=status_to_update_with,
+            sent_at=case(
+                *[
+                    (Notification.message_id == key, cast(value, TIMESTAMP))
+                    for key, value in id_to_timestamp.items()
+                ]
+            ),
+            provider_response=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_provider_response.items()
+                ]
+            ),
+        )
+    )
+    db.session.execute(stmt)
+    db.session.commit()
