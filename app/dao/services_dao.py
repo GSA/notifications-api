@@ -394,26 +394,36 @@ def delete_service_and_all_associated_db_objects(service):
         db.session.execute(stmt)
         db.session.commit()
 
-    subq = select(Template.id).where(Service.service == service).subquery()
+    subq = select(Template.id).where(Template.service == service).subquery()
 
     stmt = delete(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
     _delete_commit(stmt)
 
-    _delete_commit(delete(ServiceSmsSender).where(Service.service == service))
-    _delete_commit(delete(ServiceEmailReplyTo).where(Service.service == service))
-    _delete_commit(delete(InvitedUser).where(Service.service == service))
-    _delete_commit(delete(Permission).where(Service.service == service))
-    _delete_commit(delete(NotificationHistory).where(Service.service == service))
-    _delete_commit(delete(Notification).where(Service.service == service))
-    _delete_commit(delete(Job).where(Service.service == service))
-    _delete_commit(delete(Template).where(Service.service == service))
-    _delete_commit(delete(TemplateHistory).where(Service.service_id == service.id))
-    _delete_commit(delete(ServicePermission).where(Service.service_id == service.id))
-    _delete_commit(delete(ApiKey).where(Service.service == service))
+    _delete_commit(delete(ServiceSmsSender).where(ServiceSmsSender.service == service))
     _delete_commit(
-        delete(ApiKey.get_history_model()).where(Service.service_id == service.id)
+        delete(ServiceEmailReplyTo).where(ServiceEmailReplyTo.service == service)
     )
-    _delete_commit(delete(AnnualBilling).where(Service.service_id == service.id))
+    _delete_commit(delete(InvitedUser).where(InvitedUser.service == service))
+    _delete_commit(delete(Permission).where(Permission.service == service))
+    _delete_commit(
+        delete(NotificationHistory).where(NotificationHistory.service == service)
+    )
+    _delete_commit(delete(Notification).where(Notification.service == service))
+    _delete_commit(delete(Job).where(Job.service == service))
+    _delete_commit(delete(Template).where(Template.service == service))
+    _delete_commit(
+        delete(TemplateHistory).where(TemplateHistory.service_id == service.id)
+    )
+    _delete_commit(
+        delete(ServicePermission).where(ServicePermission.service_id == service.id)
+    )
+    _delete_commit(delete(ApiKey).where(ApiKey.service == service))
+    _delete_commit(
+        delete(ApiKey.get_history_model()).where(
+            ApiKey.get_history_model().service_id == service.id
+        )
+    )
+    _delete_commit(delete(AnnualBilling).where(AnnualBilling.service_id == service.id))
 
     stmt = (
         select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))

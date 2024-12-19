@@ -57,7 +57,7 @@ class PermissionDAO(DAOClass):
                 select(self.Meta.model)
                 .where(self.Meta.model.user_id == user_id)
                 .join(Permission.service)
-                .where(Permission.active == True)  # noqa
+                .where(Permission.service.active == True)  # noqa
             )
             .scalars()
             .all()
@@ -69,7 +69,10 @@ class PermissionDAO(DAOClass):
                 select(self.Meta.model)
                 .where(self.Meta.model.user_id == user_id)
                 .join(Permission.service)
-                .where(Permission.active == True, Permission.id == service_id)  # noqa
+                .where(
+                    Permission.service.active == True,  # noqa
+                    Permission.service.id == service_id,
+                )  # noqa
             )
             .scalars()
             .all()
