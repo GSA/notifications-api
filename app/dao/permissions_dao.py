@@ -66,13 +66,11 @@ class PermissionDAO(DAOClass):
     def get_permissions_by_user_id_and_service_id(self, user_id, service_id):
         return (
             db.session.execute(
-                select(self.Meta.model)
-                .where(self.Meta.model.user_id == user_id)
-                .join(Permission.service)
-                .where(
-                    Permission.service.active == True,  # noqa
-                    Permission.service.id == service_id,
-                )  # noqa
+                select(Permission)
+                .join(Service)
+                .where(Permission.user_id == user_id)
+                .where(Service.active.is_(True))
+                .where(Service.id == service_id)
             )
             .scalars()
             .all()
