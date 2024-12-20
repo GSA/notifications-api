@@ -252,7 +252,7 @@ def process_delivery_receipts(self):
     it does fail, we need to go back over at some point when things are running again and process those results.
     """
     try:
-        batch_size = 200  # in theory with postgresql this could be 10k to 20k?
+        batch_size = 1000  # in theory with postgresql this could be 10k to 20k?
 
         cloudwatch = AwsCloudwatchClient()
         cloudwatch.init_app(current_app)

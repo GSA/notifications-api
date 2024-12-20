@@ -7,7 +7,6 @@ from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
-from app.utils import hilite
 
 
 class AwsCloudwatchClient(Client):
@@ -49,7 +48,6 @@ class AwsCloudwatchClient(Client):
 
     def _get_log(self, log_group_name, start, end):
         # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
-        print(hilite(f"START {start} END {end}"))
         next_token = None
         all_log_events = []
 
