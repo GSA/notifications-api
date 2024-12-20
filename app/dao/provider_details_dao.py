@@ -109,7 +109,7 @@ def dao_get_provider_stats():
                 "current_month_billable_sms"
             ),
         )
-        .filter(
+        .where(
             FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= first_day_of_the_month,
         )

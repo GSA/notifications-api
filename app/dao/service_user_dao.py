@@ -17,7 +17,7 @@ def dao_get_active_service_users(service_id):
     stmt = (
         select(ServiceUser)
         .join(User, User.id == ServiceUser.user_id)
-        .filter(User.state == "active", ServiceUser.service_id == service_id)
+        .where(User.state == "active", ServiceUser.service_id == service_id)
     )
     return db.session.execute(stmt).scalars().all()
 

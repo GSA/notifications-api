@@ -104,11 +104,11 @@ def check_job_status():
     thirty_minutes_ago = utc_now() - timedelta(minutes=30)
     thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
 
-    incomplete_in_progress_jobs = select(Job).filter(
+    incomplete_in_progress_jobs = select(Job).where(
         Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
     )
-    incomplete_pending_jobs = select(Job).filter(
+    incomplete_pending_jobs = select(Job).where(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),

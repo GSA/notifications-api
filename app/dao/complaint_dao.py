@@ -46,6 +46,6 @@ def fetch_count_of_complaints(start_date, end_date):
     stmt = (
         select(func.count())
         .select_from(Complaint)
-        .filter(Complaint.created_at >= start_date, Complaint.created_at < end_date)
+        .where(Complaint.created_at >= start_date, Complaint.created_at < end_date)
     )
     return db.session.execute(stmt).scalar() or 0

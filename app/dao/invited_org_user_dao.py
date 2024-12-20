@@ -52,7 +52,7 @@ def get_invited_org_users_for_organization(organization_id):
 def delete_org_invitations_created_more_than_two_days_ago():
     deleted = (
         db.session.query(InvitedOrganizationUser)
-        .filter(InvitedOrganizationUser.created_at <= utc_now() - timedelta(days=2))
+        .where(InvitedOrganizationUser.created_at <= utc_now() - timedelta(days=2))
         .delete()
     )
     db.session.commit()

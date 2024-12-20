@@ -43,7 +43,7 @@ def dao_update_annual_billing_for_future_years(
 ):
     stmt = (
         update(AnnualBilling)
-        .filter(
+        .where(
             AnnualBilling.service_id == service_id,
             AnnualBilling.financial_year_start > financial_year_start,
         )

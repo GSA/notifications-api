@@ -10,7 +10,7 @@ from app.models import ServiceEmailReplyTo
 def dao_get_reply_to_by_service_id(service_id):
     reply_to = (
         db.session.query(ServiceEmailReplyTo)
-        .filter(
+        .where(
             ServiceEmailReplyTo.service_id == service_id,
             ServiceEmailReplyTo.archived == False,  # noqa
         )
@@ -25,7 +25,7 @@ def dao_get_reply_to_by_service_id(service_id):
 def dao_get_reply_to_by_id(service_id, reply_to_id):
     reply_to = (
         db.session.query(ServiceEmailReplyTo)
-        .filter(
+        .where(
             ServiceEmailReplyTo.service_id == service_id,
             ServiceEmailReplyTo.id == reply_to_id,
             ServiceEmailReplyTo.archived == False,  # noqa

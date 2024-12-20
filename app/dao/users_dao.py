@@ -54,7 +54,7 @@ def get_login_gov_user(login_uuid, email_address):
 
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
-    stmt = select(User).filter(User.email_address.ilike(email_address))
+    stmt = select(User).where(User.email_address.ilike(email_address))
     user = db.session.execute(stmt).scalars().first()
 
     if user:
@@ -113,7 +113,7 @@ def get_user_code(user, code, code_type):
 
 
 def delete_codes_older_created_more_than_a_day_ago():
-    stmt = delete(VerifyCode).filter(
+    stmt = delete(VerifyCode).where(
         VerifyCode.created_at < utc_now() - timedelta(hours=24)
     )
 
@@ -141,7 +141,7 @@ def delete_user_verify_codes(user):
 
 
 def count_user_verify_codes(user):
-    stmt = select(func.count(VerifyCode.id)).filter(
+    stmt = select(func.count(VerifyCode.id)).where(
         VerifyCode.user == user,
         VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
@@ -163,13 +163,13 @@ def get_users():
 
 
 def get_user_by_email(email):
-    stmt = select(User).filter(func.lower(User.email_address) == func.lower(email))
+    stmt = select(User).where(func.lower(User.email_address) == func.lower(email))
     return db.session.execute(stmt).scalars().one()
 
 
 def get_users_by_partial_email(email):
     email = escape_special_characters(email)
-    stmt = select(User).filter(User.email_address.ilike("%{}%".format(email)))
+    stmt = select(User).where(User.email_address.ilike("%{}%".format(email)))
     return db.session.execute(stmt).scalars().all()
 
 
@@ -200,7 +200,7 @@ def get_user_and_accounts(user_id):
     # that we have put is functionally doing the same thing as before
     stmt = (
         select(User)
-        .filter(User.id == user_id)
+        .where(User.id == user_id)
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)

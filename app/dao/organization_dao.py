@@ -17,7 +17,7 @@ def dao_count_organizations_with_live_services():
     stmt = (
         select(func.count(func.distinct(Organization.id)))
         .join(Organization.services)
-        .filter(
+        .where(
             Service.active.is_(True),
             Service.restricted.is_(False),
             Service.count_as_live.is_(True),
@@ -59,9 +59,7 @@ def dao_get_organization_by_email_address(email_address):
 
 def dao_get_organization_by_service_id(service_id):
     stmt = (
-        select(Organization)
-        .join(Organization.services)
-        .where(Service.id == service_id)
+        select(Organization).join(Organization.services).where(Service.id == service_id)
     )
     return db.session.execute(stmt).scalars().first()
 
@@ -127,7 +125,7 @@ def dao_get_users_for_organization(organization_id):
     return (
         db.session.query(User)
         .join(User.organizations)
-        .filter(Organization.id == organization_id, User.state == "active")
+        .where(Organization.id == organization_id, User.state == "active")
         .order_by(User.created_at)
         .all()
     )

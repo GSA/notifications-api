@@ -52,7 +52,7 @@ def fetch_sms_free_allowance_remainder_until_date(end_date):
                 FactBilling.notification_type == NotificationType.SMS,
             ),
         )
-        .filter(
+        .where(
             AnnualBilling.financial_year_start == billing_year,
         )
         .group_by(
@@ -110,7 +110,7 @@ def fetch_sms_billing_for_all_services(start_date, end_date):
             FactBilling,
             FactBilling.service_id == Service.id,
         )
-        .filter(
+        .where(
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
             FactBilling.notification_type == NotificationType.SMS,
@@ -250,7 +250,7 @@ def query_service_email_usage_for_year(service_id, year):
             FactBilling.billable_units.label("charged_units"),
         )
         .select_from(FactBilling)
-        .filter(
+        .where(
             FactBilling.service_id == service_id,
             FactBilling.local_date >= year_start,
             FactBilling.local_date <= year_end,
@@ -338,7 +338,7 @@ def query_service_sms_usage_for_year(service_id, year):
         )
         .select_from(FactBilling)
         .join(AnnualBilling, AnnualBilling.service_id == service_id)
-        .filter(
+        .where(
             FactBilling.service_id == service_id,
             FactBilling.local_date >= year_start,
             FactBilling.local_date <= year_end,
@@ -355,7 +355,7 @@ def delete_billing_data_for_service_for_day(process_day, service_id):
 
     Returns how many rows were deleted
     """
-    stmt = delete(FactBilling).filter(
+    stmt = delete(FactBilling).where(
         FactBilling.local_date == process_day, FactBilling.service_id == service_id
     )
     result = db.session.execute(stmt)
@@ -403,7 +403,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
                 func.count().label("notifications_sent"),
             )
             .select_from(NotificationAllTimeView)
-            .filter(
+            .where(
                 NotificationAllTimeView.status.in_(
                     NotificationStatus.sent_email_types()
                 ),
@@ -438,7 +438,7 @@ def _query_for_billing_data(notification_type, start_date, end_date, service):
                 func.count().label("notifications_sent"),
             )
             .select_from(NotificationAllTimeView)
-            .filter(
+            .where(
                 NotificationAllTimeView.status.in_(
                     NotificationStatus.billable_sms_types()
                 ),
@@ -474,7 +474,7 @@ def get_service_ids_that_need_billing_populated(start_date, end_date):
     stmt = (
         select(NotificationHistory.service_id)
         .select_from(NotificationHistory)
-        .filter(
+        .where(
             NotificationHistory.created_at >= start_date,
             NotificationHistory.created_at <= end_date,
             NotificationHistory.notification_type.in_(
@@ -568,7 +568,7 @@ def fetch_email_usage_for_organization(organization_id, start_date, end_date):
             FactBilling,
             FactBilling.service_id == Service.id,
         )
-        .filter(
+        .where(
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
             FactBilling.notification_type == NotificationType.EMAIL,
@@ -623,7 +623,7 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
             ),
         )
         .outerjoin(ft_billing_substmt, Service.id == ft_billing_substmt.c.service_id)
-        .filter(
+        .where(
             Service.organization_id == organization_id, Service.restricted.is_(False)
         )
         .group_by(Service.id, Service.name, AnnualBilling.free_sms_fragment_limit)
@@ -688,7 +688,7 @@ def query_organization_sms_usage_for_year(organization_id, year):
                 FactBilling.notification_type == NotificationType.SMS,
             ),
         )
-        .filter(
+        .where(
             Service.organization_id == organization_id,
             AnnualBilling.financial_year_start == year,
         )
@@ -812,9 +812,7 @@ def fetch_daily_volumes_for_platform(start_date, end_date):
                 )
             ).label("email_totals"),
         )
-        .filter(
-            FactBilling.local_date >= start_date, FactBilling.local_date <= end_date
-        )
+        .where(FactBilling.local_date >= start_date, FactBilling.local_date <= end_date)
         .group_by(FactBilling.local_date, FactBilling.notification_type)
         .subquery()
     )
@@ -857,7 +855,7 @@ def fetch_daily_sms_provider_volumes_for_platform(start_date, end_date):
             ).label("sms_cost"),
         )
         .select_from(FactBilling)
-        .filter(
+        .where(
             FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= start_date,
             FactBilling.local_date <= end_date,
@@ -912,9 +910,7 @@ def fetch_volumes_by_service(start_date, end_date):
             ).label("email_totals"),
         )
         .select_from(FactBilling)
-        .filter(
-            FactBilling.local_date >= start_date, FactBilling.local_date <= end_date
-        )
+        .where(FactBilling.local_date >= start_date, FactBilling.local_date <= end_date)
         .group_by(
             FactBilling.local_date,
             FactBilling.service_id,
@@ -930,7 +926,7 @@ def fetch_volumes_by_service(start_date, end_date):
             AnnualBilling.free_sms_fragment_limit,
         )
         .select_from(AnnualBilling)
-        .filter(AnnualBilling.financial_year_start <= year_end_date)
+        .where(AnnualBilling.financial_year_start <= year_end_date)
         .group_by(AnnualBilling.service_id, AnnualBilling.free_sms_fragment_limit)
         .subquery()
     )
@@ -957,7 +953,7 @@ def fetch_volumes_by_service(start_date, end_date):
         .outerjoin(  # include services without volume
             volume_stats, Service.id == volume_stats.c.service_id
         )
-        .filter(
+        .where(
             Service.restricted.is_(False),
             Service.count_as_live.is_(True),
             Service.active.is_(True),
