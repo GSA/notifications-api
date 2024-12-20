@@ -1,4 +1,5 @@
 import json
+from time import sleep
 
 from celery.signals import task_postrun
 from flask import current_app
@@ -75,8 +76,15 @@ def process_job(job_id, sender_id=None):
         )
     )
 
+    # notify-api-1495 we are going to sleep periodically to give other
+    # jobs running at the same time a chance to get some of their messages
+    # sent.  Sleep for 5 minutes after every 500 sends
+    count = 0
     for row in recipient_csv.get_rows():
         process_row(row, template, job, service, sender_id=sender_id)
+        count = count + 1
+        if count % 500 == 0:
+            sleep(5 * 60)
 
     # End point/Exit point for message send flow.
     job_complete(job, start=start)
