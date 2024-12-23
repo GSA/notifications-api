@@ -100,12 +100,20 @@ class AwsCloudwatchClient(Client):
         if isinstance(event, str):
             event = json.loads(event)
 
+        # Don't trust AWS to always send the same JSON structure back
+        # However, if we don't get message_id and status we might as well blow up
+        # because it's pointless to continue
+        phone_carrier = self._aws_value_or_default(event, "delivery", "phoneCarrier")
+        provider_response = self._aws_value_or_default(
+            event, "delivery", "providerResponse"
+        )
+        my_timestamp = self._aws_value_or_default(event, "notification", "timestamp")
         return {
             "notification.messageId": event["notification"]["messageId"],
             "status": event["status"],
-            "delivery.phoneCarrier": event["delivery"]["phoneCarrier"],
-            "delivery.providerResponse": event["delivery"]["providerResponse"],
-            "@timestamp": event["notification"]["timestamp"],
+            "delivery.phoneCarrier": phone_carrier,
+            "delivery.providerResponse": provider_response,
+            "@timestamp": my_timestamp,
         }
 
     # Here is an example of how to get the events with log insights
@@ -155,16 +163,34 @@ class AwsCloudwatchClient(Client):
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
         delivered_event_set = self._get_receipts(log_group_name, start, end)
+        current_app.logger.info(
+            (f"Delivered message count: {len(delivered_event_set)}")
+        )
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
         failed_event_set = self._get_receipts(log_group_name, start, end)
+        current_app.logger.info((f"Failed message count: {len(failed_event_set)}"))
+
         return delivered_event_set, failed_event_set
 
     def _get_receipts(self, log_group_name, start, end):
         event_set = set()
         all_events = self._get_log(log_group_name, start, end)
         for event in all_events:
-            actual_event = self.event_to_db_format(event["message"])
-            event_set.add(json.dumps(actual_event))
+            try:
+                actual_event = self.event_to_db_format(event["message"])
+                event_set.add(json.dumps(actual_event))
+            except Exception:
+                current_app.logger.exception(
+                    f"Could not format delivery receipt {event} for db insert"
+                )
         return event_set
+
+    def _aws_value_or_default(self, event, top_level, second_level):
+        if event.get(top_level) is None or event[top_level].get(second_level) is None:
+            my_var = ""
+        else:
+            my_var = event[top_level][second_level]
+
+        return my_var
