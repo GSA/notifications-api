@@ -29,8 +29,8 @@ def dao_create_or_update_annual_billing_for_year(
 def dao_get_annual_billing(service_id):
     stmt = (
         select(AnnualBilling)
-        .filter_by(
-            service_id=service_id,
+        .where(
+            AnnualBilling.service_id == service_id,
         )
         .order_by(AnnualBilling.financial_year_start)
     )
@@ -43,7 +43,7 @@ def dao_update_annual_billing_for_future_years(
 ):
     stmt = (
         update(AnnualBilling)
-        .filter(
+        .where(
             AnnualBilling.service_id == service_id,
             AnnualBilling.financial_year_start > financial_year_start,
         )
@@ -57,8 +57,9 @@ def dao_get_free_sms_fragment_limit_for_year(service_id, financial_year_start=No
     if not financial_year_start:
         financial_year_start = get_current_calendar_year_start_year()
 
-    stmt = select(AnnualBilling).filter_by(
-        service_id=service_id, financial_year_start=financial_year_start
+    stmt = select(AnnualBilling).where(
+        AnnualBilling.service_id == service_id,
+        AnnualBilling.financial_year_start == financial_year_start,
     )
     return db.session.execute(stmt).scalars().first()
 
@@ -66,8 +67,8 @@ def dao_get_free_sms_fragment_limit_for_year(service_id, financial_year_start=No
 def dao_get_all_free_sms_fragment_limit(service_id):
     stmt = (
         select(AnnualBilling)
-        .filter_by(
-            service_id=service_id,
+        .where(
+            AnnualBilling.service_id == service_id,
         )
         .order_by(AnnualBilling.financial_year_start)
     )

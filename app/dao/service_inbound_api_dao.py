@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit, version_class
 from app.models import ServiceInboundApi
@@ -28,13 +30,26 @@ def reset_service_inbound_api(
 
 
 def get_service_inbound_api(service_inbound_api_id, service_id):
-    return ServiceInboundApi.query.filter_by(
-        id=service_inbound_api_id, service_id=service_id
-    ).first()
+    return (
+        db.session.execute(
+            select(ServiceInboundApi).where(
+                ServiceInboundApi.id == service_inbound_api_id,
+                ServiceInboundApi.service_id == service_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
 
 def get_service_inbound_api_for_service(service_id):
-    return ServiceInboundApi.query.filter_by(service_id=service_id).first()
+    return (
+        db.session.execute(
+            select(ServiceInboundApi).where(ServiceInboundApi.service_id == service_id)
+        )
+        .scalars()
+        .first()
+    )
 
 
 @autocommit

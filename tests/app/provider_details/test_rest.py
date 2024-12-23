@@ -1,7 +1,9 @@
 import pytest
 from flask import json
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.models import ProviderDetails, ProviderDetailsHistory
 from tests import create_admin_authorization_header
 from tests.app.db import create_ft_billing
@@ -53,7 +55,7 @@ def test_get_provider_contains_correct_fields(client, sample_template):
 
 
 def test_should_be_able_to_update_status(client, restore_provider_details):
-    provider = ProviderDetails.query.first()
+    provider = db.session.execute(select(ProviderDetails)).scalars().first()
 
     update_resp_1 = client.post(
         "/provider-details/{}".format(provider.id),
@@ -76,7 +78,7 @@ def test_should_be_able_to_update_status(client, restore_provider_details):
 def test_should_not_be_able_to_update_disallowed_fields(
     client, restore_provider_details, field, value
 ):
-    provider = ProviderDetails.query.first()
+    provider = db.session.execute(select(ProviderDetails)).scalars().first()
 
     resp = client.post(
         "/provider-details/{}".format(provider.id),
@@ -94,7 +96,7 @@ def test_should_not_be_able_to_update_disallowed_fields(
 
 
 def test_get_provider_versions_contains_correct_fields(client, notify_db_session):
-    provider = ProviderDetailsHistory.query.first()
+    provider = db.session.execute(select(ProviderDetailsHistory)).scalars().first()
     response = client.get(
         "/provider-details/{}/versions".format(provider.id),
         headers=[create_admin_authorization_header()],
@@ -117,7 +119,7 @@ def test_get_provider_versions_contains_correct_fields(client, notify_db_session
 def test_update_provider_should_store_user_id(
     client, restore_provider_details, sample_user
 ):
-    provider = ProviderDetails.query.first()
+    provider = db.session.execute(select(ProviderDetails)).scalars().first()
 
     update_resp_1 = client.post(
         "/provider-details/{}".format(provider.id),
