@@ -54,7 +54,7 @@ def _create_service_invite(invited_user, nonce, state):
     data["invited_user_email"] = invited_user.email_address
 
     invite_redis_key = f"invite-data-{unquote(state)}"
-    redis_store.set(invite_redis_key, get_user_data_url_safe(data))
+    redis_store.set(invite_redis_key, get_user_data_url_safe(data), ex=2 * 24 * 60 * 60)
 
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
 
