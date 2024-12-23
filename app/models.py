@@ -1532,6 +1532,7 @@ class Notification(db.Model):
 
     provider_response = db.Column(db.Text, nullable=True)
     carrier = db.Column(db.Text, nullable=True)
+    message_id = db.Column(db.Text, nullable=True)
 
     # queue_name = db.Column(db.Text, nullable=True)
 
