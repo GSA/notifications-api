@@ -1,5 +1,6 @@
 import json
 
+from celery.signals import task_postrun
 from flask import current_app
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -168,6 +169,13 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
             ),
         )
         return True
+
+
+@task_postrun.connect
+def log_task_ejection(sender=None, task_id=None, **kwargs):
+    current_app.logger.info(
+        f"Task {task_id} ({sender.name if sender else 'unknown_task'}) has been completed and removed"
+    )
 
 
 @notify_celery.task(bind=True, name="save-sms", max_retries=2, default_retry_delay=600)
