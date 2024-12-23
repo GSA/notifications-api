@@ -65,6 +65,12 @@ def dao_get_last_date_template_was_used(template_id, service_id):
     return last_date
 
 
+def dao_notification_exists(notification_id) -> bool:
+    stmt = select(Notification).where(Notification.id == notification_id)
+    result = db.session.execute(stmt).scalar()
+    return result is not None
+
+
 @autocommit
 def dao_create_notification(notification):
     if not notification.id:
@@ -86,9 +92,7 @@ def dao_create_notification(notification):
     notification.normalised_to = "1"
 
     # notify-api-1454 insert only if it doesn't exist
-    stmt = select(Notification).where(Notification.id == notification.id)
-    result = db.session.execute(stmt).scalar()
-    if result is None:
+    if not dao_notification_exists(notification.id):
         db.session.add(notification)
 
 
