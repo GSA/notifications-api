@@ -8,6 +8,7 @@ from app.config import QueueNames
 from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
+    dao_notification_exists,
     get_notification_by_id,
 )
 from app.enums import KeyType, NotificationStatus, NotificationType
@@ -151,6 +152,10 @@ def persist_notification(
             f"{notification_type} {notification_id} created at {notification_created_at}"
         )
     return notification
+
+
+def notification_exists(notification_id):
+    return dao_notification_exists(notification_id)
 
 
 def send_notification_to_queue_detached(
