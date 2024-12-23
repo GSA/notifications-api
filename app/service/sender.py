@@ -1,5 +1,8 @@
+import json
+
 from flask import current_app
 
+from app import redis_store
 from app.config import QueueNames
 from app.dao.services_dao import (
     dao_fetch_active_users_for_service,
@@ -40,6 +43,15 @@ def send_notification_to_service_users(
             key_type=KeyType.NORMAL,
             reply_to_text=notify_service.get_default_reply_to_email_address(),
         )
+        redis_store.set(
+            f"email-personalisation-{notification.id}",
+            json.dumps(personalisation),
+            ex=24 * 60 * 60,
+        )
+        redis_store.set(
+            f"email-recipient-{notification.id}", notification.to, ex=24 * 60 * 60
+        )
+
         send_notification_to_queue(notification, queue=QueueNames.NOTIFY)
 
 

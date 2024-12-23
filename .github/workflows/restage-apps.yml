@@ -19,18 +19,18 @@ jobs:
         app: ["api", "admin"]
     steps:
       - name: Restage ${{matrix.app}}
-        uses: 18f/cg-deploy-action@main
+        uses: cloud-gov/cg-cli-tools@main
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
-          full_command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
+          command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
       - name: Restage ${{matrix.app}} egress
-        uses: 18f/cg-deploy-action@main
+        uses: cloud-gov/cg-cli-tools@main
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}-egress
-          full_command: "cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}"
+          command: "cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}"
