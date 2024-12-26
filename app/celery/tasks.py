@@ -24,6 +24,7 @@ from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
 from app.notifications.process_notifications import (
     get_notification,
+    notification_exists,
     persist_notification,
 )
 from app.notifications.validators import check_service_over_total_message_limit
@@ -39,9 +40,7 @@ def process_job(job_id, sender_id=None):
     start = utc_now()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
-        "Starting process-job task for job id {} with status: {}".format(
-            job_id, job.job_status
-        )
+        f"Starting process-job task for job id {job_id} with status: {job.job_status}"
     )
 
     if job.job_status != JobStatus.PENDING:
@@ -57,7 +56,7 @@ def process_job(job_id, sender_id=None):
         job.job_status = JobStatus.CANCELLED
         dao_update_job(job)
         current_app.logger.warning(
-            "Job {} has been cancelled, service {} is inactive".format(
+            f"Job {job_id} has been cancelled, service {service.id} is inactive".format(
                 job_id, service.id
             )
         )
@@ -71,9 +70,7 @@ def process_job(job_id, sender_id=None):
     )
 
     current_app.logger.info(
-        "Starting job {} processing {} notifications".format(
-            job_id, job.notification_count
-        )
+        f"Starting job {job_id} processing {job.notification_count} notifications"
     )
 
     # notify-api-1495 we are going to sleep periodically to give other
@@ -229,22 +226,29 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             job = dao_get_job_by_id(job_id)
             created_by_id = job.created_by_id
 
-        saved_notification = persist_notification(
-            template_id=notification["template"],
-            template_version=notification["template_version"],
-            recipient=notification["to"],
-            service=service,
-            personalisation=notification.get("personalisation"),
-            notification_type=NotificationType.SMS,
-            api_key_id=None,
-            key_type=KeyType.NORMAL,
-            created_at=utc_now(),
-            created_by_id=created_by_id,
-            job_id=notification.get("job", None),
-            job_row_number=notification.get("row_number", None),
-            notification_id=notification_id,
-            reply_to_text=reply_to_text,
-        )
+        try:
+            saved_notification = persist_notification(
+                template_id=notification["template"],
+                template_version=notification["template_version"],
+                recipient=notification["to"],
+                service=service,
+                personalisation=notification.get("personalisation"),
+                notification_type=NotificationType.SMS,
+                api_key_id=None,
+                key_type=KeyType.NORMAL,
+                created_at=utc_now(),
+                created_by_id=created_by_id,
+                job_id=notification.get("job", None),
+                job_row_number=notification.get("row_number", None),
+                notification_id=notification_id,
+                reply_to_text=reply_to_text,
+            )
+        except IntegrityError:
+            if notification_exists(notification_id):
+                saved_notification = get_notification(notification_id)
+
+            else:
+                raise
 
         # Kick off sns process in provider_tasks.py
         sn = saved_notification
@@ -258,11 +262,8 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
         )
 
         current_app.logger.debug(
-            "SMS {} created at {} for job {}".format(
-                saved_notification.id,
-                saved_notification.created_at,
-                notification.get("job", None),
-            )
+            f"SMS {saved_notification.id} created at {saved_notification.created_at} "
+            f"for job {notification.get('job', None)}"
         )
 
     except SQLAlchemyError as e:
