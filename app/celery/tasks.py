@@ -39,9 +39,7 @@ def process_job(job_id, sender_id=None):
     start = utc_now()
     job = dao_get_job_by_id(job_id)
     current_app.logger.info(
-        "Starting process-job task for job id {} with status: {}".format(
-            job_id, job.job_status
-        )
+        f"Starting process-job task for job id {job_id} with status: {job.job_status}"
     )
 
     if job.job_status != JobStatus.PENDING:
@@ -57,7 +55,7 @@ def process_job(job_id, sender_id=None):
         job.job_status = JobStatus.CANCELLED
         dao_update_job(job)
         current_app.logger.warning(
-            "Job {} has been cancelled, service {} is inactive".format(
+            f"Job {job_id} has been cancelled, service {service.id} is inactive".format(
                 job_id, service.id
             )
         )
@@ -71,9 +69,7 @@ def process_job(job_id, sender_id=None):
     )
 
     current_app.logger.info(
-        "Starting job {} processing {} notifications".format(
-            job_id, job.notification_count
-        )
+        f"Starting job {job_id} processing {job.notification_count} notifications"
     )
 
     for row in recipient_csv.get_rows():
@@ -236,9 +232,10 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
                 notification_id=notification_id,
                 reply_to_text=reply_to_text,
             )
-        except IntegrityError as e:
+        except IntegrityError:
             if notification_exists(notification_id):
                 saved_notification = get_notification(notification_id)
+
             else:
                 raise
 
