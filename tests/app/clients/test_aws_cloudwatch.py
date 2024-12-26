@@ -87,3 +87,7 @@ def test_extract_account_number_gov_staging():
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
+
+
+def test_check_delivery_receipts():
+    pass
