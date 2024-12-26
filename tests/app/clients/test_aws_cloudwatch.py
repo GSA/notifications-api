@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from flask import current_app
 
@@ -87,3 +89,65 @@ def test_extract_account_number_gov_staging():
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
+
+
+def test_check_delivery_receipts():
+    pass
+
+
+def test_aws_value_or_default():
+    event = {
+        "delivery": {"phoneCarrier": "AT&T"},
+        "notification": {"timestamp": "2024-01-01T:12:00:00Z"},
+    }
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "delivery", "phoneCarrier")
+        == "AT&T"
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(
+            event, "delivery", "providerResponse"
+        )
+        == ""
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "notification", "timestamp")
+        == "2024-01-01T:12:00:00Z"
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "nonexistent", "field") == ""
+    )
+
+
+def test_event_to_db_format_with_missing_fields():
+    event = {
+        "notification": {"messageId": "12345"},
+        "status": "UNKNOWN",
+        "delivery": {},
+    }
+    result = aws_cloudwatch_client.event_to_db_format(event)
+    assert result == {
+        "notification.messageId": "12345",
+        "status": "UNKNOWN",
+        "delivery.phoneCarrier": "",
+        "delivery.providerResponse": "",
+        "@timestamp": "",
+    }
+
+
+def test_event_to_db_format_with_string_input():
+    event = json.dumps(
+        {
+            "notification": {"messageId": "67890", "timestamp": "2024-01-01T14:00:00Z"},
+            "status": "FAILED",
+            "delivery": {"phoneCarrier": "Verizon", "providerResponse": "Error"},
+        }
+    )
+    result = aws_cloudwatch_client.event_to_db_format(event)
+    assert result == {
+        "notification.messageId": "67890",
+        "status": "FAILED",
+        "delivery.phoneCarrier": "Verizon",
+        "delivery.providerResponse": "Error",
+        "@timestamp": "2024-01-01T14:00:00Z",
+    }
