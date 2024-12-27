@@ -24,7 +24,6 @@ from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
 from app.notifications.process_notifications import (
     get_notification,
-    notification_exists,
     persist_notification,
 )
 from app.notifications.validators import check_service_over_total_message_limit
