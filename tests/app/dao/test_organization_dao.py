@@ -180,8 +180,9 @@ def test_update_organization_updates_the_service_org_type_if_org_type_is_provide
 
     assert sample_organization.organization_type == OrganizationType.FEDERAL
     assert sample_service.organization_type == OrganizationType.FEDERAL
-    stmt = select(Service.get_history_model()).filter_by(
-        id=sample_service.id, version=2
+    stmt = select(Service.get_history_model()).where(
+        Service.get_history_model().id == sample_service.id,
+        Service.get_history_model().version == 2,
     )
     assert (
         db.session.execute(stmt).scalars().one().organization_type
@@ -234,8 +235,9 @@ def test_add_service_to_organization(sample_service, sample_organization):
     assert sample_organization.services[0].id == sample_service.id
 
     assert sample_service.organization_type == sample_organization.organization_type
-    stmt = select(Service.get_history_model()).filter_by(
-        id=sample_service.id, version=2
+    stmt = select(Service.get_history_model()).where(
+        Service.get_history_model().id == sample_service.id,
+        Service.get_history_model().version == 2,
     )
     assert (
         db.session.execute(stmt).scalars().one().organization_type

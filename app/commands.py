@@ -656,7 +656,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                     AnnualBilling.financial_year_start == year,
                 ),
             )
-            .filter(AnnualBilling.id == None)  # noqa
+            .where(AnnualBilling.id == None)  # noqa
         )
         active_services = db.session.execute(stmt).scalars().all()
     else:
@@ -665,7 +665,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
     previous_year = year - 1
     services_with_zero_free_allowance = (
         db.session.query(AnnualBilling.service_id)
-        .filter(
+        .where(
             AnnualBilling.financial_year_start == previous_year,
             AnnualBilling.free_sms_fragment_limit == 0,
         )
