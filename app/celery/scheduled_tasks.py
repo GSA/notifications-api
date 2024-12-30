@@ -138,7 +138,6 @@ def check_job_status():
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_allotted_time:
-        print(f"HERE IS A FREAKING JOB {job}")
         dao_update_job_status_to_error(job)
         job_ids.append(str(job.id))
     if job_ids:
