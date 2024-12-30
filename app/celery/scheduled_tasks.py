@@ -19,7 +19,7 @@ from app.dao.invited_org_user_dao import (
 from app.dao.invited_user_dao import expire_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
-    dao_update_job,
+    dao_update_job_status_to_error,
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
@@ -139,7 +139,7 @@ def check_job_status():
     job_ids = []
     for job in jobs_not_complete_after_allotted_time:
         job.job_status = JobStatus.ERROR
-        dao_update_job(job)
+        dao_update_job_status_to_error(job)
         job_ids.append(str(job.id))
     if job_ids:
         current_app.logger.info("Job(s) {} have not completed.".format(job_ids))
