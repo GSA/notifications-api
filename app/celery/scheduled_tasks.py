@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import between, select
+from sqlalchemy import between, select, union
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import notify_celery, zendesk_client
@@ -38,6 +38,7 @@ from app.notifications.process_notifications import send_notification_to_queue
 from app.utils import utc_now
 from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
+from tests.app import db
 
 MAX_NOTIFICATION_FAILS = 10000
 
@@ -121,12 +122,18 @@ def check_job_status():
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, start_minutes_ago, end_minutes_ago),
     )
-
-    jobs_not_complete_after_allotted_time = (
-        incomplete_in_progress_jobs.union(incomplete_pending_jobs)
-        .order_by(Job.processing_started, Job.scheduled_for)
-        .all()
+    jobs_not_completed_after_allotted_time = union(
+        incomplete_in_progress_jobs, incomplete_pending_jobs
     )
+    jobs_not_completed_after_allotted_time = (
+        jobs_not_completed_after_allotted_time.order_by(
+            Job.processing_started, Job.scheduled_for
+        )
+    )
+
+    jobs_not_complete_after_allotted_time = db.session.execute(
+        jobs_not_completed_after_allotted_time
+    ).all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
