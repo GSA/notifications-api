@@ -132,7 +132,7 @@ def check_job_status():
 
     jobs_not_complete_after_allotted_time = db.session.execute(
         jobs_not_completed_after_allotted_time
-    ).all()
+    ).scalars().all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
