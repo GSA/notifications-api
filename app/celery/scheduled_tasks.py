@@ -130,9 +130,9 @@ def check_job_status():
         )
     )
 
-    jobs_not_complete_after_allotted_time = db.session.execute(
-        jobs_not_completed_after_allotted_time
-    ).scalars().all()
+    jobs_not_complete_after_allotted_time = (
+        db.session.execute(jobs_not_completed_after_allotted_time).scalars().all()
+    )
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
@@ -140,8 +140,6 @@ def check_job_status():
     for job in jobs_not_complete_after_allotted_time:
         job.job_status = JobStatus.ERROR
         dao_update_job(job)
-        job_ids.append(str(job.id))
-
         job_ids.append(str(job.id))
     if job_ids:
         current_app.logger.info("Job(s) {} have not completed.".format(job_ids))

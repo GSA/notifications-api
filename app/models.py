@@ -1385,6 +1385,7 @@ class Job(db.Model):
         index=True,
         nullable=False,
         default=JobStatus.PENDING,
+        native_enum=False,
     )
     archived = db.Column(db.Boolean, nullable=False, default=False)
 
