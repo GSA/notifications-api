@@ -38,7 +38,6 @@ from app.notifications.process_notifications import send_notification_to_queue
 from app.utils import utc_now
 from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
-from tests.app import db
 
 MAX_NOTIFICATION_FAILS = 10000
 
