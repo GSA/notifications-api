@@ -24,7 +24,6 @@ from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
 from app.notifications.process_notifications import (
     get_notification,
-    notification_exists,
     persist_notification,
 )
 from app.notifications.validators import check_service_over_total_message_limit
@@ -214,9 +213,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
                 f"service not allowed to send for job_id {notification.get('job', None)}, aborting"
             )
         )
-        current_app.logger.debug(
-            "SMS {} failed as restricted service".format(notification_id)
-        )
+        current_app.logger.debug(f"SMS {notification_id} failed as restricted service")
         return
 
     try:
@@ -244,11 +241,12 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
                 reply_to_text=reply_to_text,
             )
         except IntegrityError:
-            if notification_exists(notification_id):
-                saved_notification = get_notification(notification_id)
-
-            else:
-                raise
+            current_app.logger.warning(
+                f"{NotificationType.SMS}: {notification_id} already exists."
+            )
+            # If we don't have the return statement here, we will fall through and end
+            # up retrying because IntegrityError is a subclass of SQLAlchemyError
+            return
 
         # Kick off sns process in provider_tasks.py
         sn = saved_notification
