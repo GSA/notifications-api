@@ -3,7 +3,7 @@ import uuid
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import and_, asc, desc, func, select
+from sqlalchemy import and_, asc, desc, func, select, update
 
 from app import db
 from app.dao.pagination import Pagination
@@ -177,7 +177,8 @@ def dao_update_job(job):
 
 
 def dao_update_job_status_to_error(job):
-    db.session.update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR)
+    stmt = update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR)
+    db.session.execute(stmt)
     db.session.commit()
 
 
