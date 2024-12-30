@@ -1,15 +1,12 @@
 import json
 import os
 import re
-from datetime import timedelta
 
 from boto3 import client
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
-from app.exceptions import NotificationTechnicalFailureException
-from app.utils import hilite, utc_now
 
 
 class AwsCloudwatchClient(Client):
@@ -49,47 +46,31 @@ class AwsCloudwatchClient(Client):
     def is_localstack(self):
         return self._is_localstack
 
-    def _get_log(self, my_filter, log_group_name, sent_at):
+    def _get_log(self, log_group_name, start, end):
         # Check all cloudwatch logs from the time the notification was sent (currently 5 minutes previously) until now
-        now = utc_now()
-        beginning = sent_at
         next_token = None
         all_log_events = []
-        current_app.logger.info(f"START TIME {beginning} END TIME {now}")
-        # There has been a change somewhere and the time range we were previously using has become too
-        # narrow or wrong in some way, so events can't be found.  For the time being, adjust by adding
-        # a buffer on each side of 12 hours.
-        TWELVE_HOURS = 12 * 60 * 60 * 1000
+
         while True:
             if next_token:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
-                    filterPattern=my_filter,
                     nextToken=next_token,
-                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
-                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
+                    startTime=int(start.timestamp() * 1000),
+                    endTime=int(end.timestamp() * 1000),
                 )
             else:
                 response = self._client.filter_log_events(
                     logGroupName=log_group_name,
-                    filterPattern=my_filter,
-                    startTime=int(beginning.timestamp() * 1000) - TWELVE_HOURS,
-                    endTime=int(now.timestamp() * 1000) + TWELVE_HOURS,
+                    startTime=int(start.timestamp() * 1000),
+                    endTime=int(end.timestamp() * 1000),
                 )
             log_events = response.get("events", [])
             all_log_events.extend(log_events)
-            if len(log_events) > 0:
-                # We found it
-
-                break
             next_token = response.get("nextToken")
             if not next_token:
                 break
         return all_log_events
-
-    def _extract_account_number(self, ses_domain_arn):
-        account_number = ses_domain_arn.split(":")
-        return account_number
 
     def warn_if_dev_is_opted_out(self, provider_response, notification_id):
         if (
@@ -108,60 +89,108 @@ class AwsCloudwatchClient(Client):
                 return logline
         return None
 
-    def check_sms(self, message_id, notification_id, created_at):
+    def _extract_account_number(self, ses_domain_arn):
+        account_number = ses_domain_arn.split(":")
+        return account_number
+
+    def event_to_db_format(self, event):
+
+        # massage the data into the form the db expects.  When we switch
+        # from filter_log_events to log insights this will be convenient
+        if isinstance(event, str):
+            event = json.loads(event)
+
+        # Don't trust AWS to always send the same JSON structure back
+        # However, if we don't get message_id and status we might as well blow up
+        # because it's pointless to continue
+        phone_carrier = self._aws_value_or_default(event, "delivery", "phoneCarrier")
+        provider_response = self._aws_value_or_default(
+            event, "delivery", "providerResponse"
+        )
+        my_timestamp = self._aws_value_or_default(event, "notification", "timestamp")
+        return {
+            "notification.messageId": event["notification"]["messageId"],
+            "status": event["status"],
+            "delivery.phoneCarrier": phone_carrier,
+            "delivery.providerResponse": provider_response,
+            "@timestamp": my_timestamp,
+        }
+
+    # Here is an example of how to get the events with log insights
+    # def do_log_insights():
+    #     query = """
+    #     fields @timestamp, status, message, recipient
+    #     | filter status = "DELIVERED"
+    #     | sort @timestamp asc
+    #     """
+    #     temp_client = boto3.client(
+    #             "logs",
+    #             region_name="us-gov-west-1",
+    #             aws_access_key_id=AWS_ACCESS_KEY_ID,
+    #             aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    #             config=AWS_CLIENT_CONFIG,
+    #         )
+    #     start = utc_now()
+    #     end = utc_now - timedelta(hours=1)
+    #     response = temp_client.start_query(
+    #         logGroupName = LOG_GROUP_NAME_DELIVERED,
+    #         startTime = int(start.timestamp()),
+    #         endTime= int(end.timestamp()),
+    #         queryString = query
+
+    #     )
+    #     query_id = response['queryId']
+    #     while True:
+    #         result = temp_client.get_query_results(queryId=query_id)
+    #         if result['status'] == 'Complete':
+    #             break
+    #         time.sleep(1)
+
+    #     delivery_receipts = []
+    #     for log in result['results']:
+    #         receipt = {field['field']: field['value'] for field in log}
+    #         delivery_receipts.append(receipt)
+    #         print(receipt)
+
+    #     print(len(delivery_receipts))
+
+    # In the long run we want to use Log Insights because it is more efficient
+    # that filter_log_events.  But we are blocked by a permissions issue in the broker.
+    # So for now, use filter_log_events and grab all log_events over a 10 minute interval,
+    # and run this on a schedule.
+    def check_delivery_receipts(self, start, end):
         region = cloud_config.sns_region
-        # TODO this clumsy approach to getting the account number will be fixed as part of notify-api #258
         account_number = self._extract_account_number(cloud_config.ses_domain_arn)
-
-        time_now = utc_now()
         log_group_name = f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber"
-        filter_pattern = '{$.notification.messageId="XXXXX"}'
-        filter_pattern = filter_pattern.replace("XXXXX", message_id)
-        all_log_events = self._get_log(filter_pattern, log_group_name, created_at)
-        if all_log_events and len(all_log_events) > 0:
-            event = all_log_events[0]
-            message = json.loads(event["message"])
-            self.warn_if_dev_is_opted_out(
-                message["delivery"]["providerResponse"], notification_id
-            )
-            # Here we map the answer from aws to the message_id.
-            # Previously, in send_to_providers, we mapped the job_id and row number
-            # to the message id.  And on the admin side we mapped the csv filename
-            # to the job_id.  So by tracing through all the logs we can go:
-            # filename->job_id->message_id->what really happened
-            current_app.logger.info(
-                hilite(f"DELIVERED: {message} for message_id {message_id}")
-            )
-            return (
-                "success",
-                message["delivery"]["providerResponse"],
-                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
-            )
-
+        delivered_event_set = self._get_receipts(log_group_name, start, end)
+        current_app.logger.info(
+            (f"Delivered message count: {len(delivered_event_set)}")
+        )
         log_group_name = (
             f"sns/{region}/{account_number[4]}/DirectPublishToPhoneNumber/Failure"
         )
-        all_failed_events = self._get_log(filter_pattern, log_group_name, created_at)
-        if all_failed_events and len(all_failed_events) > 0:
-            event = all_failed_events[0]
-            message = json.loads(event["message"])
-            self.warn_if_dev_is_opted_out(
-                message["delivery"]["providerResponse"], notification_id
-            )
+        failed_event_set = self._get_receipts(log_group_name, start, end)
+        current_app.logger.info((f"Failed message count: {len(failed_event_set)}"))
 
-            current_app.logger.info(
-                hilite(f"FAILED: {message} for message_id {message_id}")
-            )
-            return (
-                "failure",
-                message["delivery"]["providerResponse"],
-                message["delivery"].get("phoneCarrier", "Unknown Carrier"),
-            )
+        return delivered_event_set, failed_event_set
 
-        if time_now > (created_at + timedelta(hours=3)):
-            # see app/models.py Notification. This message corresponds to "permanent-failure",
-            # but we are copy/pasting here to avoid circular imports.
-            return "failure", "Unable to find carrier response."
-        raise NotificationTechnicalFailureException(
-            f"No event found for message_id {message_id} notification_id {notification_id}"
-        )
+    def _get_receipts(self, log_group_name, start, end):
+        event_set = set()
+        all_events = self._get_log(log_group_name, start, end)
+        for event in all_events:
+            try:
+                actual_event = self.event_to_db_format(event["message"])
+                event_set.add(json.dumps(actual_event))
+            except Exception:
+                current_app.logger.exception(
+                    f"Could not format delivery receipt {event} for db insert"
+                )
+        return event_set
+
+    def _aws_value_or_default(self, event, top_level, second_level):
+        if event.get(top_level) is None or event[top_level].get(second_level) is None:
+            my_var = ""
+        else:
+            my_var = event[top_level][second_level]
+
+        return my_var

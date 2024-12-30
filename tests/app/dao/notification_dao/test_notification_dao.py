@@ -1,6 +1,7 @@
 import uuid
 from datetime import date, datetime, timedelta
 from functools import partial
+from unittest.mock import MagicMock, patch
 
 import pytest
 from freezegun import freeze_time
@@ -19,6 +20,7 @@ from app.dao.notifications_dao import (
     dao_get_notification_history_by_reference,
     dao_get_notifications_by_recipient_or_reference,
     dao_timeout_notifications,
+    dao_update_delivery_receipts,
     dao_update_notification,
     dao_update_notifications_by_reference,
     get_notification_by_id,
@@ -1998,6 +2000,34 @@ def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_
 
     results = notifications_not_yet_sent(older_than, notification_type)
     assert len(results) == 0
+
+
+def test_update_delivery_receipts(mocker):
+    mock_session = mocker.patch("app.dao.notifications_dao.db.session")
+    receipts = [
+        '{"notification.messageId": "msg1", "delivery.phoneCarrier": "carrier1", "delivery.providerResponse": "resp1", "@timestamp": "2024-01-01T12:00:00"}',  # noqa
+        '{"notification.messageId": "msg2", "delivery.phoneCarrier": "carrier2", "delivery.providerResponse": "resp2", "@timestamp": "2024-01-01T13:00:00"}',  # noqa
+    ]
+    delivered = True
+    mock_update = MagicMock()
+    mock_where = MagicMock()
+    mock_values = MagicMock()
+    mock_update.where.return_value = mock_where
+    mock_where.values.return_value = mock_values
+
+    mock_session.execute.return_value = None
+    with patch("app.dao.notifications_dao.update", return_value=mock_update):
+        dao_update_delivery_receipts(receipts, delivered)
+    mock_update.where.assert_called_once()
+    mock_where.values.assert_called_once()
+    mock_session.execute.assert_called_once_with(mock_values)
+    mock_session.commit.assert_called_once()
+
+    args, kwargs = mock_where.values.call_args
+    assert "carrier" in kwargs
+    assert "status" in kwargs
+    assert "sent_at" in kwargs
+    assert "provider_response" in kwargs
 
 
 @pytest.mark.parametrize(

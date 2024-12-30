@@ -198,6 +198,11 @@ class Config(object):
                 "schedule": timedelta(minutes=63),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "process-delivery-receipts": {
+                "task": "process-delivery-receipts",
+                "schedule": timedelta(minutes=8),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "expire-or-delete-invitations": {
                 "task": "expire-or-delete-invitations",
                 "schedule": timedelta(minutes=66),
