@@ -96,7 +96,7 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict[StatisticsType.FAILURE] += row.count
-    elif row.status == NotificationStatus.PENDING:
+    elif row.status in (NotificationStatus.PENDING, NotificationStatus.CREATED, NotificationStatus.SENDING):
         update_dict[StatisticsType.PENDING] += row.count
 
 
