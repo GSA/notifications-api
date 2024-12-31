@@ -23,6 +23,8 @@ from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTick
 from tests.app import load_example_csv
 from tests.app.db import create_job, create_notification, create_template
 
+CHECK_JOB_STATUS_TOO_OLD_MINUTES = 241
+
 
 def test_should_call_delete_codes_on_delete_verify_codes_task(
     notify_db_session, mocker
@@ -108,8 +110,9 @@ def test_check_job_status_task_calls_process_incomplete_jobs(mocker, sample_temp
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_notification(template=sample_template, job=job)
@@ -125,9 +128,10 @@ def test_check_job_status_task_calls_process_incomplete_jobs_when_scheduled_job_
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -142,8 +146,8 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_pending_schedul
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.PENDING,
     )
 
@@ -175,17 +179,19 @@ def test_check_job_status_task_calls_process_incomplete_jobs_for_multiple_jobs(
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -200,23 +206,24 @@ def test_check_job_status_task_only_sends_old_tasks(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=300),
+        processing_started=utc_now() - timedelta(minutes=239),
         job_status=JobStatus.IN_PROGRESS,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(minutes=50),
-        scheduled_for=utc_now() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=300),
+        scheduled_for=utc_now() - timedelta(minutes=239),
         job_status=JobStatus.PENDING,
     )
     check_job_status()
@@ -230,16 +237,17 @@ def test_check_job_status_task_sets_jobs_to_error(mocker, sample_template):
     job = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.IN_PROGRESS,
     )
     job_2 = create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=29),
+        created_at=utc_now() - timedelta(minutes=300),
+        processing_started=utc_now() - timedelta(minutes=239),
         job_status=JobStatus.IN_PROGRESS,
     )
     check_job_status()
@@ -311,16 +319,18 @@ def test_check_job_status_task_does_not_raise_error(sample_template):
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(hours=2),
-        scheduled_for=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(hours=5),
+        scheduled_for=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.FINISHED,
     )
     create_job(
         template=sample_template,
         notification_count=3,
-        created_at=utc_now() - timedelta(minutes=31),
-        processing_started=utc_now() - timedelta(minutes=31),
+        created_at=utc_now() - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
+        processing_started=utc_now()
+        - timedelta(minutes=CHECK_JOB_STATUS_TOO_OLD_MINUTES),
         job_status=JobStatus.FINISHED,
     )
 
