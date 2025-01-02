@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from time import time
 
 from flask import current_app
 from sqlalchemy import (
@@ -727,6 +728,7 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
 
 
 def dao_update_delivery_receipts(receipts, delivered):
+    start_time_millis = time() * 1000
     new_receipts = []
     for r in receipts:
         if isinstance(r, str):
@@ -773,3 +775,7 @@ def dao_update_delivery_receipts(receipts, delivered):
     )
     db.session.execute(stmt)
     db.session.commit()
+    elapsed_time = (time() * 1000) - start_time_millis
+    current_app.logger.info(
+        f"#loadtestperformance batch update query time: {elapsed_time} ms"
+    )
