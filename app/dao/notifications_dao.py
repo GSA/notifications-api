@@ -777,5 +777,6 @@ def dao_update_delivery_receipts(receipts, delivered):
     db.session.commit()
     elapsed_time = (time() * 1000) - start_time_millis
     current_app.logger.info(
-        f"#loadtestperformance batch update query time: {elapsed_time} ms"
+        f"#loadtestperformance batch update query time: \
+        updated {len(receipts)} notification in {elapsed_time} ms"
     )
