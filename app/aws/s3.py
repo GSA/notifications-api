@@ -402,12 +402,7 @@ def extract_phones(job):
     phone_index = 0
     for item in first_row:
         # Note: may contain a BOM and look like \ufeffphone number
-        if item.lower() in [
-            "phone number",
-            "\\ufeffphone number",
-            "\\ufeffphone number\n",
-            "phone number\n",
-        ]:
+        if item.lower().lstrip("\ufeff") == "phone number":
             break
         phone_index = phone_index + 1
 
@@ -419,7 +414,8 @@ def extract_phones(job):
         if phone_index >= len(row):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
-                "Corrupt csv file, missing columns or possibly a byte order mark in the file",
+                f"Corrupt csv file, missing columns or\
+                possibly a byte order mark in the file, row looks like {row}",
             )
 
         else:
