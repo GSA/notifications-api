@@ -158,7 +158,7 @@ def _get_verify_code(notification):
         recipient = recipient.decode("utf-8")
     return recipient
 
-
+# PUT THE FIX HERE???????
 def get_sender_numbers(notification):
     possible_senders = dao_get_sms_senders_by_service_id(notification.service_id)
     sender_numbers = []
