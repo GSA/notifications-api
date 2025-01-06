@@ -1,9 +1,9 @@
 import csv
 import datetime
-from io import StringIO
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 
 import botocore
 from boto3 import Session
