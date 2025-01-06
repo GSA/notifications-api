@@ -40,7 +40,7 @@ marshmallow = "==3.22.0"
 marshmallow-sqlalchemy = "==1.0.0"
 newrelic = "*"
 notifications-python-client = "==10.0.0"
-oscrypto = { git = "https://github.com/wbond/oscrypto.git", rev = "1547f53" }
+oscrypto = { git = "https://github.com/wbond/oscrypto.git" }
 packaging = "==24.1"
 poetry-dotenv-plugin = "==0.2.0"
 psycopg2-binary = "==2.9.9"
