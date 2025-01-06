@@ -1,7 +1,9 @@
+import csv
 import datetime
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 
 import botocore
 from boto3 import Session
@@ -395,31 +397,25 @@ def get_job_from_s3(service_id, job_id):
 
 
 def extract_phones(job):
-    job = job.split("\r\n")
-    first_row = job[0]
-    job.pop(0)
-    first_row = first_row.split(",")
+    job_csv_data = StringIO(job)
+    csv_reader = csv.reader(job_csv_data)
+    first_row = next(csv_reader)
+
     phone_index = 0
-    for item in first_row:
-        # Note: may contain a BOM and look like \ufeffphone number
-        if item.lower() in [
-            "phone number",
-            "\\ufeffphone number",
-            "\\ufeffphone number\n",
-            "phone number\n",
-        ]:
+    for i, item in enumerate(first_row):
+        if item.lower().lstrip("\ufeff") == "phone number":
+            phone_index = i
             break
-        phone_index = phone_index + 1
 
     phones = {}
     job_row = 0
-    for row in job:
-        row = row.split(",")
+    for row in csv_reader:
 
         if phone_index >= len(row):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
-                "Corrupt csv file, missing columns or possibly a byte order mark in the file",
+                f"Corrupt csv file, missing columns or\
+                possibly a byte order mark in the file, row looks like {row}",
             )
 
         else:
