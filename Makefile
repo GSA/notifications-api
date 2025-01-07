@@ -9,10 +9,12 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 
 ## DEVELOPMENT
 
+## TODO this line should go under `make generate-version-file`
+## poetry self update
+
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry self update
 	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
