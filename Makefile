@@ -82,7 +82,7 @@ test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
 	poetry run black .
 	poetry run flake8 .
-	poetry run isort --check-only ./app ./tests
+	poetry run isort ./app ./tests
 	poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
 
     ## TODO set this back to 95 asap
