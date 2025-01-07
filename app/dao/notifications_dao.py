@@ -1,7 +1,21 @@
+import json
 from datetime import timedelta
+from time import time
 
 from flask import current_app
-from sqlalchemy import asc, delete, desc, func, or_, select, text, union, update
+from sqlalchemy import (
+    TIMESTAMP,
+    asc,
+    cast,
+    delete,
+    desc,
+    func,
+    or_,
+    select,
+    text,
+    union,
+    update,
+)
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import functions
@@ -52,6 +66,12 @@ def dao_get_last_date_template_was_used(template_id, service_id):
     return last_date
 
 
+def dao_notification_exists(notification_id) -> bool:
+    stmt = select(Notification).where(Notification.id == notification_id)
+    result = db.session.execute(stmt).scalar()
+    return result is not None
+
+
 @autocommit
 def dao_create_notification(notification):
     if not notification.id:
@@ -73,9 +93,7 @@ def dao_create_notification(notification):
     notification.normalised_to = "1"
 
     # notify-api-1454 insert only if it doesn't exist
-    stmt = select(Notification).where(Notification.id == notification.id)
-    result = db.session.execute(stmt).scalar()
-    if result is None:
+    if not dao_notification_exists(notification.id):
         db.session.add(notification)
 
 
@@ -707,3 +725,58 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
             union(notification_table_query, ft_status_table_query).subquery()
         ).distinct()
     }
+
+
+def dao_update_delivery_receipts(receipts, delivered):
+    start_time_millis = time() * 1000
+    new_receipts = []
+    for r in receipts:
+        if isinstance(r, str):
+            r = json.loads(r)
+        new_receipts.append(r)
+
+    receipts = new_receipts
+
+    id_to_carrier = {
+        r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
+    }
+    id_to_provider_response = {
+        r["notification.messageId"]: r["delivery.providerResponse"] for r in receipts
+    }
+    id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
+
+    status_to_update_with = NotificationStatus.DELIVERED
+    if not delivered:
+        status_to_update_with = NotificationStatus.FAILED
+    stmt = (
+        update(Notification)
+        .where(Notification.message_id.in_(id_to_carrier.keys()))
+        .values(
+            carrier=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_carrier.items()
+                ]
+            ),
+            status=status_to_update_with,
+            sent_at=case(
+                *[
+                    (Notification.message_id == key, cast(value, TIMESTAMP))
+                    for key, value in id_to_timestamp.items()
+                ]
+            ),
+            provider_response=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_provider_response.items()
+                ]
+            ),
+        )
+    )
+    db.session.execute(stmt)
+    db.session.commit()
+    elapsed_time = (time() * 1000) - start_time_millis
+    current_app.logger.info(
+        f"#loadtestperformance batch update query time: \
+        updated {len(receipts)} notification in {elapsed_time} ms"
+    )

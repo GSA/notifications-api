@@ -11,6 +11,7 @@ from app.celery.tasks import (
     process_job,
     process_row,
 )
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     delete_org_invitations_created_more_than_two_days_ago,
@@ -22,7 +23,10 @@ from app.dao.jobs_dao import (
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
-from app.dao.notifications_dao import notifications_not_yet_sent
+from app.dao.notifications_dao import (
+    dao_update_delivery_receipts,
+    notifications_not_yet_sent,
+)
 from app.dao.services_dao import (
     dao_find_services_sending_to_tv_numbers,
     dao_find_services_with_high_failure_rates,
@@ -32,6 +36,7 @@ from app.enums import JobStatus, NotificationType
 from app.models import Job
 from app.notifications.process_notifications import send_notification_to_queue
 from app.utils import utc_now
+from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
@@ -95,27 +100,29 @@ def check_job_status():
     select
     from jobs
     where job_status == 'in progress'
-    and processing started between 30 and 35 minutes ago
+    and processing started some time ago
     OR where the job_status == 'pending'
-    and the job scheduled_for timestamp is between 30 and 35 minutes ago.
+    and the job scheduled_for timestamp is some time ago.
     if any results then
         update the job_status to 'error'
         process the rows in the csv that are missing (in another task) just do the check here.
     """
-    thirty_minutes_ago = utc_now() - timedelta(minutes=30)
-    thirty_five_minutes_ago = utc_now() - timedelta(minutes=35)
+    START_MINUTES = 245
+    END_MINUTES = 240
+    end_minutes_ago = utc_now() - timedelta(minutes=END_MINUTES)
+    start_minutes_ago = utc_now() - timedelta(minutes=START_MINUTES)
 
     incomplete_in_progress_jobs = Job.query.filter(
         Job.job_status == JobStatus.IN_PROGRESS,
-        between(Job.processing_started, thirty_five_minutes_ago, thirty_minutes_ago),
+        between(Job.processing_started, start_minutes_ago, end_minutes_ago),
     )
     incomplete_pending_jobs = Job.query.filter(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
-        between(Job.scheduled_for, thirty_five_minutes_ago, thirty_minutes_ago),
+        between(Job.scheduled_for, start_minutes_ago, end_minutes_ago),
     )
 
-    jobs_not_complete_after_30_minutes = (
+    jobs_not_complete_after_allotted_time = (
         incomplete_in_progress_jobs.union(incomplete_pending_jobs)
         .order_by(Job.processing_started, Job.scheduled_for)
         .all()
@@ -124,7 +131,7 @@ def check_job_status():
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
     job_ids = []
-    for job in jobs_not_complete_after_30_minutes:
+    for job in jobs_not_complete_after_allotted_time:
         job.job_status = JobStatus.ERROR
         dao_update_job(job)
         job_ids.append(str(job.id))
@@ -169,9 +176,7 @@ def check_for_missing_rows_in_completed_jobs():
         for row_to_process in missing_rows:
             row = recipient_csv[row_to_process.missing_row]
             current_app.logger.info(
-                "Processing missing row: {} for job: {}".format(
-                    row_to_process.missing_row, job.id
-                )
+                f"Processing missing row: {row_to_process.missing_row} for job: {job.id}"
             )
             process_row(row, template, job, job.service, sender_id=sender_id)
 
@@ -231,3 +236,45 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
                 technical_ticket=True,
             )
             zendesk_client.send_ticket_to_zendesk(ticket)
+
+
+@notify_celery.task(
+    bind=True, max_retries=7, default_retry_delay=3600, name="process-delivery-receipts"
+)
+def process_delivery_receipts(self):
+    """
+    Every eight minutes or so (see config.py) we run this task, which searches the last ten
+    minutes of logs for delivery receipts and batch updates the db with the results.  The overlap
+    is intentional.  We don't mind re-updating things, it is better than losing data.
+
+    We also set this to retry with exponential backoff in the case of failure.  The only way this would
+    fail is if, for example the db went down, or redis filled causing the app to stop processing.  But if
+    it does fail, we need to go back over at some point when things are running again and process those results.
+    """
+    try:
+        batch_size = 1000  # in theory with postgresql this could be 10k to 20k?
+
+        cloudwatch = AwsCloudwatchClient()
+        cloudwatch.init_app(current_app)
+        start_time = aware_utcnow() - timedelta(minutes=3)
+        end_time = aware_utcnow()
+        delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
+            start_time, end_time
+        )
+        delivered_receipts = list(delivered_receipts)
+        for i in range(0, len(delivered_receipts), batch_size):
+            batch = delivered_receipts[i : i + batch_size]
+            dao_update_delivery_receipts(batch, True)
+        failed_receipts = list(failed_receipts)
+        for i in range(0, len(failed_receipts), batch_size):
+            batch = failed_receipts[i : i + batch_size]
+            dao_update_delivery_receipts(batch, False)
+    except Exception as ex:
+        retry_count = self.request.retries
+        wait_time = 3600 * 2**retry_count
+        try:
+            raise self.retry(ex=ex, countdown=wait_time)
+        except self.MaxRetriesExceededError:
+            current_app.logger.error(
+                "Failed process delivery receipts after max retries"
+            )

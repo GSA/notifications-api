@@ -577,7 +577,16 @@ class Service(db.Model, Versioned):
             return self.inbound_number.number
 
     def get_default_sms_sender(self):
-        default_sms_sender = [x for x in self.service_sms_senders if x.is_default]
+        # notify-api-1513 let's try a minimalistic fix
+        # to see if we can get the right numbers back
+        default_sms_sender = [
+            x
+            for x in self.service_sms_senders
+            if x.is_default and x.service_id == self.id
+        ]
+        current_app.logger.info(
+            f"#notify-api-1513 senders for service {self.name} are {self.service_sms_senders}"
+        )
         return default_sms_sender[0].sms_sender
 
     def get_default_reply_to_email_address(self):

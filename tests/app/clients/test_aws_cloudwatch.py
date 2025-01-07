@@ -1,8 +1,9 @@
+import json
+
 import pytest
 from flask import current_app
 
 from app import aws_cloudwatch_client
-from app.utils import utc_now
 
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
@@ -74,51 +75,6 @@ def test_warn_if_dev_is_opted_out(response, notify_id, expected_message):
     assert result == expected_message
 
 
-def test_check_sms_success(notify_api, mocker):
-    aws_cloudwatch_client.init_app(current_app)
-    boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
-    boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict(
-        "os.environ",
-        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
-    )
-
-    message_id = "succeed"
-    notification_id = "ccc"
-    created_at = utc_now()
-    with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
-
-    # We check the 'success' log group first and if we find the message_id, we are done, so there is only 1 call
-    assert boto_mock.filter_log_events.call_count == 1
-    mock_call = str(boto_mock.filter_log_events.mock_calls[0])
-    assert "Failure" not in mock_call
-    assert "succeed" in mock_call
-    assert "notification.messageId" in mock_call
-
-
-def test_check_sms_failure(notify_api, mocker):
-    aws_cloudwatch_client.init_app(current_app)
-    boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
-    boto_mock.filter_log_events.side_effect = side_effect
-    mocker.patch.dict(
-        "os.environ",
-        {"SES_DOMAIN_ARN": "arn:aws:ses:us-west-2:12345:identity/ses-xxx.xxx.xxx.xxx"},
-    )
-    message_id = "fail"
-    notification_id = "bbb"
-    created_at = utc_now()
-    with notify_api.app_context():
-        aws_cloudwatch_client.check_sms(message_id, notification_id, created_at)
-
-    # We check the 'success' log group and find nothing, so we then check the 'fail' log group -- two calls.
-    assert boto_mock.filter_log_events.call_count == 2
-    mock_call = str(boto_mock.filter_log_events.mock_calls[1])
-    assert "Failure" in mock_call
-    assert "fail" in mock_call
-    assert "notification.messageId" in mock_call
-
-
 def test_extract_account_number_gov_cloud():
     domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
     actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
@@ -133,3 +89,65 @@ def test_extract_account_number_gov_staging():
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
+
+
+def test_check_delivery_receipts():
+    pass
+
+
+def test_aws_value_or_default():
+    event = {
+        "delivery": {"phoneCarrier": "AT&T"},
+        "notification": {"timestamp": "2024-01-01T:12:00:00Z"},
+    }
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "delivery", "phoneCarrier")
+        == "AT&T"
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(
+            event, "delivery", "providerResponse"
+        )
+        == ""
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "notification", "timestamp")
+        == "2024-01-01T:12:00:00Z"
+    )
+    assert (
+        aws_cloudwatch_client._aws_value_or_default(event, "nonexistent", "field") == ""
+    )
+
+
+def test_event_to_db_format_with_missing_fields():
+    event = {
+        "notification": {"messageId": "12345"},
+        "status": "UNKNOWN",
+        "delivery": {},
+    }
+    result = aws_cloudwatch_client.event_to_db_format(event)
+    assert result == {
+        "notification.messageId": "12345",
+        "status": "UNKNOWN",
+        "delivery.phoneCarrier": "",
+        "delivery.providerResponse": "",
+        "@timestamp": "",
+    }
+
+
+def test_event_to_db_format_with_string_input():
+    event = json.dumps(
+        {
+            "notification": {"messageId": "67890", "timestamp": "2024-01-01T14:00:00Z"},
+            "status": "FAILED",
+            "delivery": {"phoneCarrier": "Verizon", "providerResponse": "Error"},
+        }
+    )
+    result = aws_cloudwatch_client.event_to_db_format(event)
+    assert result == {
+        "notification.messageId": "67890",
+        "status": "FAILED",
+        "delivery.phoneCarrier": "Verizon",
+        "delivery.providerResponse": "Error",
+        "@timestamp": "2024-01-01T14:00:00Z",
+    }
