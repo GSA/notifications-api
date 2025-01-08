@@ -203,6 +203,11 @@ class Config(object):
                 "schedule": timedelta(minutes=2),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "cleanup-delivery-receipts": {
+                "task": "cleanup-delivery-receipts",
+                "schedule": timedelta(minutes=82),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "expire-or-delete-invitations": {
                 "task": "expire-or-delete-invitations",
                 "schedule": timedelta(minutes=66),
