@@ -793,7 +793,9 @@ def dao_close_out_delivery_receipts():
         .values(status=NotificationStatus.FAILED, provider_response="Technical Failure")
     )
     result = db.session.execute(stmt)
-    current_app.logger.info(
-        f"Marked {result.rowcount} notifications as technical failures"
-    )
+
     db.session.commit()
+    if result:
+        current_app.logger.info(
+            f"Marked {result.rowcount} notifications as technical failures"
+        )
