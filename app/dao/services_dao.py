@@ -455,24 +455,41 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    stmt = (
+    sub_stmt = (
         select(
+            Job.id,
+            Job.notification_count,
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
-        .filter(
+        .join_from(
+            Notification,
+            Job,
+        )
+        .where(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.key_type != KeyType.TEST,
             NotificationAllTimeView.created_at >= start_date,
             NotificationAllTimeView.created_at < end_date,
         )
         .group_by(
+            Job.id,
+            Job.notification_count,
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at),
         )
+        .subquery()
+    )
+
+    stmt = select(
+        func.sum(sub_stmt.notification_count).label("total_notifications"),
+        sub_stmt.notification_type,
+        sub_stmt.status,
+        sub_stmt.day,
+        func.sum(sub_stmt.count).label("count"),
     )
     return db.session.execute(stmt).all()
 
