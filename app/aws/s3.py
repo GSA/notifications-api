@@ -10,6 +10,7 @@ from boto3 import Session
 from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG
+from app.utils import hilite
 from notifications_utils import aware_utcnow
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
@@ -65,6 +66,7 @@ def clean_cache():
 def get_s3_client():
     global s3_client
     if s3_client is None:
+        # print(hilite("S3 CLIENT IS NONE, CREATING IT!"))
         access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
         secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
         region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
@@ -74,12 +76,15 @@ def get_s3_client():
             region_name=region,
         )
         s3_client = session.client("s3")
+    # else:
+    # print(hilite("S3 CLIENT ALREADY EXISTS, REUSING IT!"))
     return s3_client
 
 
 def get_s3_resource():
     global s3_resource
     if s3_resource is None:
+        print(hilite("S3 RESOURCE IS NONE, CREATING IT!"))
         access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
         secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
         region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
@@ -89,6 +94,8 @@ def get_s3_resource():
             region_name=region,
         )
         s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    else:
+        print(hilite("S3 RESOURCE ALREADY EXSITS, REUSING IT!"))
     return s3_resource
 
 

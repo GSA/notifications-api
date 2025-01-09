@@ -16,9 +16,30 @@ AWS_CLIENT_CONFIG = Config(
     use_fips_endpoint=True,
 )
 
+# Global variable
+s3_resource = None
+
 default_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
 default_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 default_region = os.environ.get("AWS_REGION")
+
+
+def get_s3_resource():
+    global s3_resource
+    if s3_resource is None:
+        # print(hilite("S3 RESOURCE IS NONE, CREATING IT!"))
+        access_key = (default_access_key_id,)
+        secret_key = (default_secret_access_key,)
+        region = (default_region,)
+        session = Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name=region,
+        )
+        s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    # else:
+    # print(hilite("S3 RESOURCE ALREADY EXSITS, REUSING IT!"))
+    return s3_resource
 
 
 def s3upload(
@@ -32,12 +53,7 @@ def s3upload(
     access_key=default_access_key_id,
     secret_key=default_secret_access_key,
 ):
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    _s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    _s3 = get_s3_resource()
 
     key = _s3.Object(bucket_name, file_location)
 
@@ -73,12 +89,7 @@ def s3download(
     secret_key=default_secret_access_key,
 ):
     try:
-        session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        )
-        s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+        s3 = get_s3_resource()
         key = s3.Object(bucket_name, filename)
         return key.get()["Body"]
     except botocore.exceptions.ClientError as error:
