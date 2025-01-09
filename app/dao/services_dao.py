@@ -465,7 +465,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .join_from(
-            Notification,
+            NotificationAllTimeView,
             Job,
         )
         .where(
