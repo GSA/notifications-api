@@ -37,7 +37,7 @@ iso8601 = "==2.1.0"
 jsonschema = {version = "==4.23.0", extras = ["format"]}
 lxml = "==5.2.2"
 marshmallow = "==3.22.0"
-marshmallow-sqlalchemy = "==1.0.0"
+marshmallow-sqlalchemy = "==1.2.0"
 newrelic = "*"
 notifications-python-client = "==10.0.0"
 oscrypto = { git = "https://github.com/wbond/oscrypto.git", rev = "1547f53" }
