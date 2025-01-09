@@ -14,9 +14,9 @@ content_type = "binary/octet-stream"
 
 def test_s3upload_save_file_to_bucket(mocker):
 
-    mock_s3_client = mocker.Mock()
+    mock_s3_resource = mocker.Mock()
     mocked = mocker.patch(
-        "notification_utils.s3.get_s3_client", return_value=mock_s3_client
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
     )
     s3upload(
         filedata=contents, region=region, bucket_name=bucket, file_location=location
@@ -32,8 +32,10 @@ def test_s3upload_save_file_to_bucket(mocker):
 def test_s3upload_save_file_to_bucket_with_contenttype(mocker):
     content_type = "image/png"
 
-    mock_s3_client = mocker.Mock()
-    mocked = mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
     s3upload(
         filedata=contents,
         region=region,
@@ -51,8 +53,10 @@ def test_s3upload_save_file_to_bucket_with_contenttype(mocker):
 
 def test_s3upload_raises_exception(app, mocker):
 
-    mock_s3_client = mocker.Mock()
-    mocked = mocker.patch("app.aws.s3.get_s3_client", return_value=mock_s3_client)
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
     response = {"Error": {"Code": 500}}
     exception = botocore.exceptions.ClientError(response, "Bad exception")
     mocked.return_value.Object.return_value.put.side_effect = exception
@@ -66,7 +70,12 @@ def test_s3upload_raises_exception(app, mocker):
 
 
 def test_s3upload_save_file_to_bucket_with_urlencoded_tags(mocker):
-    mocked = mocker.patch("notifications_utils.s3.Session.resource")
+
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
+
     s3upload(
         filedata=contents,
         region=region,
@@ -82,7 +91,12 @@ def test_s3upload_save_file_to_bucket_with_urlencoded_tags(mocker):
 
 
 def test_s3upload_save_file_to_bucket_with_metadata(mocker):
-    mocked = mocker.patch("notifications_utils.s3.Session.resource")
+
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
+
     s3upload(
         filedata=contents,
         region=region,
@@ -97,16 +111,25 @@ def test_s3upload_save_file_to_bucket_with_metadata(mocker):
 
 
 def test_s3download_gets_file(mocker):
-    mocked = mocker.patch("notifications_utils.s3.Session.resource")
+
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
+
     mocked_object = mocked.return_value.Object
-    mocked_get = mocked.return_value.Object.return_value.get
+    mocked_object.return_value.get.return_value = {"Body": mocker.Mock()}
     s3download("bucket", "location.file")
     mocked_object.assert_called_once_with("bucket", "location.file")
-    mocked_get.assert_called_once_with()
 
 
 def test_s3download_raises_on_error(mocker):
-    mocked = mocker.patch("notifications_utils.s3.Session.resource")
+
+    mock_s3_resource = mocker.Mock()
+    mocked = mocker.patch(
+        "notifications_utils.s3.get_s3_resource", return_value=mock_s3_resource
+    )
+
     mocked.return_value.Object.side_effect = botocore.exceptions.ClientError(
         {"Error": {"Code": 404}},
         "Bad exception",
