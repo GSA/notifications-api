@@ -26,7 +26,6 @@ from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
-from app.utils import hilite
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
@@ -60,7 +59,6 @@ class SQLAlchemy(_SQLAlchemy):
 
     def apply_driver_hacks(self, app, info, options):
         sa_url, options = super().apply_driver_hacks(app, info, options)
-        print(hilite(f"OPTIONS {options}"))
 
         if "connect_args" not in options:
             options["connect_args"] = {}
