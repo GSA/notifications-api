@@ -24,6 +24,7 @@ from app.dao.jobs_dao import (
     find_missing_row_for_job,
 )
 from app.dao.notifications_dao import (
+    dao_close_out_delivery_receipts,
     dao_update_delivery_receipts,
     notifications_not_yet_sent,
 )
@@ -278,3 +279,10 @@ def process_delivery_receipts(self):
             current_app.logger.error(
                 "Failed process delivery receipts after max retries"
             )
+
+
+@notify_celery.task(
+    bind=True, max_retries=2, default_retry_delay=3600, name="cleanup-delivery-receipts"
+)
+def cleanup_delivery_receipts(self):
+    dao_close_out_delivery_receipts()
