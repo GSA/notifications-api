@@ -13,11 +13,12 @@ AWS_CLIENT_CONFIG = Config(
     s3={
         "addressing_style": "virtual",
     },
+    max_pool_connections=50,
     use_fips_endpoint=True,
 )
 
 # Global variable
-s3_resource = None
+noti_s3_resource = None
 
 default_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
 default_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
@@ -25,21 +26,15 @@ default_region = os.environ.get("AWS_REGION")
 
 
 def get_s3_resource():
-    global s3_resource
-    if s3_resource is None:
-        # print(hilite("S3 RESOURCE IS NONE, CREATING IT!"))
-        access_key = (default_access_key_id,)
-        secret_key = (default_secret_access_key,)
-        region = (default_region,)
+    global noti_s3_resource
+    if noti_s3_resource is None:
         session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+            region_name=os.environ.get("AWS_REGION"),
         )
-        s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
-    # else:
-    # print(hilite("S3 RESOURCE ALREADY EXSITS, REUSING IT!"))
-    return s3_resource
+        noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    return noti_s3_resource
 
 
 def s3upload(

@@ -1,9 +1,16 @@
+from unittest.mock import MagicMock
 from urllib.parse import parse_qs
 
 import botocore
 import pytest
 
-from notifications_utils.s3 import S3ObjectNotFound, s3download, s3upload
+from notifications_utils.s3 import (
+    AWS_CLIENT_CONFIG,
+    S3ObjectNotFound,
+    get_s3_resource,
+    s3download,
+    s3upload,
+)
 
 contents = "some file data"
 region = "eu-west-1"
@@ -108,6 +115,29 @@ def test_s3upload_save_file_to_bucket_with_metadata(mocker):
 
     metadata = mocked_put.call_args[1]["Metadata"]
     assert metadata == {"status": "valid", "pages": "5"}
+
+
+def test_get_s3_resource(mocker):
+    mock_session = mocker.patch("notifications_utils.s3.Session")
+    mock_current_app = mocker.patch("notifications_utils.s3.current_app")
+    sa_key = "sec"
+    sa_key = f"{sa_key}ret_access_key"
+
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {
+            "access_key_id": "test_access_key",
+            sa_key: "test_s_key",
+            "region": "us-west-100",
+        }
+    }
+    mock_s3_resource = MagicMock()
+    mock_session.return_value.resource.return_value = mock_s3_resource
+    result = get_s3_resource()
+
+    mock_session.return_value.resource.assert_called_once_with(
+        "s3", config=AWS_CLIENT_CONFIG
+    )
+    assert result == mock_s3_resource
 
 
 def test_s3download_gets_file(mocker):
