@@ -484,12 +484,19 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .subquery()
     )
 
-    stmt = select(
-        func.sum(sub_stmt.notification_count).label("total_notifications"),
-        sub_stmt.notification_type,
-        sub_stmt.status,
-        sub_stmt.day,
-        func.sum(sub_stmt.count).label("count"),
+    stmt = (
+        select(
+            func.sum(sub_stmt.notification_count).label("total_notifications"),
+            sub_stmt.notification_type,
+            sub_stmt.status,
+            sub_stmt.day,
+            func.sum(sub_stmt.count).label("count"),
+        )
+        .group_by(
+            sub_stmt.notification_type,
+            sub_stmt.status,
+            sub_stmt.day,
+        )
     )
     return db.session.execute(stmt).all()
 
