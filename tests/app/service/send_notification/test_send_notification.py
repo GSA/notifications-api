@@ -420,7 +420,7 @@ def test_should_allow_valid_sms_notification(notify_api, sample_template, mocker
             response_data = json.loads(response.data)["data"]
             notification_id = response_data["notification"]["id"]
 
-            mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
+            mocked.assert_called_once_with([notification_id], queue="send-sms-tasks", countdown=30)
             assert response.status_code == 201
             assert notification_id
             assert "subject" not in response_data
@@ -658,7 +658,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         ],
     )
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=30
     )
     assert response.status_code == 201
 
@@ -735,7 +735,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=30
     )
     assert response.status_code == 201
 
