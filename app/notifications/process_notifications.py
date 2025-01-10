@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from flask import current_app
@@ -10,7 +11,7 @@ from app.dao.notifications_dao import (
     dao_notification_exists,
     get_notification_by_id,
 )
-from app.enums import KeyType, NotificationStatus, NotificationType
+from app.enums import NotificationStatus, NotificationType
 from app.errors import BadRequestError
 from app.models import Notification
 from app.utils import hilite, utc_now
@@ -140,16 +141,15 @@ def persist_notification(
     if not simulated:
         # current_app.logger.info("Firing dao_create_notification")
         # dao_create_notification(notification)
-        redis_store.rpush("message_queue", notification)
-        if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
-            current_app.logger.info(
-                "Redis enabled, querying cache key for service id: {}".format(
-                    service.id
-                )
-            )
+        current_app.logger.info(
+            f"QUEUE LENTGH BEFOE {redis_store.llen("message_queue")}"
+        )
+        redis_store.rpush(
+            "message_queue", json.dumps(notification.serialize_for_redis(notification))
+        )
 
         current_app.logger.info(
-            f"{notification_type} {notification_id} created at {notification_created_at}"
+            f"QUEUE LENTGH AFTA {redis_store.llen("message_queue")}"
         )
     return notification
 
