@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, encryption
 from app.celery import provider_tasks, tasks
+from app.celery.scheduled_tasks import batch_insert_notifications
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_job,
@@ -944,7 +945,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
         notification_id,
         encryption.encrypt(notification),
     )
-
+    batch_insert_notifications()
     persisted_notification = Notification.query.one()
     assert persisted_notification.reply_to_text == "+12028675309"
 
