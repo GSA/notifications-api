@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import KeyType, NotificationStatus, StatisticsType, TemplateType
+from app.enums import KeyType, NotificationStatus, NotificationType, StatisticsType, TemplateType
 
 
 def format_statistics(statistics, total_notifications=None):
@@ -17,8 +17,16 @@ def format_statistics(statistics, total_notifications=None):
             _update_statuses_from_row(
                 counts[row.notification_type],
                 row,
-                total_notifications=total_notifications,
             )
+
+    # Update pending count directly
+    if NotificationType.SMS in counts and total_notifications is not None:
+        sms_dict = counts[NotificationType.SMS]
+        requested_count = sms_dict[StatisticsType.REQUESTED]
+        delivered_count = sms_dict[StatisticsType.DELIVERED]
+        failed_count = sms_dict[StatisticsType.FAILURE]
+        pending_count = total_notifications - (requested_count + delivered_count + failed_count)
+        sms_dict[StatisticsType.PENDING] = pending_count
 
     return counts
 
@@ -86,7 +94,7 @@ def create_zeroed_stats_dicts():
     }
 
 
-def _update_statuses_from_row(update_dict, row, total_notifications=None):
+def _update_statuses_from_row(update_dict, row):
     requested_count = 0
     delivered_count = 0
     failed_count = 0
@@ -112,11 +120,6 @@ def _update_statuses_from_row(update_dict, row, total_notifications=None):
     ):
         update_dict[StatisticsType.FAILURE] += row.count
         failed_count += row.count
-
-    if total_notifications is not None:
-        # Update pending count directly
-        pending_count = total_notifications - (requested_count + delivered_count + failed_count)
-        update_dict[StatisticsType.PENDING] = pending_count
 
 
 def create_empty_monthly_notification_status_stats_dict(year):

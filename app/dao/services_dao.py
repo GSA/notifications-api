@@ -457,8 +457,9 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     # Getting the total notifications through this query.
 
-    total_stmt = (
+    total_substmt = (
         select(
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
             cast(Job.notification_count, Integer).label(
                 "notification_count"
             ),  # <-- i added cast here
@@ -475,10 +476,16 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .group_by(
             Job.id,
             Job.notification_count,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
         )
+        .subquery()
     )
 
-    total_notifications = sum(db.session.execute(total_stmt).scalars())
+    total_stmt = select(
+        func.sum(total_substmt.c.notification_count).label("total_notifications")
+    )
+
+    total_notifications = db.session.execute(total_stmt).scalar_one()
 
     stmt = (
         select(
