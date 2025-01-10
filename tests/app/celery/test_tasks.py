@@ -707,7 +707,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     assert not persisted_notification.sent_by
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
+        [str(persisted_notification.id)], queue="send-email-tasks"
     )
 
 

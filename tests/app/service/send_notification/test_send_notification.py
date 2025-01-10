@@ -476,7 +476,7 @@ def test_should_allow_valid_email_notification(
             response_data = json.loads(response.get_data(as_text=True))["data"]
             notification_id = response_data["notification"]["id"]
             app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-                [notification_id], queue="send-email-tasks"
+                [notification_id], queue="send-email-tasks", countdown=30
             )
 
             assert response.status_code == 201
@@ -620,7 +620,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=30
     )
     assert response.status_code == 201
 
@@ -697,7 +697,7 @@ def test_should_send_email_to_anyone_with_test_key(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=30
     )
     assert response.status_code == 201
 
