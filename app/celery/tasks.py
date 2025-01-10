@@ -256,7 +256,7 @@ def save_sms(self, service_id, notification_id, encrypted_notification, sender_i
             )
         )
         provider_tasks.deliver_sms.apply_async(
-            [str(saved_notification.id)], queue=QueueNames.SEND_SMS
+            [str(saved_notification.id)], queue=QueueNames.SEND_SMS, countdown=30
         )
 
         current_app.logger.debug(
