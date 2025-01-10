@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from time import time
 
+import sqlalchemy
 from flask import current_app
 from sqlalchemy import (
     TIMESTAMP,
@@ -799,3 +800,12 @@ def dao_close_out_delivery_receipts():
         current_app.logger.info(
             f"Marked {result.rowcount} notifications as technical failures"
         )
+
+
+def dao_batch_insert_notifications(batch):
+    try:
+        db.session.bulk_save_objects(Notification(**msg) for msg in batch)
+        db.session.commit()
+        return len(batch)
+    except sqlalchemy.exc.SQLAlchemyError as e:
+        current_app.logger.exception(f"Error during batch insert {e}")

@@ -1,10 +1,11 @@
+import json
 from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import between
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, zendesk_client
+from app import notify_celery, redis_store, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -24,6 +25,7 @@ from app.dao.jobs_dao import (
     find_missing_row_for_job,
 )
 from app.dao.notifications_dao import (
+    dao_batch_insert_notifications,
     dao_close_out_delivery_receipts,
     dao_update_delivery_receipts,
     notifications_not_yet_sent,
@@ -286,3 +288,17 @@ def process_delivery_receipts(self):
 )
 def cleanup_delivery_receipts(self):
     dao_close_out_delivery_receipts()
+
+
+@notify_celery.task(bind=True, name="batch-insert-notifications")
+def batch_insert_notifications(self):
+    batch = []
+    with redis_store.pipeline:
+        notification = redis_store.lpop("notification_queue")
+        batch.append(json.loads(notification))
+    try:
+        dao_batch_insert_notifications(batch)
+    except Exception as e:
+        for msg in batch:
+            redis_store.rpush("notification_queue", json.dumps(msg))
+        current_app.logger.exception(f"Notification batch insert failed {e}")

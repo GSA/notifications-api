@@ -6,7 +6,6 @@ from app import redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
-    dao_create_notification,
     dao_delete_notifications_by_id,
     dao_notification_exists,
     get_notification_by_id,
@@ -139,8 +138,9 @@ def persist_notification(
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
-        current_app.logger.info("Firing dao_create_notification")
-        dao_create_notification(notification)
+        # current_app.logger.info("Firing dao_create_notification")
+        # dao_create_notification(notification)
+        redis_store.rpush("message_queue", notification)
         if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
             current_app.logger.info(
                 "Redis enabled, querying cache key for service id: {}".format(
@@ -172,7 +172,7 @@ def send_notification_to_queue_detached(
         deliver_task = provider_tasks.deliver_email
 
     try:
-        deliver_task.apply_async([str(notification_id)], queue=queue)
+        deliver_task.apply_async([str(notification_id)], queue=queue, countdown=30)
     except Exception:
         dao_delete_notifications_by_id(notification_id)
         raise
