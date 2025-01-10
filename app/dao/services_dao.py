@@ -457,7 +457,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     # Getting the total notifications through this query.
 
-    total_stmt = select(
+    total_stmt = (
         select(
             cast(Job.notification_count, Integer).label(
                 "notification_count"
