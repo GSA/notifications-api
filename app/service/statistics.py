@@ -87,21 +87,19 @@ def create_zeroed_stats_dicts():
 
 
 def _update_statuses_from_row(update_dict, row, total_notifications=None):
-    # Initialize pending_count to total_notifications
-    if total_notifications is not None:
-        pending_count = total_notifications
+    requested_count = 0
+    delivered_count = 0
+    failed_count = 0
 
     # Update requested count
     if row.status != NotificationStatus.CANCELLED:
         update_dict[StatisticsType.REQUESTED] += row.count
-        if total_notifications is not None:
-            pending_count -= row.count  # Subtract from pending_count
+        requested_count += row.count
 
     # Update delivered count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict[StatisticsType.DELIVERED] += row.count
-        if total_notifications is not None:
-            pending_count -= row.count  # Subtract from pending_count
+        delivered_count += row.count
 
     # Update failure count
     if row.status in (
@@ -113,11 +111,11 @@ def _update_statuses_from_row(update_dict, row, total_notifications=None):
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict[StatisticsType.FAILURE] += row.count
-        if total_notifications is not None:
-            pending_count -= row.count  # Subtract from pending_count
+        failed_count += row.count
 
     if total_notifications is not None:
         # Update pending count directly
+        pending_count = total_notifications - (requested_count + delivered_count + failed_count)
         update_dict[StatisticsType.PENDING] = pending_count
 
 
