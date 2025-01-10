@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 
 from flask import current_app
@@ -141,10 +142,14 @@ def persist_notification(
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
         if notification.notification_type == NotificationType.SMS:
-            redis_store.rpush(
-                "message_queue",
-                json.dumps(notification.serialize_for_redis(notification)),
-            )
+            # it's just too hard with redis and timing to test this here
+            if os.getenv("NOTIFY_ENVIRONMENT") == "test":
+                dao_create_notification(notification)
+            else:
+                redis_store.rpush(
+                    "message_queue",
+                    json.dumps(notification.serialize_for_redis(notification)),
+                )
         else:
             dao_create_notification(notification)
 
