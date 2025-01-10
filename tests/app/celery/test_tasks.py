@@ -939,7 +939,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
     notification = _notification_json(template, to="2028675301")
     mocker.patch("app.celery.provider_tasks.deliver_sms.apply_async")
 
-    notification_id = uuid.uuid4()
+    notification_id = str(uuid.uuid4())
     save_sms(
         service.id,
         notification_id,
