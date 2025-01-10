@@ -13,7 +13,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, encryption
 from app.celery import provider_tasks, tasks
-from app.celery.scheduled_tasks import batch_insert_notifications
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_job,
