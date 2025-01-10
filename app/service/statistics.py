@@ -83,11 +83,21 @@ def create_zeroed_stats_dicts():
 
 
 def _update_statuses_from_row(update_dict, row):
+    # Initialize pending_count to total_notifications
+    pending_count = row.total_notifications
+
+    # Update requested count
     if row.status != NotificationStatus.CANCELLED:
         update_dict[StatisticsType.REQUESTED] += row.count
+        pending_count -= row.count  # Subtract from pending_count
+
+    # Update delivered count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict[StatisticsType.DELIVERED] += row.count
-    elif row.status in (
+        pending_count -= row.count  # Subtract from pending_count
+
+    # Update failure count
+    if row.status in (
         NotificationStatus.FAILED,
         NotificationStatus.TECHNICAL_FAILURE,
         NotificationStatus.TEMPORARY_FAILURE,
@@ -96,13 +106,10 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict[StatisticsType.FAILURE] += row.count
-    elif row.status in (
-        NotificationStatus.PENDING,
-        NotificationStatus.CREATED,
-        NotificationStatus.SENDING,
-    ):
-        update_dict[StatisticsType.PENDING] += row.count
+        pending_count -= row.count  # Subtract from pending_count
 
+    # Update pending count directly
+    update_dict[StatisticsType.PENDING] = pending_count
 
 def create_empty_monthly_notification_status_stats_dict(year):
     utc_month_starts = get_months_for_financial_year(year)
