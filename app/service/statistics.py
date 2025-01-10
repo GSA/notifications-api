@@ -2,7 +2,13 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import KeyType, NotificationStatus, NotificationType, StatisticsType, TemplateType
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    StatisticsType,
+    TemplateType,
+)
 
 
 def format_statistics(statistics, total_notifications=None):
@@ -25,7 +31,9 @@ def format_statistics(statistics, total_notifications=None):
         requested_count = sms_dict[StatisticsType.REQUESTED]
         delivered_count = sms_dict[StatisticsType.DELIVERED]
         failed_count = sms_dict[StatisticsType.FAILURE]
-        pending_count = total_notifications - (requested_count + delivered_count + failed_count)
+        pending_count = total_notifications - (
+            requested_count + delivered_count + failed_count
+        )
         sms_dict[StatisticsType.PENDING] = pending_count
 
     return counts

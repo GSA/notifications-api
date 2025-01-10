@@ -482,10 +482,13 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     )
 
     total_stmt = select(
-        func.sum(total_substmt.c.notification_count).label("total_notifications")
+        func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+        func.sum(total_substmt.c.notification_count).label("total_notifications"),
+    ).group_by(
+        func.date_trunc("day", NotificationAllTimeView.created_at),
     )
 
-    total_notifications = db.session.execute(total_stmt).scalar_one()
+    total_notifications = {day: count for day, count in db.session.execute(total_stmt)}
 
     stmt = (
         select(
@@ -777,7 +780,11 @@ def get_specific_days_stats(
     stats = {
         day.strftime("%Y-%m-%d"): statistics.format_statistics(
             rows,
-            total_notifications=total_notifications,
+            total_notifications=(
+                total_notifications.get(day, 0)
+                if total_notifications is not None
+                else None
+            ),
         )
         for day, rows in grouped_data.items()
     }
