@@ -738,7 +738,7 @@ def test_should_use_email_template_subject_placeholders(
     assert not persisted_notification.reference
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
+        [str(persisted_notification.id)], queue="send-email-tasks"
     )
 
 
@@ -822,7 +822,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
     assert not persisted_notification.reference
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
+        [str(persisted_notification.id)], queue="send-email-tasks"
     )
 
 

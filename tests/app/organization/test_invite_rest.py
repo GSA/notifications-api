@@ -73,7 +73,7 @@ def test_create_invited_org_user(
     # assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
 
     mocked.assert_called_once_with(
-        [(str(notification.id))], queue="notify-internal-tasks"
+        [(str(notification.id))], queue="notify-internal-tasks",  countdown=30
     )
 
 
