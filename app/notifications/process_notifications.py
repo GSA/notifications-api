@@ -7,6 +7,7 @@ from app import redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
+    dao_create_notification,
     dao_delete_notifications_by_id,
     dao_notification_exists,
     get_notification_by_id,
@@ -139,18 +140,14 @@ def persist_notification(
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
-        # current_app.logger.info("Firing dao_create_notification")
-        # dao_create_notification(notification)
-        current_app.logger.info(
-            f"QUEUE LENTGH BEFOE {redis_store.llen("message_queue")}"
-        )
-        redis_store.rpush(
-            "message_queue", json.dumps(notification.serialize_for_redis(notification))
-        )
+        if notification.notification_type == NotificationType.SMS:
+            redis_store.rpush(
+                "message_queue",
+                json.dumps(notification.serialize_for_redis(notification)),
+            )
+        else:
+            dao_create_notification(notification)
 
-        current_app.logger.info(
-            f"QUEUE LENTGH AFTA {redis_store.llen("message_queue")}"
-        )
     return notification
 
 
