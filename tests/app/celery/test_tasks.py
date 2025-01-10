@@ -599,7 +599,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
     assert persisted_notification.notification_type == NotificationType.SMS
 
     provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-sms-tasks"
+        [str(persisted_notification.id)], queue="send-sms-tasks", countdown=30
     )
 
 
@@ -670,7 +670,7 @@ def test_should_use_email_template_and_persist(
     assert persisted_notification.notification_type == NotificationType.EMAIL
 
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks"
+        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
     )
 
 
@@ -707,7 +707,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
     assert not persisted_notification.sent_by
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks"
+        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
     )
 
 
@@ -738,7 +738,7 @@ def test_should_use_email_template_subject_placeholders(
     assert not persisted_notification.reference
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks"
+        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
     )
 
 
@@ -822,7 +822,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
     assert not persisted_notification.reference
     assert persisted_notification.notification_type == NotificationType.EMAIL
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks"
+        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
     )
 
 
