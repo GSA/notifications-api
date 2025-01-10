@@ -14,7 +14,11 @@ def format_statistics(statistics, total_notifications=None):
         # any row could be null, if the service either has no notifications in the notifications table,
         # or no historical data in the ft_notification_status table.
         if row.notification_type:
-            _update_statuses_from_row(counts[row.notification_type], row, total_notifications=total_notifications,)
+            _update_statuses_from_row(
+                counts[row.notification_type],
+                row,
+                total_notifications=total_notifications,
+            )
 
     return counts
 
@@ -115,6 +119,7 @@ def _update_statuses_from_row(update_dict, row, total_notifications=None):
     if total_notifications is not None:
         # Update pending count directly
         update_dict[StatisticsType.PENDING] = pending_count
+
 
 def create_empty_monthly_notification_status_stats_dict(year):
     utc_month_starts = get_months_for_financial_year(year)

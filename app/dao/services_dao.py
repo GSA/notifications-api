@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import Float, cast, delete, select, Integer
+from sqlalchemy import Float, Integer, cast, delete, select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
@@ -458,13 +458,19 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     sub_stmt = (
         select(
             Job.id.label("job_id"),
-            cast(Job.notification_count, Integer).label("notification_count"),  # <-- i added cast here
+            cast(Job.notification_count, Integer).label(
+                "notification_count"
+            ),  # <-- i added cast here
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(func.count(NotificationAllTimeView.id), Integer).label("count"),  # <-- i added cast here
+            cast(func.count(NotificationAllTimeView.id), Integer).label(
+                "count"
+            ),  # <-- i added cast here
         )
-        .join_from(NotificationAllTimeView, Job, NotificationAllTimeView.job_id == Job.id) # <-- i changed this to NotificationAllTimeView from notifications
+        .join_from(
+            NotificationAllTimeView, Job, NotificationAllTimeView.job_id == Job.id
+        )  # <-- i changed this to NotificationAllTimeView from notifications
         .where(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.key_type != KeyType.TEST,
@@ -483,38 +489,29 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     # Getting the total notifications through this query.
 
-    total_stmt = (
-        select(
-            sub_stmt.c.job_id,
-            sub_stmt.c.notification_count,
-        )
-        .group_by(
-            sub_stmt.c.job_id,
-            sub_stmt.c.notification_count,
-        )
+    total_stmt = select(
+        sub_stmt.c.job_id,
+        sub_stmt.c.notification_count,
+    ).group_by(
+        sub_stmt.c.job_id,
+        sub_stmt.c.notification_count,
     )
 
     total_notifications = sum(
-        count
-        for __, count in db.session.execute(total_stmt).all()
+        count for __, count in db.session.execute(total_stmt).all()
     )
 
-    stmt = (
-        select(
-            cast(func.sum(sub_stmt.c.notification_count), Integer).label("total_notifications"),  # <-- i added cast here
-            sub_stmt.c.notification_type,
-            sub_stmt.c.status,
-            sub_stmt.c.day,
-            cast(func.sum(sub_stmt.c.count), Integer).label("count"),  # <-- i added cast here
-        )
-        .group_by(   # <-- i added this group here
-            sub_stmt.c.notification_type,
-            sub_stmt.c.status,
-            sub_stmt.c.day
-        )
+    stmt = select(
+        sub_stmt.c.notification_type,
+        sub_stmt.c.status,
+        sub_stmt.c.day,
+        cast(func.sum(sub_stmt.c.count), Integer).label(
+            "count"
+        ),  # <-- i added cast here
+    ).group_by(  # <-- i added this group here
+        sub_stmt.c.notification_type, sub_stmt.c.status, sub_stmt.c.day
     )
     return total_notifications, db.session.execute(stmt).all()
-
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
@@ -760,7 +757,9 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None, total_notifications=None):
+def get_specific_days_stats(
+    data, start_date, days=None, end_date=None, total_notifications=None
+):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
@@ -776,7 +775,10 @@ def get_specific_days_stats(data, start_date, days=None, end_date=None, total_no
     }
 
     stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows, total_notifications=total_notifications,)
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(
+            rows,
+            total_notifications=total_notifications,
+        )
         for day, rows in grouped_data.items()
     }
 
