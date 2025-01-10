@@ -230,18 +230,13 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
     end_date = datetime.strptime(start, "%Y-%m-%d")
     start_date = end_date - timedelta(days=days - 1)
 
-    total_notifications, results = dao_fetch_stats_for_service_from_days(
+    results = dao_fetch_stats_for_service_from_days(
         service_id,
         start_date,
         end_date,
     )
 
-    stats = get_specific_days_stats(
-        results,
-        start_date,
-        days=days,
-        total_notifications=total_notifications,
-    )
+    stats = get_specific_days_stats(results, start_date, days=days)
 
     return stats
 

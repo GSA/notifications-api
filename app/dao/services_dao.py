@@ -455,41 +455,6 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    # Getting the total notifications through this query.
-
-    total_substmt = (
-        select(
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(Job.notification_count, Integer).label(
-                "notification_count"
-            ),  # <-- i added cast here
-        )
-        .join_from(
-            NotificationAllTimeView, Job, NotificationAllTimeView.job_id == Job.id
-        )  # <-- i changed this to NotificationAllTimeView from notifications
-        .where(
-            NotificationAllTimeView.service_id == service_id,
-            NotificationAllTimeView.key_type != KeyType.TEST,
-            NotificationAllTimeView.created_at >= start_date,
-            NotificationAllTimeView.created_at < end_date,
-        )
-        .group_by(
-            Job.id,
-            Job.notification_count,
-            func.date_trunc("day", NotificationAllTimeView.created_at),
-        )
-        .subquery()
-    )
-
-    total_stmt = select(
-        func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-        func.sum(total_substmt.c.notification_count).label("total_notifications"),
-    ).group_by(
-        func.date_trunc("day", NotificationAllTimeView.created_at),
-    )
-
-    total_notifications = {day: count for day, count in db.session.execute(total_stmt)}
-
     stmt = (
         select(
             NotificationAllTimeView.notification_type,
@@ -514,7 +479,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     data = db.session.execute(stmt).all()
 
-    return total_notifications, data
+    return data
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
@@ -760,9 +725,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(
-    data, start_date, days=None, end_date=None, total_notifications=None
-):
+def get_specific_days_stats(data, start_date, days=None, end_date=None):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
@@ -778,14 +741,7 @@ def get_specific_days_stats(
     }
 
     stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(
-            rows,
-            total_notifications=(
-                total_notifications.get(day, 0)
-                if total_notifications is not None
-                else None
-            ),
-        )
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
         for day, rows in grouped_data.items()
     }
 
