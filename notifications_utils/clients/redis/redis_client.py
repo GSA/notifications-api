@@ -156,6 +156,14 @@ class RedisClient:
 
         return None
 
+    def rpush(self, key, value):
+        if self.active:
+            self.redis_store.rpush(key, value)
+
+    def lpop(self, key, value):
+        if self.active:
+            self.redis_store.lpop(key, value)
+
     def delete(self, *keys, raise_exception=False):
         keys = [prepare_value(k) for k in keys]
         if self.active:
