@@ -945,6 +945,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
         notification_id,
         encryption.encrypt(notification),
     )
+
     batch_insert_notifications()
     persisted_notification = Notification.query.one()
     assert persisted_notification.reply_to_text == "+12028675309"
