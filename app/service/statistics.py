@@ -5,7 +5,7 @@ from app.dao.date_util import get_months_for_financial_year
 from app.enums import KeyType, NotificationStatus, StatisticsType, TemplateType
 
 
-def format_statistics(statistics):
+def format_statistics(statistics, total_notifications=None):
     # statistics come in a named tuple with uniqueness from 'notification_type', 'status' - however missing
     # statuses/notification types won't be represented and the status types need to be simplified/summed up
     # so we can return emails/sms * created, sent, and failed
@@ -14,7 +14,7 @@ def format_statistics(statistics):
         # any row could be null, if the service either has no notifications in the notifications table,
         # or no historical data in the ft_notification_status table.
         if row.notification_type:
-            _update_statuses_from_row(counts[row.notification_type], row)
+            _update_statuses_from_row(counts[row.notification_type], row, total_notifications=total_notifications,)
 
     return counts
 
@@ -82,19 +82,22 @@ def create_zeroed_stats_dicts():
     }
 
 
-def _update_statuses_from_row(update_dict, row):
+def _update_statuses_from_row(update_dict, row, total_notifications=None):
     # Initialize pending_count to total_notifications
-    pending_count = row.total_notifications
+    if total_notifications is not None:
+        pending_count = total_notifications
 
     # Update requested count
     if row.status != NotificationStatus.CANCELLED:
         update_dict[StatisticsType.REQUESTED] += row.count
-        pending_count -= row.count  # Subtract from pending_count
+        if total_notifications is not None:
+            pending_count -= row.count  # Subtract from pending_count
 
     # Update delivered count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict[StatisticsType.DELIVERED] += row.count
-        pending_count -= row.count  # Subtract from pending_count
+        if total_notifications is not None:
+            pending_count -= row.count  # Subtract from pending_count
 
     # Update failure count
     if row.status in (
@@ -106,10 +109,12 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict[StatisticsType.FAILURE] += row.count
-        pending_count -= row.count  # Subtract from pending_count
+        if total_notifications is not None:
+            pending_count -= row.count  # Subtract from pending_count
 
-    # Update pending count directly
-    update_dict[StatisticsType.PENDING] = pending_count
+    if total_notifications is not None:
+        # Update pending count directly
+        update_dict[StatisticsType.PENDING] = pending_count
 
 def create_empty_monthly_notification_status_stats_dict(year):
     utc_month_starts = get_months_for_financial_year(year)

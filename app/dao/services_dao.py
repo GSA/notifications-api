@@ -457,7 +457,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     sub_stmt = (
         select(
-            Job.id,
+            Job.id.label("job_id"),
             cast(Job.notification_count, Integer).label("notification_count"),  # <-- i added cast here
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
@@ -481,6 +481,24 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .subquery()
     )
 
+    # Getting the total notifications through this query.
+
+    total_stmt = (
+        select(
+            sub_stmt.c.job_id,
+            sub_stmt.c.notification_count,
+        )
+        .group_by(
+            sub_stmt.c.job_id,
+            sub_stmt.c.notification_count,
+        )
+    )
+
+    total_notifications = sum(
+        count
+        for __, count in db.session.execute(total_stmt).all()
+    )
+
     stmt = (
         select(
             cast(func.sum(sub_stmt.c.notification_count), Integer).label("total_notifications"),  # <-- i added cast here
@@ -495,7 +513,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             sub_stmt.c.day
         )
     )
-    return db.session.execute(stmt).all()
+    return total_notifications, db.session.execute(stmt).all()
 
 
 
@@ -742,7 +760,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None):
+def get_specific_days_stats(data, start_date, days=None, end_date=None, total_notifications=None):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
@@ -758,7 +776,7 @@ def get_specific_days_stats(data, start_date, days=None, end_date=None):
     }
 
     stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows, total_notifications=total_notifications,)
         for day, rows in grouped_data.items()
     }
 
