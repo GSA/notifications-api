@@ -455,17 +455,12 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    sub_stmt = (
+    # Getting the total notifications through this query.
+
+    total_stmt = select(
         select(
-            Job.id.label("job_id"),
             cast(Job.notification_count, Integer).label(
                 "notification_count"
-            ),  # <-- i added cast here
-            NotificationAllTimeView.notification_type,
-            NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(func.count(NotificationAllTimeView.id), Integer).label(
-                "count"
             ),  # <-- i added cast here
         )
         .join_from(
@@ -480,38 +475,36 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .group_by(
             Job.id,
             Job.notification_count,
+        )
+    )
+
+    total_notifications = sum(db.session.execute(total_stmt).scalars())
+
+    stmt = (
+        select(
+            NotificationAllTimeView.notification_type,
+            NotificationAllTimeView.status,
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            cast(func.count(NotificationAllTimeView.id), Integer).label(
+                "count"
+            ),  # <-- i added cast here
+        )
+        .where(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+        )
+        .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at),
         )
-        .subquery()
     )
 
-    # Getting the total notifications through this query.
+    data = db.session.execute(stmt).all()
 
-    total_stmt = select(
-        sub_stmt.c.job_id,
-        sub_stmt.c.notification_count,
-    ).group_by(
-        sub_stmt.c.job_id,
-        sub_stmt.c.notification_count,
-    )
-
-    total_notifications = sum(
-        count for __, count in db.session.execute(total_stmt).all()
-    )
-
-    stmt = select(
-        sub_stmt.c.notification_type,
-        sub_stmt.c.status,
-        sub_stmt.c.day,
-        cast(func.sum(sub_stmt.c.count), Integer).label(
-            "count"
-        ),  # <-- i added cast here
-    ).group_by(  # <-- i added this group here
-        sub_stmt.c.notification_type, sub_stmt.c.status, sub_stmt.c.day
-    )
-    return total_notifications, db.session.execute(stmt).all()
+    return total_notifications, data
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
