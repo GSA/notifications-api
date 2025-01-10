@@ -435,7 +435,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
     assert persisted_notification.personalisation == {}
     assert persisted_notification.notification_type == NotificationType.SMS
     mocked_deliver_sms.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-sms-tasks"
+        [str(persisted_notification.id)], queue="send-sms-tasks", countdown=30
     )
 
 
@@ -471,7 +471,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
     assert not persisted_notification.personalisation
     assert persisted_notification.notification_type == NotificationType.SMS
     provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-sms-tasks"
+        [str(persisted_notification.id)], queue="send-sms-tasks", countdown=30
     )
 
 
@@ -670,7 +670,7 @@ def test_should_use_email_template_and_persist(
     assert persisted_notification.notification_type == NotificationType.EMAIL
 
     provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [str(persisted_notification.id)], queue="send-email-tasks", countdown=30
+        [str(persisted_notification.id)], queue="send-email-tasks"
     )
 
 
@@ -946,7 +946,6 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
         encryption.encrypt(notification),
     )
 
-    batch_insert_notifications()
     persisted_notification = Notification.query.one()
     assert persisted_notification.reply_to_text == "+12028675309"
 
