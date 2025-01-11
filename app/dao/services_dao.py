@@ -455,7 +455,6 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
-    # Subquery for daily total notifications
     total_substmt = (
         select(
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
@@ -478,7 +477,6 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .subquery()
     )
 
-    # Query for daily total notifications
     total_stmt = select(
         total_substmt.c.day,
         func.sum(total_substmt.c.notification_count).label("total_notifications"),
@@ -486,12 +484,10 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         total_substmt.c.day
     )
 
-    # Execute both queries
     total_notifications = {
         row.day: row.total_notifications for row in db.session.execute(total_stmt).all()
     }
 
-    # Query for breakdown by notification type and status
     stmt = (
         select(
             NotificationAllTimeView.notification_type,

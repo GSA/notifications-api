@@ -687,7 +687,6 @@ def get_single_month_notification_stats_for_service(service_id):
     month_year = datetime(year, month, 10, 00, 00, 00)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    # First element is total notifications used elsewhere.
     __, results = dao_fetch_stats_for_service_from_days(
         service_id, start_date, end_date
     )
