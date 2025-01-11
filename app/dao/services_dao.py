@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import Float, Integer, cast, delete, select
+from sqlalchemy import Float, cast, delete, select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import and_, asc, case, func
 
@@ -459,7 +459,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     total_substmt = (
         select(
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(Job.notification_count, Integer).label("notification_count")
+            Job.notification_count.label("notification_count")
         )
         .join(
             Job, NotificationAllTimeView.job_id == Job.id
@@ -497,7 +497,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(func.count(NotificationAllTimeView.id), Integer).label("count"),
+            func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
             NotificationAllTimeView.service_id == service_id,
