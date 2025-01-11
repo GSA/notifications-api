@@ -796,7 +796,7 @@ def test_should_persist_notification(
         ],
     )
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=30)
     assert response.status_code == 201
 
     notification = notifications_dao.get_notification_by_id(fake_uuid)
