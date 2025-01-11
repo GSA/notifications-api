@@ -5,9 +5,9 @@ from app.dao.date_util import get_months_for_financial_year
 from app.enums import (
     KeyType,
     NotificationStatus,
+    NotificationType,
     StatisticsType,
     TemplateType,
-    NotificationType
 )
 
 
