@@ -37,6 +37,7 @@ def format_statistics(statistics, total_notifications=None):
 
     return counts
 
+
 def format_admin_stats(statistics):
     counts = create_stats_dict()
 

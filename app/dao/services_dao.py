@@ -516,6 +516,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     return total_notifications, data
 
+
 def dao_fetch_stats_for_service_from_days_for_user(
     service_id, start_date, end_date, user_id
 ):
@@ -759,7 +760,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None,total_notifications=None):
+def get_specific_days_stats(data, start_date, days=None, end_date=None, total_notifications=None):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
