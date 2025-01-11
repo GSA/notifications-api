@@ -458,11 +458,9 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     total_substmt = (
         select(
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            Job.notification_count.label("notification_count")
+            Job.notification_count.label("notification_count"),
         )
-        .join(
-            Job, NotificationAllTimeView.job_id == Job.id
-        )
+        .join(Job, NotificationAllTimeView.job_id == Job.id)
         .where(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.key_type != KeyType.TEST,
@@ -480,9 +478,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     total_stmt = select(
         total_substmt.c.day,
         func.sum(total_substmt.c.notification_count).label("total_notifications"),
-    ).group_by(
-        total_substmt.c.day
-    )
+    ).group_by(total_substmt.c.day)
 
     total_notifications = {
         row.day: row.total_notifications for row in db.session.execute(total_stmt).all()
@@ -756,7 +752,9 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None, total_notifications=None):
+def get_specific_days_stats(
+    data, start_date, days=None, end_date=None, total_notifications=None
+):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:

@@ -2200,6 +2200,7 @@ def test_set_sms_prefixing_for_service_cant_be_none(
                 StatisticsType.REQUESTED: 2,
                 StatisticsType.DELIVERED: 1,
                 StatisticsType.FAILURE: 0,
+                StatisticsType.PENDING: 0,
             },
         ),
         (
@@ -2208,6 +2209,7 @@ def test_set_sms_prefixing_for_service_cant_be_none(
                 StatisticsType.REQUESTED: 1,
                 StatisticsType.DELIVERED: 0,
                 StatisticsType.FAILURE: 0,
+                StatisticsType.PENDING: 0,
             },
         ),
     ],
@@ -2256,11 +2258,13 @@ def test_get_services_with_detailed_flag(client, sample_template):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 3,
         },
     }
@@ -2287,11 +2291,13 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 2,
         },
     }
@@ -2363,11 +2369,13 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 1,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 3,
         },
     }
@@ -2376,11 +2384,13 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 1,
         },
     }
@@ -2406,11 +2416,13 @@ def test_get_detailed_services_includes_services_with_no_notifications(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 1,
         },
     }
@@ -2419,11 +2431,13 @@ def test_get_detailed_services_includes_services_with_no_notifications(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
     }
@@ -2448,12 +2462,15 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
-            StatisticsType.REQUESTED: 0,
+            StatisticsType.PENDING: 0,
+            StatisticsType.REQUESTED: 0
+
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
-            StatisticsType.REQUESTED: 3,
+            StatisticsType.PENDING: 0,
+            StatisticsType.REQUESTED: 3
         },
     }
 
@@ -2501,11 +2518,13 @@ def test_get_detailed_services_for_date_range(
     assert data[0]["statistics"][NotificationType.EMAIL] == {
         StatisticsType.DELIVERED: 0,
         StatisticsType.FAILURE: 0,
+        StatisticsType.PENDING: 0,
         StatisticsType.REQUESTED: 0,
     }
     assert data[0]["statistics"][NotificationType.SMS] == {
         StatisticsType.DELIVERED: 2,
         StatisticsType.FAILURE: 0,
+        StatisticsType.PENDING: 0,
         StatisticsType.REQUESTED: 2,
     }
 
