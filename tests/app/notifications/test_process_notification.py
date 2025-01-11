@@ -263,7 +263,9 @@ def test_send_notification_to_queue(
 
     send_notification_to_queue(notification=notification, queue=requested_queue)
 
-    mocked.assert_called_once_with([str(notification.id)], queue=expected_queue, countdown=30)
+    mocked.assert_called_once_with(
+        [str(notification.id)], queue=expected_queue, countdown=30
+    )
 
 
 def test_send_notification_to_queue_throws_exception_deletes_notification(
@@ -276,9 +278,7 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     with pytest.raises(Boto3Error):
         send_notification_to_queue(sample_notification, False)
     mocked.assert_called_once_with(
-        [(str(sample_notification.id))],
-        queue="send-sms-tasks",
-        countdown=30
+        [(str(sample_notification.id))], queue="send-sms-tasks", countdown=30
     )
 
     assert _get_notification_query_count() == 0

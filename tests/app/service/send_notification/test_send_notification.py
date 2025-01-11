@@ -150,7 +150,9 @@ def test_send_notification_with_placeholders_replaced(
                 {"template_version": sample_email_template_with_placeholders.version}
             )
 
-            mocked.assert_called_once_with([notification_id], queue="send-email-tasks", countdown=30)
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-email-tasks", countdown=30
+            )
             assert response.status_code == 201
             assert response_data["body"] == "Hello Jo\nThis is an email from GOV.UK"
             assert response_data["subject"] == "Jo"
@@ -420,7 +422,9 @@ def test_should_allow_valid_sms_notification(notify_api, sample_template, mocker
             response_data = json.loads(response.data)["data"]
             notification_id = response_data["notification"]["id"]
 
-            mocked.assert_called_once_with([notification_id], queue="send-sms-tasks", countdown=30)
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-sms-tasks", countdown=30
+            )
             assert response.status_code == 201
             assert notification_id
             assert "subject" not in response_data
@@ -853,7 +857,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         )
     assert str(e.value) == "failed to talk to redis"
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=30)
     assert not notifications_dao.get_notification_by_id(fake_uuid)
     assert not NotificationHistory.query.get(fake_uuid)
 
@@ -1185,7 +1189,9 @@ def test_should_allow_store_original_number_on_sms_notification(
     response_data = json.loads(response.data)["data"]
     notification_id = response_data["notification"]["id"]
 
-    mocked.assert_called_once_with([notification_id], queue="send-sms-tasks", countdown=30)
+    mocked.assert_called_once_with(
+        [notification_id], queue="send-sms-tasks", countdown=30
+    )
     assert response.status_code == 201
     assert notification_id
     notifications = Notification.query.all()
