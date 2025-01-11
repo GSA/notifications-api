@@ -455,14 +455,49 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
 
+    # Subquery for daily total notifications
+    total_substmt = (
+        select(
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            cast(Job.notification_count, Integer).label("notification_count")
+        )
+        .join(
+            Job, NotificationAllTimeView.job_id == Job.id
+        )
+        .where(
+            NotificationAllTimeView.service_id == service_id,
+            NotificationAllTimeView.key_type != KeyType.TEST,
+            NotificationAllTimeView.created_at >= start_date,
+            NotificationAllTimeView.created_at < end_date,
+        )
+        .group_by(
+            Job.id,
+            Job.notification_count,
+            func.date_trunc("day", NotificationAllTimeView.created_at),
+        )
+        .subquery()
+    )
+
+    # Query for daily total notifications
+    total_stmt = select(
+        func.date_trunc("day", total_substmt.c.day).label("day"),
+        func.sum(total_substmt.c.notification_count).label("total_notifications"),
+    ).group_by(
+        total_substmt.c.day
+    )
+
+    # Execute both queries
+    total_notifications = {
+        row.day: row.total_notifications for row in db.session.execute(total_stmt).all()
+    }
+
+    # Query for breakdown by notification type and status
     stmt = (
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
             func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
-            cast(func.count(NotificationAllTimeView.id), Integer).label(
-                "count"
-            ),  # <-- i added cast here
+            cast(func.count(NotificationAllTimeView.id), Integer).label("count"),
         )
         .where(
             NotificationAllTimeView.service_id == service_id,
@@ -479,8 +514,9 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     data = db.session.execute(stmt).all()
 
-    return data
+    print("Daily Total Notifications:", total_notifications)
 
+    return total_notifications, data
 
 def dao_fetch_stats_for_service_from_days_for_user(
     service_id, start_date, end_date, user_id
@@ -725,7 +761,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None):
+def get_specific_days_stats(data, start_date, days=None, end_date=None,total_notifications=None):
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
@@ -736,13 +772,19 @@ def get_specific_days_stats(data, start_date, days=None, end_date=None):
         raise ValueError("Either days or end_date must be set.")
 
     grouped_data = {date: [] for date in gen_range} | {
-        day: [row for row in data if row.day.date() == day]
-        for day in {item.day.date() for item in data}
+        day: [row for row in data if row.day == day]
+        for day in {item.day for item in data}
     }
 
     stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(
+            rows,
+            total_notifications=(
+                total_notifications.get(day, 0)
+                if total_notifications is not None
+                else None
+            ),
+        )
         for day, rows in grouped_data.items()
     }
-
     return stats

@@ -7,10 +7,11 @@ from app.enums import (
     NotificationStatus,
     StatisticsType,
     TemplateType,
+    NotificationType
 )
 
 
-def format_statistics(statistics):
+def format_statistics(statistics, total_notifications=None):
     # statistics come in a named tuple with uniqueness from 'notification_type', 'status' - however missing
     # statuses/notification types won't be represented and the status types need to be simplified/summed up
     # so we can return emails/sms * created, sent, and failed
@@ -24,8 +25,18 @@ def format_statistics(statistics):
                 row,
             )
 
-    return counts
+        if NotificationType.SMS in counts and total_notifications is not None:
+            sms_dict = counts[NotificationType.SMS]
+            delivered_count = sms_dict[StatisticsType.DELIVERED]
+            failed_count = sms_dict[StatisticsType.FAILURE]
+            print('total_notifications',total_notifications)
+            pending_count = total_notifications - (delivered_count + failed_count)
 
+            pending_count = max(0, pending_count)
+
+            sms_dict[StatisticsType.PENDING] = pending_count
+
+    return counts
 
 def format_admin_stats(statistics):
     counts = create_stats_dict()
@@ -98,12 +109,10 @@ def _update_statuses_from_row(update_dict, row):
     # Update requested count
     if row.status != NotificationStatus.CANCELLED:
         update_dict[StatisticsType.REQUESTED] += row.count
-        requested_count += row.count
 
     # Update delivered count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict[StatisticsType.DELIVERED] += row.count
-        delivered_count += row.count
 
     # Update failure count
     if row.status in (
