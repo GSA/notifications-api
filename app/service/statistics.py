@@ -29,7 +29,6 @@ def format_statistics(statistics, total_notifications=None):
             sms_dict = counts[NotificationType.SMS]
             delivered_count = sms_dict[StatisticsType.DELIVERED]
             failed_count = sms_dict[StatisticsType.FAILURE]
-            print('total_notifications',total_notifications)
             pending_count = total_notifications - (delivered_count + failed_count)
 
             pending_count = max(0, pending_count)
@@ -102,20 +101,11 @@ def create_zeroed_stats_dicts():
 
 
 def _update_statuses_from_row(update_dict, row):
-    requested_count = 0
-    delivered_count = 0
-    failed_count = 0
-
-    # Update requested count
     if row.status != NotificationStatus.CANCELLED:
         update_dict[StatisticsType.REQUESTED] += row.count
-
-    # Update delivered count
     if row.status in (NotificationStatus.DELIVERED, NotificationStatus.SENT):
         update_dict[StatisticsType.DELIVERED] += row.count
-
-    # Update failure count
-    if row.status in (
+    elif row.status in (
         NotificationStatus.FAILED,
         NotificationStatus.TECHNICAL_FAILURE,
         NotificationStatus.TEMPORARY_FAILURE,
@@ -124,7 +114,6 @@ def _update_statuses_from_row(update_dict, row):
         NotificationStatus.VIRUS_SCAN_FAILED,
     ):
         update_dict[StatisticsType.FAILURE] += row.count
-        failed_count += row.count
 
 
 def create_empty_monthly_notification_status_stats_dict(year):

@@ -480,7 +480,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     # Query for daily total notifications
     total_stmt = select(
-        func.date_trunc("day", total_substmt.c.day).label("day"),
+        total_substmt.c.day,
         func.sum(total_substmt.c.notification_count).label("total_notifications"),
     ).group_by(
         total_substmt.c.day
@@ -513,8 +513,6 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
     )
 
     data = db.session.execute(stmt).all()
-
-    print("Daily Total Notifications:", total_notifications)
 
     return total_notifications, data
 
