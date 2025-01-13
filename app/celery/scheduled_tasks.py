@@ -320,8 +320,8 @@ def batch_insert_notifications(self):
                 batch.append(notification)
     try:
         dao_batch_insert_notifications(batch)
-    except Exception as e:
-        current_app.logger.exception(f"Notification batch insert failed {e}")
+    except Exception:
+        current_app.logger.exception("Notification batch insert failed")
         for n in batch:
             # Use 'created_at' as a TTL so we don't retry infinitely
             if n.created_at < utc_now() - timedelta(minutes=1):
