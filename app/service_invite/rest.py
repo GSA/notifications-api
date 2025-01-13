@@ -25,7 +25,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
-from app.utils import utc_now
+from app.utils import hilite, utc_now
 from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)
@@ -67,7 +67,7 @@ def _create_service_invite(invited_user, nonce, state):
         "service_name": invited_user.service.name,
         "url": url,
     }
-
+    created_at = utc_now()
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
@@ -78,6 +78,10 @@ def _create_service_invite(invited_user, nonce, state):
         api_key_id=None,
         key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
+        created_at=created_at,
+    )
+    print(
+        hilite(f"saved notification created at time: {saved_notification.created_at}")
     )
     saved_notification.personalisation = personalisation
     redis_store.set(
