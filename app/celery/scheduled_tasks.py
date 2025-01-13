@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import between
@@ -324,7 +324,7 @@ def batch_insert_notifications(self):
         current_app.logger.exception("Notification batch insert failed")
         for n in batch:
             # Use 'created_at' as a TTL so we don't retry infinitely
-            if n.created_at < utc_now() - timedelta(minutes=1):
+            if datetime.fromisoformat(n.created_at) < utc_now() - timedelta(minutes=1):
                 current_app.logger.warning(
                     f"Abandoning stale data, could not write to db: {n.serialize_for_redis(n)}"
                 )
