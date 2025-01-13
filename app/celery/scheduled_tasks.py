@@ -315,6 +315,8 @@ def batch_insert_notifications(self):
             notification_dict["status"] = notification_dict.pop("notification_status")
             if not notification_dict.get("created_at"):
                 notification_dict["created_at"] = utc_now()
+            elif isinstance(notification_dict["created_at"], list):
+                notification_dict["created_at"] = notification_dict["created_at"][0]
             notification = Notification(**notification_dict)
             if notification is not None:
                 batch.append(notification)
@@ -324,7 +326,10 @@ def batch_insert_notifications(self):
         current_app.logger.exception("Notification batch insert failed")
         for n in batch:
             # Use 'created_at' as a TTL so we don't retry infinitely
-            if datetime.fromisoformat(n.created_at) < utc_now() - timedelta(seconds=50):
+            notification_time = n.created_at
+            if isinstance(notification_time, str):
+                notification_time = datetime.fromisoformat(n.created_at)
+            if notification_time < utc_now() - timedelta(seconds=50):
                 current_app.logger.warning(
                     f"Abandoning stale data, could not write to db: {n.serialize_for_redis(n)}"
                 )
