@@ -605,10 +605,10 @@ def test_batch_insert_with_malformed_notifications(mocker):
 
 def test_process_delivery_receipts_success(mocker):
     dao_update_mock = mocker.patch(
-        "app.dao.notifications_dao.dao_update_delivery_receipts"
+        "app.celery.scheduled_tasks.dao_update_delivery_receipts"
     )
     cloudwatch_mock = mocker.patch(
-        "app.clients.cloudwatch.aws_cloudwatch.AwsCloudwatchClient"
+        "app.celery.scheduled_tasks.AwsCloudwatchClient"
     )
     cloudwatch_mock.check_delivery_receipts.return_value = {range(2000), range(500)}
     current_app_mock = mocker.patch("app.celery.scheduled_tasks.current_app")
@@ -620,7 +620,7 @@ def test_process_delivery_receipts_success(mocker):
     processor.process_delivery_receipts()
 
     cloudwatch_mock.init_app.assert_called_once_with(current_app_mock)
-    cloudwatch_mock.check_delivery_receipts.assert_called_ocne()
+    cloudwatch_mock.check_delivery_receipts.assert_called_once()
 
     assert dao_update_mock.call_count == 3
     dao_update_mock.assert_any_call(list(range(1000)), True)
