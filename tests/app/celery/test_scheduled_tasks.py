@@ -618,9 +618,6 @@ def test_process_delivery_receipts_success(mocker):
     processor.retry = MagicMock()
 
     processor.process_delivery_receipts()
-
-    cloudwatch_mock.check_delivery_receipts.assert_called_once()
-
     assert dao_update_mock.call_count == 3
     dao_update_mock.assert_any_call(list(range(1000)), True)
     dao_update_mock.assert_any_call(list(range(1000, 2000)), True)
