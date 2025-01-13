@@ -211,4 +211,3 @@ class StatisticsType(StrEnum):
     REQUESTED = "requested"
     DELIVERED = "delivered"
     FAILURE = "failure"
-    PENDING = "pending"
