@@ -1702,7 +1702,10 @@ class Notification(db.Model):
                     new_name = "status"
                     value = getattr(obj, new_name)
                 elif column.name == "created_at":
-                    value = (obj.created_at.strftime("%Y-%m-%d %H:%M:%S"),)
+                    if isinstance(obj.created_at, str):
+                        value = obj.created_at
+                    else:
+                        value = (obj.created_at.strftime("%Y-%m-%d %H:%M:%S"),)
                 elif column.name in ["sent_at", "completed_at"]:
                     value = None
                 elif column.name.endswith("_id"):
