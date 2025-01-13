@@ -261,26 +261,18 @@ def process_delivery_receipts(self):
         cloudwatch.init_app(current_app)
         start_time = aware_utcnow() - timedelta(minutes=3)
         end_time = aware_utcnow()
-        print(f"START TIME {start_time} END TIME {end_time}")
         delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
             start_time, end_time
         )
-        print(f"DELIVERED {delivered_receipts} FAILED {failed_receipts}")
         delivered_receipts = list(delivered_receipts)
-        print(f"DELIVERED LIST {delivered_receipts}")
         for i in range(0, len(delivered_receipts), batch_size):
             batch = delivered_receipts[i : i + batch_size]
-            print("UPDATING DELIVERY RECEIPTS")
             dao_update_delivery_receipts(batch, True)
-            print("DEIVERY RECEIPTS UPDATED")
         failed_receipts = list(failed_receipts)
         for i in range(0, len(failed_receipts), batch_size):
-            print("UDPATING FAILED RECEIPTS")
             batch = failed_receipts[i : i + batch_size]
             dao_update_delivery_receipts(batch, False)
-            print("FAILED RECEITPS UPDATED")
     except Exception as ex:
-        print(f"EXCEPTION {ex}")
         retry_count = self.request.retries
         wait_time = 3600 * 2**retry_count
         try:

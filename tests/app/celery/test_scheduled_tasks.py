@@ -607,10 +607,11 @@ def test_process_delivery_receipts_success(mocker):
     dao_update_mock = mocker.patch(
         "app.celery.scheduled_tasks.dao_update_delivery_receipts"
     )
-    cloudwatch_mock = mocker.patch(
-        "app.celery.scheduled_tasks.AwsCloudwatchClient"
+    cloudwatch_mock = mocker.patch("app.celery.scheduled_tasks.AwsCloudwatchClient")
+    cloudwatch_mock.return_value.check_delivery_receipts.return_value = (
+        range(2000),
+        range(500),
     )
-    cloudwatch_mock.return_value.check_delivery_receipts.return_value = (range(2000), range(500))
     current_app_mock = mocker.patch("app.celery.scheduled_tasks.current_app")
     current_app_mock.return_value = MagicMock()
     processor = MagicMock()
