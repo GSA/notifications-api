@@ -2463,14 +2463,13 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
             StatisticsType.PENDING: 0,
-            StatisticsType.REQUESTED: 0
-
+            StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
             StatisticsType.PENDING: 0,
-            StatisticsType.REQUESTED: 3
+            StatisticsType.REQUESTED: 3,
         },
     }
 

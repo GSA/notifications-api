@@ -29,13 +29,16 @@ def format_statistics(statistics, total_notifications=None):
             sms_dict = counts[NotificationType.SMS]
             delivered_count = sms_dict[StatisticsType.DELIVERED]
             failed_count = sms_dict[StatisticsType.FAILURE]
-            pending_count = total_notifications - (delivered_count + failed_count)
-
-            pending_count = max(0, pending_count)
-
-            sms_dict[StatisticsType.PENDING] = pending_count
+            sms_dict[StatisticsType.PENDING] = calculate_pending_stats(
+                delivered_count, failed_count, total_notifications
+            )
 
     return counts
+
+
+def calculate_pending_stats(delivered_count, failed_count, total_notifications):
+    pending_count = total_notifications - (delivered_count + failed_count)
+    return max(0, pending_count)
 
 
 def format_admin_stats(statistics):
