@@ -261,9 +261,11 @@ def process_delivery_receipts(self):
         cloudwatch.init_app(current_app)
         start_time = aware_utcnow() - timedelta(minutes=3)
         end_time = aware_utcnow()
+        print(f"START TIME {start_time} END TIME {end_time}")
         delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
             start_time, end_time
         )
+        print(f"DELIVERED {delivered_receipts} FAILED {failed_receipts}")
         delivered_receipts = list(delivered_receipts)
         for i in range(0, len(delivered_receipts), batch_size):
             batch = delivered_receipts[i : i + batch_size]
