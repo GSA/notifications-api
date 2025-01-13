@@ -292,39 +292,42 @@ def cleanup_delivery_receipts(self):
 
 @notify_celery.task(bind=True, name="batch-insert-notifications")
 def batch_insert_notifications(self):
-    current_app.logger.info("ENTER SCHEDULED TASK")
     batch = []
+
+    # TODO We probably need some way to clear the list if
+    # things go haywire.  A command?
+
     # with redis_store.pipeline():
     #     while redis_store.llen("message_queue") > 0:
     #         redis_store.lpop("message_queue")
     #     current_app.logger.info("EMPTY!")
     #     return
+    current_len = redis_store.llen("message_queue")
     with redis_store.pipeline():
-        current_app.logger.info("PIPELINE")
-        # since this list is always growing, just grab what is available when
+        # since this list is being fed by other processes, just grab what is available when
         # this call is made and process that.
-        current_len = redis_store.llen("message_queue")
+
         count = 0
         while count < current_len:
             count = count + 1
             notification_bytes = redis_store.lpop("message_queue")
             notification_dict = json.loads(notification_bytes.decode("utf-8"))
             notification_dict["status"] = notification_dict.pop("notification_status")
-            notification_dict["created_at"] = utc_now()
+            if not notification_dict.get("created_at"):
+                notification_dict["created_at"] = utc_now()
             notification = Notification(**notification_dict)
-            current_app.logger.info(
-                f"WHAT IS THIS NOTIFICATION {type(notification)} {notification}"
-            )
             if notification is not None:
-                current_app.logger.info(
-                    f"SCHEDULED adding notification {notification.id} to batch"
-                )
                 batch.append(notification)
     try:
-        current_app.logger.info("GOING TO DO BATCH INSERT")
         dao_batch_insert_notifications(batch)
     except Exception as e:
         current_app.logger.exception(f"Notification batch insert failed {e}")
-
-        for msg in batch:
-            redis_store.rpush("notification_queue", json.dumps(msg))
+        for n in batch:
+            # Use 'created_at' as a TTL so we don't retry infinitely
+            if n.created_at < utc_now() - timedelta(minutes=1):
+                current_app.logger.warning(
+                    f"Abandoning stale data, could not write to db: {n.serialize_for_redis(n)}"
+                )
+                continue
+            else:
+                redis_store.rpush("message_queue", json.dumps(n.serialize_for_redis(n)))

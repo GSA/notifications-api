@@ -1,12 +1,14 @@
+import json
 from collections import namedtuple
 from datetime import timedelta
 from unittest import mock
-from unittest.mock import ANY, call
+from unittest.mock import ANY, MagicMock, call
 
 import pytest
 
 from app.celery import scheduled_tasks
 from app.celery.scheduled_tasks import (
+    batch_insert_notifications,
     check_for_missing_rows_in_completed_jobs,
     check_for_services_with_high_failure_rates_or_sending_to_tv_numbers,
     check_job_status,
@@ -523,3 +525,25 @@ def test_check_for_services_with_high_failure_rates_or_sending_to_tv_numbers(
         technical_ticket=True,
     )
     mock_send_ticket_to_zendesk.assert_called_once()
+
+
+def test_batch_insert_with_valid_notifications(mocker):
+    mocker.patch("app.celery.scheduled_tasks.dao_batch_insert_notifications")
+    rs = MagicMock()
+    mocker.patch("app.celery.scheduled_tasks.redis_store", rs)
+    notifications = [
+        {"id": 1, "notification_status": "pending"},
+        {"id": 2, "notification_status": "pending"},
+    ]
+    serialized_notifications = [json.dumps(n).encode("utf-8") for n in notifications]
+
+    pipeline_mock = MagicMock()
+
+    rs.pipeline.return_value.__enter__.return_value = pipeline_mock
+    rs.llen.return_value = len(notifications)
+    rs.lpop.side_effect = serialized_notifications
+
+    batch_insert_notifications()
+
+    rs.llen.assert_called_once_with("message_queue")
+    rs.lpop.assert_called_with("message_queue")
