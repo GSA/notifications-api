@@ -174,7 +174,7 @@ def send_notification_to_queue_detached(
         deliver_task = provider_tasks.deliver_email
 
     try:
-        deliver_task.apply_async([str(notification_id)], queue=queue, countdown=30)
+        deliver_task.apply_async([str(notification_id)], queue=queue, countdown=60)
     except Exception:
         dao_delete_notifications_by_id(notification_id)
         raise

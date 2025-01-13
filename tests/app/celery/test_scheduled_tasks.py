@@ -311,10 +311,10 @@ def test_replay_created_notifications(notify_db_session, sample_service, mocker)
 
     replay_created_notifications()
     email_delivery_queue.assert_called_once_with(
-        [str(old_email.id)], queue="send-email-tasks", countdown=30
+        [str(old_email.id)], queue="send-email-tasks", countdown=60
     )
     sms_delivery_queue.assert_called_once_with(
-        [str(old_sms.id)], queue="send-sms-tasks", countdown=30
+        [str(old_sms.id)], queue="send-sms-tasks", countdown=60
     )
 
 
