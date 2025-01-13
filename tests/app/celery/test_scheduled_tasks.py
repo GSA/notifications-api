@@ -621,5 +621,5 @@ def test_process_delivery_receipts_success(mocker):
     assert dao_update_mock.call_count == 3
     dao_update_mock.assert_any_call(list(range(1000)), True)
     dao_update_mock.assert_any_call(list(range(1000, 2000)), True)
-    dao_update_mock.assert_any_call(list(range(500)), True)
+    dao_update_mock.assert_any_call(list(range(500)), False)
     processor.retry.assert_not_called()
