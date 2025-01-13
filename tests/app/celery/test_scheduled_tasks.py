@@ -615,6 +615,7 @@ def test_process_delivery_receipts_success(mocker):
     current_app_mock.return_value = MagicMock()
     processor = MagicMock()
     processor.process_delivery_receipts = process_delivery_receipts
+    processor.retry = MagicMock()
 
     processor.process_delivery_receipts()
 
@@ -625,3 +626,4 @@ def test_process_delivery_receipts_success(mocker):
     dao_update_mock.assert_any_call(list(range(1000)), True)
     dao_update_mock.assert_any_call(list(range(1000, 2000)), True)
     dao_update_mock.assert_any_call(list(range(500)), True)
+    processor.retry.assert_not_called()
