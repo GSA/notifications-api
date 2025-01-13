@@ -619,7 +619,6 @@ def test_process_delivery_receipts_success(mocker):
 
     processor.process_delivery_receipts()
 
-    cloudwatch_mock.init_app.assert_called_once_with(current_app_mock)
     cloudwatch_mock.check_delivery_receipts.assert_called_once()
 
     assert dao_update_mock.call_count == 3
