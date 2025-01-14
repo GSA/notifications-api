@@ -44,8 +44,9 @@ def dao_get_job_by_service_id_and_job_id(service_id, job_id):
 
 
 def dao_get_unfinished_jobs():
-    stmt = select(Job).where(Job.processing_finished.is_(None))
-    return db.session.execute(stmt).all()
+
+    stmt = select(Job).filter(Job.processing_finished.is_(None))
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_get_jobs_by_service_id(

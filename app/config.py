@@ -81,7 +81,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = cloud_config.database_url
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_SIZE = int(getenv("SQLALCHEMY_POOL_SIZE", 5))
+    SQLALCHEMY_POOL_SIZE = int(getenv("SQLALCHEMY_POOL_SIZE", 40))
     SQLALCHEMY_POOL_TIMEOUT = 30
     SQLALCHEMY_POOL_RECYCLE = 300
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
@@ -200,7 +200,12 @@ class Config(object):
             },
             "process-delivery-receipts": {
                 "task": "process-delivery-receipts",
-                "schedule": timedelta(minutes=8),
+                "schedule": timedelta(minutes=2),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
+            "cleanup-delivery-receipts": {
+                "task": "cleanup-delivery-receipts",
+                "schedule": timedelta(minutes=82),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "expire-or-delete-invitations": {

@@ -18,6 +18,7 @@ from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
 
+from app import config
 from app.clients import NotificationProviderClients
 from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
@@ -58,15 +59,28 @@ class SQLAlchemy(_SQLAlchemy):
 
     def apply_driver_hacks(self, app, info, options):
         sa_url, options = super().apply_driver_hacks(app, info, options)
+
         if "connect_args" not in options:
             options["connect_args"] = {}
         options["connect_args"]["options"] = "-c statement_timeout={}".format(
             int(app.config["SQLALCHEMY_STATEMENT_TIMEOUT"]) * 1000
         )
+
         return (sa_url, options)
 
 
-db = SQLAlchemy()
+# Set db engine settings here for now.
+# They were not being set previous (despite environmental variables with appropriate
+# sounding names) and were defaulting to low values
+db = SQLAlchemy(
+    engine_options={
+        "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
+        "max_overflow": 10,
+        "pool_timeout": config.Config.SQLALCHEMY_POOL_TIMEOUT,
+        "pool_recycle": config.Config.SQLALCHEMY_POOL_RECYCLE,
+        "pool_pre_ping": True,
+    }
+)
 migrate = Migrate()
 ma = Marshmallow()
 notify_celery = NotifyCelery()

@@ -24,6 +24,7 @@ from app.dao.jobs_dao import (
     find_missing_row_for_job,
 )
 from app.dao.notifications_dao import (
+    dao_close_out_delivery_receipts,
     dao_update_delivery_receipts,
     notifications_not_yet_sent,
 )
@@ -130,9 +131,9 @@ def check_job_status():
         )
     )
 
-    jobs_not_complete_after_allotted_time = (
-        db.session.execute(jobs_not_completed_after_allotted_time).all()
-    )
+    jobs_not_complete_after_allotted_time = db.session.execute(
+        jobs_not_completed_after_allotted_time
+    ).all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
@@ -247,6 +248,8 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
     bind=True, max_retries=7, default_retry_delay=3600, name="process-delivery-receipts"
 )
 def process_delivery_receipts(self):
+    # If we need to check db settings do it here for convenience
+    # current_app.logger.info(f"POOL SIZE {app.db.engine.pool.size()}")
     """
     Every eight minutes or so (see config.py) we run this task, which searches the last ten
     minutes of logs for delivery receipts and batch updates the db with the results.  The overlap
@@ -261,7 +264,7 @@ def process_delivery_receipts(self):
 
         cloudwatch = AwsCloudwatchClient()
         cloudwatch.init_app(current_app)
-        start_time = aware_utcnow() - timedelta(minutes=10)
+        start_time = aware_utcnow() - timedelta(minutes=3)
         end_time = aware_utcnow()
         delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
             start_time, end_time
@@ -283,3 +286,10 @@ def process_delivery_receipts(self):
             current_app.logger.error(
                 "Failed process delivery receipts after max retries"
             )
+
+
+@notify_celery.task(
+    bind=True, max_retries=2, default_retry_delay=3600, name="cleanup-delivery-receipts"
+)
+def cleanup_delivery_receipts(self):
+    dao_close_out_delivery_receipts()

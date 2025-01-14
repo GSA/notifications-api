@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from time import time
 
 from flask import current_app
 from sqlalchemy import (
@@ -745,6 +746,7 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
 
 
 def dao_update_delivery_receipts(receipts, delivered):
+    start_time_millis = time() * 1000
     new_receipts = []
     for r in receipts:
         if isinstance(r, str):
@@ -791,3 +793,27 @@ def dao_update_delivery_receipts(receipts, delivered):
     )
     db.session.execute(stmt)
     db.session.commit()
+    elapsed_time = (time() * 1000) - start_time_millis
+    current_app.logger.info(
+        f"#loadtestperformance batch update query time: \
+        updated {len(receipts)} notification in {elapsed_time} ms"
+    )
+
+
+def dao_close_out_delivery_receipts():
+    THREE_DAYS_AGO = utc_now() - timedelta(minutes=3)
+    stmt = (
+        update(Notification)
+        .where(
+            Notification.status == NotificationStatus.PENDING,
+            Notification.sent_at < THREE_DAYS_AGO,
+        )
+        .values(status=NotificationStatus.FAILED, provider_response="Technical Failure")
+    )
+    result = db.session.execute(stmt)
+
+    db.session.commit()
+    if result:
+        current_app.logger.info(
+            f"Marked {result.rowcount} notifications as technical failures"
+        )
