@@ -38,9 +38,8 @@ class RedisClient:
     active = False
     scripts = {}
 
-    @classmethod
-    def pipeline(cls):
-        return cls.redis_store.pipeline()
+    def pipeline(self):
+        return self.redis_store.pipeline()
 
     def init_app(self, app):
         self.active = app.config.get("REDIS_ENABLED")
@@ -171,6 +170,10 @@ class RedisClient:
     def llen(self, key):
         if self.active:
             return self.redis_store.llen(key)
+
+    def ltrim(self, key, start, end):
+        if self.active:
+            return self.redis_store.ltrim(key, start, end)
 
     def delete(self, *keys, raise_exception=False):
         keys = [prepare_value(k) for k in keys]

@@ -1717,8 +1717,6 @@ class Notification(db.Model):
                     pass  # do nothing because we don't have the message id yet
                 else:
                     fields[column.name] = value
-            current_app.logger.warning(f"FIELDS {fields}")
-            print(f"FIELDS {fields}", flush=True)
 
             return fields
         raise ValueError("Provided object is not a SQLAlchemy instance")
