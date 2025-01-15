@@ -103,8 +103,19 @@ def dao_create_notification(notification):
             orig_time = notification.created_at
 
             now_time = utc_now()
-            print(hilite(f"original time: {orig_time} - {type(orig_time)} \n now time: {now_time} - {type(now_time)}"))
-            diff_time = now_time - datetime.strptime(orig_time, "%Y-%m-%D-%H-%M-%S")
+            print(
+                hilite(
+                    f"original time: {orig_time} - {type(orig_time)} \n now time: {now_time} - {type(now_time)}"
+                )
+            )
+            try:
+                diff_time = now_time - orig_time
+            except TypeError:
+                try:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except ValueError:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%d")
+                diff_time = now_time - orig_time
             current_app.logger.error(
                 f"dao_create_notification orig created at: {orig_time} and now created at: {now_time}"
             )
