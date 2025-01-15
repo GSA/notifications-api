@@ -780,3 +780,22 @@ def dao_update_delivery_receipts(receipts, delivered):
         f"#loadtestperformance batch update query time: \
         updated {len(receipts)} notification in {elapsed_time} ms"
     )
+
+
+def dao_close_out_delivery_receipts():
+    THREE_DAYS_AGO = utc_now() - timedelta(minutes=3)
+    stmt = (
+        update(Notification)
+        .where(
+            Notification.status == NotificationStatus.PENDING,
+            Notification.sent_at < THREE_DAYS_AGO,
+        )
+        .values(status=NotificationStatus.FAILED, provider_response="Technical Failure")
+    )
+    result = db.session.execute(stmt)
+
+    db.session.commit()
+    if result:
+        current_app.logger.info(
+            f"Marked {result.rowcount} notifications as technical failures"
+        )
