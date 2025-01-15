@@ -5,7 +5,7 @@ from flask import current_app, url_for
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import DeclarativeMeta, declared_attr
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -1693,6 +1693,33 @@ class Notification(db.Model):
             return self.created_by.email_address
         else:
             return None
+
+    def serialize_for_redis(self, obj):
+        if isinstance(obj.__class__, DeclarativeMeta):
+            fields = {}
+            for column in obj.__table__.columns:
+                if column.name == "notification_status":
+                    new_name = "status"
+                    value = getattr(obj, new_name)
+                elif column.name == "created_at":
+                    if isinstance(obj.created_at, str):
+                        value = obj.created_at
+                    else:
+                        value = (obj.created_at.strftime("%Y-%m-%d %H:%M:%S"),)
+                elif column.name in ["sent_at", "completed_at"]:
+                    value = None
+                elif column.name.endswith("_id"):
+                    value = getattr(obj, column.name)
+                    value = str(value)
+                else:
+                    value = getattr(obj, column.name)
+                if column.name in ["message_id", "api_key_id"]:
+                    pass  # do nothing because we don't have the message id yet
+                else:
+                    fields[column.name] = value
+
+            return fields
+        raise ValueError("Provided object is not a SQLAlchemy instance")
 
     def serialize_for_csv(self):
         serialized = {

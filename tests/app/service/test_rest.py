@@ -3025,7 +3025,7 @@ def test_verify_reply_to_email_address_should_send_verification_email(
     assert notification.template_id == verify_reply_to_address_email_template.id
     assert response["data"] == {"id": str(notification.id)}
     mocked.assert_called_once_with(
-        [str(notification.id)], queue="notify-internal-tasks"
+        [str(notification.id)], queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
