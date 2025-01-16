@@ -101,13 +101,7 @@ def dao_create_notification(notification):
         # Ensure the created at value is set and debug.
         if notification.notification_type == "email":
             orig_time = notification.created_at
-
             now_time = utc_now()
-            print(
-                hilite(
-                    f"original time: {orig_time} - {type(orig_time)} \n now time: {now_time} - {type(now_time)}"
-                )
-            )
             try:
                 diff_time = now_time - orig_time
             except TypeError:
