@@ -25,7 +25,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import invited_user_schema
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)

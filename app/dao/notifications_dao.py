@@ -30,7 +30,6 @@ from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
-    hilite,
     midnight_n_days_ago,
     utc_now,
 )
