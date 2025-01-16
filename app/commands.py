@@ -789,6 +789,17 @@ def _update_template(id, name, template_type, content, subject):
     db.session.commit()
 
 
+@notify_command(name="clear-redis-list")
+@click.option("-n", "--name_of_list", required=True)
+def clear_redis_list(name_of_list):
+    my_len_before = redis_store.llen(name_of_list)
+    redis_store.ltrim(name_of_list, 1, 0)
+    my_len_after = redis_store.llen(name_of_list)
+    current_app.logger.info(
+        f"Cleared redis list {name_of_list}. Before: {my_len_before} after {my_len_after}"
+    )
+
+
 @notify_command(name="update-templates")
 def update_templates():
     with open(current_app.config["CONFIG_FILES"] + "/templates.json") as f:

@@ -208,6 +208,11 @@ class Config(object):
                 "schedule": timedelta(minutes=82),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "batch-insert-notifications": {
+                "task": "batch-insert-notifications",
+                "schedule": 10.0,
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "expire-or-delete-invitations": {
                 "task": "expire-or-delete-invitations",
                 "schedule": timedelta(minutes=66),

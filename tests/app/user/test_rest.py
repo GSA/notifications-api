@@ -702,7 +702,7 @@ def test_send_already_registered_email(
     stmt = select(Notification)
     notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
@@ -741,7 +741,7 @@ def test_send_user_confirm_new_email_returns_204(
     stmt = select(Notification)
     notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
