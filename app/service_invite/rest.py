@@ -80,9 +80,6 @@ def _create_service_invite(invited_user, nonce, state):
         reply_to_text=invited_user.from_user.email_address,
         created_at=created_at,
     )
-    print(
-        hilite(f"saved notification created at time: {saved_notification.created_at}")
-    )
     saved_notification.personalisation = personalisation
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
