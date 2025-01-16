@@ -827,3 +827,11 @@ def dao_close_out_delivery_receipts():
         current_app.logger.info(
             f"Marked {result.rowcount} notifications as technical failures"
         )
+
+
+def dao_batch_insert_notifications(batch):
+
+    db.session.bulk_save_objects(batch)
+    db.session.commit()
+    current_app.logger.info(f"Batch inserted notifications: {len(batch)}")
+    return len(batch)
