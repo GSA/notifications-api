@@ -1,5 +1,6 @@
 import json
-from datetime import timedelta
+import os
+from datetime import datetime, timedelta
 from time import time
 
 from flask import current_app
@@ -95,6 +96,32 @@ def dao_create_notification(notification):
     # notify-api-1454 insert only if it doesn't exist
     if not dao_notification_exists(notification.id):
         db.session.add(notification)
+        # There have been issues with invites expiring.
+        # Ensure the created at value is set and debug.
+        if notification.notification_type == "email":
+            orig_time = notification.created_at
+            now_time = utc_now()
+            try:
+                diff_time = now_time - orig_time
+            except TypeError:
+                try:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except ValueError:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%d")
+                diff_time = now_time - orig_time
+            current_app.logger.error(
+                f"dao_create_notification orig created at: {orig_time} and now created at: {now_time}"
+            )
+            if diff_time.total_seconds() > 300:
+                current_app.logger.error(
+                    "Something is wrong with notification.created_at in email!"
+                )
+                if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
+                    notification.created_at = now_time
+                    dao_update_notification(notification)
+                    current_app.logger.error(
+                        f"Email notification created_at reset to   {notification.created_at}"
+                    )
 
 
 def country_records_delivery(phone_prefix):

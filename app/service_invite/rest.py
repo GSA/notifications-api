@@ -67,7 +67,7 @@ def _create_service_invite(invited_user, nonce, state):
         "service_name": invited_user.service.name,
         "url": url,
     }
-
+    created_at = utc_now()
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,
@@ -78,6 +78,7 @@ def _create_service_invite(invited_user, nonce, state):
         api_key_id=None,
         key_type=KeyType.NORMAL,
         reply_to_text=invited_user.from_user.email_address,
+        created_at=created_at,
     )
     saved_notification.personalisation = personalisation
     redis_store.set(
