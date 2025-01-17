@@ -5,8 +5,7 @@ from flask import current_app
 from sqlalchemy import between, select, union
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, redis_store, zendesk_client
-
+from app import db, notify_celery, redis_store, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
