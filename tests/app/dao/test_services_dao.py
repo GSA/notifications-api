@@ -1638,11 +1638,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 2,
+                        StatisticsType.PENDING: 2,
                     },
                 },
                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
@@ -1650,11 +1652,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
@@ -1662,11 +1666,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
@@ -1674,11 +1680,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
@@ -1686,11 +1694,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
             },
@@ -1713,11 +1723,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 2,
+                        StatisticsType.PENDING: 2,
                     },
                 },
                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
@@ -1725,11 +1737,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
@@ -1737,11 +1751,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
@@ -1749,11 +1765,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
@@ -1761,11 +1779,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
             },
@@ -1786,5 +1806,21 @@ def test_get_specific_days(data, start_date, days, end_date, expected, is_error)
             new_line.count = 1
             new_line.something = line["something"]
             new_data.append(new_line)
-        results = get_specific_days_stats(new_data, start_date, days, end_date)
+
+        total_notifications = None
+
+        date_key = _this_date.date().strftime("%Y-%m-%d")
+        if expected and date_key in expected:
+            sms_stats = expected[date_key].get(TemplateType.SMS, {})
+            requested = sms_stats.get(StatisticsType.REQUESTED, 0)
+            if requested > 0:
+                total_notifications = {_this_date: requested}
+
+        results = get_specific_days_stats(
+            new_data,
+            start_date,
+            days,
+            end_date,
+            total_notifications=total_notifications,
+        )
         assert results == expected
