@@ -90,7 +90,7 @@ def test_create_invited_user(
     )
 
     mocked.assert_called_once_with(
-        [(str(notification.id))], queue="notify-internal-tasks"
+        [(str(notification.id))], queue="notify-internal-tasks", countdown=60
     )
 
 

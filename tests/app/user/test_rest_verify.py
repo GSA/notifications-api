@@ -231,7 +231,7 @@ def test_send_user_sms_code(client, sample_user, sms_code_template, mocker):
     assert notification.reply_to_text == notify_service.get_default_sms_sender()
 
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
 
 
@@ -267,7 +267,7 @@ def test_send_user_code_for_sms_with_optional_to_field(
     notification = Notification.query.first()
     assert notification.to == "1"
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
 
 
@@ -349,7 +349,7 @@ def test_send_new_user_email_verification(
     notification = Notification.query.first()
     assert _get_verify_code_count() == 0
     mocked.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
@@ -494,7 +494,9 @@ def test_send_user_email_code(
     )
     assert noti.to == "1"
     assert str(noti.template_id) == current_app.config["EMAIL_2FA_TEMPLATE_ID"]
-    deliver_email.assert_called_once_with([str(noti.id)], queue="notify-internal-tasks")
+    deliver_email.assert_called_once_with(
+        [str(noti.id)], queue="notify-internal-tasks", countdown=60
+    )
 
 
 @pytest.mark.skip(reason="Broken email functionality")
