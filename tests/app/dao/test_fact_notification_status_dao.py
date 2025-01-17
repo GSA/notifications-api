@@ -1130,7 +1130,10 @@ def test_update_fact_notification_status_respects_gmt_bst(
     stmt = (
         select(func.count())
         .select_from(FactNotificationStatus)
-        .filter_by(service_id=sample_service.id, local_date=process_day)
+        .where(
+            FactNotificationStatus.service_id == sample_service.id,
+            FactNotificationStatus.local_date == process_day,
+        )
     )
     result = db.session.execute(stmt)
     assert result.rowcount == expected_count

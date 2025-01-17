@@ -74,12 +74,12 @@ def test_create_user(notify_db_session, phone_number, expected_phone_number):
     stmt = select(func.count(User.id))
     assert db.session.execute(stmt).scalar() == 1
     stmt = select(User)
-    user_query = db.session.execute(stmt).scalars().first()
-    assert user_query.email_address == email
-    assert user_query.id == user.id
-    assert user_query.mobile_number == expected_phone_number
-    assert user_query.email_access_validated_at == utc_now()
-    assert not user_query.platform_admin
+    user = db.session.execute(stmt).scalars().first()
+    assert user.email_address == email
+    assert user.id == user.id
+    assert user.mobile_number == expected_phone_number
+    assert user.email_access_validated_at == utc_now()
+    assert not user.platform_admin
 
 
 def test_get_all_users(notify_db_session):

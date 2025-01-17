@@ -6,7 +6,7 @@ from urllib.parse import unquote
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 
-from app import redis_store
+from app import db, redis_store
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
     get_expired_invite_by_service_and_id,
@@ -39,7 +39,7 @@ def _create_service_invite(invited_user, nonce, state):
 
     template = dao_get_template_by_id(template_id)
 
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
 
     # The raw permissions are in the form "a,b,c,d"
     # but need to be in the form ["a", "b", "c", "d"]
