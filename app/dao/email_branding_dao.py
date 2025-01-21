@@ -1,18 +1,32 @@
+from sqlalchemy import select
+
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import EmailBranding
 
 
 def dao_get_email_branding_options():
-    return EmailBranding.query.all()
+    return db.session.execute(select(EmailBranding)).scalars().all()
 
 
 def dao_get_email_branding_by_id(email_branding_id):
-    return EmailBranding.query.filter_by(id=email_branding_id).one()
+    return (
+        db.session.execute(
+            select(EmailBranding).where(EmailBranding.id == email_branding_id)
+        )
+        .scalars()
+        .one()
+    )
 
 
 def dao_get_email_branding_by_name(email_branding_name):
-    return EmailBranding.query.filter_by(name=email_branding_name).first()
+    return (
+        db.session.execute(
+            select(EmailBranding).where(EmailBranding.name == email_branding_name)
+        )
+        .scalars()
+        .first()
+    )
 
 
 @autocommit

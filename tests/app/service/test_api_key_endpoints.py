@@ -27,7 +27,13 @@ def test_api_key_should_create_new_api_key_for_service(notify_api, sample_servic
             )
             assert response.status_code == 201
             assert "data" in json.loads(response.get_data(as_text=True))
-            saved_api_key = ApiKey.query.filter_by(service_id=sample_service.id).first()
+            saved_api_key = (
+                db.session.execute(
+                    select(ApiKey).where(ApiKey.service_id == sample_service.id)
+                )
+                .scalars()
+                .first()
+            )
             assert saved_api_key.service_id == sample_service.id
             assert saved_api_key.name == "some secret name"
 
@@ -81,7 +87,7 @@ def test_revoke_should_expire_api_key_for_service(notify_api, sample_api_key):
                 headers=[auth_header],
             )
             assert response.status_code == 202
-            api_keys_for_service = ApiKey.query.get(sample_api_key.id)
+            api_keys_for_service = db.session.get(ApiKey, sample_api_key.id)
             assert api_keys_for_service.expiry_date is not None
 
 

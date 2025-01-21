@@ -439,7 +439,7 @@ def create_service_permission(service_id, permission=ServicePermissionType.EMAIL
         permission,
     )
 
-    service_permissions = ServicePermission.query.all()
+    service_permissions = db.session.execute(select(ServicePermission)).scalars().all()
 
     return service_permissions
 

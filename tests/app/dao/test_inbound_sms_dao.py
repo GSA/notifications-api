@@ -254,7 +254,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api(sample_service
         inbound_sms.service.id
     )
 
-    assert inbound_sms == inbound_from_db[0]
+    assert inbound_sms == inbound_from_db.items[0]
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_return_only_for_service(
@@ -268,8 +268,8 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_return_only_fo
         inbound_sms.service.id
     )
 
-    assert inbound_sms in inbound_from_db
-    assert another_inbound_sms not in inbound_from_db
+    assert inbound_sms in inbound_from_db.items
+    assert another_inbound_sms not in inbound_from_db.items
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_no_inbound_sms_returns_empty_list(
@@ -279,7 +279,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_no_inbound_sms
         sample_service.id
     )
 
-    assert inbound_from_db == []
+    assert inbound_from_db.has_next() is False
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_page_size_returns_correct_size(
@@ -299,7 +299,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_page_size_retu
         sample_service.id, older_than=reversed_inbound_sms[1].id, page_size=2
     )
 
-    assert len(inbound_from_db) == 2
+    assert inbound_from_db.total == 2
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_returns_correct_list(
@@ -320,8 +320,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_ret
     )
 
     expected_inbound_sms = reversed_inbound_sms[2:]
-
-    assert expected_inbound_sms == inbound_from_db
+    assert expected_inbound_sms == inbound_from_db.items
 
 
 def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_end_returns_empty_list(
@@ -338,8 +337,7 @@ def test_dao_get_paginated_inbound_sms_for_service_for_public_api_older_than_end
     inbound_from_db = dao_get_paginated_inbound_sms_for_service_for_public_api(
         sample_service.id, older_than=reversed_inbound_sms[1].id, page_size=2
     )
-
-    assert inbound_from_db == []
+    assert inbound_from_db.items == []
 
 
 def test_most_recent_inbound_sms_only_returns_most_recent_for_each_number(
