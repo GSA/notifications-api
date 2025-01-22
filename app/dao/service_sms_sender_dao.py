@@ -17,8 +17,10 @@ def insert_service_sms_sender(service, sms_sender):
 
 
 def dao_get_service_sms_senders_by_id(service_id, service_sms_sender_id):
-    stmt = select(ServiceSmsSender).filter_by(
-        id=service_sms_sender_id, service_id=service_id, archived=False
+    stmt = select(ServiceSmsSender).where(
+        ServiceSmsSender.id == service_sms_sender_id,
+        ServiceSmsSender.service_id == service_id,
+        ServiceSmsSender.archived == False,  # noqa
     )
     return db.session.execute(stmt).scalars().one()
 
@@ -27,7 +29,10 @@ def dao_get_sms_senders_by_service_id(service_id):
 
     stmt = (
         select(ServiceSmsSender)
-        .filter_by(service_id=service_id, archived=False)
+        .where(
+            ServiceSmsSender.service_id == service_id,
+            ServiceSmsSender.archived == False,  # noqa
+        )
         .order_by(desc(ServiceSmsSender.is_default))
     )
     return db.session.execute(stmt).scalars().all()
@@ -65,7 +70,7 @@ def dao_update_service_sms_sender(
         if old_default.id == service_sms_sender_id:
             raise Exception("You must have at least one SMS sender as the default")
 
-    sms_sender_to_update = ServiceSmsSender.query.get(service_sms_sender_id)
+    sms_sender_to_update = db.session.get(ServiceSmsSender, service_sms_sender_id)
     sms_sender_to_update.is_default = is_default
     if not sms_sender_to_update.inbound_number_id and sms_sender:
         sms_sender_to_update.sms_sender = sms_sender
@@ -85,9 +90,16 @@ def update_existing_sms_sender_with_inbound_number(
 
 @autocommit
 def archive_sms_sender(service_id, sms_sender_id):
-    sms_sender_to_archive = ServiceSmsSender.query.filter_by(
-        id=sms_sender_id, service_id=service_id
-    ).one()
+    sms_sender_to_archive = (
+        db.session.execute(
+            select(ServiceSmsSender).where(
+                ServiceSmsSender.id == sms_sender_id,
+                ServiceSmsSender.service_id == service_id,
+            )
+        )
+        .scalars()
+        .one()
+    )
 
     if sms_sender_to_archive.inbound_number_id:
         raise ArchiveValidationError("You cannot delete an inbound number")

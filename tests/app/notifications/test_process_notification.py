@@ -100,9 +100,9 @@ def test_persist_notification_creates_and_save_to_db(
         reply_to_text=sample_template.service.get_default_sms_sender(),
     )
 
-    assert Notification.query.get(notification.id) is not None
+    assert db.session.get(Notification, notification.id) is not None
 
-    notification_from_db = Notification.query.one()
+    notification_from_db = db.session.execute(select(Notification)).scalars().one()
 
     assert notification_from_db.id == notification.id
     assert notification_from_db.template_id == notification.template_id
@@ -263,7 +263,9 @@ def test_send_notification_to_queue(
 
     send_notification_to_queue(notification=notification, queue=requested_queue)
 
-    mocked.assert_called_once_with([str(notification.id)], queue=expected_queue)
+    mocked.assert_called_once_with(
+        [str(notification.id)], queue=expected_queue, countdown=60
+    )
 
 
 def test_send_notification_to_queue_throws_exception_deletes_notification(
@@ -276,8 +278,7 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     with pytest.raises(Boto3Error):
         send_notification_to_queue(sample_notification, False)
     mocked.assert_called_once_with(
-        [(str(sample_notification.id))],
-        queue="send-sms-tasks",
+        [(str(sample_notification.id))], queue="send-sms-tasks", countdown=60
     )
 
     assert _get_notification_query_count() == 0

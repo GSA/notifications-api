@@ -415,7 +415,7 @@ def test_create_service(
     assert json_resp["data"]["email_from"] == "created.service"
     assert json_resp["data"]["count_as_live"] is expected_count_as_live
 
-    service_db = Service.query.get(json_resp["data"]["id"])
+    service_db = db.session.get(Service, json_resp["data"]["id"])
     assert service_db.name == "created service"
 
     json_resp = admin_request.get(
@@ -501,10 +501,11 @@ def test_create_service_should_create_annual_billing_for_service(
         "email_from": "created.service",
         "created_by": str(sample_user.id),
     }
-    assert len(AnnualBilling.query.all()) == 0
+
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     admin_request.post("service.create_service", _data=data, _expected_status=201)
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 1
 
 
@@ -525,11 +526,11 @@ def test_create_service_should_raise_exception_and_not_create_service_if_annual_
         "email_from": "created.service",
         "created_by": str(sample_user.id),
     }
-    assert len(AnnualBilling.query.all()) == 0
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
         admin_request.post("service.create_service", _data=data)
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 0
     stmt = (
         select(func.count())
@@ -2849,7 +2850,7 @@ def test_send_one_off_notification(sample_service, admin_request, mocker):
         _expected_status=201,
     )
 
-    noti = Notification.query.one()
+    noti = db.session.execute(select(Notification)).scalars().one()
     assert response["id"] == str(noti.id)
 
 
@@ -3039,11 +3040,11 @@ def test_verify_reply_to_email_address_should_send_verification_email(
         _expected_status=201,
     )
 
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
     assert notification.template_id == verify_reply_to_address_email_template.id
     assert response["data"] == {"id": str(notification.id)}
     mocked.assert_called_once_with(
-        [str(notification.id)], queue="notify-internal-tasks"
+        [str(notification.id)], queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
@@ -3078,7 +3079,7 @@ def test_add_service_reply_to_email_address(admin_request, sample_service):
         _expected_status=201,
     )
 
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 1
     assert response["data"] == results[0].serialize()
 
@@ -3118,7 +3119,7 @@ def test_add_service_reply_to_email_address_can_add_multiple_addresses(
         _data=second,
         _expected_status=201,
     )
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 2
     default = [x for x in results if x.is_default]
     assert response["data"] == default[0].serialize()
@@ -3169,7 +3170,7 @@ def test_update_service_reply_to_email_address(admin_request, sample_service):
         _expected_status=200,
     )
 
-    results = ServiceEmailReplyTo.query.all()
+    results = db.session.execute(select(ServiceEmailReplyTo)).scalars().all()
     assert len(results) == 1
     assert response["data"] == results[0].serialize()
 
@@ -3281,7 +3282,7 @@ def test_add_service_sms_sender_can_add_multiple_senders(client, notify_db_sessi
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == "second"
     assert not resp_json["is_default"]
-    senders = ServiceSmsSender.query.all()
+    senders = db.session.execute(select(ServiceSmsSender)).scalars().all()
     assert len(senders) == 2
 
 
@@ -3307,7 +3308,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_updates_the_only_ex
         ],
     )
     assert response.status_code == 201
-    updated_number = InboundNumber.query.get(inbound_number.id)
+    updated_number = db.session.get(InboundNumber, inbound_number.id)
     assert updated_number.service_id == service.id
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == inbound_number.number
@@ -3338,7 +3339,7 @@ def test_add_service_sms_sender_when_it_is_an_inbound_number_inserts_new_sms_sen
         ],
     )
     assert response.status_code == 201
-    updated_number = InboundNumber.query.get(inbound_number.id)
+    updated_number = db.session.get(InboundNumber, inbound_number.id)
     assert updated_number.service_id == service.id
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["sms_sender"] == inbound_number.number

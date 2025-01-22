@@ -96,7 +96,7 @@ def dao_fetch_live_services_data():
 
     this_year_ft_billing = (
         select(FactBilling)
-        .filter(
+        .where(
             FactBilling.local_date >= year_start_date,
             FactBilling.local_date <= year_end_date,
         )
@@ -145,7 +145,7 @@ def dao_fetch_live_services_data():
             this_year_ft_billing, Service.id == this_year_ft_billing.c.service_id
         )
         .outerjoin(User, Service.go_live_user_id == User.id)
-        .filter(
+        .where(
             Service.count_as_live.is_(True),
             Service.active.is_(True),
             Service.restricted.is_(False),
@@ -216,10 +216,12 @@ def dao_fetch_service_by_inbound_number(number):
 
 def dao_fetch_service_by_id_with_api_keys(service_id, only_active=False):
     stmt = (
-        select(Service).filter_by(id=service_id).options(joinedload(Service.api_keys))
+        select(Service)
+        .where(Service.id == service_id)
+        .options(joinedload(Service.api_keys))
     )
     if only_active:
-        stmt = stmt.filter(Service.active)
+        stmt = stmt.where(Service.active)
     return db.session.execute(stmt).scalars().unique().one()
 
 
@@ -227,12 +229,12 @@ def dao_fetch_all_services_by_user(user_id, only_active=False):
 
     stmt = (
         select(Service)
-        .filter(Service.users.any(id=user_id))
+        .where(Service.users.any(id=user_id))
         .order_by(asc(Service.created_at))
         .options(joinedload(Service.users))
     )
     if only_active:
-        stmt = stmt.filter(Service.active)
+        stmt = stmt.where(Service.active)
     return db.session.execute(stmt).scalars().unique().all()
 
 
@@ -240,7 +242,7 @@ def dao_fetch_all_services_created_by_user(user_id):
 
     stmt = (
         select(Service)
-        .filter_by(created_by_id=user_id)
+        .where(Service.created_by_id == user_id)
         .order_by(asc(Service.created_at))
     )
 
@@ -260,7 +262,7 @@ def dao_archive_service(service_id):
             joinedload(Service.templates).subqueryload(Template.template_redacted),
             joinedload(Service.api_keys),
         )
-        .filter(Service.id == service_id)
+        .where(Service.id == service_id)
     )
     service = db.session.execute(stmt).scalars().unique().one()
 
@@ -281,7 +283,7 @@ def dao_fetch_service_by_id_and_user(service_id, user_id):
 
     stmt = (
         select(Service)
-        .filter(Service.users.any(id=user_id), Service.id == service_id)
+        .where(Service.users.any(id=user_id), Service.id == service_id)
         .options(joinedload(Service.users))
     )
     result = db.session.execute(stmt).scalar_one()
@@ -392,27 +394,39 @@ def delete_service_and_all_associated_db_objects(service):
         db.session.execute(stmt)
         db.session.commit()
 
-    subq = select(Template.id).filter_by(service=service).subquery()
+    subq = select(Template.id).where(Template.service == service).subquery()
 
-    stmt = delete(TemplateRedacted).filter(TemplateRedacted.template_id.in_(subq))
+    stmt = delete(TemplateRedacted).where(TemplateRedacted.template_id.in_(subq))
     _delete_commit(stmt)
 
-    _delete_commit(delete(ServiceSmsSender).filter_by(service=service))
-    _delete_commit(delete(ServiceEmailReplyTo).filter_by(service=service))
-    _delete_commit(delete(InvitedUser).filter_by(service=service))
-    _delete_commit(delete(Permission).filter_by(service=service))
-    _delete_commit(delete(NotificationHistory).filter_by(service=service))
-    _delete_commit(delete(Notification).filter_by(service=service))
-    _delete_commit(delete(Job).filter_by(service=service))
-    _delete_commit(delete(Template).filter_by(service=service))
-    _delete_commit(delete(TemplateHistory).filter_by(service_id=service.id))
-    _delete_commit(delete(ServicePermission).filter_by(service_id=service.id))
-    _delete_commit(delete(ApiKey).filter_by(service=service))
-    _delete_commit(delete(ApiKey.get_history_model()).filter_by(service_id=service.id))
-    _delete_commit(delete(AnnualBilling).filter_by(service_id=service.id))
+    _delete_commit(delete(ServiceSmsSender).where(ServiceSmsSender.service == service))
+    _delete_commit(
+        delete(ServiceEmailReplyTo).where(ServiceEmailReplyTo.service == service)
+    )
+    _delete_commit(delete(InvitedUser).where(InvitedUser.service == service))
+    _delete_commit(delete(Permission).where(Permission.service == service))
+    _delete_commit(
+        delete(NotificationHistory).where(NotificationHistory.service == service)
+    )
+    _delete_commit(delete(Notification).where(Notification.service == service))
+    _delete_commit(delete(Job).where(Job.service == service))
+    _delete_commit(delete(Template).where(Template.service == service))
+    _delete_commit(
+        delete(TemplateHistory).where(TemplateHistory.service_id == service.id)
+    )
+    _delete_commit(
+        delete(ServicePermission).where(ServicePermission.service_id == service.id)
+    )
+    _delete_commit(delete(ApiKey).where(ApiKey.service == service))
+    _delete_commit(
+        delete(ApiKey.get_history_model()).where(
+            ApiKey.get_history_model().service_id == service.id
+        )
+    )
+    _delete_commit(delete(AnnualBilling).where(AnnualBilling.service_id == service.id))
 
     stmt = (
-        select(VerifyCode).join(User).filter(User.id.in_([x.id for x in service.users]))
+        select(VerifyCode).join(User).where(User.id.in_([x.id for x in service.users]))
     )
     verify_codes = db.session.execute(stmt).scalars().all()
     list(map(db.session.delete, verify_codes))
@@ -421,7 +435,7 @@ def delete_service_and_all_associated_db_objects(service):
     for user in users:
         user.organizations = []
         service.users.remove(user)
-    _delete_commit(delete(Service.get_history_model()).filter_by(id=service.id))
+    _delete_commit(delete(Service.get_history_model()).where(Service.id == service.id))
     db.session.delete(service)
     db.session.commit()
     for user in users:
@@ -438,7 +452,7 @@ def dao_fetch_todays_stats_for_service(service_id):
             Notification.status,
             func.count(Notification.id).label("count"),
         )
-        .filter(
+        .where(
             Notification.service_id == service_id,
             Notification.key_type != KeyType.TEST,
             Notification.created_at >= start_date,
@@ -578,14 +592,14 @@ def dao_fetch_todays_stats_for_all_services(
     start_date = get_midnight_in_utc(today)
     end_date = get_midnight_in_utc(today + timedelta(days=1))
 
-    subquery = (
+    substmt = (
         select(
             Notification.notification_type,
             Notification.status,
             Notification.service_id,
             func.count(Notification.id).label("count"),
         )
-        .filter(
+        .where(
             Notification.created_at >= start_date, Notification.created_at < end_date
         )
         .group_by(
@@ -594,9 +608,9 @@ def dao_fetch_todays_stats_for_all_services(
     )
 
     if not include_from_test_key:
-        subquery = subquery.filter(Notification.key_type != KeyType.TEST)
+        substmt = substmt.where(Notification.key_type != KeyType.TEST)
 
-    subquery = subquery.subquery()
+    substmt = substmt.subquery()
 
     stmt = (
         select(
@@ -605,16 +619,16 @@ def dao_fetch_todays_stats_for_all_services(
             Service.restricted,
             Service.active,
             Service.created_at,
-            subquery.c.notification_type,
-            subquery.c.status,
-            subquery.c.count,
+            substmt.c.notification_type,
+            substmt.c.status,
+            substmt.c.count,
         )
-        .outerjoin(subquery, subquery.c.service_id == Service.id)
+        .outerjoin(substmt, substmt.c.service_id == Service.id)
         .order_by(Service.id)
     )
 
     if only_active:
-        stmt = stmt.filter(Service.active)
+        stmt = stmt.where(Service.active)
 
     return db.session.execute(stmt).all()
 
@@ -629,7 +643,7 @@ def dao_suspend_service(service_id):
     stmt = (
         select(Service)
         .options(joinedload(Service.api_keys))
-        .filter(Service.id == service_id)
+        .where(Service.id == service_id)
     )
     service = db.session.execute(stmt).scalars().unique().one()
 
@@ -662,7 +676,7 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
             Notification.service_id.label("service_id"),
             func.count(Notification.id).label("notification_count"),
         )
-        .filter(
+        .where(
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
@@ -681,12 +695,12 @@ def dao_find_services_sending_to_tv_numbers(start_date, end_date, threshold=500)
 
 
 def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10000):
-    subquery = (
+    substmt = (
         select(
             func.count(Notification.id).label("total_count"),
             Notification.service_id.label("service_id"),
         )
-        .filter(
+        .where(
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
@@ -701,20 +715,20 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
         .having(func.count(Notification.id) >= threshold)
     )
 
-    subquery = subquery.subquery()
+    substmt = substmt.subquery()
 
     stmt = (
         select(
             Notification.service_id.label("service_id"),
             func.count(Notification.id).label("permanent_failure_count"),
-            subquery.c.total_count.label("total_count"),
+            substmt.c.total_count.label("total_count"),
             (
                 cast(func.count(Notification.id), Float)
-                / cast(subquery.c.total_count, Float)
+                / cast(substmt.c.total_count, Float)
             ).label("permanent_failure_rate"),
         )
-        .join(subquery, subquery.c.service_id == Notification.service_id)
-        .filter(
+        .join(substmt, substmt.c.service_id == Notification.service_id)
+        .where(
             Notification.service_id == Service.id,
             Notification.created_at >= start_date,
             Notification.created_at <= end_date,
@@ -724,10 +738,10 @@ def dao_find_services_with_high_failure_rates(start_date, end_date, threshold=10
             Service.restricted == False,  # noqa
             Service.active == True,  # noqa
         )
-        .group_by(Notification.service_id, subquery.c.total_count)
+        .group_by(Notification.service_id, substmt.c.total_count)
         .having(
             cast(func.count(Notification.id), Float)
-            / cast(subquery.c.total_count, Float)
+            / cast(substmt.c.total_count, Float)
             >= 0.25
         )
     )
@@ -746,7 +760,7 @@ def get_live_services_with_organization():
         )
         .select_from(Service)
         .outerjoin(Service.organization)
-        .filter(
+        .where(
             Service.count_as_live.is_(True),
             Service.active.is_(True),
             Service.restricted.is_(False),
@@ -768,7 +782,7 @@ def fetch_notification_stats_for_service_by_month_by_user(
             (NotificationAllTimeView.status).label("notification_status"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
-        .filter(
+        .where(
             NotificationAllTimeView.service_id == service_id,
             NotificationAllTimeView.created_at >= start_date,
             NotificationAllTimeView.created_at < end_date,

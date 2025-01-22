@@ -656,7 +656,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                     AnnualBilling.financial_year_start == year,
                 ),
             )
-            .filter(AnnualBilling.id == None)  # noqa
+            .where(AnnualBilling.id == None)  # noqa
         )
         active_services = db.session.execute(stmt).scalars().all()
     else:
@@ -665,7 +665,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
     previous_year = year - 1
     services_with_zero_free_allowance = (
         db.session.query(AnnualBilling.service_id)
-        .filter(
+        .where(
             AnnualBilling.financial_year_start == previous_year,
             AnnualBilling.free_sms_fragment_limit == 0,
         )
@@ -787,6 +787,17 @@ def _update_template(id, name, template_type, content, subject):
     history.subject = subject
 
     db.session.commit()
+
+
+@notify_command(name="clear-redis-list")
+@click.option("-n", "--name_of_list", required=True)
+def clear_redis_list(name_of_list):
+    my_len_before = redis_store.llen(name_of_list)
+    redis_store.ltrim(name_of_list, 1, 0)
+    my_len_after = redis_store.llen(name_of_list)
+    current_app.logger.info(
+        f"Cleared redis list {name_of_list}. Before: {my_len_before} after {my_len_after}"
+    )
 
 
 @notify_command(name="update-templates")

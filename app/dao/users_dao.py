@@ -37,7 +37,7 @@ def get_login_gov_user(login_uuid, email_address):
     login.gov uuids are.  Eventually the code that checks by email address
     should be removed.
     """
-    stmt = select(User).filter_by(login_uuid=login_uuid)
+    stmt = select(User).where(User.login_uuid == login_uuid)
     user = db.session.execute(stmt).scalars().first()
     if user:
         if user.email_address != email_address:
@@ -54,7 +54,7 @@ def get_login_gov_user(login_uuid, email_address):
 
         return user
     # Remove this 1 July 2025, all users should have login.gov uuids by now
-    stmt = select(User).filter(User.email_address.ilike(email_address))
+    stmt = select(User).where(User.email_address.ilike(email_address))
     user = db.session.execute(stmt).scalars().first()
 
     if user:
@@ -65,7 +65,7 @@ def get_login_gov_user(login_uuid, email_address):
 
 
 def save_user_attribute(usr, update_dict=None):
-    db.session.query(User).filter_by(id=usr.id).update(update_dict or {})
+    db.session.query(User).where(User.id == usr.id).update(update_dict or {})
     db.session.commit()
 
 
@@ -82,7 +82,7 @@ def save_model_user(
         user.email_access_validated_at = utc_now()
     if update_dict:
         _remove_values_for_keys_if_present(update_dict, ["id", "password_changed_at"])
-        db.session.query(User).filter_by(id=user.id).update(update_dict or {})
+        db.session.query(User).where(User.id == user.id).update(update_dict or {})
     else:
         db.session.add(user)
     db.session.commit()
@@ -105,7 +105,7 @@ def get_user_code(user, code, code_type):
     # time searching for the correct code.
     stmt = (
         select(VerifyCode)
-        .filter_by(user=user, code_type=code_type)
+        .where(VerifyCode.user == user, VerifyCode.code_type == code_type)
         .order_by(VerifyCode.created_at.desc())
     )
     codes = db.session.execute(stmt).scalars().all()
@@ -113,7 +113,7 @@ def get_user_code(user, code, code_type):
 
 
 def delete_codes_older_created_more_than_a_day_ago():
-    stmt = delete(VerifyCode).filter(
+    stmt = delete(VerifyCode).where(
         VerifyCode.created_at < utc_now() - timedelta(hours=24)
     )
 
@@ -135,13 +135,13 @@ def delete_model_user(user):
 
 
 def delete_user_verify_codes(user):
-    stmt = delete(VerifyCode).filter_by(user=user)
+    stmt = delete(VerifyCode).where(VerifyCode.user == user)
     db.session.execute(stmt)
     db.session.commit()
 
 
 def count_user_verify_codes(user):
-    stmt = select(func.count(VerifyCode.id)).filter(
+    stmt = select(func.count(VerifyCode.id)).where(
         VerifyCode.user == user,
         VerifyCode.expiry_datetime > utc_now(),
         VerifyCode.code_used.is_(False),
@@ -152,7 +152,7 @@ def count_user_verify_codes(user):
 
 def get_user_by_id(user_id=None):
     if user_id:
-        stmt = select(User).filter_by(id=user_id)
+        stmt = select(User).where(User.id == user_id)
         return db.session.execute(stmt).scalars().one()
     return get_users()
 
@@ -163,13 +163,13 @@ def get_users():
 
 
 def get_user_by_email(email):
-    stmt = select(User).filter(func.lower(User.email_address) == func.lower(email))
+    stmt = select(User).where(func.lower(User.email_address) == func.lower(email))
     return db.session.execute(stmt).scalars().one()
 
 
 def get_users_by_partial_email(email):
     email = escape_special_characters(email)
-    stmt = select(User).filter(User.email_address.ilike("%{}%".format(email)))
+    stmt = select(User).where(User.email_address.ilike("%{}%".format(email)))
     return db.session.execute(stmt).scalars().all()
 
 
@@ -200,7 +200,7 @@ def get_user_and_accounts(user_id):
     # that we have put is functionally doing the same thing as before
     stmt = (
         select(User)
-        .filter(User.id == user_id)
+        .where(User.id == user_id)
         .options(
             # eagerly load the user's services and organizations, and also the service's org and vice versa
             # (so we can see if the user knows about it)

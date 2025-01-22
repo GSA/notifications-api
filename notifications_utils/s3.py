@@ -13,12 +13,28 @@ AWS_CLIENT_CONFIG = Config(
     s3={
         "addressing_style": "virtual",
     },
+    max_pool_connections=50,
     use_fips_endpoint=True,
 )
+
+# Global variable
+noti_s3_resource = None
 
 default_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
 default_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 default_region = os.environ.get("AWS_REGION")
+
+
+def get_s3_resource():
+    global noti_s3_resource
+    if noti_s3_resource is None:
+        session = Session(
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+            region_name=os.environ.get("AWS_REGION"),
+        )
+        noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    return noti_s3_resource
 
 
 def s3upload(
@@ -32,12 +48,7 @@ def s3upload(
     access_key=default_access_key_id,
     secret_key=default_secret_access_key,
 ):
-    session = Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region,
-    )
-    _s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    _s3 = get_s3_resource()
 
     key = _s3.Object(bucket_name, file_location)
 
@@ -73,12 +84,7 @@ def s3download(
     secret_key=default_secret_access_key,
 ):
     try:
-        session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        )
-        s3 = session.resource("s3", config=AWS_CLIENT_CONFIG)
+        s3 = get_s3_resource()
         key = s3.Object(bucket_name, filename)
         return key.get()["Body"]
     except botocore.exceptions.ClientError as error:

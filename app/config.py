@@ -2,10 +2,12 @@ import json
 from datetime import datetime, timedelta
 from os import getenv, path
 
+from boto3 import Session
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
 import notifications_utils
+from app.clients import AWS_CLIENT_CONFIG
 from app.cloudfoundry_config import cloud_config
 
 
@@ -51,6 +53,13 @@ class TaskNames(object):
     SCAN_FILE = "scan-file"
 
 
+session = Session(
+    aws_access_key_id=getenv("CSV_AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=getenv("CSV_AWS_SECRET_ACCESS_KEY"),
+    region_name=getenv("CSV_AWS_REGION"),
+)
+
+
 class Config(object):
     NOTIFY_APP_NAME = "api"
     DEFAULT_REDIS_EXPIRE_TIME = 4 * 24 * 60 * 60
@@ -81,7 +90,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = cloud_config.database_url
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_SIZE = int(getenv("SQLALCHEMY_POOL_SIZE", 5))
+    SQLALCHEMY_POOL_SIZE = int(getenv("SQLALCHEMY_POOL_SIZE", 40))
     SQLALCHEMY_POOL_TIMEOUT = 30
     SQLALCHEMY_POOL_RECYCLE = 300
     SQLALCHEMY_STATEMENT_TIMEOUT = 1200
@@ -166,6 +175,9 @@ class Config(object):
 
     current_minute = (datetime.now().minute + 1) % 60
 
+    S3_CLIENT = session.client("s3")
+    S3_RESOURCE = session.resource("s3", config=AWS_CLIENT_CONFIG)
+
     CELERY = {
         "worker_max_tasks_per_child": 500,
         "task_ignore_result": True,
@@ -201,6 +213,16 @@ class Config(object):
             "process-delivery-receipts": {
                 "task": "process-delivery-receipts",
                 "schedule": timedelta(minutes=2),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
+            "cleanup-delivery-receipts": {
+                "task": "cleanup-delivery-receipts",
+                "schedule": timedelta(minutes=82),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
+            "batch-insert-notifications": {
+                "task": "batch-insert-notifications",
+                "schedule": 10.0,
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "expire-or-delete-invitations": {

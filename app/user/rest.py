@@ -6,7 +6,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import redis_store
+from app import db, redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -120,7 +120,7 @@ def update_user_attribute(user_id):
             reply_to = get_sms_reply_to_for_notify_service(recipient, template)
         else:
             return jsonify(data=user_to_update.serialize()), 200
-        service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+        service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
         personalisation = {
             "name": user_to_update.name,
             "servicemanagername": updated_by.name,
@@ -393,7 +393,7 @@ def send_user_confirm_new_email(user_id):
     template = dao_get_template_by_id(
         current_app.config["CHANGE_EMAIL_CONFIRMATION_TEMPLATE_ID"]
     )
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
     personalisation = {
         "name": user_to_send_to.name,
         "url": _create_confirmation_url(
@@ -434,7 +434,7 @@ def send_new_user_email_verification(user_id):
     template = dao_get_template_by_id(
         current_app.config["NEW_USER_EMAIL_VERIFICATION_TEMPLATE_ID"]
     )
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
 
     current_app.logger.info("template.id is {}".format(template.id))
     current_app.logger.info("service.id is {}".format(service.id))
@@ -487,7 +487,7 @@ def send_already_registered_email(user_id):
     template = dao_get_template_by_id(
         current_app.config["ALREADY_REGISTERED_EMAIL_TEMPLATE_ID"]
     )
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
 
     current_app.logger.info("template.id is {}".format(template.id))
     current_app.logger.info("service.id is {}".format(service.id))

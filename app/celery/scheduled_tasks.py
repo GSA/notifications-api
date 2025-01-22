@@ -1,10 +1,11 @@
-from datetime import timedelta
+import json
+from datetime import datetime, timedelta
 
 from flask import current_app
-from sqlalchemy import between
+from sqlalchemy import between, select, union
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import notify_celery, zendesk_client
+from app import db, notify_celery, redis_store, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -19,11 +20,13 @@ from app.dao.invited_org_user_dao import (
 from app.dao.invited_user_dao import expire_invitations_created_more_than_two_days_ago
 from app.dao.jobs_dao import (
     dao_set_scheduled_jobs_to_pending,
-    dao_update_job,
+    dao_update_job_status_to_error,
     find_jobs_with_missing_rows,
     find_missing_row_for_job,
 )
 from app.dao.notifications_dao import (
+    dao_batch_insert_notifications,
+    dao_close_out_delivery_receipts,
     dao_update_delivery_receipts,
     notifications_not_yet_sent,
 )
@@ -33,7 +36,7 @@ from app.dao.services_dao import (
 )
 from app.dao.users_dao import delete_codes_older_created_more_than_a_day_ago
 from app.enums import JobStatus, NotificationType
-from app.models import Job
+from app.models import Job, Notification
 from app.notifications.process_notifications import send_notification_to_queue
 from app.utils import utc_now
 from notifications_utils import aware_utcnow
@@ -112,30 +115,34 @@ def check_job_status():
     end_minutes_ago = utc_now() - timedelta(minutes=END_MINUTES)
     start_minutes_ago = utc_now() - timedelta(minutes=START_MINUTES)
 
-    incomplete_in_progress_jobs = Job.query.filter(
+    incomplete_in_progress_jobs = select(Job).where(
         Job.job_status == JobStatus.IN_PROGRESS,
         between(Job.processing_started, start_minutes_ago, end_minutes_ago),
     )
-    incomplete_pending_jobs = Job.query.filter(
+    incomplete_pending_jobs = select(Job).where(
         Job.job_status == JobStatus.PENDING,
         Job.scheduled_for.isnot(None),
         between(Job.scheduled_for, start_minutes_ago, end_minutes_ago),
     )
-
-    jobs_not_complete_after_allotted_time = (
-        incomplete_in_progress_jobs.union(incomplete_pending_jobs)
-        .order_by(Job.processing_started, Job.scheduled_for)
-        .all()
+    jobs_not_completed_after_allotted_time = union(
+        incomplete_in_progress_jobs, incomplete_pending_jobs
     )
+    jobs_not_completed_after_allotted_time = (
+        jobs_not_completed_after_allotted_time.order_by(
+            Job.processing_started, Job.scheduled_for
+        )
+    )
+
+    jobs_not_complete_after_allotted_time = db.session.execute(
+        jobs_not_completed_after_allotted_time
+    ).all()
 
     # temporarily mark them as ERROR so that they don't get picked up by future check_job_status tasks
     # if they haven't been re-processed in time.
     job_ids = []
     for job in jobs_not_complete_after_allotted_time:
-        job.job_status = JobStatus.ERROR
-        dao_update_job(job)
+        dao_update_job_status_to_error(job)
         job_ids.append(str(job.id))
-
     if job_ids:
         current_app.logger.info("Job(s) {} have not completed.".format(job_ids))
         process_incomplete_jobs.apply_async([job_ids], queue=QueueNames.JOBS)
@@ -165,6 +172,7 @@ def replay_created_notifications():
 
 @notify_celery.task(name="check-for-missing-rows-in-completed-jobs")
 def check_for_missing_rows_in_completed_jobs():
+
     jobs = find_jobs_with_missing_rows()
     for job in jobs:
         (
@@ -242,6 +250,8 @@ def check_for_services_with_high_failure_rates_or_sending_to_tv_numbers():
     bind=True, max_retries=7, default_retry_delay=3600, name="process-delivery-receipts"
 )
 def process_delivery_receipts(self):
+    # If we need to check db settings do it here for convenience
+    # current_app.logger.info(f"POOL SIZE {app.db.engine.pool.size()}")
     """
     Every eight minutes or so (see config.py) we run this task, which searches the last ten
     minutes of logs for delivery receipts and batch updates the db with the results.  The overlap
@@ -278,3 +288,58 @@ def process_delivery_receipts(self):
             current_app.logger.error(
                 "Failed process delivery receipts after max retries"
             )
+
+
+@notify_celery.task(
+    bind=True, max_retries=2, default_retry_delay=3600, name="cleanup-delivery-receipts"
+)
+def cleanup_delivery_receipts(self):
+    dao_close_out_delivery_receipts()
+
+
+@notify_celery.task(bind=True, name="batch-insert-notifications")
+def batch_insert_notifications(self):
+    batch = []
+
+    # TODO We probably need some way to clear the list if
+    # things go haywire.  A command?
+
+    # with redis_store.pipeline():
+    #     while redis_store.llen("message_queue") > 0:
+    #         redis_store.lpop("message_queue")
+    #     current_app.logger.info("EMPTY!")
+    #     return
+    current_len = redis_store.llen("message_queue")
+    with redis_store.pipeline():
+        # since this list is being fed by other processes, just grab what is available when
+        # this call is made and process that.
+
+        count = 0
+        while count < current_len:
+            count = count + 1
+            notification_bytes = redis_store.lpop("message_queue")
+            notification_dict = json.loads(notification_bytes.decode("utf-8"))
+            notification_dict["status"] = notification_dict.pop("notification_status")
+            if not notification_dict.get("created_at"):
+                notification_dict["created_at"] = utc_now()
+            elif isinstance(notification_dict["created_at"], list):
+                notification_dict["created_at"] = notification_dict["created_at"][0]
+            notification = Notification(**notification_dict)
+            if notification is not None:
+                batch.append(notification)
+    try:
+        dao_batch_insert_notifications(batch)
+    except Exception:
+        current_app.logger.exception("Notification batch insert failed")
+        for n in batch:
+            # Use 'created_at' as a TTL so we don't retry infinitely
+            notification_time = n.created_at
+            if isinstance(notification_time, str):
+                notification_time = datetime.fromisoformat(n.created_at)
+            if notification_time < utc_now() - timedelta(seconds=50):
+                current_app.logger.warning(
+                    f"Abandoning stale data, could not write to db: {n.serialize_for_redis(n)}"
+                )
+                continue
+            else:
+                redis_store.rpush("message_queue", json.dumps(n.serialize_for_redis(n)))

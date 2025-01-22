@@ -115,12 +115,12 @@ def test_save_invited_user_sets_status_to_cancelled(
     notify_db_session, sample_invited_user
 ):
     assert _get_invited_user_count() == 1
-    saved = InvitedUser.query.get(sample_invited_user.id)
+    saved = db.session.get(InvitedUser, sample_invited_user.id)
     assert saved.status == InvitedUserStatus.PENDING
     saved.status = InvitedUserStatus.CANCELLED
     save_invited_user(saved)
     assert _get_invited_user_count() == 1
-    cancelled_invited_user = InvitedUser.query.get(sample_invited_user.id)
+    cancelled_invited_user = db.session.get(InvitedUser, sample_invited_user.id)
     assert cancelled_invited_user.status == InvitedUserStatus.CANCELLED
 
 

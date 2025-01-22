@@ -2,8 +2,9 @@ import json
 from unittest.mock import ANY
 
 from freezegun import freeze_time
+from sqlalchemy import select
 
-from app import encryption
+from app import db, encryption
 from app.celery.process_ses_receipts_tasks import (
     process_ses_results,
     remove_emails_from_bounce,
@@ -168,7 +169,7 @@ def test_process_ses_results_in_complaint(sample_email_template, mocker):
     )
     process_ses_results(response=ses_complaint_callback())
     assert mocked.call_count == 0
-    complaints = Complaint.query.all()
+    complaints = db.session.execute(select(Complaint)).scalars().all()
     assert len(complaints) == 1
     assert complaints[0].notification_id == notification.id
 
@@ -420,7 +421,7 @@ def test_ses_callback_should_send_on_complaint_to_user_callback_api(
     assert send_mock.call_count == 1
     assert encryption.decrypt(send_mock.call_args[0][0][0]) == {
         "complaint_date": "2018-06-05T13:59:58.000000Z",
-        "complaint_id": str(Complaint.query.one().id),
+        "complaint_id": str(db.session.execute(select(Complaint)).scalars().one().id),
         "notification_id": str(notification.id),
         "reference": None,
         "service_callback_api_bearer_token": "some_super_secret",

@@ -13,8 +13,7 @@ AWS_CLIENT_CONFIG = Config(
         "addressing_style": "virtual",
     },
     use_fips_endpoint=True,
-    # This is the default but just for doc sake
-    max_pool_connections=10,
+    max_pool_connections=50,  # This should be equal or greater than our celery concurrency
 )
 
 

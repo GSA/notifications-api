@@ -1,5 +1,6 @@
 import json
-from datetime import timedelta
+import os
+from datetime import datetime, timedelta
 from time import time
 
 from flask import current_app
@@ -24,6 +25,7 @@ from werkzeug.datastructures import MultiDict
 
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
+from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
@@ -43,7 +45,7 @@ from notifications_utils.recipients import (
 def dao_get_last_date_template_was_used(template_id, service_id):
     last_date_from_notifications = (
         db.session.query(functions.max(Notification.created_at))
-        .filter(
+        .where(
             Notification.service_id == service_id,
             Notification.template_id == template_id,
             Notification.key_type != KeyType.TEST,
@@ -56,7 +58,7 @@ def dao_get_last_date_template_was_used(template_id, service_id):
 
     last_date = (
         db.session.query(functions.max(FactNotificationStatus.local_date))
-        .filter(
+        .where(
             FactNotificationStatus.template_id == template_id,
             FactNotificationStatus.key_type != KeyType.TEST,
         )
@@ -95,6 +97,32 @@ def dao_create_notification(notification):
     # notify-api-1454 insert only if it doesn't exist
     if not dao_notification_exists(notification.id):
         db.session.add(notification)
+        # There have been issues with invites expiring.
+        # Ensure the created at value is set and debug.
+        if notification.notification_type == "email":
+            orig_time = notification.created_at
+            now_time = utc_now()
+            try:
+                diff_time = now_time - orig_time
+            except TypeError:
+                try:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except ValueError:
+                    orig_time = datetime.strptime(orig_time, "%Y-%m-%d")
+                diff_time = now_time - orig_time
+            current_app.logger.error(
+                f"dao_create_notification orig created at: {orig_time} and now created at: {now_time}"
+            )
+            if diff_time.total_seconds() > 300:
+                current_app.logger.error(
+                    "Something is wrong with notification.created_at in email!"
+                )
+                if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
+                    notification.created_at = now_time
+                    dao_update_notification(notification)
+                    current_app.logger.error(
+                        f"Email notification created_at reset to   {notification.created_at}"
+                    )
 
 
 def country_records_delivery(phone_prefix):
@@ -143,9 +171,7 @@ def update_notification_status_by_id(
     notification_id, status, sent_by=None, provider_response=None, carrier=None
 ):
     stmt = (
-        select(Notification)
-        .with_for_update()
-        .filter(Notification.id == notification_id)
+        select(Notification).with_for_update().where(Notification.id == notification_id)
     )
     notification = db.session.execute(stmt).scalars().first()
 
@@ -190,7 +216,7 @@ def update_notification_status_by_id(
 @autocommit
 def update_notification_status_by_reference(reference, status):
     # this is used to update emails
-    stmt = select(Notification).filter(Notification.reference == reference)
+    stmt = select(Notification).where(Notification.reference == reference)
     notification = db.session.execute(stmt).scalars().first()
 
     if not notification:
@@ -226,40 +252,59 @@ def get_notifications_for_job(
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    query = Notification.query.filter_by(service_id=service_id, job_id=job_id)
-    query = _filter_query(query, filter_dict)
-    return query.order_by(asc(Notification.job_row_number)).paginate(
-        page=page, per_page=page_size
+    stmt = select(Notification).where(
+        Notification.service_id == service_id, Notification.job_id == job_id
     )
+    stmt = _filter_query(stmt, filter_dict)
+    stmt = stmt.order_by(asc(Notification.job_row_number))
+
+    results = db.session.execute(stmt).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
 def dao_get_notification_count_for_job_id(*, job_id):
-    stmt = select(func.count(Notification.id)).filter_by(job_id=job_id)
+    stmt = select(func.count(Notification.id)).where(Notification.job_id == job_id)
     return db.session.execute(stmt).scalar()
 
 
 def dao_get_notification_count_for_service(*, service_id):
-    stmt = select(func.count(Notification.id)).filter_by(service_id=service_id)
+    stmt = select(func.count(Notification.id)).where(
+        Notification.service_id == service_id
+    )
     return db.session.execute(stmt).scalar()
 
 
 def dao_get_failed_notification_count():
-    stmt = select(func.count(Notification.id)).filter_by(
-        status=NotificationStatus.FAILED
+    stmt = select(func.count(Notification.id)).where(
+        Notification.status == NotificationStatus.FAILED
     )
     return db.session.execute(stmt).scalar()
 
 
 def get_notification_with_personalisation(service_id, notification_id, key_type):
-    filter_dict = {"service_id": service_id, "id": notification_id}
-    if key_type:
-        filter_dict["key_type"] = key_type
 
     stmt = (
         select(Notification)
-        .filter_by(**filter_dict)
+        .where(
+            Notification.service_id == service_id, Notification.id == notification_id
+        )
         .options(joinedload(Notification.template))
     )
+    if key_type:
+        stmt = (
+            select(Notification)
+            .where(
+                Notification.service_id == service_id,
+                Notification.id == notification_id,
+                Notification.key_type == key_type,
+            )
+            .options(joinedload(Notification.template))
+        )
     return db.session.execute(stmt).scalars().one()
 
 
@@ -269,7 +314,7 @@ def get_notification_by_id(notification_id, service_id=None, _raise=False):
     if service_id:
         filters.append(Notification.service_id == service_id)
 
-    stmt = select(Notification).filter(*filters)
+    stmt = select(Notification).where(*filters)
 
     return (
         db.session.execute(stmt).scalars().one()
@@ -305,7 +350,7 @@ def get_notifications_for_service(
     if older_than is not None:
         older_than_created_at = (
             db.session.query(Notification.created_at)
-            .filter(Notification.id == older_than)
+            .where(Notification.id == older_than)
             .as_scalar()
         )
         filters.append(Notification.created_at < older_than_created_at)
@@ -324,22 +369,22 @@ def get_notifications_for_service(
     if client_reference is not None:
         filters.append(Notification.client_reference == client_reference)
 
-    query = Notification.query.filter(*filters)
-    query = _filter_query(query, filter_dict)
+    stmt = select(Notification).where(*filters)
+    stmt = _filter_query(stmt, filter_dict)
     if personalisation:
-        query = query.options(joinedload(Notification.template))
+        stmt = stmt.options(joinedload(Notification.template))
 
-    return query.order_by(desc(Notification.created_at)).paginate(
-        page=page,
-        per_page=page_size,
-        count=count_pages,
-        error_out=error_out,
-    )
+    stmt = stmt.order_by(desc(Notification.created_at))
+    results = db.session.execute(stmt).scalars().all()
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
 
 
-def _filter_query(query, filter_dict=None):
+def _filter_query(stmt, filter_dict=None):
     if filter_dict is None:
-        return query
+        return stmt
 
     multidict = MultiDict(filter_dict)
 
@@ -347,14 +392,14 @@ def _filter_query(query, filter_dict=None):
     statuses = multidict.getlist("status")
 
     if statuses:
-        query = query.filter(Notification.status.in_(statuses))
+        stmt = stmt.where(Notification.status.in_(statuses))
 
     # filter by template
     template_types = multidict.getlist("template_type")
     if template_types:
-        query = query.filter(Notification.notification_type.in_(template_types))
+        stmt = stmt.where(Notification.notification_type.in_(template_types))
 
-    return query
+    return stmt
 
 
 def sanitize_successful_notification_by_id(notification_id, carrier, provider_response):
@@ -455,7 +500,7 @@ def move_notifications_to_notification_history(
         deleted += delete_count_per_call
 
     # Deleting test Notifications, test notifications are not persisted to NotificationHistory
-    stmt = delete(Notification).filter(
+    stmt = delete(Notification).where(
         Notification.notification_type == notification_type,
         Notification.service_id == service_id,
         Notification.created_at < timestamp_to_delete_backwards_from,
@@ -469,7 +514,7 @@ def move_notifications_to_notification_history(
 
 @autocommit
 def dao_delete_notifications_by_id(notification_id):
-    db.session.query(Notification).filter(Notification.id == notification_id).delete(
+    db.session.query(Notification).where(Notification.id == notification_id).delete(
         synchronize_session="fetch"
     )
 
@@ -485,7 +530,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
 
     stmt = (
         select(Notification)
-        .filter(
+        .where(
             Notification.created_at < cutoff_time,
             Notification.status.in_(current_statuses),
             Notification.notification_type.in_(
@@ -498,7 +543,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
 
     stmt = (
         update(Notification)
-        .filter(Notification.id.in_([n.id for n in notifications]))
+        .where(Notification.id.in_([n.id for n in notifications]))
         .values({"status": new_status, "updated_at": updated_at})
     )
     db.session.execute(stmt)
@@ -511,7 +556,7 @@ def dao_timeout_notifications(cutoff_time, limit=100000):
 def dao_update_notifications_by_reference(references, update_dict):
     stmt = (
         update(Notification)
-        .filter(Notification.reference.in_(references))
+        .where(Notification.reference.in_(references))
         .values(update_dict)
     )
     result = db.session.execute(stmt)
@@ -521,7 +566,7 @@ def dao_update_notifications_by_reference(references, update_dict):
     if updated_count != len(references):
         stmt = (
             update(NotificationHistory)
-            .filter(NotificationHistory.reference.in_(references))
+            .where(NotificationHistory.reference.in_(references))
             .values(update_dict)
         )
         result = db.session.execute(stmt)
@@ -584,7 +629,7 @@ def dao_get_notifications_by_recipient_or_reference(
 
     results = (
         db.session.query(Notification)
-        .filter(*filters)
+        .where(*filters)
         .order_by(desc(Notification.created_at))
         .paginate(page=page, per_page=page_size, count=False, error_out=error_out)
     )
@@ -592,7 +637,7 @@ def dao_get_notifications_by_recipient_or_reference(
 
 
 def dao_get_notification_by_reference(reference):
-    stmt = select(Notification).filter(Notification.reference == reference)
+    stmt = select(Notification).where(Notification.reference == reference)
     return db.session.execute(stmt).scalars().one()
 
 
@@ -600,10 +645,10 @@ def dao_get_notification_history_by_reference(reference):
     try:
         # This try except is necessary because in test keys and research mode does not create notification history.
         # Otherwise we could just search for the NotificationHistory object
-        stmt = select(Notification).filter(Notification.reference == reference)
+        stmt = select(Notification).where(Notification.reference == reference)
         return db.session.execute(stmt).scalars().one()
     except NoResultFound:
-        stmt = select(NotificationHistory).filter(
+        stmt = select(NotificationHistory).where(
             NotificationHistory.reference == reference
         )
         return db.session.execute(stmt).scalars().one()
@@ -646,7 +691,7 @@ def dao_get_notifications_processing_time_stats(start_date, end_date):
 def dao_get_last_notification_added_for_job_id(job_id):
     stmt = (
         select(Notification)
-        .filter(Notification.job_id == job_id)
+        .where(Notification.job_id == job_id)
         .order_by(Notification.job_row_number.desc())
     )
     last_notification_added = db.session.execute(stmt).scalars().first()
@@ -657,7 +702,7 @@ def dao_get_last_notification_added_for_job_id(job_id):
 def notifications_not_yet_sent(should_be_sending_after_seconds, notification_type):
     older_than_date = utc_now() - timedelta(seconds=should_be_sending_after_seconds)
 
-    stmt = select(Notification).filter(
+    stmt = select(Notification).where(
         Notification.created_at <= older_than_date,
         Notification.notification_type == notification_type,
         Notification.status == NotificationStatus.CREATED,
@@ -689,7 +734,7 @@ def get_service_ids_with_notifications_before(notification_type, timestamp):
     return {
         row.service_id
         for row in db.session.query(Notification.service_id)
-        .filter(
+        .where(
             Notification.notification_type == notification_type,
             Notification.created_at < timestamp,
         )
@@ -703,7 +748,7 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
 
     notification_table_query = db.session.query(
         Notification.service_id.label("service_id")
-    ).filter(
+    ).where(
         Notification.notification_type == notification_type,
         # using >= + < is much more efficient than date(created_at)
         Notification.created_at >= start_date,
@@ -714,7 +759,7 @@ def get_service_ids_with_notifications_on_date(notification_type, date):
     # provided the task to populate it has run before they were archived.
     ft_status_table_query = db.session.query(
         FactNotificationStatus.service_id.label("service_id")
-    ).filter(
+    ).where(
         FactNotificationStatus.notification_type == notification_type,
         FactNotificationStatus.local_date == date,
     )
@@ -780,3 +825,30 @@ def dao_update_delivery_receipts(receipts, delivered):
         f"#loadtestperformance batch update query time: \
         updated {len(receipts)} notification in {elapsed_time} ms"
     )
+
+
+def dao_close_out_delivery_receipts():
+    THREE_DAYS_AGO = utc_now() - timedelta(minutes=3)
+    stmt = (
+        update(Notification)
+        .where(
+            Notification.status == NotificationStatus.PENDING,
+            Notification.sent_at < THREE_DAYS_AGO,
+        )
+        .values(status=NotificationStatus.FAILED, provider_response="Technical Failure")
+    )
+    result = db.session.execute(stmt)
+
+    db.session.commit()
+    if result:
+        current_app.logger.info(
+            f"Marked {result.rowcount} notifications as technical failures"
+        )
+
+
+def dao_batch_insert_notifications(batch):
+
+    db.session.bulk_save_objects(batch)
+    db.session.commit()
+    current_app.logger.info(f"Batch inserted notifications: {len(batch)}")
+    return len(batch)

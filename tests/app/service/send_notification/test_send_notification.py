@@ -150,7 +150,9 @@ def test_send_notification_with_placeholders_replaced(
                 {"template_version": sample_email_template_with_placeholders.version}
             )
 
-            mocked.assert_called_once_with([notification_id], queue="send-email-tasks")
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-email-tasks", countdown=60
+            )
             assert response.status_code == 201
             assert response_data["body"] == "Hello Jo\nThis is an email from GOV.UK"
             assert response_data["subject"] == "Jo"
@@ -420,7 +422,9 @@ def test_should_allow_valid_sms_notification(notify_api, sample_template, mocker
             response_data = json.loads(response.data)["data"]
             notification_id = response_data["notification"]["id"]
 
-            mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-sms-tasks", countdown=60
+            )
             assert response.status_code == 201
             assert notification_id
             assert "subject" not in response_data
@@ -476,7 +480,7 @@ def test_should_allow_valid_email_notification(
             response_data = json.loads(response.get_data(as_text=True))["data"]
             notification_id = response_data["notification"]["id"]
             app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-                [notification_id], queue="send-email-tasks"
+                [notification_id], queue="send-email-tasks", countdown=60
             )
 
             assert response.status_code == 201
@@ -620,7 +624,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -658,7 +662,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         ],
     )
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -697,7 +701,7 @@ def test_should_send_email_to_anyone_with_test_key(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -735,7 +739,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -792,7 +796,7 @@ def test_should_persist_notification(
         ],
     )
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=60)
     assert response.status_code == 201
 
     notification = notifications_dao.get_notification_by_id(fake_uuid)
@@ -853,9 +857,9 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         )
     assert str(e.value) == "failed to talk to redis"
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=60)
     assert not notifications_dao.get_notification_by_id(fake_uuid)
-    assert not NotificationHistory.query.get(fake_uuid)
+    assert not db.session.get(NotificationHistory, fake_uuid)
 
 
 @pytest.mark.parametrize(
@@ -1065,7 +1069,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
 def test_create_template_raises_invalid_request_exception_with_missing_personalisation(
     sample_template_with_placeholders,
 ):
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     from app.notifications.rest import create_template_object_for_notification
 
     with pytest.raises(InvalidRequest) as e:
@@ -1078,7 +1082,7 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
 ):
     from app.notifications.rest import create_template_object_for_notification
 
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     create_template_object_for_notification(template, {"name": "Jo", "extra": "stuff"})
 
 
@@ -1095,7 +1099,7 @@ def test_create_template_raises_invalid_request_when_content_too_large(
     sample = create_template(
         sample_service, template_type=template_type, content="((long_text))"
     )
-    template = Template.query.get(sample.id)
+    template = db.session.get(Template, sample.id)
     from app.notifications.rest import create_template_object_for_notification
 
     try:
@@ -1185,10 +1189,12 @@ def test_should_allow_store_original_number_on_sms_notification(
     response_data = json.loads(response.data)["data"]
     notification_id = response_data["notification"]["id"]
 
-    mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
+    mocked.assert_called_once_with(
+        [notification_id], queue="send-sms-tasks", countdown=60
+    )
     assert response.status_code == 201
     assert notification_id
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert "1" == notifications[0].to
 
@@ -1349,7 +1355,7 @@ def test_post_notification_should_set_reply_to_text(
         ],
     )
     assert response.status_code == 201
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert notifications[0].reply_to_text == expected_reply_to
 
@@ -1377,5 +1383,5 @@ def test_send_notification_should_set_client_reference_from_placeholder(
 
     notification_id = send_one_off_notification(sample_letter_template.service_id, data)
     assert deliver_mock.called
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     assert notification.client_reference == reference_paceholder

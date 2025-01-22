@@ -2,10 +2,12 @@ import itertools
 from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
+from app import db
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -325,7 +327,7 @@ def update_service(service_id):
         service.email_branding = (
             None
             if not email_branding_id
-            else EmailBranding.query.get(email_branding_id)
+            else db.session.get(EmailBranding, email_branding_id)
         )
     dao_update_service(service)
 
@@ -432,14 +434,34 @@ def get_service_history(service_id):
         template_history_schema,
     )
 
-    service_history = Service.get_history_model().query.filter_by(id=service_id).all()
+    service_history = (
+        db.session.execute(
+            select(Service.get_history_model()).where(
+                Service.get_history_model().id == service_id
+            )
+        )
+        .scalars()
+        .all()
+    )
     service_data = service_history_schema.dump(service_history, many=True)
     api_key_history = (
-        ApiKey.get_history_model().query.filter_by(service_id=service_id).all()
+        db.session.execute(
+            select(ApiKey.get_history_model()).where(
+                ApiKey.get_history_model().service_id == service_id
+            )
+        )
+        .scalars()
+        .all()
     )
     api_keys_data = api_key_history_schema.dump(api_key_history, many=True)
 
-    template_history = TemplateHistory.query.filter_by(service_id=service_id).all()
+    template_history = (
+        db.session.execute(
+            select(TemplateHistory).where(TemplateHistory.service_id == service_id)
+        )
+        .scalars()
+        .all()
+    )
     template_data = template_history_schema.dump(template_history, many=True)
 
     data = {
@@ -893,7 +915,7 @@ def verify_reply_to_email_address(service_id):
     template = dao_get_template_by_id(
         current_app.config["REPLY_TO_EMAIL_ADDRESS_VERIFICATION_TEMPLATE_ID"]
     )
-    notify_service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    notify_service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
     saved_notification = persist_notification(
         template_id=template.id,
         template_version=template.version,

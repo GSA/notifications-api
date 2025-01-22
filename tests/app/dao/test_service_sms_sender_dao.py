@@ -126,7 +126,7 @@ def test_dao_add_sms_sender_for_service_switches_default(notify_db_session):
 
 def test_dao_update_service_sms_sender(notify_db_session):
     service = create_service()
-    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
     service_sms_senders = db.session.execute(stmt).scalars().all()
     assert len(service_sms_senders) == 1
     sms_sender_to_update = service_sms_senders[0]
@@ -137,7 +137,7 @@ def test_dao_update_service_sms_sender(notify_db_session):
         is_default=True,
         sms_sender="updated",
     )
-    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
     sms_senders = db.session.execute(stmt).scalars().all()
     assert len(sms_senders) == 1
     assert sms_senders[0].is_default
@@ -159,7 +159,7 @@ def test_dao_update_service_sms_sender_switches_default(notify_db_session):
         is_default=True,
         sms_sender="updated",
     )
-    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
     sms_senders = db.session.execute(stmt).scalars().all()
 
     expected = {("testing", False), ("updated", True)}
@@ -191,7 +191,7 @@ def test_update_existing_sms_sender_with_inbound_number(notify_db_session):
     service = create_service()
     inbound_number = create_inbound_number(number="12345", service_id=service.id)
 
-    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
     existing_sms_sender = db.session.execute(stmt).scalars().one()
     sms_sender = update_existing_sms_sender_with_inbound_number(
         service_sms_sender=existing_sms_sender,
@@ -208,7 +208,7 @@ def test_update_existing_sms_sender_with_inbound_number_raises_exception_if_inbo
     notify_db_session,
 ):
     service = create_service()
-    stmt = select(ServiceSmsSender).filter_by(service_id=service.id)
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
     existing_sms_sender = db.session.execute(stmt).scalars().one()
     with pytest.raises(expected_exception=SQLAlchemyError):
         update_existing_sms_sender_with_inbound_number(

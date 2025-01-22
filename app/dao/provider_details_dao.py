@@ -102,14 +102,14 @@ def dao_get_provider_stats():
     current_datetime = utc_now()
     first_day_of_the_month = current_datetime.date().replace(day=1)
 
-    subquery = (
+    substmt = (
         db.session.query(
             FactBilling.provider,
             func.sum(FactBilling.billable_units * FactBilling.rate_multiplier).label(
                 "current_month_billable_sms"
             ),
         )
-        .filter(
+        .where(
             FactBilling.notification_type == NotificationType.SMS,
             FactBilling.local_date >= first_day_of_the_month,
         )
@@ -127,11 +127,11 @@ def dao_get_provider_stats():
             ProviderDetails.updated_at,
             ProviderDetails.supports_international,
             User.name.label("created_by_name"),
-            func.coalesce(subquery.c.current_month_billable_sms, 0).label(
+            func.coalesce(substmt.c.current_month_billable_sms, 0).label(
                 "current_month_billable_sms"
             ),
         )
-        .outerjoin(subquery, ProviderDetails.identifier == subquery.c.provider)
+        .outerjoin(substmt, ProviderDetails.identifier == substmt.c.provider)
         .outerjoin(User, ProviderDetails.created_by_id == User.id)
         .order_by(
             ProviderDetails.notification_type,
