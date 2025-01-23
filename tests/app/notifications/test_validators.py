@@ -62,13 +62,13 @@ def test_check_service_over_total_message_limit_fails(
     service = create_service()
     mocker.patch(
         "app.redis_store.get",
-        return_value="250001",
+        return_value="100001",
     )
 
     with pytest.raises(TotalRequestsError) as e:
         check_service_over_total_message_limit(key_type, service)
     assert e.value.status_code == 429
-    assert e.value.message == "Exceeded total application limits (250000) for today"
+    assert e.value.message == "Exceeded total application limits (100000) for today"
     assert e.value.fields == []
 
 
