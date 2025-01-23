@@ -1,11 +1,8 @@
 import pytest
-from flask import current_app
-from freezegun import freeze_time
 
-import app
 from app.dao import templates_dao
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
-from app.errors import BadRequestError, RateLimitError, TotalRequestsError
+from app.errors import BadRequestError, TotalRequestsError
 from app.notifications.process_notifications import create_content_for_notification
 from app.notifications.sns_cert_validator import (
     VALID_SNS_TOPICS,
@@ -17,10 +14,8 @@ from app.notifications.validators import (
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
     check_notification_content_is_not_empty,
-    check_rate_limiting,
     check_reply_to,
     check_service_email_reply_to_id,
-    check_service_over_api_rate_limit,
     check_service_over_total_message_limit,
     check_service_sms_sender_id,
     check_template_is_active,
@@ -29,16 +24,11 @@ from app.notifications.validators import (
     validate_and_format_recipient,
     validate_template,
 )
-from app.serialised_models import (
-    SerialisedAPIKeyCollection,
-    SerialisedService,
-    SerialisedTemplate,
-)
+from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_template_instance
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from tests.app.db import (
-    create_api_key,
     create_reply_to_email,
     create_service,
     create_service_guest_list,
@@ -480,92 +470,6 @@ def test_validate_template_calls_all_validators_exception_message_too_long(
     mock_create_conent.assert_called_once_with(template, {})
     mock_check_not_empty.assert_called_once_with("content")
     assert not mock_check_message_is_too_long.called
-
-
-@pytest.mark.parametrize("key_type", [KeyType.TEAM, KeyType.NORMAL, KeyType.TEST])
-def test_check_service_over_api_rate_limit_when_exceed_rate_limit_request_fails_raises_error(
-    key_type, sample_service, mocker
-):
-    with freeze_time("2016-01-01 12:00:00.000000"):
-        mocker.patch("app.redis_store.exceeded_rate_limit", return_value=True)
-
-        sample_service.restricted = True
-        api_key = create_api_key(sample_service, key_type=key_type)
-        serialised_service = SerialisedService.from_id(sample_service.id)
-        serialised_api_key = SerialisedAPIKeyCollection.from_service_id(
-            serialised_service.id
-        )[0]
-
-        with pytest.raises(RateLimitError) as e:
-            check_service_over_api_rate_limit(serialised_service, serialised_api_key)
-
-        app.redis_store.exceeded_rate_limit.assert_called_with(
-            f"{sample_service.id}-{api_key.key_type}",
-            sample_service.rate_limit,
-            60,
-        )
-        assert e.value.status_code == 429
-        assert e.value.message == (
-            f"Exceeded rate limit for key type "
-            f"{key_type.name if key_type != KeyType.NORMAL else 'LIVE'} of "
-            f"{sample_service.rate_limit} requests per {60} seconds"
-        )
-        assert e.value.fields == []
-
-
-def test_check_service_over_api_rate_limit_when_rate_limit_has_not_exceeded_limit_succeeds(
-    sample_service,
-    mocker,
-):
-    with freeze_time("2016-01-01 12:00:00.000000"):
-        mocker.patch("app.redis_store.exceeded_rate_limit", return_value=False)
-
-        sample_service.restricted = True
-        api_key = create_api_key(sample_service)
-        serialised_service = SerialisedService.from_id(sample_service.id)
-        serialised_api_key = SerialisedAPIKeyCollection.from_service_id(
-            serialised_service.id
-        )[0]
-
-        check_service_over_api_rate_limit(serialised_service, serialised_api_key)
-        app.redis_store.exceeded_rate_limit.assert_called_with(
-            f"{sample_service.id}-{api_key.key_type}",
-            3000,
-            60,
-        )
-
-
-def test_check_service_over_api_rate_limit_should_do_nothing_if_limiting_is_disabled(
-    sample_service, mocker
-):
-    with freeze_time("2016-01-01 12:00:00.000000"):
-        current_app.config["API_RATE_LIMIT_ENABLED"] = False
-
-        mocker.patch("app.redis_store.exceeded_rate_limit", return_value=False)
-
-        sample_service.restricted = True
-        create_api_key(sample_service)
-        serialised_service = SerialisedService.from_id(sample_service.id)
-        serialised_api_key = SerialisedAPIKeyCollection.from_service_id(
-            serialised_service.id
-        )[0]
-
-        check_service_over_api_rate_limit(serialised_service, serialised_api_key)
-        app.redis_store.exceeded_rate_limit.assert_not_called()
-
-
-def test_check_rate_limiting_validates_api_rate_limit_and_daily_limit(
-    notify_db_session, mocker
-):
-    mock_rate_limit = mocker.patch(
-        "app.notifications.validators.check_service_over_api_rate_limit"
-    )
-    service = create_service()
-    api_key = create_api_key(service=service)
-
-    check_rate_limiting(service, api_key)
-
-    mock_rate_limit.assert_called_once_with(service, api_key)
 
 
 @pytest.mark.parametrize("key_type", [KeyType.TEST, KeyType.NORMAL])
