@@ -6,17 +6,14 @@ from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
-from app.errors import BadRequestError, RateLimitError, TotalRequestsError
+from app.errors import BadRequestError, TotalRequestsError
 from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text, hilite
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.clients.redis import (
-    rate_limit_cache_key,
-    total_limit_cache_key,
-)
+from notifications_utils.clients.redis import total_limit_cache_key
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
@@ -45,10 +42,10 @@ def check_service_over_total_message_limit(key_type, service):
     # add service api to return total_message_limit and actual number of messages for service
     if service_stats is None:
         service_stats = 0
-        redis_store.set(cache_key, service_stats, ex=365*24*60*60)
+        redis_store.set(cache_key, service_stats, ex=365 * 24 * 60 * 60)
         return service_stats
     if int(service_stats) >= 5:
-    #if int(service_stats) >= service.total_message_limit:
+        # if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
             "service {} has been rate limited for total use sent {} limit {}".format(
                 service.id, int(service_stats), service.total_message_limit
@@ -56,7 +53,11 @@ def check_service_over_total_message_limit(key_type, service):
         )
         raise TotalRequestsError(service.total_message_limit)
     else:
-        print(hilite(f"TOTAL MESSAGE LIMIT {service.total_message_limit} CURRENT {service_stats}"))
+        print(
+            hilite(
+                f"TOTAL MESSAGE LIMIT {service.total_message_limit} CURRENT {service_stats}"
+            )
+        )
     return int(service_stats)
 
 
@@ -75,11 +76,6 @@ def check_application_over_retention_limit(key_type, service):
         )
         raise TotalRequestsError(daily_message_limit)
     return int(total_stats)
-
-
-def check_rate_limiting(service, api_key):
-    check_service_over_api_rate_limit(service, api_key)
-    check_application_over_retention_limit(api_key.key_type, service)
 
 
 def check_template_is_for_notification_type(notification_type, template_type):

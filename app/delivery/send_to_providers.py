@@ -119,9 +119,7 @@ def send_sms_to_provider(notification):
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
 
-
                 message_id = provider.send_sms(**send_sms_kwargs)
-
 
                 update_notification_message_id(notification.id, message_id)
             except Exception as e:
