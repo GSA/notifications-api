@@ -166,7 +166,7 @@ def process_row(row, template, job, service, sender_id=None):
 # Assuming the limit is annual, is it calendar year, fiscal year, MOU year?
 # Do we need a command to run to clear the redis value, or should it happen automatically?
 def __total_sending_limits_for_job_exceeded(service, job, job_id):
-
+    print(hilite("ENTER __total_sending_limits_for_job_exceeded"))
     try:
         total_sent = check_service_over_total_message_limit(KeyType.NORMAL, service)
         if total_sent + job.notification_count > service.total_message_limit:

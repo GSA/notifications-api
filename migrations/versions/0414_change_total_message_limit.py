@@ -14,12 +14,10 @@ revision = "0414_change_total_message_limit"
 
 
 def upgrade():
-    """
-    This limit is only used
-    """
-    op.execute("UPDATE services set total_message_limit=100000")
+    # TODO This needs updating when the agreement model is ready.  We only want free tier at 100k
+    op.execute("UPDATE services set total_message_limit=100000 where total_message_limit=250000")
 
 
 
 def downgrade():
-    op.execute("UPDATE services set total_message_limit=250000")
+    op.execute("UPDATE services set total_message_limit=250000 where total_message_limit=100000")

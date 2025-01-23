@@ -11,7 +11,7 @@ from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
-from app.utils import get_public_notify_type_text
+from app.utils import get_public_notify_type_text, hilite
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import (
     rate_limit_cache_key,
@@ -24,26 +24,13 @@ from notifications_utils.recipients import (
 )
 
 
-def check_service_over_api_rate_limit(service, api_key):
-    if (
-        current_app.config["API_RATE_LIMIT_ENABLED"]
-        and current_app.config["REDIS_ENABLED"]
-    ):
-        cache_key = rate_limit_cache_key(service.id, api_key.key_type)
-        rate_limit = service.rate_limit
-        interval = 60
-        if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
-            current_app.logger.info(
-                "service {} has been rate limited for throughput".format(service.id)
-            )
-            raise RateLimitError(rate_limit, interval, api_key.key_type)
-
-
 def check_service_over_total_message_limit(key_type, service):
+    print(hilite("ENTER check_service_over_total_message_limit"))
     if key_type == KeyType.TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
 
     cache_key = total_limit_cache_key(service.id)
+    print(hilite(f"CACHE_KEY = {cache_key}"))
     service_stats = redis_store.get(cache_key)
 
     # Originally this was a daily limit check.  It is now a free-tier limit check.
@@ -53,17 +40,23 @@ def check_service_over_total_message_limit(key_type, service):
     # TODO
     # setting expiration to one year for now on the assume that the free tier
     # limit resets annually.
+
+    # add column for actual charges to notifications and notifification_history table
+    # add service api to return total_message_limit and actual number of messages for service
     if service_stats is None:
         service_stats = 0
         redis_store.set(cache_key, service_stats, ex=365*24*60*60)
         return service_stats
-    if int(service_stats) >= service.total_message_limit:
+    if int(service_stats) >= 5:
+    #if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
             "service {} has been rate limited for total use sent {} limit {}".format(
                 service.id, int(service_stats), service.total_message_limit
             )
         )
         raise TotalRequestsError(service.total_message_limit)
+    else:
+        print(hilite(f"TOTAL MESSAGE LIMIT {service.total_message_limit} CURRENT {service_stats}"))
     return int(service_stats)
 
 
