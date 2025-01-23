@@ -45,10 +45,17 @@ def check_service_over_total_message_limit(key_type, service):
 
     cache_key = total_limit_cache_key(service.id)
     service_stats = redis_store.get(cache_key)
+
+    ## Originally this was a daily limit check.  It is now a free-tier limit check.
+    ## TODO is this annual or forever for each service?
+    ## TODO do we need a way to clear this out?  How do we determine if it is
+    ## free-tier or paid?  What are the limits for paid?  Etc.
+    ## TODO
+    ## setting expiration to one year for now on the assume that the free tier
+    ## limit resets annually.
     if service_stats is None:
-        # first message of the day, set the cache to 0 and the expiry to 24 hours
         service_stats = 0
-        redis_store.set(cache_key, service_stats, ex=86400)
+        redis_store.set(cache_key, service_stats, ex=365*24*60*60)
         return service_stats
     if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
