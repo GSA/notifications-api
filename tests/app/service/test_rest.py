@@ -1665,6 +1665,27 @@ def test_remove_user_from_service(client, sample_user_service_permission):
     assert resp.status_code == 204
 
 
+def test_get_service_message_ratio(mocker, client, sample_user_service_permission):
+    service = sample_user_service_permission.service
+
+    mock_redis = mocker.patch("app.service.rest.redis_store.get")
+    mock_redis.return_value = 1
+
+    endpoint = url_for(
+        "service.get_service_message_ratio",
+        service_id=str(service.id),
+    )
+    auth_header = create_admin_authorization_header()
+
+    resp = client.get(
+        endpoint, headers=[("Content-Type", "application/json"), auth_header]
+    )
+    assert resp.status_code == 200
+    result = resp.json
+    assert result["total_message_limit"] == 100000
+    assert result["message_count"] == 1
+
+
 def test_remove_non_existant_user_from_service(client, sample_user_service_permission):
     second_user = create_user(email="new@digital.fake.gov")
     endpoint = url_for(
