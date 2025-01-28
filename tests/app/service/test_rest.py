@@ -1683,7 +1683,7 @@ def test_get_service_message_ratio(mocker, client, sample_user_service_permissio
     assert resp.status_code == 200
     result = resp.json
     assert result["total_message_limit"] == 100000
-    assert result["message_count"] == 1
+    assert result["messages_sent"] == 1
 
 
 def test_remove_non_existant_user_from_service(client, sample_user_service_permission):
