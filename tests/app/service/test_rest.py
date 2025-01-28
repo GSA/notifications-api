@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest.mock import ANY, MagicMock
+from unittest.mock import ANY
 
 import pytest
 from flask import current_app, url_for
@@ -38,7 +38,6 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
-from app.service.rest import check_request_args
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
