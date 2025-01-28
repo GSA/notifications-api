@@ -1,3 +1,6 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -31,9 +34,17 @@ def check_service_over_total_message_limit(key_type, service):
     # TODO
     # For now we are using calendar year
     # Switch to using service agreement dates when the Agreement model is ready
+    # If the service stat has never been set before, compute the remaining seconds for 2025
+    # and set it (all services) to expire on 12/31/2025.
     if service_stats is None:
+        now_et = datetime.now(ZoneInfo("America/New_York"))
+        target_time = datetime(
+            2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("America/New_York")
+        )
+        time_difference = target_time - now_et
+        seconds_difference = int(time_difference.total_seconds())
         service_stats = 0
-        redis_store.set(cache_key, service_stats, ex=365 * 24 * 60 * 60)
+        redis_store.set(cache_key, service_stats, ex=seconds_difference)
         return service_stats
     # TODO CHANGE THIS BACK TO SERVICE TOTAL MESSAGE LIMIT
     if int(service_stats) >= 5:

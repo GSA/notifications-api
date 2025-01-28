@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from flask import current_app, url_for
@@ -38,6 +38,7 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
+from app.service.rest import check_request_args
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -3712,3 +3713,24 @@ def test_get_service_notification_statistics_by_day(
 
     assert mock_get_service_statistics_for_specific_days.assert_called_once
     assert response == mock_data
+
+
+def test_valid_request():
+    request = MagicMock()
+    request.args = {
+        "service_id": "123",
+        "name": "Test Name",
+        "email_from": "test@example.com",
+    }
+    result = check_request_args(request)
+    assert result == ("123", "Test Name", "test@example.com")
+
+
+def test_missing_service_id():
+    request = MagicMock()
+    request.args = {"name": "Test Name", "email_from": "test@example.com"}
+    try:
+        check_request_args(request)
+    except Exception as e:
+        assert e.status_code == 400
+        assert {"service_id": ["Can't be empty"] in e.errors}
