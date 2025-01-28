@@ -2110,7 +2110,9 @@ def test_sanitize_successful_notification_by_id():
         sanitize_successful_notification_by_id(
             notification_id, carrier, provider_response
         )
-        mock_text.assert_called_once_with("x")
+        mock_text.assert_called_once_with(
+            "\n    update notifications set provider_response=:response, carrier=:carrier,\n    notification_status='delivered', sent_at=:sent_at, \"to\"='1', normalised_to='1'\n    where id=:notification_id\n    "  # noqa
+        )
         mock_session.execute.assert_called_once_with(
             mock_text.return_value,
             {
