@@ -2104,8 +2104,8 @@ def test_sanitize_successful_notification_by_id():
 
     mock_session = MagicMock()
     mock_text = MagicMock()
-    with patch("app.dao.notification_dao.db.session", mock_session), patch(
-        "app.dao.notification_dao.text", mock_text
+    with patch("app.dao.notifications_dao.db.session", mock_session), patch(
+        "app.dao.notifications_dao.text", mock_text
     ):
         sanitize_successful_notification_by_id(
             notification_id, carrier, provider_response
