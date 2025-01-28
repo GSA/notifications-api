@@ -22,28 +22,20 @@ from notifications_utils.recipients import (
 
 
 def check_service_over_total_message_limit(key_type, service):
-    print(hilite("ENTER check_service_over_total_message_limit"))
     if key_type == KeyType.TEST or not current_app.config["REDIS_ENABLED"]:
         return 0
 
     cache_key = total_limit_cache_key(service.id)
-    print(hilite(f"CACHE_KEY = {cache_key}"))
     service_stats = redis_store.get(cache_key)
 
-    # Originally this was a daily limit check.  It is now a free-tier limit check.
-    # TODO is this annual or forever for each service?
-    # TODO do we need a way to clear this out?  How do we determine if it is
-    # free-tier or paid?  What are the limits for paid?  Etc.
     # TODO
-    # setting expiration to one year for now on the assume that the free tier
-    # limit resets annually.
-
-    # add column for actual charges to notifications and notifification_history table
-    # add service api to return total_message_limit and actual number of messages for service
+    # For now we are using calendar year
+    # Switch to using service agreement dates when the Agreement model is ready
     if service_stats is None:
         service_stats = 0
         redis_store.set(cache_key, service_stats, ex=365 * 24 * 60 * 60)
         return service_stats
+    # TODO CHANGE THIS BACK TO SERVICE TOTAL MESSAGE LIMIT
     if int(service_stats) >= 5:
         # if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(

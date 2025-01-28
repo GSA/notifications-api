@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app import db
+from app import db, redis_store
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -109,6 +109,7 @@ from app.service.service_senders_schema import (
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
 from app.utils import get_prev_next_pagination_links, utc_now
+from notifications_utils.clients.redis import total_limit_cache_key
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -1118,6 +1119,28 @@ def modify_service_data_retention(service_id, data_retention_id):
         )
 
     return "", 204
+
+
+@service_blueprint.route("/get-service-message-ratio")
+def get_service_message_ratio():
+    service_id = request.args.get("service_id")
+
+    my_service = dao_fetch_service_by_id(service_id)
+
+    cache_key = total_limit_cache_key(service_id)
+    messages_sent = redis_store.get(cache_key)
+    if messages_sent is None:
+        messages_sent = 0
+        current_app.logger.warning(
+            f"Messages sent was not being tracked for service {service_id}"
+        )
+    else:
+        messages_sent = int(messages_sent)
+
+    return {
+        "messages_sent": messages_sent,
+        "total_message_limit": my_service.total_message_limit,
+    }
 
 
 @service_blueprint.route("/monthly-data-by-service")
