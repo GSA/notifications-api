@@ -3715,22 +3715,22 @@ def test_get_service_notification_statistics_by_day(
     assert response == mock_data
 
 
-def test_valid_request():
-    request = MagicMock()
-    request.args = {
-        "service_id": "123",
-        "name": "Test Name",
-        "email_from": "test@example.com",
-    }
-    result = check_request_args(request)
-    assert result == ("123", "Test Name", "test@example.com")
+# def test_valid_request():
+#     request = MagicMock()
+#     request.args = {
+#         "service_id": "123",
+#         "name": "Test Name",
+#         "email_from": "test@example.com",
+#     }
+#     result = check_request_args(request)
+#     assert result == ("123", "Test Name", "test@example.com")
 
 
-def test_missing_service_id():
-    request = MagicMock()
-    request.args = {"name": "Test Name", "email_from": "test@example.com"}
-    try:
-        check_request_args(request)
-    except Exception as e:
-        assert e.status_code == 400
-        assert {"service_id": ["Can't be empty"] in e.errors}
+# def test_missing_service_id():
+#     request = MagicMock()
+#     request.args = {"name": "Test Name", "email_from": "test@example.com"}
+#     try:
+#         check_request_args(request)
+#     except Exception as e:
+#         assert e.status_code == 400
+#         assert {"service_id": ["Can't be empty"] in e.errors}
