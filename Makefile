@@ -31,6 +31,14 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 run-procfile:
 	poetry run honcho start -f Procfile.dev
 
+
+
+.PHONY: tada
+tada:
+	poetry run isort .
+	poetry run black .
+	poetry run flake8 .
+
 .PHONY: avg-complexity
 avg-complexity:
 	echo "*** Shows average complexity in radon of all code ***"

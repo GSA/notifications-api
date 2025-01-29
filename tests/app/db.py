@@ -121,7 +121,7 @@ def create_service(
     email_from=None,
     prefix_sms=True,
     message_limit=1000,
-    total_message_limit=250000,
+    total_message_limit=100000,
     organization_type=OrganizationType.FEDERAL,
     check_if_service_exists=False,
     go_live_user=None,

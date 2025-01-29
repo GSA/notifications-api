@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime, timedelta
 from functools import partial
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from freezegun import freeze_time
@@ -30,6 +30,7 @@ from app.dao.notifications_dao import (
     get_notifications_for_service,
     get_service_ids_with_notifications_on_date,
     notifications_not_yet_sent,
+    sanitize_successful_notification_by_id,
     update_notification_status_by_id,
     update_notification_status_by_reference,
 )
@@ -2094,3 +2095,30 @@ def test_get_service_ids_with_notifications_on_date_checks_ft_status(
         )
         == 1
     )
+
+
+def test_sanitize_successful_notification_by_id():
+    notification_id = "12345"
+    carrier = "CarrierX"
+    provider_response = "Success"
+
+    mock_session = MagicMock()
+    mock_text = MagicMock()
+    with patch("app.dao.notifications_dao.db.session", mock_session), patch(
+        "app.dao.notifications_dao.text", mock_text
+    ):
+        sanitize_successful_notification_by_id(
+            notification_id, carrier, provider_response
+        )
+        mock_text.assert_called_once_with(
+            "\n    update notifications set provider_response=:response, carrier=:carrier,\n    notification_status='delivered', sent_at=:sent_at, \"to\"='1', normalised_to='1'\n    where id=:notification_id\n    "  # noqa
+        )
+        mock_session.execute.assert_called_once_with(
+            mock_text.return_value,
+            {
+                "notification_id": notification_id,
+                "carrier": carrier,
+                "response": provider_response,
+                "sent_at": ANY,
+            },
+        )

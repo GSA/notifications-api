@@ -224,7 +224,7 @@ def sample_service(sample_user):
     data = {
         "name": service_name,
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "email_from": email_from,
         "created_by": sample_user,
