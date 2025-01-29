@@ -114,7 +114,10 @@ static-scan:
 clean:
 	rm -rf node_modules cache target venv .coverage build tests/.cache ${CF_MANIFEST_PATH}
 
-
+.PHONY: test-single
+test-single: export NEW_RELIC_ENVIRONMENT=test
+test-single: ## Run a single test file
+	poetry run pytest $(TEST_FILE)
 ## DEPLOYMENT
 
 # .PHONY: cf-deploy-failwhale

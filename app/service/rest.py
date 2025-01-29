@@ -1,12 +1,12 @@
 import itertools
 from datetime import datetime, timedelta
 
+import pytz
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
-import pytz
 
 from app import db
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3

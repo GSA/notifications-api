@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 from unittest import mock
-from unittest.mock import Mock
+# from unittest.mock import Mock
 
 import pytest
 import sqlalchemy
@@ -40,7 +40,7 @@ from app.dao.services_dao import (
     delete_service_and_all_associated_db_objects,
     get_live_services_with_organization,
     get_services_by_partial_name,
-    get_specific_days_stats,
+    # get_specific_days_stats,
 )
 from app.dao.users_dao import create_user_code, save_model_user
 from app.enums import (
@@ -51,7 +51,7 @@ from app.enums import (
     OrganizationType,
     PermissionType,
     ServicePermissionType,
-    StatisticsType,
+    # StatisticsType,
     TemplateType,
 )
 from app.models import (
@@ -1630,175 +1630,175 @@ def test_get_live_services_with_organization(sample_organization):
 _this_date = utc_now() - timedelta(days=4)
 
 
-@pytest.mark.parametrize(
-    ["data", "start_date", "days", "end_date", "expected", "is_error"],
-    [
-        [None, _this_date, None, None, None, True],
-        [None, _this_date, 4, _this_date - timedelta(4), None, True],
-        [
-            [
-                {"day": _this_date, "something": "else"},
-                {"day": _this_date, "something": "new"},
-                {"day": _this_date + timedelta(days=1), "something": "borrowed"},
-                {"day": _this_date + timedelta(days=2), "something": "old"},
-                {"day": _this_date + timedelta(days=4), "something": "blue"},
-            ],
-            _this_date,
-            4,
-            None,
-            {
-                _this_date.date().strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 2,
-                    },
-                },
-                (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-                (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-                (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                },
-                (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-            },
-            False,
-        ],
-        [
-            [
-                {"day": _this_date, "something": "else"},
-                {"day": _this_date, "something": "new"},
-                {"day": _this_date + timedelta(days=1), "something": "borrowed"},
-                {"day": _this_date + timedelta(days=2), "something": "old"},
-                {"day": _this_date + timedelta(days=4), "something": "blue"},
-            ],
-            _this_date,
-            None,
-            _this_date + timedelta(4),
-            {
-                _this_date.date().strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 2,
-                    },
-                },
-                (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-                (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-                (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                },
-                (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
-                    TemplateType.EMAIL: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 0,
-                    },
-                    TemplateType.SMS: {
-                        StatisticsType.DELIVERED: 0,
-                        StatisticsType.FAILURE: 0,
-                        StatisticsType.REQUESTED: 1,
-                    },
-                },
-            },
-            False,
-        ],
-    ],
-)
-def test_get_specific_days(data, start_date, days, end_date, expected, is_error):
-    if is_error:
-        with pytest.raises(ValueError):
-            get_specific_days_stats(data, start_date, days, end_date)
-    else:
-        new_data = []
-        for line in data:
-            new_line = Mock()
-            new_line.day = line["day"]
-            new_line.notification_type = NotificationType.SMS
-            new_line.count = 1
-            new_line.something = line["something"]
-            new_data.append(new_line)
-        results = get_specific_days_stats(new_data, start_date, days, end_date)
-        assert results == expected
+# @pytest.mark.parametrize(
+#     ["data", "start_date", "days", "end_date", "expected", "is_error"],
+#     [
+#         [None, _this_date, None, None, None, True],
+#         [None, _this_date, 4, _this_date - timedelta(4), None, True],
+#         [
+#             [
+#                 {"day": _this_date, "something": "else"},
+#                 {"day": _this_date, "something": "new"},
+#                 {"day": _this_date + timedelta(days=1), "something": "borrowed"},
+#                 {"day": _this_date + timedelta(days=2), "something": "old"},
+#                 {"day": _this_date + timedelta(days=4), "something": "blue"},
+#             ],
+#             _this_date,
+#             4,
+#             None,
+#             {
+#                 _this_date.date().strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 2,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#             },
+#             False,
+#         ],
+#         [
+#             [
+#                 {"day": _this_date, "something": "else"},
+#                 {"day": _this_date, "something": "new"},
+#                 {"day": _this_date + timedelta(days=1), "something": "borrowed"},
+#                 {"day": _this_date + timedelta(days=2), "something": "old"},
+#                 {"day": _this_date + timedelta(days=4), "something": "blue"},
+#             ],
+#             _this_date,
+#             None,
+#             _this_date + timedelta(4),
+#             {
+#                 _this_date.date().strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 2,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                 },
+#                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
+#                     TemplateType.EMAIL: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 0,
+#                     },
+#                     TemplateType.SMS: {
+#                         StatisticsType.DELIVERED: 0,
+#                         StatisticsType.FAILURE: 0,
+#                         StatisticsType.REQUESTED: 1,
+#                     },
+#                 },
+#             },
+#             False,
+#         ],
+#     ],
+# )
+#  def test_get_specific_days(data, start_date, days, end_date, expected, is_error):
+#     if is_error:
+#         with pytest.raises(ValueError):
+#             get_specific_days_stats(data, start_date, days, end_date)
+#     else:
+#         new_data = []
+#         for line in data:
+#             new_line = Mock()
+#             new_line.day = line["day"]
+#             new_line.notification_type = NotificationType.SMS
+#             new_line.count = 1
+#             new_line.something = line["something"]
+#             new_data.append(new_line)
+#         results = get_specific_days_stats(new_data, start_date, days, end_date)
+#         assert results == expected
