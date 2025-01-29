@@ -233,9 +233,18 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
     end_date = datetime.strptime(start, "%Y-%m-%d")
     start_date = end_date - timedelta(days=days - 1)
 
-    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+    total_notifications, results = dao_fetch_stats_for_service_from_days(
+        service_id,
+        start_date,
+        end_date,
+    )
 
-    stats = get_specific_days_stats(results, start_date, days=days)
+    stats = get_specific_days_stats(
+        results,
+        start_date,
+        days=days,
+        total_notifications=total_notifications,
+    )
 
     return stats
 
@@ -262,12 +271,16 @@ def get_service_statistics_for_specific_days_by_user(
     end_date = datetime.strptime(start, "%Y-%m-%d")
     start_date = end_date - timedelta(days=days - 1)
 
-    results = dao_fetch_stats_for_service_from_days_for_user(
+    total_notifications, results = dao_fetch_stats_for_service_from_days_for_user(
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, days=days)
-
+    stats = get_specific_days_stats(
+        results,
+        start_date,
+        days=days,
+        total_notifications=total_notifications,
+    )
     return stats
 
 
@@ -677,11 +690,11 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
     month_year = datetime(year, month, 10, 00, 00, 00)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    results = dao_fetch_stats_for_service_from_days_for_user(
+    total_notifications, results = dao_fetch_stats_for_service_from_days_for_user(
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, end_date=end_date)
+    stats = get_specific_days_stats(results, start_date, end_date=end_date, total_notifications=total_notifications,)
     return jsonify(stats)
 
 
@@ -701,7 +714,9 @@ def get_single_month_notification_stats_for_service(service_id):
     month_year = datetime(year, month, 10, 00, 00, 00)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+    __, results = dao_fetch_stats_for_service_from_days(
+        service_id, start_date, end_date
+    )
 
     stats = get_specific_days_stats(results, start_date, end_date=end_date)
     return jsonify(stats)
