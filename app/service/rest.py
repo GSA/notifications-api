@@ -231,6 +231,7 @@ def convert_local_to_utc(local_dt, user_timezone="America/New_York"):
     localized_dt = local_tz.localize(local_dt)
     return localized_dt.astimezone(pytz.utc)
 
+
 def get_service_statistics_for_specific_days(service_id, start, days=7):
     print(f"DEBUG - Received start: {start}, days: {days}")
 
@@ -238,16 +239,26 @@ def get_service_statistics_for_specific_days(service_id, start, days=7):
     local_end_date = datetime.strptime(start, "%Y-%m-%d")
     local_start_date = local_end_date - timedelta(days=days - 1)
 
-    utc_start_date = convert_local_to_utc(local_start_date.replace(hour=0, minute=0, second=0), user_timezone)
-    utc_end_date = convert_local_to_utc(local_end_date.replace(hour=23, minute=59, second=59), user_timezone)
+    utc_start_date = convert_local_to_utc(
+        local_start_date.replace(hour=0, minute=0, second=0), user_timezone
+    )
+    utc_end_date = convert_local_to_utc(
+        local_end_date.replace(hour=23, minute=59, second=59), user_timezone
+    )
 
-    now_local = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone(user_timezone))
+    now_local = (
+        datetime.utcnow()
+        .replace(tzinfo=pytz.utc)
+        .astimezone(pytz.timezone(user_timezone))
+    )
     if now_local.hour >= 19:
         utc_end_date += timedelta(days=1)
 
     print(f"DEBUG - Querying db from {utc_start_date} UTC to {utc_end_date} UTC")
 
-    results = dao_fetch_stats_for_service_from_days(service_id, utc_start_date, utc_end_date)
+    results = dao_fetch_stats_for_service_from_days(
+        service_id, utc_start_date, utc_end_date
+    )
 
     stats = get_specific_days_stats(results, utc_start_date, days=days)
 

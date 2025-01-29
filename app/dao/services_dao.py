@@ -1,6 +1,5 @@
 import uuid
 from datetime import timedelta
-import pytz
 
 from flask import current_app
 from sqlalchemy import Float, cast, delete, select
@@ -746,10 +745,14 @@ def get_specific_days_stats(data, start_date, days=None, end_date=None):
         raise ValueError("Either days or end_date must be set.")
 
     for item in data:
-        print(f"DEBUG12345 - Timestamp Check: {item.timestamp.isoformat()} {item.status.value})")
+        print(
+            f"DEBUG12345 - Timestamp Check: {item.timestamp.isoformat()} {item.status.value})"
+        )
 
     grouped_data = {date: [] for date in gen_range} | {
-        timestamp.date(): [row for row in data if row.timestamp.date() == timestamp.date()]
+        timestamp.date(): [
+            row for row in data if row.timestamp.date() == timestamp.date()
+        ]
         for timestamp in {item.timestamp for item in data}
     }
 
