@@ -53,6 +53,7 @@ def check_service_over_total_message_limit(key_type, service):
             )
         )
         raise TotalRequestsError(service.total_message_limit)
+
     return int(service_stats)
 
 

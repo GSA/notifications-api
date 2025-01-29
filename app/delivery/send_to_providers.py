@@ -140,11 +140,7 @@ def send_sms_to_provider(notification):
 
                 cache_key = total_limit_cache_key(service.id)
                 redis_store.incr(cache_key)
-                current_app.logger.info(
-                    hilite(
-                        f"message count for service {n.service_id} now {redis_store.get(cache_key)}"
-                    )
-                )
+
     return message_id
 
 
