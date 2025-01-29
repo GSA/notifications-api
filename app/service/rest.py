@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
+import pytz
 
 from app import db
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
@@ -225,16 +226,30 @@ def get_service_notification_statistics_by_day(service_id, start, days):
     )
 
 
-def get_service_statistics_for_specific_days(service_id, start, days=1):
-    # start and end dates needs to be reversed because
-    # the end date is today and the start is x days in the past
-    # a day needs to be substracted to allow for today
-    end_date = datetime.strptime(start, "%Y-%m-%d")
-    start_date = end_date - timedelta(days=days - 1)
+def convert_local_to_utc(local_dt, user_timezone="America/New_York"):
+    local_tz = pytz.timezone(user_timezone)
+    localized_dt = local_tz.localize(local_dt)
+    return localized_dt.astimezone(pytz.utc)
 
-    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+def get_service_statistics_for_specific_days(service_id, start, days=7):
+    print(f"DEBUG - Received start: {start}, days: {days}")
 
-    stats = get_specific_days_stats(results, start_date, days=days)
+    user_timezone = "America/New_York"
+    local_end_date = datetime.strptime(start, "%Y-%m-%d")
+    local_start_date = local_end_date - timedelta(days=days - 1)
+
+    utc_start_date = convert_local_to_utc(local_start_date.replace(hour=0, minute=0, second=0), user_timezone)
+    utc_end_date = convert_local_to_utc(local_end_date.replace(hour=23, minute=59, second=59), user_timezone)
+
+    now_local = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone(user_timezone))
+    if now_local.hour >= 19:
+        utc_end_date += timedelta(days=1)
+
+    print(f"DEBUG - Querying db from {utc_start_date} UTC to {utc_end_date} UTC")
+
+    results = dao_fetch_stats_for_service_from_days(service_id, utc_start_date, utc_end_date)
+
+    stats = get_specific_days_stats(results, utc_start_date, days=days)
 
     return stats
 

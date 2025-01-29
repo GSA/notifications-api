@@ -1,5 +1,6 @@
 import uuid
 from datetime import timedelta
+import pytz
 
 from flask import current_app
 from sqlalchemy import Float, cast, delete, select
@@ -473,7 +474,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            NotificationAllTimeView.created_at.label("timestamp"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
@@ -485,7 +486,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at),
+            NotificationAllTimeView.created_at,
         )
     )
     return db.session.execute(stmt).all()
@@ -744,9 +745,12 @@ def get_specific_days_stats(data, start_date, days=None, end_date=None):
     else:
         raise ValueError("Either days or end_date must be set.")
 
+    for item in data:
+        print(f"DEBUG12345 - Timestamp Check: {item.timestamp.isoformat()} {item.status.value})")
+
     grouped_data = {date: [] for date in gen_range} | {
-        day: [row for row in data if row.day.date() == day]
-        for day in {item.day.date() for item in data}
+        timestamp.date(): [row for row in data if row.timestamp.date() == timestamp.date()]
+        for timestamp in {item.timestamp for item in data}
     }
 
     stats = {
