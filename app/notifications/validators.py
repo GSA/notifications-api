@@ -14,7 +14,7 @@ from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
-from app.utils import get_public_notify_type_text, hilite
+from app.utils import get_public_notify_type_text
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.clients.redis import total_limit_cache_key
 from notifications_utils.recipients import (
@@ -46,21 +46,13 @@ def check_service_over_total_message_limit(key_type, service):
         service_stats = 0
         redis_store.set(cache_key, service_stats, ex=seconds_difference)
         return service_stats
-    # TODO CHANGE THIS BACK TO SERVICE TOTAL MESSAGE LIMIT
-    if int(service_stats) >= 5:
-        # if int(service_stats) >= service.total_message_limit:
+    if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
             "service {} has been rate limited for total use sent {} limit {}".format(
                 service.id, int(service_stats), service.total_message_limit
             )
         )
         raise TotalRequestsError(service.total_message_limit)
-    else:
-        print(
-            hilite(
-                f"TOTAL MESSAGE LIMIT {service.total_message_limit} CURRENT {service_stats}"
-            )
-        )
     return int(service_stats)
 
 

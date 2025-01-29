@@ -136,11 +136,15 @@ def send_sms_to_provider(notification):
                 msg = f"Send to AWS!!! for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
                 current_app.logger.info(hilite(msg))
                 notification.billable_units = template.fragment_count
-                current_app.logger.info("GOING TO UPDATE NOTI TO SENDING")
                 update_notification_to_sending(notification, provider)
 
                 cache_key = total_limit_cache_key(service.id)
                 redis_store.incr(cache_key)
+                current_app.logger.info(
+                    hilite(
+                        f"message count for service {n.service_id} now {redis_store.get(cache_key)}"
+                    )
+                )
     return message_id
 
 

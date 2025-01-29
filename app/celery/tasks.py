@@ -179,7 +179,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         dao_update_job(job)
         current_app.logger.exception(
             "Job {} size {} error. Total sending limits {} exceeded".format(
-                job_id, job.notification_count, service.message_limit
+                job_id, job.notification_count, service.total_message_limit
             ),
         )
         return True

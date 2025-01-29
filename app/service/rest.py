@@ -1140,7 +1140,7 @@ def get_service_message_ratio():
     return {
         "messages_sent": messages_sent,
         "total_message_limit": my_service.total_message_limit,
-    }
+    }, 200
 
 
 @service_blueprint.route("/monthly-data-by-service")
