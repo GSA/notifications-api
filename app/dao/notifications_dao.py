@@ -276,8 +276,9 @@ def get_recent_notifications_for_job(
     stmt = select(Notification).where(
         Notification.service_id == service_id,
         Notification.job_id == job_id,
-        Notification.status
-        in [NotificationStatus.FAILED, NotificationStatus.DELIVERED],
+        Notification.status.in_(
+            [NotificationStatus.FAILED, NotificationStatus.DELIVERED]
+        ),
     )
     stmt = _filter_query(stmt, filter_dict)
     stmt = stmt.order_by(desc(Notification.job_row_number))
