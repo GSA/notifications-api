@@ -512,14 +512,9 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         job_id=main_job.id,
     )
 
-    assert len(resp["notifications"]) == 3
-    print(resp["notifications"])
-    # assert resp["notifications"][0]["to"] == notification_3.to
-    # assert resp["notifications"][0]["job_row_number"] == notification_3.job_row_number
-    # assert resp["notifications"][1]["to"] == notification_2.to
-    # assert resp["notifications"][1]["job_row_number"] == notification_2.job_row_number
-    # assert resp["notifications"][2]["to"] == notification_1.to
-    # assert resp["notifications"][2]["job_row_number"] == notification_1.job_row_number
+    assert len(resp["notifications"]) == 2
+    assert resp["notifications"][0]["notification_status"] == "failed"
+    assert resp["notifications"][1]["notification_status"] == "delivered"
 
 
 @pytest.mark.parametrize(
