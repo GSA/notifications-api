@@ -694,20 +694,14 @@ def test_get_all_notifications_for_job(sample_job):
 
 
 def test_get_recent_notifications_for_job(sample_job):
-    for x in range(0, 5):
-        try:
-            n = create_notification(template=sample_job.template, job=sample_job)
-            if x == 0:
-                n.status = NotificationStatus.DELIVERED
-            elif x in [1, 2]:
-                n.status = NotificationStatus.FAILED
-        except IntegrityError:
-            pass
+
+    for status in NotificationStatus:
+        create_notification(template=sample_job.template, job=sample_job, status=status)
 
     notifications_from_db = get_recent_notifications_for_job(
         sample_job.service.id, sample_job.id
     ).items
-    assert len(notifications_from_db) == 3
+    assert len(notifications_from_db) == 2
     print(notifications_from_db)
 
 
