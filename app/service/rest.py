@@ -694,7 +694,12 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, end_date=end_date, total_notifications=total_notifications,)
+    stats = get_specific_days_stats(
+        results,
+        start_date,
+        end_date=end_date,
+        total_notifications=total_notifications,
+    )
     return jsonify(stats)
 
 
