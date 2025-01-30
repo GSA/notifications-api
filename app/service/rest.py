@@ -221,48 +221,43 @@ def get_service_notification_statistics(service_id):
 
 @service_blueprint.route("/<uuid:service_id>/statistics/<string:start>/<int:days>")
 def get_service_notification_statistics_by_day(service_id, start, days):
+    # Allow timezone override, default to UTC
+    user_timezone = request.args.get("timezone", "UTC")
     return jsonify(
-        data=get_service_statistics_for_specific_days(service_id, start, int(days))
+        data=get_service_statistics_for_specific_days(service_id, start, int(days), user_timezone)
     )
 
 
 def convert_local_to_utc(local_dt, user_timezone="America/New_York"):
-    local_tz = pytz.timezone(user_timezone)
-    localized_dt = local_tz.localize(local_dt)
+    local_timezone = pytz.timezone(user_timezone)
+    if local_dt.tzinfo is None:
+        localized_dt = local_timezone.localize(local_dt)
+    else:
+        localized_dt = local_dt.astimezone(local_timezone)
+
     return localized_dt.astimezone(pytz.utc)
 
 
-def get_service_statistics_for_specific_days(service_id, start, days=7):
-    print(f"DEBUG - Received start: {start}, days: {days}")
-
-    user_timezone = "America/New_York"
-    local_end_date = datetime.strptime(start, "%Y-%m-%d")
+def get_service_statistics_for_specific_days(service_id, start, days=7, timezone="UTC"):
+    user_timezone = pytz.timezone(timezone)
+    local_end_date = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=user_timezone)
     local_start_date = local_end_date - timedelta(days=days - 1)
 
-    utc_start_date = convert_local_to_utc(
-        local_start_date.replace(hour=0, minute=0, second=0), user_timezone
-    )
-    utc_end_date = convert_local_to_utc(
-        local_end_date.replace(hour=23, minute=59, second=59), user_timezone
-    )
+    utc_start_date = local_start_date.astimezone(pytz.utc).replace(hour=0, minute=0, second=0)
+    utc_end_date = local_end_date.astimezone(pytz.utc).replace(hour=23, minute=59, second=59)
 
-    now_local = (
-        datetime.utcnow()
-        .replace(tzinfo=pytz.utc)
-        .astimezone(pytz.timezone(user_timezone))
-    )
-    if now_local.hour >= 19:
+    now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
+    now_local = now_utc.astimezone(user_timezone)
+
+    # If the local day hasn't fully ended in UTC yet, extend the end date to the next day
+    if now_local.date() == local_end_date.date() and now_utc.date() > now_local.date():
         utc_end_date += timedelta(days=1)
 
-    print(f"DEBUG - Querying db from {utc_start_date} UTC to {utc_end_date} UTC")
-
-    results = dao_fetch_stats_for_service_from_days(
-        service_id, utc_start_date, utc_end_date
-    )
-
-    stats = get_specific_days_stats(results, utc_start_date, days=days)
+    results = dao_fetch_stats_for_service_from_days(service_id, utc_start_date, utc_end_date)
+    stats = get_specific_days_stats(results, utc_start_date, days=days, timezone=timezone)
 
     return stats
+
 
 
 @service_blueprint.route(

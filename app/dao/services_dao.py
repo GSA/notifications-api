@@ -1,5 +1,7 @@
 import uuid
 from datetime import timedelta
+import datetime
+import pytz
 
 from flask import current_app
 from sqlalchemy import Float, cast, delete, select
@@ -734,31 +736,35 @@ def fetch_notification_stats_for_service_by_month_by_user(
     return db.session.execute(stmt).all()
 
 
-def get_specific_days_stats(data, start_date, days=None, end_date=None):
+def get_specific_days_stats(data, start_date, days=None, end_date=None, timezone="UTC"):
+    user_timezone = pytz.timezone(timezone if timezone else "UTC")
+
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
-        gen_range = generate_date_range(start_date, days=days)
+        date_range = list(generate_date_range(start_date, days=days))
     elif end_date is not None:
-        gen_range = generate_date_range(start_date, end_date)
+        date_range = list(generate_date_range(start_date, end_date))
     else:
         raise ValueError("Either days or end_date must be set.")
 
     for item in data:
-        print(
-            f"DEBUG12345 - Timestamp Check: {item.timestamp.isoformat()} {item.status.value})"
-        )
+        if not isinstance(item.timestamp, datetime.datetime):
+            print(f"ERROR: Found non-datetime value: {item.timestamp} ({type(item.timestamp)})")
 
-    grouped_data = {date: [] for date in gen_range} | {
-        timestamp.date(): [
-            row for row in data if row.timestamp.date() == timestamp.date()
-        ]
-        for timestamp in {item.timestamp for item in data}
-    }
 
+    # Group data by date, ensuring ALL dates in range are included
+    grouped_data = {date: [] for date in date_range}
+    for item in data:
+        local_datetime = item.timestamp.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+        local_date = local_datetime.date()
+
+        grouped_data[local_date].append(item)
+
+    # Ensure all dates exist in the final output, even if empty
     stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(rows)
-        for day, rows in grouped_data.items()
+        day.strftime("%Y-%m-%d"): statistics.format_statistics(grouped_data.get(day, []))
+        for day in date_range
     }
 
     return stats
