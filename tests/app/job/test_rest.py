@@ -506,12 +506,13 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
     create_notification(job=another_job)
 
     resp = admin_request.get(
-        "job.get_all_notifications_for_service_job",
+        "job.get_recent_notifications_for_service_job",
         service_id=main_job.service_id,
         job_id=main_job.id,
     )
 
     assert len(resp["notifications"]) == 3
+    print(resp["notifications"])
     assert resp["notifications"][0]["to"] == notification_3.to
     assert resp["notifications"][0]["job_row_number"] == notification_3.job_row_number
     assert resp["notifications"][1]["to"] == notification_2.to
