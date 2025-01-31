@@ -516,9 +516,9 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
     for n in resp["notifications"]:
         print(n)
     assert resp["notifications"][0]["status"] == "failed"
-    assert resp["notifications"][0]["job_row_number"] == "7"
+    assert resp["notifications"][0]["job_row_number"] == 7
     assert resp["notifications"][1]["status"] == "delivered"
-    assert resp["notifications"][1]["job_row_number"] == "5"
+    assert resp["notifications"][1]["job_row_number"] == 5
 
 
 @pytest.mark.parametrize(
