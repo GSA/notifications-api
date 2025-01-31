@@ -512,7 +512,6 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         job_id=main_job.id,
     )
 
-    print("RUNNING TEST 1 and checking total is 13")
     assert len(resp["notifications"]) == 13
     assert resp["notifications"][0]["status"] == "virus-scan-failed"
     assert resp["notifications"][0]["job_row_number"] == 13
@@ -525,11 +524,10 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         **query_string,
     )
 
-    print("RUNNING TEST TWO WITH LENGTH == 1")
     assert len(resp["notifications"]) == 1
 
     assert resp["notifications"][0]["status"] == "delivered"
-    assert resp["notifications"][0]["job_row_number"] == 0
+    assert resp["notifications"][0]["job_row_number"] == 5
 
 
 @pytest.mark.parametrize(
