@@ -268,18 +268,23 @@ def get_notifications_for_job(
 
 
 def get_recent_notifications_for_job(
-    service_id, job_id, filter_dict=None, page=1, page_size=None
+    service_id, job_id, filter_dict=None, page=1, page_size=None, status=None
 ):
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    stmt = select(Notification).where(
-        Notification.service_id == service_id,
-        Notification.job_id == job_id,
-        Notification.status.in_(
-            [NotificationStatus.FAILED, NotificationStatus.DELIVERED]
-        ),
-    )
+    if status is None:
+        stmt = select(Notification).where(
+            Notification.service_id == service_id,
+            Notification.job_id == job_id,
+        )
+    else:
+        stmt = select(Notification).where(
+            Notification.service_id == service_id,
+            Notification.job_id == job_id,
+            Notification.status == status,
+        )
+
     stmt = _filter_query(stmt, filter_dict)
     stmt = stmt.order_by(desc(Notification.job_row_number))
     print(f"STMT {stmt}")
