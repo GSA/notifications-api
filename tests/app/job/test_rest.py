@@ -522,7 +522,7 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         "job.get_recent_notifications_for_service_job",
         service_id=main_job.service_id,
         job_id=main_job.id,
-        status=NotificationStatus.DELIVERED
+        status=NotificationStatus.DELIVERED,
     )
 
     assert len(resp["notifications"]) == 1
@@ -530,7 +530,6 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         print(n)
     assert resp["notifications"][0]["status"] == "delivered"
     assert resp["notifications"][0]["job_row_number"] == 0
-
 
 
 @pytest.mark.parametrize(
