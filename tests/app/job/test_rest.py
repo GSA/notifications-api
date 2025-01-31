@@ -502,7 +502,7 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
 
     count = 1
     for status in NotificationStatus:
-        create_notification(job=main_job, to_field=str(count), status=status)
+        create_notification(job=main_job, job_row_number=str(count), status=status)
         count = count + 1
     create_notification(job=another_job)
 
@@ -513,6 +513,8 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
     )
 
     assert len(resp["notifications"]) == 2
+    for n in resp["notifications"]:
+        print(n)
     assert resp["notifications"][0]["status"] == "delivered"
     assert resp["notifications"][0]["job_row_number"] == "2"
     assert resp["notifications"][1]["status"] == "failed"
