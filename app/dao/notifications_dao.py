@@ -268,35 +268,25 @@ def get_notifications_for_job(
 
 
 def get_recent_notifications_for_job(
-    service_id, job_id, filter_dict=None, page=1, page_size=None, status=None
+    service_id, job_id, filter_dict=None, page=1, page_size=None
 ):
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
-    if status is None:
-        stmt = select(Notification).where(
-            Notification.service_id == service_id,
-            Notification.job_id == job_id,
-        )
-    else:
-        stmt = select(Notification).where(
-            Notification.service_id == service_id,
-            Notification.job_id == job_id,
-            Notification.status == status,
-        )
+    stmt = select(Notification).where(
+        Notification.service_id == service_id,
+        Notification.job_id == job_id,
+    )
 
     stmt = _filter_query(stmt, filter_dict)
     stmt = stmt.order_by(desc(Notification.job_row_number))
     print(f"STMT {stmt}")
     results = db.session.execute(stmt).scalars().all()
-    print(f"RESULTS {results}")
 
     page_size = current_app.config["PAGE_SIZE"]
     offset = (page - 1) * page_size
     paginated_results = results[offset : offset + page_size]
-    print(
-        f"PAGINATED RESULTS {paginated_results} page_size {page_size} offset {offset}"
-    )
+
     pagination = Pagination(paginated_results, page, page_size, len(results))
     return pagination
 
