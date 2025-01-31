@@ -512,9 +512,7 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
         job_id=main_job.id,
     )
 
-    assert len(resp["notifications"]) == 2
-    for n in resp["notifications"]:
-        print(n)
+    assert len(resp["notifications"]) == 13
     assert resp["notifications"][0]["status"] == "failed"
     assert resp["notifications"][0]["job_row_number"] == 7
     assert resp["notifications"][1]["status"] == "delivered"

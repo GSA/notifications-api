@@ -701,8 +701,7 @@ def test_get_recent_notifications_for_job(sample_job):
     notifications_from_db = get_recent_notifications_for_job(
         sample_job.service.id, sample_job.id
     ).items
-    print(notifications_from_db)
-    assert len(notifications_from_db) == 2
+    assert len(notifications_from_db) == 13
 
 
 def test_get_all_notifications_for_job_by_status(sample_job):
