@@ -134,14 +134,12 @@ def get_recent_notifications_for_service_job(service_id, job_id):
         if "page_size" in data
         else current_app.config.get("PAGE_SIZE")
     )
-    status = data["status"] if "status" in data else None
     paginated_notifications = get_recent_notifications_for_job(
         service_id,
         job_id,
         filter_dict=data,
         page=page,
         page_size=page_size,
-        status=status,
     )
 
     kwargs = request.args.to_dict()
