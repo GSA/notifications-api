@@ -128,6 +128,7 @@ def get_all_notifications_for_service_job(service_id, job_id):
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
 def get_recent_notifications_for_service_job(service_id, job_id):
     data = notifications_filter_schema.load(request.args)
+    print(f"DATA COMING IN AT REST LEVEL IS {data}")
     page = data["page"] if "page" in data else 1
     page_size = (
         data["page_size"]

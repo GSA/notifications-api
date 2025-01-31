@@ -270,6 +270,7 @@ def get_notifications_for_job(
 def get_recent_notifications_for_job(
     service_id, job_id, filter_dict=None, page=1, page_size=None
 ):
+    print(f"FILTER_DICT AT DAO LEVEL {filter_dict}")
     if page_size is None:
         page_size = current_app.config["PAGE_SIZE"]
 
