@@ -517,12 +517,12 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
     assert resp["notifications"][0]["status"] == "virus-scan-failed"
     assert resp["notifications"][0]["job_row_number"] == 13
 
-    filter_dict = {"status": NotificationStatus.DELIVERED}
+    data = {"status": NotificationStatus.DELIVERED}
     resp = admin_request.get(
         "job.get_recent_notifications_for_service_job",
         service_id=main_job.service_id,
         job_id=main_job.id,
-        filter_dict=filter_dict,
+        data=json.dumps(data),
     )
 
     print("RUNNING TEST TWO WITH LENGTH == 1")
