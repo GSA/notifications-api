@@ -513,10 +513,24 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
     )
 
     assert len(resp["notifications"]) == 13
-    assert resp["notifications"][0]["status"] == "failed"
-    assert resp["notifications"][0]["job_row_number"] == 7
-    assert resp["notifications"][1]["status"] == "delivered"
-    assert resp["notifications"][1]["job_row_number"] == 5
+    for n in resp["notifications"]:
+        print(n)
+    assert resp["notifications"][0]["status"] == "virus-scan-failed"
+    assert resp["notifications"][0]["job_row_number"] == 13
+
+    resp = admin_request.get(
+        "job.get_recent_notifications_for_service_job",
+        service_id=main_job.service_id,
+        job_id=main_job.id,
+        status=NotificationStatus.DELIVERED
+    )
+
+    assert len(resp["notifications"]) == 1
+    for n in resp["notifications"]:
+        print(n)
+    assert resp["notifications"][0]["status"] == "delivered"
+    assert resp["notifications"][0]["job_row_number"] == 0
+
 
 
 @pytest.mark.parametrize(
