@@ -81,17 +81,21 @@ class ResponseHeaderMiddleware(object):
                     for key, value in headers
                     if key.lower() not in ["server", "last-modified"]
                 ]
+                found_a_text_yaml = False
+                old_headers_len = len(headers)
                 headers = [
                     (key, value)
                     for key, value in headers
-                    if "werkzeug" not in value.lower()
+                    if "text/yaml" not in value.lower()
                 ]
+                new_headers_len = len(headers)
+                if new_headers_len < old_headers_len:
+                    found_a_text_yaml = True
 
-                for key, value in headers:
-                    if key.lower() == "content-type" and "text/yaml" in value.lower():
-                        headers.pop("Content-Type")
-                        headers.append("Content-Type", "application/yaml")
-                headers.append(("Server", "SecureServer"))
+                if found_a_text_yaml:
+                    headers.append(("Content-Type", "application/yaml"))
+
+                print(headers)
                 return start_response(status, headers, exc_info)
 
             return self._app(environ, rewrite_response_headers)
