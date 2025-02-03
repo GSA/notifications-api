@@ -32,9 +32,21 @@ def worker_int(worker):
     worker.log.info("worker: received SIGINT {}".format(worker.pid))
 
 
-def post_request(worker, req, environ, resp):
-    if "Server" in resp.headers:
-        resp.headers.pop("Server")
+# fix dynamic scan warning 10036
+def post_fork(server, worker):
+    server.cfg.set(
+        "secure_scheme_headers",
+        {
+            "X-FORWARDED-PROTO": "https",
+        },
+    )
+    original_send = worker.wsgi.send
+
+    def custom_send(self, resp, *args, **kwargs):
+        resp.headers.pop("Server", None)
+        return original_send(resp, *args, **kwargs)
+
+    worker.wsgi.send = custom_send.__get__(worker.wsgi, type(worker.wsgi))
 
 
 def fix_ssl_monkeypatching():
