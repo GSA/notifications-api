@@ -1,6 +1,8 @@
 from flask import abort, current_app, request
 from flask.wrappers import Request
 
+from app.utils import hilite
+
 TRACE_ID_HEADER = "X-B3-TraceId"
 SPAN_ID_HEADER = "X-B3-SpanId"
 PARENT_SPAN_ID_HEADER = "X-B3-ParentSpanId"
@@ -80,7 +82,7 @@ class ResponseHeaderMiddleware(object):
                     (key, value) for key, value in headers if key.lower() != "server"
                 ]
                 headers.append(("Server", "SecureServer"))
-
+                print(hilite(f"HEADERS {headers}"))
                 return start_response(status, headers, exc_info)
 
             return self._app(environ, rewrite_response_headers)
