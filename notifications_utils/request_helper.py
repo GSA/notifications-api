@@ -76,7 +76,11 @@ class ResponseHeaderMiddleware(object):
                 if SPAN_ID_HEADER.lower() not in lower_existing_header_names:
                     headers.append((SPAN_ID_HEADER, str(req.span_id)))
 
-                print(headers)
+                headers = [
+                    (key, value) for key, value in headers if key.lower() != "server"
+                ]
+                headers.append(("Server", "SecureServer"))
+
                 return start_response(status, headers, exc_info)
 
             return self._app(environ, rewrite_response_headers)
