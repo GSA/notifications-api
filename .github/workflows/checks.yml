@@ -144,4 +144,4 @@ jobs:
           fail_action: true
           allow_issue_writing: false
           rules_file_name: 'zap.conf'
-          cmd_options: '-I'
+          cmd_options: '-I -d'
