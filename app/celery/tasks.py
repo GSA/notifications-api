@@ -159,7 +159,14 @@ def process_row(row, template, job, service, sender_id=None):
     return notification_id
 
 
+# TODO
+# Originally this was checking a daily limit
+# It is now checking an overall limit (annual?) for the free tier
+# Is there any limit for the paid tier?
+# Assuming the limit is annual, is it calendar year, fiscal year, MOU year?
+# Do we need a command to run to clear the redis value, or should it happen automatically?
 def __total_sending_limits_for_job_exceeded(service, job, job_id):
+    print(hilite("ENTER __total_sending_limits_for_job_exceeded"))
     try:
         total_sent = check_service_over_total_message_limit(KeyType.NORMAL, service)
         if total_sent + job.notification_count > service.total_message_limit:
@@ -172,7 +179,7 @@ def __total_sending_limits_for_job_exceeded(service, job, job_id):
         dao_update_job(job)
         current_app.logger.exception(
             "Job {} size {} error. Total sending limits {} exceeded".format(
-                job_id, job.notification_count, service.message_limit
+                job_id, job.notification_count, service.total_message_limit
             ),
         )
         return True

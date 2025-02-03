@@ -2,7 +2,9 @@ import uuid
 
 from flask import current_app
 from notifications_python_client.authentication import create_jwt_token
+from sqlalchemy import select
 
+from app import db
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.enums import KeyType
@@ -11,7 +13,15 @@ from app.models import ApiKey
 
 def create_service_authorization_header(service_id, key_type=KeyType.NORMAL):
     client_id = str(service_id)
-    secrets = ApiKey.query.filter_by(service_id=service_id, key_type=key_type).all()
+    secrets = (
+        db.session.execute(
+            select(ApiKey).where(
+                ApiKey.service_id == service_id, ApiKey.key_type == key_type
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     if secrets:
         secret = secrets[0].secret
