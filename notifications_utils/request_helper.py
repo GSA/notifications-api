@@ -95,7 +95,7 @@ class ResponseHeaderMiddleware(object):
                 if found_a_text_yaml:
                     headers.append(("Content-Type", "text/plain"))
 
-                print(headers)
+                print(f"MIDDLEWARE HEADERS {headers}")
                 return start_response(status, headers, exc_info)
 
             return self._app(environ, rewrite_response_headers)

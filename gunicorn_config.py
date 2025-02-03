@@ -32,24 +32,6 @@ def worker_int(worker):
     worker.log.info("worker: received SIGINT {}".format(worker.pid))
 
 
-# fix dynamic scan warning 10036
-def post_fork(server, worker):
-    server.cfg.set(
-        "secure_scheme_headers",
-        {
-            "X-FORWARDED-PROTO": "https",
-        },
-    )
-    original_send = worker.wsgi.send
-
-    def custom_send(self, resp, *args, **kwargs):
-        resp.headers.pop("Server", None)
-        print(f"HEADERS!!!!!!!! {resp.headers}")
-        return original_send(resp, *args, **kwargs)
-
-    worker.wsgi.send = custom_send.__get__(worker.wsgi, type(worker.wsgi))
-
-
 def fix_ssl_monkeypatching():
     """
     eventlet works by monkey-patching core IO libraries (such as ssl) to be non-blocking. However, there's currently

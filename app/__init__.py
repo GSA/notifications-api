@@ -292,7 +292,6 @@ def init_app(app):
         response.headers.add("Cross-Origin-Embedder-Policy", "require-corp")
         response.headers.add("Cross-Origin-Resource-Policy", "same-origin")
         response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
-        response.headers.pop("Server", None)
 
         return response
 
