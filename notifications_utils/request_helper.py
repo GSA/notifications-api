@@ -93,7 +93,7 @@ class ResponseHeaderMiddleware(object):
                     found_a_text_yaml = True
 
                 if found_a_text_yaml:
-                    headers.append(("Content-Type", "application/yaml"))
+                    headers.append(("Content-Type", "text/plain"))
 
                 print(headers)
                 return start_response(status, headers, exc_info)

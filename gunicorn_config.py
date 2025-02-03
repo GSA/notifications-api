@@ -16,18 +16,6 @@ gunicorn.SERVER_SOFTWARE = "None"
 
 def on_starting(server):
     server.log.info("Starting Notifications API")
-    from gunicorn.http.wsgi import Response
-
-    original_init = Response.__init__
-
-    def custom_init(self, *args, **kwargs):
-        original_init(self, *args, **kwargs)
-        self.headers = [
-            (key, value) for key, value in self.headers if key.lower() != "server"
-        ]
-        print(f"HEADERS {self.headers}")
-
-    Response.__init__ = custom_init
 
 
 def worker_abort(worker):
@@ -42,6 +30,24 @@ def on_exit(server):
 
 def worker_int(worker):
     worker.log.info("worker: received SIGINT {}".format(worker.pid))
+
+
+# fix dynamic scan warning 10036
+def post_fork(server, worker):
+    server.cfg.set(
+        "secure_scheme_headers",
+        {
+            "X-FORWARDED-PROTO": "https",
+        },
+    )
+    original_send = worker.wsgi.send
+
+    def custom_send(self, resp, *args, **kwargs):
+        resp.headers.pop("Server", None)
+        print(f"HEADERS!!!!!!!! {resp.headers}")
+        return original_send(resp, *args, **kwargs)
+
+    worker.wsgi.send = custom_send.__get__(worker.wsgi, type(worker.wsgi))
 
 
 def fix_ssl_monkeypatching():
