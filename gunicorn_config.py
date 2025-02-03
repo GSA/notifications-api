@@ -32,6 +32,11 @@ def worker_int(worker):
     worker.log.info("worker: received SIGINT {}".format(worker.pid))
 
 
+def post_request(worker, req, environ, resp):
+    if "Server" in resp.headers:
+        resp.headers.pop("Server")
+
+
 def fix_ssl_monkeypatching():
     """
     eventlet works by monkey-patching core IO libraries (such as ssl) to be non-blocking. However, there's currently
