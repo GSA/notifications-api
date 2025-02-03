@@ -81,6 +81,16 @@ class ResponseHeaderMiddleware(object):
                     for key, value in headers
                     if key.lower() not in ["server", "last-modified"]
                 ]
+                headers = [
+                    (key, value)
+                    for key, value in headers
+                    if "werkzeug" not in value.lower()
+                ]
+
+                for key, value in headers:
+                    if key.lower() == "content-type" and "text/yaml" in value.lower():
+                        headers.pop("Content-Type")
+                        headers.append("Content-Type", "application/yaml")
                 headers.append(("Server", "SecureServer"))
                 return start_response(status, headers, exc_info)
 
