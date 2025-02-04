@@ -1,4 +1,6 @@
 import calendar
+import pytz
+
 from datetime import date, datetime, time, timedelta
 
 from app.utils import utc_now
@@ -93,3 +95,25 @@ def generate_date_range(start_date, end_date=None, days=0):
             current_date += timedelta(days=1)
     else:
         return "An end_date or number of days must be specified"
+
+
+def build_local_and_utc_date_range(
+    start_date_str: str,
+    days: int = 7,
+    timezone: str = "UTC"
+):
+    """
+    Convert date to local range based on timezone
+    """
+
+    user_timezone = pytz.timezone(timezone)
+    local_end_date = datetime.strptime(start_date_str, "%Y-%m-%d").replace(tzinfo=user_timezone)
+    # Subtract (days - 1) so the entire final day is included in the range
+    local_start_date = local_end_date - timedelta(days=days)
+
+
+    # Convert to UTC for database queries
+    utc_start_date = local_start_date.astimezone(pytz.utc).replace(hour=0, minute=0, second=0)
+    utc_end_date   = local_end_date.astimezone(pytz.utc).replace(hour=23, minute=59, second=59)
+
+    return (local_start_date, utc_start_date, utc_end_date)

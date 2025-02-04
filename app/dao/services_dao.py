@@ -503,7 +503,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("timestamp"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .select_from(NotificationAllTimeView)

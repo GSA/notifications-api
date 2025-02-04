@@ -1,8 +1,10 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import pytz
 
 import pytest
 
 from app.dao.date_util import (
+    build_local_and_utc_date_range,
     get_calendar_year,
     get_calendar_year_for_datetime,
     get_month_start_and_end_date_in_utc,
@@ -75,3 +77,31 @@ def test_get_month_start_and_end_date_in_utc(month, year, expected_start, expect
 )
 def test_get_calendar_year_for_datetime(dt, fy):
     assert get_calendar_year_for_datetime(dt) == fy
+
+
+def test_build_local_and_utc_date_range():
+    local_start, utc_start, utc_end = build_local_and_utc_date_range(
+        "2025-02-04", 7, "America/New_York"
+    )
+    assert local_start.tzinfo
+    assert utc_start.tzinfo
+    assert utc_end.tzinfo
+    assert utc_end > utc_start
+
+
+def test_build_local_and_utc_7_days_ny():
+    local_start, utc_start, utc_end = build_local_and_utc_date_range(
+        "2025-02-10", 7, "America/New_York"
+    )
+    diff = local_start + timedelta(days=7)
+    assert diff == datetime(2025, 2, 10, tzinfo=pytz.timezone("America/New_York"))
+    assert utc_start < utc_end
+
+def test_build_local_and_utc_1_day_utc():
+    local_start, utc_start, utc_end = build_local_and_utc_date_range(
+        "2025-02-10", 1, "UTC"
+    )
+    # this should be one day before
+    assert local_start.isoformat() == "2025-02-09T00:00:00+00:00"
+    assert utc_start.hour == 0
+    assert utc_end.hour == 23

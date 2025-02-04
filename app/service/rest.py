@@ -20,7 +20,7 @@ from app.dao.api_key_dao import (
     save_model_api_key,
 )
 from app.dao.dao_utils import dao_rollback, transaction
-from app.dao.date_util import get_calendar_year, get_month_start_and_end_date_in_utc
+from app.dao.date_util import build_local_and_utc_date_range, get_calendar_year, get_month_start_and_end_date_in_utc
 from app.dao.fact_notification_status_dao import (
     fetch_monthly_template_usage_for_service,
     fetch_notification_status_for_service_by_month,
@@ -221,72 +221,65 @@ def get_service_notification_statistics(service_id):
 
 @service_blueprint.route("/<uuid:service_id>/statistics/<string:start>/<int:days>")
 def get_service_notification_statistics_by_day(service_id, start, days):
-    # Allow timezone override, default to UTC
     user_timezone = request.args.get("timezone", "UTC")
+
     return jsonify(
         data=get_service_statistics_for_specific_days(service_id, start, int(days), user_timezone)
     )
 
 
-def convert_local_to_utc(local_dt, user_timezone="America/New_York"):
-    local_timezone = pytz.timezone(user_timezone)
-    if local_dt.tzinfo is None:
-        localized_dt = local_timezone.localize(local_dt)
-    else:
-        localized_dt = local_dt.astimezone(local_timezone)
-
-    return localized_dt.astimezone(pytz.utc)
-
-
 def get_service_statistics_for_specific_days(service_id, start, days=7, timezone="UTC"):
-    user_timezone = pytz.timezone(timezone)
-    local_end_date = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=user_timezone)
-    local_start_date = local_end_date - timedelta(days=days - 1)
-
-    utc_start_date = local_start_date.astimezone(pytz.utc).replace(hour=0, minute=0, second=0)
-    utc_end_date = local_end_date.astimezone(pytz.utc).replace(hour=23, minute=59, second=59)
-
-    now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
-    now_local = now_utc.astimezone(user_timezone)
-
-    # If the local day hasn't fully ended in UTC yet, extend the end date to the next day
-    if now_local.date() == local_end_date.date() and now_utc.date() > now_local.date():
-        utc_end_date += timedelta(days=1)
+    (
+        local_start_date,
+        utc_start_date,
+        utc_end_date
+    ) = build_local_and_utc_date_range(start, days, timezone)
 
     results = dao_fetch_stats_for_service_from_days(service_id, utc_start_date, utc_end_date)
-    stats = get_specific_days_stats(results, utc_start_date, days=days, timezone=timezone)
 
+    stats = get_specific_days_stats(
+        data=results,
+        start_date=local_start_date,
+        days=days,
+        timezone=timezone
+    )
     return stats
-
 
 
 @service_blueprint.route(
     "/<uuid:service_id>/statistics/user/<uuid:user_id>/<string:start>/<int:days>"
 )
-def get_service_notification_statistics_by_day_by_user(
-    service_id, user_id, start, days
-):
+def get_service_notification_statistics_by_day_by_user(service_id, user_id, start, days):
+    user_timezone = request.args.get('timezone', 'UTC')
     return jsonify(
         data=get_service_statistics_for_specific_days_by_user(
-            service_id, user_id, start, int(days)
+            service_id, user_id, start, int(days), timezone=user_timezone
         )
     )
 
 
 def get_service_statistics_for_specific_days_by_user(
-    service_id, user_id, start, days=1
+    service_id, user_id, start, days=1, timezone="UTC"
 ):
-    # start and end dates needs to be reversed because
-    # the end date is today and the start is x days in the past
-    # a day needs to be substracted to allow for today
-    end_date = datetime.strptime(start, "%Y-%m-%d")
-    start_date = end_date - timedelta(days=days - 1)
+    (
+        local_start_date,
+        utc_start_date,
+        utc_end_date
+    ) = build_local_and_utc_date_range(start_date_str=start, days=days, timezone=timezone)
 
     results = dao_fetch_stats_for_service_from_days_for_user(
-        service_id, start_date, end_date, user_id
+        service_id,
+        utc_start_date,
+        utc_end_date,
+        user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, days=days)
+    stats = get_specific_days_stats(
+        data=results,
+        start_date=local_start_date,
+        days=days,
+        timezone=timezone
+    )
 
     return stats
 
