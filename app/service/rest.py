@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app import db
+from app import db, redis_store
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -110,6 +110,7 @@ from app.service.service_senders_schema import (
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
 from app.utils import get_prev_next_pagination_links, utc_now
+from notifications_utils.clients.redis import total_limit_cache_key
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -235,12 +236,17 @@ def get_service_statistics_for_specific_days(service_id, start, days=7, timezone
         utc_end_date
     ) = build_local_and_utc_date_range(start, days, timezone)
 
-    results = dao_fetch_stats_for_service_from_days(service_id, utc_start_date, utc_end_date)
+    total_notifications, results = dao_fetch_stats_for_service_from_days(
+        service_id,
+        utc_start_date,
+        utc_end_date,
+    )
 
     stats = get_specific_days_stats(
         data=results,
         start_date=local_start_date,
         days=days,
+        total_notifications=total_notifications,
         timezone=timezone
     )
     return stats
@@ -268,18 +274,10 @@ def get_service_statistics_for_specific_days_by_user(
     ) = build_local_and_utc_date_range(start_date_str=start, days=days, timezone=timezone)
 
     results = dao_fetch_stats_for_service_from_days_for_user(
-        service_id,
-        utc_start_date,
-        utc_end_date,
-        user_id
+        service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(
-        data=results,
-        start_date=local_start_date,
-        days=days,
-        timezone=timezone
-    )
+    stats = get_specific_days_stats(results, start_date, days=days)
 
     return stats
 
@@ -690,11 +688,11 @@ def get_single_month_notification_stats_by_user(service_id, user_id):
     month_year = datetime(year, month, 10, 00, 00, 00)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    results = dao_fetch_stats_for_service_from_days_for_user(
+    total_notifications, results = dao_fetch_stats_for_service_from_days_for_user(
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, end_date=end_date)
+    stats = get_specific_days_stats(results, start_date, end_date=end_date, total_notifications=total_notifications,)
     return jsonify(stats)
 
 
@@ -714,7 +712,9 @@ def get_single_month_notification_stats_for_service(service_id):
     month_year = datetime(year, month, 10, 00, 00, 00)
     start_date, end_date = get_month_start_and_end_date_in_utc(month_year)
 
-    results = dao_fetch_stats_for_service_from_days(service_id, start_date, end_date)
+    __, results = dao_fetch_stats_for_service_from_days(
+        service_id, start_date, end_date
+    )
 
     stats = get_specific_days_stats(results, start_date, end_date=end_date)
     return jsonify(stats)
@@ -1132,6 +1132,28 @@ def modify_service_data_retention(service_id, data_retention_id):
         )
 
     return "", 204
+
+
+@service_blueprint.route("/get-service-message-ratio")
+def get_service_message_ratio():
+    service_id = request.args.get("service_id")
+
+    my_service = dao_fetch_service_by_id(service_id)
+
+    cache_key = total_limit_cache_key(service_id)
+    messages_sent = redis_store.get(cache_key)
+    if messages_sent is None:
+        messages_sent = 0
+        current_app.logger.warning(
+            f"Messages sent was not being tracked for service {service_id}"
+        )
+    else:
+        messages_sent = int(messages_sent)
+
+    return {
+        "messages_sent": messages_sent,
+        "total_message_limit": my_service.total_message_limit,
+    }, 200
 
 
 @service_blueprint.route("/monthly-data-by-service")

@@ -397,7 +397,7 @@ def test_create_service(
         "name": "created service",
         "user_id": str(sample_user.id),
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "active": False,
         "email_from": "created.service",
@@ -468,7 +468,7 @@ def test_create_service_with_domain_sets_organization(
         "name": "created service",
         "user_id": str(sample_user.id),
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "active": False,
         "email_from": "created.service",
@@ -495,7 +495,7 @@ def test_create_service_should_create_annual_billing_for_service(
         "name": "created service",
         "user_id": str(sample_user.id),
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "active": False,
         "email_from": "created.service",
@@ -520,7 +520,7 @@ def test_create_service_should_raise_exception_and_not_create_service_if_annual_
         "name": "created service",
         "user_id": str(sample_user.id),
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "active": False,
         "email_from": "created.service",
@@ -557,7 +557,7 @@ def test_create_service_inherits_branding_from_organization(
             "name": "created service",
             "user_id": str(sample_user.id),
             "message_limit": 1000,
-            "total_message_limit": 250000,
+            "total_message_limit": 100000,
             "restricted": False,
             "active": False,
             "email_from": "created.service",
@@ -576,7 +576,7 @@ def test_should_not_create_service_with_missing_user_id_field(notify_api, fake_u
                 "email_from": "service",
                 "name": "created service",
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "created_by": str(fake_uuid),
@@ -597,7 +597,7 @@ def test_should_error_if_created_by_missing(notify_api, sample_user):
                 "email_from": "service",
                 "name": "created service",
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "user_id": str(sample_user.id),
@@ -623,7 +623,7 @@ def test_should_not_create_service_with_missing_if_user_id_is_not_in_database(
                 "user_id": fake_uuid,
                 "name": "created service",
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "created_by": str(fake_uuid),
@@ -666,7 +666,7 @@ def test_should_not_create_service_with_duplicate_name(
                 "name": sample_service.name,
                 "user_id": str(sample_service.users[0].id),
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "email_from": "sample.service2",
@@ -694,7 +694,7 @@ def test_create_service_should_throw_duplicate_key_constraint_for_existing_email
                 "name": service_name,
                 "user_id": str(first_service.users[0].id),
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "email_from": "first.service",
@@ -1220,7 +1220,7 @@ def test_default_permissions_are_added_for_user_service(
                 "name": "created service",
                 "user_id": str(sample_user.id),
                 "message_limit": 1000,
-                "total_message_limit": 250000,
+                "total_message_limit": 100000,
                 "restricted": False,
                 "active": False,
                 "email_from": "created.service",
@@ -1663,6 +1663,27 @@ def test_remove_user_from_service(client, sample_user_service_permission):
         endpoint, headers=[("Content-Type", "application/json"), auth_header]
     )
     assert resp.status_code == 204
+
+
+def test_get_service_message_ratio(mocker, client, sample_user_service_permission):
+    service = sample_user_service_permission.service
+
+    mock_redis = mocker.patch("app.service.rest.redis_store.get")
+    mock_redis.return_value = 1
+
+    endpoint = url_for(
+        "service.get_service_message_ratio",
+        service_id=str(service.id),
+    )
+    auth_header = create_admin_authorization_header()
+
+    resp = client.get(
+        endpoint, headers=[("Content-Type", "application/json"), auth_header]
+    )
+    assert resp.status_code == 200
+    result = resp.json
+    assert result["total_message_limit"] == 100000
+    assert result["messages_sent"] == 1
 
 
 def test_remove_non_existant_user_from_service(client, sample_user_service_permission):
@@ -2201,6 +2222,7 @@ def test_set_sms_prefixing_for_service_cant_be_none(
                 StatisticsType.REQUESTED: 2,
                 StatisticsType.DELIVERED: 1,
                 StatisticsType.FAILURE: 0,
+                StatisticsType.PENDING: 0,
             },
         ),
         (
@@ -2209,6 +2231,7 @@ def test_set_sms_prefixing_for_service_cant_be_none(
                 StatisticsType.REQUESTED: 1,
                 StatisticsType.DELIVERED: 0,
                 StatisticsType.FAILURE: 0,
+                StatisticsType.PENDING: 0,
             },
         ),
     ],
@@ -2257,11 +2280,13 @@ def test_get_services_with_detailed_flag(client, sample_template):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 3,
         },
     }
@@ -2288,11 +2313,13 @@ def test_get_services_with_detailed_flag_excluding_from_test_key(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 2,
         },
     }
@@ -2364,11 +2391,13 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 1,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 3,
         },
     }
@@ -2377,11 +2406,13 @@ def test_get_detailed_services_groups_by_service(notify_db_session):
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 1,
         },
     }
@@ -2407,11 +2438,13 @@ def test_get_detailed_services_includes_services_with_no_notifications(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 1,
         },
     }
@@ -2420,11 +2453,13 @@ def test_get_detailed_services_includes_services_with_no_notifications(
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
     }
@@ -2449,11 +2484,13 @@ def test_get_detailed_services_only_includes_todays_notifications(sample_templat
         NotificationType.EMAIL: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 0,
         },
         NotificationType.SMS: {
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
             StatisticsType.REQUESTED: 3,
         },
     }
@@ -2502,11 +2539,13 @@ def test_get_detailed_services_for_date_range(
     assert data[0]["statistics"][NotificationType.EMAIL] == {
         StatisticsType.DELIVERED: 0,
         StatisticsType.FAILURE: 0,
+        StatisticsType.PENDING: 0,
         StatisticsType.REQUESTED: 0,
     }
     assert data[0]["statistics"][NotificationType.SMS] == {
         StatisticsType.DELIVERED: 2,
         StatisticsType.FAILURE: 0,
+        StatisticsType.PENDING: 0,
         StatisticsType.REQUESTED: 2,
     }
 
@@ -3691,3 +3730,24 @@ def test_get_service_notification_statistics_by_day(
 
     assert mock_get_service_statistics_for_specific_days.assert_called_once
     assert response == mock_data
+
+
+# def test_valid_request():
+#     request = MagicMock()
+#     request.args = {
+#         "service_id": "123",
+#         "name": "Test Name",
+#         "email_from": "test@example.com",
+#     }
+#     result = check_request_args(request)
+#     assert result == ("123", "Test Name", "test@example.com")
+
+
+# def test_missing_service_id():
+#     request = MagicMock()
+#     request.args = {"name": "Test Name", "email_from": "test@example.com"}
+#     try:
+#         check_request_args(request)
+#     except Exception as e:
+#         assert e.status_code == 400
+#         assert {"service_id": ["Can't be empty"] in e.errors}
