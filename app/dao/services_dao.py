@@ -1,6 +1,5 @@
 import uuid
-from datetime import timedelta
-import datetime
+from datetime import datetime, timedelta
 import pytz
 
 from flask import current_app
@@ -801,9 +800,14 @@ def fetch_notification_stats_for_service_by_month_by_user(
 
 
 def get_specific_days_stats(
-    data, start_date, days=None, end_date=None, total_notifications=None
-, timezone="UTC"):
-    user_timezone = pytz.timezone(timezone if timezone else "UTC")
+    data,
+    start_date,
+    days=None,
+    end_date=None,
+    timezone="UTC",
+    total_notifications=None
+):
+    user_timezone = pytz.timezone(timezone or "UTC")
 
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
@@ -812,22 +816,30 @@ def get_specific_days_stats(
     elif end_date is not None:
         date_range = list(generate_date_range(start_date, end_date))
     else:
-        raise ValueError("Either days or end_date must be set.")
+        raise ValueError("Either 'days' or 'end_date' must be set.")
 
-    grouped_data = {date: [] for date in gen_range} | {
-        day: [row for row in data if row.day.date() == day]
-        for day in {item.day.date() for item in data}
-    }
+    # Group data by local date
+    grouped_data = {date: [] for date in date_range}
+    for item in data:
+        if not isinstance(item.timestamp, datetime):
+            continue
+        local_datetime = item.timestamp.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+        local_date = local_datetime.date()
+        if local_date in grouped_data:
+            grouped_data[local_date].append(item)
 
-    stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(
-            grouped_data.get(day, []),
-            total_notifications=(
-                total_notifications.get(day, 0)
-                if total_notifications is not None
-                else None
-            ),
+    # Build final stats, optionally including total_notifications
+    stats = {}
+    for day in date_range:
+        formatted_day = day.strftime("%Y-%m-%d")
+        day_data = grouped_data[day]
+        total_for_day = None
+        if total_notifications and day in total_notifications:
+            total_for_day = total_notifications[day]
+
+        stats[formatted_day] = statistics.format_statistics(
+            day_data,
+            total_notifications=total_for_day
         )
-        for day in date_range
-    }
+
     return stats

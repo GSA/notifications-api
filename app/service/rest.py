@@ -1,5 +1,5 @@
 import itertools
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 from flask import Blueprint, current_app, jsonify, request
@@ -273,11 +273,11 @@ def get_service_statistics_for_specific_days_by_user(
         utc_end_date
     ) = build_local_and_utc_date_range(start_date_str=start, days=days, timezone=timezone)
 
-    results = dao_fetch_stats_for_service_from_days_for_user(
-        service_id, start_date, end_date, user_id
+    total_notifications, results = dao_fetch_stats_for_service_from_days_for_user(
+        service_id, utc_start_date, utc_end_date, user_id
     )
 
-    stats = get_specific_days_stats(results, start_date, days=days)
+    stats = get_specific_days_stats(results, local_start_date, days=days, total_notifications=total_notifications)
 
     return stats
 
