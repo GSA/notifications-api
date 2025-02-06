@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
-import pytz
 
+import pytz
 from flask import current_app
 from sqlalchemy import Float, cast, delete, select
 from sqlalchemy.orm import joinedload

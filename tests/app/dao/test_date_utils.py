@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
-import pytz
 
 import pytest
+import pytz
 
 from app.dao.date_util import (
     build_local_and_utc_date_range,

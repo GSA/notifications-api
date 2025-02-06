@@ -1,10 +1,13 @@
-import pytest
 from datetime import datetime
-import pytz
 from unittest.mock import Mock
+
+import pytest
+import pytz
+
 from app.dao.services_dao import get_specific_days_stats
 from app.enums import StatisticsType
 from app.models import TemplateType
+
 
 def generate_expected_output(requested_days, requested_sms_days):
     output = {}
