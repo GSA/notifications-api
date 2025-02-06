@@ -2,7 +2,6 @@ import uuid
 from collections import namedtuple
 from datetime import datetime, timedelta
 from unittest import mock
-from unittest.mock import Mock
 
 import pytest
 import pytz
@@ -1630,7 +1629,6 @@ def test_get_live_services_with_organization(sample_organization):
 
 
 _this_date = datetime(2025, 2, 2, 13, 45, 22, 222955, tzinfo=pytz.utc)
-
 
 
 @pytest.mark.parametrize(
