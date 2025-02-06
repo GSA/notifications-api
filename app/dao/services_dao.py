@@ -814,28 +814,31 @@ def get_specific_days_stats(
     elif days is not None:
         date_range = list(generate_date_range(start_date, days=days))
     elif end_date is not None:
-        date_range = list(generate_date_range(start_date, end_date))
+        date_range = list(generate_date_range(start_date, end_date=end_date))
     else:
         raise ValueError("Either 'days' or 'end_date' must be set.")
 
-    # Group data by local date
-    grouped_data = {date: [] for date in date_range}
+    # Ensure date_range is in correct format
+    grouped_data = {day.strftime("%Y-%m-%d"): [] for day in date_range}
+
     for item in data:
         if not isinstance(item.timestamp, datetime):
             continue
-        local_datetime = item.timestamp.replace(tzinfo=pytz.utc).astimezone(user_timezone)
-        local_date = local_datetime.date()
-        if local_date in grouped_data:
-            grouped_data[local_date].append(item)
+
+        local_datetime = item.timestamp.astimezone(user_timezone)
+        local_date_str = local_datetime.strftime("%Y-%m-%d")
+
+        if local_date_str in grouped_data:
+            grouped_data[local_date_str].append(item)
 
     # Build final stats, optionally including total_notifications
     stats = {}
     for day in date_range:
         formatted_day = day.strftime("%Y-%m-%d")
-        day_data = grouped_data[day]
+        day_data = grouped_data.get(formatted_day, [])  # Avoid KeyError
         total_for_day = None
-        if total_notifications and day in total_notifications:
-            total_for_day = total_notifications[day]
+        if total_notifications and formatted_day in total_notifications:
+            total_for_day = total_notifications[formatted_day]
 
         stats[formatted_day] = statistics.format_statistics(
             day_data,
