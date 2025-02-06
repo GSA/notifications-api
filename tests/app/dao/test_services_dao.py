@@ -1,8 +1,8 @@
 import uuid
+from collections import namedtuple
 from datetime import datetime, timedelta
 from unittest import mock
 from unittest.mock import Mock
-from collections import namedtuple
 
 import pytest
 import pytz
