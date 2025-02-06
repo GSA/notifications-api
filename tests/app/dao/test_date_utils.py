@@ -97,6 +97,7 @@ def test_build_local_and_utc_7_days_ny():
     assert diff == datetime(2025, 2, 10, tzinfo=pytz.timezone("America/New_York"))
     assert utc_start < utc_end
 
+
 def test_build_local_and_utc_1_day_utc():
     local_start, utc_start, utc_end = build_local_and_utc_date_range(
         "2025-02-10", 1, "UTC"
