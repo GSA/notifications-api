@@ -2,8 +2,10 @@ import uuid
 from datetime import datetime, timedelta
 from unittest import mock
 from unittest.mock import Mock
+from collections import namedtuple
 
 import pytest
+import pytz
 import sqlalchemy
 from freezegun import freeze_time
 from sqlalchemy import func, select
@@ -1627,7 +1629,8 @@ def test_get_live_services_with_organization(sample_organization):
     ]
 
 
-_this_date = utc_now() - timedelta(days=4)
+_this_date = datetime(2025, 2, 2, 13, 45, 22, 222955, tzinfo=pytz.utc)
+
 
 
 @pytest.mark.parametrize(
@@ -1644,7 +1647,7 @@ _this_date = utc_now() - timedelta(days=4)
                 {"day": _this_date + timedelta(days=4), "something": "blue"},
             ],
             _this_date,
-            4,
+            5,
             None,
             {
                 _this_date.date().strftime("%Y-%m-%d"): {
@@ -1812,23 +1815,30 @@ def test_get_specific_days(data, start_date, days, end_date, expected, is_error)
         with pytest.raises(ValueError):
             get_specific_days_stats(data, start_date, days, end_date)
     else:
-        new_data = []
-        for line in data:
-            new_line = Mock()
-            new_line.day = line["day"]
-            new_line.notification_type = NotificationType.SMS
-            new_line.count = 1
-            new_line.something = line["something"]
-            new_data.append(new_line)
+        Notification = namedtuple("Notification", ["timestamp", "notification_type", "count", "something", "status"])
+
+        new_data = [
+            Notification(
+                timestamp=line["day"],
+                notification_type=NotificationType.SMS,
+                count=1,
+                something=line["something"],
+                status=None
+            )
+            for line in data
+        ]
 
         total_notifications = None
 
-        date_key = _this_date.date().strftime("%Y-%m-%d")
+        # Convert start_date to UTC to ensure consistency
+        start_date = start_date.astimezone(pytz.utc)
+
+        date_key = start_date.date().strftime("%Y-%m-%d")
         if expected and date_key in expected:
             sms_stats = expected[date_key].get(TemplateType.SMS, {})
             requested = sms_stats.get(StatisticsType.REQUESTED, 0)
             if requested > 0:
-                total_notifications = {_this_date: requested}
+                total_notifications = {date_key: requested}
 
         results = get_specific_days_stats(
             new_data,
@@ -1837,4 +1847,5 @@ def test_get_specific_days(data, start_date, days, end_date, expected, is_error)
             end_date,
             total_notifications=total_notifications,
         )
+
         assert results == expected
