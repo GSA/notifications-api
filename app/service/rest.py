@@ -1,7 +1,6 @@
 import itertools
 from datetime import datetime
 
-import pytz
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError

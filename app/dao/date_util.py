@@ -111,9 +111,8 @@ def build_local_and_utc_date_range(
     # Subtract (days - 1) so the entire final day is included in the range
     local_start_date = local_end_date - timedelta(days=days)
 
-
     # Convert to UTC for database queries
     utc_start_date = local_start_date.astimezone(pytz.utc).replace(hour=0, minute=0, second=0)
-    utc_end_date   = local_end_date.astimezone(pytz.utc).replace(hour=23, minute=59, second=59)
+    utc_end_date = local_end_date.astimezone(pytz.utc).replace(hour=23, minute=59, second=59)
 
     return (local_start_date, utc_start_date, utc_end_date)
