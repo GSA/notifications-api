@@ -286,6 +286,13 @@ def init_app(app):
     @app.after_request
     def after_request(response):
         response.headers.add("X-Content-Type-Options", "nosniff")
+
+        # Some dynamic scan findings
+        response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
+        response.headers.add("Cross-Origin-Embedder-Policy", "require-corp")
+        response.headers.add("Cross-Origin-Resource-Policy", "same-origin")
+        response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
+
         return response
 
     @app.errorhandler(Exception)
