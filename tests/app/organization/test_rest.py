@@ -599,7 +599,7 @@ def test_post_link_service_to_organization_inserts_annual_billing(
     data = {"service_id": str(sample_service.id)}
     organization = create_organization(organization_type=OrganizationType.FEDERAL)
     assert len(organization.services) == 0
-    assert len(AnnualBilling.query.all()) == 0
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     admin_request.post(
         "organization.link_service_to_organization",
         _data=data,
@@ -607,7 +607,7 @@ def test_post_link_service_to_organization_inserts_annual_billing(
         _expected_status=204,
     )
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 1
     assert annual_billing[0].free_sms_fragment_limit == 150000
 
@@ -624,7 +624,7 @@ def test_post_link_service_to_organization_rollback_service_if_annual_billing_up
 
     organization = create_organization(organization_type=OrganizationType.FEDERAL)
     assert len(organization.services) == 0
-    assert len(AnnualBilling.query.all()) == 0
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
     with pytest.raises(expected_exception=SQLAlchemyError):
         admin_request.post(
             "organization.link_service_to_organization",
@@ -633,7 +633,7 @@ def test_post_link_service_to_organization_rollback_service_if_annual_billing_up
         )
     assert not sample_service.organization_type
     assert len(organization.services) == 0
-    assert len(AnnualBilling.query.all()) == 0
+    assert len(db.session.execute(select(AnnualBilling)).scalars().all()) == 0
 
 
 @freeze_time("2021-09-24 13:30")
@@ -663,7 +663,7 @@ def test_post_link_service_to_another_org(
     assert not sample_organization.services
     assert len(new_org.services) == 1
     assert sample_service.organization_type == OrganizationType.FEDERAL
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 1
     assert annual_billing[0].free_sms_fragment_limit == 150000
 

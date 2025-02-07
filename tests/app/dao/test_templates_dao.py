@@ -334,9 +334,9 @@ def test_update_template_creates_a_history_record_with_current_data(
 
     assert template_from_db.version == 2
 
-    stmt = select(TemplateHistory).filter_by(name="Sample Template")
+    stmt = select(TemplateHistory).where(TemplateHistory.name == "Sample Template")
     assert db.session.execute(stmt).scalars().one().version == 1
-    stmt = select(TemplateHistory).filter_by(name="new name")
+    stmt = select(TemplateHistory).where(TemplateHistory.name == "new name")
     assert db.session.execute(stmt).scalars().one().version == 2
 
 

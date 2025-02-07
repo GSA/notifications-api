@@ -18,7 +18,6 @@ from app.notifications.process_notifications import (
 from app.notifications.validators import (
     check_if_service_can_send_files_by_email,
     check_is_message_too_long,
-    check_rate_limiting,
     check_service_email_reply_to_id,
     check_service_has_permission,
     check_service_sms_sender_id,
@@ -53,8 +52,6 @@ def post_notification(notification_type):
         abort(404)
 
     check_service_has_permission(notification_type, authenticated_service.permissions)
-
-    check_rate_limiting(authenticated_service, api_user)
 
     template, template_with_content = validate_template(
         form["template_id"],
