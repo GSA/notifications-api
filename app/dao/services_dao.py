@@ -1,6 +1,7 @@
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+import pytz
 from flask import current_app
 from sqlalchemy import Float, cast, delete, select
 from sqlalchemy.orm import joinedload
@@ -502,7 +503,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            NotificationAllTimeView.created_at.label("timestamp"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
@@ -514,7 +515,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
         .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at),
+            NotificationAllTimeView.created_at,
         )
     )
 
@@ -563,7 +564,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.date_trunc("day", NotificationAllTimeView.created_at).label("timestamp"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
@@ -799,31 +800,49 @@ def fetch_notification_stats_for_service_by_month_by_user(
 
 
 def get_specific_days_stats(
-    data, start_date, days=None, end_date=None, total_notifications=None
+    data,
+    start_date,
+    days=None,
+    end_date=None,
+    timezone="UTC",
+    total_notifications=None
 ):
+    user_timezone = pytz.timezone(timezone or "UTC")
+
     if days is not None and end_date is not None:
         raise ValueError("Only set days OR set end_date, not both.")
     elif days is not None:
-        gen_range = generate_date_range(start_date, days=days)
+        date_range = list(generate_date_range(start_date, days=days))
     elif end_date is not None:
-        gen_range = generate_date_range(start_date, end_date)
+        date_range = list(generate_date_range(start_date, end_date=end_date))
     else:
-        raise ValueError("Either days or end_date must be set.")
+        raise ValueError("Either 'days' or 'end_date' must be set.")
 
-    grouped_data = {date: [] for date in gen_range} | {
-        day: [row for row in data if row.day == day]
-        for day in {item.day for item in data}
-    }
+    # Ensure date_range is in correct format
+    grouped_data = {day.strftime("%Y-%m-%d"): [] for day in date_range}
 
-    stats = {
-        day.strftime("%Y-%m-%d"): statistics.format_statistics(
-            rows,
-            total_notifications=(
-                total_notifications.get(day, 0)
-                if total_notifications is not None
-                else None
-            ),
+    for item in data:
+        if not isinstance(item.timestamp, datetime):
+            continue
+
+        local_datetime = item.timestamp.astimezone(user_timezone)
+        local_date_str = local_datetime.strftime("%Y-%m-%d")
+
+        if local_date_str in grouped_data:
+            grouped_data[local_date_str].append(item)
+
+    # Build final stats, optionally including total_notifications
+    stats = {}
+    for day in date_range:
+        formatted_day = day.strftime("%Y-%m-%d")
+        day_data = grouped_data.get(formatted_day, [])  # Avoid KeyError
+        total_for_day = None
+        if total_notifications and formatted_day in total_notifications:
+            total_for_day = total_notifications[formatted_day]
+
+        stats[formatted_day] = statistics.format_statistics(
+            day_data,
+            total_notifications=total_for_day
         )
-        for day, rows in grouped_data.items()
-    }
+
     return stats
