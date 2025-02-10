@@ -5,6 +5,8 @@ from sqlalchemy import select
 from app import db
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
+    dao_get_all_free_sms_fragment_limit,
+    dao_get_annual_billing,
     dao_get_free_sms_fragment_limit_for_year,
     dao_update_annual_billing_for_future_years,
     set_default_free_allowance_for_service,
@@ -124,3 +126,37 @@ def test_set_default_free_allowance_for_service_updates_existing_year(sample_ser
     assert len(annual_billing) == 1
     assert annual_billing[0].service_id == sample_service.id
     assert annual_billing[0].free_sms_fragment_limit == 150000
+
+
+def test_dao_get_annual_billing(mocker):
+    mock_db_session = mocker.patch("app.dao.db.session.execute")
+
+    mock_db_session.return_value.scalars.return_value.all.return_value = [
+        "billing_entry1",
+        "billing_entry2",
+    ]
+    service_id = "test_service_id"
+    result = dao_get_annual_billing(service_id)
+    mock_db_session.assert_called_once()
+    stmt = mock_db_session.call_args[0][0]
+    assert stmt.compile().params["service_id_1"] == service_id
+
+    assert result == ["billing_entry1", "billing_entry2"]
+
+
+def test_dao_get_all_free_sms_fragment_limit(mocker):
+    mock_db_session = mocker.patch("app.dao.db.session.execute")
+    mock_db_session.return_value.scalars.return_value.all.return_value = [
+        "sms_limit1",
+        "sms_limit2",
+    ]
+
+    service_id = "test_service_id"
+
+    result = dao_get_all_free_sms_fragment_limit(service_id)
+
+    mock_db_session.assert_called_once()
+
+    stmt = mock_db_session.call_args[0][0]
+    assert stmt.compile().params["service_id_1"] == service_id
+    assert result == ["sms_limit1", "sms_limit2"]
