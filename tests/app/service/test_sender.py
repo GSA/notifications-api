@@ -1,6 +1,8 @@
 import pytest
 from flask import current_app
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.services_dao import dao_add_user_to_service
 from app.enums import NotificationType, TemplateType
 from app.models import Notification
@@ -21,9 +23,11 @@ def test_send_notification_to_service_users_persists_notifications_correctly(
         service_id=sample_service.id, template_id=template.id
     )
 
-    notification = Notification.query.one()
+    notification = db.session.execute(select(Notification)).scalars().one()
 
-    assert Notification.query.count() == 1
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
     assert notification.to == "1"
     assert str(notification.service_id) == current_app.config["NOTIFY_SERVICE_ID"]
     assert notification.template.id == template.id
@@ -54,6 +58,7 @@ def test_send_notification_to_service_users_includes_user_fields_in_personalisat
 ):
     persist_mock = mocker.patch("app.service.sender.persist_notification")
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store")
 
     user = sample_service.users[0]
 
@@ -78,15 +83,20 @@ def test_send_notification_to_service_users_sends_to_active_users_only(
     notify_service, mocker
 ):
     mocker.patch("app.service.sender.send_notification_to_queue")
+    mocker.patch("app.service.sender.redis_store", autospec=True)
 
     first_active_user = create_user(email="foo@bar.com", state="active")
     second_active_user = create_user(email="foo1@bar.com", state="active")
     pending_user = create_user(email="foo2@bar.com", state="pending")
     service = create_service(user=first_active_user)
     dao_add_user_to_service(service, second_active_user)
+
     dao_add_user_to_service(service, pending_user)
+
     template = create_template(service, template_type=TemplateType.EMAIL)
 
     send_notification_to_service_users(service_id=service.id, template_id=template.id)
 
-    assert Notification.query.count() == 2
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 2

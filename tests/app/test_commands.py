@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open
 
 import pytest
+from sqlalchemy import func, select
 
+from app import db
 from app.commands import (
     _update_template,
     bulk_invite_user_to_service,
@@ -54,8 +56,13 @@ from tests.app.db import (
 )
 
 
+def _get_user_query_count():
+    stmt = select(func.count()).select_from(User)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_purge_functional_test_data(notify_db_session, notify_api):
-    orig_user_count = User.query.count()
+    orig_user_count = _get_user_query_count()
 
     notify_api.test_cli_runner().invoke(
         create_test_user,
@@ -71,16 +78,16 @@ def test_purge_functional_test_data(notify_db_session, notify_api):
         ],
     )
 
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == orig_user_count + 1
     notify_api.test_cli_runner().invoke(purge_functional_test_data, ["-u", "somebody"])
     # if the email address has a uuid, it is test data so it should be purged and there should be
     # zero users.  Otherwise, it is real data so there should be one user.
-    assert User.query.count() == orig_user_count
+    assert _get_user_query_count() == orig_user_count
 
 
 def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == 0
     # run the command
     command_response = notify_api.test_cli_runner().invoke(
@@ -99,7 +106,7 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
     # The bad mobile phone number results in a bad parameter error,
     # leading to a system exit 2 and no entry made in db
     assert "SystemExit(2)" in str(command_response)
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
     assert user_count == 0
 
 
@@ -115,7 +122,8 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
     right_now = right_now.strftime("%Y-%m-%d")
     tomorrow = tomorrow.strftime("%Y-%m-%d")
 
-    archived_jobs = Job.query.filter(Job.archived is True).count()
+    stmt = select(Job).where(Job.archived is True)
+    archived_jobs = db.session.execute(stmt).scalar() or 0
     assert archived_jobs == 0
 
     notify_api.test_cli_runner().invoke(
@@ -127,14 +135,19 @@ def test_update_jobs_archived_flag(notify_db_session, notify_api):
             right_now,
         ],
     )
-    jobs = Job.query.all()
+    jobs = db.session.execute(select(Job)).scalars().all()
     assert len(jobs) == 1
     for job in jobs:
         assert job.archived is True
 
 
+def _get_organization_query_count():
+    stmt = select(func.count()).select_from(Organization)
+    return db.session.execute(stmt).scalar() or 0
+
+
 def test_populate_organizations_from_file(notify_db_session, notify_api):
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 0
 
     file_name = "./tests/app/orgs1.csv"
@@ -149,7 +162,7 @@ def test_populate_organizations_from_file(notify_db_session, notify_api):
     os.remove(file_name)
     print(f"command_response = {command_response}")
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
 
 
@@ -158,13 +171,13 @@ def test_populate_organization_agreement_details_from_file(
 ):
     file_name = "./tests/app/orgs.csv"
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 0
     create_organization()
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
 
-    org = Organization.query.one()
+    org = db.session.execute(select(Organization)).scalars().one()
     org.agreement_signed = True
     notify_db_session.commit()
 
@@ -180,11 +193,16 @@ def test_populate_organization_agreement_details_from_file(
     )
     print(f"command_response = {command_response}")
 
-    org_count = Organization.query.count()
+    org_count = _get_organization_query_count()
     assert org_count == 1
-    org = Organization.query.one()
+    org = db.session.execute(select(Organization)).scalars().one()
     assert org.agreement_signed_on_behalf_of_name == "bob"
     os.remove(file_name)
+
+
+def _get_organization_query_one():
+    stmt = select(Organization)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_bulk_invite_user_to_service(
@@ -221,7 +239,7 @@ def test_bulk_invite_user_to_service(
 
 def test_create_test_user_command(notify_db_session, notify_api):
     # number of users before adding ours
-    user_count = User.query.count()
+    user_count = _get_user_query_count()
 
     # run the command
     notify_api.test_cli_runner().invoke(
@@ -239,10 +257,11 @@ def test_create_test_user_command(notify_db_session, notify_api):
     )
 
     # there should be one more user
-    assert User.query.count() == user_count + 1
+    assert _get_user_query_count() == user_count + 1
 
     # that user should be the one we added
-    user = User.query.filter_by(name="Fake Personson").first()
+    stmt = select(User).where(User.name == "Fake Personson")
+    user = db.session.execute(stmt).scalars().first()
     assert user.email_address == "somebody@fake.gov"
     assert user.auth_type == AuthType.SMS
     assert user.state == "active"
@@ -281,10 +300,11 @@ def test_populate_annual_billing_with_defaults(
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
@@ -306,10 +326,11 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2022,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
@@ -318,18 +339,24 @@ def test_populate_annual_billing_with_the_previous_years_allowance(
         populate_annual_billing_with_the_previous_years_allowance, ["-y", 2023]
     )
 
-    results = AnnualBilling.query.filter(
+    stmt = select(AnnualBilling).where(
         AnnualBilling.financial_year_start == 2023,
         AnnualBilling.service_id == service.id,
-    ).all()
+    )
+    results = db.session.execute(stmt).scalars().all()
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == expected_allowance
 
 
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
+
+
 def test_fix_billable_units(notify_db_session, notify_api, sample_template):
     create_notification(template=sample_template)
-    notification = Notification.query.one()
+    notification = _get_notification_query_one()
     notification.billable_units = 0
     notification.notification_type = NotificationType.SMS
     notification.status = NotificationStatus.DELIVERED
@@ -340,7 +367,7 @@ def test_fix_billable_units(notify_db_session, notify_api, sample_template):
 
     notify_api.test_cli_runner().invoke(fix_billable_units, [])
 
-    notification = Notification.query.one()
+    notification = _get_notification_query_one()
     assert notification.billable_units == 1
 
 
@@ -355,10 +382,16 @@ def test_populate_annual_billing_with_defaults_sets_free_allowance_to_zero_if_pr
         populate_annual_billing_with_defaults, ["-y", 2022]
     )
 
-    results = AnnualBilling.query.filter(
-        AnnualBilling.financial_year_start == 2022,
-        AnnualBilling.service_id == service.id,
-    ).all()
+    results = (
+        db.session.execute(
+            select(AnnualBilling).where(
+                AnnualBilling.financial_year_start == 2022,
+                AnnualBilling.service_id == service.id,
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     assert len(results) == 1
     assert results[0].free_sms_fragment_limit == 0
@@ -375,7 +408,7 @@ def test_update_template(notify_db_session, email_2fa_code_template):
         "",
     )
 
-    t = Template.query.all()
+    t = db.session.execute(select(Template)).scalars().all()
 
     assert t[0].name == "Example text message template!"
 
@@ -395,22 +428,26 @@ def test_create_service_command(notify_db_session, notify_api):
         ],
     )
 
-    user = User.query.first()
+    user = db.session.execute(select(User)).scalars().first()
 
-    service_count = Service.query.count()
+    stmt = select(func.count()).select_from(Service)
+    service_count = db.session.execute(stmt).scalar() or 0
 
     # run the command
-    result = notify_api.test_cli_runner().invoke(
+    notify_api.test_cli_runner().invoke(
         create_new_service,
         ["-e", "somebody@fake.gov", "-n", "Fake Service", "-c", user.id],
     )
-    print(result)
 
     # there should be one more service
-    assert Service.query.count() == service_count + 1
+
+    stmt = select(func.count()).select_from(Service)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == service_count + 1
 
     # that service should be the one we added
-    service = Service.query.filter_by(name="Fake Service").first()
+    stmt = select(Service).where(Service.name == "Fake Service")
+    service = db.session.execute(stmt).scalars().first()
     assert service.email_from == "somebody@fake.gov"
     assert service.restricted is False
     assert service.message_limit == 40000

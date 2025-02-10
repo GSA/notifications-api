@@ -1,7 +1,9 @@
 import uuid
 
 import pytest
+from sqlalchemy import func, select
 
+from app import db
 from app.dao.service_user_dao import dao_get_service_user
 from app.models import TemplateFolder
 from tests.app.db import (
@@ -268,7 +270,7 @@ def test_delete_template_folder(admin_request, sample_service):
         template_folder_id=existing_folder.id,
     )
 
-    assert TemplateFolder.query.all() == []
+    assert db.session.execute(select(TemplateFolder)).scalars().all() == []
 
 
 def test_delete_template_folder_fails_if_folder_has_subfolders(
@@ -286,7 +288,9 @@ def test_delete_template_folder_fails_if_folder_has_subfolders(
 
     assert resp == {"result": "error", "message": "Folder is not empty"}
 
-    assert TemplateFolder.query.count() == 2
+    stmt = select(func.count()).select_from(TemplateFolder)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 2
 
 
 def test_delete_template_folder_fails_if_folder_contains_templates(
@@ -304,7 +308,9 @@ def test_delete_template_folder_fails_if_folder_contains_templates(
 
     assert resp == {"result": "error", "message": "Folder is not empty"}
 
-    assert TemplateFolder.query.count() == 1
+    stmt = select(func.count()).select_from(TemplateFolder)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 1
 
 
 @pytest.mark.parametrize(

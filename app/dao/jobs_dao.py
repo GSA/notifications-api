@@ -3,7 +3,7 @@ import uuid
 from datetime import timedelta
 
 from flask import current_app
-from sqlalchemy import and_, asc, desc, func, select
+from sqlalchemy import and_, asc, desc, func, select, update
 
 from app import db
 from app.dao.pagination import Pagination
@@ -21,7 +21,7 @@ from app.utils import midnight_n_days_ago, utc_now
 def dao_get_notification_outcomes_for_job(service_id, job_id):
     stmt = (
         select(func.count(Notification.status).label("count"), Notification.status)
-        .filter(Notification.service_id == service_id, Notification.job_id == job_id)
+        .where(Notification.service_id == service_id, Notification.job_id == job_id)
         .group_by(Notification.status)
     )
     notification_statuses = db.session.execute(stmt).all()
@@ -30,7 +30,7 @@ def dao_get_notification_outcomes_for_job(service_id, job_id):
         stmt = select(
             FactNotificationStatus.notification_count.label("count"),
             FactNotificationStatus.notification_status.label("status"),
-        ).filter(
+        ).where(
             FactNotificationStatus.service_id == service_id,
             FactNotificationStatus.job_id == job_id,
         )
@@ -39,13 +39,14 @@ def dao_get_notification_outcomes_for_job(service_id, job_id):
 
 
 def dao_get_job_by_service_id_and_job_id(service_id, job_id):
-    stmt = select(Job).filter_by(service_id=service_id, id=job_id)
+    stmt = select(Job).where(Job.service_id == service_id, Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
 
 
 def dao_get_unfinished_jobs():
+
     stmt = select(Job).filter(Job.processing_finished.is_(None))
-    return db.session.execute(stmt).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def dao_get_jobs_by_service_id(
@@ -67,13 +68,13 @@ def dao_get_jobs_by_service_id(
         query_filter.append(Job.job_status.in_(statuses))
 
     total_items = db.session.execute(
-        select(func.count()).select_from(Job).filter(*query_filter)
+        select(func.count()).select_from(Job).where(*query_filter)
     ).scalar_one()
 
     offset = (page - 1) * page_size
     stmt = (
         select(Job)
-        .filter(*query_filter)
+        .where(*query_filter)
         .order_by(Job.processing_started.desc(), Job.created_at.desc())
         .limit(page_size)
         .offset(offset)
@@ -89,7 +90,7 @@ def dao_get_scheduled_job_stats(
     stmt = select(
         func.count(Job.id),
         func.min(Job.scheduled_for),
-    ).filter(
+    ).where(
         Job.service_id == service_id,
         Job.job_status == JobStatus.SCHEDULED,
     )
@@ -97,7 +98,7 @@ def dao_get_scheduled_job_stats(
 
 
 def dao_get_job_by_id(job_id):
-    stmt = select(Job).filter_by(id=job_id)
+    stmt = select(Job).where(Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
 
 
@@ -117,7 +118,7 @@ def dao_set_scheduled_jobs_to_pending():
     """
     stmt = (
         select(Job)
-        .filter(
+        .where(
             Job.job_status == JobStatus.SCHEDULED,
             Job.scheduled_for < utc_now(),
         )
@@ -136,7 +137,7 @@ def dao_set_scheduled_jobs_to_pending():
 
 
 def dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id):
-    stmt = select(Job).filter(
+    stmt = select(Job).where(
         Job.service_id == service_id,
         Job.id == job_id,
         Job.job_status == JobStatus.SCHEDULED,
@@ -176,8 +177,14 @@ def dao_update_job(job):
     db.session.commit()
 
 
+def dao_update_job_status_to_error(job):
+    stmt = update(Job).where(Job.id == job.id).values(job_status=JobStatus.ERROR)
+    db.session.execute(stmt)
+    db.session.commit()
+
+
 def dao_get_jobs_older_than_data_retention(notification_types):
-    stmt = select(ServiceDataRetention).filter(
+    stmt = select(ServiceDataRetention).where(
         ServiceDataRetention.notification_type.in_(notification_types)
     )
     flexible_data_retention = db.session.execute(stmt).scalars().all()
@@ -188,7 +195,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
         stmt = (
             select(Job)
             .join(Template)
-            .filter(
+            .where(
                 func.coalesce(Job.scheduled_for, Job.created_at) < end_date,
                 Job.archived == False,  # noqa
                 Template.template_type == f.notification_type,
@@ -209,7 +216,7 @@ def dao_get_jobs_older_than_data_retention(notification_types):
         stmt = (
             select(Job)
             .join(Template)
-            .filter(
+            .where(
                 func.coalesce(Job.scheduled_for, Job.created_at) < end_date,
                 Job.archived == False,  # noqa
                 Template.template_type == notification_type,
@@ -229,7 +236,7 @@ def find_jobs_with_missing_rows():
     yesterday = utc_now() - timedelta(days=1)
     jobs_with_rows_missing = (
         select(Job)
-        .filter(
+        .where(
             Job.job_status == JobStatus.FINISHED,
             Job.processing_finished < ten_minutes_ago,
             Job.processing_finished > yesterday,
@@ -258,6 +265,6 @@ def find_missing_row_for_job(job_id, job_size):
                 Notification.job_id == job_id,
             ),
         )
-        .filter(Notification.job_row_number == None)  # noqa
+        .where(Notification.job_row_number == None)  # noqa
     )
     return db.session.execute(query).all()

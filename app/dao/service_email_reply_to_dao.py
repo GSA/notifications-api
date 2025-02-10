@@ -1,4 +1,4 @@
-from sqlalchemy import desc
+from sqlalchemy import desc, select
 
 from app import db
 from app.dao.dao_utils import autocommit
@@ -10,7 +10,7 @@ from app.models import ServiceEmailReplyTo
 def dao_get_reply_to_by_service_id(service_id):
     reply_to = (
         db.session.query(ServiceEmailReplyTo)
-        .filter(
+        .where(
             ServiceEmailReplyTo.service_id == service_id,
             ServiceEmailReplyTo.archived == False,  # noqa
         )
@@ -25,7 +25,7 @@ def dao_get_reply_to_by_service_id(service_id):
 def dao_get_reply_to_by_id(service_id, reply_to_id):
     reply_to = (
         db.session.query(ServiceEmailReplyTo)
-        .filter(
+        .where(
             ServiceEmailReplyTo.service_id == service_id,
             ServiceEmailReplyTo.id == reply_to_id,
             ServiceEmailReplyTo.archived == False,  # noqa
@@ -62,7 +62,7 @@ def update_reply_to_email_address(service_id, reply_to_id, email_address, is_def
                 "You must have at least one reply to email address as the default.", 400
             )
 
-    reply_to_update = ServiceEmailReplyTo.query.get(reply_to_id)
+    reply_to_update = db.session.get(ServiceEmailReplyTo, reply_to_id)
     reply_to_update.email_address = email_address
     reply_to_update.is_default = is_default
     db.session.add(reply_to_update)
@@ -71,9 +71,16 @@ def update_reply_to_email_address(service_id, reply_to_id, email_address, is_def
 
 @autocommit
 def archive_reply_to_email_address(service_id, reply_to_id):
-    reply_to_archive = ServiceEmailReplyTo.query.filter_by(
-        id=reply_to_id, service_id=service_id
-    ).one()
+    reply_to_archive = (
+        db.session.execute(
+            select(ServiceEmailReplyTo).where(
+                ServiceEmailReplyTo.id == reply_to_id,
+                ServiceEmailReplyTo.service_id == service_id,
+            )
+        )
+        .scalars()
+        .one()
+    )
 
     if reply_to_archive.is_default:
         raise ArchiveValidationError(

@@ -16,13 +16,17 @@ from app import (
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
 from app.dao.email_branding_dao import dao_get_email_branding_by_id
-from app.dao.notifications_dao import dao_update_notification
+from app.dao.notifications_dao import (
+    dao_update_notification,
+    update_notification_message_id,
+)
 from app.dao.provider_details_dao import get_provider_details_by_notification_type
 from app.dao.service_sms_sender_dao import dao_get_sms_senders_by_service_id
 from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import hilite, utc_now
+from notifications_utils.clients.redis import total_limit_cache_key
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -116,7 +120,8 @@ def send_sms_to_provider(notification):
                 db.session.close()  # no commit needed as no changes to objects have been made above
 
                 message_id = provider.send_sms(**send_sms_kwargs)
-                current_app.logger.info(f"got message_id {message_id}")
+
+                update_notification_message_id(notification.id, message_id)
             except Exception as e:
                 n = notification
                 msg = f"FAILED send to sms, job_id: {n.job_id} row_number {n.job_row_number} message_id {message_id}"
@@ -128,10 +133,14 @@ def send_sms_to_provider(notification):
             else:
                 # Here we map the job_id and row number to the aws message_id
                 n = notification
-                msg = f"Send to aws for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                msg = f"Send to AWS!!! for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
                 current_app.logger.info(hilite(msg))
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
+
+                cache_key = total_limit_cache_key(service.id)
+                redis_store.incr(cache_key)
+
     return message_id
 
 

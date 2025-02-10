@@ -5,8 +5,10 @@ from collections import namedtuple
 import pytest
 from boto3.exceptions import Boto3Error
 from freezegun import freeze_time
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
 from app.errors import BadRequestError
 from app.models import Notification, NotificationHistory
@@ -67,12 +69,22 @@ def test_create_content_for_notification_allows_additional_personalisation(
     )
 
 
+def _get_notification_query_count():
+    stmt = select(func.count()).select_from(Notification)
+    return db.session.execute(stmt).scalar() or 0
+
+
+def _get_notification_history_query_count():
+    stmt = select(func.count()).select_from(NotificationHistory)
+    return db.session.execute(stmt).scalar() or 0
+
+
 @freeze_time("2016-01-01 11:09:00.061258")
 def test_persist_notification_creates_and_save_to_db(
     sample_template, sample_api_key, sample_job
 ):
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 0
+    assert _get_notification_history_query_count() == 0
     notification = persist_notification(
         template_id=sample_template.id,
         template_version=sample_template.version,
@@ -88,9 +100,9 @@ def test_persist_notification_creates_and_save_to_db(
         reply_to_text=sample_template.service.get_default_sms_sender(),
     )
 
-    assert Notification.query.get(notification.id) is not None
+    assert db.session.get(Notification, notification.id) is not None
 
-    notification_from_db = Notification.query.one()
+    notification_from_db = db.session.execute(select(Notification)).scalars().one()
 
     assert notification_from_db.id == notification.id
     assert notification_from_db.template_id == notification.template_id
@@ -114,8 +126,8 @@ def test_persist_notification_creates_and_save_to_db(
 
 
 def test_persist_notification_throws_exception_when_missing_template(sample_api_key):
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 0
+    assert _get_notification_history_query_count() == 0
     with pytest.raises(SQLAlchemyError):
         persist_notification(
             template_id=None,
@@ -127,14 +139,14 @@ def test_persist_notification_throws_exception_when_missing_template(sample_api_
             api_key_id=sample_api_key.id,
             key_type=sample_api_key.key_type,
         )
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 0
+    assert _get_notification_history_query_count() == 0
 
 
 @freeze_time("2016-01-01 11:09:00.061258")
 def test_persist_notification_with_optionals(sample_job, sample_api_key):
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 0
+    assert _get_notification_history_query_count() == 0
     n_id = uuid.uuid4()
     created_at = datetime.datetime(2016, 11, 11, 16, 8, 18)
     persist_notification(
@@ -153,9 +165,10 @@ def test_persist_notification_with_optionals(sample_job, sample_api_key):
         notification_id=n_id,
         created_by_id=sample_job.created_by_id,
     )
-    assert Notification.query.count() == 1
-    assert NotificationHistory.query.count() == 0
-    persisted_notification = Notification.query.all()[0]
+    assert _get_notification_query_count() == 1
+    assert _get_notification_history_query_count() == 0
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
     assert persisted_notification.id == n_id
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.job_row_number == 10
@@ -250,7 +263,9 @@ def test_send_notification_to_queue(
 
     send_notification_to_queue(notification=notification, queue=requested_queue)
 
-    mocked.assert_called_once_with([str(notification.id)], queue=expected_queue)
+    mocked.assert_called_once_with(
+        [str(notification.id)], queue=expected_queue, countdown=60
+    )
 
 
 def test_send_notification_to_queue_throws_exception_deletes_notification(
@@ -263,12 +278,11 @@ def test_send_notification_to_queue_throws_exception_deletes_notification(
     with pytest.raises(Boto3Error):
         send_notification_to_queue(sample_notification, False)
     mocked.assert_called_once_with(
-        [(str(sample_notification.id))],
-        queue="send-sms-tasks",
+        [(str(sample_notification.id))], queue="send-sms-tasks", countdown=60
     )
 
-    assert Notification.query.count() == 0
-    assert NotificationHistory.query.count() == 0
+    assert _get_notification_query_count() == 0
+    assert _get_notification_history_query_count() == 0
 
 
 @pytest.mark.parametrize(
@@ -349,7 +363,8 @@ def test_persist_notification_with_international_info_stores_correct_info(
         job_row_number=10,
         client_reference="ref from client",
     )
-    persisted_notification = Notification.query.all()[0]
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
 
     assert persisted_notification.international is expected_international
     assert persisted_notification.phone_prefix == expected_prefix
@@ -372,7 +387,8 @@ def test_persist_notification_with_international_info_does_not_store_for_email(
         job_row_number=10,
         client_reference="ref from client",
     )
-    persisted_notification = Notification.query.all()[0]
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
 
     assert persisted_notification.international is False
     assert persisted_notification.phone_prefix is None
@@ -404,7 +420,8 @@ def test_persist_sms_notification_stores_normalised_number(
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
     )
-    persisted_notification = Notification.query.all()[0]
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
 
     assert persisted_notification.to == "1"
     assert persisted_notification.normalised_to == "1"
@@ -428,7 +445,8 @@ def test_persist_email_notification_stores_normalised_email(
         key_type=sample_api_key.key_type,
         job_id=sample_job.id,
     )
-    persisted_notification = Notification.query.all()[0]
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
 
     assert persisted_notification.to == "1"
     assert persisted_notification.normalised_to == "1"
@@ -449,6 +467,7 @@ def test_persist_notification_with_billable_units_stores_correct_info(mocker):
         key_type=KeyType.NORMAL,
         billable_units=3,
     )
-    persisted_notification = Notification.query.all()[0]
+    stmt = select(Notification)
+    persisted_notification = db.session.execute(stmt).scalars().all()[0]
 
     assert persisted_notification.billable_units == 3

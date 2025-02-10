@@ -4,7 +4,9 @@ from unittest import mock
 
 import pytest
 from flask import current_app, json
+from sqlalchemy import func, select
 
+from app import db
 from app.enums import ServicePermissionType
 from app.models import InboundSms
 from app.notifications.receive_notifications import (
@@ -63,7 +65,7 @@ def test_receive_notification_returns_received_to_sns(
     prom_counter_labels_mock.assert_called_once_with("sns")
     prom_counter_labels_mock.return_value.inc.assert_called_once_with()
 
-    inbound_sms_id = InboundSms.query.all()[0].id
+    inbound_sms_id = db.session.execute(select(InboundSms)).scalars().all()[0].id
     mocked.assert_called_once_with(
         [str(inbound_sms_id), str(sample_service_full_permissions.id)],
         queue="notify-internal-tasks",
@@ -100,7 +102,9 @@ def test_receive_notification_from_sns_without_permissions_does_not_persist(
     parsed_response = json.loads(response.get_data(as_text=True))
     assert parsed_response["result"] == "success"
 
-    assert InboundSms.query.count() == 0
+    stmt = select(func.count()).select_from(InboundSms)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
     assert mocked.called is False
 
 
@@ -133,7 +137,7 @@ def test_receive_notification_without_permissions_does_not_create_inbound_even_w
     response = sns_post(client, data)
 
     assert response.status_code == 200
-    assert len(InboundSms.query.all()) == 0
+    assert len(db.session.execute(select(InboundSms)).scalars().all()) == 0
     assert mocked_has_permissions.called
     mocked_send_inbound_sms.assert_not_called()
 
@@ -286,7 +290,10 @@ def test_receive_notification_error_if_not_single_matching_service(
     # we still return 'RECEIVED' to MMG
     assert response.status_code == 200
     assert response.get_data(as_text=True) == "RECEIVED"
-    assert InboundSms.query.count() == 0
+
+    stmt = select(func.count()).select_from(InboundSms)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")

@@ -1,6 +1,8 @@
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     dao_get_all_free_sms_fragment_limit,
@@ -89,7 +91,7 @@ def test_set_default_free_allowance_for_service(
 
     set_default_free_allowance_for_service(service=service, year_start=year)
 
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
 
     assert len(annual_billing) == 1
     assert annual_billing[0].service_id == service.id
@@ -111,7 +113,7 @@ def test_set_default_free_allowance_for_service_using_correct_year(
 @freeze_time("2021-04-01 14:02:00")
 def test_set_default_free_allowance_for_service_updates_existing_year(sample_service):
     set_default_free_allowance_for_service(service=sample_service, year_start=None)
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert not sample_service.organization_type
     assert len(annual_billing) == 1
     assert annual_billing[0].service_id == sample_service.id
@@ -120,7 +122,7 @@ def test_set_default_free_allowance_for_service_updates_existing_year(sample_ser
     sample_service.organization_type = OrganizationType.FEDERAL
 
     set_default_free_allowance_for_service(service=sample_service, year_start=None)
-    annual_billing = AnnualBilling.query.all()
+    annual_billing = db.session.execute(select(AnnualBilling)).scalars().all()
     assert len(annual_billing) == 1
     assert annual_billing[0].service_id == sample_service.id
     assert annual_billing[0].free_sms_fragment_limit == 150000

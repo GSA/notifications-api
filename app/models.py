@@ -5,7 +5,7 @@ from flask import current_app, url_for
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON, JSONB, UUID
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import DeclarativeMeta, declared_attr
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -577,7 +577,16 @@ class Service(db.Model, Versioned):
             return self.inbound_number.number
 
     def get_default_sms_sender(self):
-        default_sms_sender = [x for x in self.service_sms_senders if x.is_default]
+        # notify-api-1513 let's try a minimalistic fix
+        # to see if we can get the right numbers back
+        default_sms_sender = [
+            x
+            for x in self.service_sms_senders
+            if x.is_default and x.service_id == self.id
+        ]
+        current_app.logger.info(
+            f"#notify-api-1513 senders for service {self.name} are {self.service_sms_senders}"
+        )
         return default_sms_sender[0].sms_sender
 
     def get_default_reply_to_email_address(self):
@@ -1532,6 +1541,7 @@ class Notification(db.Model):
 
     provider_response = db.Column(db.Text, nullable=True)
     carrier = db.Column(db.Text, nullable=True)
+    message_id = db.Column(db.Text, nullable=True)
 
     # queue_name = db.Column(db.Text, nullable=True)
 
@@ -1683,6 +1693,33 @@ class Notification(db.Model):
             return self.created_by.email_address
         else:
             return None
+
+    def serialize_for_redis(self, obj):
+        if isinstance(obj.__class__, DeclarativeMeta):
+            fields = {}
+            for column in obj.__table__.columns:
+                if column.name == "notification_status":
+                    new_name = "status"
+                    value = getattr(obj, new_name)
+                elif column.name == "created_at":
+                    if isinstance(obj.created_at, str):
+                        value = obj.created_at
+                    else:
+                        value = (obj.created_at.strftime("%Y-%m-%d %H:%M:%S"),)
+                elif column.name in ["sent_at", "completed_at"]:
+                    value = None
+                elif column.name.endswith("_id"):
+                    value = getattr(obj, column.name)
+                    value = str(value)
+                else:
+                    value = getattr(obj, column.name)
+                if column.name in ["message_id", "api_key_id"]:
+                    pass  # do nothing because we don't have the message id yet
+                else:
+                    fields[column.name] = value
+
+            return fields
+        raise ValueError("Provided object is not a SQLAlchemy instance")
 
     def serialize_for_csv(self):
         serialized = {

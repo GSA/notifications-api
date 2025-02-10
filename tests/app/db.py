@@ -2,6 +2,8 @@ import random
 import uuid
 from datetime import datetime, timedelta
 
+from sqlalchemy import select
+
 from app import db
 from app.dao import fact_processing_time_dao
 from app.dao.email_branding_dao import dao_create_email_branding
@@ -90,7 +92,8 @@ def create_user(
         "state": state,
         "platform_admin": platform_admin,
     }
-    user = User.query.filter_by(email_address=email).first()
+    stmt = select(User).where(User.email_address == email)
+    user = db.session.execute(stmt).scalars().first()
     if not user:
         user = User(**data)
     save_model_user(user, validated_email_access=True)
@@ -118,7 +121,7 @@ def create_service(
     email_from=None,
     prefix_sms=True,
     message_limit=1000,
-    total_message_limit=250000,
+    total_message_limit=100000,
     organization_type=OrganizationType.FEDERAL,
     check_if_service_exists=False,
     go_live_user=None,
@@ -130,7 +133,8 @@ def create_service(
     billing_reference=None,
 ):
     if check_if_service_exists:
-        service = Service.query.filter_by(name=service_name).first()
+        stmt = select(Service).where(Service.name == service_name)
+        service = db.session.execute(stmt).scalars().first()
     if (not check_if_service_exists) or (check_if_service_exists and not service):
         service = Service(
             name=service_name,
@@ -175,7 +179,8 @@ def create_service(
 def create_service_with_inbound_number(inbound_number="1234567", *args, **kwargs):
     service = create_service(*args, **kwargs)
 
-    sms_sender = ServiceSmsSender.query.filter_by(service_id=service.id).first()
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
+    sms_sender = db.session.execute(stmt).scalars().first()
     inbound = create_inbound_number(number=inbound_number, service_id=service.id)
     update_existing_sms_sender_with_inbound_number(
         service_sms_sender=sms_sender,
@@ -189,7 +194,8 @@ def create_service_with_inbound_number(inbound_number="1234567", *args, **kwargs
 def create_service_with_defined_sms_sender(sms_sender_value="1234567", *args, **kwargs):
     service = create_service(*args, **kwargs)
 
-    sms_sender = ServiceSmsSender.query.filter_by(service_id=service.id).first()
+    stmt = select(ServiceSmsSender).where(ServiceSmsSender.service_id == service.id)
+    sms_sender = db.session.execute(stmt).scalars().first()
     dao_update_service_sms_sender(
         service_id=service.id,
         service_sms_sender_id=sms_sender.id,
@@ -286,9 +292,10 @@ def create_notification(
 
     if not one_off and (job is None and api_key is None):
         # we did not specify in test - lets create it
-        api_key = ApiKey.query.filter(
+        stmt = select(ApiKey).where(
             ApiKey.service == template.service, ApiKey.key_type == key_type
-        ).first()
+        )
+        api_key = db.session.execute(stmt).scalars().first()
         if not api_key:
             api_key = create_api_key(template.service, key_type=key_type)
 
@@ -432,7 +439,7 @@ def create_service_permission(service_id, permission=ServicePermissionType.EMAIL
         permission,
     )
 
-    service_permissions = ServicePermission.query.all()
+    service_permissions = db.session.execute(select(ServicePermission)).scalars().all()
 
     return service_permissions
 

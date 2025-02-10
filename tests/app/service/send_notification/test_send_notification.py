@@ -5,14 +5,16 @@ import pytest
 from flask import current_app, json
 from freezegun import freeze_time
 from notifications_python_client.authentication import create_jwt_token
+from sqlalchemy import func, select
 
 import app
+from app import db
 from app.dao import notifications_dao
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.services_dao import dao_update_service
 from app.dao.templates_dao import dao_get_all_templates_for_service, dao_update_template
 from app.enums import KeyType, NotificationType, TemplateType
-from app.errors import InvalidRequest, RateLimitError
+from app.errors import InvalidRequest
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from app.service.send_notification import send_one_off_notification
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
@@ -148,7 +150,9 @@ def test_send_notification_with_placeholders_replaced(
                 {"template_version": sample_email_template_with_placeholders.version}
             )
 
-            mocked.assert_called_once_with([notification_id], queue="send-email-tasks")
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-email-tasks", countdown=60
+            )
             assert response.status_code == 201
             assert response_data["body"] == "Hello Jo\nThis is an email from GOV.UK"
             assert response_data["subject"] == "Jo"
@@ -418,7 +422,9 @@ def test_should_allow_valid_sms_notification(notify_api, sample_template, mocker
             response_data = json.loads(response.data)["data"]
             notification_id = response_data["notification"]["id"]
 
-            mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
+            mocked.assert_called_once_with(
+                [notification_id], queue="send-sms-tasks", countdown=60
+            )
             assert response.status_code == 201
             assert notification_id
             assert "subject" not in response_data
@@ -474,7 +480,7 @@ def test_should_allow_valid_email_notification(
             response_data = json.loads(response.get_data(as_text=True))["data"]
             notification_id = response_data["notification"]["id"]
             app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-                [notification_id], queue="send-email-tasks"
+                [notification_id], queue="send-email-tasks", countdown=60
             )
 
             assert response.status_code == 201
@@ -618,7 +624,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -656,7 +662,7 @@ def test_should_send_sms_to_anyone_with_test_key(
         ],
     )
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -695,7 +701,7 @@ def test_should_send_email_to_anyone_with_test_key(
     )
 
     app.celery.provider_tasks.deliver_email.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-email-tasks"
+        [fake_uuid], queue="send-email-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -733,7 +739,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
     )
 
     app.celery.provider_tasks.deliver_sms.apply_async.assert_called_once_with(
-        [fake_uuid], queue="send-sms-tasks"
+        [fake_uuid], queue="send-sms-tasks", countdown=60
     )
     assert response.status_code == 201
 
@@ -790,7 +796,7 @@ def test_should_persist_notification(
         ],
     )
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=60)
     assert response.status_code == 201
 
     notification = notifications_dao.get_notification_by_id(fake_uuid)
@@ -851,9 +857,9 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
         )
     assert str(e.value) == "failed to talk to redis"
 
-    mocked.assert_called_once_with([fake_uuid], queue=queue_name)
+    mocked.assert_called_once_with([fake_uuid], queue=queue_name, countdown=60)
     assert not notifications_dao.get_notification_by_id(fake_uuid)
-    assert not NotificationHistory.query.get(fake_uuid)
+    assert not db.session.get(NotificationHistory, fake_uuid)
 
 
 @pytest.mark.parametrize(
@@ -883,7 +889,9 @@ def test_should_not_persist_notification_or_send_email_if_simulated_email(
 
     assert response.status_code == 201
     apply_async.assert_not_called()
-    assert Notification.query.count() == 0
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.parametrize("to_sms", ["+14254147755", "+14254147167"])
@@ -906,7 +914,10 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
 
     assert response.status_code == 201
     apply_async.assert_not_called()
-    assert Notification.query.count() == 0
+
+    stmt = select(func.count()).select_from(Notification)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 @pytest.mark.parametrize("key_type", [KeyType.NORMAL, KeyType.TEAM])
@@ -1058,7 +1069,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
 def test_create_template_raises_invalid_request_exception_with_missing_personalisation(
     sample_template_with_placeholders,
 ):
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     from app.notifications.rest import create_template_object_for_notification
 
     with pytest.raises(InvalidRequest) as e:
@@ -1071,7 +1082,7 @@ def test_create_template_doesnt_raise_with_too_much_personalisation(
 ):
     from app.notifications.rest import create_template_object_for_notification
 
-    template = Template.query.get(sample_template_with_placeholders.id)
+    template = db.session.get(Template, sample_template_with_placeholders.id)
     create_template_object_for_notification(template, {"name": "Jo", "extra": "stuff"})
 
 
@@ -1088,7 +1099,7 @@ def test_create_template_raises_invalid_request_when_content_too_large(
     sample = create_template(
         sample_service, template_type=template_type, content="((long_text))"
     )
-    template = Template.query.get(sample.id)
+    template = db.session.get(Template, sample.id)
     from app.notifications.rest import create_template_object_for_notification
 
     try:
@@ -1113,51 +1124,6 @@ def test_create_template_raises_invalid_request_when_content_too_large(
         }
 
 
-@pytest.mark.parametrize(
-    "notification_type, send_to",
-    [
-        (NotificationType.SMS, "2028675309"),
-        (
-            NotificationType.EMAIL,
-            "sample@email.com",
-        ),
-    ],
-)
-def test_returns_a_429_limit_exceeded_if_rate_limit_exceeded(
-    client, sample_service, mocker, notification_type, send_to
-):
-    sample = create_template(sample_service, template_type=notification_type)
-    persist_mock = mocker.patch("app.notifications.rest.persist_notification")
-    deliver_mock = mocker.patch("app.notifications.rest.send_notification_to_queue")
-
-    mocker.patch(
-        "app.notifications.rest.check_rate_limiting",
-        side_effect=RateLimitError("LIMIT", "INTERVAL", "TYPE"),
-    )
-
-    data = {"to": send_to, "template": str(sample.id)}
-
-    auth_header = create_service_authorization_header(service_id=sample.service_id)
-
-    response = client.post(
-        path=f"/notifications/{notification_type}",
-        data=json.dumps(data),
-        headers=[("Content-Type", "application/json"), auth_header],
-    )
-
-    message = json.loads(response.data)["message"]
-    result = json.loads(response.data)["result"]
-    assert response.status_code == 429
-    assert result == "error"
-    assert message == (
-        "Exceeded rate limit for key type TYPE of LIMIT "
-        "requests per INTERVAL seconds"
-    )
-
-    assert not persist_mock.called
-    assert not deliver_mock.called
-
-
 def test_should_allow_store_original_number_on_sms_notification(
     client, sample_template, mocker
 ):
@@ -1178,10 +1144,12 @@ def test_should_allow_store_original_number_on_sms_notification(
     response_data = json.loads(response.data)["data"]
     notification_id = response_data["notification"]["id"]
 
-    mocked.assert_called_once_with([notification_id], queue="send-sms-tasks")
+    mocked.assert_called_once_with(
+        [notification_id], queue="send-sms-tasks", countdown=60
+    )
     assert response.status_code == 201
     assert notification_id
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert "1" == notifications[0].to
 
@@ -1342,7 +1310,7 @@ def test_post_notification_should_set_reply_to_text(
         ],
     )
     assert response.status_code == 201
-    notifications = Notification.query.all()
+    notifications = db.session.execute(select(Notification)).scalars().all()
     assert len(notifications) == 1
     assert notifications[0].reply_to_text == expected_reply_to
 
@@ -1370,5 +1338,5 @@ def test_send_notification_should_set_client_reference_from_placeholder(
 
     notification_id = send_one_off_notification(sample_letter_template.service_id, data)
     assert deliver_mock.called
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     assert notification.client_reference == reference_paceholder

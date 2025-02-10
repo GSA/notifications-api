@@ -6,6 +6,7 @@ import pytest
 import pytz
 import requests_mock
 from flask import current_app, url_for
+from sqlalchemy import delete, select
 from sqlalchemy.orm.session import make_transient
 
 from app import db
@@ -100,9 +101,10 @@ def create_sample_notification(
 
     if job is None and api_key is None:
         # we didn't specify in test - lets create it
-        api_key = ApiKey.query.filter(
+        stmt = select(ApiKey).where(
             ApiKey.service == template.service, ApiKey.key_type == key_type
-        ).first()
+        )
+        api_key = db.session.execute(stmt).scalars().first()
         if not api_key:
             api_key = create_api_key(template.service, key_type=key_type)
 
@@ -222,12 +224,13 @@ def sample_service(sample_user):
     data = {
         "name": service_name,
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "email_from": email_from,
         "created_by": sample_user,
     }
-    service = Service.query.filter_by(name=service_name).first()
+    stmt = select(Service).where(Service.name == service_name)
+    service = db.session.execute(stmt).scalars().first()
     if not service:
         service = Service(**data)
         dao_create_service(service, sample_user, service_permissions=None)
@@ -442,9 +445,10 @@ def sample_notification(notify_db_session):
     service = create_service(check_if_service_exists=True)
     template = create_template(service=service)
 
-    api_key = ApiKey.query.filter(
+    stmt = select(ApiKey).where(
         ApiKey.service == template.service, ApiKey.key_type == KeyType.NORMAL
-    ).first()
+    )
+    api_key = db.session.execute(stmt).scalars().first()
     if not api_key:
         api_key = create_api_key(template.service, key_type=KeyType.NORMAL)
 
@@ -595,9 +599,12 @@ def sample_user_service_permission(sample_user):
     permission = PermissionType.MANAGE_SETTINGS
 
     data = {"user": sample_user, "service": service, "permission": permission}
-    p_model = Permission.query.filter_by(
-        user=sample_user, service=service, permission=permission
-    ).first()
+    stmt = select(Permission).where(
+        Permission.user == sample_user,
+        Permission.service == service,
+        Permission.permission == permission,
+    )
+    p_model = db.session.execute(stmt).scalars().first()
     if not p_model:
         p_model = Permission(**data)
         db.session.add(p_model)
@@ -612,12 +619,14 @@ def fake_uuid():
 
 @pytest.fixture(scope="function")
 def ses_provider():
-    return ProviderDetails.query.filter_by(identifier="ses").one()
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == "ses")
+    return db.session.execute(stmt).scalars().one()
 
 
 @pytest.fixture(scope="function")
 def sns_provider():
-    return ProviderDetails.query.filter_by(identifier="sns").one()
+    stmt = select(ProviderDetails).where(ProviderDetails.identifier == "sns")
+    return db.session.execute(stmt).scalars().one()
 
 
 @pytest.fixture(scope="function")
@@ -796,7 +805,7 @@ def mou_signed_templates(notify_service):
 def create_custom_template(
     service, user, template_config_name, template_type, content="", subject=None
 ):
-    template = Template.query.get(current_app.config[template_config_name])
+    template = db.session.get(Template, current_app.config[template_config_name])
     if not template:
         data = {
             "id": current_app.config[template_config_name],
@@ -817,7 +826,7 @@ def create_custom_template(
 
 @pytest.fixture
 def notify_service(notify_db_session, sample_user):
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
     if not service:
         service = Service(
             name="Notify Service",
@@ -906,8 +915,12 @@ def restore_provider_details(notify_db_session):
     Note: This doesn't technically require notify_db_session (only notify_db), but kept as a requirement to encourage
     good usage - if you're modifying ProviderDetails' state then it's good to clear down the rest of the DB too
     """
-    existing_provider_details = ProviderDetails.query.all()
-    existing_provider_details_history = ProviderDetailsHistory.query.all()
+    existing_provider_details = (
+        db.session.execute(select(ProviderDetails)).scalars().all()
+    )
+    existing_provider_details_history = (
+        db.session.execute(select(ProviderDetailsHistory)).scalars().all()
+    )
     # make transient removes the objects from the session - since we'll want to delete them later
     for epd in existing_provider_details:
         make_transient(epd)
@@ -917,8 +930,9 @@ def restore_provider_details(notify_db_session):
     yield
 
     # also delete these as they depend on provider_details
-    ProviderDetails.query.delete()
-    ProviderDetailsHistory.query.delete()
+    db.session.execute(delete(ProviderDetails))
+    db.session.execute(delete(ProviderDetailsHistory))
+    db.session.commit()
     notify_db_session.commit()
     notify_db_session.add_all(existing_provider_details)
     notify_db_session.add_all(existing_provider_details_history)

@@ -5,7 +5,9 @@ from functools import partial
 import pytest
 from flask import current_app
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.enums import AuthType, InvitedUserStatus
 from app.models import Notification
 from notifications_utils.url_safe_token import generate_token
@@ -72,7 +74,7 @@ def test_create_invited_user(
         "folder_3",
     ]
 
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
 
     assert notification.reply_to_text == invite_from.email_address
 
@@ -90,7 +92,7 @@ def test_create_invited_user(
     )
 
     mocked.assert_called_once_with(
-        [(str(notification.id))], queue="notify-internal-tasks"
+        [(str(notification.id))], queue="notify-internal-tasks", countdown=60
     )
 
 

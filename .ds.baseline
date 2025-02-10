@@ -267,7 +267,7 @@
         "filename": "tests/app/db.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 87,
+        "line_number": 90,
         "is_secret": false
       }
     ],
@@ -277,7 +277,7 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
         "is_verified": false,
-        "line_number": 25,
+        "line_number": 27,
         "is_secret": false
       },
       {
@@ -285,7 +285,7 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
         "is_verified": false,
-        "line_number": 55,
+        "line_number": 57,
         "is_secret": false
       }
     ],
@@ -295,7 +295,7 @@
         "filename": "tests/app/notifications/test_validators.py",
         "hashed_secret": "6c1a8443963d02d13ffe575a71abe19ea731fb66",
         "is_verified": false,
-        "line_number": 768,
+        "line_number": 672,
         "is_secret": false
       }
     ],
@@ -305,7 +305,7 @@
         "filename": "tests/app/service/test_rest.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 1275,
+        "line_number": 1285,
         "is_secret": false
       }
     ],
@@ -341,7 +341,7 @@
         "filename": "tests/app/user/test_rest.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 106,
+        "line_number": 110,
         "is_secret": false
       },
       {
@@ -349,7 +349,7 @@
         "filename": "tests/app/user/test_rest.py",
         "hashed_secret": "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
         "is_verified": false,
-        "line_number": 810,
+        "line_number": 864,
         "is_secret": false
       }
     ],
@@ -384,5 +384,5 @@
       }
     ]
   },
-  "generated_at": "2024-11-11T20:34:04Z"
+  "generated_at": "2025-02-10T16:57:15Z"
 }

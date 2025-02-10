@@ -6,7 +6,9 @@ from unittest import mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
+from sqlalchemy import delete, func, select
 
+from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.enums import AuthType, KeyType, NotificationType, PermissionType
 from app.models import Notification, Permission, User
@@ -99,7 +101,9 @@ def test_post_user(admin_request, notify_db_session):
     """
     Tests POST endpoint '/' to create a user.
     """
-    User.query.delete()
+    db.session.execute(delete(User))
+    db.session.commit()
+
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
@@ -113,7 +117,13 @@ def test_post_user(admin_request, notify_db_session):
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+    user = (
+        db.session.execute(
+            select(User).where(User.email_address == "user@digital.fake.gov")
+        )
+        .scalars()
+        .first()
+    )
     assert user.check_password("password")
     assert json_resp["data"]["email_address"] == user.email_address
     assert json_resp["data"]["id"] == str(user.id)
@@ -121,7 +131,9 @@ def test_post_user(admin_request, notify_db_session):
 
 
 def test_post_user_without_auth_type(admin_request, notify_db_session):
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
@@ -132,7 +144,13 @@ def test_post_user_without_auth_type(admin_request, notify_db_session):
 
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=201)
 
-    user = User.query.filter_by(email_address="user@digital.fake.gov").first()
+    user = (
+        db.session.execute(
+            select(User).where(User.email_address == "user@digital.fake.gov")
+        )
+        .scalars()
+        .first()
+    )
     assert json_resp["data"]["id"] == str(user.id)
     assert user.auth_type == AuthType.SMS
 
@@ -141,7 +159,9 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
     """
     Tests POST endpoint '/' missing attribute email.
     """
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "password": "password",
@@ -153,17 +173,24 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
 
-    assert User.query.count() == 0
+    assert _get_user_count() == 0
     assert {"email_address": ["Missing data for required field."]} == json_resp[
         "message"
     ]
+
+
+def _get_user_count():
+    stmt = select(func.count()).select_from(User)
+    return db.session.execute(stmt).scalar() or 0
 
 
 def test_create_user_missing_attribute_password(admin_request, notify_db_session):
     """
     Tests POST endpoint '/' missing attribute password.
     """
-    User.query.delete()
+
+    db.session.execute(delete(User))
+    db.session.commit()
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
@@ -174,7 +201,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
         "permissions": {},
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
-    assert User.query.count() == 0
+    assert _get_user_count() == 0
     assert {"password": ["Missing data for required field."]} == json_resp["message"]
 
 
@@ -329,7 +356,8 @@ def test_post_user_attribute_with_updated_by_sends_notification_to_international
         _data=update_dict,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     assert (
         notification.reply_to_text
         == current_app.config["NOTIFY_INTERNATIONAL_SMS_SENDER"]
@@ -464,9 +492,15 @@ def test_set_user_permissions(admin_request, sample_user, sample_service):
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_SETTINGS
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).where(
+                Permission.permission == PermissionType.MANAGE_SETTINGS
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_SETTINGS
@@ -487,15 +521,27 @@ def test_set_user_permissions_multiple(admin_request, sample_user, sample_servic
         _expected_status=204,
     )
 
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_SETTINGS
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).where(
+                Permission.permission == PermissionType.MANAGE_SETTINGS
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_SETTINGS
-    permission = Permission.query.filter_by(
-        permission=PermissionType.MANAGE_TEMPLATES
-    ).first()
+    permission = (
+        db.session.execute(
+            select(Permission).where(
+                Permission.permission == PermissionType.MANAGE_TEMPLATES
+            )
+        )
+        .scalars()
+        .first()
+    )
     assert permission.user == sample_user
     assert permission.service == sample_service
     assert permission.permission == PermissionType.MANAGE_TEMPLATES
@@ -512,9 +558,16 @@ def test_set_user_permissions_remove_old(admin_request, sample_user, sample_serv
         _expected_status=204,
     )
 
-    query = Permission.query.filter_by(user=sample_user)
-    assert query.count() == 1
-    assert query.first().permission == PermissionType.MANAGE_SETTINGS
+    query = (
+        select(func.count())
+        .select_from(Permission)
+        .where(Permission.user == sample_user)
+    )
+    count = db.session.execute(query).scalar() or 0
+    assert count == 1
+    query = select(Permission).where(Permission.user == sample_user)
+    first_permission = db.session.execute(query).scalars().first()
+    assert first_permission.permission == PermissionType.MANAGE_SETTINGS
 
 
 def test_set_user_folder_permissions(admin_request, sample_user, sample_service):
@@ -646,9 +699,10 @@ def test_send_already_registered_email(
         _expected_status=204,
     )
 
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text
@@ -684,10 +738,10 @@ def test_send_user_confirm_new_email_returns_204(
         _data=data,
         _expected_status=204,
     )
-
-    notification = Notification.query.first()
+    stmt = select(Notification)
+    notification = db.session.execute(stmt).scalars().first()
     mocked.assert_called_once_with(
-        ([str(notification.id)]), queue="notify-internal-tasks"
+        ([str(notification.id)]), queue="notify-internal-tasks", countdown=60
     )
     assert (
         notification.reply_to_text

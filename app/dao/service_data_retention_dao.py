@@ -1,3 +1,5 @@
+from sqlalchemy import select, update
+
 from app import db
 from app.dao.dao_utils import autocommit
 from app.models import ServiceDataRetention
@@ -5,29 +7,31 @@ from app.utils import utc_now
 
 
 def fetch_service_data_retention_by_id(service_id, data_retention_id):
-    data_retention = ServiceDataRetention.query.filter_by(
-        service_id=service_id, id=data_retention_id
-    ).first()
-    return data_retention
+    stmt = select(ServiceDataRetention).where(
+        ServiceDataRetention.service_id == service_id,
+        ServiceDataRetention.id == data_retention_id,
+    )
+    return db.session.execute(stmt).scalars().first()
 
 
 def fetch_service_data_retention(service_id):
-    data_retention_list = (
-        ServiceDataRetention.query.filter_by(service_id=service_id)
+    stmt = (
+        select(ServiceDataRetention)
+        .where(ServiceDataRetention.service_id == service_id)
         .order_by(
             # in the order that models.notification_types are created (email, sms, letter)
             ServiceDataRetention.notification_type
         )
-        .all()
     )
-    return data_retention_list
+    return db.session.execute(stmt).scalars().all()
 
 
 def fetch_service_data_retention_by_notification_type(service_id, notification_type):
-    data_retention_list = ServiceDataRetention.query.filter_by(
-        service_id=service_id, notification_type=notification_type
-    ).first()
-    return data_retention_list
+    stmt = select(ServiceDataRetention).where(
+        ServiceDataRetention.service_id == service_id,
+        ServiceDataRetention.notification_type == notification_type,
+    )
+    return db.session.execute(stmt).scalars().first()
 
 
 @autocommit
@@ -46,16 +50,22 @@ def insert_service_data_retention(service_id, notification_type, days_of_retenti
 def update_service_data_retention(
     service_data_retention_id, service_id, days_of_retention
 ):
-    updated_count = ServiceDataRetention.query.filter(
-        ServiceDataRetention.id == service_data_retention_id,
-        ServiceDataRetention.service_id == service_id,
-    ).update({"days_of_retention": days_of_retention, "updated_at": utc_now()})
-    return updated_count
+    stmt = (
+        update(ServiceDataRetention)
+        .where(
+            ServiceDataRetention.id == service_data_retention_id,
+            ServiceDataRetention.service_id == service_id,
+        )
+        .values({"days_of_retention": days_of_retention, "updated_at": utc_now()})
+    )
+    result = db.session.execute(stmt)
+    return result.rowcount
 
 
 def fetch_service_data_retention_for_all_services_by_notification_type(
     notification_type,
 ):
-    return ServiceDataRetention.query.filter(
+    stmt = select(ServiceDataRetention).where(
         ServiceDataRetention.notification_type == notification_type
-    ).all()
+    )
+    return db.session.execute(stmt).scalars().all()

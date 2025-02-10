@@ -4,7 +4,9 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.enums import InvitedUserStatus
 from app.models import Notification
 from notifications_utils.url_safe_token import generate_token
@@ -62,7 +64,7 @@ def test_create_invited_org_user(
     assert json_resp["data"]["status"] == InvitedUserStatus.PENDING
     assert json_resp["data"]["id"]
 
-    notification = Notification.query.first()
+    notification = db.session.execute(select(Notification)).scalars().first()
 
     assert notification.reply_to_text == sample_user.email_address
 
@@ -73,7 +75,7 @@ def test_create_invited_org_user(
     # assert len(notification.personalisation["url"]) > len(expected_start_of_invite_url)
 
     mocked.assert_called_once_with(
-        [(str(notification.id))], queue="notify-internal-tasks"
+        [(str(notification.id))], queue="notify-internal-tasks", countdown=60
     )
 
 

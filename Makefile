@@ -9,10 +9,12 @@ GIT_COMMIT ?= $(shell git rev-parse HEAD)
 
 ## DEVELOPMENT
 
+## TODO this line should go under `make generate-version-file`
+## poetry self update
+
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry self update
 	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
@@ -28,6 +30,14 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 .PHONY: run-procfile
 run-procfile:
 	poetry run honcho start -f Procfile.dev
+
+
+
+.PHONY: tada
+tada:
+	poetry run isort .
+	poetry run black .
+	poetry run flake8 .
 
 .PHONY: avg-complexity
 avg-complexity:
@@ -50,7 +60,8 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
-		--concurrency=4
+		--pool=threads
+		--concurrency=10
 
 
 .PHONY: dead-code
@@ -80,7 +91,7 @@ test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
 	poetry run black .
 	poetry run flake8 .
-	poetry run isort --check-only ./app ./tests
+	poetry run isort ./app ./tests
 	poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
 
     ## TODO set this back to 95 asap

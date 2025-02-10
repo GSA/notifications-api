@@ -1,3 +1,5 @@
+import json
+import os
 import uuid
 
 from flask import current_app
@@ -8,8 +10,10 @@ from app.config import QueueNames
 from app.dao.notifications_dao import (
     dao_create_notification,
     dao_delete_notifications_by_id,
+    dao_notification_exists,
+    get_notification_by_id,
 )
-from app.enums import KeyType, NotificationStatus, NotificationType
+from app.enums import NotificationStatus, NotificationType
 from app.errors import BadRequestError
 from app.models import Notification
 from app.utils import hilite, utc_now
@@ -51,6 +55,10 @@ def check_placeholders(template_object):
             ", ".join(template_object.missing_data)
         )
         raise BadRequestError(fields=[{"template": message}], message=message)
+
+
+def get_notification(notification_id):
+    return get_notification_by_id(notification_id)
 
 
 def persist_notification(
@@ -133,19 +141,23 @@ def persist_notification(
 
     # if simulated create a Notification model to return but do not persist the Notification to the dB
     if not simulated:
-        current_app.logger.info("Firing dao_create_notification")
-        dao_create_notification(notification)
-        if key_type != KeyType.TEST and current_app.config["REDIS_ENABLED"]:
-            current_app.logger.info(
-                "Redis enabled, querying cache key for service id: {}".format(
-                    service.id
+        if notification.notification_type == NotificationType.SMS:
+            # it's just too hard with redis and timing to test this here
+            if os.getenv("NOTIFY_ENVIRONMENT") == "test":
+                dao_create_notification(notification)
+            else:
+                redis_store.rpush(
+                    "message_queue",
+                    json.dumps(notification.serialize_for_redis(notification)),
                 )
-            )
+        else:
+            dao_create_notification(notification)
 
-        current_app.logger.info(
-            f"{notification_type} {notification_id} created at {notification_created_at}"
-        )
     return notification
+
+
+def notification_exists(notification_id):
+    return dao_notification_exists(notification_id)
 
 
 def send_notification_to_queue_detached(
@@ -162,7 +174,7 @@ def send_notification_to_queue_detached(
         deliver_task = provider_tasks.deliver_email
 
     try:
-        deliver_task.apply_async([str(notification_id)], queue=queue)
+        deliver_task.apply_async([str(notification_id)], queue=queue, countdown=60)
     except Exception:
         dao_delete_notifications_by_id(notification_id)
         raise

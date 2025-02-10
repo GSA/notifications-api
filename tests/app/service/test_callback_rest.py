@@ -1,5 +1,8 @@
 import uuid
 
+from sqlalchemy import func, select
+
+from app import db
 from app.models import ServiceCallbackApi, ServiceInboundApi
 from tests.app.db import create_service_callback_api, create_service_inbound_api
 
@@ -101,7 +104,10 @@ def test_delete_service_inbound_api(admin_request, sample_service):
     )
 
     assert response is None
-    assert ServiceInboundApi.query.count() == 0
+
+    stmt = select(func.count()).select_from(ServiceInboundApi)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0
 
 
 def test_create_service_callback_api(admin_request, sample_service):
@@ -207,4 +213,7 @@ def test_delete_service_callback_api(admin_request, sample_service):
     )
 
     assert response is None
-    assert ServiceCallbackApi.query.count() == 0
+
+    stmt = select(func.count()).select_from(ServiceCallbackApi)
+    count = db.session.execute(stmt).scalar() or 0
+    assert count == 0

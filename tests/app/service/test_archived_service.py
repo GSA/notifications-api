@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import select
 
 from app import db
 from app.dao.api_key_dao import expire_api_key
@@ -85,8 +86,12 @@ def test_deactivating_service_archives_templates(archived_service):
 def test_deactivating_service_creates_history(archived_service):
     ServiceHistory = Service.get_history_model()
     history = (
-        ServiceHistory.query.filter_by(id=archived_service.id)
-        .order_by(ServiceHistory.version.desc())
+        db.session.execute(
+            select(ServiceHistory)
+            .where(ServiceHistory.id == archived_service.id)
+            .order_by(ServiceHistory.version.desc())
+        )
+        .scalars()
         .first()
     )
 
