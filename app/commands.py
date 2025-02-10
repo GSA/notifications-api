@@ -846,6 +846,19 @@ def create_new_service(name, message_limit, restricted, email_from, created_by_i
         db.session.rollback()
 
 
+@notify_command(name="get-service-sender-phones")
+@click.option("-s", "--service_id", required=True, prompt=True)
+def get_service_sender_phones(service_id):
+    sender_phone_numbers = """
+            select sms_sender, is_default
+            from service_sms_senders
+            where service_id = :service_id
+        """
+    rows = db.session.execute(text(sender_phone_numbers), {"service_id": service_id})
+    for row in rows:
+        print(row)
+
+
 @notify_command(name="promote-user-to-platform-admin")
 @click.option("-u", "--user-email-address", required=True, prompt=True)
 def promote_user_to_platform_admin(user_email_address):
