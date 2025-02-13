@@ -14,6 +14,7 @@ from app.dao.notifications_dao import update_notification_status_by_id
 from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
+from notifications_utils.clients.redis import total_limit_cache_key
 
 
 @notify_celery.task(
@@ -40,6 +41,9 @@ def deliver_sms(self, notification_id):
             )
         # Code branches off to send_to_providers.py
         send_to_providers.send_sms_to_provider(notification)
+
+        cache_key = total_limit_cache_key(notification.service_id)
+        redis_store.incr(cache_key)
 
     except Exception as e:
         update_notification_status_by_id(

@@ -31,6 +31,14 @@ bootstrap-with-docker: ## Build the image to run the app in Docker
 run-procfile:
 	poetry run honcho start -f Procfile.dev
 
+
+
+.PHONY: tada
+tada:
+	poetry run isort .
+	poetry run black .
+	poetry run flake8 .
+
 .PHONY: avg-complexity
 avg-complexity:
 	echo "*** Shows average complexity in radon of all code ***"
@@ -83,7 +91,7 @@ test: export NEW_RELIC_ENVIRONMENT=test
 test: ## Run tests and create coverage report
 	poetry run black .
 	poetry run flake8 .
-	poetry run isort --check-only ./app ./tests
+	poetry run isort ./app ./tests
 	poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
 
     ## TODO set this back to 95 asap

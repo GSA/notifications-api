@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit, version_class
 from app.enums import CallbackType
@@ -29,23 +31,42 @@ def reset_service_callback_api(
 
 
 def get_service_callback_api(service_callback_api_id, service_id):
-    return ServiceCallbackApi.query.filter_by(
-        id=service_callback_api_id, service_id=service_id
-    ).first()
+    return (
+        db.session.execute(
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.id == service_callback_api_id,
+                ServiceCallbackApi.service_id == service_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
 
 def get_service_delivery_status_callback_api_for_service(service_id):
-    return ServiceCallbackApi.query.filter_by(
-        service_id=service_id,
-        callback_type=CallbackType.DELIVERY_STATUS,
-    ).first()
+    return (
+        db.session.execute(
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.service_id == service_id,
+                ServiceCallbackApi.callback_type == CallbackType.DELIVERY_STATUS,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
 
 def get_service_complaint_callback_api_for_service(service_id):
-    return ServiceCallbackApi.query.filter_by(
-        service_id=service_id,
-        callback_type=CallbackType.COMPLAINT,
-    ).first()
+    return (
+        db.session.execute(
+            select(ServiceCallbackApi).where(
+                ServiceCallbackApi.service_id == service_id,
+                ServiceCallbackApi.callback_type == CallbackType.COMPLAINT,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
 
 @autocommit

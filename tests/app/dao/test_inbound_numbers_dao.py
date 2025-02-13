@@ -37,7 +37,7 @@ def test_set_service_id_on_inbound_number(notify_db_session, sample_inbound_numb
 
     dao_set_inbound_number_to_service(service.id, numbers[0])
 
-    stmt = select(InboundNumber).filter(InboundNumber.service_id == service.id)
+    stmt = select(InboundNumber).where(InboundNumber.service_id == service.id)
     res = db.session.execute(stmt).scalars().all()
 
     assert len(res) == 1

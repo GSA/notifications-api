@@ -2,10 +2,16 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.dao.date_util import get_months_for_financial_year
-from app.enums import KeyType, NotificationStatus, StatisticsType, TemplateType
+from app.enums import (
+    KeyType,
+    NotificationStatus,
+    NotificationType,
+    StatisticsType,
+    TemplateType,
+)
 
 
-def format_statistics(statistics):
+def format_statistics(statistics, total_notifications=None):
     # statistics come in a named tuple with uniqueness from 'notification_type', 'status' - however missing
     # statuses/notification types won't be represented and the status types need to be simplified/summed up
     # so we can return emails/sms * created, sent, and failed
@@ -14,9 +20,25 @@ def format_statistics(statistics):
         # any row could be null, if the service either has no notifications in the notifications table,
         # or no historical data in the ft_notification_status table.
         if row.notification_type:
-            _update_statuses_from_row(counts[row.notification_type], row)
+            _update_statuses_from_row(
+                counts[row.notification_type],
+                row,
+            )
+
+        if NotificationType.SMS in counts and total_notifications is not None:
+            sms_dict = counts[NotificationType.SMS]
+            delivered_count = sms_dict[StatisticsType.DELIVERED]
+            failed_count = sms_dict[StatisticsType.FAILURE]
+            sms_dict[StatisticsType.PENDING] = calculate_pending_stats(
+                delivered_count, failed_count, total_notifications
+            )
 
     return counts
+
+
+def calculate_pending_stats(delivered_count, failed_count, total_notifications):
+    pending_count = total_notifications - (delivered_count + failed_count)
+    return max(0, pending_count)
 
 
 def format_admin_stats(statistics):

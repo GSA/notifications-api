@@ -50,7 +50,7 @@ def get_invited_users_for_service(service_id):
 def expire_invitations_created_more_than_two_days_ago():
     expired = (
         db.session.query(InvitedUser)
-        .filter(
+        .where(
             InvitedUser.created_at <= utc_now() - timedelta(days=2),
             InvitedUser.status.in_((InvitedUserStatus.PENDING,)),
         )

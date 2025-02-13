@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from app.enums import KeyType, NotificationStatus, NotificationType, StatisticsType
 from app.service.statistics import (
     add_monthly_notification_status_stats,
+    calculate_pending_stats,
     create_empty_monthly_notification_status_stats_dict,
     create_stats_dict,
     create_zeroed_stats_dicts,
@@ -27,22 +28,22 @@ NewStatsRow = collections.namedtuple(
 @pytest.mark.idparametrize(
     "stats, email_counts, sms_counts",
     {
-        "empty": ([], [0, 0, 0], [0, 0, 0]),
+        "empty": ([], [0, 0, 0, 0], [0, 0, 0, 0]),
         "always_increment_requested": (
             [
                 StatsRow(NotificationType.EMAIL, NotificationStatus.DELIVERED, 1),
                 StatsRow(NotificationType.EMAIL, NotificationStatus.FAILED, 1),
             ],
-            [2, 1, 1],
-            [0, 0, 0],
+            [2, 1, 1, 0],
+            [0, 0, 0, 0],
         ),
         "dont_mix_template_types": (
             [
                 StatsRow(NotificationType.EMAIL, NotificationStatus.DELIVERED, 1),
                 StatsRow(NotificationType.SMS, NotificationStatus.DELIVERED, 1),
             ],
-            [1, 1, 0],
-            [1, 1, 0],
+            [1, 1, 0, 0],
+            [1, 1, 0, 0],
         ),
         "convert_fail_statuses_to_failed": (
             [
@@ -57,8 +58,8 @@ NewStatsRow = collections.namedtuple(
                     NotificationType.EMAIL, NotificationStatus.PERMANENT_FAILURE, 1
                 ),
             ],
-            [4, 0, 4],
-            [0, 0, 0],
+            [4, 0, 4, 0],
+            [0, 0, 0, 0],
         ),
         "convert_sent_to_delivered": (
             [
@@ -66,16 +67,16 @@ NewStatsRow = collections.namedtuple(
                 StatsRow(NotificationType.SMS, NotificationStatus.DELIVERED, 1),
                 StatsRow(NotificationType.SMS, NotificationStatus.SENT, 1),
             ],
-            [0, 0, 0],
-            [3, 2, 0],
+            [0, 0, 0, 0],
+            [3, 2, 0, 0],
         ),
         "handles_none_rows": (
             [
                 StatsRow(NotificationType.SMS, NotificationStatus.SENDING, 1),
                 StatsRow(None, None, None),
             ],
-            [0, 0, 0],
-            [1, 0, 0],
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
         ),
     },
 )
@@ -89,6 +90,7 @@ def test_format_statistics(stats, email_counts, sms_counts):
                 StatisticsType.REQUESTED,
                 StatisticsType.DELIVERED,
                 StatisticsType.FAILURE,
+                StatisticsType.PENDING,
             ],
             email_counts,
         )
@@ -101,10 +103,43 @@ def test_format_statistics(stats, email_counts, sms_counts):
                 StatisticsType.REQUESTED,
                 StatisticsType.DELIVERED,
                 StatisticsType.FAILURE,
+                StatisticsType.PENDING,
             ],
             sms_counts,
         )
     }
+
+
+def test_format_statistics_with_pending():
+    stats = [
+        StatsRow(NotificationType.SMS, NotificationStatus.DELIVERED, 10),
+        StatsRow(NotificationType.SMS, NotificationStatus.FAILED, 2),
+    ]
+
+    total_notifications_for_sms = 20
+
+    result = format_statistics(stats, total_notifications=total_notifications_for_sms)
+
+    expected_sms_counts = {
+        StatisticsType.REQUESTED: 12,
+        StatisticsType.DELIVERED: 10,
+        StatisticsType.FAILURE: 2,
+        StatisticsType.PENDING: 8,
+    }
+
+    assert result[NotificationType.SMS] == expected_sms_counts
+
+
+@pytest.mark.parametrize(
+    "delivered, failed, total, expected",
+    [
+        (10, 2, 20, 8),
+        (10, 10, 20, 0),
+        (15, 10, 20, 0),
+    ],
+)
+def test_calculate_pending(delivered, failed, total, expected):
+    assert calculate_pending_stats(delivered, failed, total) == expected
 
 
 def test_create_zeroed_stats_dicts():
@@ -113,11 +148,13 @@ def test_create_zeroed_stats_dicts():
             StatisticsType.REQUESTED: 0,
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
         },
         NotificationType.EMAIL: {
             StatisticsType.REQUESTED: 0,
             StatisticsType.DELIVERED: 0,
             StatisticsType.FAILURE: 0,
+            StatisticsType.PENDING: 0,
         },
     }
 

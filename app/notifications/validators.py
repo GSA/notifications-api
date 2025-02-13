@@ -1,3 +1,6 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -6,37 +9,19 @@ from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
 from app.enums import KeyType, NotificationType, ServicePermissionType, TemplateType
-from app.errors import BadRequestError, RateLimitError, TotalRequestsError
+from app.errors import BadRequestError, TotalRequestsError
 from app.models import ServicePermission
 from app.notifications.process_notifications import create_content_for_notification
 from app.serialised_models import SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import get_public_notify_type_text
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.clients.redis import (
-    rate_limit_cache_key,
-    total_limit_cache_key,
-)
+from notifications_utils.clients.redis import total_limit_cache_key
 from notifications_utils.recipients import (
     get_international_phone_info,
     validate_and_format_email_address,
     validate_and_format_phone_number,
 )
-
-
-def check_service_over_api_rate_limit(service, api_key):
-    if (
-        current_app.config["API_RATE_LIMIT_ENABLED"]
-        and current_app.config["REDIS_ENABLED"]
-    ):
-        cache_key = rate_limit_cache_key(service.id, api_key.key_type)
-        rate_limit = service.rate_limit
-        interval = 60
-        if redis_store.exceeded_rate_limit(cache_key, rate_limit, interval):
-            current_app.logger.info(
-                "service {} has been rate limited for throughput".format(service.id)
-            )
-            raise RateLimitError(rate_limit, interval, api_key.key_type)
 
 
 def check_service_over_total_message_limit(key_type, service):
@@ -45,10 +30,21 @@ def check_service_over_total_message_limit(key_type, service):
 
     cache_key = total_limit_cache_key(service.id)
     service_stats = redis_store.get(cache_key)
+
+    # TODO
+    # For now we are using calendar year
+    # Switch to using service agreement dates when the Agreement model is ready
+    # If the service stat has never been set before, compute the remaining seconds for 2025
+    # and set it (all services) to expire on 12/31/2025.
     if service_stats is None:
-        # first message of the day, set the cache to 0 and the expiry to 24 hours
+        now_et = datetime.now(ZoneInfo("America/New_York"))
+        target_time = datetime(
+            2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("America/New_York")
+        )
+        time_difference = target_time - now_et
+        seconds_difference = int(time_difference.total_seconds())
         service_stats = 0
-        redis_store.set(cache_key, service_stats, ex=86400)
+        redis_store.set(cache_key, service_stats, ex=seconds_difference)
         return service_stats
     if int(service_stats) >= service.total_message_limit:
         current_app.logger.warning(
@@ -57,6 +53,7 @@ def check_service_over_total_message_limit(key_type, service):
             )
         )
         raise TotalRequestsError(service.total_message_limit)
+
     return int(service_stats)
 
 
@@ -75,11 +72,6 @@ def check_application_over_retention_limit(key_type, service):
         )
         raise TotalRequestsError(daily_message_limit)
     return int(total_stats)
-
-
-def check_rate_limiting(service, api_key):
-    check_service_over_api_rate_limit(service, api_key)
-    check_application_over_retention_limit(api_key.key_type, service)
 
 
 def check_template_is_for_notification_type(notification_type, template_type):
