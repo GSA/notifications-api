@@ -24,7 +24,7 @@ jobs:
 
     - name: Check for changes to Terraform
       id: changed-terraform-files
-      uses: tj-actions/changed-files@v45
+      uses: tj-actions/changed-files@v44
       with:
         files: |
           terraform/staging/**
@@ -84,7 +84,7 @@ jobs:
 
     - name: Check for changes to templates.json
       id: changed-templates
-      uses: tj-actions/changed-files@v45
+      uses: tj-actions/changed-files@v44
       with:
         files: |
           app/config_files/templates.json
