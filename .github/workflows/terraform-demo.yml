@@ -18,6 +18,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Looks like we need to install Terraform ourselves now!
+      # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "^1.7.5"
+          terraform_wrapper: false
+
       - name: Terraform format
         id: format
         run: terraform fmt -check
