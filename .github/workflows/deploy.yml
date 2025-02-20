@@ -22,6 +22,14 @@ jobs:
       with:
         fetch-depth: 2
 
+    # Looks like we need to install Terraform ourselves now!
+    # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "^1.7.5"
+        terraform_wrapper: false
+
     - name: Check for changes to Terraform
       id: changed-terraform-files
       uses: tj-actions/changed-files@v45
