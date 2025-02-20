@@ -7,7 +7,7 @@ from app.models import ServicePermission
 
 def dao_fetch_service_permissions(service_id):
 
-    stmt = select(ServicePermission).filter(ServicePermission.service_id == service_id)
+    stmt = select(ServicePermission).where(ServicePermission.service_id == service_id)
     return db.session.execute(stmt).scalars().all()
 
 

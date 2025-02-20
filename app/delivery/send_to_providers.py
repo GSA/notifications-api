@@ -26,6 +26,7 @@ from app.enums import BrandType, KeyType, NotificationStatus, NotificationType
 from app.exceptions import NotificationTechnicalFailureException
 from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.utils import hilite, utc_now
+from notifications_utils.clients.redis import total_limit_cache_key
 from notifications_utils.template import (
     HTMLEmailTemplate,
     PlainTextEmailTemplate,
@@ -119,7 +120,7 @@ def send_sms_to_provider(notification):
                 db.session.close()  # no commit needed as no changes to objects have been made above
 
                 message_id = provider.send_sms(**send_sms_kwargs)
-                current_app.logger.info(f"got message_id {message_id}")
+
                 update_notification_message_id(notification.id, message_id)
             except Exception as e:
                 n = notification
@@ -132,10 +133,14 @@ def send_sms_to_provider(notification):
             else:
                 # Here we map the job_id and row number to the aws message_id
                 n = notification
-                msg = f"Send to aws for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
+                msg = f"Send to AWS!!! for job_id {n.job_id} row_number {n.job_row_number} message_id {message_id}"
                 current_app.logger.info(hilite(msg))
                 notification.billable_units = template.fragment_count
                 update_notification_to_sending(notification, provider)
+
+                cache_key = total_limit_cache_key(service.id)
+                redis_store.incr(cache_key)
+
     return message_id
 
 

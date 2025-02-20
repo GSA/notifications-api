@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from flask import json
+from flask import current_app, json
 from sqlalchemy import func, select
 
 from app import db
@@ -13,6 +13,7 @@ from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     fetch_potential_service,
     has_inbound_sms_permissions,
+    receive_sns_sms,
     unescape_string,
 )
 from tests.app.db import (
@@ -64,7 +65,7 @@ def test_receive_notification_returns_received_to_sns(
     prom_counter_labels_mock.assert_called_once_with("sns")
     prom_counter_labels_mock.return_value.inc.assert_called_once_with()
 
-    inbound_sms_id = InboundSms.query.all()[0].id
+    inbound_sms_id = db.session.execute(select(InboundSms)).scalars().all()[0].id
     mocked.assert_called_once_with(
         [str(inbound_sms_id), str(sample_service_full_permissions.id)],
         queue="notify-internal-tasks",
@@ -136,7 +137,7 @@ def test_receive_notification_without_permissions_does_not_create_inbound_even_w
     response = sns_post(client, data)
 
     assert response.status_code == 200
-    assert len(InboundSms.query.all()) == 0
+    assert len(db.session.execute(select(InboundSms)).scalars().all()) == 0
     assert mocked_has_permissions.called
     mocked_send_inbound_sms.assert_not_called()
 
@@ -376,3 +377,14 @@ def test_fetch_potential_service_cant_find_it(mock_dao):
     mock_dao.return_value = create_service()
     found_service = fetch_potential_service(234, "sns")
     assert found_service is False
+
+
+def test_receive_sns_sms_inbound_disabled(mocker):
+    current_app.config["RECEIVE_INBOUND_SMS"] = False
+    response, status_code = receive_sns_sms()
+
+    assert status_code == 200
+    assert response.json == {
+        "result": "success",
+        "message": "SMS-SNS callback succeeded",
+    }

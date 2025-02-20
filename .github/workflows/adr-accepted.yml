@@ -53,7 +53,7 @@ jobs:
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: write the ADR
-      uses: DamianReeves/write-file-action@v1.2
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: ${{ steps.filename.outputs.filename }}
         write-mode: overwrite
