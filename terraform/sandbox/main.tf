@@ -49,7 +49,8 @@ module "egress-space" {
   cf_org_name              = local.cf_org_name
   cf_restricted_space_name = local.cf_space_name
   deployers = [
-    var.cf_user
+    var.cf_user,
+    "carlo.costino@gsa.gov"
   ]
 }
 
