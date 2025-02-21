@@ -488,6 +488,48 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     assert resp["notifications"][2]["job_row_number"] == notification_3.job_row_number
 
 
+def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
+    admin_request, sample_template, mocker
+):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
+    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
+    mock_s3_personalisation.return_value = {}
+
+    main_job = create_job(sample_template)
+    another_job = create_job(sample_template)
+
+    count = 1
+    for status in NotificationStatus:
+        create_notification(job=main_job, job_row_number=str(count), status=status)
+        count = count + 1
+    create_notification(job=another_job)
+
+    resp = admin_request.get(
+        "job.get_recent_notifications_for_service_job",
+        service_id=main_job.service_id,
+        job_id=main_job.id,
+    )
+
+    assert len(resp["notifications"]) == 13
+    assert resp["notifications"][0]["status"] == "virus-scan-failed"
+    assert resp["notifications"][0]["job_row_number"] == 13
+
+    query_string = {"status": "delivered"}
+    resp = admin_request.get(
+        "job.get_recent_notifications_for_service_job",
+        service_id=main_job.service_id,
+        job_id=main_job.id,
+        **query_string,
+    )
+
+    assert len(resp["notifications"]) == 1
+
+    assert resp["notifications"][0]["status"] == "delivered"
+    assert resp["notifications"][0]["job_row_number"] == 5
+
+
 @pytest.mark.parametrize(
     "expected_notification_count, status_args",
     [
