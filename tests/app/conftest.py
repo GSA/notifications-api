@@ -1,9 +1,9 @@
 import json
 import uuid
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 import requests_mock
 from flask import current_app, url_for
 from sqlalchemy import delete, select
@@ -988,4 +988,4 @@ def admin_request(client):
 
 
 def datetime_in_past(days=0, seconds=0):
-    return datetime.now(tz=pytz.utc) - timedelta(days=days, seconds=seconds)
+    return datetime.now(tz=ZoneInfo.UTC) - timedelta(days=days, seconds=seconds)

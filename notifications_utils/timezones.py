@@ -1,9 +1,9 @@
 import os
+from zoneinfo import ZoneInfo
 
-import pytz
 from dateutil import parser
 
-local_timezone = pytz.timezone(os.getenv("TIMEZONE", "America/New_York"))
+local_timezone = os.getenv("TIMEZONE", ZoneInfo("America/New_York"))
 
 
 def utc_string_to_aware_gmt_datetime(date):
@@ -12,5 +12,5 @@ def utc_string_to_aware_gmt_datetime(date):
     Returns an aware local datetime, essentially the time you'd see on your clock
     """
     date = parser.parse(date)
-    forced_utc = date.replace(tzinfo=pytz.utc)
+    forced_utc = date.replace(tzinfo=ZoneInfo.UTC)
     return forced_utc.astimezone(local_timezone)

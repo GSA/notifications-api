@@ -2,9 +2,9 @@ import json
 import uuid
 from datetime import date, datetime, timedelta
 from unittest.mock import ANY
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -183,7 +183,7 @@ def test_create_scheduled_job(client, sample_template, mocker, fake_uuid):
     assert resp_json["data"]["id"] == fake_uuid
     assert (
         resp_json["data"]["scheduled_for"]
-        == datetime(2016, 1, 5, 11, 59, 0, tzinfo=pytz.UTC).isoformat()
+        == datetime(2016, 1, 5, 11, 59, 0, tzinfo=ZoneInfo.UTC).isoformat()
     )
     assert resp_json["data"]["job_status"] == JobStatus.SCHEDULED
     assert resp_json["data"]["template"] == str(sample_template.id)
