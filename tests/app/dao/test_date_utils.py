@@ -92,6 +92,7 @@ def test_generate_hourly_range_with_end_date():
 
     assert result == expected, f"Expected {expected}, but got {result}"
 
+
 def test_generate_hourly_range_with_hours():
     start_date = datetime(2025, 2, 18, 12, 0)
     result = list(generate_hourly_range(start_date, hours=3))
@@ -103,6 +104,7 @@ def test_generate_hourly_range_with_hours():
     ]
 
     assert result == expected, f"Expected {expected}, but got {result}"
+
 
 def test_generate_hourly_range_with_zero_hours():
     start_date = datetime(2025, 2, 18, 12, 0)

@@ -240,12 +240,6 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
         end_date,
     )
 
-    # Debug logs: Raw output from DB query
-    print(f"🚀 Fetching stats for service {service_id} from {start_date} to {end_date}")
-    print(f"🔍 Total Notifications: {total_notifications}")
-    print(f"📝 Raw Query Results: {results}")
-
-    # Convert days to hours (since 1 day = 24 hours)
     hours = days * 24
 
     # Process data using new hourly stats function
@@ -256,11 +250,7 @@ def get_service_statistics_for_specific_days(service_id, start, days=1):
         total_notifications=total_notifications,
     )
 
-    # Debug log: Final processed stats
-    print(f"✅ Processed Stats: {stats}")
-
-    return stats  # ✅ Make sure to return stats
-
+    return stats
 
 
 @service_blueprint.route(

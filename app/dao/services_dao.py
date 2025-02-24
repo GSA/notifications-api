@@ -526,6 +526,7 @@ def dao_fetch_stats_for_service_from_days(service_id, start_date, end_date):
 
     return total_notifications, data
 
+
 def dao_fetch_stats_for_service_from_hours(service_id, start_date, end_date):
     start_date = get_midnight_in_utc(start_date)
     end_date = get_midnight_in_utc(end_date + timedelta(days=1))
@@ -586,7 +587,6 @@ def dao_fetch_stats_for_service_from_hours(service_id, start_date, end_date):
     data = db.session.execute(stmt).all()
 
     return total_notifications, data
-
 
 
 def dao_fetch_stats_for_service_from_days_for_user(
