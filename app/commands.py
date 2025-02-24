@@ -656,7 +656,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
                     AnnualBilling.financial_year_start == year,
                 ),
             )
-            .filter(AnnualBilling.id == None)  # noqa
+            .where(AnnualBilling.id == None)  # noqa
         )
         active_services = db.session.execute(stmt).scalars().all()
     else:
@@ -665,7 +665,7 @@ def populate_annual_billing_with_defaults(year, missing_services_only):
     previous_year = year - 1
     services_with_zero_free_allowance = (
         db.session.query(AnnualBilling.service_id)
-        .filter(
+        .where(
             AnnualBilling.financial_year_start == previous_year,
             AnnualBilling.free_sms_fragment_limit == 0,
         )
@@ -844,6 +844,19 @@ def create_new_service(name, message_limit, restricted, email_from, created_by_i
     except IntegrityError:
         current_app.logger.info("duplicate service", service.name)
         db.session.rollback()
+
+
+@notify_command(name="get-service-sender-phones")
+@click.option("-s", "--service_id", required=True, prompt=True)
+def get_service_sender_phones(service_id):
+    sender_phone_numbers = """
+            select sms_sender, is_default
+            from service_sms_senders
+            where service_id = :service_id
+        """
+    rows = db.session.execute(text(sender_phone_numbers), {"service_id": service_id})
+    for row in rows:
+        print(row)
 
 
 @notify_command(name="promote-user-to-platform-admin")

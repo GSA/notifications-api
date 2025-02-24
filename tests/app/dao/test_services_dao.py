@@ -107,7 +107,7 @@ def _get_first_service():
 
 
 def _get_service_by_id(service_id):
-    stmt = select(Service).filter(Service.id == service_id)
+    stmt = select(Service).where(Service.id == service_id)
 
     service = db.session.execute(stmt).scalars().one()
     return service
@@ -746,9 +746,13 @@ def test_update_service_creates_a_history_record_with_current_data(notify_db_ses
     service_from_db = _get_first_service()
 
     assert service_from_db.version == 2
-    stmt = select(Service.get_history_model()).filter_by(name="service_name")
+    stmt = select(Service.get_history_model()).where(
+        Service.get_history_model().name == "service_name"
+    )
     assert db.session.execute(stmt).scalars().one().version == 1
-    stmt = select(Service.get_history_model()).filter_by(name="updated_service_name")
+    stmt = select(Service.get_history_model()).where(
+        Service.get_history_model().name == "updated_service_name"
+    )
     assert db.session.execute(stmt).scalars().one().version == 2
 
 
@@ -819,7 +823,7 @@ def test_update_service_permission_creates_a_history_record_with_current_data(
 
     stmt = (
         select(Service.get_history_model())
-        .filter_by(name="service_name")
+        .where(Service.get_history_model().name == "service_name")
         .order_by("version")
     )
     history = db.session.execute(stmt).scalars().all()
@@ -920,7 +924,9 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
 
     dao_create_service(service_one, user)
     assert user.id == service_one.users[0].id
-    stmt = select(Permission).filter_by(service=service_one, user=user)
+    stmt = select(Permission).where(
+        Permission.service == service_one, Permission.user == user
+    )
     test_user_permissions = db.session.execute(stmt).all()
     assert len(test_user_permissions) == 7
 
@@ -941,10 +947,14 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
     dao_create_service(service_two, other_user)
 
     assert other_user.id == service_two.users[0].id
-    stmt = select(Permission).filter_by(service=service_two, user=other_user)
+    stmt = select(Permission).where(
+        Permission.service == service_two, Permission.user == other_user
+    )
     other_user_permissions = db.session.execute(stmt).all()
     assert len(other_user_permissions) == 7
-    stmt = select(Permission).filter_by(service=service_one, user=other_user)
+    stmt = select(Permission).where(
+        Permission.service == service_one, Permission.user == other_user
+    )
     other_user_service_one_permissions = db.session.execute(stmt).all()
 
     assert len(other_user_service_one_permissions) == 0
@@ -955,11 +965,15 @@ def test_add_existing_user_to_another_service_doesnot_change_old_permissions(
         permissions.append(Permission(permission=p))
 
     dao_add_user_to_service(service_one, other_user, permissions=permissions)
-    stmt = select(Permission).filter_by(service=service_one, user=other_user)
+    stmt = select(Permission).where(
+        Permission.service == service_one, Permission.user == other_user
+    )
     other_user_service_one_permissions = db.session.execute(stmt).all()
     assert len(other_user_service_one_permissions) == 2
 
-    stmt = select(Permission).filter_by(service=service_two, user=other_user)
+    stmt = select(Permission).where(
+        Permission.service == service_two, Permission.user == other_user
+    )
     other_user_service_two_permissions = db.session.execute(stmt).all()
     assert len(other_user_service_two_permissions) == 7
 
@@ -1638,11 +1652,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 2,
+                        StatisticsType.PENDING: 2,
                     },
                 },
                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
@@ -1650,11 +1666,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
@@ -1662,11 +1680,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
@@ -1674,11 +1694,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
@@ -1686,11 +1708,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
             },
@@ -1713,11 +1737,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 2,
+                        StatisticsType.PENDING: 2,
                     },
                 },
                 (_this_date.date() + timedelta(days=1)).strftime("%Y-%m-%d"): {
@@ -1725,11 +1751,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=2)).strftime("%Y-%m-%d"): {
@@ -1737,11 +1765,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=3)).strftime("%Y-%m-%d"): {
@@ -1749,11 +1779,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                 },
                 (_this_date.date() + timedelta(days=4)).strftime("%Y-%m-%d"): {
@@ -1761,11 +1793,13 @@ _this_date = utc_now() - timedelta(days=4)
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 0,
+                        StatisticsType.PENDING: 0,
                     },
                     TemplateType.SMS: {
                         StatisticsType.DELIVERED: 0,
                         StatisticsType.FAILURE: 0,
                         StatisticsType.REQUESTED: 1,
+                        StatisticsType.PENDING: 0,
                     },
                 },
             },
@@ -1786,5 +1820,21 @@ def test_get_specific_days(data, start_date, days, end_date, expected, is_error)
             new_line.count = 1
             new_line.something = line["something"]
             new_data.append(new_line)
-        results = get_specific_days_stats(new_data, start_date, days, end_date)
+
+        total_notifications = None
+
+        date_key = _this_date.date().strftime("%Y-%m-%d")
+        if expected and date_key in expected:
+            sms_stats = expected[date_key].get(TemplateType.SMS, {})
+            requested = sms_stats.get(StatisticsType.REQUESTED, 0)
+            if requested > 0:
+                total_notifications = {_this_date: requested}
+
+        results = get_specific_days_stats(
+            new_data,
+            start_date,
+            days,
+            end_date,
+            total_notifications=total_notifications,
+        )
         assert results == expected

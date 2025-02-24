@@ -43,9 +43,19 @@ def test_move_notifications_does_nothing_if_notification_history_row_already_exi
     )
 
     assert _get_notification_count() == 0
-    history = NotificationHistory.query.all()
+    history = _get_notification_history_query_all()
     assert len(history) == 1
     assert history[0].status == NotificationStatus.DELIVERED
+
+
+def _get_notification_query_all():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().all()
+
+
+def _get_notification_history_query_all():
+    stmt = select(NotificationHistory)
+    return db.session.execute(stmt).scalars().all()
 
 
 def _get_notification_count():
@@ -76,8 +86,18 @@ def test_move_notifications_only_moves_notifications_older_than_provided_timesta
     )
     assert result == 1
 
-    assert Notification.query.one().id == new_notification.id
-    assert NotificationHistory.query.one().id == old_notification_id
+    assert _get_notification_query_one().id == new_notification.id
+    assert _get_notification_history_query_one().id == old_notification_id
+
+
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
+
+
+def _get_notification_history_query_one():
+    stmt = select(NotificationHistory)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_move_notifications_keeps_calling_until_no_more_to_delete_and_then_returns_total_deleted(
@@ -123,7 +143,9 @@ def test_move_notifications_only_moves_for_given_notification_type(sample_servic
     )
     assert result == 1
     assert {x.notification_type for x in Notification.query} == {NotificationType.EMAIL}
-    assert NotificationHistory.query.one().notification_type == NotificationType.SMS
+    assert (
+        _get_notification_history_query_one().notification_type == NotificationType.SMS
+    )
 
 
 def test_move_notifications_only_moves_for_given_service(notify_db_session):
@@ -146,8 +168,8 @@ def test_move_notifications_only_moves_for_given_service(notify_db_session):
     )
     assert result == 1
 
-    assert NotificationHistory.query.one().service_id == service.id
-    assert Notification.query.one().service_id == other_service.id
+    assert _get_notification_history_query_one().service_id == service.id
+    assert _get_notification_query_one().service_id == other_service.id
 
 
 def test_move_notifications_just_deletes_test_key_notifications(sample_template):
@@ -258,8 +280,8 @@ def test_insert_notification_history_delete_notifications(sample_email_template)
         timestamp_to_delete_backwards_from=utc_now() - timedelta(days=1),
     )
     assert del_count == 8
-    notifications = Notification.query.all()
-    history_rows = NotificationHistory.query.all()
+    notifications = _get_notification_query_all()
+    history_rows = _get_notification_history_query_all()
     assert len(history_rows) == 8
     assert ids_to_move == sorted([x.id for x in history_rows])
     assert len(notifications) == 3
@@ -293,8 +315,8 @@ def test_insert_notification_history_delete_notifications_more_notifications_tha
     )
 
     assert del_count == 1
-    notifications = Notification.query.all()
-    history_rows = NotificationHistory.query.all()
+    notifications = _get_notification_query_all()
+    history_rows = _get_notification_history_query_all()
     assert len(history_rows) == 1
     assert len(notifications) == 2
 
@@ -324,8 +346,8 @@ def test_insert_notification_history_delete_notifications_only_insert_delete_for
     )
 
     assert del_count == 1
-    notifications = Notification.query.all()
-    history_rows = NotificationHistory.query.all()
+    notifications = _get_notification_query_all()
+    history_rows = _get_notification_history_query_all()
     assert len(notifications) == 1
     assert len(history_rows) == 1
     assert notifications[0].id == notification_to_stay.id
@@ -361,8 +383,8 @@ def test_insert_notification_history_delete_notifications_insert_for_key_type(
     )
 
     assert del_count == 2
-    notifications = Notification.query.all()
-    history_rows = NotificationHistory.query.all()
+    notifications = _get_notification_query_all()
+    history_rows = _get_notification_history_query_all()
     assert len(notifications) == 1
     assert with_test_key.id == notifications[0].id
     assert len(history_rows) == 2

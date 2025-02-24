@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import ANY, Mock, call
+from unittest.mock import ANY, MagicMock, Mock, call
 
 import pytest
 import requests_mock
@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db, encryption
 from app.celery import provider_tasks, tasks
 from app.celery.tasks import (
+    __total_sending_limits_for_job_exceeded,
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_job,
     process_incomplete_jobs,
@@ -419,7 +420,7 @@ def test_should_send_template_to_correct_sms_task_and_persist(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_template_with_placeholders.id
     assert (
@@ -436,6 +437,11 @@ def test_should_send_template_to_correct_sms_task_and_persist(
     mocked_deliver_sms.assert_called_once_with(
         [str(persisted_notification.id)], queue="send-sms-tasks", countdown=60
     )
+
+
+def _get_notification_query_one():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().one()
 
 
 def test_should_save_sms_if_restricted_service_and_valid_number(
@@ -458,7 +464,7 @@ def test_should_save_sms_if_restricted_service_and_valid_number(
         encrypt_notification,
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == template.id
     assert persisted_notification.template_version == template.version
@@ -497,7 +503,7 @@ def test_save_email_should_save_default_email_reply_to_text_on_notification(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "reply_to@digital.fake.gov"
 
 
@@ -517,7 +523,7 @@ def test_save_sms_should_save_default_sms_sender_notification_reply_to_text_on(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "12345"
 
 
@@ -539,6 +545,11 @@ def test_should_not_save_sms_if_restricted_service_and_invalid_number(
     )
     assert provider_tasks.deliver_sms.apply_async.called is False
     assert _get_notification_query_count() == 0
+
+
+def _get_notification_query_all():
+    stmt = select(Notification)
+    return db.session.execute(stmt).scalars().all()
 
 
 def _get_notification_query_count():
@@ -584,7 +595,7 @@ def test_should_save_sms_template_to_and_persist_with_job_id(sample_job, mocker)
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.job_id == sample_job.id
     assert persisted_notification.template_id == sample_job.template.id
@@ -649,7 +660,7 @@ def test_should_use_email_template_and_persist(
             encryption.encrypt(notification),
         )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
@@ -696,7 +707,7 @@ def test_save_email_should_use_template_version_from_job_not_latest(
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.template_version == version_on_notification
@@ -725,7 +736,7 @@ def test_should_use_email_template_subject_placeholders(
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert (
         persisted_notification.template_id == sample_email_template_with_placeholders.id
@@ -766,7 +777,7 @@ def test_save_email_uses_the_reply_to_text_when_provided(sample_email_template, 
         encryption.encrypt(notification),
         sender_id=other_email_reply_to.id,
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "other@example.com"
 
@@ -791,7 +802,7 @@ def test_save_email_uses_the_default_reply_to_text_if_sender_id_is_none(
         encryption.encrypt(notification),
         sender_id=None,
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.notification_type == NotificationType.EMAIL
     assert persisted_notification.reply_to_text == "default@example.com"
 
@@ -810,7 +821,7 @@ def test_should_use_email_template_and_persist_without_personalisation(
         notification_id,
         encryption.encrypt(notification),
     )
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.to == "1"
     assert persisted_notification.template_id == sample_email_template.id
     assert persisted_notification.created_at >= now
@@ -945,7 +956,7 @@ def test_save_sms_uses_sms_sender_reply_to_text(mocker, notify_db_session):
         encryption.encrypt(notification),
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "+12028675309"
 
 
@@ -971,7 +982,7 @@ def test_save_sms_uses_non_default_sms_sender_reply_to_text_if_provided(
         sender_id=new_sender.id,
     )
 
-    persisted_notification = Notification.query.one()
+    persisted_notification = _get_notification_query_one()
     assert persisted_notification.reply_to_text == "new-sender"
 
 
@@ -1485,12 +1496,12 @@ def test_save_api_email_or_sms(mocker, sample_service, notification_type):
 
     encrypted = encryption.encrypt(data)
 
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     assert str(notifications[0].id) == data["id"]
     assert notifications[0].created_at == datetime(2020, 3, 25, 14, 30)
@@ -1538,20 +1549,20 @@ def test_save_api_email_dont_retry_if_notification_already_exists(
         expected_queue = QueueNames.SEND_SMS
 
     encrypted = encryption.encrypt(data)
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
 
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     # call the task again with the same notification
     if notification_type == NotificationType.EMAIL:
         save_api_email(encrypted_notification=encrypted)
     else:
         save_api_sms(encrypted_notification=encrypted)
-    notifications = Notification.query.all()
+    notifications = _get_notification_query_all()
     assert len(notifications) == 1
     assert str(notifications[0].id) == data["id"]
     assert notifications[0].created_at == datetime(2020, 3, 25, 14, 30)
@@ -1615,7 +1626,7 @@ def test_save_tasks_use_cached_service_and_template(
     ]
 
     # But we save 2 notifications and enqueue 2 tasks
-    assert len(Notification.query.all()) == 2
+    assert len(_get_notification_query_all()) == 2
     assert len(delivery_mock.call_args_list) == 2
 
 
@@ -1676,12 +1687,37 @@ def test_save_api_tasks_use_cache(
             }
         )
 
-    assert len(Notification.query.all()) == 0
+    assert len(_get_notification_query_all()) == 0
 
     for _ in range(3):
         task_function(encrypted_notification=create_encrypted_notification())
 
     assert service_dict_mock.call_args_list == [call(str(template.service_id))]
 
-    assert len(Notification.query.all()) == 3
+    assert len(_get_notification_query_all()) == 3
     assert len(mock_provider_task.call_args_list) == 3
+
+
+def test_total_sending_limits_exceeded(mocker):
+    mock_service = MagicMock()
+    mock_service.total_message_limit = 1000
+    mock_job = MagicMock()
+    mock_job.notification_count = 300
+    job_id = "test_job_id"
+
+    mock_check_service_limit = mocker.patch(
+        "app.celery.tasks.check_service_over_total_message_limit"
+    )
+    mock_check_service_limit.return_value = 800
+
+    mock_utc_now = mocker.patch("app.celery.tasks.utc_now")
+    mock_utc_now.return_value = datetime(2024, 11, 10, 12, 0, 0)
+
+    mock_dao_update_job = mocker.patch("app.celery.tasks.dao_update_job")
+
+    result = __total_sending_limits_for_job_exceeded(mock_service, mock_job, job_id)
+    assert result is True
+
+    assert mock_job.job_status == "sending limits exceeded"
+    assert mock_job.processing_finished == datetime(2024, 11, 10, 12, 0, 0)
+    mock_dao_update_job.assert_called_once_with(mock_job)

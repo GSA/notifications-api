@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from app import db
 from app.dao.service_guest_list_dao import dao_add_and_commit_guest_list_contacts
 from app.enums import (
     KeyType,
@@ -266,7 +267,7 @@ def test_send_one_off_notification_should_add_email_reply_to_text_for_notificati
     notification_id = send_one_off_notification(
         service_id=sample_email_template.service.id, post_data=data
     )
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     celery_mock.assert_called_once_with(notification=notification, queue=None)
     assert notification.reply_to_text == reply_to_email.email_address
 
@@ -289,7 +290,7 @@ def test_send_one_off_sms_notification_should_use_sms_sender_reply_to_text(
     notification_id = send_one_off_notification(
         service_id=sample_service.id, post_data=data
     )
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     celery_mock.assert_called_once_with(notification=notification, queue=None)
 
     assert notification.reply_to_text == "+12028675309"
@@ -313,7 +314,7 @@ def test_send_one_off_sms_notification_should_use_default_service_reply_to_text(
     notification_id = send_one_off_notification(
         service_id=sample_service.id, post_data=data
     )
-    notification = Notification.query.get(notification_id["id"])
+    notification = db.session.get(Notification, notification_id["id"])
     celery_mock.assert_called_once_with(notification=notification, queue=None)
 
     assert notification.reply_to_text == "+12028675309"

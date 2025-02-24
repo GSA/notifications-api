@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from freezegun import freeze_time
+from sqlalchemy import select
 
+from app import db
 from app.dao import fact_processing_time_dao
 from app.dao.fact_processing_time_dao import (
     get_processing_time_percentage_for_date_range,
@@ -19,7 +21,7 @@ def test_insert_update_processing_time(notify_db_session):
 
     fact_processing_time_dao.insert_update_processing_time(data)
 
-    result = FactProcessingTime.query.all()
+    result = db.session.execute(select(FactProcessingTime)).scalars().all()
 
     assert len(result) == 1
     assert result[0].local_date == datetime(2021, 2, 22).date()
@@ -36,7 +38,7 @@ def test_insert_update_processing_time(notify_db_session):
     with freeze_time("2021-02-23 13:23:33"):
         fact_processing_time_dao.insert_update_processing_time(data)
 
-    result = FactProcessingTime.query.all()
+    result = db.session.execute(select(FactProcessingTime)).scalars().all()
 
     assert len(result) == 1
     assert result[0].local_date == datetime(2021, 2, 22).date()
@@ -77,7 +79,6 @@ def test_get_processing_time_percentage_for_date_range_handles_zero_cases(
     )
 
     results = get_processing_time_percentage_for_date_range("2021-02-21", "2021-02-22")
-
     assert len(results) == 2
     assert results[0].date == "2021-02-21"
     assert results[0].messages_total == 0

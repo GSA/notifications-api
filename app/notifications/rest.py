@@ -12,7 +12,6 @@ from app.notifications.process_notifications import (
 )
 from app.notifications.validators import (
     check_if_service_can_send_to_number,
-    check_rate_limiting,
     service_has_permission,
     validate_template,
 )
@@ -124,8 +123,6 @@ def send_notification(notification_type):
         if notification_type == NotificationType.SMS
         else email_notification_schema
     ).load(request.get_json())
-
-    check_rate_limiting(authenticated_service, api_user)
 
     template, template_with_content = validate_template(
         template_id=notification_form["template"],

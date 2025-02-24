@@ -52,7 +52,8 @@ def cleanup_unfinished_jobs():
         # The query already checks that the processing_finished time is null, so here we are saying
         # if it started more than 4 hours ago, that's too long
         try:
-            acceptable_finish_time = job.processing_started + timedelta(minutes=5)
+            if job.processing_started is not None:
+                acceptable_finish_time = job.processing_started + timedelta(minutes=5)
         except TypeError:
             current_app.logger.exception(
                 f"Job ID {job.id} processing_started is {job.processing_started}.",

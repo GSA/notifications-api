@@ -6,7 +6,7 @@ import pytest
 import pytz
 import requests_mock
 from flask import current_app, url_for
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm.session import make_transient
 
 from app import db
@@ -224,7 +224,7 @@ def sample_service(sample_user):
     data = {
         "name": service_name,
         "message_limit": 1000,
-        "total_message_limit": 250000,
+        "total_message_limit": 100000,
         "restricted": False,
         "email_from": email_from,
         "created_by": sample_user,
@@ -805,7 +805,7 @@ def mou_signed_templates(notify_service):
 def create_custom_template(
     service, user, template_config_name, template_type, content="", subject=None
 ):
-    template = Template.query.get(current_app.config[template_config_name])
+    template = db.session.get(Template, current_app.config[template_config_name])
     if not template:
         data = {
             "id": current_app.config[template_config_name],
@@ -826,7 +826,7 @@ def create_custom_template(
 
 @pytest.fixture
 def notify_service(notify_db_session, sample_user):
-    service = Service.query.get(current_app.config["NOTIFY_SERVICE_ID"])
+    service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
     if not service:
         service = Service(
             name="Notify Service",
@@ -915,8 +915,12 @@ def restore_provider_details(notify_db_session):
     Note: This doesn't technically require notify_db_session (only notify_db), but kept as a requirement to encourage
     good usage - if you're modifying ProviderDetails' state then it's good to clear down the rest of the DB too
     """
-    existing_provider_details = ProviderDetails.query.all()
-    existing_provider_details_history = ProviderDetailsHistory.query.all()
+    existing_provider_details = (
+        db.session.execute(select(ProviderDetails)).scalars().all()
+    )
+    existing_provider_details_history = (
+        db.session.execute(select(ProviderDetailsHistory)).scalars().all()
+    )
     # make transient removes the objects from the session - since we'll want to delete them later
     for epd in existing_provider_details:
         make_transient(epd)
@@ -926,8 +930,9 @@ def restore_provider_details(notify_db_session):
     yield
 
     # also delete these as they depend on provider_details
-    ProviderDetails.query.delete()
-    ProviderDetailsHistory.query.delete()
+    db.session.execute(delete(ProviderDetails))
+    db.session.execute(delete(ProviderDetailsHistory))
+    db.session.commit()
     notify_db_session.commit()
     notify_db_session.add_all(existing_provider_details)
     notify_db_session.add_all(existing_provider_details_history)

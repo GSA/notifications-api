@@ -396,7 +396,7 @@ def get_job_from_s3(service_id, job_id):
     return None
 
 
-def extract_phones(job):
+def extract_phones(job, service_id, job_id):
     job_csv_data = StringIO(job)
     csv_reader = csv.reader(job_csv_data)
     first_row = next(csv_reader)
@@ -415,9 +415,11 @@ def extract_phones(job):
             phones[job_row] = "Unavailable"
             current_app.logger.error(
                 f"Corrupt csv file, missing columns or\
-                possibly a byte order mark in the file, row looks like {row}",
+                possibly a byte order mark in the file, \
+                row: {row} service_id {service_id} job_id {job_id}",
             )
-
+            # If the file is corrupt, stop trying to process it.
+            return phones
         else:
             my_phone = row[phone_index]
             my_phone = re.sub(r"[\+\s\(\)\-\.]*", "", my_phone)
@@ -460,7 +462,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    phones = extract_phones(job)
+    phones = extract_phones(job, service_id, job_id)
     set_job_cache(f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it

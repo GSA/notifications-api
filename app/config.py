@@ -2,10 +2,12 @@ import json
 from datetime import datetime, timedelta
 from os import getenv, path
 
+from boto3 import Session
 from celery.schedules import crontab
 from kombu import Exchange, Queue
 
 import notifications_utils
+from app.clients import AWS_CLIENT_CONFIG
 from app.cloudfoundry_config import cloud_config
 
 
@@ -49,6 +51,13 @@ class QueueNames(object):
 class TaskNames(object):
     PROCESS_INCOMPLETE_JOBS = "process-incomplete-jobs"
     SCAN_FILE = "scan-file"
+
+
+session = Session(
+    aws_access_key_id=getenv("CSV_AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=getenv("CSV_AWS_SECRET_ACCESS_KEY"),
+    region_name=getenv("CSV_AWS_REGION"),
+)
 
 
 class Config(object):
@@ -165,6 +174,9 @@ class Config(object):
     DVLA_EMAIL_ADDRESSES = json.loads(getenv("DVLA_EMAIL_ADDRESSES", "[]"))
 
     current_minute = (datetime.now().minute + 1) % 60
+
+    S3_CLIENT = session.client("s3")
+    S3_RESOURCE = session.resource("s3", config=AWS_CLIENT_CONFIG)
 
     CELERY = {
         "worker_max_tasks_per_child": 500,
@@ -327,7 +339,7 @@ class Config(object):
 
     FREE_SMS_TIER_FRAGMENT_COUNT = 250000
 
-    TOTAL_MESSAGE_LIMIT = 250000
+    TOTAL_MESSAGE_LIMIT = 100000
 
     DAILY_MESSAGE_LIMIT = notifications_utils.DAILY_MESSAGE_LIMIT
 
