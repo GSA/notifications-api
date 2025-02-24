@@ -7,6 +7,7 @@ from app.dao.date_util import (
     get_calendar_year_for_datetime,
     get_month_start_and_end_date_in_utc,
     get_new_years,
+    generate_hourly_range,
 )
 
 
@@ -75,3 +76,44 @@ def test_get_month_start_and_end_date_in_utc(month, year, expected_start, expect
 )
 def test_get_calendar_year_for_datetime(dt, fy):
     assert get_calendar_year_for_datetime(dt) == fy
+
+
+def test_generate_hourly_range_with_end_date():
+    start_date = datetime(2025, 2, 18, 12, 0)
+    end_date = datetime(2025, 2, 18, 15, 0)
+    result = list(generate_hourly_range(start_date, end_date=end_date))
+
+    expected = [
+        datetime(2025, 2, 18, 12, 0),
+        datetime(2025, 2, 18, 13, 0),
+        datetime(2025, 2, 18, 14, 0),
+        datetime(2025, 2, 18, 15, 0),
+    ]
+
+    assert result == expected, f"Expected {expected}, but got {result}"
+
+def test_generate_hourly_range_with_hours():
+    start_date = datetime(2025, 2, 18, 12, 0)
+    result = list(generate_hourly_range(start_date, hours=3))
+
+    expected = [
+        datetime(2025, 2, 18, 12, 0),
+        datetime(2025, 2, 18, 13, 0),
+        datetime(2025, 2, 18, 14, 0),
+    ]
+
+    assert result == expected, f"Expected {expected}, but got {result}"
+
+def test_generate_hourly_range_with_zero_hours():
+    start_date = datetime(2025, 2, 18, 12, 0)
+    result = list(generate_hourly_range(start_date, hours=0))
+
+    assert result == [], f"Expected an empty list, but got {result}"
+
+
+def test_generate_hourly_range_with_end_date_before_start():
+    start_date = datetime(2025, 2, 18, 12, 0)
+    end_date = datetime(2025, 2, 18, 10, 0)
+    result = list(generate_hourly_range(start_date, end_date=end_date))
+
+    assert result == [], f"Expected empty list, but got {result}"
