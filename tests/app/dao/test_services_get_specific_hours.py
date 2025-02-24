@@ -1,5 +1,6 @@
 from datetime import datetime
 from unittest.mock import Mock
+
 import pytest
 
 from app.dao.services_dao import get_specific_hours_stats

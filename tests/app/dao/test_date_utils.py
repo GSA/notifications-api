@@ -3,11 +3,11 @@ from datetime import date, datetime
 import pytest
 
 from app.dao.date_util import (
+    generate_hourly_range,
     get_calendar_year,
     get_calendar_year_for_datetime,
     get_month_start_and_end_date_in_utc,
     get_new_years,
-    generate_hourly_range,
 )
 
 
