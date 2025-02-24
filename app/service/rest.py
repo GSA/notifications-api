@@ -71,6 +71,7 @@ from app.dao.services_dao import (
     dao_fetch_service_by_id,
     dao_fetch_stats_for_service_from_days,
     dao_fetch_stats_for_service_from_days_for_user,
+    dao_fetch_stats_for_service_from_hours,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_remove_user_from_service,
@@ -80,6 +81,7 @@ from app.dao.services_dao import (
     fetch_notification_stats_for_service_by_month_by_user,
     get_services_by_partial_name,
     get_specific_days_stats,
+    get_specific_hours_stats,
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
@@ -230,22 +232,24 @@ def get_service_notification_statistics_by_day(service_id, start, days):
 
 
 def get_service_statistics_for_specific_days(service_id, start, days=1):
-    # start and end dates needs to be reversed because
-    # the end date is today and the start is x days in the past
-    # a day needs to be substracted to allow for today
+    # Calculate start and end date range
     end_date = datetime.strptime(start, "%Y-%m-%d")
     start_date = end_date - timedelta(days=days - 1)
 
-    total_notifications, results = dao_fetch_stats_for_service_from_days(
+    # Fetch hourly stats from DB
+    total_notifications, results = dao_fetch_stats_for_service_from_hours(
         service_id,
         start_date,
         end_date,
     )
 
-    stats = get_specific_days_stats(
+    hours = days * 24
+
+    # Process data using new hourly stats function
+    stats = get_specific_hours_stats(
         results,
         start_date,
-        days=days,
+        hours=hours,
         total_notifications=total_notifications,
     )
 
