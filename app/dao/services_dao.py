@@ -905,25 +905,22 @@ def get_specific_hours_stats(data, start_date, hours=None, end_date=None, total_
     else:
         raise ValueError("Either hours or end_date must be set.")
 
-    # Ensure all hours exist in the output (even if empty)
     grouped_data = {hour: [] for hour in gen_range}
 
-    # Normalize timestamps and group notifications
     for row in data:
-        row_hour = row.timestamp.replace(minute=0, second=0, microsecond=0)  # Normalize to full hour
+        timestamp = row
+
+        row_hour = timestamp.replace(minute=0, second=0, microsecond=0)
         if row_hour in grouped_data:
             grouped_data[row_hour].append(row)
-
-    # Ensure `total_notifications` is a dictionary
-    total_notifications = total_notifications or {}
 
     # Format statistics, returning only hours with results
     stats = {
         hour.strftime("%Y-%m-%dT%H:00:00Z"): statistics.format_statistics(
             rows,
-            total_notifications.get(hour, 0)
+            total_notifications.get(hour, 0) if total_notifications else None
         )
-        for hour, rows in grouped_data.items() if rows  # Only include hours with notifications
+        for hour, rows in grouped_data.items() if rows
     }
 
     return stats
