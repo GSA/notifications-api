@@ -905,10 +905,12 @@ def get_specific_hours_stats(data, start_date, hours=None, end_date=None, total_
     else:
         raise ValueError("Either hours or end_date must be set.")
 
+    # Ensure all hours exist in the output (even if empty)
     grouped_data = {hour: [] for hour in gen_range}
 
+    # Group notifications based on full hour timestamps
     for row in data:
-        timestamp = row
+        notification_type, status, timestamp, count = row
 
         row_hour = timestamp.replace(minute=0, second=0, microsecond=0)
         if row_hour in grouped_data:
