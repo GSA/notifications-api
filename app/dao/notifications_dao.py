@@ -279,6 +279,44 @@ def dao_get_notification_count_for_service(*, service_id):
     return db.session.execute(stmt).scalar()
 
 
+def dao_get_notification_count_for_service_message_ratio(service_id, current_year):
+    start_date = datetime(current_year, 1, 1)
+    end_date = datetime(current_year + 1, 1, 1)
+    stmt1 = (
+        select(func.count())
+        .select_from(Notification)
+        .where(
+            Notification.service_id == service_id,
+            Notification.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            Notification.created_at >= start_date,
+            Notification.created_at < end_date,
+        )
+    )
+    stmt2 = (
+        select(func.count())
+        .select_from(NotificationHistory)
+        .where(
+            NotificationHistory.service_id == service_id,
+            NotificationHistory.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            NotificationHistory.created_at >= start_date,
+            NotificationHistory.created_at < end_date,
+        )
+    )
+    recent_count = db.session.execute(stmt1).scalar_one()
+    old_count = db.session.execute(stmt2).scalar_one()
+    return recent_count + old_count
+
+
 def dao_get_failed_notification_count():
     stmt = select(func.count(Notification.id)).where(
         Notification.status == NotificationStatus.FAILED
