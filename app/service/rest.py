@@ -1148,7 +1148,7 @@ def modify_service_data_retention(service_id, data_retention_id):
 def get_service_message_ratio():
     service_id = request.args.get("service_id")
 
-    current_year = datetime.datetime.now(tzinfo=ZoneInfo("UTC")).year
+    current_year = datetime.now(tzinfo=ZoneInfo("UTC")).year
     my_service = dao_fetch_service_by_id(service_id)
     messages_sent = dao_get_notification_count_for_service_message_ratio(
         service_id, current_year
