@@ -988,4 +988,4 @@ def admin_request(client):
 
 
 def datetime_in_past(days=0, seconds=0):
-    return datetime.now(tz=ZoneInfo.UTC) - timedelta(days=days, seconds=seconds)
+    return datetime.now(tz=ZoneInfo("UTC")) - timedelta(days=days, seconds=seconds)

@@ -12,5 +12,5 @@ def utc_string_to_aware_gmt_datetime(date):
     Returns an aware local datetime, essentially the time you'd see on your clock
     """
     date = parser.parse(date)
-    forced_utc = date.replace(tzinfo=ZoneInfo.UTC)
+    forced_utc = date.replace(tzinfo=ZoneInfo("UTC"))
     return forced_utc.astimezone(local_timezone)

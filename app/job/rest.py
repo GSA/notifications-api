@@ -226,7 +226,7 @@ def get_scheduled_job_stats(service_id):
         jsonify(
             count=count,
             soonest_scheduled_for=(
-                soonest_scheduled_for.replace(tzinfo=ZoneInfo.UTC).isoformat()
+                soonest_scheduled_for.replace(tzinfo=ZoneInfo("UTC")).isoformat()
                 if soonest_scheduled_for
                 else None
             ),
