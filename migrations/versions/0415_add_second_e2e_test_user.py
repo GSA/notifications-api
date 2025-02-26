@@ -8,6 +8,7 @@ from alembic import op
 # from app import db
 # from app.dao.users_dao import get_user_by_email
 # from app.models import User
+from app.enums import AuthType
 from app.utils import utc_now
 
 revision = "0415_add_second_e2e_test_user"
@@ -39,6 +40,7 @@ def upgrade():
         "password_changed_at": utc_now(),
         "failed_login_count": 0,
         "platform_admin": "f",
+        "auth_type": AuthType.SMS,
         "email_access_validated_at": utc_now(),
     }
     conn = op.get_bind()
