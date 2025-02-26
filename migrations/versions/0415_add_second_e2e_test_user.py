@@ -9,6 +9,7 @@ from app import db
 from app.dao.users_dao import get_user_by_email
 from app.models import User
 from app.utils import utc_now
+from app.enums import AuthType
 
 revision = "0415_add_second_e2e_test_user"
 down_revision = "0414_change_total_message_limit"
@@ -32,11 +33,12 @@ def upgrade():
         "failed_login_count": 0,
         "platform_admin": "f",
         "email_access_validated_at": utc_now(),
+        "auth_type": AuthType.SMS,
     }
     conn = op.get_bind()
     insert_sql = """
-        insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at)
-        values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at)
+        insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at, auth_type)
+        values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at, :auth_type)
         """
     conn.execute(sa.text(insert_sql), data)
 
