@@ -26,8 +26,9 @@ old_type = sa.Enum(*old_options, name=enum_name)
 def upgrade():
     # ALTER TYPE must be run outside of a transaction block (see link below for details)
     # https://alembic.sqlalchemy.org/en/latest/api/runtime.html#alembic.runtime.migration.MigrationContext.autocommit_block
-    with op.get_context().autocommit_block():
-        op.execute(f"ALTER TYPE {enum_name} ADD VALUE 'expired'")
+    pass
+    # with op.get_context().autocommit_block():
+    #    op.execute(f"ALTER TYPE {enum_name} ADD VALUE 'expired'")
 
 
 def downgrade():
