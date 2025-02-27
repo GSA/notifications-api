@@ -267,6 +267,29 @@ def get_notifications_for_job(
     return pagination
 
 
+def get_recent_notifications_for_job(
+    service_id, job_id, filter_dict=None, page=1, page_size=None
+):
+    if page_size is None:
+        page_size = current_app.config["PAGE_SIZE"]
+
+    stmt = select(Notification).where(
+        Notification.service_id == service_id,
+        Notification.job_id == job_id,
+    )
+
+    stmt = _filter_query(stmt, filter_dict)
+    stmt = stmt.order_by(desc(Notification.job_row_number))
+    results = db.session.execute(stmt).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
+
+
 def dao_get_notification_count_for_job_id(*, job_id):
     stmt = select(func.count(Notification.id)).where(Notification.job_id == job_id)
     return db.session.execute(stmt).scalar()

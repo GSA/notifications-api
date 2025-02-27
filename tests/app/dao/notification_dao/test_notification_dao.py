@@ -28,6 +28,7 @@ from app.dao.notifications_dao import (
     get_notification_with_personalisation,
     get_notifications_for_job,
     get_notifications_for_service,
+    get_recent_notifications_for_job,
     get_service_ids_with_notifications_on_date,
     notifications_not_yet_sent,
     sanitize_successful_notification_by_id,
@@ -690,6 +691,17 @@ def test_get_all_notifications_for_job(sample_job):
         sample_job.service.id, sample_job.id
     ).items
     assert len(notifications_from_db) == 5
+
+
+def test_get_recent_notifications_for_job(sample_job):
+
+    for status in NotificationStatus:
+        create_notification(template=sample_job.template, job=sample_job, status=status)
+
+    notifications_from_db = get_recent_notifications_for_job(
+        sample_job.service.id, sample_job.id
+    ).items
+    assert len(notifications_from_db) == 13
 
 
 def test_get_all_notifications_for_job_by_status(sample_job):
