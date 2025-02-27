@@ -93,3 +93,25 @@ def generate_date_range(start_date, end_date=None, days=0):
             current_date += timedelta(days=1)
     else:
         return "An end_date or number of days must be specified"
+
+
+def generate_hourly_range(start_date, end_date=None, hours=0):
+    if end_date:
+        current_time = start_date
+        while current_time <= end_date:
+            try:
+                yield current_time
+            except ValueError:
+                pass
+            current_time += timedelta(hours=1)
+    elif hours > 0:
+        end_time = start_date + timedelta(hours=hours)
+        current_time = start_date
+        while current_time < end_time:
+            try:
+                yield current_time
+            except ValueError:
+                pass
+            current_time += timedelta(hours=1)
+    else:
+        return "An end_date or number of hours must be specified"
