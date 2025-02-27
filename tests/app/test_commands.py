@@ -15,6 +15,7 @@ from app.commands import (
     dump_sms_senders,
     dump_user_info,
     fix_billable_units,
+    generate_salt,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
@@ -661,3 +662,10 @@ def test_dump_user_info(notify_api, mocker):
 
     mock_get_user_by_email.assert_called_once_with("john@example.com")
     mock_open_file.assert_called_once_with("user_download.json", "wb")
+
+
+def test_generate_salt(notify_api):
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(generate_salt)
+    assert result.exit_code == 0
+    assert len(result.output.strip()) == 32
