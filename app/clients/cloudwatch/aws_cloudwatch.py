@@ -7,7 +7,6 @@ from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
-from app.utils import hilite
 
 
 class AwsCloudwatchClient(Client):
@@ -113,7 +112,6 @@ class AwsCloudwatchClient(Client):
             message_cost = 0.0
         else:
             message_cost = float(message_cost)
-        current_app.logger.info(hilite(f"EVENT {event} message_cost = {message_cost}"))
 
         my_timestamp = self._aws_value_or_default(event, "notification", "timestamp")
         return {
