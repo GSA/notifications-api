@@ -917,7 +917,6 @@ def dao_close_out_delivery_receipts():
 
 
 def dao_batch_insert_notifications(batch):
-    current_app.logger.info(f"ENTER DAO_BATCH_INSERT with batch {batch}")
     db.session.bulk_save_objects(batch)
     db.session.commit()
     current_app.logger.info(f"Batch inserted notifications: {len(batch)}")
