@@ -131,7 +131,7 @@ def test_event_to_db_format_with_missing_fields():
         "status": "UNKNOWN",
         "delivery.phoneCarrier": "",
         "delivery.providerResponse": "",
-        "delivery.priceInUSD": "0.0",
+        "delivery.priceInUSD": 0.0,
         "@timestamp": "",
     }
 
@@ -154,6 +154,6 @@ def test_event_to_db_format_with_string_input():
         "status": "FAILED",
         "delivery.phoneCarrier": "Verizon",
         "delivery.providerResponse": "Error",
-        "delivery.priceInUSD": "0.00881",
+        "delivery.priceInUSD": 0.00881,
         "@timestamp": "2024-01-01T14:00:00Z",
     }
