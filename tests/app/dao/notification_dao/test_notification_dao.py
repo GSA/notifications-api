@@ -2019,8 +2019,8 @@ def test_notifications_not_yet_sent_return_no_rows(sample_service, notification_
 def test_update_delivery_receipts(mocker):
     mock_session = mocker.patch("app.dao.notifications_dao.db.session")
     receipts = [
-        '{"notification.messageId": "msg1", "delivery.phoneCarrier": "carrier1", "delivery.providerResponse": "resp1", "@timestamp": "2024-01-01T12:00:00"}',  # noqa
-        '{"notification.messageId": "msg2", "delivery.phoneCarrier": "carrier2", "delivery.providerResponse": "resp2", "@timestamp": "2024-01-01T13:00:00"}',  # noqa
+        '{"notification.messageId": "msg1", "delivery.phoneCarrier": "carrier1", "delivery.providerResponse": "resp1", "@timestamp": "2024-01-01T12:00:00", "delivery.priceInUSD": "0.00881"}',  # noqa
+        '{"notification.messageId": "msg2", "delivery.phoneCarrier": "carrier2", "delivery.providerResponse": "resp2", "@timestamp": "2024-01-01T13:00:00", "delivery.priceInUSD": "0.00881"}',  # noqa
     ]
     delivered = True
     mock_update = MagicMock()
