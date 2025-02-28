@@ -831,7 +831,7 @@ def test_get_organization_users_returns_users_for_organization(
     )
 
     assert len(response["data"]) == 2
-    response_ids = [response["data"][0]["id"], response["data"][0]["id"]]
+    response_ids = [response["data"][0]["id"], response["data"][1]["id"]]
     assert str(first.id) in response_ids
     assert str(second.id) in response_ids
 
