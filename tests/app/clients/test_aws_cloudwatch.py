@@ -31,7 +31,7 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
                 {
                     "logStreamName": "89db9712-c6d1-49f9-be7c-4caa7ed9efb1",
                     "message": '{"delivery":{"destination":"+1661","phoneCarrier":"ATT Mobility", '
-                    '"providerResponse":"Invalid phone number"}}',
+                    '"providerResponse":"Invalid phone number", "priceInUSD": "0.00881"}}',
                     "eventId": "37535432778099870001723210579798865345508698025292922880",
                 }
             ]
@@ -44,7 +44,7 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
                     "logStreamName": "89db9712-c6d1-49f9-be7c-4caa7ed9efb1",
                     "timestamp": 1683147017911,
                     "message": '{"delivery":{"destination":"+1661","phoneCarrier":"ATT Mobility",'
-                    '"providerResponse":"Phone accepted msg"}}',
+                    '"providerResponse":"Phone accepted msg", "priceInUSD": "0.00881"}}',
                     "ingestionTime": 1683147018026,
                     "eventId": "37535432778099870001723210579798865345508698025292922880",
                 }
@@ -131,6 +131,7 @@ def test_event_to_db_format_with_missing_fields():
         "status": "UNKNOWN",
         "delivery.phoneCarrier": "",
         "delivery.providerResponse": "",
+        "delivery.priceInUSD": "0.0",
         "@timestamp": "",
     }
 
@@ -140,7 +141,11 @@ def test_event_to_db_format_with_string_input():
         {
             "notification": {"messageId": "67890", "timestamp": "2024-01-01T14:00:00Z"},
             "status": "FAILED",
-            "delivery": {"phoneCarrier": "Verizon", "providerResponse": "Error"},
+            "delivery": {
+                "phoneCarrier": "Verizon",
+                "providerResponse": "Error",
+                "priceInUSD": "0.00881",
+            },
         }
     )
     result = aws_cloudwatch_client.event_to_db_format(event)
@@ -149,5 +154,6 @@ def test_event_to_db_format_with_string_input():
         "status": "FAILED",
         "delivery.phoneCarrier": "Verizon",
         "delivery.providerResponse": "Error",
+        "delivery.priceInUSD": "0.00881",
         "@timestamp": "2024-01-01T14:00:00Z",
     }
