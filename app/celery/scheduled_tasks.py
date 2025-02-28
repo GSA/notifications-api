@@ -266,7 +266,7 @@ def process_delivery_receipts(self):
 
         cloudwatch = AwsCloudwatchClient()
         cloudwatch.init_app(current_app)
-        start_time = aware_utcnow() - timedelta(minutes=3)
+        start_time = aware_utcnow() - timedelta(minutes=30)
         end_time = aware_utcnow()
         delivered_receipts, failed_receipts = cloudwatch.check_delivery_receipts(
             start_time, end_time

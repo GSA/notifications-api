@@ -7,6 +7,7 @@ from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
+from app.utils import hilite
 
 
 class AwsCloudwatchClient(Client):
@@ -107,6 +108,13 @@ class AwsCloudwatchClient(Client):
         provider_response = self._aws_value_or_default(
             event, "delivery", "providerResponse"
         )
+        message_cost = self._aws_value_or_default(event, "delivery", "priceInUSD")
+        if message_cost is None or message_cost == "":
+            message_cost = 0.0
+        else:
+            message_cost = float(message_cost)
+        current_app.logger.info(hilite(f"EVENT {event} message_cost = {message_cost}"))
+
         my_timestamp = self._aws_value_or_default(event, "notification", "timestamp")
         return {
             "notification.messageId": event["notification"]["messageId"],
@@ -114,6 +122,7 @@ class AwsCloudwatchClient(Client):
             "delivery.phoneCarrier": phone_carrier,
             "delivery.providerResponse": provider_response,
             "@timestamp": my_timestamp,
+            "delivery.priceInUSD": message_cost,
         }
 
     # Here is an example of how to get the events with log insights
