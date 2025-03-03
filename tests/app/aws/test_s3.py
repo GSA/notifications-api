@@ -22,8 +22,10 @@ from app.aws.s3 import (
     get_s3_object,
     get_s3_resource,
     list_s3_objects,
+    purge_bucket,
     read_s3_file,
     remove_csv_object,
+    remove_job_from_s3,
     remove_s3_object,
 )
 from app.clients import AWS_CLIENT_CONFIG
@@ -563,3 +565,72 @@ def test_get_s3_object_client_error(mocker):
     mock_logger.exception.assert_called_once_with(
         f"Can't retrieve S3 Object from {file_location}"
     )
+
+
+def test_purge_bucket(mocker):
+    mock_s3_resource = MagicMock()
+    mock_bucket = MagicMock()
+    mock_s3_resource.Bucket.return_value = mock_bucket
+    mocker.patch('app.aws.s3.get_s3_resource', return_value=mock_s3_resource)
+
+    purge_bucket('my-bucket', 'access-key', 'secret-key', 'region')
+
+    # Assert that the bucket's objects.all().delete() method was called
+    mock_bucket.objects.all.return_value.delete.assert_called_once()
+
+
+def test_remove_job_from_s3(mocker):
+    mock_get_job_location = mocker.patch("app.aws.s3.get_job_location")
+    mock_remove_s3_object = mocker.patch("app.aws.s3.remove_s3_object")
+
+    mock_get_job_location.return_value = (
+        "test-bucket",
+        "test.csv",
+        "fake-stuff",
+    )
+
+    remove_job_from_s3("service-id-123", "job-id-456")
+
+    mock_get_job_location.assert_called_once_with("service-id-123", "job-id-456")
+    mock_remove_s3_object.assert_called_once_with(
+        "test-bucket",
+        "test.csv",
+        "fake-stuff",
+    )
+
+
+def test_get_s3_files_handles_exception(mocker):
+    mock_current_app = mocker.patch("app.aws.s3.current_app")
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"},
+        "job_cache": {},
+    }
+
+    mock_list_s3_objects = mocker.patch("app.aws.s3.list_s3_objects")
+    mock_list_s3_objects.return_value = ["file1.csv", "file2.csv"]
+
+    mock_get_s3_resource = mocker.patch("app.aws.s3.get_s3_resource")
+
+    # Make the first call succeed, second call should fail.
+    mock_read_s3_file = mocker.patch(
+        "app.aws.s3.read_s3_file",
+        side_effect=[None, Exception("exception here")]
+    )
+
+    mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
+    mock_executor = mock_thread_pool_executor.return_value.__enter__.return_value
+
+    def mock_map(func, iterable):
+        for item in iterable:
+            func(item)
+
+    mock_executor.map.side_effect = mock_map
+    get_s3_files()
+
+    calls = [
+        mocker.call("test-bucket", "file1.csv", mock_get_s3_resource.return_value),
+        mocker.call("test-bucket", "file2.csv", mock_get_s3_resource.return_value),
+    ]
+    mock_read_s3_file.assert_has_calls(calls, any_order=True)
+
+    mock_current_app.logger.exception.assert_called_with("Connection pool issue")

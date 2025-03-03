@@ -534,7 +534,9 @@ def dao_fetch_stats_for_service_from_hours(service_id, start_date, end_date):
     # Update to group by HOUR instead of DAY
     total_substmt = (
         select(
-            func.date_trunc("hour", NotificationAllTimeView.created_at).label("hour"),  # UPDATED
+            func.date_trunc("hour", NotificationAllTimeView.created_at).label(
+                "hour"
+            ),  # UPDATED
             Job.notification_count.label("notification_count"),
         )
         .join(Job, NotificationAllTimeView.job_id == Job.id)
@@ -556,11 +558,14 @@ def dao_fetch_stats_for_service_from_hours(service_id, start_date, end_date):
     total_stmt = select(
         total_substmt.c.hour,  # UPDATED
         func.sum(total_substmt.c.notification_count).label("total_notifications"),
-    ).group_by(total_substmt.c.hour)  # UPDATED
+    ).group_by(
+        total_substmt.c.hour
+    )  # UPDATED
 
     # Ensure we're using hourly timestamps in the response
     total_notifications = {
-        row.hour: row.total_notifications for row in db.session.execute(total_stmt).all()
+        row.hour: row.total_notifications
+        for row in db.session.execute(total_stmt).all()
     }
 
     # Update the second query to also use "hour"
@@ -568,7 +573,9 @@ def dao_fetch_stats_for_service_from_hours(service_id, start_date, end_date):
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("hour", NotificationAllTimeView.created_at).label("hour"),  # UPDATED
+            func.date_trunc("hour", NotificationAllTimeView.created_at).label(
+                "hour"
+            ),  # UPDATED
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
@@ -895,7 +902,9 @@ def get_specific_days_stats(
     return stats
 
 
-def get_specific_hours_stats(data, start_date, hours=None, end_date=None, total_notifications=None):
+def get_specific_hours_stats(
+    data, start_date, hours=None, end_date=None, total_notifications=None
+):
     if hours is not None and end_date is not None:
         raise ValueError("Only set hours OR set end_date, not both.")
     elif hours is not None:
@@ -919,10 +928,10 @@ def get_specific_hours_stats(data, start_date, hours=None, end_date=None, total_
     # Format statistics, returning only hours with results
     stats = {
         hour.strftime("%Y-%m-%dT%H:00:00Z"): statistics.format_statistics(
-            rows,
-            total_notifications.get(hour, 0) if total_notifications else None
+            rows, total_notifications.get(hour, 0) if total_notifications else None
         )
-        for hour, rows in grouped_data.items() if rows
+        for hour, rows in grouped_data.items()
+        if rows
     }
 
     return stats

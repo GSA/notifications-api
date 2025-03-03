@@ -2134,3 +2134,55 @@ def test_sanitize_successful_notification_by_id():
                 "sent_at": ANY,
             },
         )
+
+
+def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_reference(notify_db_session):
+    """
+    This test:
+      1. Creates a service and an SMS template.
+      2. Creates a notification with a specific client_reference and status=FAILED.
+      3. Calls dao_get_notifications_by_recipient_or_reference with notification_type=SMS,
+         statuses=[FAILED], and a search term = client_reference.
+      4. Confirms the function returns exactly one notification matching that reference.
+    """
+
+    service = create_service(service_name="Test Service")
+    template = create_template(service=service, template_type=NotificationType.SMS)
+
+    # Instead of matching phone logic, we'll match on client_reference
+    data = {
+        "id": uuid.uuid4(),
+        "to": "1",
+        "normalised_to": "1",     # phone is irrelevant here
+        "service_id": service.id,
+        "service": service,
+        "template_id": template.id,
+        "template_version": template.version,
+        "status": NotificationStatus.FAILED,
+        "created_at": utc_now(),
+        "billable_units": 1,
+        "notification_type": template.template_type,
+        "key_type": KeyType.NORMAL,
+        "client_reference": "some-ref",  # <--- We'll search for this
+    }
+    notification = Notification(**data)
+    dao_create_notification(notification)
+
+    # We'll search by this reference instead of a phone number
+    search_term = "some-ref"
+
+    results_page = dao_get_notifications_by_recipient_or_reference(
+        service_id=service.id,
+        search_term=search_term,
+        notification_type=NotificationType.SMS,
+        statuses=[NotificationStatus.FAILED],
+        page=1,
+        page_size=50,
+    )
+
+    # Now we should find exactly one match
+    assert len(results_page.items) == 1, "Should find exactly one matching notification"
+    found = results_page.items[0]
+    assert found.id == notification.id
+    assert found.status == NotificationStatus.FAILED
+    assert found.client_reference == "some-ref"
