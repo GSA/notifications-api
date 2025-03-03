@@ -2136,7 +2136,9 @@ def test_sanitize_successful_notification_by_id():
         )
 
 
-def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_reference(notify_db_session):
+def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_reference(
+    notify_db_session,
+):
     """
     This test:
       1. Creates a service and an SMS template.
@@ -2153,7 +2155,7 @@ def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_re
     data = {
         "id": uuid.uuid4(),
         "to": "1",
-        "normalised_to": "1",     # phone is irrelevant here
+        "normalised_to": "1",  # phone is irrelevant here
         "service_id": service.id,
         "service": service,
         "template_id": template.id,

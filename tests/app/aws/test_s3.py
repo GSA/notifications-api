@@ -571,9 +571,9 @@ def test_purge_bucket(mocker):
     mock_s3_resource = MagicMock()
     mock_bucket = MagicMock()
     mock_s3_resource.Bucket.return_value = mock_bucket
-    mocker.patch('app.aws.s3.get_s3_resource', return_value=mock_s3_resource)
+    mocker.patch("app.aws.s3.get_s3_resource", return_value=mock_s3_resource)
 
-    purge_bucket('my-bucket', 'access-key', 'secret-key', 'region')
+    purge_bucket("my-bucket", "access-key", "secret-key", "region")
 
     # Assert that the bucket's objects.all().delete() method was called
     mock_bucket.objects.all.return_value.delete.assert_called_once()
@@ -613,8 +613,7 @@ def test_get_s3_files_handles_exception(mocker):
 
     # Make the first call succeed, second call should fail.
     mock_read_s3_file = mocker.patch(
-        "app.aws.s3.read_s3_file",
-        side_effect=[None, Exception("exception here")]
+        "app.aws.s3.read_s3_file", side_effect=[None, Exception("exception here")]
     )
 
     mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")

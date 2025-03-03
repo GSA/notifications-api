@@ -36,7 +36,9 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     service_2 = create_service(service_name="service_2")
 
     create_template(service=service_1)
-    create_template(service=service_1, template_type=TemplateType.EMAIL)
+    template_email = create_template(
+        service=service_1, template_type=TemplateType.EMAIL
+    )
     # not the service being tested
     create_template(service=service_2)
 
@@ -50,11 +52,15 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     create_notification(
         service_1.templates[0], created_at=datetime(2018, 1, 1, 1, 1, 0)
     )
-    create_notification(
+    questionable_notification = create_notification(
         service_1.templates[1],
         created_at=datetime(2018, 1, 1, 1, 1, 0),
         status=NotificationStatus.DELIVERED,
     )
+    print(
+        f"QN status = {questionable_notification.status} type = {questionable_notification.notification_type}"
+    )
+
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 2, 1, 1, 1, 0),
@@ -85,6 +91,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     assert len(results) == 4
 
     assert results[0].month.date() == date(2018, 1, 1)
+    assert results[0].template == template_email
     assert results[0].notification_type == NotificationType.EMAIL
     assert results[0].notification_status == NotificationStatus.DELIVERED
     assert results[0].count == 1
