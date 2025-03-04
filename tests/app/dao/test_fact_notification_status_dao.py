@@ -77,7 +77,6 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
         key=lambda x: (x.month, x.notification_status),
     )
 
-    print(results)
     assert len(results) == 3
 
     assert results[0].month.date() == date(2018, 1, 1)
