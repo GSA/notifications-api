@@ -451,9 +451,9 @@ def test_get_s3_files_success(client, mocker):
 
     mock_read_s3_file.assert_has_calls(calls, any_order=True)
 
-    # mock_current_app.info.assert_any_call("job_cache length before regen: 0 #notify-admin-1200")
+    # mock_current_app.info.assert_any_call("job_cache length before regen: 0 #notify-debug-admin-1200")
 
-    # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-admin-1200")
+    # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-debug-admin-1200")
 
 
 @patch("app.aws.s3.s3_client", None)  # ensure it starts as None
