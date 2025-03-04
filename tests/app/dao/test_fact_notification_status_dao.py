@@ -47,14 +47,19 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
             created_at=datetime(2018, 1, 1, 1, x, 0),
             status=NotificationStatus.DELIVERED,
         )
-    create_notification(
+    whats_this = create_notification(
         service_1.templates[0], created_at=datetime(2018, 1, 1, 1, 1, 0)
     )
-    create_notification(
+    print(f"WTN status = {whats_this.status} type = {whats_this.notification_type}")
+    questionable_notification = create_notification(
         service_1.templates[1],
         created_at=datetime(2018, 1, 1, 1, 1, 0),
         status=NotificationStatus.DELIVERED,
     )
+    print(
+        f"QN status = {questionable_notification.status} type = {questionable_notification.notification_type}"
+    )
+
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 2, 1, 1, 1, 0),
