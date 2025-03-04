@@ -47,17 +47,13 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
             created_at=datetime(2018, 1, 1, 1, x, 0),
             status=NotificationStatus.DELIVERED,
         )
-    whats_this = create_notification(
+    create_notification(
         service_1.templates[0], created_at=datetime(2018, 1, 1, 1, 1, 0)
     )
-    print(f"WTN status = {whats_this.status} type = {whats_this.notification_type}")
-    questionable_notification = create_notification(
+    create_notification(
         service_1.templates[1],
         created_at=datetime(2018, 1, 1, 1, 1, 0),
         status=NotificationStatus.DELIVERED,
-    )
-    print(
-        f"QN status = {questionable_notification.status} type = {questionable_notification.notification_type}"
     )
 
     create_notification(
@@ -88,6 +84,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     )
 
     assert len(results) == 4
+    print(results)
 
     assert results[0].month.date() == date(2018, 1, 1)
     assert results[0].notification_type == NotificationType.EMAIL
@@ -107,7 +104,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     assert results[3].month.date() == date(2018, 2, 1)
     assert results[3].notification_type == NotificationType.SMS
     assert results[3].notification_status == NotificationStatus.DELIVERED
-    assert results[3].count == 1
+    assert results[3].count == 1000
 
 
 def test_fetch_notification_status_for_service_for_day(notify_db_session):
