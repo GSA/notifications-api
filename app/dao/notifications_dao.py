@@ -267,6 +267,29 @@ def get_notifications_for_job(
     return pagination
 
 
+def get_recent_notifications_for_job(
+    service_id, job_id, filter_dict=None, page=1, page_size=None
+):
+    if page_size is None:
+        page_size = current_app.config["PAGE_SIZE"]
+
+    stmt = select(Notification).where(
+        Notification.service_id == service_id,
+        Notification.job_id == job_id,
+    )
+
+    stmt = _filter_query(stmt, filter_dict)
+    stmt = stmt.order_by(desc(Notification.job_row_number))
+    results = db.session.execute(stmt).scalars().all()
+
+    page_size = current_app.config["PAGE_SIZE"]
+    offset = (page - 1) * page_size
+    paginated_results = results[offset : offset + page_size]
+
+    pagination = Pagination(paginated_results, page, page_size, len(results))
+    return pagination
+
+
 def dao_get_notification_count_for_job_id(*, job_id):
     stmt = select(func.count(Notification.id)).where(Notification.job_id == job_id)
     return db.session.execute(stmt).scalar()
@@ -277,6 +300,44 @@ def dao_get_notification_count_for_service(*, service_id):
         Notification.service_id == service_id
     )
     return db.session.execute(stmt).scalar()
+
+
+def dao_get_notification_count_for_service_message_ratio(service_id, current_year):
+    start_date = datetime(current_year, 1, 1)
+    end_date = datetime(current_year + 1, 1, 1)
+    stmt1 = (
+        select(func.count())
+        .select_from(Notification)
+        .where(
+            Notification.service_id == service_id,
+            Notification.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            Notification.created_at >= start_date,
+            Notification.created_at < end_date,
+        )
+    )
+    stmt2 = (
+        select(func.count())
+        .select_from(NotificationHistory)
+        .where(
+            NotificationHistory.service_id == service_id,
+            NotificationHistory.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            NotificationHistory.created_at >= start_date,
+            NotificationHistory.created_at < end_date,
+        )
+    )
+    recent_count = db.session.execute(stmt1).scalar_one()
+    old_count = db.session.execute(stmt2).scalar_one()
+    return recent_count + old_count
 
 
 def dao_get_failed_notification_count():
@@ -446,7 +507,7 @@ def insert_notification_history_delete_notifications(
          SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
              key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
              client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, document_download_count
+              created_by_id, document_download_count, message_cost
           FROM notifications
         WHERE service_id = :service_id
           AND notification_type = :notification_type
@@ -781,7 +842,6 @@ def dao_update_delivery_receipts(receipts, delivered):
         new_receipts.append(r)
 
     receipts = new_receipts
-
     id_to_carrier = {
         r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
     }
@@ -790,9 +850,13 @@ def dao_update_delivery_receipts(receipts, delivered):
     }
     id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
 
+    id_to_message_cost = {
+        r["notification.messageId"]: r["delivery.priceInUSD"] for r in receipts
+    }
     status_to_update_with = NotificationStatus.DELIVERED
     if not delivered:
         status_to_update_with = NotificationStatus.FAILED
+
     stmt = (
         update(Notification)
         .where(Notification.message_id.in_(id_to_carrier.keys()))
@@ -814,6 +878,12 @@ def dao_update_delivery_receipts(receipts, delivered):
                 *[
                     (Notification.message_id == key, value)
                     for key, value in id_to_provider_response.items()
+                ]
+            ),
+            message_cost=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_message_cost.items()
                 ]
             ),
         )
@@ -847,7 +917,6 @@ def dao_close_out_delivery_receipts():
 
 
 def dao_batch_insert_notifications(batch):
-
     db.session.bulk_save_objects(batch)
     db.session.commit()
     current_app.logger.info(f"Batch inserted notifications: {len(batch)}")

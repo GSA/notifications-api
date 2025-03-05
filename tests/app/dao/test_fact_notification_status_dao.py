@@ -36,7 +36,6 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     service_2 = create_service(service_name="service_2")
 
     create_template(service=service_1)
-    create_template(service=service_1, template_type=TemplateType.EMAIL)
     # not the service being tested
     create_template(service=service_2)
 
@@ -50,11 +49,7 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
     create_notification(
         service_1.templates[0], created_at=datetime(2018, 1, 1, 1, 1, 0)
     )
-    create_notification(
-        service_1.templates[1],
-        created_at=datetime(2018, 1, 1, 1, 1, 0),
-        status=NotificationStatus.DELIVERED,
-    )
+
     create_notification(
         service_1.templates[0],
         created_at=datetime(2018, 2, 1, 1, 1, 0),
@@ -79,30 +74,25 @@ def test_fetch_notification_status_for_service_by_month(notify_db_session):
         fetch_notification_status_for_service_by_month(
             date(2018, 1, 1), date(2018, 2, 28), service_1.id
         ),
-        key=lambda x: (x.month, x.notification_type, x.notification_status),
+        key=lambda x: (x.month, x.notification_status),
     )
 
-    assert len(results) == 4
+    assert len(results) == 3
 
     assert results[0].month.date() == date(2018, 1, 1)
-    assert results[0].notification_type == NotificationType.EMAIL
-    assert results[0].notification_status == NotificationStatus.DELIVERED
+    assert results[0].notification_type == NotificationType.SMS
+    assert results[0].notification_status == NotificationStatus.CREATED
     assert results[0].count == 1
 
     assert results[1].month.date() == date(2018, 1, 1)
     assert results[1].notification_type == NotificationType.SMS
-    assert results[1].notification_status == NotificationStatus.CREATED
-    assert results[1].count == 1
+    assert results[1].notification_status == NotificationStatus.DELIVERED
+    assert results[1].count == 14
 
-    assert results[2].month.date() == date(2018, 1, 1)
+    assert results[2].month.date() == date(2018, 2, 1)
     assert results[2].notification_type == NotificationType.SMS
     assert results[2].notification_status == NotificationStatus.DELIVERED
-    assert results[2].count == 14
-
-    assert results[3].month.date() == date(2018, 2, 1)
-    assert results[3].notification_type == NotificationType.SMS
-    assert results[3].notification_status == NotificationStatus.DELIVERED
-    assert results[3].count == 1
+    assert results[2].count == 1
 
 
 def test_fetch_notification_status_for_service_for_day(notify_db_session):
