@@ -1,5 +1,6 @@
+from zoneinfo import ZoneInfo
+
 import dateutil
-import pytz
 from flask import Blueprint, current_app, jsonify, request
 
 from app.aws.s3 import (
@@ -22,6 +23,7 @@ from app.dao.jobs_dao import (
 from app.dao.notifications_dao import (
     dao_get_notification_count_for_job_id,
     get_notifications_for_job,
+    get_recent_notifications_for_job,
 )
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
@@ -74,6 +76,71 @@ def get_all_notifications_for_service_job(service_id, job_id):
     )
     paginated_notifications = get_notifications_for_job(
         service_id, job_id, filter_dict=data, page=page, page_size=page_size
+    )
+
+    kwargs = request.args.to_dict()
+    kwargs["service_id"] = service_id
+    kwargs["job_id"] = job_id
+
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            recipient = get_phone_number_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+            notification.to = recipient
+            notification.normalised_to = recipient
+
+    for notification in paginated_notifications.items:
+        if notification.job_id is not None:
+            notification.personalisation = get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
+    notifications = None
+    if data.get("format_for_csv"):
+        notifications = [
+            notification.serialize_for_csv()
+            for notification in paginated_notifications.items
+        ]
+    else:
+        notifications = notification_with_template_schema.dump(
+            paginated_notifications.items, many=True
+        )
+
+    return (
+        jsonify(
+            notifications=notifications,
+            page_size=page_size,
+            total=paginated_notifications.total,
+            links=pagination_links(
+                paginated_notifications,
+                ".get_all_notifications_for_service_job",
+                **kwargs,
+            ),
+        ),
+        200,
+    )
+
+
+@job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
+def get_recent_notifications_for_service_job(service_id, job_id):
+    data = notifications_filter_schema.load(request.args)
+    page = data["page"] if "page" in data else 1
+    page_size = (
+        data["page_size"]
+        if "page_size" in data
+        else current_app.config.get("PAGE_SIZE")
+    )
+    paginated_notifications = get_recent_notifications_for_job(
+        service_id,
+        job_id,
+        filter_dict=data,
+        page=page,
+        page_size=page_size,
     )
 
     kwargs = request.args.to_dict()
@@ -225,7 +292,7 @@ def get_scheduled_job_stats(service_id):
         jsonify(
             count=count,
             soonest_scheduled_for=(
-                soonest_scheduled_for.replace(tzinfo=pytz.UTC).isoformat()
+                soonest_scheduled_for.replace(tzinfo=ZoneInfo("UTC")).isoformat()
                 if soonest_scheduled_for
                 else None
             ),

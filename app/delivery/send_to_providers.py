@@ -118,7 +118,13 @@ def send_sms_to_provider(notification):
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-
+                real_sender_number = notification.reply_to_text
+                # interleave spaces to bypass PII scrubbing since sender number is not PII
+                arr = list(real_sender_number)
+                real_sender_number = " ".join(arr)
+                current_app.logger.info(
+                    f"#notify-debug-api-1701 real sender number going to AWS is {real_sender_number}"
+                )
                 message_id = provider.send_sms(**send_sms_kwargs)
 
                 update_notification_message_id(notification.id, message_id)

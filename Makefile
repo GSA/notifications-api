@@ -148,3 +148,8 @@ clean:
 # 	cf unmap-route notify-api-failwhale ${DNS_NAME} --hostname api
 # 	cf stop notify-api-failwhale
 # 	@echo "Failwhale is disabled"
+
+.PHONY: test-single
+test-single: export NEW_RELIC_ENVIRONMENT=test
+test-single: ## Run a single test file
+	poetry run pytest -s $(TEST_FILE)
