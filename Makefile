@@ -152,4 +152,4 @@ clean:
 .PHONY: test-single
 test-single: export NEW_RELIC_ENVIRONMENT=test
 test-single: ## Run a single test file
-	poetry run pytest $(TEST_FILE)
+	poetry run pytest -s $(TEST_FILE)

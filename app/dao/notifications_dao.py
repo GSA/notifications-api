@@ -507,7 +507,7 @@ def insert_notification_history_delete_notifications(
          SELECT id, job_id, job_row_number, service_id, template_id, template_version, api_key_id,
              key_type, notification_type, created_at, sent_at, sent_by, updated_at, reference, billable_units,
              client_reference, international, phone_prefix, rate_multiplier, notification_status,
-              created_by_id, document_download_count
+              created_by_id, document_download_count, message_cost
           FROM notifications
         WHERE service_id = :service_id
           AND notification_type = :notification_type
@@ -842,7 +842,6 @@ def dao_update_delivery_receipts(receipts, delivered):
         new_receipts.append(r)
 
     receipts = new_receipts
-
     id_to_carrier = {
         r["notification.messageId"]: r["delivery.phoneCarrier"] for r in receipts
     }
@@ -851,9 +850,13 @@ def dao_update_delivery_receipts(receipts, delivered):
     }
     id_to_timestamp = {r["notification.messageId"]: r["@timestamp"] for r in receipts}
 
+    id_to_message_cost = {
+        r["notification.messageId"]: r["delivery.priceInUSD"] for r in receipts
+    }
     status_to_update_with = NotificationStatus.DELIVERED
     if not delivered:
         status_to_update_with = NotificationStatus.FAILED
+
     stmt = (
         update(Notification)
         .where(Notification.message_id.in_(id_to_carrier.keys()))
@@ -875,6 +878,12 @@ def dao_update_delivery_receipts(receipts, delivered):
                 *[
                     (Notification.message_id == key, value)
                     for key, value in id_to_provider_response.items()
+                ]
+            ),
+            message_cost=case(
+                *[
+                    (Notification.message_id == key, value)
+                    for key, value in id_to_message_cost.items()
                 ]
             ),
         )
@@ -908,7 +917,6 @@ def dao_close_out_delivery_receipts():
 
 
 def dao_batch_insert_notifications(batch):
-
     db.session.bulk_save_objects(batch)
     db.session.commit()
     current_app.logger.info(f"Batch inserted notifications: {len(batch)}")
