@@ -583,7 +583,7 @@ def test_batch_insert_with_expired_notifications(mocker):
     rs.llen.assert_called_once_with("message_queue")
     rs.rpush.assert_called_once()
     requeued_notification = json.loads(rs.rpush.call_args[0][1])
-    assert requeued_notification["id"] == '1'
+    assert requeued_notification["id"] == "1"
 
 
 def test_batch_insert_with_malformed_notifications(mocker):
