@@ -107,7 +107,7 @@ def send_sms_to_provider(notification):
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
-                        f"{notification.reply_to_text} not in {sender_numbers} #notify-admin-1701"
+                        f"{notification.reply_to_text} not in {sender_numbers} #notify-debug-admin-1701"
                     )
 
                 send_sms_kwargs = {
@@ -158,7 +158,7 @@ def _experimentally_validate_phone_numbers(recipient):
     if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"] and os.getenv(
         "NOTIFY_ENVIRONMENT"
     ) in ["development", "test"]:
-        current_app.logger.info(hilite("#validate-phone-number fired"))
+        current_app.logger.info(hilite("#notify-debug-validate-phone-number fired"))
         aws_pinpoint_client.validate_phone_number("01", recipient)
 
 
