@@ -1,45 +1,32 @@
-# TODO
-# repo->Settings->Pull Requests->Check "Allow auto-merge"
-# Settings-Branches->Add/Edit branch protection rule for main:
-    # Check "Require status checks to pass before merging" and select build workflow (CI pipelilne name like 'build') to make sure PR only merges when it passes
-
 name: Dependabot Auto-Merge
 
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
 
-  permissions:
-    pull-requests: write # To approve PRs
-    contents: write # to merge PRs
+permissions:
+  pull-requests: write # To approve PRs
+  contents: write # to merge PRs
 
-  jobs:
-    auto-merge:
-      runs-on: ubuntu-latest
-      if: github.actor == 'dependabot[bot]' # Only dependabot PRs
-      steps:
-        - name: Checkout repo
-          users: actions/checkout@v4
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' # Only dependabot PRs
+    steps:
+      - name: Checkout repo
+        users: actions/checkout@v4
 
-        - name: Fetch Dependabot metadata
-          id: metadata
-          uses: dependabot/fetch-metadata@v2
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-        # - name: Approve minor updates
-        #   if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
-        #   run: |
-        #     gh pr review "$PR_URL" --approve -b "Auto-approved minor update"
-        #   env:
-        #     PR_URL: ${{ github.event.pull_request.html_url }}
-        #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        # use admin to bypass the need for approval, human PRs still need two approvals
-        - name: Enable auto-merge for minor updates
-          if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
-          run: |
-            gh pr merge --squash --admin "$PR_URL"
-          env:
-            PR_URL: ${{ github.event.pull_request.html_url }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # use admin to bypass the need for approval, human PRs still need two approvals
+      - name: Enable auto-merge for minor updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh pr merge --squash --admin "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
