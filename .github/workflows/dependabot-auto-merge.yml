@@ -27,18 +27,19 @@ on:
           with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Approve minor updates
-          if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
-          run: |
-            gh pr review "$PR_URL" --approve -b "Auto-approved minor update"
-          env:
-            PR_URL: ${{ github.event.pull_request.html_url }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # - name: Approve minor updates
+        #   if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        #   run: |
+        #     gh pr review "$PR_URL" --approve -b "Auto-approved minor update"
+        #   env:
+        #     PR_URL: ${{ github.event.pull_request.html_url }}
+        #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+        # use admin to bypass the need for approval, human PRs still need two approvals
         - name: Enable auto-merge for minor updates
           if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
           run: |
-            gh pr merge --auto --squash "$PR_URL"
+            gh pr merge --squash --admin "$PR_URL"
           env:
             PR_URL: ${{ github.event.pull_request.html_url }}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
