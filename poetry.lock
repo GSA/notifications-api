@@ -240,18 +240,18 @@ tests-mypy = ["mypy (>=1.11.1) ; platform_python_implementation == \"CPython\" a
 
 [[package]]
 name = "awscli"
-version = "1.35.17"
+version = "1.36.40"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "awscli-1.35.17-py3-none-any.whl", hash = "sha256:67906511b138bb6b241136c0ba6bee854f522b7b506887911e6ad34877a822c3"},
-    {file = "awscli-1.35.17.tar.gz", hash = "sha256:9469a1924c6987dd0553ad0d0fd2a37717d0f7b55104e99f5789d3678c9706c4"},
+    {file = "awscli-1.36.40-py3-none-any.whl", hash = "sha256:971c3b150c06068bc26867fe295753547780f63fcf8256d41cd38760e44d46ca"},
+    {file = "awscli-1.36.40.tar.gz", hash = "sha256:e2a88f88dc16d5c0f26379afd6f254097e53e8b34c82164e59f4165db6ee6dfa"},
 ]
 
 [package.dependencies]
-botocore = "1.35.51"
+botocore = "1.35.99"
 colorama = ">=0.2.5,<0.4.7"
 docutils = ">=0.10,<0.17"
 PyYAML = ">=3.10,<6.1"
@@ -467,14 +467,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.35.51"
+version = "1.35.99"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "botocore-1.35.51-py3-none-any.whl", hash = "sha256:4d65b00111bd12b98e9f920ecab602cf619cc6a6d0be6e5dd53f517e4b92901c"},
-    {file = "botocore-1.35.51.tar.gz", hash = "sha256:a9b3d1da76b3e896ad74605c01d88f596324a3337393d4bfbfa0d6c35822ca9c"},
+    {file = "botocore-1.35.99-py3-none-any.whl", hash = "sha256:b22d27b6b617fc2d7342090d6129000af2efd20174215948c0d7ae2da0fab445"},
+    {file = "botocore-1.35.99.tar.gz", hash = "sha256:1eab44e969c39c5f3d9a3104a0836c24715579a455f12b3979a31d7cde51b3c3"},
 ]
 
 [package.dependencies]
@@ -5186,4 +5186,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "c791f133fcf2db01b7dadc9aca104cabd4c11331342bf936e0f7ebdb62bbec72"
+content-hash = "acf32f762a20572c226d1675ce61ff50f49767cb6b8f51c8775356d636b28f7c"
