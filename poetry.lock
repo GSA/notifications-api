@@ -1501,14 +1501,14 @@ Flask = "*"
 
 [[package]]
 name = "flask-marshmallow"
-version = "1.2.1"
+version = "1.3.0"
 description = "Flask + marshmallow for beautiful APIs"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "flask_marshmallow-1.2.1-py3-none-any.whl", hash = "sha256:10b5048ecfaa26f7c8d0aed7d81083164450e6be8e81c04b3d4a586b3f7b6678"},
-    {file = "flask_marshmallow-1.2.1.tar.gz", hash = "sha256:00ee96399ed664963afff3b5d6ee518640b0f91dbc2aace2b5abcf32f40ef23a"},
+    {file = "flask_marshmallow-1.3.0-py3-none-any.whl", hash = "sha256:c0a0644b46406851873ab41c1e8a7de3ef27fa69b00b89bf630f1696ec0813a0"},
+    {file = "flask_marshmallow-1.3.0.tar.gz", hash = "sha256:27a35d0ce5dcba161cc5f2f4764afbc2536c93fa439a793250b827835e3f3be6"},
 ]
 
 [package.dependencies]
@@ -1516,8 +1516,8 @@ Flask = ">=2.2"
 marshmallow = ">=3.0.0"
 
 [package.extras]
-dev = ["flask-marshmallow[tests]", "pre-commit (>=3.5,<4.0)", "tox"]
-docs = ["Sphinx (==7.2.6)", "marshmallow-sqlalchemy (>=0.19.0)", "sphinx-issues (==4.0.0)"]
+dev = ["flask-marshmallow[tests]", "pre-commit (>=3.5,<5.0)", "tox"]
+docs = ["Sphinx (==8.1.3)", "marshmallow-sqlalchemy (>=0.19.0)", "sphinx-issues (==5.0.0)"]
 sqlalchemy = ["flask-sqlalchemy (>=3.0.0)", "marshmallow-sqlalchemy (>=0.29.0)"]
 tests = ["flask-marshmallow[sqlalchemy]", "pytest"]
 
@@ -5186,4 +5186,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "c791f133fcf2db01b7dadc9aca104cabd4c11331342bf936e0f7ebdb62bbec72"
+content-hash = "9bdfffbb92245d56849fc2f31704b754ac6d4bb10fb1591ff0f8d8ccf48f29c5"
