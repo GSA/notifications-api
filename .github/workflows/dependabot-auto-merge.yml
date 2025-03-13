@@ -22,11 +22,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # use admin to bypass the need for approval, human PRs still need two approvals
+      - name: Auto-approve dependabot PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Enable auto-merge for minor updates
         if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: |
-          gh pr merge --squash --admin "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
