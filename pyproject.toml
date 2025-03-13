@@ -43,7 +43,7 @@ notifications-python-client = "==10.0.0"
 oscrypto = { git = "https://github.com/wbond/oscrypto.git", rev = "1547f53" }
 packaging = "==24.1"
 poetry-dotenv-plugin = "==0.2.0"
-psycopg2-binary = "==2.9.9"
+psycopg2-binary = "==2.9.10"
 pyjwt = "==2.10.1"
 python-dotenv = "==1.0.1"
 sqlalchemy = "==2.0.31"
