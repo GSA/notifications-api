@@ -42,12 +42,14 @@ def send_sms_to_provider(notification):
     """
     # Take this path for report generation, where we know
     # everything is in the cache.
-    personalisation = get_personalisation_from_s3(
-        notification.service_id,
-        notification.job_id,
-        notification.job_row_number,
-    )
-    notification.personalisation = personalisation
+
+    if "verify_code" not in str(notification.personalisation):
+        personalisation = get_personalisation_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
@@ -92,7 +94,6 @@ def send_sms_to_provider(notification):
                 recipient = None
                 # It is our 2facode, maybe
                 recipient = _get_verify_code(notification)
-
                 if recipient is None:
                     recipient = get_phone_number_from_s3(
                         notification.service_id,
