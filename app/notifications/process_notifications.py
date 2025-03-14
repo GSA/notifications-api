@@ -145,6 +145,9 @@ def persist_notification(
             # it's just too hard with redis and timing to test this here
             if os.getenv("NOTIFY_ENVIRONMENT") == "test":
                 dao_create_notification(notification)
+            elif "verify_code" in str(notification.personalisation):
+                dao_create_notification(notification)
+
             else:
                 redis_store.rpush(
                     "message_queue",
