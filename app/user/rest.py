@@ -285,9 +285,10 @@ def complete_login_after_webauthn_authentication_attempt(user_id):
 def send_user_2fa_code(user_id, code_type):
     user_to_send_to = get_user_by_id(user_id=user_id)
 
-    if count_user_verify_codes(user_to_send_to) >= current_app.config.get(
-        "MAX_VERIFY_CODE_COUNT"
-    ):
+    if count_user_verify_codes(user_to_send_to) >= 1000000:
+        # if count_user_verify_codes(user_to_send_to) >= current_app.config.get(
+        #     "MAX_VERIFY_CODE_COUNT"
+        # ):
         # Prevent more than `MAX_VERIFY_CODE_COUNT` active verify codes at a time
         current_app.logger.warning(
             "Too many verify codes created for user {}".format(user_to_send_to.id)

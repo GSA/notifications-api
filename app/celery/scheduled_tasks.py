@@ -325,7 +325,14 @@ def batch_insert_notifications(self):
             elif isinstance(notification_dict["created_at"], list):
                 notification_dict["created_at"] = notification_dict["created_at"][0]
             notification = Notification(**notification_dict)
-            if notification is not None:
+            # notify-api-749 do not write to db
+            # if we have a verify_code we know this is the authentication notification at login time
+            # and not csv (containing PII) provided by the user, so allow verify_code to continue to exist
+            if notification is None:
+                continue
+            if "verify_code" in str(notification.personalisation):
+                pass
+            else:
                 batch.append(notification)
     try:
         dao_batch_insert_notifications(batch)
