@@ -78,8 +78,9 @@ jobs:
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
           --strategy rolling
 
-    - name: Update templates
-      run: cf run-task notify-api-production --command "flask command update-templates"
+    # TODO FIX
+    # - name: Update templates
+    #   run: cf run-task notify-api-production --command "flask command update-templates"
 
     - name: Deploy egress proxy
       uses: ./.github/actions/deploy-proxy
