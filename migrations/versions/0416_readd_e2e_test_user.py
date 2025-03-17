@@ -41,7 +41,7 @@ def upgrade():
     }
     conn = op.get_bind()
 
-    # delete the old user
+    # delete the old user because
     delete_sql = """
         delete from users where email_address='e2e-test-notify-user@fake.gov'
         """
