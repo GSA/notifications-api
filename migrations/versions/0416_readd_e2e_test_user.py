@@ -40,15 +40,18 @@ def upgrade():
         "email_access_validated_at": utc_now(),
     }
     conn = op.get_bind()
-    insert_sql = """
-        insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at)
-        values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at)
-        """
-    conn.execute(sa.text(insert_sql), data)
 
     delete_sql = """
         delete from users where email_address='e2e-test-notify-user@fake.gov'
         """
+
+    insert_sql = """
+        insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at)
+        values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at)
+        """
+    conn.execute(sa.text(delete_sql))
+
+    conn.execute(sa.text(insert_sql), data)
 
 
 def downgrade():
