@@ -15,6 +15,7 @@ from alembic import op
 
 from app import db
 from app.dao.users_dao import get_user_by_email
+from app.enums import AuthType
 from app.models import User
 from app.utils import utc_now
 
@@ -38,6 +39,7 @@ def upgrade():
         "failed_login_count": 0,
         "platform_admin": "f",
         "email_access_validated_at": utc_now(),
+        "auth_type": AuthType.SMS,
     }
     conn = op.get_bind()
 
