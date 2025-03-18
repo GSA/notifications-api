@@ -28,23 +28,13 @@ jobs:
         terraform_version: "^1.7.5"
         terraform_wrapper: false
 
-    - name: Check for changes to Terraform
-      id: changed-terraform-files
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |
-          terraform/production/**
-          terraform/shared/**
-          .github/workflows/deploy-prod.yml
     - name: Terraform init
-      if: steps.changed-terraform-files.outputs.any_changed == 'true'
       working-directory: terraform/production
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
       run: terraform init
     - name: Terraform apply
-      if: steps.changed-terraform-files.outputs.any_changed == 'true'
       working-directory: terraform/production
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
@@ -88,26 +78,11 @@ jobs:
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
           --strategy rolling
 
-    - name: Check for changes to templates.json
-      id: changed-templates
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |
-          app/config_files/templates.json
-    - name: Update templates
-      if: steps.changed-templates.outputs.any_changed == 'true'
-      run: cf run-task notify-api-production --command "flask command update-templates"
+    # TODO FIX
+    # - name: Update templates
+    #   run: cf run-task notify-api-production --command "flask command update-templates"
 
-    - name: Check for changes to egress config
-      id: changed-egress-config
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |
-          deploy-config/egress_proxy/notify-api-production.*.acl
-          .github/actions/deploy-proxy/action.yml
-          .github/workflows/deploy-prod.yml
     - name: Deploy egress proxy
-      if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
       env:
           CF_USERNAME: ${{ secrets.CLOUDGOV_USERNAME }}
