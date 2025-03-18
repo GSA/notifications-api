@@ -65,6 +65,8 @@ jobs:
     - name: Check coverage threshold
       # TODO get this back up to 95
       run: poetry run coverage report -m --fail-under=94
+    - name: Update templates
+      run: cf run-task notify-api-staging --command "flask command update-templates"
 
   validate-new-relic-config:
     runs-on: ubuntu-latest
