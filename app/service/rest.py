@@ -282,10 +282,12 @@ def get_service_statistics_for_specific_days_by_user(
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(
+    hours = days * 24
+
+    stats = get_specific_hours_stats(
         results,
         start_date,
-        days=days,
+        hours=hours,
         total_notifications=total_notifications,
     )
     return stats
