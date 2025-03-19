@@ -11,8 +11,8 @@ from app.models import User
 from app.utils import utc_now
 from app.enums import AuthType
 
-revision = "0415_add_second_e2e_test_user"
-down_revision = "0414_change_total_message_limit"
+revision = "0417_add_second_e2e_test_user"
+down_revision = "0416_readd_e2e_test_user"
 
 
 def upgrade():
