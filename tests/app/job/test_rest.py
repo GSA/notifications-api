@@ -2,9 +2,9 @@ import json
 import uuid
 from datetime import date, datetime, timedelta
 from unittest.mock import ANY
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -183,7 +183,7 @@ def test_create_scheduled_job(client, sample_template, mocker, fake_uuid):
     assert resp_json["data"]["id"] == fake_uuid
     assert (
         resp_json["data"]["scheduled_for"]
-        == datetime(2016, 1, 5, 11, 59, 0, tzinfo=pytz.UTC).isoformat()
+        == datetime(2016, 1, 5, 11, 59, 0, tzinfo=ZoneInfo("UTC")).isoformat()
     )
     assert resp_json["data"]["job_status"] == JobStatus.SCHEDULED
     assert resp_json["data"]["template"] == str(sample_template.id)
@@ -486,6 +486,48 @@ def test_get_all_notifications_for_job_in_order_of_job_number(
     assert resp["notifications"][1]["job_row_number"] == notification_2.job_row_number
     assert resp["notifications"][2]["to"] == notification_3.to
     assert resp["notifications"][2]["job_row_number"] == notification_3.job_row_number
+
+
+def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
+    admin_request, sample_template, mocker
+):
+    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
+    mock_s3.return_value = "15555555555"
+
+    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
+    mock_s3_personalisation.return_value = {}
+
+    main_job = create_job(sample_template)
+    another_job = create_job(sample_template)
+
+    count = 1
+    for status in NotificationStatus:
+        create_notification(job=main_job, job_row_number=str(count), status=status)
+        count = count + 1
+    create_notification(job=another_job)
+
+    resp = admin_request.get(
+        "job.get_recent_notifications_for_service_job",
+        service_id=main_job.service_id,
+        job_id=main_job.id,
+    )
+
+    assert len(resp["notifications"]) == 13
+    assert resp["notifications"][0]["status"] == "virus-scan-failed"
+    assert resp["notifications"][0]["job_row_number"] == 13
+
+    query_string = {"status": "delivered"}
+    resp = admin_request.get(
+        "job.get_recent_notifications_for_service_job",
+        service_id=main_job.service_id,
+        job_id=main_job.id,
+        **query_string,
+    )
+
+    assert len(resp["notifications"]) == 1
+
+    assert resp["notifications"][0]["status"] == "delivered"
+    assert resp["notifications"][0]["job_row_number"] == 5
 
 
 @pytest.mark.parametrize(

@@ -33,4 +33,6 @@ jobs:
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}-egress
-          command: "cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}"
+          command: |
+            cf push notify-${{matrix.app}}-${{inputs.environment}} -f manifest.yml --no-start
+            cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}

@@ -1,5 +1,6 @@
 import itertools
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
@@ -7,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app import db, redis_store
+from app import db
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -28,7 +29,10 @@ from app.dao.fact_notification_status_dao import (
     fetch_stats_for_all_services_by_date_range,
 )
 from app.dao.inbound_numbers_dao import dao_allocate_number_for_service
-from app.dao.notifications_dao import dao_get_notification_count_for_service
+from app.dao.notifications_dao import (
+    dao_get_notification_count_for_service,
+    dao_get_notification_count_for_service_message_ratio,
+)
 from app.dao.organization_dao import dao_get_organization_by_service_id
 from app.dao.service_data_retention_dao import (
     fetch_service_data_retention,
@@ -67,6 +71,7 @@ from app.dao.services_dao import (
     dao_fetch_service_by_id,
     dao_fetch_stats_for_service_from_days,
     dao_fetch_stats_for_service_from_days_for_user,
+    dao_fetch_stats_for_service_from_hours,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_remove_user_from_service,
@@ -76,6 +81,7 @@ from app.dao.services_dao import (
     fetch_notification_stats_for_service_by_month_by_user,
     get_services_by_partial_name,
     get_specific_days_stats,
+    get_specific_hours_stats,
 )
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
@@ -109,7 +115,6 @@ from app.service.service_senders_schema import (
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
 from app.utils import get_prev_next_pagination_links, utc_now
-from notifications_utils.clients.redis import total_limit_cache_key
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -227,22 +232,24 @@ def get_service_notification_statistics_by_day(service_id, start, days):
 
 
 def get_service_statistics_for_specific_days(service_id, start, days=1):
-    # start and end dates needs to be reversed because
-    # the end date is today and the start is x days in the past
-    # a day needs to be substracted to allow for today
+    # Calculate start and end date range
     end_date = datetime.strptime(start, "%Y-%m-%d")
     start_date = end_date - timedelta(days=days - 1)
 
-    total_notifications, results = dao_fetch_stats_for_service_from_days(
+    # Fetch hourly stats from DB
+    total_notifications, results = dao_fetch_stats_for_service_from_hours(
         service_id,
         start_date,
         end_date,
     )
 
-    stats = get_specific_days_stats(
+    hours = days * 24
+
+    # Process data using new hourly stats function
+    stats = get_specific_hours_stats(
         results,
         start_date,
-        days=days,
+        hours=hours,
         total_notifications=total_notifications,
     )
 
@@ -275,10 +282,12 @@ def get_service_statistics_for_specific_days_by_user(
         service_id, start_date, end_date, user_id
     )
 
-    stats = get_specific_days_stats(
+    hours = days * 24
+
+    stats = get_specific_hours_stats(
         results,
         start_date,
-        days=days,
+        hours=hours,
         total_notifications=total_notifications,
     )
     return stats
@@ -1145,20 +1154,24 @@ def modify_service_data_retention(service_id, data_retention_id):
 def get_service_message_ratio():
     service_id = request.args.get("service_id")
 
+    current_year = datetime.now(tz=ZoneInfo("UTC")).year
     my_service = dao_fetch_service_by_id(service_id)
+    messages_sent = dao_get_notification_count_for_service_message_ratio(
+        service_id, current_year
+    )
+    messages_remaining = my_service.total_message_limit - messages_sent
 
-    cache_key = total_limit_cache_key(service_id)
-    messages_sent = redis_store.get(cache_key)
-    if messages_sent is None:
-        messages_sent = 0
-        current_app.logger.warning(
-            f"Messages sent was not being tracked for service {service_id}"
+    if my_service.total_message_limit - messages_sent < 0:
+        raise Exception(
+            f"Math error get_service_message_ratio(), \
+                        total {my_service.total_message_limit} \
+                        messages_sent {messages_sent} remaining {messages_remaining} \
+                        service_id {service_id} current_year {current_year}"
         )
-    else:
-        messages_sent = int(messages_sent)
 
     return {
         "messages_sent": messages_sent,
+        "messages_remaining": messages_remaining,
         "total_message_limit": my_service.total_message_limit,
     }, 200
 

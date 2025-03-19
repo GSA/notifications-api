@@ -30,23 +30,13 @@ jobs:
         terraform_version: "^1.7.5"
         terraform_wrapper: false
 
-    - name: Check for changes to Terraform
-      id: changed-terraform-files
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |
-          terraform/staging/**
-          terraform/shared/**
-          .github/workflows/deploy.yml
     - name: Terraform init
-      if: steps.changed-terraform-files.outputs.any_changed == 'true'
       working-directory: terraform/staging
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
       run: terraform init
     - name: Terraform apply
-      if: steps.changed-terraform-files.outputs.any_changed == 'true'
       working-directory: terraform/staging
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
@@ -90,26 +80,25 @@ jobs:
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
           --strategy rolling
 
-    - name: Check for changes to templates.json
-      id: changed-templates
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |
-          app/config_files/templates.json
     - name: Update templates
-      if: steps.changed-templates.outputs.any_changed == 'true'
-      run: cf run-task notify-api-staging --command "flask command update-templates"
-
-    - name: Check for changes to egress config
-      id: changed-egress-config
-      uses: tj-actions/changed-files@v45
+      uses: cloud-gov/cg-cli-tools@main
+      env:
+        DANGEROUS_SALT: ${{ secrets.DANGEROUS_SALT }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        ADMIN_CLIENT_SECRET: ${{ secrets.ADMIN_CLIENT_SECRET }}
+        NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-staging.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE"
       with:
-        files: |
-          deploy-config/egress_proxy/notify-api-staging.*.acl
-          .github/actions/deploy-proxy/action.yml
-          .github/workflows/deploy.yml
+        cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+        cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+        cf_org: gsa-tts-benefits-studio
+        cf_space: notify-staging
+        cf_command: >-
+          run-task notify-api-staging --command "flask command update-templates"
+
     - name: Deploy egress proxy
-      if: steps.changed-egress-config.outputs.any_changed == 'true'
       uses: ./.github/actions/deploy-proxy
       env:
           CF_USERNAME: ${{ secrets.CLOUDGOV_USERNAME }}

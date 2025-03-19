@@ -42,12 +42,14 @@ def send_sms_to_provider(notification):
     """
     # Take this path for report generation, where we know
     # everything is in the cache.
-    personalisation = get_personalisation_from_s3(
-        notification.service_id,
-        notification.job_id,
-        notification.job_row_number,
-    )
-    notification.personalisation = personalisation
+
+    if "verify_code" not in str(notification.personalisation):
+        personalisation = get_personalisation_from_s3(
+            notification.service_id,
+            notification.job_id,
+            notification.job_row_number,
+        )
+        notification.personalisation = personalisation
 
     service = SerialisedService.from_id(notification.service_id)
     message_id = None
@@ -92,7 +94,6 @@ def send_sms_to_provider(notification):
                 recipient = None
                 # It is our 2facode, maybe
                 recipient = _get_verify_code(notification)
-
                 if recipient is None:
                     recipient = get_phone_number_from_s3(
                         notification.service_id,
@@ -107,7 +108,7 @@ def send_sms_to_provider(notification):
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
-                        f"{notification.reply_to_text} not in {sender_numbers} #notify-admin-1701"
+                        f"{notification.reply_to_text} not in {sender_numbers} #notify-debug-admin-1701"
                     )
 
                 send_sms_kwargs = {
@@ -118,7 +119,13 @@ def send_sms_to_provider(notification):
                     "international": notification.international,
                 }
                 db.session.close()  # no commit needed as no changes to objects have been made above
-
+                real_sender_number = notification.reply_to_text
+                # interleave spaces to bypass PII scrubbing since sender number is not PII
+                arr = list(real_sender_number)
+                real_sender_number = " ".join(arr)
+                current_app.logger.info(
+                    f"#notify-debug-api-1701 real sender number going to AWS is {real_sender_number}"
+                )
                 message_id = provider.send_sms(**send_sms_kwargs)
 
                 update_notification_message_id(notification.id, message_id)
@@ -152,7 +159,7 @@ def _experimentally_validate_phone_numbers(recipient):
     if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"] and os.getenv(
         "NOTIFY_ENVIRONMENT"
     ) in ["development", "test"]:
-        current_app.logger.info(hilite("#validate-phone-number fired"))
+        current_app.logger.info(hilite("#notify-debug-validate-phone-number fired"))
         aws_pinpoint_client.validate_phone_number("01", recipient)
 
 

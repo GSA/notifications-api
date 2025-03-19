@@ -1508,6 +1508,7 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, index=True, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
+    message_cost = db.Column(db.Float, nullable=True, default=0.0)
     updated_at = db.Column(
         db.DateTime,
         index=False,
@@ -1708,7 +1709,7 @@ class Notification(db.Model):
                         value = (obj.created_at.strftime("%Y-%m-%d %H:%M:%S"),)
                 elif column.name in ["sent_at", "completed_at"]:
                     value = None
-                elif column.name.endswith("_id"):
+                elif column.name.endswith("_id") or column.name == "id":
                     value = getattr(obj, column.name)
                     value = str(value)
                 else:
@@ -1813,6 +1814,7 @@ class NotificationHistory(db.Model, HistoryModel):
     created_at = db.Column(db.DateTime, unique=False, nullable=False)
     sent_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     sent_by = db.Column(db.String, nullable=True)
+    message_cost = db.Column(db.Float, nullable=True, default=0.0)
     updated_at = db.Column(
         db.DateTime,
         index=False,

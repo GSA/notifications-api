@@ -1668,7 +1668,9 @@ def test_remove_user_from_service(client, sample_user_service_permission):
 def test_get_service_message_ratio(mocker, client, sample_user_service_permission):
     service = sample_user_service_permission.service
 
-    mock_redis = mocker.patch("app.service.rest.redis_store.get")
+    mock_redis = mocker.patch(
+        "app.service.rest.dao_get_notification_count_for_service_message_ratio"
+    )
     mock_redis.return_value = 1
 
     endpoint = url_for(
