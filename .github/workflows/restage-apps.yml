@@ -33,6 +33,16 @@ jobs:
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}-egress
+          cf_command: >-
+            push -f manifest.yml
+            --vars-file deploy-config/${{inputs.environment}}.yml
+            --var DANGEROUS_SALT="$DANGEROUS_SALT"
+            --var SECRET_KEY="$SECRET_KEY"
+            --var ADMIN_CLIENT_SECRET="$ADMIN_CLIENT_SECRET"
+            --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
+            --var NOTIFY_E2E_TEST_EMAIL="$NOTIFY_E2E_TEST_EMAIL"
+            --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
+            --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
+            --strategy rolling
           command: |
-            cf push notify-${{matrix.app}}-${{inputs.environment}} -f manifest.yml --no-start
             cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}
