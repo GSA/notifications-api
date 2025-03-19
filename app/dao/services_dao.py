@@ -604,7 +604,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
 
     total_substmt = (
         select(
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.date_trunc("hour", NotificationAllTimeView.created_at).label("hour"),
             Job.notification_count.label("notification_count"),
         )
         .join(Job, NotificationAllTimeView.job_id == Job.id)
@@ -618,25 +618,25 @@ def dao_fetch_stats_for_service_from_days_for_user(
         .group_by(
             Job.id,
             Job.notification_count,
-            func.date_trunc("day", NotificationAllTimeView.created_at),
+            func.date_trunc("hour", NotificationAllTimeView.created_at),
         )
         .subquery()
     )
 
     total_stmt = select(
-        total_substmt.c.day,
+        total_substmt.c.hour,
         func.sum(total_substmt.c.notification_count).label("total_notifications"),
-    ).group_by(total_substmt.c.day)
+    ).group_by(total_substmt.c.hour)
 
     total_notifications = {
-        row.day: row.total_notifications for row in db.session.execute(total_stmt).all()
+        row.hour: row.total_notifications for row in db.session.execute(total_stmt).all()
     }
 
     stmt = (
         select(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at).label("day"),
+            func.date_trunc("hour", NotificationAllTimeView.created_at).label("hour"),
             func.count(NotificationAllTimeView.id).label("count"),
         )
         .where(
@@ -649,7 +649,7 @@ def dao_fetch_stats_for_service_from_days_for_user(
         .group_by(
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
-            func.date_trunc("day", NotificationAllTimeView.created_at),
+            func.date_trunc("hour", NotificationAllTimeView.created_at),
         )
     )
 
