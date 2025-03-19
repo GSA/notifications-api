@@ -25,14 +25,6 @@ jobs:
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
-          command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
-      - name: Restage ${{matrix.app}} egress
-        uses: cloud-gov/cg-cli-tools@main
-        with:
-          cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
-          cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-          cf_org: gsa-tts-benefits-studio
-          cf_space: notify-${{ inputs.environment }}-egress
           cf_command: >-
             push -f manifest.yml
             --vars-file deploy-config/${{inputs.environment}}.yml
@@ -44,5 +36,14 @@ jobs:
             --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
             --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
             --strategy rolling
+          command: "cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}"
+      - name: Restage ${{matrix.app}} egress
+        uses: cloud-gov/cg-cli-tools@main
+        with:
+          cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+          cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+          cf_org: gsa-tts-benefits-studio
+          cf_space: notify-${{ inputs.environment }}-egress
+
           command: |
             cf restage --strategy rolling egress-proxy-notify-${{matrix.app}}-${{inputs.environment}}
