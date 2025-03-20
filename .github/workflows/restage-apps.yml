@@ -18,19 +18,16 @@ jobs:
       matrix:
         app: ["api", "admin"]
     steps:
-      - name: get pwd
-        shell: bash
-        run: echo "$PWD"
       - name: Restage ${{matrix.app}}
         uses: cloud-gov/cg-cli-tools@main
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
           cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+          DANGEROUS_SALT: $${{ secrets.DANGEROUS_SALT }}
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
           command: |
-            ls
-            ls /home/runner/work/notifications-api/notifications-api/manifest.yml && cf push notify-${{matrix.app}}-${{inputs.environment}} -f /home/runner/work/notifications-api/notifications-api/manifest.yml
+            cf set-env notify-${{matrix.app}}-${{inputs.environment}} DANGEROUS_SALT "$DANGEROUS_SALT"
             cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}
       - name: Restage ${{matrix.app}} egress
         uses: cloud-gov/cg-cli-tools@main
