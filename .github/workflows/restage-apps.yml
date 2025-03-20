@@ -26,7 +26,7 @@ jobs:
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
           command: |
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} DANGEROUS_SALT "${{secrets.$DANGEROUS_SALT}}"
+            cf set-env notify-${{matrix.app}}-${{inputs.environment}} DANGEROUS_SALT "${{secrets.DANGEROUS_SALT}}"
       - name: Restage ${{matrix.app}}
         uses: cloud-gov/cg-cli-tools@main
         with:
