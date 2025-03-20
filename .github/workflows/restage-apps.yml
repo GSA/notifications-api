@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: get pwd
         shell: bash
-        run: echo "$PWD" >> "$GITHUB_OUTPUT"
+        run: echo "$PWD"
       - name: Restage ${{matrix.app}}
         uses: cloud-gov/cg-cli-tools@main
         with:
