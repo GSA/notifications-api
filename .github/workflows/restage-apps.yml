@@ -26,7 +26,8 @@ jobs:
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
           command: |
-            pwd && ls /github/workspace/manifest.yml && cf push notify-${{matrix.app}}-${{inputs.environment}} -f /github/workspace/manifest.yml
+            echo "$PWD"
+            ls /home/runner/work/notifications-api/notifications-api/manifest.yml && cf push notify-${{matrix.app}}-${{inputs.environment}} -f /home/runner/work/notifications-api/notifications-api/manifest.yml
             cf restage --strategy rolling notify-${{matrix.app}}-${{inputs.environment}}
       - name: Restage ${{matrix.app}} egress
         uses: cloud-gov/cg-cli-tools@main
