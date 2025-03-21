@@ -18,7 +18,7 @@ jobs:
       matrix:
         app: ["api", "admin"]
     steps:
-      - name: Update env variables ${{matrix.app}}
+      - name: Update env variables api
         uses: cloud-gov/cg-cli-tools@main
         with:
           cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
@@ -26,12 +26,29 @@ jobs:
           cf_org: gsa-tts-benefits-studio
           cf_space: notify-${{ inputs.environment }}
           command: |
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} DANGEROUS_SALT "${{secrets.DANGEROUS_SALT}}"
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} ADMIN_CLIENT_SECRET "${{secrets.ADMIN_CLIENT_SECRET}}"
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} SECRET_KEY "${{secrets.SECRET_KEY}}"
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} LOGIN_PEM "${{secrets.LOGIN_PEM}}"
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} NOTIFY_E2E_TEST_EMAIL "${{secrets.NOTIFY_E2E_TEST_EMAIL}}"
-            cf set-env notify-${{matrix.app}}-${{inputs.environment}} NOTIFY_E2E_TEST_PASSWORD "${{secrets.NOTIFY_E2E_TEST_PASSWORD}}"
+            cf set-env notify-api-${{inputs.environment}} DANGEROUS_SALT "${{secrets.DANGEROUS_SALT}}"
+            cf set-env notify-api-${{inputs.environment}} ADMIN_CLIENT_SECRET "${{secrets.ADMIN_CLIENT_SECRET}}"
+            cf set-env notify-api-${{inputs.environment}} SECRET_KEY "${{secrets.SECRET_KEY}}"
+            cf set-env notify-api-${{inputs.environment}} LOGIN_PEM "${{secrets.LOGIN_PEM}}"
+            cf set-env notify-api-${{inputs.environment}} NOTIFY_E2E_TEST_EMAIL "${{secrets.NOTIFY_E2E_TEST_EMAIL}}"
+            cf set-env notify-api-${{inputs.environment}} NOTIFY_E2E_TEST_PASSWORD "${{secrets.NOTIFY_E2E_TEST_PASSWORD}}"
+
+      - name: Update env variables admin
+        uses: cloud-gov/cg-cli-tools@main
+        with:
+          cf_username: ${{ secrets.CLOUDGOV_USERNAME }}
+          cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+          cf_org: gsa-tts-benefits-studio
+          cf_space: notify-${{ inputs.environment }}
+          command: |
+            cf set-env notify-admin-${{inputs.environment}} DANGEROUS_SALT "${{secrets.DANGEROUS_SALT}}"
+            cf set-env notify-admin-${{inputs.environment}} ADMIN_CLIENT_SECRET "${{secrets.ADMIN_CLIENT_SECRET}}"
+            cf set-env notify-admin-${{inputs.environment}} SECRET_KEY "${{secrets.SECRET_KEY}}"
+            cf set-env notify-admin-${{inputs.environment}} LOGIN_PEM "${{secrets.LOGIN_PEM}}"
+            cf set-env notify-admin-${{inputs.environment}} NOTIFY_E2E_TEST_EMAIL "${{secrets.NOTIFY_E2E_TEST_EMAIL}}"
+            cf set-env notify-admin-${{inputs.environment}} NOTIFY_E2E_TEST_PASSWORD "${{secrets.NOTIFY_E2E_TEST_PASSWORD}}"
+            cf set-env notify-api-${{inputs.environment}} E2E_BUCKET_NAME "${{secrets.E2E_BUCKET_NAME}}"
+
       - name: Restage ${{matrix.app}}
         uses: cloud-gov/cg-cli-tools@main
         with:
