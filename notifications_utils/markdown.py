@@ -210,63 +210,8 @@ class PreheaderRenderer(PlainTextRenderer):
         return ""
 
 
-class LetterPreviewRenderer(mistune.HTMLRenderer):
-    def heading(self, text, level):
-        if level == 1:
-            return super().heading(text, 2)
-        return self.paragraph(text)
-
-    def paragraph(self, text):
-        if text.strip():
-            return f"<p>{text}</p>"
-        return ""
-
-    def block_code(self, code, info=None):
-        return code.strip()
-
-    def link(self, link, text=None, title=None, url=None):
-        current_app.logger(f"title={title}")
-        href = url
-        display_text = text or link
-        return f"{display_text}: <strong>{href.replace('http://', '').replace('https://', '')}</strong>"
-
-    def autolink(self, link, is_email=False):
-        current_app.logger.debug(f"is_email={is_email}")
-        return f"<strong>{link.replace('http://', '')}.replace(https://', '')</strong>"
-
-    def thematic_break(self):
-        return '<div class="page-break">&nbsp;</div>'
-
-    def image(self, src, alt="", title=None, **kwargs):
-        return ""
-
-    def block_quote(self, text):
-        return text
-
-    def list_item(self, text, level=None):
-        return f"<li>{text.strip()}</li>\n"
-
-    def emphasis(self, text):
-        return f"*{text}*"
-
-    def strong(self, text):
-        return f"**{text}**"
-
-    def codespan(self, text):
-        return f"`{text}`"
-
-    def linebreak(self):
-        return "<br>"
-
-    def newline(self):
-        return "<br>"
-
-
 _notify_email_markdown = mistune.create_markdown(
     renderer=EmailRenderer(), hard_wrap=True
-)
-notify_letter_preview_markdown = mistune.create_markdown(
-    renderer=LetterPreviewRenderer()
 )
 notify_email_preheader_markdown = mistune.create_markdown(renderer=PreheaderRenderer())
 _notify_plain_text_email_markdown = mistune.create_markdown(
