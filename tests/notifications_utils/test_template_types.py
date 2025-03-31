@@ -2144,24 +2144,6 @@ def test_text_messages_collapse_consecutive_whitespace(
     )
 
 
-# def test_letter_preview_template_lazy_loads_images():
-#     page = BeautifulSoup(
-#         str(
-#             LetterImageTemplate(
-#                 {"content": "Content", "subject": "Subject", "template_type": "letter"},
-#                 image_url="http://example.com/endpoint.png",
-#                 page_count=3,
-#             )
-#         ),
-#         "html.parser",
-#     )
-#     assert [(img["src"], img["loading"]) for img in page.select("img")] == [
-#         ("http://example.com/endpoint.png?page=1", "eager"),
-#         ("http://example.com/endpoint.png?page=2", "lazy"),
-#         ("http://example.com/endpoint.png?page=3", "lazy"),
-#     ]
-
-
 def test_broadcast_message_from_content():
     template = BroadcastMessageTemplate.from_content("test content")
 
