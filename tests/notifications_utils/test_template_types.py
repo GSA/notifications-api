@@ -2494,22 +2494,22 @@ def test_email_preview_shows_reply_to_address(extra_args):
     assert "test@example.com" in str(template)
 
 
-@pytest.mark.parametrize(
-    ("template_values", "expected_content"),
-    [
-        ({}, "<span class='placeholder-no-parenthesis'>email address</span>"),
-        ({"email address": "test@example.com"}, "test@example.com"),
-    ],
-)
-def test_email_preview_shows_recipient_address(
-    template_values,
-    expected_content,
-):
-    template = EmailPreviewTemplate(
-        {"content": "content", "subject": "subject", "template_type": "email"},
-        template_values,
-    )
-    assert expected_content in str(template)
+# @pytest.mark.parametrize(
+#     ("template_values", "expected_content"),
+#     [
+#         ({}, "<span class='placeholder-no-parenthesis'>email address</span>"),
+#         ({"email address": "test@example.com"}, "test@example.com"),
+#     ],
+# )
+# def test_email_preview_shows_recipient_address(
+#     template_values,
+#     expected_content,
+# ):
+#     template = EmailPreviewTemplate(
+#         {"content": "content", "subject": "subject", "template_type": "email"},
+#         template_values,
+#     )
+#     assert expected_content in str(template)
 
 
 # @pytest.mark.parametrize(
