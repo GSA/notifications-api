@@ -11,7 +11,6 @@ from notifications_utils.formatters import unlink_govuk_escaped
 from notifications_utils.template import (
     BaseBroadcastTemplate,
     BaseEmailTemplate,
-    BaseLetterTemplate,
     BroadcastMessageTemplate,
     BroadcastPreviewTemplate,
     EmailPreviewTemplate,
@@ -57,24 +56,6 @@ from notifications_utils.template import (
             BaseEmailTemplate,
             (
                 "Can't instantiate abstract class BaseEmailTemplate without an implementation for abstract method"
-            ),
-            marks=pytest.mark.skipif(
-                sys.version_info < (3, 9), reason="‘method’ will be pluralised"
-            ),
-        ),
-        pytest.param(
-            BaseLetterTemplate,
-            (
-                "Can't instantiate abstract class BaseLetterTemplate with abstract methods __str__"
-            ),
-            marks=pytest.mark.skipif(
-                sys.version_info >= (3, 9), reason="‘methods’ will be singular"
-            ),
-        ),
-        pytest.param(
-            BaseLetterTemplate,
-            (
-                "Can't instantiate abstract class BaseLetterTemplate without an implementation for abstract method"
             ),
             marks=pytest.mark.skipif(
                 sys.version_info < (3, 9), reason="‘method’ will be pluralised"
