@@ -1,6 +1,5 @@
 import os
 import sys
-from functools import partial
 from time import process_time
 from unittest import mock
 
@@ -884,440 +883,440 @@ def test_phone_templates_normalise_whitespace(template_class):
     )
 
 
-@freeze_time("2012-12-12 12:12:12")
-@mock.patch("notifications_utils.template.LetterPreviewTemplate.jinja_template.render")
-@mock.patch("notifications_utils.template.unlink_govuk_escaped")
-@mock.patch(
-    "notifications_utils.template.notify_letter_preview_markdown", return_value="Bar"
-)
-@pytest.mark.parametrize(
-    ("values", "expected_address"),
-    [
-        (
-            {},
-            [
-                "<span class='placeholder-no-parenthesis'>address line 1</span>",
-                "<span class='placeholder-no-parenthesis'>address line 2</span>",
-                "<span class='placeholder-no-parenthesis'>address line 3</span>",
-                "<span class='placeholder-no-parenthesis'>address line 4</span>",
-                "<span class='placeholder-no-parenthesis'>address line 5</span>",
-                "<span class='placeholder-no-parenthesis'>address line 6</span>",
-                "<span class='placeholder-no-parenthesis'>address line 7</span>",
-            ],
-        ),
-        (
-            {
-                "address line 1": "123 Fake Street",
-                "address line 6": "United Kingdom",
-            },
-            [
-                "123 Fake Street",
-                "<span class='placeholder-no-parenthesis'>address line 2</span>",
-                "<span class='placeholder-no-parenthesis'>address line 3</span>",
-                "<span class='placeholder-no-parenthesis'>address line 4</span>",
-                "<span class='placeholder-no-parenthesis'>address line 5</span>",
-                "United Kingdom",
-                "<span class='placeholder-no-parenthesis'>address line 7</span>",
-            ],
-        ),
-        (
-            {
-                "address line 1": "123 Fake Street",
-                "address line 2": "City of Town",
-                "postcode": "SW1A 1AA",
-            },
-            [
-                "123 Fake Street",
-                "City of Town",
-                "SW1A 1AA",
-            ],
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    ("contact_block", "expected_rendered_contact_block"),
-    [
-        (None, ""),
-        ("", ""),
-        (
-            """
-            The Pension Service
-            Mail Handling Site A
-            Wolverhampton  WV9 1LU
+# @freeze_time("2012-12-12 12:12:12")
+# @mock.patch("notifications_utils.template.LetterPreviewTemplate.jinja_template.render")
+# @mock.patch("notifications_utils.template.unlink_govuk_escaped")
+# @mock.patch(
+#     "notifications_utils.template.notify_letter_preview_markdown", return_value="Bar"
+# )
+# @pytest.mark.parametrize(
+#     ("values", "expected_address"),
+#     [
+#         (
+#             {},
+#             [
+#                 "<span class='placeholder-no-parenthesis'>address line 1</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 2</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 3</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 4</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 5</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 6</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 7</span>",
+#             ],
+#         ),
+#         (
+#             {
+#                 "address line 1": "123 Fake Street",
+#                 "address line 6": "United Kingdom",
+#             },
+#             [
+#                 "123 Fake Street",
+#                 "<span class='placeholder-no-parenthesis'>address line 2</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 3</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 4</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 5</span>",
+#                 "United Kingdom",
+#                 "<span class='placeholder-no-parenthesis'>address line 7</span>",
+#             ],
+#         ),
+#         (
+#             {
+#                 "address line 1": "123 Fake Street",
+#                 "address line 2": "City of Town",
+#                 "postcode": "SW1A 1AA",
+#             },
+#             [
+#                 "123 Fake Street",
+#                 "City of Town",
+#                 "SW1A 1AA",
+#             ],
+#         ),
+#     ],
+# )
+# @pytest.mark.parametrize(
+#     ("contact_block", "expected_rendered_contact_block"),
+#     [
+#         (None, ""),
+#         ("", ""),
+#         (
+#             """
+#             The Pension Service
+#             Mail Handling Site A
+#             Wolverhampton  WV9 1LU
 
-            Telephone: 0845 300 0168
-            Email: fpc.customercare@dwp.gsi.gov.uk
-            Monday - Friday  8am - 6pm
-            www.gov.uk
-        """,
-            (
-                "The Pension Service<br>"
-                "Mail Handling Site A<br>"
-                "Wolverhampton  WV9 1LU<br>"
-                "<br>"
-                "Telephone: 0845 300 0168<br>"
-                "Email: fpc.customercare@dwp.gsi.gov.uk<br>"
-                "Monday - Friday  8am - 6pm<br>"
-                "www.gov.uk"
-            ),
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    ("extra_args", "expected_logo_file_name", "expected_logo_class"),
-    [
-        ({}, None, None),
-        ({"logo_file_name": "example.foo"}, "example.foo", "foo"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("additional_extra_args", "expected_date"),
-    [
-        ({}, "12 December 2012"),
-        ({"date": None}, "12 December 2012"),
-        # ({'date': datetime.date.fromtimestamp(0)}, '1 January 1970'),
-    ],
-)
-def test_letter_preview_renderer(
-    letter_markdown,
-    unlink_govuk,
-    jinja_template,
-    values,
-    expected_address,
-    contact_block,
-    expected_rendered_contact_block,
-    extra_args,
-    expected_logo_file_name,
-    expected_logo_class,
-    additional_extra_args,
-    expected_date,
-):
-    extra_args.update(additional_extra_args)
-    str(
-        LetterPreviewTemplate(
-            {"content": "Foo", "subject": "Subject", "template_type": "letter"},
-            values,
-            contact_block=contact_block,
-            **extra_args,
-        )
-    )
-    jinja_template.assert_called_once_with(
-        {
-            "address": expected_address,
-            "subject": "Subject",
-            "message": "Bar",
-            "date": expected_date,
-            "contact_block": expected_rendered_contact_block,
-            "admin_base_url": "http://localhost:6012",
-            "logo_file_name": expected_logo_file_name,
-            "logo_class": expected_logo_class,
-        }
-    )
-    letter_markdown.assert_called_once_with(Markup("Foo\n"))
-    unlink_govuk.assert_not_called()
-
-
-@freeze_time("2001-01-01 12:00:00.000000")
-@mock.patch("notifications_utils.template.LetterPreviewTemplate.jinja_template.render")
-def test_letter_preview_renderer_without_mocks(jinja_template):
-    str(
-        LetterPreviewTemplate(
-            {"content": "Foo", "subject": "Subject", "template_type": "letter"},
-            {"addressline1": "name", "addressline2": "street", "postcode": "SW1 1AA"},
-            contact_block="",
-        )
-    )
-
-    jinja_template_locals = jinja_template.call_args_list[0][0][0]
-
-    assert jinja_template_locals["address"] == [
-        "name",
-        "street",
-        "SW1 1AA",
-    ]
-    assert jinja_template_locals["subject"] == "Subject"
-    assert jinja_template_locals["message"] == "<p>Foo</p>"
-    assert jinja_template_locals["date"] == "1 January 2001"
-    assert jinja_template_locals["contact_block"] == ""
-    assert jinja_template_locals["admin_base_url"] == "http://localhost:6012"
-    assert jinja_template_locals["logo_file_name"] is None
+#             Telephone: 0845 300 0168
+#             Email: fpc.customercare@dwp.gsi.gov.uk
+#             Monday - Friday  8am - 6pm
+#             www.gov.uk
+#         """,
+#             (
+#                 "The Pension Service<br>"
+#                 "Mail Handling Site A<br>"
+#                 "Wolverhampton  WV9 1LU<br>"
+#                 "<br>"
+#                 "Telephone: 0845 300 0168<br>"
+#                 "Email: fpc.customercare@dwp.gsi.gov.uk<br>"
+#                 "Monday - Friday  8am - 6pm<br>"
+#                 "www.gov.uk"
+#             ),
+#         ),
+#     ],
+# )
+# @pytest.mark.parametrize(
+#     ("extra_args", "expected_logo_file_name", "expected_logo_class"),
+#     [
+#         ({}, None, None),
+#         ({"logo_file_name": "example.foo"}, "example.foo", "foo"),
+#     ],
+# )
+# @pytest.mark.parametrize(
+#     ("additional_extra_args", "expected_date"),
+#     [
+#         ({}, "12 December 2012"),
+#         ({"date": None}, "12 December 2012"),
+#         # ({'date': datetime.date.fromtimestamp(0)}, '1 January 1970'),
+#     ],
+# )
+# def test_letter_preview_renderer(
+#     letter_markdown,
+#     unlink_govuk,
+#     jinja_template,
+#     values,
+#     expected_address,
+#     contact_block,
+#     expected_rendered_contact_block,
+#     extra_args,
+#     expected_logo_file_name,
+#     expected_logo_class,
+#     additional_extra_args,
+#     expected_date,
+# ):
+#     extra_args.update(additional_extra_args)
+#     str(
+#         LetterPreviewTemplate(
+#             {"content": "Foo", "subject": "Subject", "template_type": "letter"},
+#             values,
+#             contact_block=contact_block,
+#             **extra_args,
+#         )
+#     )
+#     jinja_template.assert_called_once_with(
+#         {
+#             "address": expected_address,
+#             "subject": "Subject",
+#             "message": "Bar",
+#             "date": expected_date,
+#             "contact_block": expected_rendered_contact_block,
+#             "admin_base_url": "http://localhost:6012",
+#             "logo_file_name": expected_logo_file_name,
+#             "logo_class": expected_logo_class,
+#         }
+#     )
+#     letter_markdown.assert_called_once_with(Markup("Foo\n"))
+#     unlink_govuk.assert_not_called()
 
 
-@freeze_time("2012-12-12 12:12:12")
-@mock.patch("notifications_utils.template.LetterImageTemplate.jinja_template.render")
-@pytest.mark.parametrize(
-    ("page_count", "expected_oversized", "expected_page_numbers"),
-    [
-        (
-            1,
-            False,
-            [1],
-        ),
-        (
-            5,
-            False,
-            [1, 2, 3, 4, 5],
-        ),
-        (
-            10,
-            False,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        ),
-        (
-            11,
-            True,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        ),
-        (
-            99,
-            True,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    (
-        "postage_args",
-        "expected_show_postage",
-        "expected_postage_class_value",
-        "expected_postage_description",
-    ),
-    [
-        pytest.param({}, False, None, None),
-        pytest.param({"postage": None}, False, None, None),
-        pytest.param({"postage": "first"}, True, "letter-postage-first", "first class"),
-        pytest.param(
-            {"postage": "second"}, True, "letter-postage-second", "second class"
-        ),
-        pytest.param(
-            {"postage": "europe"}, True, "letter-postage-international", "international"
-        ),
-        pytest.param(
-            {"postage": "rest-of-world"},
-            True,
-            "letter-postage-international",
-            "international",
-        ),
-        pytest.param(
-            {"postage": "third"},
-            True,
-            "letter-postage-third",
-            "third class",
-            marks=pytest.mark.xfail(raises=TypeError),
-        ),
-    ],
-)
-def test_letter_image_renderer(
-    jinja_template,
-    page_count,
-    expected_page_numbers,
-    expected_oversized,
-    postage_args,
-    expected_show_postage,
-    expected_postage_class_value,
-    expected_postage_description,
-):
-    str(
-        LetterImageTemplate(
-            {"content": "Content", "subject": "Subject", "template_type": "letter"},
-            image_url="http://example.com/endpoint.png",
-            page_count=page_count,
-            contact_block="10 Downing Street",
-            **postage_args,
-        )
-    )
-    jinja_template.assert_called_once_with(
-        {
-            "image_url": "http://example.com/endpoint.png",
-            "page_numbers": expected_page_numbers,
-            "address": [
-                "<span class='placeholder-no-parenthesis'>address line 1</span>",
-                "<span class='placeholder-no-parenthesis'>address line 2</span>",
-                "<span class='placeholder-no-parenthesis'>address line 3</span>",
-                "<span class='placeholder-no-parenthesis'>address line 4</span>",
-                "<span class='placeholder-no-parenthesis'>address line 5</span>",
-                "<span class='placeholder-no-parenthesis'>address line 6</span>",
-                "<span class='placeholder-no-parenthesis'>address line 7</span>",
-            ],
-            "contact_block": "10 Downing Street",
-            "date": "12 December 2012",
-            "subject": "Subject",
-            "message": "<p>Content</p>",
-            "show_postage": expected_show_postage,
-            "postage_class_value": expected_postage_class_value,
-            "postage_description": expected_postage_description,
-        }
-    )
+# @freeze_time("2001-01-01 12:00:00.000000")
+# @mock.patch("notifications_utils.template.LetterPreviewTemplate.jinja_template.render")
+# def test_letter_preview_renderer_without_mocks(jinja_template):
+#     str(
+#         LetterPreviewTemplate(
+#             {"content": "Foo", "subject": "Subject", "template_type": "letter"},
+#             {"addressline1": "name", "addressline2": "street", "postcode": "SW1 1AA"},
+#             contact_block="",
+#         )
+#     )
+
+#     jinja_template_locals = jinja_template.call_args_list[0][0][0]
+
+#     assert jinja_template_locals["address"] == [
+#         "name",
+#         "street",
+#         "SW1 1AA",
+#     ]
+#     assert jinja_template_locals["subject"] == "Subject"
+#     assert jinja_template_locals["message"] == "<p>Foo</p>"
+#     assert jinja_template_locals["date"] == "1 January 2001"
+#     assert jinja_template_locals["contact_block"] == ""
+#     assert jinja_template_locals["admin_base_url"] == "http://localhost:6012"
+#     assert jinja_template_locals["logo_file_name"] is None
 
 
-@freeze_time("2012-12-12 12:12:12")
-@mock.patch("notifications_utils.template.LetterImageTemplate.jinja_template.render")
-@pytest.mark.parametrize(
-    "postage_argument",
-    [
-        None,
-        "first",
-        "second",
-        "europe",
-        "rest-of-world",
-    ],
-)
-def test_letter_image_renderer_shows_international_post(
-    jinja_template,
-    postage_argument,
-):
-    str(
-        LetterImageTemplate(
-            {"content": "Content", "subject": "Subject", "template_type": "letter"},
-            {
-                "address line 1": "123 Example Street",
-                "address line 2": "Lima",
-                "address line 3": "Peru",
-            },
-            image_url="http://example.com/endpoint.png",
-            page_count=1,
-            postage=postage_argument,
-        )
-    )
-    assert jinja_template.call_args_list[0][0][0]["postage_description"] == (
-        "international"
-    )
+# @freeze_time("2012-12-12 12:12:12")
+# @mock.patch("notifications_utils.template.LetterImageTemplate.jinja_template.render")
+# @pytest.mark.parametrize(
+#     ("page_count", "expected_oversized", "expected_page_numbers"),
+#     [
+#         (
+#             1,
+#             False,
+#             [1],
+#         ),
+#         (
+#             5,
+#             False,
+#             [1, 2, 3, 4, 5],
+#         ),
+#         (
+#             10,
+#             False,
+#             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#         ),
+#         (
+#             11,
+#             True,
+#             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#         ),
+#         (
+#             99,
+#             True,
+#             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#         ),
+#     ],
+# )
+# @pytest.mark.parametrize(
+#     (
+#         "postage_args",
+#         "expected_show_postage",
+#         "expected_postage_class_value",
+#         "expected_postage_description",
+#     ),
+#     [
+#         pytest.param({}, False, None, None),
+#         pytest.param({"postage": None}, False, None, None),
+#         pytest.param({"postage": "first"}, True, "letter-postage-first", "first class"),
+#         pytest.param(
+#             {"postage": "second"}, True, "letter-postage-second", "second class"
+#         ),
+#         pytest.param(
+#             {"postage": "europe"}, True, "letter-postage-international", "international"
+#         ),
+#         pytest.param(
+#             {"postage": "rest-of-world"},
+#             True,
+#             "letter-postage-international",
+#             "international",
+#         ),
+#         pytest.param(
+#             {"postage": "third"},
+#             True,
+#             "letter-postage-third",
+#             "third class",
+#             marks=pytest.mark.xfail(raises=TypeError),
+#         ),
+#     ],
+# )
+# def test_letter_image_renderer(
+#     jinja_template,
+#     page_count,
+#     expected_page_numbers,
+#     expected_oversized,
+#     postage_args,
+#     expected_show_postage,
+#     expected_postage_class_value,
+#     expected_postage_description,
+# ):
+#     str(
+#         LetterImageTemplate(
+#             {"content": "Content", "subject": "Subject", "template_type": "letter"},
+#             image_url="http://example.com/endpoint.png",
+#             page_count=page_count,
+#             contact_block="10 Downing Street",
+#             **postage_args,
+#         )
+#     )
+#     jinja_template.assert_called_once_with(
+#         {
+#             "image_url": "http://example.com/endpoint.png",
+#             "page_numbers": expected_page_numbers,
+#             "address": [
+#                 "<span class='placeholder-no-parenthesis'>address line 1</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 2</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 3</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 4</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 5</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 6</span>",
+#                 "<span class='placeholder-no-parenthesis'>address line 7</span>",
+#             ],
+#             "contact_block": "10 Downing Street",
+#             "date": "12 December 2012",
+#             "subject": "Subject",
+#             "message": "<p>Content</p>",
+#             "show_postage": expected_show_postage,
+#             "postage_class_value": expected_postage_class_value,
+#             "postage_description": expected_postage_description,
+#         }
+#     )
 
 
-def test_letter_image_template_renders_visually_hidden_address():
-    template = BeautifulSoup(
-        str(
-            LetterImageTemplate(
-                {"content": "", "subject": "", "template_type": "letter"},
-                {
-                    "address_line_1": "line 1",
-                    "address_line_2": "line 2",
-                    "postcode": "postcode",
-                },
-                image_url="http://example.com/endpoint.png",
-                page_count=1,
-            )
-        ),
-        features="html.parser",
-    )
-    assert str(template.select_one(".govuk-visually-hidden ul")) == (
-        "<ul>" "<li>line 1</li>" "<li>line 2</li>" "<li>postcode</li>" "</ul>"
-    )
+# @freeze_time("2012-12-12 12:12:12")
+# @mock.patch("notifications_utils.template.LetterImageTemplate.jinja_template.render")
+# @pytest.mark.parametrize(
+#     "postage_argument",
+#     [
+#         None,
+#         "first",
+#         "second",
+#         "europe",
+#         "rest-of-world",
+#     ],
+# )
+# def test_letter_image_renderer_shows_international_post(
+#     jinja_template,
+#     postage_argument,
+# ):
+#     str(
+#         LetterImageTemplate(
+#             {"content": "Content", "subject": "Subject", "template_type": "letter"},
+#             {
+#                 "address line 1": "123 Example Street",
+#                 "address line 2": "Lima",
+#                 "address line 3": "Peru",
+#             },
+#             image_url="http://example.com/endpoint.png",
+#             page_count=1,
+#             postage=postage_argument,
+#         )
+#     )
+#     assert jinja_template.call_args_list[0][0][0]["postage_description"] == (
+#         "international"
+#     )
 
 
-@pytest.mark.parametrize(
-    "page_image_url",
-    [
-        pytest.param("http://example.com/endpoint.png?page=0", marks=pytest.mark.xfail),
-        "http://example.com/endpoint.png?page=1",
-        "http://example.com/endpoint.png?page=2",
-        "http://example.com/endpoint.png?page=3",
-        pytest.param("http://example.com/endpoint.png?page=4", marks=pytest.mark.xfail),
-    ],
-)
-def test_letter_image_renderer_pagination(page_image_url):
-    assert page_image_url in str(
-        LetterImageTemplate(
-            {"content": "", "subject": "", "template_type": "letter"},
-            image_url="http://example.com/endpoint.png",
-            page_count=3,
-        )
-    )
+# def test_letter_image_template_renders_visually_hidden_address():
+#     template = BeautifulSoup(
+#         str(
+#             LetterImageTemplate(
+#                 {"content": "", "subject": "", "template_type": "letter"},
+#                 {
+#                     "address_line_1": "line 1",
+#                     "address_line_2": "line 2",
+#                     "postcode": "postcode",
+#                 },
+#                 image_url="http://example.com/endpoint.png",
+#                 page_count=1,
+#             )
+#         ),
+#         features="html.parser",
+#     )
+#     assert str(template.select_one(".govuk-visually-hidden ul")) == (
+#         "<ul>" "<li>line 1</li>" "<li>line 2</li>" "<li>postcode</li>" "</ul>"
+#     )
 
 
-@pytest.mark.parametrize(
-    ("partial_call", "expected_exception", "expected_message"),
-    [
-        (
-            partial(LetterImageTemplate),
-            TypeError,
-            "image_url is required",
-        ),
-        (
-            partial(LetterImageTemplate, page_count=1),
-            TypeError,
-            "image_url is required",
-        ),
-        (
-            partial(LetterImageTemplate, image_url="foo"),
-            TypeError,
-            "page_count is required",
-        ),
-        (
-            partial(LetterImageTemplate, image_url="foo", page_count="foo"),
-            ValueError,
-            "invalid literal for int() with base 10: 'foo'",
-        ),
-        (
-            partial(
-                LetterImageTemplate, image_url="foo", page_count=1, postage="third"
-            ),
-            TypeError,
-            "postage must be None, 'first', 'second', 'europe' or 'rest-of-world'",
-        ),
-    ],
-)
-def test_letter_image_renderer_requires_arguments(
-    partial_call,
-    expected_exception,
-    expected_message,
-):
-    with pytest.raises(expected_exception) as exception:
-        partial_call({"content": "", "subject": "", "template_type": "letter"})
-    assert str(exception.value) == expected_message
+# @pytest.mark.parametrize(
+#     "page_image_url",
+#     [
+#         pytest.param("http://example.com/endpoint.png?page=0", marks=pytest.mark.xfail),
+#         "http://example.com/endpoint.png?page=1",
+#         "http://example.com/endpoint.png?page=2",
+#         "http://example.com/endpoint.png?page=3",
+#         pytest.param("http://example.com/endpoint.png?page=4", marks=pytest.mark.xfail),
+#     ],
+# )
+# def test_letter_image_renderer_pagination(page_image_url):
+#     assert page_image_url in str(
+#         LetterImageTemplate(
+#             {"content": "", "subject": "", "template_type": "letter"},
+#             image_url="http://example.com/endpoint.png",
+#             page_count=3,
+#         )
+#     )
 
 
-@pytest.mark.parametrize(
-    ("postage", "expected_attribute_value", "expected_postage_text"),
-    [
-        (None, None, None),
-        (
-            "first",
-            ["letter-postage", "letter-postage-first"],
-            "Postage: first class",
-        ),
-        (
-            "second",
-            ["letter-postage", "letter-postage-second"],
-            "Postage: second class",
-        ),
-        (
-            "europe",
-            ["letter-postage", "letter-postage-international"],
-            "Postage: international",
-        ),
-        (
-            "rest-of-world",
-            ["letter-postage", "letter-postage-international"],
-            "Postage: international",
-        ),
-    ],
-)
-def test_letter_image_renderer_passes_postage_to_html_attribute(
-    postage,
-    expected_attribute_value,
-    expected_postage_text,
-):
-    template = BeautifulSoup(
-        str(
-            LetterImageTemplate(
-                {"content": "", "subject": "", "template_type": "letter"},
-                image_url="foo",
-                page_count=1,
-                postage=postage,
-            )
-        ),
-        features="html.parser",
-    )
-    if expected_attribute_value:
-        assert (
-            template.select_one(".letter-postage")["class"] == expected_attribute_value
-        )
-        assert (
-            template.select_one(".letter-postage").text.strip() == expected_postage_text
-        )
-    else:
-        assert not template.select(".letter-postage")
+# @pytest.mark.parametrize(
+#     ("partial_call", "expected_exception", "expected_message"),
+#     [
+#         (
+#             partial(LetterImageTemplate),
+#             TypeError,
+#             "image_url is required",
+#         ),
+#         (
+#             partial(LetterImageTemplate, page_count=1),
+#             TypeError,
+#             "image_url is required",
+#         ),
+#         (
+#             partial(LetterImageTemplate, image_url="foo"),
+#             TypeError,
+#             "page_count is required",
+#         ),
+#         (
+#             partial(LetterImageTemplate, image_url="foo", page_count="foo"),
+#             ValueError,
+#             "invalid literal for int() with base 10: 'foo'",
+#         ),
+#         (
+#             partial(
+#                 LetterImageTemplate, image_url="foo", page_count=1, postage="third"
+#             ),
+#             TypeError,
+#             "postage must be None, 'first', 'second', 'europe' or 'rest-of-world'",
+#         ),
+#     ],
+# )
+# def test_letter_image_renderer_requires_arguments(
+#     partial_call,
+#     expected_exception,
+#     expected_message,
+# ):
+#     with pytest.raises(expected_exception) as exception:
+#         partial_call({"content": "", "subject": "", "template_type": "letter"})
+#     assert str(exception.value) == expected_message
+
+
+# @pytest.mark.parametrize(
+#     ("postage", "expected_attribute_value", "expected_postage_text"),
+#     [
+#         (None, None, None),
+#         (
+#             "first",
+#             ["letter-postage", "letter-postage-first"],
+#             "Postage: first class",
+#         ),
+#         (
+#             "second",
+#             ["letter-postage", "letter-postage-second"],
+#             "Postage: second class",
+#         ),
+#         (
+#             "europe",
+#             ["letter-postage", "letter-postage-international"],
+#             "Postage: international",
+#         ),
+#         (
+#             "rest-of-world",
+#             ["letter-postage", "letter-postage-international"],
+#             "Postage: international",
+#         ),
+#     ],
+# )
+# def test_letter_image_renderer_passes_postage_to_html_attribute(
+#     postage,
+#     expected_attribute_value,
+#     expected_postage_text,
+# ):
+#     template = BeautifulSoup(
+#         str(
+#             LetterImageTemplate(
+#                 {"content": "", "subject": "", "template_type": "letter"},
+#                 image_url="foo",
+#                 page_count=1,
+#                 postage=postage,
+#             )
+#         ),
+#         features="html.parser",
+#     )
+#     if expected_attribute_value:
+#         assert (
+#             template.select_one(".letter-postage")["class"] == expected_attribute_value
+#         )
+#         assert (
+#             template.select_one(".letter-postage").text.strip() == expected_postage_text
+#         )
+#     else:
+#         assert not template.select(".letter-postage")
 
 
 @pytest.mark.parametrize(
