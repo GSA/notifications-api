@@ -1839,7 +1839,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
                 mock.call(
                     "subject", {}, html="escape", redact_missing_personalisation=False
                 ),
-                mock.call("((email address))", {}, with_parenthesis=False),
+                mock.call("((email address))", {}, with_brackets=False),
             ],
         ),
         (
@@ -1857,7 +1857,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
             {},
             [
                 mock.call(
-                    "((phone number))", {}, with_parenthesis=False, html="escape"
+                    "((phone number))", {}, with_brackets=False, html="escape"
                 ),
                 mock.call(
                     "content", {}, html="escape", redact_missing_personalisation=False
@@ -1878,7 +1878,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
             {},
             [
                 mock.call(
-                    "((phone number))", {}, with_parenthesis=False, html="escape"
+                    "((phone number))", {}, with_brackets=False, html="escape"
                 ),
                 mock.call(
                     "content", {}, html="escape", redact_missing_personalisation=False
@@ -1911,7 +1911,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
                         "((address line 7))"
                     ),
                     {},
-                    with_parenthesis=False,
+                    with_brackets=False,
                     html="escape",
                 ),
                 mock.call(
@@ -1942,7 +1942,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
                         "((address line 7))"
                     ),
                     {},
-                    with_parenthesis=False,
+                    with_brackets=False,
                     html="escape",
                 ),
                 mock.call(
@@ -1978,7 +1978,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
                 mock.call(
                     "subject", {}, html="escape", redact_missing_personalisation=True
                 ),
-                mock.call("((email address))", {}, with_parenthesis=False),
+                mock.call("((email address))", {}, with_brackets=False),
             ],
         ),
         (
@@ -1987,7 +1987,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
             {"redact_missing_personalisation": True},
             [
                 mock.call(
-                    "((phone number))", {}, with_parenthesis=False, html="escape"
+                    "((phone number))", {}, with_brackets=False, html="escape"
                 ),
                 mock.call(
                     "content", {}, html="escape", redact_missing_personalisation=True
@@ -2000,7 +2000,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
             {"redact_missing_personalisation": True},
             [
                 mock.call(
-                    "((phone number))", {}, with_parenthesis=False, html="escape"
+                    "((phone number))", {}, with_brackets=False, html="escape"
                 ),
                 mock.call(
                     "content", {}, html="escape", redact_missing_personalisation=True
@@ -2043,7 +2043,7 @@ def test_is_message_empty_email_and_letter_templates_tries_not_to_count_chars(
                         "((address line 7))"
                     ),
                     {},
-                    with_parenthesis=False,
+                    with_brackets=False,
                     html="escape",
                 ),
                 mock.call(
