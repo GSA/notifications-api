@@ -58,7 +58,7 @@ def sns_notification_handler(data, headers):
             if "SubscribeUrl" in message
             else message.get("SubscribeURL")
         )
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         try:
             response.raise_for_status()
         except Exception as e:
