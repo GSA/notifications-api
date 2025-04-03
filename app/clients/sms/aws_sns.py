@@ -50,6 +50,7 @@ class AwsSnsClient(SmsClient):
         matched = False
         if "+" not in to:
             to = f"+{to}"
+
         for match in phonenumbers.PhoneNumberMatcher(to, None):
             matched = True
             to = phonenumbers.format_number(
