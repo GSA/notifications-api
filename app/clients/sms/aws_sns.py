@@ -48,7 +48,10 @@ class AwsSnsClient(SmsClient):
 
     def send_sms(self, to, content, reference, sender=None, international=False):
         matched = False
-        for match in phonenumbers.PhoneNumberMatcher(to, "US"):
+        if "+" not in to:
+            to = f"+{to}"
+
+        for match in phonenumbers.PhoneNumberMatcher(to, None):
             matched = True
             to = phonenumbers.format_number(
                 match.number, phonenumbers.PhoneNumberFormat.E164
