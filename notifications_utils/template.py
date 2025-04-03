@@ -8,20 +8,13 @@ from os import path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
-from notifications_utils import (
-    LETTER_MAX_PAGE_COUNT,
-    MAGIC_SEQUENCE,
-    SMS_CHAR_COUNT_LIMIT,
-    utc_now,
-)
-from notifications_utils.countries.data import Postage
+from notifications_utils import MAGIC_SEQUENCE, SMS_CHAR_COUNT_LIMIT
 from notifications_utils.field import Field, PlainTextField
 from notifications_utils.formatters import (
     add_prefix,
     add_trailing_newline,
     autolink_urls,
     escape_html,
-    formatted_list,
     make_quotes_smart,
     nl2br,
     normalise_multiple_newlines,
@@ -30,7 +23,6 @@ from notifications_utils.formatters import (
     remove_smart_quotes_from_email_addresses,
     remove_whitespace_before_punctuation,
     replace_hyphens_with_en_dashes,
-    replace_hyphens_with_non_breaking_hyphens,
     sms_encode,
     strip_leading_whitespace,
     strip_unsupported_characters,
@@ -40,10 +32,8 @@ from notifications_utils.insensitive_dict import InsensitiveDict
 from notifications_utils.markdown import (
     notify_email_markdown,
     notify_email_preheader_markdown,
-    notify_letter_preview_markdown,
     notify_plain_text_email_markdown,
 )
-from notifications_utils.postal_address import PostalAddress, address_lines_1_to_7_keys
 from notifications_utils.sanitise_text import SanitiseSMS
 from notifications_utils.take import Take
 from notifications_utils.template_change import TemplateChange
@@ -711,231 +701,6 @@ class EmailPreviewTemplate(BaseEmailTemplate):
             )
             .then(do_nice_typography)
             .then(normalise_whitespace)
-        )
-
-
-class BaseLetterTemplate(SubjectMixin, Template):
-    template_type = "letter"
-
-    address_block = "\n".join(
-        f'(({line.replace("_", " ")}))' for line in address_lines_1_to_7_keys
-    )
-
-    def __init__(
-        self,
-        template,
-        values=None,
-        contact_block=None,
-        admin_base_url="http://localhost:6012",
-        logo_file_name=None,
-        redact_missing_personalisation=False,
-        date=None,
-    ):
-        self.contact_block = (contact_block or "").strip()
-        super().__init__(
-            template,
-            values,
-            redact_missing_personalisation=redact_missing_personalisation,
-        )
-        self.admin_base_url = admin_base_url
-        self.logo_file_name = logo_file_name
-        self.date = date or utc_now()
-
-    @property
-    def subject(self):
-        return (
-            Take(
-                Field(
-                    self._subject,
-                    self.values,
-                    redact_missing_personalisation=self.redact_missing_personalisation,
-                    html="escape",
-                )
-            )
-            .then(do_nice_typography)
-            .then(normalise_whitespace)
-        )
-
-    @property
-    def placeholders(self):
-        return get_placeholders(self.contact_block) | super().placeholders
-
-    @property
-    def postal_address(self):
-        return PostalAddress.from_personalisation(InsensitiveDict(self.values))
-
-    @property
-    def _address_block(self):
-        if (
-            self.postal_address.has_enough_lines
-            and not self.postal_address.has_too_many_lines
-        ):
-            return self.postal_address.normalised_lines
-
-        if "address line 7" not in self.values and "postcode" in self.values:
-            self.values["address line 7"] = self.values["postcode"]
-
-        return Field(
-            self.address_block,
-            self.values,
-            html="escape",
-            with_brackets=False,
-        ).splitlines()
-
-    @property
-    def _contact_block(self):
-        return (
-            Take(
-                Field(
-                    "\n".join(line.strip() for line in self.contact_block.split("\n")),
-                    self.values,
-                    redact_missing_personalisation=self.redact_missing_personalisation,
-                    html="escape",
-                )
-            )
-            .then(remove_whitespace_before_punctuation)
-            .then(nl2br)
-        )
-
-    @property
-    def _date(self):
-        return self.date.strftime("%-d %B %Y")
-
-    @property
-    def _message(self):
-        return (
-            Take(
-                Field(
-                    self.content,
-                    self.values,
-                    html="escape",
-                    markdown_lists=True,
-                    redact_missing_personalisation=self.redact_missing_personalisation,
-                )
-            )
-            .then(add_trailing_newline)
-            .then(notify_letter_preview_markdown)
-            .then(do_nice_typography)
-            .then(replace_hyphens_with_non_breaking_hyphens)
-        )
-
-
-class LetterPreviewTemplate(BaseLetterTemplate):
-    jinja_template = template_env.get_template("letter_pdf/preview.jinja2")
-
-    def __str__(self):
-        return Markup(
-            self.jinja_template.render(
-                {
-                    "admin_base_url": self.admin_base_url,
-                    "logo_file_name": self.logo_file_name,
-                    # logo_class should only ever be None, svg or png
-                    "logo_class": (
-                        self.logo_file_name.lower()[-3:]
-                        if self.logo_file_name
-                        else None
-                    ),
-                    "subject": self.subject,
-                    "message": self._message,
-                    "address": self._address_block,
-                    "contact_block": self._contact_block,
-                    "date": self._date,
-                }
-            )
-        )
-
-
-class LetterPrintTemplate(LetterPreviewTemplate):
-    jinja_template = template_env.get_template("letter_pdf/print.jinja2")
-
-
-class LetterImageTemplate(BaseLetterTemplate):
-    jinja_template = template_env.get_template("letter_image_template.jinja2")
-    first_page_number = 1
-    allowed_postage_types = (
-        Postage.FIRST,
-        Postage.SECOND,
-        Postage.EUROPE,
-        Postage.REST_OF_WORLD,
-    )
-
-    def __init__(
-        self,
-        template,
-        values=None,
-        image_url=None,
-        page_count=None,
-        contact_block=None,
-        postage=None,
-    ):
-        super().__init__(template, values, contact_block=contact_block)
-        if not image_url:
-            raise TypeError("image_url is required")
-        if not page_count:
-            raise TypeError("page_count is required")
-        if postage not in [None] + list(self.allowed_postage_types):
-            raise TypeError(
-                "postage must be None, {}".format(
-                    formatted_list(
-                        self.allowed_postage_types,
-                        conjunction="or",
-                        before_each="'",
-                        after_each="'",
-                    )
-                )
-            )
-        self.image_url = image_url
-        self.page_count = int(page_count)
-        self._postage = postage
-
-    @property
-    def postage(self):
-        if self.postal_address.international:
-            return self.postal_address.postage
-        return self._postage
-
-    @property
-    def last_page_number(self):
-        return min(self.page_count, LETTER_MAX_PAGE_COUNT) + self.first_page_number
-
-    @property
-    def page_numbers(self):
-        return list(range(self.first_page_number, self.last_page_number))
-
-    @property
-    def postage_description(self):
-        return {
-            Postage.FIRST: "first class",
-            Postage.SECOND: "second class",
-            Postage.EUROPE: "international",
-            Postage.REST_OF_WORLD: "international",
-        }.get(self.postage)
-
-    @property
-    def postage_class_value(self):
-        return {
-            Postage.FIRST: "letter-postage-first",
-            Postage.SECOND: "letter-postage-second",
-            Postage.EUROPE: "letter-postage-international",
-            Postage.REST_OF_WORLD: "letter-postage-international",
-        }.get(self.postage)
-
-    def __str__(self):
-        return Markup(
-            self.jinja_template.render(
-                {
-                    "image_url": self.image_url,
-                    "page_numbers": self.page_numbers,
-                    "address": self._address_block,
-                    "contact_block": self._contact_block,
-                    "date": self._date,
-                    "subject": self.subject,
-                    "message": self._message,
-                    "show_postage": bool(self.postage),
-                    "postage_description": self.postage_description,
-                    "postage_class_value": self.postage_class_value,
-                }
-            )
         )
 
 
