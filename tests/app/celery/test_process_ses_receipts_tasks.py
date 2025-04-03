@@ -104,7 +104,7 @@ def test_notifications_ses_200_autoconfirms_subscription(client, mocker):
         ],
     )
 
-    requests_mock.assert_called_once_with("https://foo")
+    requests_mock.assert_called_once_with("https://foo", timeout=30)
     assert response.status_code == 200
 
 

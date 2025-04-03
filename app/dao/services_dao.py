@@ -629,7 +629,8 @@ def dao_fetch_stats_for_service_from_days_for_user(
     ).group_by(total_substmt.c.hour)
 
     total_notifications = {
-        row.hour: row.total_notifications for row in db.session.execute(total_stmt).all()
+        row.hour: row.total_notifications
+        for row in db.session.execute(total_stmt).all()
     }
 
     stmt = (
