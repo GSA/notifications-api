@@ -853,21 +853,19 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "click-datetime"
-version = "0.2"
+version = "0.4.0"
 description = "Datetime type support for click."
 optional = false
-python-versions = "*"
+python-versions = "<4.0,>=3.12"
 groups = ["main"]
 files = [
-    {file = "click-datetime-0.2.tar.gz", hash = "sha256:c562ad24b3711784a655a49141b4a87933a78608fe66296259acae95fda5e115"},
-    {file = "click_datetime-0.2-py2.py3-none-any.whl", hash = "sha256:7256ca518e648ada8e2550239ab328de125906e5b7199a5bd5bcbb4dfe28f946"},
+    {file = "click_datetime-0.4.0-py3-none-any.whl", hash = "sha256:dfd2f54142f0f899535e400946d724cc8319b4cf70d110d1451f892a6f010b04"},
+    {file = "click_datetime-0.4.0.tar.gz", hash = "sha256:9f35ed3fab13f553221ce8c5a895e5185d7360993c51dd7f8628b9b4f636930b"},
 ]
 
 [package.dependencies]
-click = "*"
-
-[package.extras]
-dev = ["wheel"]
+click = ">=8.0.0,<9.0.0"
+wheel = ">=0.44.0,<0.45.0"
 
 [[package]]
 name = "click-didyoumean"
@@ -4920,6 +4918,21 @@ MarkupSafe = ">=2.1.1"
 watchdog = ["watchdog (>=2.3)"]
 
 [[package]]
+name = "wheel"
+version = "0.44.0"
+description = "A built-package format for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "wheel-0.44.0-py3-none-any.whl", hash = "sha256:2376a90c98cc337d18623527a97c31797bd02bad0033d41547043a1cbfbe448f"},
+    {file = "wheel-0.44.0.tar.gz", hash = "sha256:a29c3f2817e95ab89aa4660681ad547c0e9547f20e75b0562fe7723c9a2a9d49"},
+]
+
+[package.extras]
+test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
+
+[[package]]
 name = "wrapt"
 version = "1.16.0"
 description = "Module for decorators, wrappers and monkey patching."
@@ -5186,4 +5199,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "845e698d8dfbbc28183b315c057e33c2d5e7af13c9321dab85fbb32ec4f76957"
+content-hash = "b9848ddc5ac01d7fd617d5faaedd44e8b1935dd25aeaa28762b00269b0300da8"
