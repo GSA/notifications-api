@@ -81,7 +81,7 @@ requests = "^2.32.3"
 [tool.poetry.group.dev.dependencies]
 awscli = "^1.33.32"
 bandit = "*"
-black = "^24.8.0"
+black = "^25.1.0"
 cloudfoundry-client = "*"
 exceptiongroup = "==1.2.2"
 flake8 = "^7.1.1"
