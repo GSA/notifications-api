@@ -30,7 +30,7 @@ def get_certificate(url):
     res = redis_store.get(url)
     if res is not None:
         return res
-    res = requests.get(url).text
+    res = requests.get(url, timeout=30).text
     redis_store.set(url, res, ex=60 * 60)  # 60 minutes
     _signing_cert_cache[url] = res
     return res
