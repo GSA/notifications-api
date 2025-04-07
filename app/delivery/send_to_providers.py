@@ -185,8 +185,16 @@ def send_email_to_provider(notification):
     recipient = recipient.decode("utf-8")
     personalisation = redis_store.get(f"email-personalisation-{notification.id}")
     if personalisation:
-        personalisation = personalisation.decode("utf-8")
-        notification.personalisation = json.loads(personalisation)
+        p = personalisation.decode("utf-8")
+
+        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
+            current_app.logger.info(f"Invite personalization before {p}")
+        p = p.replace("%5B", "")
+        p = p.replace("%5D", "")
+        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
+            current_app.logger.info(f"Invite personalization after {p}")
+        p = json.loads(p)
+        notification.personalisation = p
 
     service = SerialisedService.from_id(notification.service_id)
     if not service.active:
