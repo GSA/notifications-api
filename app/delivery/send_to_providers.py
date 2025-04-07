@@ -187,12 +187,6 @@ def send_email_to_provider(notification):
     if personalisation:
         p = personalisation.decode("utf-8")
 
-        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
-            current_app.logger.info(f"Invite personalization before {p}")
-        p = p.replace("%5B", "")
-        p = p.replace("%5D", "")
-        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
-            current_app.logger.info(f"Invite personalization after {p}")
         p = json.loads(p)
         notification.personalisation = p
 
@@ -218,6 +212,12 @@ def send_email_to_provider(notification):
             template_dict, values=notification.personalisation
         )
 
+        html_email = str(html_email)
+        html_email = html_email.replace("%5B", "")
+        html_email = html_email.replace("%5D", "")
+        html_email = html_email.replace("(", "")
+        html_email = html_email.replace(")", "")
+
         if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
@@ -233,7 +233,7 @@ def send_email_to_provider(notification):
                 recipient,
                 plain_text_email.subject,
                 body=str(plain_text_email),
-                html_body=str(html_email),
+                html_body=html_email,
                 reply_to_address=notification.reply_to_text,
             )
             notification.reference = reference
