@@ -218,8 +218,6 @@ def send_email_to_provider(notification):
         html_email = html_email.replace("(", "")
         html_email = html_email.replace(")", "")
 
-
-
         if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
