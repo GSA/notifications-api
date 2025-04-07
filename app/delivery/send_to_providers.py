@@ -187,11 +187,11 @@ def send_email_to_provider(notification):
     if personalisation:
         personalisation = personalisation.decode("utf-8")
         p = json.loads(personalisation)
-        if os.get("NOTIFY_ENVIRONMENT") == "staging":
+        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
             current_app.logger.info(f"Invite personalization before {p}")
         p = p.replace("%5B", "")
         p = p.replace("%5D", "")
-        if os.get("NOTIFY_ENVIRONMENT") == "staging":
+        if os.getenv("NOTIFY_ENVIRONMENT") == "staging":
             current_app.logger.info(f"Invite personalization after {p}")
 
         notification.personalisation = p
