@@ -24,21 +24,16 @@ valid_us_phone_numbers = [
     "(202) 555-0104",
 ]
 
-# TODO
-# International phone number tests are commented out as a result of issue #943 in notifications-admin.  We are
-# deliberately eliminating the ability to send to numbers outside of country code 1.   These tests should
-# be removed at some point when we are sure we are never going to support international numbers
-
 valid_international_phone_numbers = [
-    # "+71234567890",  # Russia
-    # "+447123456789",  # UK
-    # "+4407123456789",  # UK
-    # "+4407123 456789",  # UK
-    # "+4407123-456-789",  # UK
-    # "+23051234567",  # Mauritius,
-    # "+682 12345",  # Cook islands
-    # "+3312345678",
-    # "+9-2345-12345-12345",  # 15 digits
+    "+71234567890",  # Russia
+    "+447123456789",  # UK
+    "+4407123456789",  # UK
+    "+4407123 456789",  # UK
+    "+4407123-456-789",  # UK
+    "+23051234567",  # Mauritius,
+    "+682 12345",  # Cook islands
+    "+3312345678",
+    "+9-2345-12345-12345",  # 15 digits
 ]
 
 
@@ -81,11 +76,11 @@ invalid_us_phone_numbers = sum(
     [],
 )
 
-# TODO what is wrong with cook islands
+
 invalid_phone_numbers = [
     ("+80233456789", "Not a valid country prefix"),
     ("1234567", "Not enough digits"),
-    # ("+682 1234", "Invalid country code"),  # Cook Islands phone numbers can be 5 digits
+    ("+682 1234", "Not enough digits"),  # Cook Islands phone numbers are 5 digits
     ("+12345 12345 12345 6", "Too many digits"),
 ]
 
