@@ -9,7 +9,6 @@ import pytest
 from ordered_set import OrderedSet
 
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from notifications_utils.countries import Country
 from notifications_utils.formatters import strip_and_remove_obscure_whitespace
 from notifications_utils.recipients import (
     Cell,
@@ -17,11 +16,7 @@ from notifications_utils.recipients import (
     Row,
     first_column_headings,
 )
-from notifications_utils.template import (
-    EmailPreviewTemplate,
-    LetterImageTemplate,
-    SMSMessageTemplate,
-)
+from notifications_utils.template import EmailPreviewTemplate, SMSMessageTemplate
 
 
 def _sample_template(template_type, content="foo"):
@@ -30,11 +25,6 @@ def _sample_template(template_type, content="foo"):
             {"content": content, "subject": "bar", "template_type": "email"}
         ),
         "sms": SMSMessageTemplate({"content": content, "template_type": "sms"}),
-        "letter": LetterImageTemplate(
-            {"content": content, "subject": "bar", "template_type": "letter"},
-            image_url="https://example.com",
-            page_count=1,
-        ),
     }.get(template_type)
 
 
@@ -47,19 +37,6 @@ def _index_rows(rows):
     [
         ("email", ["email address"]),
         ("sms", ["phone number"]),
-        (
-            "letter",
-            [
-                "address line 1",
-                "address line 2",
-                "address line 3",
-                "address line 4",
-                "address line 5",
-                "address line 6",
-                "postcode",
-                "address line 7",
-            ],
-        ),
     ],
 )
 def test_recipient_column_headers(template_type, expected):
@@ -164,34 +141,6 @@ def test_recipient_column_headers(template_type, expected):
                     ("date", "Nov 29, 2016"),
                     ("name", "test2"),
                 ],
-            ],
-        ),
-        (
-            """
-                address_line_1
-                Alice
-                Bob
-            """,
-            "letter",
-            [[("address_line_1", "Alice")], [("address_line_1", "Bob")]],
-        ),
-        (
-            """
-                address line 1,address line 2,address line 5,address line 6,postcode,name,thing
-                A. Name,,,,XM4 5HQ,example,example
-            """,
-            "letter",
-            [
-                [
-                    ("addressline1", "A. Name"),
-                    ("addressline2", None),
-                    # optional address rows 3 and 4 not in file
-                    ("addressline5", None),
-                    ("addressline5", None),
-                    ("postcode", "XM4 5HQ"),
-                    ("name", "example"),
-                    ("thing", "example"),
-                ]
             ],
         ),
         (
@@ -563,27 +512,11 @@ def test_get_recipient_respects_order(
         ),
         (
             """
-                address_line_1, address_line_2, postcode, name
-            """,
-            "letter",
-            ["address_line_1", "address_line_2", "postcode", "name"],
-            set(),
-        ),
-        (
-            """
                 email address,colour
             """,
             "email",
             ["email address", "colour"],
             set(["name"]),
-        ),
-        (
-            """
-                address_line_1, address_line_2, name
-            """,
-            "letter",
-            ["address_line_1", "address_line_2", "name"],
-            set(),
         ),
         (
             """
@@ -617,40 +550,12 @@ def test_column_headers(file_contents, template_type, expected, expected_missing
         pytest.param("", "sms", marks=pytest.mark.xfail),
         pytest.param("name", "sms", marks=pytest.mark.xfail),
         pytest.param("email address", "sms", marks=pytest.mark.xfail),
-        pytest.param(
-            "address_line_1",
-            "letter",
-            marks=pytest.mark.xfail,
-        ),
-        pytest.param(
-            "address_line_1, address_line_2",
-            "letter",
-            marks=pytest.mark.xfail,
-        ),
-        pytest.param(
-            "address_line_6, postcode",
-            "letter",
-            marks=pytest.mark.xfail,
-        ),
-        pytest.param(
-            "address_line_1, postcode, address_line_7",
-            "letter",
-            marks=pytest.mark.xfail,
-        ),
         ("phone number", "sms"),
         ("phone number,name", "sms"),
         ("email address", "email"),
         ("email address,name", "email"),
         ("PHONENUMBER", "sms"),
         ("email_address", "email"),
-        ("address_line_1, address_line_2, postcode", "letter"),
-        ("address_line_1, address_line_2, address_line_7", "letter"),
-        ("address_line_1, address_line_2, address_line_3", "letter"),
-        ("address_line_4, address_line_5, address_line_6", "letter"),
-        (
-            "address_line_1, address_line_2, address_line_3, address_line_4, address_line_5, address_line_6, postcode",
-            "letter",
-        ),
     ],
 )
 def test_recipient_column(content, file_contents, template_type):
@@ -695,48 +600,6 @@ def test_recipient_column(content, file_contents, template_type):
             """
             """,
             "sms",
-            set(),
-            set(),
-        ),
-        (
-            # missing postcode
-            """
-                address_line_1,address_line_2,address_line_3,address_line_4,address_line_5,postcode,date
-                name,          building,      street,        town,          county,        SE1 7LS,today
-                name,          building,      street,        town,          county,        ,        today
-            """,
-            "letter",
-            {1},
-            set(),
-        ),
-        (
-            # not enough address fields
-            """
-                address_line_1, postcode, date
-                name,           SE1 7LS, today
-            """,
-            "letter",
-            {0},
-            set(),
-        ),
-        (
-            # optional address fields not filled in
-            """
-                address_line_1,address_line_2,address_line_3,address_line_4,address_line_5,postcode,date
-                name          ,123 fake st.  ,              ,              ,              ,SE1 7LS,today
-                name          ,              ,              ,              ,              ,SE1 7LS,today
-            """,
-            "letter",
-            {1},
-            set(),
-        ),
-        (
-            # Can use any address columns
-            """
-                address_line_3, address_line_4, address_line_7, date
-                name          , 123 fake st.,   SE1 7LS,        today
-            """,
-            "letter",
             set(),
             set(),
         ),
@@ -1201,23 +1064,6 @@ def test_multiple_email_recipient_columns():
     assert recipients.has_errors
 
 
-def test_multiple_letter_recipient_columns():
-    recipients = RecipientCSV(
-        """
-            address line 1, Address Line 2, address line 1, address_line_2
-            1,2,3,4
-        """,
-        template=_sample_template("letter"),
-    )
-    assert recipients.rows[0].get("addressline1").data == ("3")
-    assert recipients.rows[0].get("addressline1").error is None
-    assert recipients.has_errors
-    assert recipients.duplicate_recipient_column_headers == OrderedSet(
-        ["address line 1", "Address Line 2", "address line 1", "address_line_2"]
-    )
-    assert recipients.has_errors
-
-
 def test_displayed_rows_when_some_rows_have_errors():
     recipients = RecipientCSV(
         """
@@ -1261,59 +1107,6 @@ def test_multi_line_placeholders_work():
     )
 
     assert recipients.rows[0].personalisation["data"] == "a\nb\n\nc"
-
-
-@pytest.mark.parametrize(
-    ("extra_args", "expected_errors", "expected_bad_rows"),
-    [
-        ({}, True, {0}),
-        ({"allow_international_letters": False}, True, {0}),
-        ({"allow_international_letters": True}, False, set()),
-    ],
-)
-def test_accepts_international_addresses_when_allowed(
-    extra_args, expected_errors, expected_bad_rows
-):
-    recipients = RecipientCSV(
-        """
-            address line 1, address line 2, address line 3
-            First Lastname, 123 Example St, Fiji
-            First Lastname, 123 Example St, SW1A 1AA
-        """,
-        template=_sample_template("letter"),
-        **extra_args,
-    )
-    assert recipients.has_errors is expected_errors
-    assert _index_rows(recipients.rows_with_bad_recipients) == expected_bad_rows
-    # Prove that the error isn’t because the given country is unknown
-    assert recipients[0].as_postal_address.country == Country("Fiji")
-
-
-def test_address_validation_speed():
-    # We should be able to validate 1000 lines of address data in about
-    # a second – if it starts to get slow, something is inefficient
-    number_of_lines = 1000
-    uk_addresses_with_valid_postcodes = "\n".join(
-        (
-            "{n} Example Street, London, {a}{b} {c}{d}{e}".format(
-                n=randrange(1000),
-                a=choice(["n", "e", "sw", "se", "w"]),
-                b=choice(range(1, 10)),
-                c=choice(range(1, 10)),
-                d=choice("ABDefgHJLNPqrstUWxyZ"),
-                e=choice("ABDefgHJLNPqrstUWxyZ"),
-            )
-            for i in range(number_of_lines)
-        )
-    )
-    recipients = RecipientCSV(
-        "address line 1, address line 2, address line 3\n"
-        + (uk_addresses_with_valid_postcodes),
-        template=_sample_template("letter"),
-        allow_international_letters=False,
-    )
-    for row in recipients:
-        assert not row.has_bad_postal_address
 
 
 def test_email_validation_speed():
