@@ -35,6 +35,7 @@ def cronitor(task_name):
                     params={
                         "host": current_app.config["API_HOST_NAME"],
                     },
+                    timeout=30
                 )
                 resp.raise_for_status()
             except requests.RequestException as e:

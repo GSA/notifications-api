@@ -29,6 +29,7 @@ class PerformancePlatformClient:
                 self.performance_platform_url + payload["dataType"],
                 json=payload,
                 headers=headers,
+                timeout=30
             )
 
             if resp.status_code == 200:
