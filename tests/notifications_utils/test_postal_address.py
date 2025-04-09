@@ -559,7 +559,7 @@ def test_normalise_postcode(postcode, normalised_postcode):
         ("N5 1AA", True),
         ("SO14 6WB", True),
         ("so14 6wb", True),
-        ("so14\u00A06wb", True),
+        ("so14\u00a06wb", True),
         # invalida / incomplete postcodes
         ("N5", False),
         ("SO144 6WB", False),
@@ -600,7 +600,7 @@ def test_if_postcode_is_a_real_uk_postcode_normalises_before_checking_postcode(m
         ("N5     3EF", "N5 3EF"),
         ("N53EF   ", "N5 3EF"),
         ("n53Ef", "N5 3EF"),
-        ("n5 \u00A0 \t 3Ef", "N5 3EF"),
+        ("n5 \u00a0 \t 3Ef", "N5 3EF"),
         ("SO146WB", "SO14 6WB"),
         ("BFPO2", "BFPO 2"),
         ("BFPO232", "BFPO 232"),

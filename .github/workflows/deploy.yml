@@ -61,6 +61,8 @@ jobs:
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        NOTIFY_E2E_TEST_EMAIL_TWO: ${{ secrets.NOTIFY_E2E_TEST_EMAIL_TWO }}
+        NOTIFY_E2E_TEST_PASSWORD_TWO: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD_TWO }}
         LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-staging.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE"
 
       with:
@@ -77,6 +79,8 @@ jobs:
           --var NEW_RELIC_LICENSE_KEY="$NEW_RELIC_LICENSE_KEY"
           --var NOTIFY_E2E_TEST_EMAIL="$NOTIFY_E2E_TEST_EMAIL"
           --var NOTIFY_E2E_TEST_PASSWORD="$NOTIFY_E2E_TEST_PASSWORD"
+          --var NOTIFY_E2E_TEST_EMAIL_TWO: "$NOTIFY_E2E_TEST_EMAIL_TWO"
+          --var NOTIFY_E2E_TEST_PASSWORD_TWO: "$NOTIFY_E2E_TEST_PASSWORD_TWO"
           --var LOGIN_DOT_GOV_REGISTRATION_URL="$LOGIN_DOT_GOV_REGISTRATION_URL"
           --strategy rolling
 
@@ -89,6 +93,8 @@ jobs:
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        NOTIFY_E2E_TEST_EMAIL_TWO: ${{ secrets.NOTIFY_E2E_TEST_EMAIL_TWO }}
+        NOTIFY_E2E_TEST_PASSWORD_TWO: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD_TWO }}
         LOGIN_DOT_GOV_REGISTRATION_URL: "https://secure.login.gov/openid_connect/authorize?acr_values=http%3A%2F%2Fidmanagement.gov%2Fns%2Fassurance%2Fial%2F1&client_id=urn:gov:gsa:openidconnect.profiles:sp:sso:gsa:notify-gov&nonce=NONCE&prompt=select_account&redirect_uri=https://notify-staging.app.cloud.gov/set-up-your-profile&response_type=code&scope=openid+email&state=STATE"
       with:
         cf_username: ${{ secrets.CLOUDGOV_USERNAME }}

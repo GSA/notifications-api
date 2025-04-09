@@ -15,13 +15,13 @@ class SanitiseText:
         "’": "'",  # RIGHT SINGLE QUOTATION MARK (U+2019)
         "“": '"',  # LEFT DOUBLE QUOTATION MARK (U+201C)
         "”": '"',  # RIGHT DOUBLE QUOTATION MARK (U+201D)
-        "\u180E": "",  # Mongolian vowel separator
-        "\u200B": "",  # zero width space
-        "\u200C": "",  # zero width non-joiner
-        "\u200D": "",  # zero width joiner
+        "\u180e": "",  # Mongolian vowel separator
+        "\u200b": "",  # zero width space
+        "\u200c": "",  # zero width non-joiner
+        "\u200d": "",  # zero width joiner
         "\u2060": "",  # word joiner
-        "\uFEFF": "",  # zero width non-breaking space
-        "\u00A0": " ",  # NON BREAKING WHITE SPACE (U+200B)
+        "\ufeff": "",  # zero width non-breaking space
+        "\u00a0": " ",  # NON BREAKING WHITE SPACE (U+200B)
         "\t": " ",  # TAB
     }
 

@@ -66,7 +66,7 @@ def test_HTML_template_has_URLs_replaced_with_links():
 
 def test_escaping_govuk_in_email_templates():
     template_content = "GOV.UK"
-    expected = "GOV.\u200BUK"
+    expected = "GOV.\u200bUK"
     assert unlink_govuk_escaped(template_content) == expected
     template_json = {
         "content": template_content,
@@ -81,23 +81,23 @@ def test_escaping_govuk_in_email_templates():
     ("template_content", "expected"),
     [
         # Cases that we add the breaking space
-        ("GOV.UK", "GOV.\u200BUK"),
-        ("gov.uk", "gov.\u200Buk"),
+        ("GOV.UK", "GOV.\u200bUK"),
+        ("gov.uk", "gov.\u200buk"),
         (
             "content with space infront GOV.UK",
-            "content with space infront GOV.\u200BUK",
+            "content with space infront GOV.\u200bUK",
         ),
-        ("content with tab infront\tGOV.UK", "content with tab infront\tGOV.\u200BUK"),
+        ("content with tab infront\tGOV.UK", "content with tab infront\tGOV.\u200bUK"),
         (
             "content with newline infront\nGOV.UK",
-            "content with newline infront\nGOV.\u200BUK",
+            "content with newline infront\nGOV.\u200bUK",
         ),
-        ("*GOV.UK", "*GOV.\u200BUK"),
-        ("#GOV.UK", "#GOV.\u200BUK"),
-        ("^GOV.UK", "^GOV.\u200BUK"),
-        (" #GOV.UK", " #GOV.\u200BUK"),
-        ("GOV.UK with CONTENT after", "GOV.\u200BUK with CONTENT after"),
-        ("#GOV.UK with CONTENT after", "#GOV.\u200BUK with CONTENT after"),
+        ("*GOV.UK", "*GOV.\u200bUK"),
+        ("#GOV.UK", "#GOV.\u200bUK"),
+        ("^GOV.UK", "^GOV.\u200bUK"),
+        (" #GOV.UK", " #GOV.\u200bUK"),
+        ("GOV.UK with CONTENT after", "GOV.\u200bUK with CONTENT after"),
+        ("#GOV.UK with CONTENT after", "#GOV.\u200bUK with CONTENT after"),
         # Cases that we don't add the breaking space
         ("https://gov.uk", "https://gov.uk"),
         ("https://www.gov.uk", "https://www.gov.uk"),
@@ -366,7 +366,7 @@ def test_unicode_dash_lookup():
         """
         \t    bar
     """,
-        " \u180E\u200B \u200C bar \u200D \u2060\uFEFF ",
+        " \u180e\u200b \u200c bar \u200d \u2060\ufeff ",
     ],
 )
 def test_strip_all_whitespace(value):
@@ -378,7 +378,7 @@ def test_strip_all_whitespace(value):
     [
         "notifications-email",
         "  \tnotifications-email \x0c ",
-        "\rn\u200Coti\u200Dfi\u200Bcati\u2060ons-\u180Eemai\uFEFFl\uFEFF",
+        "\rn\u200coti\u200dfi\u200bcati\u2060ons-\u180eemai\ufeffl\ufeff",
     ],
 )
 def test_strip_and_remove_obscure_whitespace(value):
@@ -421,12 +421,12 @@ def test_strip_unsupported_characters():
 @pytest.mark.parametrize(
     "value",
     [
-        "\u200C Your tax   is\ndue\n\n",
+        "\u200c Your tax   is\ndue\n\n",
         "  Your tax is due  ",
         # Non breaking spaces replaced by single spaces
-        "\u00A0Your\u00A0tax\u00A0 is\u00A0\u00A0due\u00A0",
+        "\u00a0Your\u00a0tax\u00a0 is\u00a0\u00a0due\u00a0",
         # zero width spaces are removed
-        "\u180EYour \u200Btax\u200C is \u200D\u2060due \uFEFF",
+        "\u180eYour \u200btax\u200c is \u200d\u2060due \ufeff",
         # tabs are replaced by single spaces
         "\tYour tax\tis due  ",
     ],
