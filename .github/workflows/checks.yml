@@ -47,6 +47,8 @@ jobs:
         NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
         NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        NOTIFY_E2E_TEST_EMAIL_TWO: ${{ secrets.NOTIFY_E2E_TEST_EMAIL_TWO }}
+        NOTIFY_E2E_TEST_PASSWORD_TWO: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD_TWO }}
 
     - name: Check imports alphabetized
       run: poetry run isort --check-only ./app ./tests
@@ -62,6 +64,8 @@ jobs:
         NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
         NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        NOTIFY_E2E_TEST_EMAIL_TWO: ${{ secrets.NOTIFY_E2E_TEST_EMAIL_TWO }}
+        NOTIFY_E2E_TEST_PASSWORD_TWO: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD_TWO }}
     - name: Check coverage threshold
       # TODO get this back up to 95
       run: poetry run coverage report -m --fail-under=93
@@ -132,6 +136,8 @@ jobs:
           NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
           NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
           NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+          NOTIFY_E2E_TEST_EMAIL_TWO: ${{ secrets.NOTIFY_E2E_TEST_EMAIL_TWO }}
+          NOTIFY_E2E_TEST_PASSWORD_TWO: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD_TWO }}
       - name: Run server
         run: make run-flask &
         env:
