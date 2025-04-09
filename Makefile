@@ -50,8 +50,8 @@ too-complex:
 	poetry run radon cc ./app -a -nc
 
 .PHONY: run-flask
-run-flask: ## Run flask
-	poetry run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
+run-flask:
+	poetry run newrelic-admin run-program python run.py
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod

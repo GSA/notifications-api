@@ -13,11 +13,11 @@ from flask import current_app, g, has_request_context, jsonify, make_response, r
 from flask.ctx import has_app_context
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
+from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
 from werkzeug.local import LocalProxy
-from flask_socketio import SocketIO
 
 from app import config
 from app.clients import NotificationProviderClients
@@ -31,6 +31,13 @@ from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
+
+socketio = SocketIO(
+    cors_allowed_origins="*",
+    message_queue="redis://localhost:6379",
+    logger=True,
+    engineio_logger=True
+)
 
 
 class NotifyCelery(Celery):
@@ -101,7 +108,7 @@ notification_provider_clients = NotificationProviderClients()
 api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
 
-socketio = SocketIO(cors_allowed_origins="*")  # ← Global instance
+
 def create_app(application):
     from app.config import configs
 
@@ -114,6 +121,8 @@ def create_app(application):
 
     socketio.init_app(application)
 
+    from app.socket_handlers import register_socket_handlers
+    register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
@@ -171,7 +180,6 @@ def register_blueprint(application):
     from app.inbound_number.rest import inbound_number_blueprint
     from app.inbound_sms.rest import inbound_sms as inbound_sms_blueprint
     from app.job.rest import job_blueprint
-    from app.socketio_server.test_socketio import test_bp
     from app.notifications.notifications_ses_callback import ses_callback_blueprint
     from app.notifications.receive_notifications import receive_notifications_blueprint
     from app.notifications.rest import notifications as notifications_blueprint
@@ -192,9 +200,6 @@ def register_blueprint(application):
     from app.upload.rest import upload_blueprint
     from app.user.rest import user_blueprint
     from app.webauthn.rest import webauthn_blueprint
-
-    # this will need to be requires_admin_auth
-    application.register_blueprint(test_bp)
 
     service_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(service_blueprint, url_prefix="/service")
