@@ -185,8 +185,10 @@ def send_email_to_provider(notification):
     recipient = recipient.decode("utf-8")
     personalisation = redis_store.get(f"email-personalisation-{notification.id}")
     if personalisation:
-        personalisation = personalisation.decode("utf-8")
-        notification.personalisation = json.loads(personalisation)
+        p = personalisation.decode("utf-8")
+
+        p = json.loads(p)
+        notification.personalisation = p
 
     service = SerialisedService.from_id(notification.service_id)
     if not service.active:
@@ -210,6 +212,12 @@ def send_email_to_provider(notification):
             template_dict, values=notification.personalisation
         )
 
+        html_email = str(html_email)
+        html_email = html_email.replace("%5B", "")
+        html_email = html_email.replace("%5D", "")
+        html_email = html_email.replace("(", "")
+        html_email = html_email.replace(")", "")
+
         if notification.key_type == KeyType.TEST:
             notification.reference = str(create_uuid())
             update_notification_to_sending(notification, provider)
@@ -225,7 +233,7 @@ def send_email_to_provider(notification):
                 recipient,
                 plain_text_email.subject,
                 body=str(plain_text_email),
-                html_body=str(html_email),
+                html_body=html_email,
                 reply_to_address=notification.reply_to_text,
             )
             notification.reference = reference
