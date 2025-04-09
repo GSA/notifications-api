@@ -19,7 +19,9 @@ def upgrade():
     email_address = os.getenv("NOTIFY_E2E_TEST_EMAIL_TWO")
     password = os.getenv("NOTIFY_E2E_TEST_PASSWORD_TWO")
     if not email_address or not password:
-        raise ValueError("Required variables [NOTIFY_E2E_TEST_EMAIL_TWO] and [NOTIFY_E2E_TEST_PASSWORD_TWO] missing!")
+        raise ValueError(
+            "Required variables [NOTIFY_E2E_TEST_EMAIL_TWO] and [NOTIFY_E2E_TEST_PASSWORD_TWO] missing!"
+        )
     name = f"e2e_test_user_{uuid.uuid4()}"
     data = {
         "id": uuid.uuid4(),

@@ -344,7 +344,7 @@ def test_validate_email_address_accepts_valid(email_address):
         " email@domain.com ",
         "\temail@domain.com",
         "\temail@domain.com\n",
-        "\u200Bemail@domain.com\u200B",
+        "\u200bemail@domain.com\u200b",
     ],
 )
 def test_validate_email_address_strips_whitespace(email):
