@@ -5,7 +5,7 @@ from app import aws_sns_client
 
 def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
     boto_mock = mocker.patch.object(aws_sns_client, "_client", create=True)
-    to = "6135555555"
+    to = "16135555555"
     content = reference = "foo"
     with notify_api.app_context():
         aws_sns_client.send_sms(to, content, reference)
