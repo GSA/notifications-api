@@ -1383,7 +1383,6 @@ version = "7.2.0"
 description = "the modular source code checker: pep8 pyflakes and co"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
 files = [
     {file = "flake8-7.2.0-py2.py3-none-any.whl", hash = "sha256:93b92ba5bdb60754a6da14fa3b93a9361fd00a59632ada61fd7b130436c40343"},
     {file = "flake8-7.2.0.tar.gz", hash = "sha256:fa558ae3f6f7dbf2b4f22663e5343b6b6023620461f8d4ff2019ef4b5ee70426"},
@@ -3476,7 +3475,6 @@ version = "2.13.0"
 description = "Python style guide checker"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
 files = [
     {file = "pycodestyle-2.13.0-py2.py3-none-any.whl", hash = "sha256:35863c5974a271c7a726ed228a14a4f6daf49df369d8c50cd9a6f58a5e143ba9"},
     {file = "pycodestyle-2.13.0.tar.gz", hash = "sha256:c8415bf09abe81d9c7f872502a6eee881fbe85d8763dd5b9924bb0a01d67efae"},
@@ -3499,7 +3497,6 @@ version = "3.3.2"
 description = "passive checker of Python programs"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
 files = [
     {file = "pyflakes-3.3.2-py2.py3-none-any.whl", hash = "sha256:5039c8339cbb1944045f4ee5466908906180f13cc99cc9949348d10f82a5c32a"},
     {file = "pyflakes-3.3.2.tar.gz", hash = "sha256:6dfd61d87b97fba5dcfaaf781171ac16be16453be6d816147989e7f6e6a9576b"},
@@ -5105,4 +5102,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.2"
-content-hash = "7271eb94d243b979aef076dc1b116cfe0d7566c4581ef4c1ac623d846542b518"
+content-hash = "ce0b91b1bde65ed23a07510e0449e709706611914dc21f2d93fe1c858be13744"
