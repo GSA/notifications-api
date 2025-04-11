@@ -131,3 +131,18 @@ def utc_now():
 def debug_not_production(msg):
     if os.getenv("NOTIFY_ENVIRONMENT") not in ["production"]:
         current_app.logger.info(msg)
+
+
+def emit_job_update_summary(job):
+    from app import socketio
+
+    current_app.logger.info(f"Emitting summary for job {job.id}")
+    socketio.emit(
+        "job_updated",
+        {
+            "job_id": str(job.id),
+            "job_status": job.job_status,
+            "notification_count": job.notification_count,
+        },
+        room=f"job-{job.id}"
+    )

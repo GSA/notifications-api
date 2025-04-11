@@ -13,6 +13,7 @@ from flask import current_app, g, has_request_context, jsonify, make_response, r
 from flask.ctx import has_app_context
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
+from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
@@ -30,6 +31,13 @@ from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
+
+socketio = SocketIO(
+    cors_allowed_origins="*",
+    message_queue="redis://localhost:6379",
+    logger=True,
+    engineio_logger=True
+)
 
 
 class NotifyCelery(Celery):
@@ -111,6 +119,10 @@ def create_app(application):
     application.config["NOTIFY_APP_NAME"] = application.name
     init_app(application)
 
+    socketio.init_app(application)
+
+    from app.socket_handlers import register_socket_handlers
+    register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
