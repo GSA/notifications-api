@@ -17,7 +17,7 @@ params, ids = zip(
         ("…", "..."),
         "compatibility transform unicode char (HORIZONTAL ELLIPSIS (U+2026)",
     ),
-    (("\u200B", ""), "compatibility transform unicode char (ZERO WIDTH SPACE (U+200B)"),
+    (("\u200b", ""), "compatibility transform unicode char (ZERO WIDTH SPACE (U+200B)"),
     (
         ("‘", "'"),
         "compatibility transform unicode char (LEFT SINGLE QUOTATION MARK (U+2018)",
