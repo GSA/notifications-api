@@ -31,6 +31,7 @@ def live_service_and_organization_counts():
         jsonify(
             organizations=dao_count_organizations_with_live_services(),
             services=dao_count_live_services(),
+            headers={"Content-Type": "application/json"},
         ),
         200,
     )
