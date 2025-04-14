@@ -14,7 +14,7 @@ def show_status():
     if request.args.get("simple", None):
         return jsonify(status="ok"), 200
     else:
-        return (
+        response = make_response(
             jsonify(
                 status="ok",  # This should be considered part of the public API
                 git_commit=version.__git_commit__,
@@ -23,6 +23,8 @@ def show_status():
             ),
             200,
         )
+        response.headers["Content-Type"] = "application/json"
+        return response
 
 
 @status.route("/_status/live-service-and-organization-counts")
