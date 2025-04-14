@@ -19,6 +19,17 @@ bootstrap: ## Set up everything to run the app
 	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
+	poetry run pre-commit install
+	createdb notification_api || true
+	createdb test_notification_api || true
+	(poetry run flask db upgrade) || true
+
+.PHONY: bootstrap-with-git-hooks
+bootstrap-with-git-hooks:  ## Sets everything up and accounts for pre-existing git hooks
+	make generate-version-file
+	poetry self add poetry-dotenv-plugin
+	poetry lock --no-update
+	poetry install --sync --no-root
 	git config --global --unset-all core.hooksPath
 	poetry run pre-commit install
 	git config --global core.hookspath "${GIT_HOOKS_PATH}"
