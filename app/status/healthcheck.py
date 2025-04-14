@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from sqlalchemy import text
 
 from app import db, version
@@ -27,14 +27,13 @@ def show_status():
 
 @status.route("/_status/live-service-and-organization-counts")
 def live_service_and_organization_counts():
-    return (
-        jsonify(
+    response = make_response(jsonify(
             organizations=dao_count_organizations_with_live_services(),
             services=dao_count_live_services(),
-            headers={"Content-Type": "application/json"},
         ),
-        200,
-    )
+        200,)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
 def get_db_version():
