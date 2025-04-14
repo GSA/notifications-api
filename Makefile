@@ -5,7 +5,8 @@ DATE = $(shell date +%Y-%m-%d:%H:%M:%S)
 APP_VERSION_FILE = app/version.py
 
 GIT_BRANCH ?= $(shell git symbolic-ref --short HEAD 2> /dev/null || echo "detached")
-GIT_COMMIT ?= $(shell git rev-parse HEAD)
+GIT_COMMIT ?= $(shell git rev-parse HEAD 2> /dev/null || echo "")
+GIT_HOOKS_PATH ?= $(shell git config --global core.hooksPath || echo "")
 
 ## DEVELOPMENT
 
@@ -18,7 +19,9 @@ bootstrap: ## Set up everything to run the app
 	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
+	git config --global --unset-all core.hooksPath
 	poetry run pre-commit install
+	git config --global core.hookspath "${GIT_HOOKS_PATH}"
 	createdb notification_api || true
 	createdb test_notification_api || true
 	(poetry run flask db upgrade) || true
