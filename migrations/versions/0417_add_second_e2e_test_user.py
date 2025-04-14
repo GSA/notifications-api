@@ -36,15 +36,15 @@ def upgrade():
     conn = op.get_bind()
 
     # delete the old user because
-    delete_sql = f"""
-        delete from users where email_address='{email_address}'
-        """
+    #delete_sql = f"""
+    #    delete from users where email_address='{email_address}'
+    #    """
 
     insert_sql = """
         insert into users (id, name, email_address, _password, mobile_number, state, created_at, password_changed_at, failed_login_count, platform_admin, email_access_validated_at, auth_type)
         values (:id, :name, :email_address, :password, :mobile_number, :state, :created_at, :password_changed_at, :failed_login_count, :platform_admin, :email_access_validated_at, :auth_type)
         """
-    conn.execute(sa.text(delete_sql))
+    #conn.execute(sa.text(delete_sql))
 
     conn.execute(sa.text(insert_sql), data)
 
