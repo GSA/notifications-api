@@ -111,7 +111,9 @@ def send_sms_to_provider(notification):
                 # their country code.
                 recipient = str(recipient)
                 if len(recipient) == 10:
-                    if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:  # we want to test intl support
+                    if os.getenv("NOTIFY_ENVIRONMENT") not in [
+                        "test"
+                    ]:  # we want to test intl support
                         recipient = f"1{recipient}"
 
                 sender_numbers = get_sender_numbers(notification)

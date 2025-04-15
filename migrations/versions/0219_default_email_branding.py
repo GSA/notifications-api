@@ -2,7 +2,7 @@
  Revision ID: 0219_default_email_branding
 Revises: 0216_remove_colours
 Create Date: 2018-08-24 13:36:49.346156
- """
+"""
 
 from alembic import op
 from sqlalchemy import text
