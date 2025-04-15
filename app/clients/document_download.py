@@ -33,7 +33,7 @@ class DocumentDownloadClient:
                     "document": file_contents,
                     "is_csv": is_csv or False,
                 },
-                timeout=30
+                timeout=30,
             )
 
             response.raise_for_status()
