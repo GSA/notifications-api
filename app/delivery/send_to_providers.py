@@ -105,6 +105,13 @@ def send_sms_to_provider(notification):
                 # The future home of the validation is TBD
                 _experimentally_validate_phone_numbers(recipient)
 
+                # We need to handle the case where people ignored the "1" country code for US
+                # East Timor (670) has ten digit numbers including code so requires special handling
+                recipient = str(recipient)
+                if len(recipient) == 10 and not recipient.startswith("670"):
+                    if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
+                        recipient = f"1{recipient}"
+
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
