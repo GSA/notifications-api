@@ -24,21 +24,16 @@ valid_us_phone_numbers = [
     "(202) 555-0104",
 ]
 
-# TODO
-# International phone number tests are commented out as a result of issue #943 in notifications-admin.  We are
-# deliberately eliminating the ability to send to numbers outside of country code 1.   These tests should
-# be removed at some point when we are sure we are never going to support international numbers
-
 valid_international_phone_numbers = [
-    # "+71234567890",  # Russia
-    # "+447123456789",  # UK
-    # "+4407123456789",  # UK
-    # "+4407123 456789",  # UK
-    # "+4407123-456-789",  # UK
-    # "+23051234567",  # Mauritius,
-    # "+682 12345",  # Cook islands
-    # "+3312345678",
-    # "+9-2345-12345-12345",  # 15 digits
+    "+71234567890",  # Russia
+    "+447123456789",  # UK
+    "+4407123456789",  # UK
+    "+4407123 456789",  # UK
+    "+4407123-456-789",  # UK
+    "+23051234567",  # Mauritius,
+    "+682 12345",  # Cook islands
+    "+3312345678",
+    "+9-2345-12345-12345",  # 15 digits
 ]
 
 
@@ -85,7 +80,7 @@ invalid_us_phone_numbers = sum(
 invalid_phone_numbers = [
     ("+80233456789", "Not a valid country prefix"),
     ("1234567", "Not enough digits"),
-    ("+682 1234", "Invalid country code"),  # Cook Islands phone numbers can be 5 digits
+    ("+682 1234", "Not enough digits"),  # Cook Islands phone numbers are 5 digits
     ("+12345 12345 12345 6", "Too many digits"),
 ]
 
@@ -156,46 +151,46 @@ def test_detect_us_phone_numbers(phone_number):
 @pytest.mark.parametrize(
     ("phone_number", "expected_info"),
     [
-        # (
-        #    "+4407900900123",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="44",  # UK
-        #        billable_units=1,
-        #    ),
-        # ),
-        # (
-        #    "+4407700900123",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="44",  # Number in TV range
-        #        billable_units=1,
-        #    ),
-        # ),
-        # (
-        #    "+4407700800123",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="44",  # UK Crown dependency, so prefix same as UK
-        #        billable_units=1,
-        #    ),
-        # ),
-        # ( #
-        #    "+20-12-1234-1234",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="20",  # Egypt
-        #        billable_units=1,
-        #    ),
-        # ),
-        # (
-        #    "+201212341234",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="20",  # Egypt
-        #        billable_units=1,
-        #    ),
-        # ),
+        (
+            "+4407900900123",
+            international_phone_info(
+                international=True,
+                country_prefix="44",  # UK
+                billable_units=1,
+            ),
+        ),
+        (
+            "+4407700900123",
+            international_phone_info(
+                international=True,
+                country_prefix="44",  # Number in TV range
+                billable_units=1,
+            ),
+        ),
+        (
+            "+4407700800123",
+            international_phone_info(
+                international=True,
+                country_prefix="44",  # UK Crown dependency, so prefix same as UK
+                billable_units=1,
+            ),
+        ),
+        (  #
+            "+20-12-1234-1234",
+            international_phone_info(
+                international=True,
+                country_prefix="20",  # Egypt
+                billable_units=1,
+            ),
+        ),
+        (
+            "+201212341234",
+            international_phone_info(
+                international=True,
+                country_prefix="20",  # Egypt
+                billable_units=1,
+            ),
+        ),
         (
             "+1 664-491-3434",
             international_phone_info(
@@ -204,14 +199,14 @@ def test_detect_us_phone_numbers(phone_number):
                 billable_units=1,
             ),
         ),
-        # (
-        #    "+71234567890",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="7",  # Russia
-        #        billable_units=1,
-        #    ),
-        # ),
+        (
+            "+71234567890",
+            international_phone_info(
+                international=True,
+                country_prefix="7",  # Russia
+                billable_units=1,
+            ),
+        ),
         (
             "1-202-555-0104",
             international_phone_info(
@@ -228,14 +223,14 @@ def test_detect_us_phone_numbers(phone_number):
                 billable_units=1,
             ),
         ),
-        # (
-        #    "+23051234567",
-        #    international_phone_info(
-        #        international=True,
-        #        country_prefix="230",  # Mauritius
-        #        billable_units=1,
-        #    ),
-        # ),
+        (
+            "+23051234567",
+            international_phone_info(
+                international=True,
+                country_prefix="230",  # Mauritius
+                billable_units=1,
+            ),
+        ),
     ],
 )
 def test_get_international_info(phone_number, expected_info):
@@ -288,11 +283,11 @@ def test_valid_us_phone_number_can_be_formatted_consistently(phone_number):
 @pytest.mark.parametrize(
     ("phone_number", "expected_formatted"),
     [
-        # ("+44071234567890", "+4471234567890"),
+        ("+44071234567890", "+4471234567890"),
         ("1-202-555-0104", "+12025550104"),
         ("+12025550104", "+12025550104"),
         ("12025550104", "+12025550104"),
-        # ("+23051234567", "+23051234567"),
+        ("+23051234567", "+23051234567"),
     ],
 )
 def test_valid_international_phone_number_can_be_formatted_consistently(
@@ -344,7 +339,7 @@ def test_validate_email_address_accepts_valid(email_address):
         " email@domain.com ",
         "\temail@domain.com",
         "\temail@domain.com\n",
-        "\u200Bemail@domain.com\u200B",
+        "\u200bemail@domain.com\u200b",
     ],
 )
 def test_validate_email_address_strips_whitespace(email):
@@ -368,17 +363,17 @@ def test_validates_against_guestlist_of_phone_numbers(phone_number):
     )
 
 
-# @pytest.mark.parametrize(
-#    "recipient_number, allowlist_number",
-#    [
-#        ["+4407123-456-789", "+4407123456789"],
-#        ["+4407123456789", "+4407123-456-789"],
-#    ],
-# )
-# def test_validates_against_guestlist_of_international_phone_numbers(
-#    recipient_number, allowlist_number
-# ):
-#    assert allowed_to_send_to(recipient_number, [allowlist_number])
+@pytest.mark.parametrize(
+    "recipient_number, allowlist_number",
+    [
+        ["+4407123-456-789", "+4407123456789"],
+        ["+4407123456789", "+4407123-456-789"],
+    ],
+)
+def test_validates_against_guestlist_of_international_phone_numbers(
+    recipient_number, allowlist_number
+):
+    assert allowed_to_send_to(recipient_number, [allowlist_number])
 
 
 @pytest.mark.parametrize("email_address", valid_email_addresses)
@@ -388,19 +383,21 @@ def test_validates_against_guestlist_of_email_addresses(email_address):
     )
 
 
+# TODO something wrong with formatting Egyptian numbers, doesn't seem
+# like this would affect sendability need to confirm with AWS simulated numbers.
 @pytest.mark.parametrize(
     ("phone_number", "expected_formatted"),
     [
-        # ("+4407900900123", "+44 7900 900123"),  # UK
-        # ("+44(0)7900900123", "+44 7900 900123"),  # UK
-        # ("+447900900123", "+44 7900 900123"),  # UK
+        ("+4407900900123", "+44 7900 900123"),  # UK
+        ("+44(0)7900900123", "+44 7900 900123"),  # UK
+        ("+447900900123", "+44 7900 900123"),  # UK
         # ("+20-12-1234-1234", "+20 121 234 1234"),  # Egypt
         # ("+201212341234", "+20 121 234 1234"),  # Egypt
         ("+1 664 491-3434", "+1 664-491-3434"),  # Montserrat
-        # ("+7 499 1231212", "+7 499 123-12-12"),  # Moscow (Russia)
+        ("+7 499 1231212", "+7 499 123-12-12"),  # Moscow (Russia)
         ("1-202-555-0104", "(202) 555-0104"),  # Washington DC (USA)
-        # ("+23051234567", "+230 5123 4567"),  # Mauritius
-        # ("+33(0)1 12345678", "+33 1 12 34 56 78"),  # Paris (France)
+        ("+23051234567", "+230 5123 4567"),  # Mauritius
+        ("+33(0)1 12345678", "+33 1 12 34 56 78"),  # Paris (France)
     ],
 )
 def test_format_us_and_international_phone_numbers(phone_number, expected_formatted):
@@ -417,7 +414,7 @@ def test_format_us_and_international_phone_numbers(phone_number, expected_format
         (None, ""),
         ("foo", "foo"),
         ("TeSt@ExAmPl3.com", "test@exampl3.com"),
-        # ("+4407900 900 123", "+447900900123"),
+        ("+4407900 900 123", "+447900900123"),
         ("+1 800 555 5555", "+18005555555"),
     ],
 )

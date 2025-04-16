@@ -2,7 +2,7 @@
  Revision ID: 0221_nullable_service_branding
 Revises: 0220_email_brand_type_non_null
 Create Date: 2018-08-24 13:36:49.346156
- """
+"""
 
 from alembic import op
 

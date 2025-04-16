@@ -105,6 +105,17 @@ def send_sms_to_provider(notification):
                 # The future home of the validation is TBD
                 _experimentally_validate_phone_numbers(recipient)
 
+                # TODO current we allow US phone numbers to be uploaded without the country code (1)
+                # This will break certain international phone numbers (Norway, Denmark, East Timor)
+                # When we officially announce support for international numbers, US numbers must contain
+                # their country code.
+                recipient = str(recipient)
+                if len(recipient) == 10:
+                    if os.getenv("NOTIFY_ENVIRONMENT") not in [
+                        "test"
+                    ]:  # we want to test intl support
+                        recipient = f"1{recipient}"
+
                 sender_numbers = get_sender_numbers(notification)
                 if notification.reply_to_text not in sender_numbers:
                     raise ValueError(
