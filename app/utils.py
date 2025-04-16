@@ -144,5 +144,5 @@ def emit_job_update_summary(job):
             "job_status": job.job_status,
             "notification_count": job.notification_count,
         },
-        room=f"job-{job.id}"
+        room=f"job-{job.id}",
     )

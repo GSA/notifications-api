@@ -2029,11 +2029,11 @@ def test_update_delivery_receipts(mocker):
     mock_update.where.return_value = mock_where
     mock_where.values.return_value = mock_values
 
-    FakeJob = type("FakeJob", (object,), {
-        "id": "job-123",
-        "notification_count": 5,
-        "job_status": "delivered"
-    })
+    FakeJob = type(
+        "FakeJob",
+        (object,),
+        {"id": "job-123", "notification_count": 5, "job_status": "delivered"},
+    )
 
     fake_result = MagicMock()
     fake_result.scalars.return_value.all.return_value = ["job-1", "job-2"]

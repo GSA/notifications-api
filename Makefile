@@ -65,7 +65,7 @@ too-complex:
 
 .PHONY: run-flask
 run-flask:
-	poetry run newrelic-admin run-program python run.py
+	poetry run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod

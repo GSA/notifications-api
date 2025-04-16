@@ -1,8 +1,10 @@
 # flake8: noqa: E402
 import eventlet
+
 eventlet.monkey_patch()
 
 from flask import Flask
+
 from app import create_app, socketio
 
 

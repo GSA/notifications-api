@@ -898,10 +898,15 @@ def dao_update_delivery_receipts(receipts, delivered):
         updated {len(receipts)} notification in {elapsed_time} ms"
     )
     current_app.logger.info("✅✅✅✅ Reached delivery receipt processing")
-    job_ids = db.session.execute(
-        select(Notification.job_id)
-        .where(Notification.message_id.in_(id_to_carrier.keys()))
-    ).scalars().all()
+    job_ids = (
+        db.session.execute(
+            select(Notification.job_id).where(
+                Notification.message_id.in_(id_to_carrier.keys())
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     for job_id in set(job_ids):
         job = dao_get_job_by_id(job_id)

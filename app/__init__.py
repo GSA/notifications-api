@@ -32,13 +32,6 @@ from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 
-socketio = SocketIO(
-    cors_allowed_origins="*",
-    message_queue="redis://localhost:6379",
-    logger=True,
-    engineio_logger=True
-)
-
 
 class NotifyCelery(Celery):
     def init_app(self, app):
@@ -102,6 +95,14 @@ zendesk_client = ZendeskClient()
 redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 
+socketio = SocketIO(
+    cors_allowed_origins=[
+        config.Config.ADMIN_BASE_URL,
+    ],
+    message_queue=config.Config.REDIS_URL,
+    logger=True,
+    engineio_logger=True,
+)
 
 notification_provider_clients = NotificationProviderClients()
 
@@ -122,6 +123,7 @@ def create_app(application):
     socketio.init_app(application)
 
     from app.socket_handlers import register_socket_handlers
+
     register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
