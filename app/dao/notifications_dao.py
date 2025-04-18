@@ -897,7 +897,6 @@ def dao_update_delivery_receipts(receipts, delivered):
         f"#loadtestperformance batch update query time: \
         updated {len(receipts)} notification in {elapsed_time} ms"
     )
-    current_app.logger.info("✅✅✅✅ Reached delivery receipt processing")
     job_ids = (
         db.session.execute(
             select(Notification.job_id).where(
