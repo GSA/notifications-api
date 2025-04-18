@@ -179,6 +179,7 @@ class Config(object):
     S3_RESOURCE = session.resource("s3", config=AWS_CLIENT_CONFIG)
 
     CELERY = {
+        "broker_connection_retry_on_startup": True,
         "worker_max_tasks_per_child": 500,
         "task_ignore_result": True,
         "result_persistent": False,

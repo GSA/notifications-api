@@ -26,9 +26,11 @@ from werkzeug.datastructures import MultiDict
 from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.dao.inbound_sms_dao import Pagination
+from app.dao.jobs_dao import dao_get_job_by_id
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import FactNotificationStatus, Notification, NotificationHistory
 from app.utils import (
+    emit_job_update_summary,
     escape_special_characters,
     get_midnight_in_utc,
     midnight_n_days_ago,
@@ -895,6 +897,19 @@ def dao_update_delivery_receipts(receipts, delivered):
         f"#loadtestperformance batch update query time: \
         updated {len(receipts)} notification in {elapsed_time} ms"
     )
+    job_ids = (
+        db.session.execute(
+            select(Notification.job_id).where(
+                Notification.message_id.in_(id_to_carrier.keys())
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    for job_id in set(job_ids):
+        job = dao_get_job_by_id(job_id)
+        emit_job_update_summary(job)
 
 
 def dao_close_out_delivery_receipts():
