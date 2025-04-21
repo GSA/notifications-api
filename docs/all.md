@@ -1507,3 +1507,19 @@ Note: better to search on space 'notify-production' rather than specifically for
 #notify-admin-1505 (general login issues)
 #notify-admin-1701 (wrong sender phone number)
 #notify-admin-1859 (job is created with created_at being the wrong time)
+
+### refreshing the login.gov certificate
+
+1. generate certificate:   `openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.crt -nodes`
+2. update the github secrets for staging, demo, production (contents of key.pem go in LOGIN_PEM and contents of cert.crt in LOGIN_PUB).
+DO NOT RESTAGE YET.
+3. use the same certificate for staging, demo, and production
+4. login to the login.gov partner app (https://portal.int.identitysandbox.gov)
+5. add the new certificate to the production version of Notify in the partner app (our partner app account has sandbox and production)
+6. Make a zen request for login.gov to push the new version of Notify (https://zendesk.login.gov)
+7. Do not delete the old certificate, because you need things to keep working until you complete the transition.
+8. When you receive an email from login.gov that the app has been pushed successfully, restage notify on the staging tier
+9. If staging works, you can restage demo and production
+10. Delete the old certificate in the partner app, send another zendesk request to push again.  This is best practice but a lower
+priority, because certificates eventually expire anyway and we have changed the certificate in github secrets, so the old cert is
+no longer relevant.
