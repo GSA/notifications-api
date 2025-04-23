@@ -1562,20 +1562,24 @@ tests = ["flask-marshmallow[sqlalchemy]", "pytest"]
 
 [[package]]
 name = "flask-migrate"
-version = "4.0.7"
+version = "4.1.0"
 description = "SQLAlchemy database migrations for Flask applications using Alembic."
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "Flask-Migrate-4.0.7.tar.gz", hash = "sha256:dff7dd25113c210b069af280ea713b883f3840c1e3455274745d7355778c8622"},
-    {file = "Flask_Migrate-4.0.7-py3-none-any.whl", hash = "sha256:5c532be17e7b43a223b7500d620edae33795df27c75811ddf32560f7d48ec617"},
+    {file = "Flask_Migrate-4.1.0-py3-none-any.whl", hash = "sha256:24d8051af161782e0743af1b04a152d007bad9772b2bca67b7ec1e8ceeb3910d"},
+    {file = "flask_migrate-4.1.0.tar.gz", hash = "sha256:1a336b06eb2c3ace005f5f2ded8641d534c18798d64061f6ff11f79e1434126d"},
 ]
 
 [package.dependencies]
 alembic = ">=1.9.0"
 Flask = ">=0.9"
 Flask-SQLAlchemy = ">=1.0"
+
+[package.extras]
+dev = ["flake8", "pytest", "tox"]
+docs = ["sphinx"]
 
 [[package]]
 name = "flask-redis"
@@ -5555,4 +5559,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "4ad2256f4a9301cf8421e5da16cc7ca14be9c49d3c79b1b1799dd51ba7dc4a7f"
+content-hash = "71f530afc46fdc1fa86bd0b4e2fb16e3e5e2dc37382c712937efeda38d87370f"
