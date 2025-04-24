@@ -471,7 +471,7 @@ class JobSchema(BaseSchema):
         "ServiceSchema",
         attribute="service",
         data_key="service_name",
-        only=("name"),
+        only=["name"],
         dump_only=True,
     )
 
