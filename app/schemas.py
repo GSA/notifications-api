@@ -454,7 +454,7 @@ class JobSchema(BaseSchema):
     created_by_user = fields.Nested(
         UserSchema,
         attribute="created_by",
-        data_key="created_by",
+        # data_key="created_by",
         only=["id", "name"],
         dump_only=True,
     )
@@ -470,7 +470,7 @@ class JobSchema(BaseSchema):
     service_name = fields.Nested(
         ServiceSchema,
         attribute="service",
-        data_key="service_name",
+        # data_key="service_name",
         only=["name"],
         dump_only=True,
     )
