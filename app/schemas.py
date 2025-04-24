@@ -602,7 +602,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
             "sent_at",
             "sent_by",
             "status",
-            #"template_version",
+            # "template_version",
             "to",
             "updated_at",
             # computed fields
