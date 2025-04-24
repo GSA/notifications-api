@@ -136,19 +136,19 @@ class UserSchema(BaseSchema):
         )
 
     @validates("name")
-    def validate_name(self, value):
+    def validate_name(self, value, **kwargs):
         if not value:
             raise ValidationError("Invalid name")
 
     @validates("email_address")
-    def validate_email_address(self, value):
+    def validate_email_address(self, value, **kwargs):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
             raise ValidationError(str(e))
 
     @validates("mobile_number")
-    def validate_mobile_number(self, value):
+    def validate_mobile_number(self, value, **kwargs):
         try:
             if value is not None:
                 validate_phone_number(value, international=True)
@@ -176,19 +176,19 @@ class UserUpdateAttributeSchema(BaseSchema):
         )
 
     @validates("name")
-    def validate_name(self, value):
+    def validate_name(self, value, **kwargs):
         if not value:
             raise ValidationError("Invalid name")
 
     @validates("email_address")
-    def validate_email_address(self, value):
+    def validate_email_address(self, value, **kwargs):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
             raise ValidationError(str(e))
 
     @validates("mobile_number")
-    def validate_mobile_number(self, value):
+    def validate_mobile_number(self, value, **kwargs):
         try:
             if value is not None:
                 validate_phone_number(value, international=True)
@@ -485,7 +485,7 @@ class JobSchema(BaseSchema):
         return job.template.template_type
 
     @validates("scheduled_for")
-    def validate_scheduled_for(self, value):
+    def validate_scheduled_for(self, value, **kwargs):
         _validate_datetime_not_in_past(value)
         _validate_datetime_not_more_than_96_hours_in_future(value)
 
@@ -670,7 +670,7 @@ class EmailDataSchema(ma.Schema):
         self.partial_email = partial_email
 
     @validates("email")
-    def validate_email(self, value):
+    def validate_email(self, value, **kwargs):
         if self.partial_email:
             return
         try:
