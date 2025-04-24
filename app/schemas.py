@@ -452,10 +452,10 @@ class ApiKeySchema(BaseSchema):
 
 class JobSchema(BaseSchema):
     created_by_user = fields.Nested(
-        UserSchema,
+        "UserSchema",
         attribute="created_by",
-        # data_key="created_by",
-        only=["id", "name"],
+        data_key="created_by",
+        only=("id", "name"),
         dump_only=True,
     )
     created_by = field_for(models.Job, "created_by", required=True, load_only=True)
@@ -468,10 +468,10 @@ class JobSchema(BaseSchema):
 
     scheduled_for = FlexibleDateTime()
     service_name = fields.Nested(
-        ServiceSchema,
+        "ServiceSchema",
         attribute="service",
-        # data_key="service_name",
-        only=["name"],
+        data_key="service_name",
+        only=("name"),
         dump_only=True,
     )
 
