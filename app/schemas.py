@@ -537,6 +537,7 @@ class EmailNotificationSchema(NotificationSchema):
 
 class SmsTemplateNotificationSchema(SmsNotificationSchema):
     template = fields.Str(required=True)
+
     job = fields.String()
 
 
@@ -558,6 +559,7 @@ class NotificationWithTemplateSchema(BaseSchema):
         ],
         dump_only=True,
     )
+
     job = fields.Nested(JobSchema, only=["id", "original_file_name"], dump_only=True)
     created_by = fields.Nested(
         UserSchema, only=["id", "name", "email_address"], dump_only=True
@@ -565,7 +567,6 @@ class NotificationWithTemplateSchema(BaseSchema):
     status = fields.String(required=False)
     personalisation = fields.Dict(required=False)
     key_type = field_for(models.Notification, "key_type", required=True)
-    template_version = field_for(models.Notification, "template_version", required=False)
     key_name = fields.String()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -587,7 +588,8 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         only=["id", "name", "template_type", "content", "subject", "version"],
         dump_only=True,
     )
-    template_version = fields.Int()
+
+    template_version = field_for(models.Notification, "template_version", required=False)
 
     class Meta(NotificationWithTemplateSchema.Meta):
         # mark as many fields as possible as required since this is a public api.
