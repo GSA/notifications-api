@@ -511,7 +511,7 @@ class SmsNotificationSchema(NotificationSchema):
     to = fields.Str(required=True)
 
     @validates("to")
-    def validate_to(self, value):
+    def validate_to(self, value, **kwargs):
         try:
             validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
@@ -528,7 +528,7 @@ class EmailNotificationSchema(NotificationSchema):
     template = fields.Str(required=True)
 
     @validates("to")
-    def validate_to(self, value):
+    def validate_to(self, value, **kwargs):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
@@ -650,7 +650,7 @@ class InvitedUserSchema(BaseSchema):
         model = models.InvitedUser
 
     @validates("email_address")
-    def validate_to(self, value):
+    def validate_to(self, value, **kwargs):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
