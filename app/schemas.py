@@ -583,7 +583,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
     template_history = fields.Nested(
         TemplateHistorySchema,
         attribute="template",
-        only=["id", "name", "template_type", "content", "subject", "version"],
+        only=["id", "name", "template_type", "content", "subject", "version", "template_version"],
         dump_only=True,
     )
 
