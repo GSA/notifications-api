@@ -282,7 +282,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
         )
 
     @validates("permissions")
-    def validate_permissions(self, value):
+    def validate_permissions(self, value, **kwargs):
         permissions = [v.permission for v in value]
         for p in permissions:
             if p not in {e for e in ServicePermissionType}:
@@ -720,11 +720,11 @@ class NotificationsFilterSchema(ma.Schema):
         return in_data
 
     @validates("page")
-    def validate_page(self, value):
+    def validate_page(self, value, **kwargs):
         _validate_positive_number(value)
 
     @validates("page_size")
-    def validate_page_size(self, value):
+    def validate_page_size(self, value, **kwargs):
         _validate_positive_number(value)
 
 
