@@ -565,6 +565,7 @@ class NotificationWithTemplateSchema(BaseSchema):
     status = fields.String(required=False)
     personalisation = fields.Dict(required=False)
     key_type = field_for(models.Notification, "key_type", required=True)
+    template_version = field_for(models.Notification, "template_version", required=False)
     key_name = fields.String()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
