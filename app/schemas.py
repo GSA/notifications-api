@@ -451,7 +451,7 @@ class ApiKeySchema(BaseSchema):
 
 
 class JobSchema(BaseSchema):
-    created_by_user = fields.Nested(
+    created_by_user = ma.Nested(
         "UserSchema",
         attribute="created_by",
         data_key="created_by",
@@ -467,7 +467,7 @@ class JobSchema(BaseSchema):
     job_status = auto_field()
 
     scheduled_for = FlexibleDateTime()
-    service_name = fields.Nested(
+    service_name = ma.Nested(
         "ServiceSchema",
         attribute="service",
         data_key="service_name",
