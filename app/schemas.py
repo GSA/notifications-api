@@ -587,6 +587,7 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         only=["id", "name", "template_type", "content", "subject", "version"],
         dump_only=True,
     )
+    template_version = fields.Int()
 
     class Meta(NotificationWithTemplateSchema.Meta):
         # mark as many fields as possible as required since this is a public api.
