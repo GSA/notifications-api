@@ -53,7 +53,7 @@
   - [Smoke-testing the App](#-smoke-testing-the-app)
   - [Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [Configuration Management](#-configuration-management)
-  - [DNS Changes](#-dns-changes)
+  - [DNS and Domain Changes](#-dns-and-domain-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
   - [Known Gotchas](#-known-gotchas)
   - [User Account Management](#-user-account-management)
@@ -1068,7 +1068,7 @@ that the security of the system is maintained.
 1. [Smoke-testing the App](#smoke-testing)
 1. [Simulated bulk send testing](#simulated-bulk-send-testing)
 1. [Configuration Management](#cm)
-1. [DNS Changes](#dns)
+1. [DNS and Domain Changes](#dns)
 1. [Known Gotchas](#gotcha)
 1. [User Account Management](#ac)
 1. [SMS Phone Number Management](#phone-numbers)
@@ -1239,15 +1239,41 @@ US_Notify Administrators are responsible for ensuring that remediations for vuln
 - Low - 180 days
 - Informational - 365 days (depending on the analysis of the issue)
 
-## <a name="dns"></a> DNS Changes
+## <a name="dns"></a> DNS and Domain Changes
 
-Notify.gov DNS records are maintained within [the 18f/dns repository](https://github.com/18F/dns/blob/main/terraform/notify.gov.tf). To create new DNS records for notify.gov or any subdomains:
+Notify.gov DNS records are maintained within [the GSA-TTS/dns repository](https://github.com/GSA-TTS/dns/blob/main/terraform/notify.gov.tf), and the domains and routes are managed directly in our Cloud.gov production space.
 
-1. Update the `notify.gov.tf` terraform to update oƒr create the new records within Route53 and push the branch to the 18f/dns repository.
-1. Open a PR.
-1. Verify that the plan output within circleci creates the records that you expect.
-1. Request a PR review from the 18F/tts-tech-portfolio team
-1. Once the PR is approved and merged, verify that the apply step happened correctly within [CircleCI](https://app.circleci.com/pipelines/github/18F/dns)
+**Step 1:  Make changes to the DNS records**
+
+1. If you haven't already, clone a local copy of [the GSA-TTS/dns repository](https://github.com/GSA-TTS/dns).
+1. Create a new branch and update the [`notify.gov.tf`]((https://github.com/GSA-TTS/dns/blob/main/terraform/notify.gov.tf)) Terraform file to update, create, or remove DNS records within AWS Route 53.
+1. Open a PR in the repository and verify that the plan output within CircleCI makes the changes that you expect.
+1. Request a PR review from the `@tts-tech-operations` team within the GSA-TTS GitHub org.
+1. Once the PR is approved and merged, verify that the apply step happened correctly within [CircleCI](https://app.circleci.com/pipelines/github/GSA-TTS/dns).
+
+**Step 2:  Make changes to the domains and routes in Cloud.gov**
+
+The domains and routes are managed via the [external domain service](https://www.cloud.gov/docs/services/external-domain-service/) within Cloud.gov.
+
+If you're creating new domains:
+
+1. Sign in to the `cf` CLI in your terminal and target the `notify-production` space.
+1. Create the new domain(s) with [`cf create-private-domain`](https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#private-domains).
+1. Map the routes needed to the new domain(s) with [`cf map-route`](https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#map-route).
+1. Update the service to account for the new domain(s): `cf update-service notify-admin-domain-production -c '{"domains": "example.gov,www.example.gov,..."}'` (make sure to list *all* domains that need to be accounted for, including any existing ones that you want to keep!).
+
+If you're removing existing domains:
+
+1. Sign in to the `cf` CLI in your terminal and target the `notify-production` space.
+1. Unmap the routes to the existing domain(s) with [`cf unmap-route`](https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#unmap-route).
+1. Delete the existing domain(s) with [`cf delete-private-domain`](https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#private-domains).
+1. Update the service to account for the deleted domain(s): `cf update-service notify-admin-domain-production -c '{"domains": "example.gov,www.example.gov,..."}'` (make sure to list *all* domains that need to be accounted for, including any existing ones that you want to keep!).
+
+**Step 3:  Redeploy or restage the Admin app:**
+
+Restage or redeploy the `notify-admin-production` app.  To restage, you can trigger the action in GitHub or run the command directly: `cf restage notify-admin-production --strategy rolling`.
+
+Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propogate.
 
 ## Exporting test results for compliance monitoring
 
@@ -1507,3 +1533,19 @@ Note: better to search on space 'notify-production' rather than specifically for
 #notify-admin-1505 (general login issues)
 #notify-admin-1701 (wrong sender phone number)
 #notify-admin-1859 (job is created with created_at being the wrong time)
+
+### refreshing the login.gov certificate
+
+1. generate certificate:   `openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.crt -nodes`
+2. update the github secrets for staging, demo, production (contents of key.pem go in LOGIN_PEM and contents of cert.crt in LOGIN_PUB).
+DO NOT RESTAGE YET.
+3. use the same certificate for staging, demo, and production
+4. login to the login.gov partner app (https://portal.int.identitysandbox.gov)
+5. add the new certificate to the production version of Notify in the partner app (our partner app account has sandbox and production)
+6. Make a Zendesk support request for login.gov to push the new version of Notify (https://zendesk.login.gov)
+7. Do not delete the old certificate, because you need things to keep working until you complete the transition.
+8. When you receive an email from login.gov that the app has been pushed successfully, restage notify on the staging tier
+9. If staging works, you can restage demo and production
+10. Delete the old certificate in the partner app, send another zendesk request to push again.  This is best practice but a lower
+priority, because certificates eventually expire anyway and we have changed the certificate in github secrets, so the old cert is
+no longer relevant.

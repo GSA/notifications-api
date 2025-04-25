@@ -64,7 +64,7 @@ too-complex:
 	poetry run radon cc ./app -a -nc
 
 .PHONY: run-flask
-run-flask: ## Run flask
+run-flask:
 	poetry run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery

@@ -2029,12 +2029,23 @@ def test_update_delivery_receipts(mocker):
     mock_update.where.return_value = mock_where
     mock_where.values.return_value = mock_values
 
-    mock_session.execute.return_value = None
+    FakeJob = type(
+        "FakeJob",
+        (object,),
+        {"id": "job-123", "notification_count": 5, "job_status": "delivered"},
+    )
+
+    fake_result = MagicMock()
+    fake_result.scalars.return_value.all.return_value = ["job-1", "job-2"]
+    fake_result.scalars.return_value.one.return_value = FakeJob()
+
+    mock_session.execute.side_effect = lambda *args, **kwargs: fake_result
     with patch("app.dao.notifications_dao.update", return_value=mock_update):
         dao_update_delivery_receipts(receipts, delivered)
     mock_update.where.assert_called_once()
     mock_where.values.assert_called_once()
-    mock_session.execute.assert_called_once_with(mock_values)
+    mock_session.execute.assert_any_call(mock_values)
+    assert mock_session.execute.call_count == 4
     mock_session.commit.assert_called_once()
 
     args, kwargs = mock_where.values.call_args
