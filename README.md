@@ -507,7 +507,7 @@ instructions above for more details.
   - [Deploying to Production](./docs/all.md#-deploying-to-production)
   - [Smoke-testing the App](./docs/all.md#-smoke-testing-the-app)
   - [Configuration Management](./docs/all.md#-configuration-management)
-  - [DNS Changes](./docs/all.md#-dns-changes)
+  - [DNS and Domain Changes](./docs/all.md#-dns-changes)
   - [Exporting test results for compliance monitoring](./docs/all.md#exporting-test-results-for-compliance-monitoring)
   - [Known Gotchas](./docs/all.md#-known-gotchas)
   - [User Account Management](./docs/all.md#-user-account-management)
