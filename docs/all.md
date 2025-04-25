@@ -53,7 +53,7 @@
   - [Smoke-testing the App](#-smoke-testing-the-app)
   - [Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [Configuration Management](#-configuration-management)
-  - [DNS and Domain Changes](#-dns-changes)
+  - [DNS and Domain Changes](#-dns-and-domain-changes)
   - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
   - [Known Gotchas](#-known-gotchas)
   - [User Account Management](#-user-account-management)
@@ -1246,14 +1246,14 @@ Notify.gov DNS records are maintained within [the GSA-TTS/dns repository](https:
 **Step 1:  Make changes to the DNS records**
 
 1. If you haven't already, clone a local copy of [the GSA-TTS/dns repository](https://github.com/GSA-TTS/dns).
-1. Create a new branch and update the [`notify.gov.tf`]((https://github.com/GSA-TTS/dns/blob/main/terraform/notify.gov.tf)) Terraform file to update, create, or remove DNS records within Route53.
+1. Create a new branch and update the [`notify.gov.tf`]((https://github.com/GSA-TTS/dns/blob/main/terraform/notify.gov.tf)) Terraform file to update, create, or remove DNS records within AWS Route 53.
 1. Open a PR in the repository and verify that the plan output within CircleCI makes the changes that you expect.
 1. Request a PR review from the `@tts-tech-operations` team within the GSA-TTS GitHub org.
 1. Once the PR is approved and merged, verify that the apply step happened correctly within [CircleCI](https://app.circleci.com/pipelines/github/GSA-TTS/dns).
 
-**Steo 2:  Make changes to the domains and routes in Cloud.gov**
+**Step 2:  Make changes to the domains and routes in Cloud.gov**
 
-The domains and routes are managed via the [`external domain` service](https://www.cloud.gov/docs/services/external-domain-service/) within Cloud.gov.
+The domains and routes are managed via the [external domain service](https://www.cloud.gov/docs/services/external-domain-service/) within Cloud.gov.
 
 If you're creating new domains:
 
@@ -1273,7 +1273,7 @@ If you're removing existing domains:
 
 Restage or redeploy the `notify-admin-production` app.  To restage, you can trigger the action in GitHub or run the command directly: `cf restage notify-admin-production --strategy rolling`.
 
-Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolved correctly and/or no longer resolve as expected.
+Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propogate.
 
 ## Exporting test results for compliance monitoring
 
