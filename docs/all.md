@@ -54,7 +54,8 @@
   - [Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [Configuration Management](#-configuration-management)
   - [DNS and Domain Changes](#-dns-and-domain-changes)
-  - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
+  - [Exporting daily scan results for compliance monitoring](#exporting-daily-scan-results-for-compliance-monitoring)
+  - [Reviewing daily scan results for compliance](#reviewing-daily-scan-results-for-compliance)
   - [Known Gotchas](#-known-gotchas)
   - [User Account Management](#-user-account-management)
   - [SMS Phone Number Management](#-sms-phone-number-management)
@@ -1275,7 +1276,7 @@ Restage or redeploy the `notify-admin-production` app.  To restage, you can trig
 
 Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propogate.
 
-## Exporting test results for compliance monitoring
+## Exporting daily scan results for compliance monitoring
 
 - Head to https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml
 - Open the most recent scan (it should be today's)
@@ -1286,6 +1287,47 @@ Test that the changes took effect properly by going to the domain(s) that were a
 - Select "Download log archive" to download a .zip of the test output for all jobs
 - Rename to `api_static_scan_DATE.zip` and add it to 🔒 https://drive.google.com/drive/folders/1dSe9H7Ag_hLfi5hmQDB2ktWaDwWSf4_R
 - Repeat for https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
+
+## Reviewing daily scan results for compliance
+
+To review the daily scan results and check for any new reported findings that need to be remediated, perform the following steps.
+
+**For the API**
+
+1. Go to the daily scan page: https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml
+1. Click on the latest scan (it should have run on the current day and be at the time)
+1. Scroll to the bottom and download the two artifacts: `bandit-report` and `zap_scan` - these are zip files that contain the full scan reports
+1. Click on the `pip-audit` job in the menu on the left of the screen
+1. Click on the `Run pypa/gh-action-pip-audit` step (the version number may change over time as it gets updated)
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `static-scan` job in the menu on the left of the screen
+1. Click on the `Run scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+1. Click on the `dynamic-scan` job in the menu on the left of the screen
+1. Click on the `Run OWASP API Scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+
+Once you're done performing the steps above to gather all of the information, make a note of any new findings that need to be accounted for and remediated and create issues to track the work.
+
+**For the Admin**
+
+1. Go to the daily scan page: https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
+1. Click on the latest scan (it should have run on the current day and be at the time)
+1. Scroll to the bottom and download the artifact: `zap_scan` - this is a zip file that contains the full scan reports
+1. Click on the `dependency-audits` job in the menu on the left of the screen
+1. Click on the `Run pypa/gh-action-pip-audit` step (the version number may change over time as it gets updated)
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `Run npm audit` step
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `static-scan` job in the menu on the left of the screen
+1. Click on the `Run scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+1. Click on the `dynamic-scan` job in the menu on the left of the screen
+1. Click on the `Run OWASP Full Scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+
+Once you're done performing the steps above to gather all of the information, make a note of any new findings that need to be accounted for and remediated and create issues to track the work.
+
 
 ## Rotating the DANGEROUS_SALT
 
