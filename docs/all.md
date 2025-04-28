@@ -56,6 +56,7 @@
   - [DNS and Domain Changes](#-dns-and-domain-changes)
   - [Exporting daily scan results for compliance monitoring](#exporting-daily-scan-results-for-compliance-monitoring)
   - [Reviewing daily scan results for compliance](#reviewing-daily-scan-results-for-compliance)
+  - [Rotating environment variable secrets](#rotating-environment-variable-secrets)
   - [Known Gotchas](#-known-gotchas)
   - [User Account Management](#-user-account-management)
   - [SMS Phone Number Management](#-sms-phone-number-management)
@@ -1329,16 +1330,65 @@ Once you're done performing the steps above to gather all of the information, ma
 Once you're done performing the steps above to gather all of the information, make a note of any new findings that need to be accounted for and remediated and create issues to track the work.
 
 
-## Rotating the DANGEROUS_SALT
+## Rotating environment variable secrets
 
-1. Start API locally `make run-procfile`
-2. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt`
-3. A random secret will appear in the tab
-4. Go to github->settings->secrets and variables->actions in the admin project and find the DANGEROUS_SALT secret for the admin project for staging. Open it and paste the result of #3 into the secret and save. Repeat for the API project, for staging.
-5. Repeat #3 and #4 but do it for demo
-6. Repeat #3 and #4 but do it for production
+There are a few different ways to handle rotating environment variable secrets, depending on what the secret is.
 
-The important thing is to use the same secret for Admin and API on each tier--i.e. you only generate three secrets.
+### Secret environment variables (set directly)
+
+The `ADMIN_CLIENT_SECRET`, `DANGEROUS_SALT`, and `SECRET_KEY` environment variables are all generated random strings of characters. To make a new value for any of these environment variables, perform the following steps:
+
+1. Start the API locally with the command `make run-procfile`
+1. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt` (this command is found in the [`app/commands.py` file](https://github.com/GSA/notifications-api/blob/main/app/commands.py#L1030-L1037))
+1. A random secret will appear in the tab, which you will use to update the value(s) in GitHub
+
+Next, you'll need to go into GitHub for either the [API repo environment settings](https://github.com/GSA/notifications-api/settings/environments) or [Admin repo environment settings](https://github.com/GSA/notifications-admin/settings/environments). Once there you'll see a list of all of the environments; click into the one that you're looking to update and then find the corresponding environment that you need to update. Click on the pencil icon to the right of the environment variable name to edit the value, then paste in the value you generated with the previous steps.
+
+**NOTE:** These values must match between the API and Admin environment variables per environment (meaning, if you change the Admin repo value for any of these values in any environment, the same variable for the API in the same environment must be changed to match it!).
+
+The important thing is to use the same secret for Admin and API on each tier -- i.e. you only generate three secrets per environment.
+
+**NOTE:** You may also have to update these values for Dependabot as well!  To do this, go into GitHub and the navigate through `Settings -> Secrets and variables -> Dependabot`, which will take you to a special page to manage environment variables specifically for Dependabot.  This is more necessary in the Admin repo because of the E2E tests.
+
+### E2E environment variables (set directly)
+
+See the [end-to-end testing section](#end-to-end-testing).
+
+### Service bindings for Cloud.gov-managed services
+
+For any Cloud.gov service instance that you need to rotate credentials for, you need to run the following commands:
+
+1. `cf unbind-service <APP NAME> <SERVICE NAME>`
+1. `cf bind-service <APP NAME> <SERVICE NAME>`
+
+Once you are done unbinding and re-binding all services you're looking to rotate credentials for, you need to restage or redeploy the application(s) for the changes to take effect.  You can restage directly in the command line:  `cf restage <APP NAME> --strategy rolling`
+
+### Rotating New Relic API keys and licenses
+
+To rotate New Relic API key, license key, and other credentials, you need access to New Relic. If you have access, sign in and then click on your name in the lower left.  Click on `API keys` and you'll be taken to the management screen for all of the API keys.  From there, perform these steps:
+
+1. Create new versions of whichever key(s) you would like to rotate
+1. Update the corresponding environment variable(s) in GitHub for both the [API repo environment settings](https://github.com/GSA/notifications-api/settings/environments) and the [Admin repo environment settings](https://github.com/GSA/notifications-admin/settings/environments)
+1. Restage or redeploy the applications
+1. Once you confirm the new key(s) in New Relic are working, delete the old keys on the API Key management screen
+
+### Terraform state bucket key rotation
+
+To rotate the Terraform state bucket key, run these commands in the `api/terraform/bootstrap` directory of the API repo:
+
+```sh
+# comment out prevent_destroy in terraform/bootstrap/main.tf
+# update username to create in run.sh and teardown-creds.sh
+$ ./run.sh plan -replace=cloudfoundry_service_key.bucket_creds
+$ ./run.sh apply -replace=cloudfoundry_service_key.bucket_creds
+```
+
+Once that's done, copy the key generating to the staging, demo, and production environments of both the API and the Admin.
+
+### Login.gov certificate rotate
+
+More information coming soon; please see the [Login.gov developer guide on certificates](https://developers.login.gov/oidc/certificates/) for additional help.
+
 
 ## <a name="gotcha"></a> Known Gotchas
 

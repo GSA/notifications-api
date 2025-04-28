@@ -510,6 +510,7 @@ instructions above for more details.
   - [DNS and Domain Changes](./docs/all.md#-dns-and-domain-changes)
   - [Exporting daily scan results for compliance monitoring](./docs/all.md#exporting-daily-scan-results-for-compliance-monitoring)
   - [Reviewing daily scan results for compliance](./docs/all.md#reviewing-daily-scan-results-for-compliance)
+  - [Rotating environment variable secrets](./docs/all.md#rotating-environment-variable-secrets)
   - [Known Gotchas](./docs/all.md#-known-gotchas)
   - [User Account Management](./docs/all.md#-user-account-management)
   - [SMS Phone Number Management](./docs/all.md#-sms-phone-number-management)
