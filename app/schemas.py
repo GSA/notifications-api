@@ -588,31 +588,33 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
     )
 
     class Meta(NotificationWithTemplateSchema.Meta):
-        # mark as many fields as possible as required since this is a public api.
+        # Mark as many fields as possible as required since this is a public api.
         # WARNING: Does _not_ reference fields computed in handle_template_merge, such as
         # 'body', 'subject' [for emails], and 'content_char_count'
-        fields = (
-            # db rows
-            "billable_units",
-            "created_at",
-            "id",
-            "job_row_number",
-            "notification_type",
-            "reference",
-            "sent_at",
-            "sent_by",
-            "status",
-            "template_version",
-            "to",
-            "updated_at",
-            # computed fields
-            "personalisation",
-            # relationships
-            "api_key",
-            "job",
-            "service",
-            "template_history",
-        )
+
+        # db rows
+        billable_units = auto_field()
+        created_at = auto_field()
+        id = auto_field()
+        job_row_number = auto_field()
+        notification_type = auto_field()
+        reference = auto_field()
+        sent_at = auto_field()
+        sent_by = auto_field()
+        status = auto_field()
+        template_version = auto_field()
+        to = auto_field()
+        updated_at = auto_field()
+
+        # computed fields
+        personalisation = auto_field()
+
+        # relationships
+        api_key = auto_field()
+        job = auto_field()
+        service = auto_field()
+        template_history = auto_field()
+
         # Overwrite the `NotificationWithTemplateSchema` base class to not exclude `_personalisation`, which
         # isn't a defined field for this class
         exclude = ()
