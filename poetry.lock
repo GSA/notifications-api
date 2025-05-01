@@ -2918,13 +2918,13 @@ files = [
 
 [[package]]
 name = "notifications-python-client"
-version = "10.0.0"
+version = "10.0.1"
 description = "Python API client for GOV.UK Notify."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "notifications_python_client-10.0.0-py3-none-any.whl", hash = "sha256:0f152a4d23b7f7b827dae6b45ac63568a2bc56044b1aa57b66bc68b137c40e57"},
+    {file = "notifications_python_client-10.0.1-py3-none-any.whl", hash = "sha256:00d88eacb6fd6eb0467d7396a7e23677194cfebe0ebd88de2efa031fb51eb23f"},
 ]
 
 [package.dependencies]
@@ -5330,4 +5330,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "b106a3fce6dc2b924ade19f288539e6f1e2b046f3373e6181ed9fcbc4d828bbe"
+content-hash = "db4a2f02112645fe90669b0b3941de0ae9cdb2a014fbc0305be3ca9c67ee9c9f"
