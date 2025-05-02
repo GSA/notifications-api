@@ -375,6 +375,7 @@ class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
     created_by = field_for(models.Template, "created_by", required=True)
     process_type = field_for(models.Template, "process_type")
     redact_personalisation = fields.Method("redact")
+    template_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
 
@@ -419,6 +420,7 @@ class TemplateHistorySchema(BaseSchema):
     reply_to = fields.Method("get_reply_to", allow_none=True)
     reply_to_text = fields.Method("get_reply_to_text", allow_none=True)
     process_type = field_for(models.Template, "process_type")
+    template_type = auto_field(by_value=True)
 
     created_by = fields.Nested(
         UserSchema, only=["id", "name", "email_address"], dump_only=True
@@ -464,7 +466,7 @@ class JobSchema(BaseSchema):
     processing_started = FlexibleDateTime()
     processing_finished = FlexibleDateTime()
 
-    job_status = auto_field()
+    job_status = auto_field(by_value=True)
 
     scheduled_for = FlexibleDateTime()
     service_name = fields.Nested(
@@ -482,7 +484,7 @@ class JobSchema(BaseSchema):
         return job.template.name
 
     def get_template_type(self, job):
-        return job.template.template_type
+        return job.template.template_type.value
 
     @validates("scheduled_for")
     def validate_scheduled_for(self, value):
@@ -597,11 +599,12 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         created_at = auto_field()
         id = auto_field()
         job_row_number = auto_field()
-        notification_type = auto_field()
+        notification_type = auto_field(by_value=True)
         reference = auto_field()
         sent_at = auto_field()
         sent_by = auto_field()
         status = auto_field()
+        template_type = auto_field(by_value=True)
         template_version = auto_field()
         to = auto_field()
         updated_at = auto_field()
