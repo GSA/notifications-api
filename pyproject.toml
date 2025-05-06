@@ -77,6 +77,7 @@ jinja2 = "^3.1.6"
 redis = "^5.0.8"
 requests = "^2.32.3"
 flask-socketio = "^5.5.1"
+virtualenv = "<20.30"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -105,8 +106,12 @@ setuptools = "^80.1.0"
 sqlalchemy-utils = "^0.41.2"
 vulture = "^2.10"
 detect-secrets = "^1.5.0"
+poetry-dotenv-plugin = "^0.2.0"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."poetry.application.plugin"]
+dotenv = "poetry_dotenv_plugin.plugin:PoetryDotenvPlugin"
