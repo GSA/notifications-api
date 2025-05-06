@@ -138,14 +138,14 @@ class UserSchema(BaseSchema):
     @validates("name")
     def validate_name(self, value, data_key):
         if not value:
-            raise ValidationError("Invalid name")
+            raise ValidationError(f"{data_key}: Invalid name")
 
     @validates("email_address")
     def validate_email_address(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(f"{data_key}: {str(e)}")
 
     @validates("mobile_number")
     def validate_mobile_number(self, value, data_key):
@@ -153,7 +153,7 @@ class UserSchema(BaseSchema):
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError(f"Invalid phone number: {error}")
+            raise ValidationError(f"{data_key}: Invalid phone number ({error})")
 
 
 class UserUpdateAttributeSchema(BaseSchema):
@@ -178,14 +178,14 @@ class UserUpdateAttributeSchema(BaseSchema):
     @validates("name")
     def validate_name(self, value, data_key):
         if not value:
-            raise ValidationError("Invalid name")
+            raise ValidationError(f"{data_key}: Invalid name")
 
     @validates("email_address")
     def validate_email_address(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(f"{data_key}: {str(e)}")
 
     @validates("mobile_number")
     def validate_mobile_number(self, value, data_key):
@@ -193,7 +193,7 @@ class UserUpdateAttributeSchema(BaseSchema):
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError(f"Invalid phone number: {error}")
+            raise ValidationError(f"{data_key}: Invalid phone number ({error})")
 
     @validates_schema(pass_original=True)
     def check_unknown_fields(self, data, original_data, **kwargs):
@@ -286,7 +286,7 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
         permissions = [v.permission for v in value]
         for p in permissions:
             if p not in {e for e in ServicePermissionType}:
-                raise ValidationError(f"Invalid Service Permission: '{p}'")
+                raise ValidationError(f"{data_key}: Invalid Service Permission ('{p}')")
 
         if len(set(permissions)) != len(permissions):
             duplicates = list(set([x for x in permissions if permissions.count(x) > 1]))
@@ -517,7 +517,7 @@ class SmsNotificationSchema(NotificationSchema):
         try:
             validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError("Invalid phone number: {}".format(error))
+            raise ValidationError(f"{data_key}: Invalid phone number ({error}")
 
     @post_load
     def format_phone_number(self, item, **kwargs):
@@ -534,7 +534,7 @@ class EmailNotificationSchema(NotificationSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(f"{data_key}: {str(e)}")
 
 
 class SmsTemplateNotificationSchema(SmsNotificationSchema):
@@ -658,7 +658,7 @@ class InvitedUserSchema(BaseSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(f"{data_key}: {str(e)}")
 
 
 class EmailDataSchema(ma.Schema):
@@ -680,7 +680,7 @@ class EmailDataSchema(ma.Schema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(f"{data_key}: {str(e)}")
 
 
 class NotificationsFilterSchema(ma.Schema):
