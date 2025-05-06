@@ -359,6 +359,7 @@ class NotificationModelSchema(BaseSchema):
 class BaseTemplateSchema(BaseSchema):
     reply_to = fields.Method("get_reply_to", allow_none=True)
     reply_to_text = fields.Method("get_reply_to_text", allow_none=True)
+    template_type = auto_field(by_value=True)
 
     def get_reply_to(self, template):
         return template.reply_to
@@ -373,9 +374,8 @@ class BaseTemplateSchema(BaseSchema):
 
 class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
     created_by = field_for(models.Template, "created_by", required=True)
-    process_type = field_for(models.Template, "process_type")
+    process_type = auto_field(by_value=True)
     redact_personalisation = fields.Method("redact")
-    template_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
 
@@ -442,7 +442,7 @@ class TemplateHistorySchema(BaseSchema):
 
 class ApiKeySchema(BaseSchema):
     created_by = field_for(models.ApiKey, "created_by", required=True)
-    key_type = field_for(models.ApiKey, "key_type", required=True)
+    key_type = auto_field(by_value=True)
     expiry_date = FlexibleDateTime()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -566,11 +566,15 @@ class NotificationWithTemplateSchema(BaseSchema):
     )
     status = fields.String(required=False)
     personalisation = fields.Dict(required=False)
-    key_type = field_for(models.Notification, "key_type", required=True)
+    notification_type = auto_field(by_value=True)
+    key_type = auto_field(by_value=True)
     key_name = fields.String()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
     sent_at = FlexibleDateTime()
+
+    # TODO:  Figure out why this isn't essentially forcing the field to show up in the schema
+    template_version = auto_field()
 
     @pre_dump
     def add_api_key_name(self, in_data, **kwargs):
