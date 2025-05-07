@@ -113,7 +113,7 @@ class UserSchema(BaseSchema):
     )
     updated_at = FlexibleDateTime()
     logged_in_at = FlexibleDateTime()
-    auth_type = field_for(models.User, "auth_type")
+    auth_type = auto_field(by_value=True)
     password = fields.String(required=True, load_only=True)
 
     def user_permissions(self, usr):
@@ -157,7 +157,7 @@ class UserSchema(BaseSchema):
 
 
 class UserUpdateAttributeSchema(BaseSchema):
-    auth_type = field_for(models.User, "auth_type")
+    auth_type = auto_field(by_value=True)
     email_access_validated_at = FlexibleDateTime()
 
     class Meta(BaseSchema.Meta):
@@ -639,8 +639,9 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
 
 
 class InvitedUserSchema(BaseSchema):
-    auth_type = field_for(models.InvitedUser, "auth_type")
+    auth_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
+    status = auto_field(by_value=True)
 
     class Meta(BaseSchema.Meta):
         model = models.InvitedUser
