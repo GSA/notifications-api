@@ -17,7 +17,7 @@ from marshmallow_sqlalchemy import auto_field, field_for
 
 from app import ma, models
 from app.dao.permissions_dao import permission_dao
-from app.enums import ServicePermissionType, TemplateType
+from app.enums import NotificationStatus, ServicePermissionType, TemplateType
 from app.models import ServicePermission
 from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance, utc_now
 from notifications_utils.recipients import (
@@ -350,7 +350,7 @@ class NotificationModelSchema(BaseSchema):
             "api_key",
         )
 
-    status = fields.String(required=False)
+    status = auto_field(by_value=True)
     created_at = FlexibleDateTime()
     sent_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -505,7 +505,7 @@ class NotificationSchema(ma.Schema):
     class Meta:
         unknown = EXCLUDE
 
-    status = fields.String(required=False)
+    status = fields.Enum(NotificationStatus, by_value=True, required=False)
     personalisation = fields.Dict(required=False)
 
 
@@ -560,11 +560,12 @@ class NotificationWithTemplateSchema(BaseSchema):
         ],
         dump_only=True,
     )
+    template_version = fields.Integer()
     job = fields.Nested(JobSchema, only=["id", "original_file_name"], dump_only=True)
     created_by = fields.Nested(
         UserSchema, only=["id", "name", "email_address"], dump_only=True
     )
-    status = fields.String(required=False)
+    status = auto_field(by_value=True)
     personalisation = fields.Dict(required=False)
     notification_type = auto_field(by_value=True)
     key_type = auto_field(by_value=True)
@@ -572,9 +573,6 @@ class NotificationWithTemplateSchema(BaseSchema):
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
     sent_at = FlexibleDateTime()
-
-    # TODO:  Figure out why this isn't essentially forcing the field to show up in the schema
-    template_version = auto_field()
 
     @pre_dump
     def add_api_key_name(self, in_data, **kwargs):
@@ -593,35 +591,25 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         dump_only=True,
     )
 
+    # Mark as many fields as possible as required since this is a public api.
+    # WARNING: Does _not_ reference fields computed in handle_template_merge, such as
+    # 'body', 'subject' [for emails], and 'content_char_count'
+
+    # db rows
+    billable_units = auto_field()
+    created_at = auto_field()
+    id = auto_field()
+    job_row_number = auto_field()
+    notification_type = auto_field(by_value=True)
+    reference = auto_field()
+    sent_at = auto_field()
+    sent_by = auto_field()
+    status = auto_field(by_value=True)
+    template_version = auto_field()
+    to = auto_field()
+    updated_at = auto_field()
+
     class Meta(NotificationWithTemplateSchema.Meta):
-        # Mark as many fields as possible as required since this is a public api.
-        # WARNING: Does _not_ reference fields computed in handle_template_merge, such as
-        # 'body', 'subject' [for emails], and 'content_char_count'
-
-        # db rows
-        billable_units = auto_field()
-        created_at = auto_field()
-        id = auto_field()
-        job_row_number = auto_field()
-        notification_type = auto_field(by_value=True)
-        reference = auto_field()
-        sent_at = auto_field()
-        sent_by = auto_field()
-        status = auto_field()
-        template_type = auto_field(by_value=True)
-        template_version = auto_field()
-        to = auto_field()
-        updated_at = auto_field()
-
-        # computed fields
-        personalisation = auto_field()
-
-        # relationships
-        api_key = auto_field()
-        job = auto_field()
-        service = auto_field()
-        template_history = auto_field()
-
         # Overwrite the `NotificationWithTemplateSchema` base class to not exclude `_personalisation`, which
         # isn't a defined field for this class
         exclude = ()
