@@ -16,7 +16,6 @@ GIT_HOOKS_PATH ?= $(shell git config --global core.hooksPath || echo "")
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
 	poetry run pre-commit install
@@ -27,7 +26,6 @@ bootstrap: ## Set up everything to run the app
 .PHONY: bootstrap-with-git-hooks
 bootstrap-with-git-hooks:  ## Sets everything up and accounts for pre-existing git hooks
 	make generate-version-file
-	poetry self add poetry-dotenv-plugin
 	poetry lock --no-update
 	poetry install --sync --no-root
 	git config --global --unset-all core.hooksPath

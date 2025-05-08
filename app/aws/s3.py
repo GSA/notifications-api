@@ -116,9 +116,9 @@ def list_s3_objects():
                 )
             else:
                 break
-    except Exception:
+    except Exception as e:
         current_app.logger.exception(
-            "An error occurred while regenerating cache #notify-debug-admin-1200",
+            f"An error occurred while regenerating cache #notify-debug-admin-1200: {str(e)}",
         )
 
 
