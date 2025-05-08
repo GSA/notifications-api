@@ -10,3 +10,5 @@ gov-collector.newrelic.com
 egress-proxy-notify-api-staging.apps.internal
 idp.int.identitysandbox.gov
 secure.login.gov
+s3-fips.us-gov-east-1.amazonaws.com
+s3-fips.us-gov-west-1.amazonaws.com
