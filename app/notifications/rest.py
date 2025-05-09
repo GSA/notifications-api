@@ -15,6 +15,7 @@ from app.notifications.validators import (
     service_has_permission,
     validate_template,
 )
+from app.public_schemas.public import PublicNotificationSchema
 from app.schemas import (
     email_notification_schema,
     notification_with_personalisation_schema,
@@ -35,6 +36,7 @@ def get_notification_by_id(notification_id):
     notification = notifications_dao.get_notification_with_personalisation(
         str(authenticated_service.id), notification_id, key_type=None
     )
+
     if notification.job_id is not None:
         notification.personalisation = get_personalisation_from_s3(
             notification.service_id,
@@ -48,16 +50,9 @@ def get_notification_by_id(notification_id):
         )
         notification.to = recipient
         notification.normalised_to = recipient
-    return (
-        jsonify(
-            data={
-                "notification": notification_with_personalisation_schema.dump(
-                    notification
-                )
-            }
-        ),
-        200,
-    )
+
+    serialized = PublicNotificationSchema().dump(notification)
+    return jsonify(data={"notification": serialized}), 200
 
 
 @notifications.route("/notifications", methods=["GET"])
