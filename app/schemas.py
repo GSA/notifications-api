@@ -145,7 +145,7 @@ class UserSchema(BaseSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(f"{data_key}: {str(e)}")
+            raise ValidationError(str(e))
 
     @validates("mobile_number")
     def validate_mobile_number(self, value, data_key):
@@ -185,7 +185,7 @@ class UserUpdateAttributeSchema(BaseSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(f"{data_key}: {str(e)}")
+            raise ValidationError(str(e))
 
     @validates("mobile_number")
     def validate_mobile_number(self, value, data_key):
@@ -534,7 +534,7 @@ class EmailNotificationSchema(NotificationSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(f"{data_key}: {str(e)}")
+            raise ValidationError(str(e))
 
 
 class SmsTemplateNotificationSchema(SmsNotificationSchema):
@@ -544,6 +544,7 @@ class SmsTemplateNotificationSchema(SmsNotificationSchema):
 
 class NotificationWithTemplateSchema(BaseSchema):
     class Meta(BaseSchema.Meta):
+        unknown = EXCLUDE
         model = models.Notification
         exclude = ("_personalisation",)
 
@@ -616,26 +617,30 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
 
     @pre_dump
     def handle_personalisation_property(self, in_data, **kwargs):
-        self.personalisation = in_data.personalisation
+        in_data._merged_personalisation = in_data.personalisation
         return in_data
 
-    @post_dump
-    def handle_template_merge(self, in_data, **kwargs):
-        in_data["template"] = in_data.pop("template_history")
-        template = get_template_instance(
-            in_data["template"], in_data["personalisation"]
-        )
-        in_data["body"] = template.content_with_placeholders_filled_in
-        if in_data["template"]["template_type"] != TemplateType.SMS:
-            in_data["subject"] = template.subject
-            in_data["content_char_count"] = None
-        else:
-            in_data["content_char_count"] = template.content_count
 
-        in_data.pop("personalisation", None)
-        in_data["template"].pop("content", None)
-        in_data["template"].pop("subject", None)
-        return in_data
+@post_dump(pass_original=True)
+def handle_template_merge(self, in_data, original_obj, **kwargs):
+    personalisation = getattr(original_obj, "_merged_personalisation", None)
+
+    in_data["template"] = in_data.pop("template_history")
+    template = get_template_instance(in_data["template"], personalisation)
+
+    in_data["body"] = template.content_with_placeholders_filled_in
+
+    if in_data["template"]["template_type"] != TemplateType.SMS:
+        in_data["subject"] = template.subject
+        in_data["content_char_count"] = None
+    else:
+        in_data["content_char_count"] = template.content_count
+
+    in_data["template"].pop("content", None)
+    in_data["template"].pop("subject", None)
+    in_data.pop("personalisation", None)
+
+    return in_data
 
 
 class InvitedUserSchema(BaseSchema):
@@ -651,7 +656,7 @@ class InvitedUserSchema(BaseSchema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(f"{data_key}: {str(e)}")
+            raise ValidationError(str(e))
 
 
 class EmailDataSchema(ma.Schema):
@@ -673,7 +678,7 @@ class EmailDataSchema(ma.Schema):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
-            raise ValidationError(f"{data_key}: {str(e)}")
+            raise ValidationError(str(e))
 
 
 class NotificationsFilterSchema(ma.Schema):
