@@ -3104,14 +3104,14 @@ setuptools = "*"
 
 [[package]]
 name = "phonenumbers"
-version = "9.0.4"
+version = "9.0.5"
 description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "phonenumbers-9.0.4-py2.py3-none-any.whl", hash = "sha256:ac8aa9d4679da5078547aeb159d78c2b60f8d0fb4eafdc7cf464069039b30ccd"},
-    {file = "phonenumbers-9.0.4.tar.gz", hash = "sha256:b1530fc2a7b67e4c37c63e8e736c7e6efe2fed283c1bbb5c08c4511ec0c160ed"},
+    {file = "phonenumbers-9.0.5-py2.py3-none-any.whl", hash = "sha256:7acef19817868a6f9cbc0d628dc5ad447b3768137e3d53c70dd6827a1ac040ba"},
+    {file = "phonenumbers-9.0.5.tar.gz", hash = "sha256:70fde168a92dd9c73f57872359515181d6cde6bb8e7ec5660e94c4ca45692c50"},
 ]
 
 [[package]]
@@ -5337,4 +5337,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.2"
-content-hash = "28c60e29b3712204c3d92bbb0ed288bf365f6f7875650678e9297b66a3721142"
+content-hash = "88ea795206b3f09aed3114aa4735211f155dc06fb32d8b042fda1b0df8de903f"
