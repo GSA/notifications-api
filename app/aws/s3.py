@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 
 import botocore
+import eventlet
 from boto3 import Session
 from flask import current_app
 
@@ -375,7 +376,7 @@ def get_job_from_s3(service_id, job_id):
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                time.sleep(sleep_time)
+                eventlet.sleep(sleep_time)
                 continue
             else:
                 # Typically this is "NoSuchKey"
