@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 
 import botocore
+import eventlet
 from boto3 import Session
 from flask import current_app
 
@@ -116,9 +117,9 @@ def list_s3_objects():
                 )
             else:
                 break
-    except Exception:
+    except Exception as e:
         current_app.logger.exception(
-            "An error occurred while regenerating cache #notify-debug-admin-1200",
+            f"An error occurred while regenerating cache #notify-debug-admin-1200: {str(e)}",
         )
 
 
@@ -375,7 +376,7 @@ def get_job_from_s3(service_id, job_id):
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                time.sleep(sleep_time)
+                eventlet.sleep(sleep_time)
                 continue
             else:
                 # Typically this is "NoSuchKey"
