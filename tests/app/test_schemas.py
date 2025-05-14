@@ -48,7 +48,7 @@ def test_notification_schema_adds_api_key_name(sample_notification):
         "notification_with_template_schema",
         "notification_schema",
         "notification_with_template_schema",
-        "notification_with_personalisation_schema",
+        "public_notification_response_schema",
     ],
 )
 def test_notification_schema_has_correct_status(sample_notification, schema_name):

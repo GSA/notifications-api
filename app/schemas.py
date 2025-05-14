@@ -603,64 +603,6 @@ class NotificationWithTemplateSchema(BaseSchema):
         return in_data
 
 
-class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
-    template_history = fields.Nested(
-        TemplateHistorySchema,
-        attribute="template",
-        only=["id", "name", "template_type", "content", "subject", "version"],
-        dump_only=True,
-    )
-
-    # Mark as many fields as possible as required since this is a public api.
-    # WARNING: Does _not_ reference fields computed in handle_template_merge, such as
-    # 'body', 'subject' [for emails], and 'content_char_count'
-
-    # db rows
-    billable_units = auto_field()
-    created_at = auto_field()
-    id = auto_field()
-    job_row_number = auto_field()
-    notification_type = auto_field(by_value=True)
-    reference = auto_field()
-    sent_at = auto_field()
-    sent_by = auto_field()
-    status = auto_field(by_value=True)
-    template_version = auto_field()
-    to = auto_field()
-    updated_at = auto_field()
-
-    class Meta(NotificationWithTemplateSchema.Meta):
-        # Overwrite the `NotificationWithTemplateSchema` base class to not exclude `_personalisation`, which
-        # isn't a defined field for this class
-        exclude = ()
-
-    @pre_dump
-    def handle_personalisation_property(self, in_data, **kwargs):
-        in_data._merged_personalisation = in_data.personalisation
-        return in_data
-
-    @post_dump(pass_original=True)
-    def handle_template_merge(self, in_data, original_obj, **kwargs):
-        personalisation = getattr(original_obj, "_merged_personalisation", None)
-
-        in_data["template"] = in_data.pop("template_history")
-        template = get_template_instance(in_data["template"], personalisation)
-
-        in_data["body"] = template.content_with_placeholders_filled_in
-
-        if in_data["template"]["template_type"] != TemplateType.SMS:
-            in_data["subject"] = template.subject
-            in_data["content_char_count"] = None
-        else:
-            in_data["content_char_count"] = template.content_count
-
-        in_data["template"].pop("content", None)
-        in_data["template"].pop("subject", None)
-        in_data.pop("personalisation", None)
-
-        return in_data
-
-
 class InvitedUserSchema(BaseSchema):
     auth_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
@@ -812,7 +754,6 @@ sms_template_notification_schema = SmsTemplateNotificationSchema()
 email_notification_schema = EmailNotificationSchema()
 notification_schema = NotificationModelSchema()
 notification_with_template_schema = NotificationWithTemplateSchema()
-notification_with_personalisation_schema = NotificationWithPersonalisationSchema()
 invited_user_schema = InvitedUserSchema()
 email_data_request_schema = EmailDataSchema()
 partial_email_data_request_schema = EmailDataSchema(partial_email=True)

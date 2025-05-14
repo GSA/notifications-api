@@ -15,9 +15,9 @@ from app.notifications.validators import (
     service_has_permission,
     validate_template,
 )
+from app.public_schemas.public import PublicNotificationResponseSchema
 from app.schemas import (
     email_notification_schema,
-    notification_with_personalisation_schema,
     notifications_filter_schema,
     sms_template_notification_schema,
 )
@@ -50,7 +50,7 @@ def get_notification_by_id(notification_id):
         notification.to = recipient
         notification.normalised_to = recipient
 
-    serialized = notification_with_personalisation_schema.dump(notification)
+    serialized = PublicNotificationResponseSchema().dump(notification)
     return jsonify(data={"notification": serialized}), 200
 
 
@@ -93,7 +93,7 @@ def get_all_notifications():
             notification.normalised_to = recipient
 
     result = jsonify(
-        notifications=notification_with_personalisation_schema.dump(
+        notifications=PublicNotificationResponseSchema().dump(
             pagination.items, many=True
         ),
         page_size=page_size,
