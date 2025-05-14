@@ -54,7 +54,9 @@
   - [Simulated bulk send testing](#-simulated-bulk-send-testing)
   - [Configuration Management](#-configuration-management)
   - [DNS and Domain Changes](#-dns-and-domain-changes)
-  - [Exporting test results for compliance monitoring](#exporting-test-results-for-compliance-monitoring)
+  - [Exporting daily scan results for compliance monitoring](#exporting-daily-scan-results-for-compliance-monitoring)
+  - [Reviewing daily scan results for compliance](#reviewing-daily-scan-results-for-compliance)
+  - [Rotating environment variable secrets](#rotating-environment-variable-secrets)
   - [Known Gotchas](#-known-gotchas)
   - [User Account Management](#-user-account-management)
   - [SMS Phone Number Management](#-sms-phone-number-management)
@@ -1275,7 +1277,7 @@ Restage or redeploy the `notify-admin-production` app.  To restage, you can trig
 
 Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propogate.
 
-## Exporting test results for compliance monitoring
+## Exporting daily scan results for compliance monitoring
 
 - Head to https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml
 - Open the most recent scan (it should be today's)
@@ -1287,16 +1289,115 @@ Test that the changes took effect properly by going to the domain(s) that were a
 - Rename to `api_static_scan_DATE.zip` and add it to 🔒 https://drive.google.com/drive/folders/1dSe9H7Ag_hLfi5hmQDB2ktWaDwWSf4_R
 - Repeat for https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
 
-## Rotating the DANGEROUS_SALT
+## Reviewing daily scan results for compliance
 
-1. Start API locally `make run-procfile`
-2. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt`
-3. A random secret will appear in the tab
-4. Go to github->settings->secrets and variables->actions in the admin project and find the DANGEROUS_SALT secret for the admin project for staging. Open it and paste the result of #3 into the secret and save. Repeat for the API project, for staging.
-5. Repeat #3 and #4 but do it for demo
-6. Repeat #3 and #4 but do it for production
+To review the daily scan results and check for any new reported findings that need to be remediated, perform the following steps.
 
-The important thing is to use the same secret for Admin and API on each tier--i.e. you only generate three secrets.
+**For the API**
+
+1. Go to the daily scan page: https://github.com/GSA/notifications-api/actions/workflows/daily_checks.yml
+1. Click on the latest scan (it should have run on the current day and be at the time)
+1. Scroll to the bottom and download the two artifacts: `bandit-report` and `zap_scan` - these are zip files that contain the full scan reports
+1. Click on the `pip-audit` job in the menu on the left of the screen
+1. Click on the `Run pypa/gh-action-pip-audit` step (the version number may change over time as it gets updated)
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `static-scan` job in the menu on the left of the screen
+1. Click on the `Run scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+1. Click on the `dynamic-scan` job in the menu on the left of the screen
+1. Click on the `Run OWASP API Scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+
+Once you're done performing the steps above to gather all of the information, make a note of any new findings that need to be accounted for and remediated and create issues to track the work.
+
+**For the Admin**
+
+1. Go to the daily scan page: https://github.com/GSA/notifications-admin/actions/workflows/daily_checks.yml
+1. Click on the latest scan (it should have run on the current day and be at the time)
+1. Scroll to the bottom and download the artifact: `zap_scan` - this is a zip file that contains the full scan reports
+1. Click on the `dependency-audits` job in the menu on the left of the screen
+1. Click on the `Run pypa/gh-action-pip-audit` step (the version number may change over time as it gets updated)
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `Run npm audit` step
+1. Check that the output of the step doesn't show any new audit findings (the step and job will have failed if it did)
+1. Click on the `static-scan` job in the menu on the left of the screen
+1. Click on the `Run scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+1. Click on the `dynamic-scan` job in the menu on the left of the screen
+1. Click on the `Run OWASP Full Scan` step
+1. Check that the output of the step doesn't show any new scan findings (note: the step and job may still show as successful even if something was found)
+
+Once you're done performing the steps above to gather all of the information, make a note of any new findings that need to be accounted for and remediated and create issues to track the work.
+
+
+## Rotating environment variable secrets
+
+There are a few different ways to handle rotating environment variable secrets, depending on what the secret is.
+
+### Secret environment variables (set directly)
+
+The `ADMIN_CLIENT_SECRET`, `DANGEROUS_SALT`, and `SECRET_KEY` environment variables are all generated random strings of characters. To make a new value for any of these environment variables, perform the following steps:
+
+1. Start the API locally with the command `make run-procfile`
+1. In a separate terminal tab, navigate to the API project and run `poetry run flask command generate-salt` (this command is found in the [`app/commands.py` file](https://github.com/GSA/notifications-api/blob/main/app/commands.py#L1030-L1037))
+1. A random secret will appear in the tab, which you will use to update the value(s) in GitHub
+
+Next, you'll need to go into GitHub for either the [API repo environment settings](https://github.com/GSA/notifications-api/settings/environments) or [Admin repo environment settings](https://github.com/GSA/notifications-admin/settings/environments). Once there you'll see a list of all of the environments; click into the one that you're looking to update and then find the corresponding environment that you need to update. Click on the pencil icon to the right of the environment variable name to edit the value, then paste in the value you generated with the previous steps.
+
+**NOTE:** These values must match between the API and Admin environment variables per environment (meaning, if you change the Admin repo value for any of these values in any environment, the same variable for the API in the same environment must be changed to match it!).
+
+The important thing is to use the same secret for Admin and API on each tier -- i.e. you only generate three secrets per environment.
+
+**NOTE:** You may also have to update these values for Dependabot as well!  To do this, go into GitHub and the navigate through `Settings -> Secrets and variables -> Dependabot`, which will take you to a special page to manage environment variables specifically for Dependabot.  This is more necessary in the Admin repo because of the E2E tests.
+
+### E2E environment variables (set directly)
+
+See the [end-to-end testing section](#end-to-end-testing).
+
+### Service bindings for Cloud.gov-managed services
+
+For any Cloud.gov service instance that you need to rotate credentials for, you need to run the following commands:
+
+1. `cf unbind-service <APP NAME> <SERVICE NAME>`
+1. `cf bind-service <APP NAME> <SERVICE NAME>`
+
+Once you are done unbinding and re-binding all services you're looking to rotate credentials for, you need to restage or redeploy the application(s) for the changes to take effect.  You can restage directly in the command line:  `cf restage <APP NAME> --strategy rolling`
+
+### Rotating New Relic API keys and licenses
+
+To rotate New Relic API key, license key, and other credentials, you need access to New Relic. If you have access, sign in and then click on your name in the lower left.  Click on `API keys` and you'll be taken to the management screen for all of the API keys.  From there, perform these steps:
+
+1. Create new versions of whichever key(s) you would like to rotate
+1. Update the corresponding environment variable(s) in GitHub for both the [API repo environment settings](https://github.com/GSA/notifications-api/settings/environments) and the [Admin repo environment settings](https://github.com/GSA/notifications-admin/settings/environments)
+1. Restage or redeploy the applications
+1. Once you confirm the new key(s) in New Relic are working, delete the old keys on the API Key management screen
+
+### Terraform state bucket key rotation
+
+To rotate the Terraform state bucket key, run these commands in the `api/terraform/bootstrap` directory of the API repo:
+
+```sh
+# comment out prevent_destroy in terraform/bootstrap/main.tf
+# update username to create in run.sh and teardown-creds.sh
+$ ./run.sh plan -replace=cloudfoundry_service_key.bucket_creds
+$ ./run.sh apply -replace=cloudfoundry_service_key.bucket_creds
+```
+
+Once that's done, copy the key generating to the staging, demo, and production environments of both the API and the Admin.
+
+### Refreshing/rotating the Login.gov certificate
+
+1. generate certificate:   `openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.crt -nodes`
+1. update the github secrets for staging, demo, production (contents of key.pem go in LOGIN_PEM and contents of cert.crt in LOGIN_PUB). **DO NOT RESTAGE YET**.
+1. use the same certificate for staging, demo, and production
+1. login to the login.gov partner app (https://portal.int.identitysandbox.gov)
+1. add the new certificate to the production version of Notify in the partner app (our partner app account has sandbox and production)
+1. Make a Zendesk support request for login.gov to push the new version of Notify (https://zendesk.login.gov)
+1. Do not delete the old certificate, because you need things to keep working until you complete the transition.
+1. When you receive an email from login.gov that the app has been pushed successfully, restage notify on the staging tier
+1. If staging works, you can restage demo and production
+1. Delete the old certificate in the partner app, send another zendesk request to push again.  This is best practice but a lower priority, because certificates eventually expire anyway and we have changed the certificate in github secrets, so the old cert is no longer relevant.
+
 
 ## <a name="gotcha"></a> Known Gotchas
 
@@ -1533,19 +1634,3 @@ Note: better to search on space 'notify-production' rather than specifically for
 #notify-admin-1505 (general login issues)
 #notify-admin-1701 (wrong sender phone number)
 #notify-admin-1859 (job is created with created_at being the wrong time)
-
-### refreshing the login.gov certificate
-
-1. generate certificate:   `openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.crt -nodes`
-2. update the github secrets for staging, demo, production (contents of key.pem go in LOGIN_PEM and contents of cert.crt in LOGIN_PUB).
-DO NOT RESTAGE YET.
-3. use the same certificate for staging, demo, and production
-4. login to the login.gov partner app (https://portal.int.identitysandbox.gov)
-5. add the new certificate to the production version of Notify in the partner app (our partner app account has sandbox and production)
-6. Make a Zendesk support request for login.gov to push the new version of Notify (https://zendesk.login.gov)
-7. Do not delete the old certificate, because you need things to keep working until you complete the transition.
-8. When you receive an email from login.gov that the app has been pushed successfully, restage notify on the staging tier
-9. If staging works, you can restage demo and production
-10. Delete the old certificate in the partner app, send another zendesk request to push again.  This is best practice but a lower
-priority, because certificates eventually expire anyway and we have changed the certificate in github secrets, so the old cert is
-no longer relevant.
