@@ -15,7 +15,6 @@ from app.notifications.validators import (
     service_has_permission,
     validate_template,
 )
-from app.public_schemas.public import PublicNotificationSchema
 from app.schemas import (
     email_notification_schema,
     notification_with_personalisation_schema,

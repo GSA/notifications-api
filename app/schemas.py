@@ -661,9 +661,6 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         return in_data
 
 
-
-
-
 class InvitedUserSchema(BaseSchema):
     auth_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
