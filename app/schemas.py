@@ -639,27 +639,29 @@ class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
         in_data._merged_personalisation = in_data.personalisation
         return in_data
 
+    @post_dump(pass_original=True)
+    def handle_template_merge(self, in_data, original_obj, **kwargs):
+        personalisation = getattr(original_obj, "_merged_personalisation", None)
 
-@post_dump(pass_original=True)
-def handle_template_merge(self, in_data, original_obj, **kwargs):
-    personalisation = getattr(original_obj, "_merged_personalisation", None)
+        in_data["template"] = in_data.pop("template_history")
+        template = get_template_instance(in_data["template"], personalisation)
 
-    in_data["template"] = in_data.pop("template_history")
-    template = get_template_instance(in_data["template"], personalisation)
+        in_data["body"] = template.content_with_placeholders_filled_in
 
-    in_data["body"] = template.content_with_placeholders_filled_in
+        if in_data["template"]["template_type"] != TemplateType.SMS:
+            in_data["subject"] = template.subject
+            in_data["content_char_count"] = None
+        else:
+            in_data["content_char_count"] = template.content_count
 
-    if in_data["template"]["template_type"] != TemplateType.SMS:
-        in_data["subject"] = template.subject
-        in_data["content_char_count"] = None
-    else:
-        in_data["content_char_count"] = template.content_count
+        in_data["template"].pop("content", None)
+        in_data["template"].pop("subject", None)
+        in_data.pop("personalisation", None)
 
-    in_data["template"].pop("content", None)
-    in_data["template"].pop("subject", None)
-    in_data.pop("personalisation", None)
+        return in_data
 
-    return in_data
+
+
 
 
 class InvitedUserSchema(BaseSchema):

@@ -51,7 +51,7 @@ def get_notification_by_id(notification_id):
         notification.to = recipient
         notification.normalised_to = recipient
 
-    serialized = PublicNotificationSchema().dump(notification)
+    serialized = notification_with_personalisation_schema.dump(notification)
     return jsonify(data={"notification": serialized}), 200
 
 
