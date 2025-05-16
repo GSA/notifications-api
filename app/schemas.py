@@ -20,7 +20,7 @@ from app import ma, models
 from app.dao.permissions_dao import permission_dao
 from app.enums import NotificationStatus, ServicePermissionType, TemplateType
 from app.models import ServicePermission
-from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance, utc_now
+from app.utils import DATETIME_FORMAT_NO_TIMEZONE, utc_now
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,

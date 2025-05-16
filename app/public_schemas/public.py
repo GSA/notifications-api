@@ -1,10 +1,8 @@
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
-from marshmallow import EXCLUDE, Schema, fields, post_dump, pre_dump
+from marshmallow import EXCLUDE, Schema, fields, post_dump
 
-from app.schemas import FlexibleDateTime, JobSchema, TemplateSchema
-from app import ma
 
 class PublicTemplateSchema(Schema):
     id = fields.UUID(required=True)
@@ -63,7 +61,9 @@ class PublicNotificationResponseSchema(PublicNotificationSchema):
 
         # Fallback content
         template = data.get("template", {})
-        body = data.get("body") or (template.get("content") if isinstance(template, dict) else "")
+        body = data.get("body") or (
+            template.get("content") if isinstance(template, dict) else ""
+        )
         data["body"] = body or ""
         data["content_char_count"] = len(data["body"])
 

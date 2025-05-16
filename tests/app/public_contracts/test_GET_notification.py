@@ -1,5 +1,3 @@
-import pytest
-
 from app.dao.api_key_dao import save_model_api_key
 from app.enums import KeyType
 from app.models import ApiKey
@@ -46,8 +44,9 @@ def test_get_job_sms_contract(client, sample_notification):
     validate_v0(response_json, "GET_notification_return_sms.json")
 
 
-
-def test_get_notifications_contract(client, sample_notification, sample_email_notification):
+def test_get_notifications_contract(
+    client, sample_notification, sample_email_notification
+):
     response_json = return_json_from_response(
         _get_notification(client, sample_notification, "/notifications")
     )
