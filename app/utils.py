@@ -42,13 +42,25 @@ def url_with_token(data, url, config, base_url=None):
     return base_url + token
 
 
-def get_template_instance(template, values):
+def get_template_instance(template_dict, values_dict=None):
     from app.enums import TemplateType
 
     return {
         TemplateType.SMS: SMSMessageTemplate,
         TemplateType.EMAIL: HTMLEmailTemplate,
-    }[template["template_type"]](template, values)
+    }[template_dict["template_type"]](template_dict, values_dict)
+
+
+def template_model_to_dict(template):
+    return {
+        "id": str(template.id),
+        "template_type": template.template_type,
+        "content": template.content,
+        "subject": getattr(template, "subject", None),
+        "created_at": template.created_at,
+        "name": template.name,
+        "version": template.version,
+    }
 
 
 def get_midnight_in_utc(date):

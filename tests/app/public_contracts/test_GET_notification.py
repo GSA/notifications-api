@@ -1,5 +1,3 @@
-import pytest
-
 from app.dao.api_key_dao import save_model_api_key
 from app.enums import KeyType
 from app.models import ApiKey
@@ -24,8 +22,6 @@ def _get_notification(client, notification, url):
 
 
 # v0
-
-
 def test_get_api_sms_contract(client, sample_notification):
     response_json = return_json_from_response(
         _get_notification(
@@ -35,18 +31,6 @@ def test_get_api_sms_contract(client, sample_notification):
         )
     )
     validate_v0(response_json, "GET_notification_return_sms.json")
-
-
-@pytest.mark.skip(reason="Update to fetch email from s3")
-def test_get_api_email_contract(client, sample_email_notification):
-    response_json = return_json_from_response(
-        _get_notification(
-            client,
-            sample_email_notification,
-            "/notifications/{}".format(sample_email_notification.id),
-        )
-    )
-    validate_v0(response_json, "GET_notification_return_email.json")
 
 
 def test_get_job_sms_contract(client, sample_notification):
@@ -60,22 +44,13 @@ def test_get_job_sms_contract(client, sample_notification):
     validate_v0(response_json, "GET_notification_return_sms.json")
 
 
-@pytest.mark.skip(reason="Update to fetch email from s3")
-def test_get_job_email_contract(client, sample_email_notification):
-    response_json = return_json_from_response(
-        _get_notification(
-            client,
-            sample_email_notification,
-            "/notifications/{}".format(sample_email_notification.id),
-        )
-    )
-    validate_v0(response_json, "GET_notification_return_email.json")
-
-
 def test_get_notifications_contract(
     client, sample_notification, sample_email_notification
 ):
     response_json = return_json_from_response(
         _get_notification(client, sample_notification, "/notifications")
     )
+    notifications = response_json["notifications"]
+    assert notifications, "No notifications returned"
+    assert notifications[0]["template"]["template_type"] == "sms"
     validate_v0(response_json, "GET_notifications_return.json")

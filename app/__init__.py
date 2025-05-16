@@ -11,7 +11,6 @@ from time import monotonic
 from celery import Celery, Task, current_task
 from flask import current_app, g, has_request_context, jsonify, make_response, request
 from flask.ctx import has_app_context
-from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
@@ -83,7 +82,6 @@ db = SQLAlchemy(
     }
 )
 migrate = Migrate()
-ma = Marshmallow()
 notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
@@ -128,7 +126,6 @@ def create_app(application):
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
-    ma.init_app(application)
     zendesk_client.init_app(application)
     logging.init_app(application)
     aws_sns_client.init_app(application)
