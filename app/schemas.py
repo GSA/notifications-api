@@ -3,10 +3,11 @@ from uuid import UUID
 
 from dateutil.parser import parse
 from flask import current_app
-from flask_marshmallow.fields import fields
 from marshmallow import (
     EXCLUDE,
+    Schema,
     ValidationError,
+    fields,
     post_dump,
     post_load,
     pre_dump,
@@ -14,9 +15,9 @@ from marshmallow import (
     validates,
     validates_schema,
 )
-from marshmallow_sqlalchemy import auto_field, field_for
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, field_for
 
-from app import ma, models
+from app import models
 from app.dao.permissions_dao import permission_dao
 from app.enums import NotificationStatus, ServicePermissionType, TemplateType
 from app.models import ServicePermission
@@ -82,7 +83,7 @@ class UUIDsAsStringsMixin:
         return data
 
 
-class BaseSchema(ma.SQLAlchemyAutoSchema):
+class BaseSchema(SQLAlchemyAutoSchema):
     class Meta:
         load_instance = True
         include_relationships = True
@@ -321,6 +322,14 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
         return in_data
 
 
+class TemplateTypeFieldOnlySchema(Schema):
+    template_type = fields.String(required=True)
+
+
+class NotificationStatusFieldOnlySchema(Schema):
+    status = fields.String(required=True)
+
+
 class DetailedServiceSchema(BaseSchema):
     statistics = fields.Dict()
     organization_type = field_for(models.Service, "organization_type")
@@ -516,7 +525,7 @@ class JobSchema(BaseSchema):
         )
 
 
-class NotificationSchema(ma.Schema):
+class NotificationSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -620,7 +629,7 @@ class InvitedUserSchema(BaseSchema):
             raise ValidationError(str(e))
 
 
-class EmailDataSchema(ma.Schema):
+class EmailDataSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -643,12 +652,12 @@ class EmailDataSchema(ma.Schema):
             raise ValidationError(str(e))
 
 
-class NotificationsFilterSchema(ma.Schema):
+class NotificationsFilterSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    template_type = fields.Nested(BaseTemplateSchema, only=["template_type"], many=True)
-    status = fields.Nested(NotificationModelSchema, only=["status"], many=True)
+    template_type = fields.Nested(TemplateTypeFieldOnlySchema, many=True)
+    status = fields.Nested(NotificationStatusFieldOnlySchema, many=True)
     page = fields.Int(required=False)
     page_size = fields.Int(required=False)
     limit_days = fields.Int(required=False)
@@ -677,10 +686,10 @@ class NotificationsFilterSchema(ma.Schema):
     def convert_schema_object_to_field(self, in_data, **kwargs):
         if "template_type" in in_data:
             in_data["template_type"] = [
-                x.template_type for x in in_data["template_type"]
+                x["template_type"] for x in in_data["template_type"]
             ]
         if "status" in in_data:
-            in_data["status"] = [x.status for x in in_data["status"]]
+            in_data["status"] = [x["status"] for x in in_data["status"]]
         return in_data
 
     @validates("page")
@@ -692,7 +701,7 @@ class NotificationsFilterSchema(ma.Schema):
         _validate_positive_number(value)
 
 
-class ServiceHistorySchema(ma.Schema):
+class ServiceHistorySchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -709,7 +718,7 @@ class ServiceHistorySchema(ma.Schema):
     version = fields.Integer()
 
 
-class ApiKeyHistorySchema(ma.Schema):
+class ApiKeyHistorySchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
