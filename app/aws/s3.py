@@ -224,11 +224,20 @@ def get_s3_files():
     current_app.logger.info(
         f"job_cache length before regen: {len_job_cache()} #notify-debug-admin-1200"
     )
+    count = 0
     try:
         for object_key in object_keys:
             read_s3_file(bucket_name, object_key, s3res)
+            count = count + 1
+            eventlet.sleep(0.2)
     except Exception:
-        current_app.logger.exception("Connection pool issue")
+        current_app.logger.exception(
+            f"Trouble reading {object_key} which is # {count} during cache regeneration"
+        )
+    except OSError:
+        current_app.logger.exception(
+            f"Egress proxy issue reading {object_key} which is # {count}"
+        )
 
     current_app.logger.info(
         f"job_cache length after regen: {len_job_cache()} #notify-debug-admin-1200"
