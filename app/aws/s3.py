@@ -234,10 +234,11 @@ def get_s3_files():
         current_app.logger.exception(
             f"Trouble reading {object_key} which is # {count} during cache regeneration"
         )
-    except OSError:
+    except OSError as e:
         current_app.logger.exception(
             f"Egress proxy issue reading {object_key} which is # {count}"
         )
+        raise e
 
     current_app.logger.info(
         f"job_cache length after regen: {len_job_cache()} #notify-debug-admin-1200"
