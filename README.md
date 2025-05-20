@@ -221,7 +221,7 @@ If you don't have a line for your `$PATH` environment variable, add it in like
 this, which will include the PostgreSQL binaries:
 
 ```
-export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH
+export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
 ```
 
 _NOTE: You don't want to overwrite your existing `$PATH` environment variable! Hence the reason why it is included on the end like this; paths are separated by a colon._
