@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -461,7 +461,7 @@ def test_get_s3_client(mocker):
     mock_session.return_value.client.return_value = mock_s3_client
     result = get_s3_client()
 
-    mock_session.return_value.client.assert_called_once_with("s3")
+    mock_session.return_value.client.assert_called_once_with("s3", config=ANY)
     assert result == mock_s3_client
 
 

@@ -80,7 +80,7 @@ def get_s3_client():
             aws_secret_access_key=secret_key,
             region_name=region,
         )
-        s3_client = session.client("s3")
+        s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
     return s3_client
 
 
