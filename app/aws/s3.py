@@ -2,10 +2,10 @@ import csv
 import datetime
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 
 import botocore
+import eventlet
 from boto3 import Session
 from flask import current_app
 
@@ -24,8 +24,15 @@ s3_client = None
 s3_resource = None
 
 
+def get_service_id_from_key(key):
+    key = key.replace("service-", "")
+    key = key.split("/")
+    key = key[0].replace("-notify", "")
+    return key
+
+
 def set_job_cache(key, value):
-    current_app.logger.debug(f"Setting {key} in the job_cache.")
+    current_app.logger.debug(f"Setting {key} in the job_cache to {value}.")
     job_cache = current_app.config["job_cache"]
     job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
@@ -36,7 +43,7 @@ def get_job_cache(key):
     if ret is None:
         current_app.logger.warning(f"Could not find {key} in the job_cache.")
     else:
-        current_app.logger.debug(f"Got {key} from job_cache.")
+        current_app.logger.debug(f"Got {key} from job_cache with value {ret}.")
     return ret
 
 
@@ -73,7 +80,7 @@ def get_s3_client():
             aws_secret_access_key=secret_key,
             region_name=region,
         )
-        s3_client = session.client("s3")
+        s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
     return s3_client
 
 
@@ -116,9 +123,9 @@ def list_s3_objects():
                 )
             else:
                 break
-    except Exception:
+    except Exception as e:
         current_app.logger.exception(
-            "An error occurred while regenerating cache #notify-debug-admin-1200",
+            f"An error occurred while regenerating cache #notify-debug-admin-1200: {str(e)}",
         )
 
 
@@ -184,18 +191,20 @@ def read_s3_file(bucket_name, object_key, s3res):
     """
     try:
         job_id = get_job_id_from_s3_object_key(object_key)
+        service_id = get_service_id_from_key(object_key)
+
         if get_job_cache(job_id) is None:
-            object = (
+            job = (
                 s3res.Object(bucket_name, object_key)
                 .get()["Body"]
                 .read()
                 .decode("utf-8")
             )
-            set_job_cache(job_id, object)
-            set_job_cache(f"{job_id}_phones", extract_phones(object))
+            set_job_cache(job_id, job)
+            set_job_cache(f"{job_id}_phones", extract_phones(job, service_id, job_id))
             set_job_cache(
                 f"{job_id}_personalisation",
-                extract_personalisation(object),
+                extract_personalisation(job),
             )
 
     except LookupError:
@@ -215,11 +224,21 @@ def get_s3_files():
     current_app.logger.info(
         f"job_cache length before regen: {len_job_cache()} #notify-debug-admin-1200"
     )
+    count = 0
     try:
-        with ThreadPoolExecutor() as executor:
-            executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+        for object_key in object_keys:
+            read_s3_file(bucket_name, object_key, s3res)
+            count = count + 1
+            eventlet.sleep(0.2)
     except Exception:
-        current_app.logger.exception("Connection pool issue")
+        current_app.logger.exception(
+            f"Trouble reading {object_key} which is # {count} during cache regeneration"
+        )
+    except OSError as e:
+        current_app.logger.exception(
+            f"Egress proxy issue reading {object_key} which is # {count}"
+        )
+        raise e
 
     current_app.logger.info(
         f"job_cache length after regen: {len_job_cache()} #notify-debug-admin-1200"
@@ -375,7 +394,7 @@ def get_job_from_s3(service_id, job_id):
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                time.sleep(sleep_time)
+                eventlet.sleep(sleep_time)
                 continue
             else:
                 # Typically this is "NoSuchKey"

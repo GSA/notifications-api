@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -39,7 +39,7 @@ default_region = getenv("CSV_AWS_REGION")
 
 def single_s3_object_stub(key="foo", last_modified=None):
     return {
-        "ETag": '"d41d8cd98f00b204e9800998ecf8427e"',
+        "ETag": '"d"',
         "Key": key,
         "LastModified": last_modified or utc_now(),
     }
@@ -420,29 +420,17 @@ def test_get_s3_files_success(client, mocker):
         "CSV_UPLOAD_BUCKET": {"bucket": "test-bucket"},
         "job_cache": {},
     }
-    mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
     mock_read_s3_file = mocker.patch("app.aws.s3.read_s3_file")
     mock_list_s3_objects = mocker.patch("app.aws.s3.list_s3_objects")
     mock_get_s3_resource = mocker.patch("app.aws.s3.get_s3_resource")
     mock_list_s3_objects.return_value = ["file1.csv", "file2.csv"]
     mock_s3_resource = MagicMock()
     mock_get_s3_resource.return_value = mock_s3_resource
-    mock_executor = MagicMock()
-
-    def mock_map(func, iterable):
-        for item in iterable:
-            func(item)
-
-    mock_executor.map.side_effect = mock_map
-    mock_thread_pool_executor.return_value.__enter__.return_value = mock_executor
 
     get_s3_files()
 
     # mock_current_app.config.__getitem__.assert_called_once_with("CSV_UPLOAD_BUCKET")
     mock_list_s3_objects.assert_called_once()
-    mock_thread_pool_executor.assert_called_once()
-
-    mock_executor.map.assert_called_once()
 
     calls = [
         (("test-bucket", "file1.csv", mock_s3_resource),),
@@ -473,7 +461,7 @@ def test_get_s3_client(mocker):
     mock_session.return_value.client.return_value = mock_s3_client
     result = get_s3_client()
 
-    mock_session.return_value.client.assert_called_once_with("s3")
+    mock_session.return_value.client.assert_called_once_with("s3", config=ANY)
     assert result == mock_s3_client
 
 
@@ -615,15 +603,6 @@ def test_get_s3_files_handles_exception(mocker):
     mock_read_s3_file = mocker.patch(
         "app.aws.s3.read_s3_file", side_effect=[None, Exception("exception here")]
     )
-
-    mock_thread_pool_executor = mocker.patch("app.aws.s3.ThreadPoolExecutor")
-    mock_executor = mock_thread_pool_executor.return_value.__enter__.return_value
-
-    def mock_map(func, iterable):
-        for item in iterable:
-            func(item)
-
-    mock_executor.map.side_effect = mock_map
     get_s3_files()
 
     calls = [
@@ -632,4 +611,6 @@ def test_get_s3_files_handles_exception(mocker):
     ]
     mock_read_s3_file.assert_has_calls(calls, any_order=True)
 
-    mock_current_app.logger.exception.assert_called_with("Connection pool issue")
+    mock_current_app.logger.exception.assert_called_with(
+        "Trouble reading file2.csv which is # 1 during cache regeneration"
+    )

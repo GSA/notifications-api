@@ -11,3 +11,7 @@ updates:
       interval: "daily"
     labels:
       - "dependabot" # Custom label to identify Dependabot PRs
+    assignees:
+      - "alexjanousekGSA"
+    reviewers:
+      - "alexjanousekGSA"
