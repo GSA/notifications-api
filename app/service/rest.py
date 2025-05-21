@@ -506,7 +506,9 @@ def get_all_notifications_for_service(service_id):
         else current_app.config.get("PAGE_SIZE")
     )
     # HARD CODE TO 100 for now.  1000 or 10000 causes reports to time out before they complete (if big)
-    page_size = 100
+    # Tests are relying on the value in config (20), whereas the UI seems to pass 10000
+    if page_size > 100:
+        page_size = 100
     limit_days = data.get("limit_days")
     include_jobs = data.get("include_jobs", True)
     include_from_test_key = data.get("include_from_test_key", False)
