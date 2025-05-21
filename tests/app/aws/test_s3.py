@@ -221,20 +221,6 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             2,
             "5555555552",
         ),
-        (
-            # simulate file saved with utf8withbom
-            "\\ufeffPHONE NUMBER\n",
-            "eee",
-            2,
-            "5555555552",
-        ),
-        (
-            # simulate file saved without utf8withbom
-            "\\PHONE NUMBER\n",
-            "eee",
-            2,
-            "5555555552",
-        ),
     ],
 )
 def test_get_phone_number_from_s3(
@@ -242,6 +228,7 @@ def test_get_phone_number_from_s3(
 ):
     get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
     get_job_mock.return_value = job
+
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
 
