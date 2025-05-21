@@ -9,6 +9,7 @@ import eventlet
 from boto3 import Session
 from flask import current_app
 
+from app import job_cache, job_cache_lock
 from app.clients import AWS_CLIENT_CONFIG
 from notifications_utils import aware_utcnow
 
@@ -32,30 +33,25 @@ def get_service_id_from_key(key):
 
 
 def set_job_cache(key, value):
-    current_app.logger.debug(f"Setting {key} in the job_cache to {value}.")
-    job_cache = current_app.config["job_cache"]
-    job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
+    # current_app.logger.debug(f"Setting {key} in the job_cache to {value}.")
+
+    with job_cache_lock:
+        job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
 
 def get_job_cache(key):
-    job_cache = current_app.config["job_cache"]
+
     ret = job_cache.get(key)
-    if ret is None:
-        current_app.logger.warning(f"Could not find {key} in the job_cache.")
-    else:
-        current_app.logger.debug(f"Got {key} from job_cache with value {ret}.")
     return ret
 
 
 def len_job_cache():
-    job_cache = current_app.config["job_cache"]
     ret = len(job_cache)
     current_app.logger.debug(f"Length of job_cache is {ret}")
     return ret
 
 
 def clean_cache():
-    job_cache = current_app.config["job_cache"]
     current_time = time.time()
     keys_to_delete = []
     for key, (_, expiry_time) in job_cache.items():
@@ -65,8 +61,9 @@ def clean_cache():
     current_app.logger.debug(
         f"Deleting the following keys from the job_cache: {keys_to_delete}"
     )
-    for key in keys_to_delete:
-        del job_cache[key]
+    with job_cache_lock:
+        for key in keys_to_delete:
+            del job_cache[key]
 
 
 def get_s3_client():
@@ -207,9 +204,8 @@ def read_s3_file(bucket_name, object_key, s3res):
                 extract_personalisation(job),
             )
 
-    except LookupError:
-        # perhaps our key is not formatted as we expected.  If so skip it.
-        current_app.logger.exception("LookupError #notify-debug-admin-1200")
+    except Exception:
+        current_app.logger.exception("Exception")
 
 
 def get_s3_files():
@@ -308,9 +304,7 @@ def file_exists(file_location):
 
 
 def get_job_location(service_id, job_id):
-    current_app.logger.debug(
-        f"#notify-debug-s3-partitioning NEW JOB_LOCATION: {NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
-    )
+
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -326,9 +320,7 @@ def get_old_job_location(service_id, job_id):
     but it will take a few days where we have to support both formats.
     Remove this when everything works with the NEW_FILE_LOCATION_STRUCTURE.
     """
-    current_app.logger.debug(
-        f"#notify-debug-s3-partitioning OLD JOB LOCATION: {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
-    )
+
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -467,7 +459,6 @@ def extract_personalisation(job):
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -481,8 +472,11 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    phones = extract_phones(job, service_id, job_id)
-    set_job_cache(f"{job_id}_phones", phones)
+    phones = get_job_cache(f"{job_id}_phones")
+    if phones is None:
+        current_app.logger.debug("HAVE TO REEXTRACT PHONES!")
+        phones = extract_phones(job, service_id, job_id)
+        set_job_cache(f"{job_id}_phones", phones)
 
     # If we can find the quick dictionary, use it
     phone_to_return = phones[job_row_number]
@@ -501,7 +495,6 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -519,7 +512,9 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
+    personalisation = get_job_cache(f"{job_id}_personalisation")
+    if personalisation is None:
+        set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
 
     return get_job_cache(f"{job_id}_personalisation")[0].get(job_row_number)
 
