@@ -8,7 +8,7 @@ def register_socket_handlers(socketio):
         current_app.logger.info(
             f"Socket {request.sid} connected from {request.environ.get('HTTP_ORIGIN')}"
         )
-        return True  # Accept the connection
+        return True
 
     @socketio.on("disconnect")
     def on_disconnect():
