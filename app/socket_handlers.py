@@ -3,6 +3,15 @@ from flask_socketio import join_room, leave_room
 
 
 def register_socket_handlers(socketio):
+    @socketio.on("connect")
+    def on_connect():
+        current_app.logger.info(f"Socket {request.sid} connected from {request.environ.get('HTTP_ORIGIN')}")
+        return True  # Accept the connection
+
+    @socketio.on("disconnect")
+    def on_disconnect():
+        current_app.logger.info(f"Socket {request.sid} disconnected")
+
     @socketio.on("join")
     def on_join(data):  # noqa: F401
         room = data.get("room")
