@@ -5,7 +5,9 @@ from flask_socketio import join_room, leave_room
 def register_socket_handlers(socketio):
     @socketio.on("connect")
     def on_connect():
-        current_app.logger.info(f"Socket {request.sid} connected from {request.environ.get('HTTP_ORIGIN')}")
+        current_app.logger.info(
+            f"Socket {request.sid} connected from {request.environ.get('HTTP_ORIGIN')}"
+        )
         return True  # Accept the connection
 
     @socketio.on("disconnect")
