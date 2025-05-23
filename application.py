@@ -4,7 +4,7 @@ from __future__ import print_function
 from flask import Flask
 from werkzeug.serving import WSGIRequestHandler
 
-from app import create_app, socketio
+from app import create_app, socketio  # noqa: F401
 
 WSGIRequestHandler.version_string = lambda self: "SecureServer"
 
