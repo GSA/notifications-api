@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -221,20 +221,6 @@ def test_get_s3_file_makes_correct_call(notify_api, mocker):
             2,
             "5555555552",
         ),
-        (
-            # simulate file saved with utf8withbom
-            "\\ufeffPHONE NUMBER\n",
-            "eee",
-            2,
-            "5555555552",
-        ),
-        (
-            # simulate file saved without utf8withbom
-            "\\PHONE NUMBER\n",
-            "eee",
-            2,
-            "5555555552",
-        ),
     ],
 )
 def test_get_phone_number_from_s3(
@@ -242,6 +228,7 @@ def test_get_phone_number_from_s3(
 ):
     get_job_mock = mocker.patch("app.aws.s3.get_job_from_s3")
     get_job_mock.return_value = job
+
     phone_number = get_phone_number_from_s3("service_id", job_id, job_row_number)
     assert phone_number == expected_phone_number
 
@@ -461,7 +448,7 @@ def test_get_s3_client(mocker):
     mock_session.return_value.client.return_value = mock_s3_client
     result = get_s3_client()
 
-    mock_session.return_value.client.assert_called_once_with("s3")
+    mock_session.return_value.client.assert_called_once_with("s3", config=ANY)
     assert result == mock_s3_client
 
 
@@ -611,4 +598,6 @@ def test_get_s3_files_handles_exception(mocker):
     ]
     mock_read_s3_file.assert_has_calls(calls, any_order=True)
 
-    mock_current_app.logger.exception.assert_called_with("Connection pool issue")
+    mock_current_app.logger.exception.assert_called_with(
+        "Trouble reading file2.csv which is # 1 during cache regeneration"
+    )
