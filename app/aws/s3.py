@@ -2,7 +2,6 @@ import csv
 import datetime
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 
 import botocore
@@ -10,6 +9,7 @@ import eventlet
 from boto3 import Session
 from flask import current_app
 
+from app import job_cache, job_cache_lock
 from app.clients import AWS_CLIENT_CONFIG
 from notifications_utils import aware_utcnow
 
@@ -25,31 +25,33 @@ s3_client = None
 s3_resource = None
 
 
+def get_service_id_from_key(key):
+    key = key.replace("service-", "")
+    key = key.split("/")
+    key = key[0].replace("-notify", "")
+    return key
+
+
 def set_job_cache(key, value):
-    current_app.logger.debug(f"Setting {key} in the job_cache.")
-    job_cache = current_app.config["job_cache"]
-    job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
+    # current_app.logger.debug(f"Setting {key} in the job_cache to {value}.")
+
+    with job_cache_lock:
+        job_cache[key] = (value, time.time() + 8 * 24 * 60 * 60)
 
 
 def get_job_cache(key):
-    job_cache = current_app.config["job_cache"]
+
     ret = job_cache.get(key)
-    if ret is None:
-        current_app.logger.warning(f"Could not find {key} in the job_cache.")
-    else:
-        current_app.logger.debug(f"Got {key} from job_cache.")
     return ret
 
 
 def len_job_cache():
-    job_cache = current_app.config["job_cache"]
     ret = len(job_cache)
     current_app.logger.debug(f"Length of job_cache is {ret}")
     return ret
 
 
 def clean_cache():
-    job_cache = current_app.config["job_cache"]
     current_time = time.time()
     keys_to_delete = []
     for key, (_, expiry_time) in job_cache.items():
@@ -59,8 +61,9 @@ def clean_cache():
     current_app.logger.debug(
         f"Deleting the following keys from the job_cache: {keys_to_delete}"
     )
-    for key in keys_to_delete:
-        del job_cache[key]
+    with job_cache_lock:
+        for key in keys_to_delete:
+            del job_cache[key]
 
 
 def get_s3_client():
@@ -74,7 +77,7 @@ def get_s3_client():
             aws_secret_access_key=secret_key,
             region_name=region,
         )
-        s3_client = session.client("s3")
+        s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
     return s3_client
 
 
@@ -185,23 +188,24 @@ def read_s3_file(bucket_name, object_key, s3res):
     """
     try:
         job_id = get_job_id_from_s3_object_key(object_key)
+        service_id = get_service_id_from_key(object_key)
+
         if get_job_cache(job_id) is None:
-            object = (
+            job = (
                 s3res.Object(bucket_name, object_key)
                 .get()["Body"]
                 .read()
                 .decode("utf-8")
             )
-            set_job_cache(job_id, object)
-            set_job_cache(f"{job_id}_phones", extract_phones(object))
+            set_job_cache(job_id, job)
+            set_job_cache(f"{job_id}_phones", extract_phones(job, service_id, job_id))
             set_job_cache(
                 f"{job_id}_personalisation",
-                extract_personalisation(object),
+                extract_personalisation(job),
             )
 
-    except LookupError:
-        # perhaps our key is not formatted as we expected.  If so skip it.
-        current_app.logger.exception("LookupError #notify-debug-admin-1200")
+    except Exception as e:
+        current_app.logger.exception(str(e))
 
 
 def get_s3_files():
@@ -216,11 +220,21 @@ def get_s3_files():
     current_app.logger.info(
         f"job_cache length before regen: {len_job_cache()} #notify-debug-admin-1200"
     )
+    count = 0
     try:
-        with ThreadPoolExecutor() as executor:
-            executor.map(lambda key: read_s3_file(bucket_name, key, s3res), object_keys)
+        for object_key in object_keys:
+            read_s3_file(bucket_name, object_key, s3res)
+            count = count + 1
+            eventlet.sleep(0.2)
     except Exception:
-        current_app.logger.exception("Connection pool issue")
+        current_app.logger.exception(
+            f"Trouble reading {object_key} which is # {count} during cache regeneration"
+        )
+    except OSError as e:
+        current_app.logger.exception(
+            f"Egress proxy issue reading {object_key} which is # {count}"
+        )
+        raise e
 
     current_app.logger.info(
         f"job_cache length after regen: {len_job_cache()} #notify-debug-admin-1200"
@@ -290,9 +304,7 @@ def file_exists(file_location):
 
 
 def get_job_location(service_id, job_id):
-    current_app.logger.debug(
-        f"#notify-debug-s3-partitioning NEW JOB_LOCATION: {NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
-    )
+
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         NEW_FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -308,9 +320,7 @@ def get_old_job_location(service_id, job_id):
     but it will take a few days where we have to support both formats.
     Remove this when everything works with the NEW_FILE_LOCATION_STRUCTURE.
     """
-    current_app.logger.debug(
-        f"#notify-debug-s3-partitioning OLD JOB LOCATION: {FILE_LOCATION_STRUCTURE.format(service_id, job_id)}"
-    )
+
     return (
         current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
         FILE_LOCATION_STRUCTURE.format(service_id, job_id),
@@ -449,7 +459,6 @@ def extract_personalisation(job):
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -463,8 +472,16 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         )
         return "Unavailable"
 
-    phones = extract_phones(job, service_id, job_id)
-    set_job_cache(f"{job_id}_phones", phones)
+    phones = get_job_cache(f"{job_id}_phones")
+    if phones is None:
+        current_app.logger.debug("HAVE TO REEXTRACT PHONES!")
+        phones = extract_phones(job, service_id, job_id)
+        set_job_cache(f"{job_id}_phones", phones)
+        current_app.logger.debug(f"SETTING PHONES TO {phones}")
+    else:
+        phones = phones[
+            0
+        ]  # we only want the phone numbers not the cache expiration time
 
     # If we can find the quick dictionary, use it
     phone_to_return = phones[job_row_number]
@@ -483,7 +500,6 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = get_job_cache(job_id)
     if job is None:
-        current_app.logger.debug(f"job {job_id} was not in the cache")
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
@@ -501,7 +517,9 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
         )
         return {}
 
-    set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
+    personalisation = get_job_cache(f"{job_id}_personalisation")
+    if personalisation is None:
+        set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
 
     return get_job_cache(f"{job_id}_personalisation")[0].get(job_row_number)
 
