@@ -204,8 +204,8 @@ def read_s3_file(bucket_name, object_key, s3res):
                 extract_personalisation(job),
             )
 
-    except Exception:
-        current_app.logger.exception("Exception")
+    except Exception as e:
+        current_app.logger.exception(str(e))
 
 
 def get_s3_files():
