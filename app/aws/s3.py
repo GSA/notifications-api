@@ -477,7 +477,7 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         current_app.logger.debug("HAVE TO REEXTRACT PHONES!")
         phones = extract_phones(job, service_id, job_id)
         set_job_cache(f"{job_id}_phones", phones)
-        print(f"SETTING PHONES TO {phones}")
+        current_app.logger.debug(f"SETTING PHONES TO {phones}")
     else:
         phones = phones[
             0
