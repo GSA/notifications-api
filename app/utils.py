@@ -42,13 +42,13 @@ def url_with_token(data, url, config, base_url=None):
     return base_url + token
 
 
-def get_template_instance(template_dict, values_dict=None):
+def get_template_instance(template, values=None):
     from app.enums import TemplateType
 
     return {
         TemplateType.SMS: SMSMessageTemplate,
         TemplateType.EMAIL: HTMLEmailTemplate,
-    }[template_dict["template_type"]](template_dict, values_dict)
+    }[template["template_type"]](template, values)
 
 
 def template_model_to_dict(template):
