@@ -48,7 +48,7 @@ jobs:
       run: make bootstrap
 
     - name: Create requirements.txt
-      run: poetry export --without-hashes --format=requirements.txt > requirements.txt
+      run: poetry export --output requirements.txt
 
     - name: Deploy to cloud.gov
       uses: cloud-gov/cg-cli-tools@main

@@ -16,7 +16,7 @@ GIT_HOOKS_PATH ?= $(shell git config --global core.hooksPath || echo "")
 .PHONY: bootstrap
 bootstrap: ## Set up everything to run the app
 	make generate-version-file
-	poetry lock --no-update
+	rm poetry.lock
 	poetry install --sync --no-root
 	poetry run pre-commit install
 	createdb notification_api || true
@@ -26,7 +26,8 @@ bootstrap: ## Set up everything to run the app
 .PHONY: bootstrap-with-git-hooks
 bootstrap-with-git-hooks:  ## Sets everything up and accounts for pre-existing git hooks
 	make generate-version-file
-	poetry lock --no-update
+	rm poetry.lock
+	poetry lock
 	poetry install --sync --no-root
 	git config --global --unset-all core.hooksPath
 	poetry run pre-commit install
@@ -112,7 +113,8 @@ test: ## Run tests and create coverage report
 
 .PHONY: py-lock
 py-lock: ## Syncs dependencies and updates lock file without performing recursive internal updates
-	poetry lock --no-update
+    rm poetry.lock
+	poetry lock
 	poetry install --sync
 
 .PHONY: freeze-requirements

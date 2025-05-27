@@ -15,7 +15,10 @@ runs:
         python-version: "3.12.3"
     - name: Install poetry
       shell: bash
-      run: pip install poetry==1.8.5
+      run: pip install poetry==2.1.3
+    - name: Install poetry export
+      shell: bash
+      run: poetry self add poetry-export-plugin
     - name: Downgrade virtualenv to compatible version
       shell: bash
       run: pip install "virtualenv<20.30"

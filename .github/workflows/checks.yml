@@ -25,7 +25,7 @@ jobs:
         image: postgres
         env:
           POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: password  # pragma: allowlist secret
           POSTGRES_DB: test_notification_api
         options: >-
           --health-cmd pg_isready
@@ -42,11 +42,11 @@ jobs:
     - name: Install application dependencies
       run: make bootstrap
       env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
-        NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
-        NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
-        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api  # pragma: allowlist secret
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}  # pragma: allowlist secret
+        NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}  # pragma: allowlist secret
+        NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}  # pragma: allowlist secret
+        NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}  # pragma: allowlist secret
 
     - name: Check imports alphabetized
       run: poetry run isort --check-only ./app ./tests
@@ -57,8 +57,8 @@ jobs:
     - name: Run tests with coverage
       run: poetry run coverage run --omit=*/migrations/*,*/tests/* -m pytest --maxfail=10
       env:
-        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
+        SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api  # pragma: allowlist secret
+        NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}  # pragma: allowlist secret
         NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
         NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
         NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
-        run: poetry export --without-hashes --format=requirements.txt > requirements.txt
+        run: poetry export --output requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
@@ -111,7 +111,7 @@ jobs:
         image: postgres
         env:
           POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: password  # pragma: allowlist secret
           POSTGRES_DB: test_notification_api
         options: >-
           --health-cmd pg_isready
@@ -127,15 +127,15 @@ jobs:
       - name: Install application dependencies
         run: make bootstrap
         env:
-          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
-          NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}
-          NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}
-          NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}
-          NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}
+          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api  # pragma: allowlist secret
+          NOTIFY_E2E_TEST_EMAIL: ${{ secrets.NOTIFY_E2E_TEST_EMAIL }}  # pragma: allowlist secret
+          NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_PASSWORD }}  # pragma: allowlist secret
+          NOTIFY_E2E_TEST_HTTP_AUTH_USER: ${{ secrets.NOTIFY_E2E_TEST_HTTP_AUTH_USER }}  # pragma: allowlist secret
+          NOTIFY_E2E_TEST_PASSWORD: ${{ secrets.NOTIFY_E2E_TEST_PASSWORD }}  # pragma: allowlist secret
       - name: Run server
         run: make run-flask &
         env:
-          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api
+          SQLALCHEMY_DATABASE_TEST_URI: postgresql://user:password@localhost:5432/test_notification_api  # pragma: allowlist secret
       - name: Run OWASP API Scan
         uses: zaproxy/action-api-scan@v0.9.0
         with:
