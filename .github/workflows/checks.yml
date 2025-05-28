@@ -90,6 +90,12 @@ jobs:
         run: poetry export --output requirements_tmp.txt
       - name: Filter requirements.txt
         run: grep -v "oscrypto@ git" requirements_tmp.txt > requirements.txt
+      - name: Verify requirements.txt
+        run: ls -l requirements.txt
+      - name: Print requirements.txt
+        run: |
+          echo "Contents of requirements.txt:"
+          cat requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
           inputs: requirements.txt
