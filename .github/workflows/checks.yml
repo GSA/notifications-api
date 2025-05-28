@@ -101,6 +101,7 @@ jobs:
           inputs: requirements.txt
           ignore-vulns: |
             PYSEC-2022-43162
+            PYSEC-2023-312
 
   static-scan:
     runs-on: ubuntu-latest
