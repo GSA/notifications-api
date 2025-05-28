@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from flask import Blueprint, current_app, jsonify, request
+from jsonschema import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -305,7 +306,7 @@ def create_service():
     data["total_message_limit"] = current_app.config["TOTAL_MESSAGE_LIMIT"]
 
     # validate json with marshmallow
-    service_schema.load(data)
+    service_schema.load(data, session=db.session)
 
     user = get_user_by_id(data.pop("user_id"))
 
@@ -323,14 +324,21 @@ def create_service():
 def update_service(service_id):
     req_json = request.get_json()
     fetched_service = dao_fetch_service_by_id(service_id)
-    # Capture the status change here as Marshmallow changes this later
     service_going_live = fetched_service.restricted and not req_json.get(
         "restricted", True
     )
     current_data = dict(service_schema.dump(fetched_service).items())
-    current_data.update(request.get_json())
+    current_data.update(req_json)
 
-    service = service_schema.load(current_data)
+    try:
+        service = service_schema.load(
+            current_data, session=db.session, instance=fetched_service, partial=True
+        )
+    except ValidationError as e:
+        current_app.logger.error(
+            f"Validation error during service update: {e.messages}"
+        )
+        return jsonify(errors=e.messages), 400
 
     if "email_branding" in req_json:
         email_branding_id = req_json["email_branding"]
@@ -339,6 +347,7 @@ def update_service(service_id):
             if not email_branding_id
             else db.session.get(EmailBranding, email_branding_id)
         )
+
     dao_update_service(service)
 
     if service_going_live:
@@ -355,7 +364,7 @@ def update_service(service_id):
 @service_blueprint.route("/<uuid:service_id>/api-key", methods=["POST"])
 def create_api_key(service_id=None):
     fetched_service = dao_fetch_service_by_id(service_id=service_id)
-    valid_api_key = api_key_schema.load(request.get_json())
+    valid_api_key = api_key_schema.load(request.get_json(), session=db.session)
     valid_api_key.service = fetched_service
     save_model_api_key(valid_api_key)
     unsigned_api_key = get_unsigned_secret(valid_api_key.id)

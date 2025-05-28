@@ -77,6 +77,7 @@ redis = "^5.0.8"
 requests = "^2.32.3"
 flask-socketio = "^5.5.1"
 virtualenv = "<20.30"
+marshmallow-enum = "^1.5.1"
 
 
 [tool.poetry.group.dev.dependencies]

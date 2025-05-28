@@ -15,11 +15,17 @@ from marshmallow import (
     validates,
     validates_schema,
 )
+from marshmallow_enum import EnumField as BaseEnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, field_for
 
 from app import models
 from app.dao.permissions_dao import permission_dao
-from app.enums import NotificationStatus, ServicePermissionType, TemplateType
+from app.enums import (
+    NotificationStatus,
+    OrganizationType,
+    ServicePermissionType,
+    TemplateType,
+)
 from app.models import ServicePermission
 from app.utils import DATETIME_FORMAT_NO_TIMEZONE, utc_now
 from notifications_utils.recipients import (
@@ -29,6 +35,14 @@ from notifications_utils.recipients import (
     validate_email_address,
     validate_phone_number,
 )
+
+
+class SafeEnumField(BaseEnumField):
+    def fail(self, key, **kwargs):
+        kwargs["values"] = ", ".join([str(mem.value) for mem in self.enum])
+        kwargs["names"] = ", ".join([mem.name for mem in self.enum])
+        msg = self.error or self.default_error_messages.get(key, "Invalid input")
+        raise ValidationError(msg.format(**kwargs))
 
 
 def _validate_positive_number(value, msg="Not a positive integer"):
@@ -245,7 +259,10 @@ class ProviderDetailsHistorySchema(BaseSchema):
 
 class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     created_by = field_for(models.Service, "created_by", required=True)
-    organization_type = field_for(models.Service, "organization_type")
+    organization_type = SafeEnumField(
+        OrganizationType, by_value=True, required=False, allow_none=True
+    )
+
     permissions = fields.Method(
         "serialize_service_permissions", "deserialize_service_permissions"
     )
@@ -664,15 +681,16 @@ class NotificationsFilterSchema(Schema):
     include_jobs = fields.Boolean(required=False)
     include_from_test_key = fields.Boolean(required=False)
     older_than = fields.UUID(required=False)
-    format_for_csv = fields.String()
+    format_for_csv = fields.Boolean()
     to = fields.String()
     include_one_off = fields.Boolean(required=False)
     count_pages = fields.Boolean(required=False)
 
     @pre_load
     def handle_multidict(self, in_data, **kwargs):
+        out_data = dict(in_data)
+
         if isinstance(in_data, dict) and hasattr(in_data, "getlist"):
-            out_data = dict([(k, in_data.get(k)) for k in in_data.keys()])
             if "template_type" in in_data:
                 out_data["template_type"] = [
                     {"template_type": x} for x in in_data.getlist("template_type")

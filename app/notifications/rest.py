@@ -99,8 +99,10 @@ def get_all_notifications():
 
     serialized = []
     for notification in pagination.items:
+        personalisation = notification.personalisation
+
         if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
+            personalisation = get_personalisation_from_s3(
                 notification.service_id,
                 notification.job_id,
                 notification.job_row_number,
@@ -110,24 +112,29 @@ def get_all_notifications():
                 notification.job_id,
                 notification.job_row_number,
             )
+            # Safe to set dynamically for serialization purposes
             notification.to = recipient
             notification.normalised_to = recipient
 
-        if not hasattr(notification, "body") or not notification.body:
+        subject = None
+
+        if not getattr(notification, "body", None):
             template_dict = template_model_to_dict(notification.template)
-            template = get_template_instance(
-                template_dict, notification.personalisation or {}
-            )
+            template = get_template_instance(template_dict, personalisation or {})
             notification.body = template.content_with_placeholders_filled_in
             if hasattr(template, "subject"):
-                try:
-                    notification.__dict__["subject"] = template.subject
-                except Exception:
-                    pass
+                subject = template.subject
+
+        notification.personalisation = personalisation
 
         schema = PublicNotificationResponseSchema()
         schema.context = {"notification_instance": notification}
-        serialized.append(schema.dump(notification))
+        notification_data = schema.dump(notification)
+
+        if subject is not None:
+            notification_data["subject"] = subject
+
+        serialized.append(notification_data)
 
     result = jsonify(
         notifications=serialized,
