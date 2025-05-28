@@ -120,11 +120,12 @@ py-lock: ## Syncs dependencies and updates lock file without performing recursiv
 	rm poetry.lock
 
 	poetry lock
-	poetry install --sync
+	poetry install
+	poetry sync
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
-	poetry export --without-hashes --format=requirements.txt > requirements.txt
+	poetry export --output > requirements.txt
 
 .PHONY: audit
 audit:
