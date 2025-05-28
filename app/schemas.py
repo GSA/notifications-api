@@ -24,6 +24,7 @@ from app.enums import (
     NotificationStatus,
     OrganizationType,
     ServicePermissionType,
+    TemplateProcessType,
     TemplateType,
 )
 from app.models import ServicePermission
@@ -460,7 +461,7 @@ class TemplateSchemaNoDetail(TemplateSchema):
 class TemplateHistorySchema(BaseSchema):
     reply_to = fields.Method("get_reply_to", allow_none=True)
     reply_to_text = fields.Method("get_reply_to_text", allow_none=True)
-    process_type = field_for(models.Template, "process_type")
+    process_type = SafeEnumField(TemplateProcessType, by_value=True)
     template_type = auto_field(by_value=True)
 
     created_by = fields.Nested(
