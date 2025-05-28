@@ -89,10 +89,10 @@ jobs:
       - name: Create requirements.txt
         run: poetry export --output requirements.txt
       - name: Filter requirements.txt
-        run: grep -v "oscrypto@ git" requirements.txt > requirements-audit.txt
+        run: grep -v "oscrypto@ git" requirements.txt > requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.0.8
         with:
-          inputs: requirements-audit.txt
+          inputs: requirements.txt
           ignore-vulns: |
             PYSEC-2022-43162
 
