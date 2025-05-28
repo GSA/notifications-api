@@ -128,8 +128,8 @@ freeze-requirements: ## Pin all requirements including sub dependencies into req
 audit:
 	poetry requirements > requirements.txt
 	poetry requirements --dev > requirements_for_test.txt
-	poetry run pip-audit -r requirements.txt
-	poetry run pip-audit -r requirements_for_test.txt
+	poetry run pip-audit -r requirements.txt --skip-editable
+	poetry run pip-audit -r requirements_for_test.txt --skip-editable
 
 .PHONY: static-scan
 static-scan:
