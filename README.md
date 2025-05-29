@@ -339,6 +339,21 @@ you'll be set with an upgraded version of Python.
 _If you're not sure about the details of your current virtual environment, you can run `poetry env info` to get more information. If you've been using `pyenv` for everything, you can also see all available virtual environments with `pyenv virtualenvs`._
 
 
+#### Poetry upgrades ####
+
+If you are doing a new project setup, then after you install poetry you need to install the export plugin
+
+```sh
+poetry self add poetry-plugin-export
+```
+
+If you are upgrading from poetry 1.8.5, you need to do this:
+
+```sh
+curl -sSL https://install.python-poetry.org | python3 - --version 2.1.3
+poetry self add poetry-export-plugin
+```
+
 ### Final environment setup
 
 There's one final thing to adjust in the newly created `.env` file.  This
