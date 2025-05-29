@@ -136,7 +136,217 @@
         "line_number": 18,
         "is_secret": false
       }
+    ],
+    "app/enums.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "app/enums.py",
+        "hashed_secret": "12322e07b94ee3c7cd65a2952ece441538b53eb3",
+        "is_verified": false,
+        "line_number": 123,
+        "is_secret": false
+      }
+    ],
+    "app/notifications/receive_notifications.py": [
+      {
+        "type": "Base64 High Entropy String",
+        "filename": "app/notifications/receive_notifications.py",
+        "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
+        "is_verified": false,
+        "line_number": 29,
+        "is_secret": false
+      }
+    ],
+    "deploy-config/sandbox.yml": [
+      {
+        "type": "Secret Keyword",
+        "filename": "deploy-config/sandbox.yml",
+        "hashed_secret": "113151dd10316fcb0d5507b6215d78e2f3fe9e54",
+        "is_verified": false,
+        "line_number": 11,
+        "is_secret": false
+      }
+    ],
+    "sample.env": [
+      {
+        "type": "Basic Auth Credentials",
+        "filename": "sample.env",
+        "hashed_secret": "5b98cf4c3d794c8af1fcd7991e89cd4e52fb42a4",
+        "is_verified": false,
+        "line_number": 16,
+        "is_secret": false
+      }
+    ],
+    "tests/app/clients/test_document_download.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/clients/test_document_download.py",
+        "hashed_secret": "3acfb2c2b433c0ea7ff107e33df91b18e52f960f",
+        "is_verified": false,
+        "line_number": 14,
+        "is_secret": false
+      }
+    ],
+    "tests/app/clients/test_performance_platform.py": [
+      {
+        "type": "Base64 High Entropy String",
+        "filename": "tests/app/clients/test_performance_platform.py",
+        "hashed_secret": "76bb66c38ac4046bf73cd4a2c35a2b0af94aeb61",
+        "is_verified": false,
+        "line_number": 84,
+        "is_secret": false
+      }
+    ],
+    "tests/app/dao/test_services_dao.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/dao/test_services_dao.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 289,
+        "is_secret": false
+      }
+    ],
+    "tests/app/dao/test_users_dao.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/dao/test_users_dao.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 69,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/dao/test_users_dao.py",
+        "hashed_secret": "f2c57870308dc87f432e5912d4de6f8e322721ba",
+        "is_verified": false,
+        "line_number": 199,
+        "is_secret": false
+      }
+    ],
+    "tests/app/db.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/db.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 90,
+        "is_secret": false
+      }
+    ],
+    "tests/app/notifications/test_receive_notification.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/notifications/test_receive_notification.py",
+        "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
+        "is_verified": false,
+        "line_number": 27,
+        "is_secret": false
+      },
+      {
+        "type": "Base64 High Entropy String",
+        "filename": "tests/app/notifications/test_receive_notification.py",
+        "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
+        "is_verified": false,
+        "line_number": 57,
+        "is_secret": false
+      }
+    ],
+    "tests/app/notifications/test_validators.py": [
+      {
+        "type": "Base64 High Entropy String",
+        "filename": "tests/app/notifications/test_validators.py",
+        "hashed_secret": "6c1a8443963d02d13ffe575a71abe19ea731fb66",
+        "is_verified": false,
+        "line_number": 672,
+        "is_secret": false
+      }
+    ],
+    "tests/app/service/test_rest.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/service/test_rest.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 1285,
+        "is_secret": false
+      }
+    ],
+    "tests/app/test_cloudfoundry_config.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/test_cloudfoundry_config.py",
+        "hashed_secret": "e5e178db7317356946d13e5d2da037d39ac61c71",
+        "is_verified": false,
+        "line_number": 12,
+        "is_secret": false
+      },
+      {
+        "type": "Basic Auth Credentials",
+        "filename": "tests/app/test_cloudfoundry_config.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 14,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/test_cloudfoundry_config.py",
+        "hashed_secret": "cfd48edeb81ba7d48cbddcf1eeede25ba67057e8",
+        "is_verified": false,
+        "line_number": 33,
+        "is_secret": false
+      }
+    ],
+    "tests/app/user/test_rest.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/user/test_rest.py",
+        "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+        "is_verified": false,
+        "line_number": 110,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/app/user/test_rest.py",
+        "hashed_secret": "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
+        "is_verified": false,
+        "line_number": 864,
+        "is_secret": false
+      }
+    ],
+    "tests/notifications_utils/clients/antivirus/test_antivirus_client.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/notifications_utils/clients/antivirus/test_antivirus_client.py",
+        "hashed_secret": "932b25270abe1301c22c709a19082dff07d469ff",
+        "is_verified": false,
+        "line_number": 16,
+        "is_secret": false
+      }
+    ],
+    "tests/notifications_utils/clients/encryption/test_encryption_client.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/notifications_utils/clients/encryption/test_encryption_client.py",
+        "hashed_secret": "f1e923a9667de11be6a210849a8651c1bfd81605",
+        "is_verified": false,
+        "line_number": 13,
+        "is_secret": false
+      }
+    ],
+    "tests/notifications_utils/clients/zendesk/test_zendesk_client.py": [
+      {
+        "type": "Secret Keyword",
+        "filename": "tests/notifications_utils/clients/zendesk/test_zendesk_client.py",
+        "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
+        "is_verified": false,
+        "line_number": 16,
+        "is_secret": false
+      }
     ]
   },
-  "generated_at": "2025-05-12T16:45:34Z"
+  "generated_at": "2025-05-29T15:05:15Z"
 }
