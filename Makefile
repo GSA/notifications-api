@@ -28,10 +28,7 @@ bootstrap: ## Set up everything to run the app
 .PHONY: bootstrap-with-git-hooks
 bootstrap-with-git-hooks:  ## Sets everything up and accounts for pre-existing git hooks
 	make generate-version-file
-	rm poetry.lock
-	poetry lock
-	poetry install --no-root
-	poetry sync
+	poetry sync --no-root
 	git config --global --unset-all core.hooksPath
 	poetry run pre-commit install
 	git config --global core.hookspath "${GIT_HOOKS_PATH}"
