@@ -110,12 +110,8 @@ test: ## Run tests and create coverage report
 
 .PHONY: py-lock
 py-lock: ## Syncs dependencies and updates lock file without performing recursive internal updates
-
-	rm poetry.lock
-
+	poetry sync --no-root
 	poetry lock
-	poetry install
-	poetry sync
 
 .PHONY: freeze-requirements
 freeze-requirements: ## Pin all requirements including sub dependencies into requirements.txt
