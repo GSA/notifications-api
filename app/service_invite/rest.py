@@ -110,19 +110,37 @@ def create_invited_user(service_id):
 
     invite_data = _create_service_invite(invited_user, nonce, state)
 
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user), invite=invite_data), 201
+    return (
+        jsonify(
+            data=InvitedUserSchema(session=db.session).dump(invited_user),
+            invite=invite_data,
+        ),
+        201,
+    )
 
 
 @service_invite.route("/service/<service_id>/invite/expired", methods=["GET"])
 def get_expired_invited_users_by_service(service_id):
     expired_invited_users = get_expired_invited_users_for_service(service_id)
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(expired_invited_users, many=True)), 200
+    return (
+        jsonify(
+            data=InvitedUserSchema(session=db.session).dump(
+                expired_invited_users, many=True
+            )
+        ),
+        200,
+    )
 
 
 @service_invite.route("/service/<service_id>/invite", methods=["GET"])
 def get_invited_users_by_service(service_id):
     invited_users = get_invited_users_for_service(service_id)
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_users, many=True)), 200
+    return (
+        jsonify(
+            data=InvitedUserSchema(session=db.session).dump(invited_users, many=True)
+        ),
+        200,
+    )
 
 
 @service_invite.route("/service/<service_id>/invite/<invited_user_id>", methods=["GET"])
@@ -178,14 +196,21 @@ def resend_service_invite(service_id, invited_user_id):
     fetched.created_at = utc_now()
     fetched.status = InvitedUserStatus.PENDING
 
-    current_data = {k: v for k, v in InvitedUserSchema(session=db.session).dump(fetched).items()}
+    current_data = {
+        k: v for k, v in InvitedUserSchema(session=db.session).dump(fetched).items()
+    }
     update_dict = InvitedUserSchema(session=db.session).load(current_data)
 
     save_invited_user(update_dict)
 
     invite_data = _create_service_invite(fetched, nonce, state)
 
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(fetched), invite=invite_data), 200
+    return (
+        jsonify(
+            data=InvitedUserSchema(session=db.session).dump(fetched), invite=invite_data
+        ),
+        200,
+    )
 
 
 def invited_user_url(invited_user_id, invite_link_host=None):

@@ -1356,7 +1356,7 @@ def test_add_existing_user_to_another_service_with_send_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password", # pragma: allowlist secret
+                password="password",  # pragma: allowlist secret
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1406,7 +1406,7 @@ def test_add_existing_user_to_another_service_with_manage_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password", # pragma: allowlist secret
+                password="password",  # pragma: allowlist secret
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1457,7 +1457,7 @@ def test_add_existing_user_to_another_service_with_folder_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password", # pragma: allowlist secret
+                password="password",  # pragma: allowlist secret
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1498,7 +1498,7 @@ def test_add_existing_user_to_another_service_with_manage_api_keys(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password", # pragma: allowlist secret: keyword
+                password="password",  # pragma: allowlist secret: keyword
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1538,7 +1538,7 @@ def test_add_existing_user_to_non_existing_service_returns404(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password", # pragma: allowlist secret: keyword
+                password="password",  # pragma: allowlist secret: keyword
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
