@@ -67,7 +67,9 @@ def test_notification_schema_has_correct_status(sample_notification, schema_name
         ("mobile_number", "+14254147755"),
     ],
 )
-def test_user_update_schema_accepts_valid_attribute_pairs(user_attribute, user_value):
+def test_user_update_schema_accepts_valid_attribute_pairs(
+    notify_api, user_attribute, user_value
+):
     update_dict = {user_attribute: user_value}
     from app.schemas import user_update_schema_load_json
 
@@ -84,7 +86,9 @@ def test_user_update_schema_accepts_valid_attribute_pairs(user_attribute, user_v
         ("mobile_number", "+44077009"),
     ],
 )
-def test_user_update_schema_rejects_invalid_attribute_pairs(user_attribute, user_value):
+def test_user_update_schema_rejects_invalid_attribute_pairs(
+    notify_api, user_attribute, user_value
+):
     from app.schemas import user_update_schema_load_json
 
     update_dict = {user_attribute: user_value}
@@ -109,7 +113,9 @@ def test_user_update_schema_rejects_invalid_attribute_pairs(user_attribute, user
         "platform_admin",
     ],
 )
-def test_user_update_schema_rejects_disallowed_attribute_keys(user_attribute):
+def test_user_update_schema_rejects_disallowed_attribute_keys(
+    notify_api, user_attribute
+):
     update_dict = {user_attribute: "not important"}
     from app.schemas import user_update_schema_load_json
 

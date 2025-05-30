@@ -768,7 +768,9 @@ class UnarchivedTemplateSchema(BaseSchema):
 
 # should not be used on its own for dumping - only for loading
 create_user_schema = UserSchema()
-user_update_schema_load_json = UserUpdateAttributeSchema(load_json=True, partial=True)
+user_update_schema_load_json = UserUpdateAttributeSchema(
+    load_json=True, partial=True, transient=True
+)
 user_update_password_schema_load_json = UserUpdatePasswordSchema(
     only=("_password",), load_json=True, partial=True
 )
@@ -785,6 +787,7 @@ invited_user_schema = InvitedUserSchema()
 email_data_request_schema = EmailDataSchema()
 partial_email_data_request_schema = EmailDataSchema(partial_email=True)
 notifications_filter_schema = NotificationsFilterSchema()
+public_notification_response_schema = NotificationWithTemplateSchema()
 service_history_schema = ServiceHistorySchema()
 api_key_history_schema = ApiKeyHistorySchema()
 template_history_schema = TemplateHistorySchema()
