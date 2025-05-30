@@ -8,7 +8,7 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = "^3.13.2"
+python = "^3.13.1"
 alembic = "==1.16.1"
 amqp = "==5.3.1"
 beautifulsoup4 = "==4.13.4"
@@ -25,7 +25,7 @@ click-didyoumean = "==0.3.1"
 click-plugins = "==1.1.1"
 click-repl = "==0.3.0"
 deprecated = "==1.2.14"
-eventlet = "==0.33.3"
+eventlet = "==0.36.1"
 expiringdict = "==1.2.2"
 flask = "~=3.1"
 flask-bcrypt = "==1.0.1"
