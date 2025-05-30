@@ -7,6 +7,7 @@
   - [Setting up the infrastructure](#setting-up-the-infrastructure)
 - [Using the logs](#using-the-logs)
 - [`git` hooks](#git-hooks)
+  - [detect-secrets pre-commit plugin](#detect-secrets-pre-commit-plugin)
 - [Testing](#testing)
   - [CI testing](#ci-testing)
   - [Manual testing](#manual-testing)
@@ -261,6 +262,17 @@ To run the hooks in advance of a `git` operation, use `poetry run pre-commit run
 The configuration is stored in `.pre-commit-config.yaml`. In that config, there are links to the repos from which the hooks are pulled, so hop through there if you want a detailed description of what each one is doing.
 
 We do not maintain any hooks in this repository.
+
+## detect-secrets pre-commit plugin
+
+One of the pre-commit hooks we use is [`detect-secrets`](https://github.com/Yelp/detect-secrets), which checks for all sorts of things that might be committed accidently that should not be.  The project is already set up with a baseline file (`.ds.baseline`) and this should just work out of the box, but occasionally it will flag something new when you try and commit something; or, the file may need a refresh after a while.  In either case, to get things back on track and update the `.ds.baseline` file, run these two commands:
+
+```sh
+detect-secrets scan --baseline .ds.baseline
+detect-secrets audit .ds.baseline
+```
+
+The second command will walk you through all of the new detected secrets and ask you to validate if they actually are or if they're false positives.  Mark off each one as apppropriate (they should all be false positives - if they're not please stop and check in with the team!), then commit the updates to the `.ds.baseline` file and push them remotely so the project stays up-to-date.
 
 # Testing
 
