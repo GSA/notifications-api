@@ -462,6 +462,8 @@ instructions above for more details.
   - [Onboarding](./docs/all.md#onboarding)
   - [Setting up the infrastructure](./docs/all.md#setting-up-the-infrastructure)
 - [Using the logs](./docs/all.md#using-the-logs)
+- [`git` hooks](./docs/all.md#git-hooks)
+  - [detect-secrets pre-commit plugin](./docs/all.md#detect-secrets-pre-commit-plugin)
 - [Testing](./docs/all.md#testing)
   - [CI testing](./docs/all.md#ci-testing)
   - [Manual testing](./docs/all.md#manual-testing)
