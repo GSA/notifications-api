@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "notifications-api"
+package-mode = false
 version = "0.1.0"
 description = "Notify.gov backend"
 authors = ["Your Name <you@example.com>"]
