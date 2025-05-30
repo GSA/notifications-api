@@ -1350,14 +1350,14 @@ pgp = ["gpg"]
 
 [[package]]
 name = "eventlet"
-version = "0.36.1"
+version = "0.40.0"
 description = "Highly concurrent networking library"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "eventlet-0.36.1-py3-none-any.whl", hash = "sha256:e42d0f73b718e654c223a033b8692d1a94d778a6c1deb6c3d21442746f3f727f"},
-    {file = "eventlet-0.36.1.tar.gz", hash = "sha256:d227fe76a63d9e6a6cef53beb8ad0b2dc40a5e7737c801f4b474cfae1db07bc5"},
+    {file = "eventlet-0.40.0-py3-none-any.whl", hash = "sha256:496915bc92d054236bad872d5143112a13b0216a7bbeeb832e1a858ae131fe8a"},
+    {file = "eventlet-0.40.0.tar.gz", hash = "sha256:f659d735e06795a26167b666008798c7a203fcd8119b08b84036e41076432ff1"},
 ]
 
 [package.dependencies]
@@ -5603,4 +5603,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13.3"
-content-hash = "cb641bb176af96c26a762ea53880bbf70b6e52cbfdfceea4884542199b67dee3"
+content-hash = "8a2eca06a71550cc0aac0701655676e356bf1139e5ac438bcdf397da4cef120f"
