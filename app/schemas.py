@@ -767,7 +767,7 @@ class UnarchivedTemplateSchema(BaseSchema):
 
 
 # should not be used on its own for dumping - only for loading
-create_user_schema = UserSchema()
+create_user_schema = UserSchema(transient=True)
 user_update_schema_load_json = UserUpdateAttributeSchema(
     load_json=True, partial=True, transient=True
 )
