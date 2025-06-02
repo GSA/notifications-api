@@ -5,7 +5,7 @@ import string
 import time
 import uuid
 from contextlib import contextmanager
-from multiprocessing import Manager
+from threading import Lock
 from time import monotonic
 
 from celery import Celery, Task, current_task
@@ -30,6 +30,9 @@ from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
 from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
+
+job_cache = {}
+job_cache_lock = Lock()
 
 
 class NotifyCelery(Celery):
@@ -148,9 +151,6 @@ def create_app(application):
     encryption.init_app(application)
     redis_store.init_app(application)
     document_download_client.init_app(application)
-
-    manager = Manager()
-    application.config["job_cache"] = manager.dict()
 
     register_blueprint(application)
 

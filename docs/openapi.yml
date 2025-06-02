@@ -570,7 +570,7 @@ paths:
                 reference:
                   type: string
             example:
-              phone_number: "2028675309"
+              phone_number: "800-555-0100"
               template_id: "85b58733-7ebf-494e-bee2-a21a4ce17d58"
               personalisation:
                 variable: "value"

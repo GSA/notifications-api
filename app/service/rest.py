@@ -1,4 +1,5 @@
 import itertools
+import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -513,6 +514,10 @@ def get_all_notifications_for_service(service_id):
         if "page_size" in data
         else current_app.config.get("PAGE_SIZE")
     )
+    # HARD CODE TO 100 for now.  1000 or 10000 causes reports to time out before they complete (if big)
+    # Tests are relying on the value in config (20), whereas the UI seems to pass 10000
+    if page_size > 100:
+        page_size = 100
     limit_days = data.get("limit_days")
     include_jobs = data.get("include_jobs", True)
     include_from_test_key = data.get("include_from_test_key", False)
@@ -526,6 +531,8 @@ def get_all_notifications_for_service(service_id):
         f"get pagination with {service_id} service_id filters {data} \
                              limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}"
     )
+    start_time = time.time()
+    current_app.logger.debug(f"Start report generation  with page.size {page_size}")
     pagination = notifications_dao.get_notifications_for_service(
         service_id,
         filter_dict=data,
@@ -537,9 +544,13 @@ def get_all_notifications_for_service(service_id):
         include_from_test_key=include_from_test_key,
         include_one_off=include_one_off,
     )
+    current_app.logger.debug(f"Query complete at {int(time.time()-start_time)*1000}")
 
     for notification in pagination.items:
         if notification.job_id is not None:
+            current_app.logger.debug(
+                f"Processing job_id {notification.job_id} at {int(time.time()-start_time)*1000}"
+            )
             notification.personalisation = get_personalisation_from_s3(
                 notification.service_id,
                 notification.job_id,
