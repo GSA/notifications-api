@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
+from flask import current_app
 from marshmallow import EXCLUDE, Schema, fields, post_dump
 
 
@@ -122,7 +123,13 @@ class PublicNotificationResponseSchema(PublicNotificationSchema):
             elif notification and hasattr(notification, "subject"):
                 try:
                     data["subject"] = str(notification.subject)
-                except Exception:
-                    pass
+                except AttributeError:
+                    data["subject"] = ""
+                    current_app.logger.debug("Notification has no subject attribute")
+                except Exception as e:
+                    data["subject"] = ""
+                    current_app.logger.warning(
+                        f"Error getting notification subject: {e}"
+                    )
 
         return data

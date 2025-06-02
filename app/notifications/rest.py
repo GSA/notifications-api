@@ -63,8 +63,14 @@ def get_notification_by_id(notification_id):
         if hasattr(template, "subject"):
             try:
                 notification.__dict__["subject"] = template.subject
-            except Exception:
-                pass  # in case subject is a read-only property
+            except AttributeError as e:
+                current_app.logger.warning(
+                    f"Could not set subject on notification: {e}"
+                )
+            except Exception as e:
+                current_app.logger.error(
+                    f"Unexpected error setting notification subject: {e}"
+                )
 
     schema = PublicNotificationResponseSchema()
     schema.context = {"notification_instance": notification}
