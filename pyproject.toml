@@ -96,7 +96,7 @@ jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
 moto = "==5.1.5"
 pip-audit = "*"
 pre-commit = "^4.2.0"
-pytest = "^8.3.2"
+pytest = "^8.4.0"
 pytest-env = "^1.1.3"
 pytest-mock = "^3.14.1"
 pytest-cov = "^6.1.1"
