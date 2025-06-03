@@ -504,7 +504,7 @@ def delete_old_s3_objects():
         service = dao_fetch_service_by_id(service_id)
         service_names.append(service.name)
     current_app.logger.info(
-        f"#delete-old-s3-objects Services with retained jobs: {service_names}"
+        f"#delete-old-s3-objects Services with retained csvs: {service_names}"
     )
 
 
