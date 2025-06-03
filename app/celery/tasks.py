@@ -19,6 +19,7 @@ from app.dao.notifications_dao import (
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
+from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
@@ -496,7 +497,15 @@ def clean_job_cache():
 
 @notify_celery.task(name="delete-old-s3-objects")
 def delete_old_s3_objects():
-    s3.cleanup_old_s3_objects()
+
+    existing_service_ids = s3.cleanup_old_s3_objects()
+    service_names = []
+    for service_id in existing_service_ids:
+        service = dao_fetch_service_by_id(service_id)
+        service_names.append(service.name)
+    current_app.logger.info(
+        f"#delete-old-s3-objects Services with retained jobs: {service_names}"
+    )
 
 
 @notify_celery.task(name="process-incomplete-jobs")

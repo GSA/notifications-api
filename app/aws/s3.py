@@ -185,11 +185,9 @@ def cleanup_old_s3_objects():
                 break
             retained_services = []
             for service_id in service_ids:
-                # service = get_service_by_id(service_id)
                 retained_services.append(service_id)
-            current_app.logger.info(
-                f"#delete-old-s3-objects Services with retained jobs: {retained_services}"
-            )
+
+        return service_ids
     except Exception:
         current_app.logger.exception(
             "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
