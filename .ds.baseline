@@ -127,16 +127,6 @@
     }
   ],
   "results": {
-    ".github/actions/deploy-proxy/action.yml": [
-      {
-        "type": "Hex High Entropy String",
-        "filename": ".github/actions/deploy-proxy/action.yml",
-        "hashed_secret": "a6c13f5da3788e8d654cd24001dc79a238723248",
-        "is_verified": false,
-        "line_number": 18,
-        "is_secret": false
-      }
-    ],
     ".github/workflows/checks.yml": [
       {
         "type": "Secret Keyword",
@@ -384,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-06-04T15:02:41Z"
+  "generated_at": "2025-06-04T16:02:28Z"
 }
