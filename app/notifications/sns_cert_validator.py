@@ -2,8 +2,12 @@ import base64
 import re
 from urllib.parse import urlparse
 
-import oscrypto.asymmetric
-import oscrypto.errors
+#import oscrypto.asymmetric
+#import oscrypto.errors
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.exceptions import InvalidSignature
 import requests
 import six
 
@@ -110,15 +114,26 @@ def validate_sns_cert(sns_payload):
     if isinstance(certificate, six.text_type):
         certificate = certificate.encode()
 
+    # load the certificate
+    certificate = x509.load_pem_x509_certificate(certificate)
+
     signature = base64.b64decode(sns_payload["Signature"])
 
     try:
-        oscrypto.asymmetric.rsa_pkcs1v15_verify(
-            oscrypto.asymmetric.load_certificate(certificate),
+        public_key = certificate.public_key()
+        public_key.verify(
             signature,
             string_to_sign,
-            "sha1",
+            padding.PKCS1v15(),
+            hashes.SHA256()  # or SHA1?
         )
+        #oscrypto.asymmetric.rsa_pkcs1v15_verify(
+        #    oscrypto.asymmetric.load_certificate(certificate),
+        #    signature,
+        #    string_to_sign,
+        #    "sha1",
+        #)
         return True
-    except oscrypto.errors.SignatureError:
+    #except oscrypto.errors.SignatureError:
+    except InvalidSignature:
         raise ValidationError("Invalid signature")
