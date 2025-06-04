@@ -161,7 +161,7 @@
         "filename": ".github/workflows/daily_checks.yml",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 71,
+        "line_number": 63,
         "is_secret": false
       },
       {
@@ -169,7 +169,7 @@
         "filename": ".github/workflows/daily_checks.yml",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 87,
+        "line_number": 79,
         "is_secret": false
       }
     ],
@@ -384,5 +384,5 @@
       }
     ]
   },
-  "generated_at": "2025-06-02T13:22:36Z"
+  "generated_at": "2025-06-04T15:02:41Z"
 }

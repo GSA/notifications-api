@@ -26,15 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
-        run: poetry export --output requirements_tmp.txt --without-hashes
-      - name: Filter requirements.txt
-        run: grep -v "oscrypto@ git" requirements_tmp.txt > requirements.txt
-      - name: Verify requirements.txt
-        run: ls -l requirements.txt
-      - name: Print requirements.txt
-        run: |
-          echo "Contents of requirements.txt:"
-          cat requirements.txt
+        run: poetry export --output requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           inputs: requirements.txt
