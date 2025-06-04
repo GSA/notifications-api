@@ -11,6 +11,8 @@ from flask import current_app
 
 from app import job_cache, job_cache_lock
 from app.clients import AWS_CLIENT_CONFIG
+
+# from app.service.rest import get_service_by_id
 from notifications_utils import aware_utcnow
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
@@ -158,6 +160,34 @@ def cleanup_old_s3_objects():
                 )
             else:
                 break
+    except Exception:
+        current_app.logger.exception(
+            "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
+        )
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
+
+        service_ids = set()
+        while True:
+            for obj in response.get("Contents", []):
+                # Get the service id out of the upload key
+                key = obj["Key"]
+                object_arr = key.split("/")
+                service_id = object_arr[0]
+                service_id = service_id.replace("-service-notify", "")
+                service_ids.add(service_id)
+            if "NextContinuationToken" in response:
+                response = s3_client.list_objects_v2(
+                    Bucket=bucket_name,
+                    ContinuationToken=response["NextContinuationToken"],
+                )
+            else:
+                break
+            retained_services = []
+            for service_id in service_ids:
+                retained_services.append(service_id)
+
+        return service_ids
     except Exception:
         current_app.logger.exception(
             "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
