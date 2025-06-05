@@ -28,6 +28,7 @@ def show_status():
         current_app.logger.error(
             f"Unexpected error in show_status: {str(e)}", exc_info=True
         )
+        raise Exception(status_code=503, detail="Service temporarily unavailable")
 
 
 @status.route("/_status/live-service-and-organization-counts")
@@ -45,9 +46,17 @@ def live_service_and_organization_counts():
             f"Unexpected error in live_service_and_organization_counts: {str(e)}",
             exc_info=True,
         )
+        raise Exception(status_code=503, detail="Service temporarily unavailable")
 
 
 def get_db_version():
-    query = "SELECT version_num FROM alembic_version"
-    full_name = db.session.execute(text(query)).fetchone()[0]
-    return full_name
+    try:
+        query = "SELECT version_num FROM alembic_version"
+        full_name = db.session.execute(text(query)).fetchone()[0]
+        return full_name
+    except Exception as e:
+        current_app.logger.error(
+            f"Unexpected error in get_db_version: {str(e)}",
+            exc_info=True,
+        )
+        raise Exception(status_code=503, detail="Database temporarily unavailable")
