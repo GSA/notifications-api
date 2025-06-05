@@ -108,6 +108,10 @@ test: ## Run tests and create coverage report
 	poetry run coverage report -m --fail-under=93
 	poetry run coverage html -d .coverage_cache
 
+.PHONY: test-debug
+test-debug:
+	poetry run pytest --pdb -x
+
 .PHONY: py-lock
 py-lock: ## Syncs dependencies and updates lock file without performing recursive internal updates
 	poetry sync --no-root
