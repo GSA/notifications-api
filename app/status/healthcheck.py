@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import text
 
 from app import db, version
@@ -11,29 +11,40 @@ status = Blueprint("status", __name__)
 @status.route("/", methods=["GET"])
 @status.route("/_status", methods=["GET", "POST"])
 def show_status():
-    if request.args.get("simple", None):
-        return jsonify(status="ok"), 200
-    else:
-        return (
-            jsonify(
-                status="ok",  # This should be considered part of the public API
-                git_commit=version.__git_commit__,
-                build_time=version.__time__,
-                db_version=get_db_version(),
-            ),
-            200,
+    try:
+        if request.args.get("simple", None):
+            return jsonify(status="ok"), 200
+        else:
+            return (
+                jsonify(
+                    status="ok",  # This should be considered part of the public API
+                    git_commit=version.__git_commit__,
+                    build_time=version.__time__,
+                    db_version=get_db_version(),
+                ),
+                200,
+            )
+    except Exception as e:
+        current_app.logger.error(
+            f"Unexpected error in show_status: {str(e)}", exc_info=True
         )
 
 
 @status.route("/_status/live-service-and-organization-counts")
 def live_service_and_organization_counts():
-    return (
-        jsonify(
-            organizations=dao_count_organizations_with_live_services(),
-            services=dao_count_live_services(),
-        ),
-        200,
-    )
+    try:
+        return (
+            jsonify(
+                organizations=dao_count_organizations_with_live_services(),
+                services=dao_count_live_services(),
+            ),
+            200,
+        )
+    except Exception as e:
+        current_app.logger.error(
+            f"Unexpected error in live_service_and_organization_counts: {str(e)}",
+            exc_info=True,
+        )
 
 
 def get_db_version():
