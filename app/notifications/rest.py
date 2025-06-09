@@ -60,7 +60,8 @@ def get_notification_by_id(notification_id):
             template_dict, notification.personalisation or {}
         )
         notification.body = template.content_with_placeholders_filled_in
-        if hasattr(template, "subject"):
+        if hasattr(template, "subject") and hasattr(notification, "subject"):
+            notification.subject = template.subject
             try:
                 notification.subject = template.subject
             except Exception:
