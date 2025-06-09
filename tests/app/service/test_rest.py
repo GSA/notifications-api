@@ -738,8 +738,6 @@ def test_update_service(client, notify_db_session, sample_service):
         headers=[("Content-Type", "application/json"), auth_header],
     )
     result = resp.json
-    print(resp.status_code)
-    print(resp.json)
 
     assert resp.status_code == 200
     assert result["data"]["name"] == "updated service name"
@@ -1281,7 +1279,7 @@ def test_add_existing_user_to_another_service_with_all_permissions(
                 == user_already_in_service.email_address
             )
 
-            fake_password = "password"  # pragma: allowlist secret
+            fake_password = "password"
             # add new user to service
             user_to_add = User(
                 name="Invited User",
@@ -1356,7 +1354,7 @@ def test_add_existing_user_to_another_service_with_send_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password",  # pragma: allowlist secret
+                password="password",
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1406,7 +1404,7 @@ def test_add_existing_user_to_another_service_with_manage_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password",  # pragma: allowlist secret
+                password="password",
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1457,7 +1455,7 @@ def test_add_existing_user_to_another_service_with_folder_permissions(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password",  # pragma: allowlist secret
+                password="password",
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1498,7 +1496,7 @@ def test_add_existing_user_to_another_service_with_manage_api_keys(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password",  # pragma: allowlist secret: keyword
+                password="password",
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
@@ -1538,7 +1536,7 @@ def test_add_existing_user_to_non_existing_service_returns404(
             user_to_add = User(
                 name="Invited User",
                 email_address="invited@digital.fake.gov",
-                password="password",  # pragma: allowlist secret: keyword
+                password="password",
                 mobile_number="+14254147755",
             )
             save_model_user(user_to_add, validated_email_access=True)
