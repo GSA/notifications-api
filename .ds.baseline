@@ -127,16 +127,6 @@
     }
   ],
   "results": {
-    ".github/actions/deploy-proxy/action.yml": [
-      {
-        "type": "Hex High Entropy String",
-        "filename": ".github/actions/deploy-proxy/action.yml",
-        "hashed_secret": "a6c13f5da3788e8d654cd24001dc79a238723248",
-        "is_verified": false,
-        "line_number": 18,
-        "is_secret": false
-      }
-    ],
     ".github/workflows/checks.yml": [
       {
         "type": "Secret Keyword",
@@ -161,7 +151,7 @@
         "filename": ".github/workflows/daily_checks.yml",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 71,
+        "line_number": 63,
         "is_secret": false
       },
       {
@@ -169,7 +159,7 @@
         "filename": ".github/workflows/daily_checks.yml",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 87,
+        "line_number": 79,
         "is_secret": false
       }
     ],

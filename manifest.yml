@@ -54,5 +54,6 @@ applications:
       SECRET_KEY: ((SECRET_KEY))
       AWS_US_TOLL_FREE_NUMBER: ((default_toll_free_number))
 
+      SSL_CERT_FILE: "/etc/ssl/certs/ca-certificates.crt"
       REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
       NEW_RELIC_CA_BUNDLE_PATH: "/etc/ssl/certs/ca-certificates.crt"

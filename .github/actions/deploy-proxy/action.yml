@@ -15,7 +15,7 @@ inputs:
     default: https://github.com/GSA-TTS/cg-egress-proxy.git
   proxy_version:
     description: git ref to be deployed
-    default: 1500c67157c1a7a6fbbda7a2de172b3d0a67e703
+    default: main
 runs:
   using: composite
   steps:
