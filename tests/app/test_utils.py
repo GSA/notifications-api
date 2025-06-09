@@ -55,6 +55,7 @@ def test_get_public_notify_type_text():
         get_public_notify_type_text(ServicePermissionType.UPLOAD_DOCUMENT) == "document"
     )
 
+
 @pytest.mark.parametrize(
     "template_type, expected_class",
     [
@@ -128,7 +129,9 @@ def test_get_template_instance_comprehensive(template_type, values):
     template = {
         "template_type": template_type,
         "id": "test-id",
-        "content": "Test content ((name))" if values and "name" in values else "Test content",
+        "content": (
+            "Test content ((name))" if values and "name" in values else "Test content"
+        ),
         "subject": "Test subject" if template_type == TemplateType.EMAIL else None,
     }
 
