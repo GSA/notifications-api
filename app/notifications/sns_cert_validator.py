@@ -112,6 +112,7 @@ def validate_sns_cert(sns_payload):
 
     signature = base64.b64decode(sns_payload["Signature"])
 
+    # TODO we can remove oscrypto and use calls from cryptography instead
     try:
         oscrypto.asymmetric.rsa_pkcs1v15_verify(
             oscrypto.asymmetric.load_certificate(certificate),
