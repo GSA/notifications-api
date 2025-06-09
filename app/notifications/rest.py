@@ -64,6 +64,7 @@ def get_notification_by_id(notification_id):
             try:
                 notification.subject = template.subject
             except Exception:
+                # Subject attribute may not exist on notification model
                 pass
 
     schema = PublicNotificationResponseSchema()
