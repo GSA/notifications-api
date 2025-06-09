@@ -60,16 +60,12 @@ def get_notification_by_id(notification_id):
             template_dict, notification.personalisation or {}
         )
         notification.body = template.content_with_placeholders_filled_in
-        if hasattr(template, "subject") and hasattr(notification, "subject"):
-            notification.subject = template.subject
-            try:
-                notification.subject = template.subject
-            except Exception:
-                # Subject attribute may not exist on notification model
-                pass
 
     schema = PublicNotificationResponseSchema()
-    schema.context = {"notification_instance": notification}
+    schema.context = {
+        "notification_instance": notification,
+        "template_subject": getattr(template, "subject", None) if hasattr(template, "subject") else None
+    }
     serialized = schema.dump(notification)
 
     return jsonify(data={"notification": serialized}), 200
