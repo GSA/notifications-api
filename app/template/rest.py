@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy.orm.exc import NoResultFound
 
+from app import db
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.template_folder_dao import dao_get_template_folder_by_id_and_service_id
 from app.dao.templates_dao import (
@@ -135,7 +136,8 @@ def update_template(service_id, template_id):
         errors = {"content": [message]}
         raise InvalidRequest(errors, status_code=400)
 
-    update_dict = template_schema.load(updated_template)
+    update_dict = template_schema.load(updated_template, session=db.session)
+
     if update_dict.archived:
         update_dict.folder = None
     dao_update_template(update_dict)

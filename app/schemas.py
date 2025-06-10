@@ -2,10 +2,12 @@ from datetime import timedelta
 from uuid import UUID
 
 from dateutil.parser import parse
-from flask_marshmallow.fields import fields
+from flask import current_app
 from marshmallow import (
     EXCLUDE,
+    Schema,
     ValidationError,
+    fields,
     post_dump,
     post_load,
     pre_dump,
@@ -13,13 +15,20 @@ from marshmallow import (
     validates,
     validates_schema,
 )
-from marshmallow_sqlalchemy import auto_field, field_for
+from marshmallow_enum import EnumField as BaseEnumField
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, field_for
 
-from app import ma, models
+from app import models
 from app.dao.permissions_dao import permission_dao
-from app.enums import ServicePermissionType, TemplateType
+from app.enums import (
+    NotificationStatus,
+    OrganizationType,
+    ServicePermissionType,
+    TemplateProcessType,
+    TemplateType,
+)
 from app.models import ServicePermission
-from app.utils import DATETIME_FORMAT_NO_TIMEZONE, get_template_instance, utc_now
+from app.utils import DATETIME_FORMAT_NO_TIMEZONE, utc_now
 from notifications_utils.recipients import (
     InvalidEmailError,
     InvalidPhoneError,
@@ -27,6 +36,14 @@ from notifications_utils.recipients import (
     validate_email_address,
     validate_phone_number,
 )
+
+
+class SafeEnumField(BaseEnumField):
+    def fail(self, key, **kwargs):
+        kwargs["values"] = ", ".join([str(mem.value) for mem in self.enum])
+        kwargs["names"] = ", ".join([mem.name for mem in self.enum])
+        msg = self.error or self.default_error_messages.get(key, "Invalid input")
+        raise ValidationError(msg.format(**kwargs))
 
 
 def _validate_positive_number(value, msg="Not a positive integer"):
@@ -81,7 +98,7 @@ class UUIDsAsStringsMixin:
         return data
 
 
-class BaseSchema(ma.SQLAlchemyAutoSchema):
+class BaseSchema(SQLAlchemyAutoSchema):
     class Meta:
         load_instance = True
         include_relationships = True
@@ -113,7 +130,7 @@ class UserSchema(BaseSchema):
     )
     updated_at = FlexibleDateTime()
     logged_in_at = FlexibleDateTime()
-    auth_type = field_for(models.User, "auth_type")
+    auth_type = auto_field(by_value=True)
     password = fields.String(required=True, load_only=True)
 
     def user_permissions(self, usr):
@@ -136,28 +153,31 @@ class UserSchema(BaseSchema):
         )
 
     @validates("name")
-    def validate_name(self, value):
+    def validate_name(self, value, data_key):
         if not value:
+            current_app.logger.exception(f"{data_key}: Invalid name")
             raise ValidationError("Invalid name")
 
     @validates("email_address")
-    def validate_email_address(self, value):
+    def validate_email_address(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
+            current_app.logger.exception(f"{data_key}: {str(e)}")
             raise ValidationError(str(e))
 
     @validates("mobile_number")
-    def validate_mobile_number(self, value):
+    def validate_mobile_number(self, value, data_key):
         try:
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError(f"Invalid phone number: {error}")
+            current_app.logger.exception(f"{data_key}: {str(error)}")
+            raise ValidationError(f"Invalid phone number: {str(error)}")
 
 
 class UserUpdateAttributeSchema(BaseSchema):
-    auth_type = field_for(models.User, "auth_type")
+    auth_type = auto_field(by_value=True)
     email_access_validated_at = FlexibleDateTime()
 
     class Meta(BaseSchema.Meta):
@@ -176,24 +196,29 @@ class UserUpdateAttributeSchema(BaseSchema):
         )
 
     @validates("name")
-    def validate_name(self, value):
+    def validate_name(self, value, data_key):
         if not value:
+            current_app.logger.exception(f"{data_key}: Invalid name")
             raise ValidationError("Invalid name")
 
     @validates("email_address")
-    def validate_email_address(self, value):
+    def validate_email_address(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
+            current_app.logger.exception(f"{data_key}: {str(e)}")
             raise ValidationError(str(e))
 
     @validates("mobile_number")
-    def validate_mobile_number(self, value):
+    def validate_mobile_number(self, value, data_key):
         try:
             if value is not None:
                 validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError(f"Invalid phone number: {error}")
+            current_app.logger.exception(
+                f"{data_key}: Invalid phone number ({str(error)})"
+            )
+            raise ValidationError(f"Invalid phone number: {str(error)}")
 
     @validates_schema(pass_original=True)
     def check_unknown_fields(self, data, original_data, **kwargs):
@@ -235,7 +260,10 @@ class ProviderDetailsHistorySchema(BaseSchema):
 
 class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
     created_by = field_for(models.Service, "created_by", required=True)
-    organization_type = field_for(models.Service, "organization_type")
+    organization_type = SafeEnumField(
+        OrganizationType, by_value=True, required=False, allow_none=True
+    )
+
     permissions = fields.Method(
         "serialize_service_permissions", "deserialize_service_permissions"
     )
@@ -282,14 +310,20 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
         )
 
     @validates("permissions")
-    def validate_permissions(self, value):
+    def validate_permissions(self, value, data_key):
         permissions = [v.permission for v in value]
         for p in permissions:
             if p not in {e for e in ServicePermissionType}:
+                current_app.logger.exception(
+                    f"{data_key}: Invalid Service Permission: '{p}'"
+                )
                 raise ValidationError(f"Invalid Service Permission: '{p}'")
 
         if len(set(permissions)) != len(permissions):
             duplicates = list(set([x for x in permissions if permissions.count(x) > 1]))
+            current_app.logger.exception(
+                f"{data_key}: Duplicate Service Permission: {duplicates}"
+            )
             raise ValidationError(f"Duplicate Service Permission: {duplicates}")
 
     @pre_load()
@@ -304,6 +338,14 @@ class ServiceSchema(BaseSchema, UUIDsAsStringsMixin):
             in_data["permissions"] = permissions
 
         return in_data
+
+
+class TemplateTypeFieldOnlySchema(Schema):
+    template_type = fields.String(required=True)
+
+
+class NotificationStatusFieldOnlySchema(Schema):
+    status = fields.String(required=True)
 
 
 class DetailedServiceSchema(BaseSchema):
@@ -350,7 +392,7 @@ class NotificationModelSchema(BaseSchema):
             "api_key",
         )
 
-    status = fields.String(required=False)
+    status = auto_field(by_value=True)
     created_at = FlexibleDateTime()
     sent_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -359,6 +401,7 @@ class NotificationModelSchema(BaseSchema):
 class BaseTemplateSchema(BaseSchema):
     reply_to = fields.Method("get_reply_to", allow_none=True)
     reply_to_text = fields.Method("get_reply_to_text", allow_none=True)
+    template_type = auto_field(by_value=True)
 
     def get_reply_to(self, template):
         return template.reply_to
@@ -373,7 +416,7 @@ class BaseTemplateSchema(BaseSchema):
 
 class TemplateSchema(BaseTemplateSchema, UUIDsAsStringsMixin):
     created_by = field_for(models.Template, "created_by", required=True)
-    process_type = field_for(models.Template, "process_type")
+    process_type = auto_field(by_value=True)
     redact_personalisation = fields.Method("redact")
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -418,7 +461,8 @@ class TemplateSchemaNoDetail(TemplateSchema):
 class TemplateHistorySchema(BaseSchema):
     reply_to = fields.Method("get_reply_to", allow_none=True)
     reply_to_text = fields.Method("get_reply_to_text", allow_none=True)
-    process_type = field_for(models.Template, "process_type")
+    process_type = SafeEnumField(TemplateProcessType, by_value=True)
+    template_type = auto_field(by_value=True)
 
     created_by = fields.Nested(
         UserSchema, only=["id", "name", "email_address"], dump_only=True
@@ -440,7 +484,7 @@ class TemplateHistorySchema(BaseSchema):
 
 class ApiKeySchema(BaseSchema):
     created_by = field_for(models.ApiKey, "created_by", required=True)
-    key_type = field_for(models.ApiKey, "key_type", required=True)
+    key_type = auto_field(by_value=True)
     expiry_date = FlexibleDateTime()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -464,7 +508,7 @@ class JobSchema(BaseSchema):
     processing_started = FlexibleDateTime()
     processing_finished = FlexibleDateTime()
 
-    job_status = auto_field()
+    job_status = auto_field(by_value=True)
 
     scheduled_for = FlexibleDateTime()
     service_name = fields.Nested(
@@ -482,10 +526,10 @@ class JobSchema(BaseSchema):
         return job.template.name
 
     def get_template_type(self, job):
-        return job.template.template_type
+        return job.template.template_type.value
 
     @validates("scheduled_for")
-    def validate_scheduled_for(self, value):
+    def validate_scheduled_for(self, value, data_key):
         _validate_datetime_not_in_past(value)
         _validate_datetime_not_more_than_96_hours_in_future(value)
 
@@ -499,11 +543,11 @@ class JobSchema(BaseSchema):
         )
 
 
-class NotificationSchema(ma.Schema):
+class NotificationSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    status = fields.String(required=False)
+    status = fields.Enum(NotificationStatus, by_value=True, required=False)
     personalisation = fields.Dict(required=False)
 
 
@@ -511,11 +555,14 @@ class SmsNotificationSchema(NotificationSchema):
     to = fields.Str(required=True)
 
     @validates("to")
-    def validate_to(self, value):
+    def validate_to(self, value, data_key):
         try:
             validate_phone_number(value, international=True)
         except InvalidPhoneError as error:
-            raise ValidationError("Invalid phone number: {}".format(error))
+            current_app.logger.exception(
+                f"{data_key}: Invalid phone number ({str(error)}"
+            )
+            raise ValidationError(f"Invalid phone number: {str(error)}")
 
     @post_load
     def format_phone_number(self, item, **kwargs):
@@ -528,10 +575,11 @@ class EmailNotificationSchema(NotificationSchema):
     template = fields.Str(required=True)
 
     @validates("to")
-    def validate_to(self, value):
+    def validate_to(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
+            current_app.logger.exception(f"{data_key}: {str(e)}")
             raise ValidationError(str(e))
 
 
@@ -542,6 +590,7 @@ class SmsTemplateNotificationSchema(SmsNotificationSchema):
 
 class NotificationWithTemplateSchema(BaseSchema):
     class Meta(BaseSchema.Meta):
+        unknown = EXCLUDE
         model = models.Notification
         exclude = ("_personalisation",)
 
@@ -558,13 +607,15 @@ class NotificationWithTemplateSchema(BaseSchema):
         ],
         dump_only=True,
     )
+    template_version = fields.Integer()
     job = fields.Nested(JobSchema, only=["id", "original_file_name"], dump_only=True)
     created_by = fields.Nested(
         UserSchema, only=["id", "name", "email_address"], dump_only=True
     )
-    status = fields.String(required=False)
+    status = auto_field(by_value=True)
     personalisation = fields.Dict(required=False)
-    key_type = field_for(models.Notification, "key_type", required=True)
+    notification_type = auto_field(by_value=True)
+    key_type = auto_field(by_value=True)
     key_name = fields.String()
     created_at = FlexibleDateTime()
     updated_at = FlexibleDateTime()
@@ -579,84 +630,24 @@ class NotificationWithTemplateSchema(BaseSchema):
         return in_data
 
 
-class NotificationWithPersonalisationSchema(NotificationWithTemplateSchema):
-    template_history = fields.Nested(
-        TemplateHistorySchema,
-        attribute="template",
-        only=["id", "name", "template_type", "content", "subject", "version"],
-        dump_only=True,
-    )
-
-    class Meta(NotificationWithTemplateSchema.Meta):
-        # mark as many fields as possible as required since this is a public api.
-        # WARNING: Does _not_ reference fields computed in handle_template_merge, such as
-        # 'body', 'subject' [for emails], and 'content_char_count'
-        fields = (
-            # db rows
-            "billable_units",
-            "created_at",
-            "id",
-            "job_row_number",
-            "notification_type",
-            "reference",
-            "sent_at",
-            "sent_by",
-            "status",
-            "template_version",
-            "to",
-            "updated_at",
-            # computed fields
-            "personalisation",
-            # relationships
-            "api_key",
-            "job",
-            "service",
-            "template_history",
-        )
-        # Overwrite the `NotificationWithTemplateSchema` base class to not exclude `_personalisation`, which
-        # isn't a defined field for this class
-        exclude = ()
-
-    @pre_dump
-    def handle_personalisation_property(self, in_data, **kwargs):
-        self.personalisation = in_data.personalisation
-        return in_data
-
-    @post_dump
-    def handle_template_merge(self, in_data, **kwargs):
-        in_data["template"] = in_data.pop("template_history")
-        template = get_template_instance(
-            in_data["template"], in_data["personalisation"]
-        )
-        in_data["body"] = template.content_with_placeholders_filled_in
-        if in_data["template"]["template_type"] != TemplateType.SMS:
-            in_data["subject"] = template.subject
-            in_data["content_char_count"] = None
-        else:
-            in_data["content_char_count"] = template.content_count
-
-        in_data.pop("personalisation", None)
-        in_data["template"].pop("content", None)
-        in_data["template"].pop("subject", None)
-        return in_data
-
-
 class InvitedUserSchema(BaseSchema):
-    auth_type = field_for(models.InvitedUser, "auth_type")
+    auth_type = auto_field(by_value=True)
     created_at = FlexibleDateTime()
+    status = auto_field(by_value=True)
 
     class Meta(BaseSchema.Meta):
         model = models.InvitedUser
 
     @validates("email_address")
-    def validate_to(self, value):
+    def validate_to(self, value, data_key):
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
+            current_app.logger.exception(f"{data_key}: {str(e)}")
             raise ValidationError(str(e))
 
 
-class EmailDataSchema(ma.Schema):
+class EmailDataSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -669,36 +660,38 @@ class EmailDataSchema(ma.Schema):
         self.partial_email = partial_email
 
     @validates("email")
-    def validate_email(self, value):
+    def validate_email(self, value, data_key):
         if self.partial_email:
             return
         try:
             validate_email_address(value)
         except InvalidEmailError as e:
+            current_app.logger.exception(f"{data_key}: {str(e)}")
             raise ValidationError(str(e))
 
 
-class NotificationsFilterSchema(ma.Schema):
+class NotificationsFilterSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    template_type = fields.Nested(BaseTemplateSchema, only=["template_type"], many=True)
-    status = fields.Nested(NotificationModelSchema, only=["status"], many=True)
+    template_type = fields.Nested(TemplateTypeFieldOnlySchema, many=True)
+    status = fields.Nested(NotificationStatusFieldOnlySchema, many=True)
     page = fields.Int(required=False)
     page_size = fields.Int(required=False)
     limit_days = fields.Int(required=False)
     include_jobs = fields.Boolean(required=False)
     include_from_test_key = fields.Boolean(required=False)
     older_than = fields.UUID(required=False)
-    format_for_csv = fields.String()
+    format_for_csv = fields.Boolean()
     to = fields.String()
     include_one_off = fields.Boolean(required=False)
     count_pages = fields.Boolean(required=False)
 
     @pre_load
     def handle_multidict(self, in_data, **kwargs):
+        out_data = dict(in_data)
+
         if isinstance(in_data, dict) and hasattr(in_data, "getlist"):
-            out_data = dict([(k, in_data.get(k)) for k in in_data.keys()])
             if "template_type" in in_data:
                 out_data["template_type"] = [
                     {"template_type": x} for x in in_data.getlist("template_type")
@@ -712,22 +705,22 @@ class NotificationsFilterSchema(ma.Schema):
     def convert_schema_object_to_field(self, in_data, **kwargs):
         if "template_type" in in_data:
             in_data["template_type"] = [
-                x.template_type for x in in_data["template_type"]
+                x["template_type"] for x in in_data["template_type"]
             ]
         if "status" in in_data:
-            in_data["status"] = [x.status for x in in_data["status"]]
+            in_data["status"] = [x["status"] for x in in_data["status"]]
         return in_data
 
     @validates("page")
-    def validate_page(self, value):
+    def validate_page(self, value, data_key):
         _validate_positive_number(value)
 
     @validates("page_size")
-    def validate_page_size(self, value):
+    def validate_page_size(self, value, data_key):
         _validate_positive_number(value)
 
 
-class ServiceHistorySchema(ma.Schema):
+class ServiceHistorySchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -744,7 +737,7 @@ class ServiceHistorySchema(ma.Schema):
     version = fields.Integer()
 
 
-class ApiKeyHistorySchema(ma.Schema):
+class ApiKeyHistorySchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -774,8 +767,10 @@ class UnarchivedTemplateSchema(BaseSchema):
 
 
 # should not be used on its own for dumping - only for loading
-create_user_schema = UserSchema()
-user_update_schema_load_json = UserUpdateAttributeSchema(load_json=True, partial=True)
+create_user_schema = UserSchema(transient=True)
+user_update_schema_load_json = UserUpdateAttributeSchema(
+    load_json=True, partial=True, transient=True
+)
 user_update_password_schema_load_json = UserUpdatePasswordSchema(
     only=("_password",), load_json=True, partial=True
 )
@@ -784,20 +779,19 @@ detailed_service_schema = DetailedServiceSchema()
 template_schema = TemplateSchema()
 template_schema_no_detail = TemplateSchemaNoDetail()
 api_key_schema = ApiKeySchema()
-job_schema = JobSchema()
 sms_template_notification_schema = SmsTemplateNotificationSchema()
 email_notification_schema = EmailNotificationSchema()
 notification_schema = NotificationModelSchema()
 notification_with_template_schema = NotificationWithTemplateSchema()
-notification_with_personalisation_schema = NotificationWithPersonalisationSchema()
 invited_user_schema = InvitedUserSchema()
 email_data_request_schema = EmailDataSchema()
 partial_email_data_request_schema = EmailDataSchema(partial_email=True)
 notifications_filter_schema = NotificationsFilterSchema()
+public_notification_response_schema = NotificationWithTemplateSchema()
 service_history_schema = ServiceHistorySchema()
 api_key_history_schema = ApiKeyHistorySchema()
 template_history_schema = TemplateHistorySchema()
 event_schema = EventSchema()
 provider_details_schema = ProviderDetailsSchema()
 provider_details_history_schema = ProviderDetailsHistorySchema()
-unarchived_template_schema = UnarchivedTemplateSchema()
+job_schema = JobSchema()

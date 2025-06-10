@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
 
+from app import db
 from app.aws.s3 import (
     get_job_metadata_from_s3,
     get_personalisation_from_s3,
@@ -30,10 +31,10 @@ from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus
 from app.errors import InvalidRequest, register_errors
 from app.schemas import (
-    job_schema,
+    JobSchema,
+    UnarchivedTemplateSchema,
     notification_with_template_schema,
     notifications_filter_schema,
-    unarchived_template_schema,
 )
 from app.utils import midnight_n_days_ago, pagination_links
 
@@ -47,7 +48,7 @@ register_errors(job_blueprint)
 def get_job_by_service_and_job_id(service_id, job_id):
     job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
     statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
-    data = job_schema.dump(job)
+    data = JobSchema(session=db.session).dump(job)
 
     data["statistics"] = [
         {"status": statistic[1], "count": statistic[0]} for statistic in statistics
@@ -257,14 +258,15 @@ def create_job(service_id):
     if data.get("valid") != "True":
         raise InvalidRequest("File is not valid, can't create job", 400)
 
-    errors = unarchived_template_schema.validate({"archived": template.archived})
+    schema = UnarchivedTemplateSchema(session=db.session)
+    errors = schema.validate({"archived": template.archived})
 
     if errors:
         raise InvalidRequest(errors, status_code=400)
 
     data.update({"template_version": template.version})
 
-    job = job_schema.load(data)
+    job = JobSchema(session=db.session).load(data)
     # See admin #1148, for whatever reason schema loading doesn't load this
     if original_file_name is not None:
         job.original_file_name = original_file_name
@@ -281,7 +283,7 @@ def create_job(service_id):
             [str(job.id)], {"sender_id": sender_id}, queue=QueueNames.JOBS
         )
 
-    job_json = job_schema.dump(job)
+    job_json = JobSchema(session=db.session).dump(job)
     job_json["statistics"] = []
 
     return jsonify(data=job_json), 201
@@ -317,7 +319,7 @@ def get_paginated_jobs(
         page_size=current_app.config["PAGE_SIZE"],
         statuses=statuses,
     )
-    data = job_schema.dump(pagination.items, many=True)
+    data = JobSchema(session=db.session).dump(pagination.items, many=True)
     for job_data in data:
         start = job_data["processing_started"]
         start = dateutil.parser.parse(start).replace(tzinfo=None) if start else None
