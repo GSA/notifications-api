@@ -64,7 +64,9 @@ def get_notification_by_id(notification_id):
     schema = PublicNotificationResponseSchema()
     schema.context = {
         "notification_instance": notification,
-        "template_subject": getattr(template, "subject", None) if hasattr(template, "subject") else None
+        "template_subject": (
+            getattr(template, "subject", None) if hasattr(template, "subject") else None
+        ),
     }
     serialized = schema.dump(notification)
 
