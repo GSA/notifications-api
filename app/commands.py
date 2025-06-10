@@ -11,7 +11,6 @@ import flask
 from click_datetime import Datetime as click_dt
 from faker import Faker
 from flask import current_app, json
-from notifications_python_client.authentication import create_jwt_token
 from sqlalchemy import and_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -58,6 +57,7 @@ from app.models import (
     User,
 )
 from app.utils import utc_now
+from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
 from tests.app.db import (
