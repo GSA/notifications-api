@@ -188,9 +188,9 @@ def cleanup_old_s3_objects():
                 retained_services.append(service_id)
 
         return service_ids
-    except Exception:
+    except Exception as error:
         current_app.logger.exception(
-            "#delete-old-s3-objects An error occurred while cleaning up old s3 objects",
+            f"#delete-old-s3-objects An error occurred while cleaning up old s3 objects: str(error)"
         )
 
 
