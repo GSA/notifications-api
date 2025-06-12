@@ -558,8 +558,8 @@ def test_get_notification_by_id_returns_merged_template_content(
 def test_get_notification_by_id_returns_merged_template_content_for_email(
     client, sample_email_template_with_placeholders, mocker
 ):
-    mock_s3 = mocker.patch("app.notifications.rest.get_personalisation_from_s3")
-    mock_s3.return_value = {"name": "foo"}
+    # mock_s3 = mocker.patch("app.notifications.rest.get_personalisation_from_s3")
+    # mock_s3.return_value = {"name": "foo"}
     sample_notification = create_notification(
         sample_email_template_with_placeholders, personalisation={"name": "world"}
     )

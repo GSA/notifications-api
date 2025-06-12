@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 
+from app import db
 from app.dao.events_dao import dao_create_event
 from app.errors import register_errors
 from app.schemas import event_schema
@@ -11,6 +12,6 @@ register_errors(events)
 @events.route("", methods=["POST"])
 def create_event():
     data = request.get_json()
-    event = event_schema.load(data)
+    event = event_schema.load(data, session=db.session)
     dao_create_event(event)
     return jsonify(data=event_schema.dump(event)), 201
