@@ -24,14 +24,20 @@ jobs:
           terraform_wrapper: false
 
       - name: Check for drift
-        uses: dflook/terraform-check@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
-          TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
-          TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-        with:
-          path: terraform/staging
+        run: |
+          cd terraform/staging
+          terraform init
+          terraform plan -detailed-exitcode
+          exit_code=$?
+          if [ $exit_code -eq 0 ]; then
+            echo "No changes detected.  Intrastructure is up-to-date."
+          elif [ $exit_code -eq 2 ]; then
+            echo "Changes detected.  Infrastructure drift found."
+            exit 1
+          else
+            echo "Error running terraform plan."
+            exit $exit_code
+          fi
 
   check_demo_drift:
     runs-on: ubuntu-latest
