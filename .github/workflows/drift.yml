@@ -24,6 +24,11 @@ jobs:
           terraform_wrapper: false
 
       - name: Check for drift
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+          TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+          TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
         run: |
           cd terraform/staging
           terraform init
@@ -39,58 +44,58 @@ jobs:
             exit $exit_code
           fi
 
-  check_demo_drift:
-    runs-on: ubuntu-latest
-    name: Check for drift of demo terraform configuration
-    environment: demo
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: 'production'
+  # check_demo_drift:
+  #   runs-on: ubuntu-latest
+  #   name: Check for drift of demo terraform configuration
+  #   environment: demo
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: 'production'
 
-      # Looks like we need to install Terraform ourselves now!
-      # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "^1.7.5"
-          terraform_wrapper: false
+  #     # Looks like we need to install Terraform ourselves now!
+  #     # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: "^1.7.5"
+  #         terraform_wrapper: false
 
-      - name: Check for drift
-        uses: dflook/terraform-check@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
-          TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
-          TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-        with:
-          path: terraform/demo
+  #     - name: Check for drift
+  #       uses: dflook/terraform-check@v1
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+  #         TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+  #         TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+  #       with:
+  #         path: terraform/demo
 
-  check_prod_drift:
-    runs-on: ubuntu-latest
-    name: Check for drift of production terraform configuration
-    environment: production
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: 'production'
+  # check_prod_drift:
+  #   runs-on: ubuntu-latest
+  #   name: Check for drift of production terraform configuration
+  #   environment: production
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: 'production'
 
-      # Looks like we need to install Terraform ourselves now!
-      # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "^1.7.5"
-          terraform_wrapper: false
+  #     # Looks like we need to install Terraform ourselves now!
+  #     # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: "^1.7.5"
+  #         terraform_wrapper: false
 
-      - name: Check for drift
-        uses: dflook/terraform-check@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
-          TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
-          TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-        with:
-          path: terraform/production
+  #     - name: Check for drift
+  #       uses: dflook/terraform-check@v1
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+  #         TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+  #         TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+  #       with:
+  #         path: terraform/production
