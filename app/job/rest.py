@@ -45,12 +45,16 @@ job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id
 register_errors(job_blueprint)
 
 
-def is_suspicious_input(str):
+def is_suspicious_input(input_str):
+    if not isinstance(input_str, str):
+        return True
     pattern = r"(?i)\b(OR|AND|UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|ALTER|--|/\*|\bpg_sleep\b|\bsleep\b)|[';]{2,}"  # noqa
-    return bool(re.search(pattern, str))
+    return bool(re.search(pattern, input_str))
 
 
 def is_valid_id(id):
+    if not isinstance(id, str):
+        return True
     return bool(re.match(r"^[a-zA-Z0-9_-]{1,32}$", id))
 
 
