@@ -16,6 +16,7 @@ from app.enums import (
     NotificationType,
     TemplateType,
 )
+from app.job.rest import is_suspicious_input, is_valid_id
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -584,6 +585,22 @@ def test_get_all_notifications_for_job_returns_correct_format(
     assert len(resp["notifications"]) == 1
     assert resp["notifications"][0]["id"] == str(sample_notification_with_job.id)
     assert resp["notifications"][0]["status"] == sample_notification_with_job.status
+
+
+def test_is_valid_id(sample_job):
+    returnVal = is_valid_id(sample_job.service_id)
+    assert returnVal is True
+
+    returnVal = is_valid_id("abc pgsleep(1)")
+    assert returnVal is False
+
+
+def test_is_suspicious_input(sample_job):
+    returnVal = is_suspicious_input(sample_job.id)
+    assert returnVal is False
+
+    returnVal = is_suspicious_input("1 OR pg_sleep(1)")
+    assert returnVal is True
 
 
 def test_get_notification_count_for_job_id(admin_request, mocker, sample_job):

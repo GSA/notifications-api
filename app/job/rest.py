@@ -47,7 +47,7 @@ register_errors(job_blueprint)
 
 def is_suspicious_input(input_str):
     if not isinstance(input_str, str):
-        return True
+        return False
     pattern = r"(?i)\b(OR|AND|UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|ALTER|--|/\*|\bpg_sleep\b|\bsleep\b)|[';]{2,}"  # noqa
     return bool(re.search(pattern, input_str))
 
@@ -55,7 +55,7 @@ def is_suspicious_input(input_str):
 def is_valid_id(id):
     if not isinstance(id, str):
         return True
-    return bool(re.match(r"^[a-zA-Z0-9_-]{1,32}$", id))
+    return bool(re.match(r"^[a-zA-Z0-9_-]{1,50}$", id))
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
@@ -209,8 +209,14 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
 def get_notification_count_for_job_id(service_id, job_id):
     if is_suspicious_input(service_id) or is_suspicious_input(job_id):
+        current_app.logger.error(
+            f"Service Id {service_id} is suspicious input or job id {job_id} is."
+        )
         abort(403)
     if not is_valid_id(service_id) or not is_valid_id(job_id):
+        current_app.logger.error(
+            f"service id {service_id} or job_id {job_id} is not a valid id"
+        )
         abort(403)
     dao_get_job_by_service_id_and_job_id(service_id, job_id)
     count = dao_get_notification_count_for_job_id(job_id=job_id)
