@@ -1,7 +1,8 @@
+import re
 from zoneinfo import ZoneInfo
 
 import dateutil
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, abort, current_app, jsonify, request
 
 from app import db
 from app.aws.s3 import (
@@ -42,6 +43,15 @@ job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id
 
 
 register_errors(job_blueprint)
+
+
+def is_suspicious_input(str):
+    pattern = r"(?i)\b(OR|AND|UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|ALTER|--|/\*|\bpg_sleep\b|\bsleep\b)|[';]{2,}"  # noqa
+    return bool(re.search(pattern, str))
+
+
+def is_valid_id(id):
+    return bool(re.match(r"^[a-zA-Z0-9_-]{1,32}$", id))
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
@@ -194,6 +204,10 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
 def get_notification_count_for_job_id(service_id, job_id):
+    if is_suspicious_input(service_id) or is_suspicious_input(job_id):
+        abort(403)
+    if not is_valid_id(service_id) or not is_valid_id(job_id):
+        abort(403)
     dao_get_job_by_service_id_and_job_id(service_id, job_id)
     count = dao_get_notification_count_for_job_id(job_id=job_id)
     return jsonify(count=count), 200
