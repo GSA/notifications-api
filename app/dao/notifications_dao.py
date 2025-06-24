@@ -112,17 +112,17 @@ def dao_create_notification(notification):
                 except ValueError:
                     orig_time = datetime.strptime(orig_time, "%Y-%m-%d")
                 diff_time = now_time - orig_time
-            current_app.logger.error(
+            current_app.logger.warning(
                 f"dao_create_notification orig created at: {orig_time} and now created at: {now_time}"
             )
             if diff_time.total_seconds() > 300:
-                current_app.logger.error(
+                current_app.logger.warning(
                     "Something is wrong with notification.created_at in email!"
                 )
                 if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
                     notification.created_at = now_time
                     dao_update_notification(notification)
-                    current_app.logger.error(
+                    current_app.logger.warning(
                         f"Email notification created_at reset to   {notification.created_at}"
                     )
 
