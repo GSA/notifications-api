@@ -5,6 +5,7 @@ from unittest.mock import ANY
 from zoneinfo import ZoneInfo
 
 import pytest
+import werkzeug
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -16,7 +17,7 @@ from app.enums import (
     NotificationType,
     TemplateType,
 )
-from app.job.rest import is_suspicious_input, is_valid_id
+from app.job.rest import check_suspicious_id, is_suspicious_input, is_valid_id
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -593,6 +594,15 @@ def test_is_valid_id(sample_job):
 
     returnVal = is_valid_id("abc pgsleep(1)")
     assert returnVal is False
+
+
+def test_check_suspicious_id(sample_job):
+    # This should be good
+    check_suspicious_id(sample_job.id, sample_job.service_id)
+
+    # This should be bad
+    with pytest.raises(werkzeug.exceptions.Forbidden):
+        check_suspicious_id(sample_job.id, "what is this???")
 
 
 def test_is_suspicious_input(sample_job):

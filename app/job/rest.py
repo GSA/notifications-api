@@ -68,8 +68,7 @@ def check_suspicious_id(*args):
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
 def get_job_by_service_and_job_id(service_id, job_id):
-    check_suspicious_id(service_id)
-    check_suspicious_id(job_id)
+    check_suspicious_id(service_id, job_id)
     job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
     statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
     data = JobSchema(session=db.session).dump(job)
@@ -83,8 +82,7 @@ def get_job_by_service_and_job_id(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])
 def cancel_job(service_id, job_id):
-    check_suspicious_id(service_id)
-    check_suspicious_id(job_id)
+    check_suspicious_id(service_id, job_id)
 
     job = dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id)
     job.job_status = JobStatus.CANCELLED
@@ -95,8 +93,7 @@ def cancel_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
 def get_all_notifications_for_service_job(service_id, job_id):
-    check_suspicious_id(service_id)
-    check_suspicious_id(job_id)
+    check_suspicious_id(service_id, job_id)
 
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
@@ -159,8 +156,7 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
 def get_recent_notifications_for_service_job(service_id, job_id):
-    check_suspicious_id(service_id)
-    check_suspicious_id(job_id)
+    check_suspicious_id(service_id, job_id)
 
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
@@ -227,8 +223,7 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
 def get_notification_count_for_job_id(service_id, job_id):
-    check_suspicious_id(service_id)
-    check_suspicious_id(job_id)
+    check_suspicious_id(service_id, job_id)
 
     dao_get_job_by_service_id_and_job_id(service_id, job_id)
     count = dao_get_notification_count_for_job_id(job_id=job_id)
