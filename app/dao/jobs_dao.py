@@ -157,17 +157,17 @@ def dao_create_job(job):
     orig_time = job.created_at
     now_time = utc_now()
     diff_time = now_time - orig_time
-    current_app.logger.info(
+    current_app.logger.warning(
         f"#notify-debug-admin-1859 dao_create_job orig created at {orig_time} and now {now_time}"
     )
     if diff_time.total_seconds() > 300:  # It should be only a few seconds diff at most
-        current_app.logger.error(
+        current_app.logger.warning(
             "#notify-debug-admin-1859 Something is wrong with job.created_at!"
         )
         if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
             job.created_at = now_time
             dao_update_job(job)
-            current_app.logger.error(
+            current_app.logger.warning(
                 f"#notify-debug-admin-1859 Job created_at reset to {job.created_at}"
             )
 
