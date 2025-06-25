@@ -9,7 +9,7 @@ It's cloned from the brilliant work of the team at
 This repo contains:
 
 - A public-facing REST API for Notify.gov, which teams can integrate with using
- [API clients built by UK](https://www.notifications.service.gov.uk/documentation).
+  [API clients built by UK](https://www.notifications.service.gov.uk/documentation).
 - An internal-only REST API built using Flask to manage services, users,
   templates, etc., which the
   [Notify.gov Admin UI](http://github.com/18F/notifications-admin) talks to.
@@ -18,7 +18,6 @@ This repo contains:
 
 Our other repositories are:
 
-- [notifications-admin](https://github.com/GSA/notifications-admin)
 - [us-notify-compliance](https://github.com/GSA/us-notify-compliance/)
 - [notify-python-demo](https://github.com/GSA/notify-python-demo)
 
@@ -53,7 +52,7 @@ recommended. This helps avoid some known installation issues. Start by following
 the installation instructions on the Homebrew homepage.
 
 **Note:** You will also need Xcode or the Xcode Command Line Tools installed. The
-quickest way to do this is is by installing the command line tools in the shell:
+quickest way to do this is by installing the command line tools in the shell:
 
 ```sh
 xcode-select –-install
@@ -71,11 +70,13 @@ Your system `$PATH` environment variable is likely set in one of these
 locations:
 
 For BASH shells:
+
 - `~/.bashrc`
 - `~/.bash_profile`
 - `~/.profile`
 
 For ZSH shells:
+
 - `~/.zshrc`
 - `~/.zprofile`
 
@@ -85,7 +86,7 @@ environments.
 Which file you need to modify depends on whether or not you are running an
 interactive shell or a login shell
 (see [this Stack Overflow post](https://stackoverflow.com/questions/18186929/what-are-the-differences-between-a-login-shell-and-interactive-shell)
-for an explanation of the differences).  If you're still not sure, please ask
+for an explanation of the differences). If you're still not sure, please ask
 the team for help!
 
 Once you determine which file you'll need to modify, add these lines before any
@@ -147,7 +148,7 @@ tfenv use 1.7.x # x = the patch version installed
 #### Python Installation
 
 Now we're going to install a tool to help us manage Python versions and
-virtual environments on our system.  First, we'll install
+virtual environments on our system. First, we'll install
 [pyenv](https://github.com/pyenv/pyenv) and one of its plugins,
 [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv), with Homebrew:
 
@@ -201,10 +202,6 @@ requires a version number to be included with it when installing it:
 brew install postgresql@15
 ```
 
-_NOTE: This project currently works with PostgreSQL version 15.x; version 12.x is currently used in our hosted environments._
-
-_NOTE: If you have a pre-existing instance of PSQL installed because of another product like PGAdmin, your database configuration may differ from the instructions above, which uses Homebrew to install and configure PostgreSQL.  If this is the case for you, you may have to either account for slightly different user permissions with the database, or uninstall PGAdmin and/or PostgreSQL itself, and reinstall it with Homebrew to follow the steps above._
-
 You'll now need to modify (or create, if it doesn't already exist) the `$PATH`
 environment variable to include the PostgreSQL binaries. Open the file you have
 worked with before to adjust your shell environment with the previous steps and
@@ -223,6 +220,10 @@ this, which will include the PostgreSQL binaries:
 ```
 export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
 ```
+
+_NOTE: This project currently works with PostgreSQL version 15.x; version 12.x is currently used in our hosted environments._
+
+_NOTE: If you have a pre-existing instance of PSQL installed because of another product like PGAdmin, your database configuration may differ from the instructions above, which uses Homebrew to install and configure PostgreSQL. If this is the case for you, you may have to either account for slightly different user permissions with the database, or uninstall PGAdmin and/or PostgreSQL itself, and reinstall it with Homebrew to follow the steps above._
 
 _NOTE: You don't want to overwrite your existing `$PATH` environment variable! Hence the reason why it is included on the end like this; paths are separated by a colon._
 
@@ -268,7 +269,7 @@ pyenv virtualenv 3.13.2 notify-api
 pyenv local notify-api
 ```
 
-_If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently._
+_NOTE: If you're not sure which version of Python was installed with `pyenv`, you can check by running `pyenv versions` and it'll list everything available currently._
 
 Now [log into cloud.gov](https://cloud.gov/docs/getting-started/setup/#set-up-the-command-line)
 in the command line by using this command:
@@ -276,6 +277,7 @@ in the command line by using this command:
 ```sh
 cf login -a api.fr.cloud.gov --sso
 ```
+
 If you are offered a choice of orgs, select `gsa-tts-benefits-studio`.
 For the space, choose `notify-local-dev` to start with (assuming you are
 setting up local development).
@@ -317,7 +319,7 @@ we'll use `3.13` in our example here since we recently upgraded to this version:
 pyenv install 3.13
 ```
 
-Next, delete the virtual environment you previously had set up.  If you followed
+Next, delete the virtual environment you previously had set up. If you followed
 the instructions above with the first-time set up, you can do this with `pyenv`:
 
 ```sh
@@ -336,10 +338,9 @@ pyenv local notify-api
 At this point, proceed with the rest of the instructions here in the README and
 you'll be set with an upgraded version of Python.
 
-_If you're not sure about the details of your current virtual environment, you can run `poetry env info` to get more information. If you've been using `pyenv` for everything, you can also see all available virtual environments with `pyenv virtualenvs`._
+_NOTE: If you're not sure about the details of your current virtual environment, you can run `poetry env info` to get more information. If you've been using `pyenv` for everything, you can also see all available virtual environments with `pyenv virtualenvs`._
 
-
-#### Poetry upgrades ####
+#### Poetry upgrades
 
 If you are doing a new project setup, then after you install poetry you need to install the export plugin
 
@@ -356,7 +357,7 @@ poetry self add poetry-export-plugin
 
 ### Final environment setup
 
-There's one final thing to adjust in the newly created `.env` file.  This
+There's one final thing to adjust in the newly created `.env` file. This
 project has support for end-to-end (E2E) tests and has some additional checks
 for the presence of an E2E test user so that it can be authenticated properly.
 
@@ -380,8 +381,8 @@ variable to something else, preferably a lengthy passphrase.**
 With those two environment variable set, the database migrations will run
 properly and an E2E test user will be ready to go for use in the admin project.
 
-_Note:  Whatever you set these two environment variables to, you'll need to
-match their values on the admin side.  Please see the admin README and
+_Note: Whatever you set these two environment variables to, you'll need to
+match their values on the admin side. Please see the admin README and
 documentation for more details._
 
 ## Running the Project and Routine Maintenance
@@ -407,7 +408,7 @@ make run-procfile
 If it runs correctly, you will be able to visit http://127.0.0.1:6011/ and see
 JSON from the API in your web browser.
 
-This will run all of the services within the same shell session.  If you need to
+This will run all of the services within the same shell session. If you need to
 run them separately to help with debugging or tracing logs, you can do so by
 opening three sepearate shell sessions and running one of these commands in each
 one separately:
@@ -419,16 +420,27 @@ one separately:
 ## Python Dependency Management
 
 We're using [`Poetry`](https://python-poetry.org/) for managing our Python
-dependencies and local virtual environments. When it comes to managing the
-Python dependencies, there are a couple of things to bear in mind.
+dependencies and local virtual environments.
 
-For situations where you manually manipulate the `pyproject.toml` file, you
-should use the `make py-lock` command to sync the `poetry.lock` file. This will
+This project has two key dependency files that must be managed together:
+
+- `pyproject.toml` - Contains the dependency specifications
+- `poetry.lock` - Contains the exact versions of all dependencies (including transitive ones)
+
+### Managing Dependencies
+
+There are two approaches for updating dependencies:
+
+#### 1. Manual manipulation of `pyproject.toml`
+
+If you manually edit the `pyproject.toml` file, you should use the `make py-lock` command to sync the `poetry.lock` file. This will
 ensure that you don't inadvertently bring in other transitive dependency updates
 that have not been fully tested with the project yet.
 
-If you're just trying to update a dependency to a newer (or the latest) version,
-you should let Poetry take care of that for you by running the following:
+#### 2. Using Poetry to update dependencies (recommended)
+
+If you're updating a dependency to a newer (or the latest) version,
+let Poetry handle it by running:
 
 ```sh
 poetry update <dependency> [<dependency>...]
@@ -441,9 +453,9 @@ will do the following for you:
 - Install the new versions
 - Update and sync the `poetry.lock` file
 
-In either situation, once you are finished and have verified the dependency
-changes are working, please be sure to commit both the `pyproject.toml` and
-`poetry.lock` files.
+**Important:** In either situation, once you are finished and have verified the dependency
+changes are working, you must commit both the `pyproject.toml` and
+`poetry.lock` files together.
 
 ## Known Installation Issues
 
@@ -513,7 +525,7 @@ instructions above for more details.
 - [Pull Requests](.docs/all.md#pull-requests)
   - [Getting Started](.docs/all.md#getting-started)
   - [Description](.docs/all.md#description)
-  - [TODO (optional)](.docs/all.md#todo-(optional))
+  - [TODO (optional)](<.docs/all.md#todo-(optional)>)
   - [Security Considerations](.docs/all.md#security-considerations)
 - [Code Reviews](.docs/all.md#code-reviews)
   - [For the reviewer](.docs/all.md#for-the-reviewer)
