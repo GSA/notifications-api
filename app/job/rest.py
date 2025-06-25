@@ -58,11 +58,12 @@ def is_valid_id(id):
     return bool(re.match(r"^[a-zA-Z0-9_-]{1,50}$", id))
 
 
-def check_suspicious_id(id):
-    if not is_valid_id(id):
-        abort(403)
-    if is_suspicious_input(id):
-        abort(403)
+def check_suspicious_id(*args):
+    for id in args:
+        if not is_valid_id(id):
+            abort(403)
+        if is_suspicious_input(id):
+            abort(403)
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
