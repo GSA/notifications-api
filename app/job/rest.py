@@ -48,7 +48,35 @@ register_errors(job_blueprint)
 def is_suspicious_input(input_str):
     if not isinstance(input_str, str):
         return False
-    pattern = r"(?i)\b(OR|AND|UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|ALTER|--|/\*|\bpg_sleep\b|\bsleep\b)|[';]{2,}"  # noqa
+
+    pattern = re.compile(
+        r"""
+                         (?i) # case insensite
+                         \b  # word boundary
+                         ( # start of group for SQL keywords
+                         OR   # match SQL keyword OR
+                         |AND
+                         |UNION
+                         |SELECT
+                         |DROP
+                         |INSERT
+                         |UPDATE
+                         |DELETE
+                         |EXEC
+                         |TRUNCATE
+                         |CREATE
+                         |ALTER
+                         |-- # match SQL single-line comment
+                         |/\* # match SQL multi-line comment
+                         |\bpg_sleep\b # Match PostgreSQL 'pg_sleep' function
+
+                         |\bsleep\b # Match SQL Server 'sleep' function
+                         ) # End SQL keywords and function group
+                         | # OR operator to include an alternate pattern
+                         [';]{2,} # Match two or more consecutive single quotes or semi-colons
+                         """,
+        re.VERBOSE,
+    )
     return bool(re.search(pattern, input_str))
 
 
