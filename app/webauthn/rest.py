@@ -9,6 +9,7 @@ from app.dao.webauthn_credential_dao import (
 )
 from app.errors import InvalidRequest, register_errors
 from app.schema_validation import validate
+from app.utils import check_suspicious_id
 from app.webauthn.webauthn_schema import (
     post_create_webauthn_credential_schema,
     post_update_webauthn_credential_schema,
@@ -28,6 +29,7 @@ def get_webauthn_credentials(user_id):
 
 @webauthn_blueprint.route("", methods=["POST"])
 def create_webauthn_credential(user_id):
+    check_suspicious_id(user_id)
     data = request.get_json()
     validate(data, post_create_webauthn_credential_schema)
     webauthn_credential = dao_create_webauthn_credential(
@@ -42,6 +44,7 @@ def create_webauthn_credential(user_id):
 
 @webauthn_blueprint.route("/<uuid:webauthn_credential_id>", methods=["POST"])
 def update_webauthn_credential(user_id, webauthn_credential_id):
+    check_suspicious_id(user_id, webauthn_credential_id)
     data = request.get_json()
     validate(data, post_update_webauthn_credential_schema)
 
@@ -56,6 +59,7 @@ def update_webauthn_credential(user_id, webauthn_credential_id):
 
 @webauthn_blueprint.route("/<uuid:webauthn_credential_id>", methods=["DELETE"])
 def delete_webauthn_credential(user_id, webauthn_credential_id):
+    check_suspicious_id(user_id, webauthn_credential_id)
     webauthn_credential = dao_get_webauthn_credential_by_user_and_id(
         user_id, webauthn_credential_id
     )

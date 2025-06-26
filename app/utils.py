@@ -1,7 +1,8 @@
 import os
+import re
 from datetime import datetime, timedelta, timezone
 
-from flask import current_app, url_for
+from flask import abort, current_app, url_for
 from sqlalchemy import func
 
 from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
@@ -158,3 +159,52 @@ def emit_job_update_summary(job):
         },
         room=f"job-{job.id}",
     )
+
+
+def is_suspicious_input(input_str):
+    if not isinstance(input_str, str):
+        return False
+
+    pattern = re.compile(
+        r"""
+                         (?i) # case insensite
+                         \b  # word boundary
+                         ( # start of group for SQL keywords
+                         OR   # match SQL keyword OR
+                         |AND
+                         |UNION
+                         |SELECT
+                         |DROP
+                         |INSERT
+                         |UPDATE
+                         |DELETE
+                         |EXEC
+                         |TRUNCATE
+                         |CREATE
+                         |ALTER
+                         |-- # match SQL single-line comment
+                         |/\* # match SQL multi-line comment
+                         |\bpg_sleep\b # Match PostgreSQL 'pg_sleep' function
+
+                         |\bsleep\b # Match SQL Server 'sleep' function
+                         ) # End SQL keywords and function group
+                         | # OR operator to include an alternate pattern
+                         [';]{2,} # Match two or more consecutive single quotes or semi-colons
+                         """,
+        re.VERBOSE,
+    )
+    return bool(re.search(pattern, input_str))
+
+
+def is_valid_id(id):
+    if not isinstance(id, str):
+        return True
+    return bool(re.match(r"^[a-zA-Z0-9_-]{1,50}$", id))
+
+
+def check_suspicious_id(*args):
+    for id in args:
+        if not is_valid_id(id):
+            abort(403)
+        if is_suspicious_input(id):
+            abort(403)

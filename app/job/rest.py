@@ -1,8 +1,7 @@
-import re
 from zoneinfo import ZoneInfo
 
 import dateutil
-from flask import Blueprint, abort, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from app import db
 from app.aws.s3 import (
@@ -37,61 +36,12 @@ from app.schemas import (
     notification_with_template_schema,
     notifications_filter_schema,
 )
-from app.utils import midnight_n_days_ago, pagination_links
+from app.utils import check_suspicious_id, midnight_n_days_ago, pagination_links
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
 
 register_errors(job_blueprint)
-
-
-def is_suspicious_input(input_str):
-    if not isinstance(input_str, str):
-        return False
-
-    pattern = re.compile(
-        r"""
-                         (?i) # case insensite
-                         \b  # word boundary
-                         ( # start of group for SQL keywords
-                         OR   # match SQL keyword OR
-                         |AND
-                         |UNION
-                         |SELECT
-                         |DROP
-                         |INSERT
-                         |UPDATE
-                         |DELETE
-                         |EXEC
-                         |TRUNCATE
-                         |CREATE
-                         |ALTER
-                         |-- # match SQL single-line comment
-                         |/\* # match SQL multi-line comment
-                         |\bpg_sleep\b # Match PostgreSQL 'pg_sleep' function
-
-                         |\bsleep\b # Match SQL Server 'sleep' function
-                         ) # End SQL keywords and function group
-                         | # OR operator to include an alternate pattern
-                         [';]{2,} # Match two or more consecutive single quotes or semi-colons
-                         """,
-        re.VERBOSE,
-    )
-    return bool(re.search(pattern, input_str))
-
-
-def is_valid_id(id):
-    if not isinstance(id, str):
-        return True
-    return bool(re.match(r"^[a-zA-Z0-9_-]{1,50}$", id))
-
-
-def check_suspicious_id(*args):
-    for id in args:
-        if not is_valid_id(id):
-            abort(403)
-        if is_suspicious_input(id):
-            abort(403)
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
