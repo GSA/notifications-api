@@ -40,7 +40,7 @@ def test_send_sms_notification_full(client):
         sms_sender_id="sender-001",
     )
     client.post.assert_called_once_with(
-        "v2/notifications/sms",
+        "/v2/notifications/sms",
         data={
             "phone_number": "1234567890",
             "template_id": "template-id",
