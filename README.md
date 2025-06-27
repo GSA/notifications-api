@@ -260,12 +260,12 @@ git clone git@github.com:GSA/notifications-api.git
 
 Now go into the project directory (`notifications-api` by default), create a
 virtual environment, and set the local Python version to point to the virtual
-environment (assumes version Python `3.12.7` is what is installed on your
+environment (assumes version Python `3.12.9` is what is installed on your
 machine):
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.12.7 notify-api
+pyenv virtualenv 3.12.9 notify-api
 pyenv local notify-api
 ```
 
@@ -331,7 +331,7 @@ environment with the newer version of Python you just installed:
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.12.7 notify-api
+pyenv virtualenv 3.12.9 notify-api
 pyenv local notify-api
 ```
 
