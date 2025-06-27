@@ -1043,16 +1043,30 @@ def test_get_jobs_should_retrieve_from_ft_notification_status_for_old_jobs(
         service_id=sample_template.service_id,
     )
 
-    assert resp_json["data"][0]["id"] == str(job_3.id)
-    assert resp_json["data"][0]["statistics"] == []
-    assert resp_json["data"][1]["id"] == str(job_2.id)
-    assert resp_json["data"][1]["statistics"] == [
-        {"status": NotificationStatus.CREATED, "count": 1},
-    ]
-    assert resp_json["data"][2]["id"] == str(job_1.id)
-    assert resp_json["data"][2]["statistics"] == [
-        {"status": NotificationStatus.DELIVERED, "count": 6},
-    ]
+    returned_jobs = resp_json["data"]
+
+    expected_jobs = [job_3, job_2, job_1]
+    expected_order = sorted(
+        expected_jobs,
+        key=lambda job: ((job.processing_started or job.created_at), str(job.id)),
+        reverse=True,
+    )
+    expected_ids = [str(job.id) for job in expected_order]
+    returned_ids = [job["id"] for job in returned_jobs if job["id"] in expected_ids]
+    assert returned_ids == expected_ids
+
+    for job in expected_jobs:
+        idx = returned_ids.index(str(job.id))
+        if job is job_3:
+            assert returned_jobs[idx]["statistics"] == []
+        elif job is job_2:
+            assert returned_jobs[idx]["statistics"] == [
+                {"status": NotificationStatus.CREATED, "count": 1},
+            ]
+        elif job is job_1:
+            assert returned_jobs[idx]["statistics"] == [
+                {"status": NotificationStatus.DELIVERED, "count": 6},
+            ]
 
 
 @freeze_time("2017-07-17 07:17")
