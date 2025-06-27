@@ -608,7 +608,7 @@ def test_get_s3_client_with_env_credentials():
         os.environ,
         {
             "AWS_ACCESS_KEY_ID": "test-key",
-            "AWS_SECRET_ACCESS_ID": "test-sekret",
+            "AWS_SECRET_ACCESS_KEY": "test-sekret",  # pragma: allowlist secret
             "AWS_DEFAULT_REGION": "us-north-1",
         },
     ):
