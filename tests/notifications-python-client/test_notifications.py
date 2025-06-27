@@ -54,7 +54,7 @@ def test_send_sms_notification_full(client):
 def test_send_email_notification(client):
     client.send_email_notification("test@example.com", "template-id")
     client.post.assert_called_once_with(
-        "/v2/ntoifications/email",
+        "/v2/notifications/email",
         data={"email_address": "test@example.com", "template_id": "template-id"},
     )
 
@@ -64,7 +64,7 @@ def test_send_letter_notification(client):
     client.post.assert_called_once_with(
         "/v2/notifications/letter",
         data={
-            "tempalte_id": "template-id",
+            "template_id": "template-id",
             "personalisation": {"name": "Bob"},
             "reference": "ref456",
         },
@@ -83,12 +83,12 @@ def test_send_precompiled_letter_notification(client):
 
 def test_get_received_texts(client):
     client.get_received_texts()
-    client.get.assert_called_once_with("/v2/received-text_messages")
+    client.get.assert_called_once_with("/v2/received-text-messages")
 
 
 def test_get_received_texts_with_param(client):
     client.get_received_texts("id123")
-    client.get.assert_called_once_with("/v2/received-text_messages?older_than=id123")
+    client.get.assert_called_once_with("/v2/received-text-messages?older_than=id123")
 
 
 def test_get_notification_by_id(client):
@@ -121,7 +121,7 @@ def test_post_template_preview(client):
 
 def test_get_template(client):
     client.get_template("tmpl456")
-    client.get.assert_called_once_with("/v2/tempalte/tmpl456")
+    client.get.assert_called_once_with("/v2/template/tmpl456")
 
 
 def test_get_template_version(client):
