@@ -612,7 +612,7 @@ def test_get_s3_client_default_credentials():
             assert client is not None
             assert mock_session.called
             assert mock_session.return_value.client.called
-            mock_session.return_value_client.assert_called_once_with(
+            mock_session.return_value.client.assert_called_once_with(
                 "s3",
                 aws_access_id=None,
                 aws_secret_access_key=None,  # pragma: allowlist secret
