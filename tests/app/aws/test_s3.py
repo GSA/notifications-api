@@ -639,7 +639,7 @@ def test_get_s3_client_default_credentials():
 
 
 def test_get_s3_client_no_region():
-    with patch.ditc(
+    with patch.dict(
         os.environ,
         {
             "AWS_ACCESS_KEY_ID": "test-key",
