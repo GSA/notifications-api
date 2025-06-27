@@ -7,7 +7,9 @@ from notifications_python_client.notifications import NotificationsAPIClient
 
 @pytest.fixture
 def client():
-    client = NotificationsAPIClient("api-key")
+    client = NotificationsAPIClient(
+        "api-key", base_url="https://api.notifications.service.gov.fake-uk"
+    )
     client.post = Mock()
     client.get = Mock()
     client._perform_request = Mock()
