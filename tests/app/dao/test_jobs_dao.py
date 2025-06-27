@@ -209,12 +209,18 @@ def test_get_jobs_for_service_in_processed_at_then_created_at_order(
         ),
     ]
 
+    expected_order = sorted(
+        created_jobs,
+        key=lambda job: ((job.processing_started or job.created_at), str(job.id)),
+        reverse=True,
+    )
+
     jobs = dao_get_jobs_by_service_id(sample_template.service.id).items
 
-    assert len(jobs) == len(created_jobs)
+    assert len(jobs) == len(expected_order)
 
-    for index in range(0, len(created_jobs)):
-        assert jobs[index].id == created_jobs[index].id
+    for index in range(len(expected_order)):
+        assert jobs[index].id == expected_order[index].id
 
 
 def test_update_job(sample_job):
