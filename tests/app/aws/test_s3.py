@@ -615,34 +615,23 @@ def test_get_s3_client_default_credentials():
             mock_session.return_value.client.assert_called_once_with(
                 "s3",
                 config=ANY,
-                aws_access_id=None,
-                aws_secret_access_key=None,  # pragma: allowlist secret
-                region_name="us-north-1",
             )
 
 
-# def test_get_s3_client_invalid_credentials():
-#     with patch.dict(
-#         os.environ,
-#         {
-#             "AWS_ACCESS_KEY_ID": "invalid-key",
-#             "AWS_SECRET_ACCESS_KEY": "invalid-secret",  # pragma: allowlist secret
-#             "AWS_DEFAULT_REGION": "us-north-1",
-#         },
-#     ):
-#         with patch("boto3.client", side_effect = (
-#                 botocore.exceptions.ClientError(
-#                     {
-#                         "Error": {
-#                             "Code": "InvalidClientTokenId",
-#                             "Message": "Invalid credentials",
-#                         }
-#                     },
-#                     "GetObject",
-#                 )
-#             )
-#             try:
-#                 get_s3_client()
-#                 assert 1 == 0
-#             except botocore.exceptions.ClientError as e:
-#                 assert e.response["Error"]["Code"] == "InvalidClientTokenId"
+def test_get_s3_client_invalid_credentials():
+
+    with patch("app.aws.s3.Session") as mock_session:
+        mock_session.return_value.client.side_effect = botocore.exceptions.ClientError(
+            {
+                "Error": {
+                    "Code": "InvalidClientTokenId",
+                    "Message": "Invalid credentials",
+                }
+            },
+            "HeadBucket",
+        )
+        try:
+            get_s3_client()
+            assert 1 == 0
+        except botocore.exceptions.ClientError as e:
+            assert e.response["Error"]["Code"] == "InvalidClientTokenId"
