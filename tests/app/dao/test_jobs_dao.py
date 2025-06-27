@@ -558,3 +558,19 @@ def test_unique_key_on_job_id_and_job_row_number_no_error_if_row_number_for_diff
     job_2 = create_job(template=sample_email_template)
     create_notification(job=job_1, job_row_number=0)
     create_notification(job=job_2, job_row_number=0)
+
+
+def test_jobs_with_same_activity_time_are_sorted_by_id(sample_template):
+    from datetime import datetime
+    dt = datetime(2023, 1, 1, 12, 0, 0)
+
+    job1 = create_job(sample_template, created_at=dt, processing_started=None)
+    job2 = create_job(sample_template, created_at=dt, processing_started=None)
+
+    if str(job1.id) < str(job2.id):
+        job1, job2 = job2, job1
+
+    jobs = dao_get_jobs_by_service_id(sample_template.service.id).items
+
+    assert jobs[0].id == job1.id
+    assert jobs[1].id == job2.id
