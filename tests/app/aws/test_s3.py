@@ -614,6 +614,7 @@ def test_get_s3_client_default_credentials():
             assert mock_session.return_value.client.called
             mock_session.return_value.client.assert_called_once_with(
                 "s3",
+                config=ANY,
                 aws_access_id=None,
                 aws_secret_access_key=None,  # pragma: allowlist secret
                 region_name="us-north-1",
