@@ -601,3 +601,37 @@ def test_get_s3_files_handles_exception(mocker):
     mock_current_app.logger.exception.assert_called_with(
         "Trouble reading file2.csv which is # 1 during cache regeneration"
     )
+
+
+def test_get_s3_client_default_credentials():
+    with patch.dict(os.environ, {}, clear=True):
+        with patch("app.aws.s3.Session") as mock_session:
+            mock_client = MagicMock()
+            mock_session.return_value.client.return_value = mock_client
+            client = get_s3_client()
+            assert client is not None
+            assert mock_session.called
+            assert mock_session.return_value.client.called
+            mock_session.return_value.client.assert_called_once_with(
+                "s3",
+                config=ANY,
+            )
+
+
+def test_get_s3_client_invalid_credentials():
+
+    with patch("app.aws.s3.Session") as mock_session:
+        mock_session.return_value.client.side_effect = botocore.exceptions.ClientError(
+            {
+                "Error": {
+                    "Code": "InvalidClientTokenId",
+                    "Message": "Invalid credentials",
+                }
+            },
+            "HeadBucket",
+        )
+        try:
+            get_s3_client()
+            assert 1 == 0
+        except botocore.exceptions.ClientError as e:
+            assert e.response["Error"]["Code"] == "InvalidClientTokenId"

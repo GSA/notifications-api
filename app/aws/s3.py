@@ -13,6 +13,7 @@ from app import job_cache, job_cache_lock
 from app.clients import AWS_CLIENT_CONFIG
 
 # from app.service.rest import get_service_by_id
+from app.utils import hilite
 from notifications_utils import aware_utcnow
 
 FILE_LOCATION_STRUCTURE = "service-{}-notify/{}.csv"
@@ -69,17 +70,18 @@ def clean_cache():
 
 
 def get_s3_client():
-    global s3_client
-    if s3_client is None:
-        access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
-        secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
-        region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-        session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        )
-        s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
+
+    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
+    current_app.logger.info(hilite("About to call session.client"))
+    s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
+    current_app.logger.info(hilite("SESSION CALLED"))
     return s3_client
 
 
