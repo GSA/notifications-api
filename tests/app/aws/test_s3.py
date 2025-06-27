@@ -605,7 +605,7 @@ def test_get_s3_files_handles_exception(mocker):
 
 def test_get_s3_client_default_credentials():
     with patch.dict(os.environ, {}, clear=True):
-        with patch("app.aws.s3.boto3.session.Session") as mock_session:
+        with patch("app.aws.s3.Session") as mock_session:
             mock_client = MagicMock()
             mock_session.return_value.client.return_value = mock_client
             client = get_s3_client()
