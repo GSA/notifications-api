@@ -20,6 +20,7 @@ from app.template_folder.template_folder_schema import (
     post_move_template_folder_schema,
     post_update_template_folder_schema,
 )
+from app.utils import check_suspicious_id
 
 template_folder_blueprint = Blueprint(
     "template_folder", __name__, url_prefix="/service/<uuid:service_id>/template-folder"
@@ -37,6 +38,7 @@ def handle_integrity_error(exc):
 
 @template_folder_blueprint.route("", methods=["GET"])
 def get_template_folders_for_service(service_id):
+    check_suspicious_id(service_id)
     service = dao_fetch_service_by_id(service_id)
 
     template_folders = [o.serialize() for o in service.all_template_folders]
@@ -45,6 +47,7 @@ def get_template_folders_for_service(service_id):
 
 @template_folder_blueprint.route("", methods=["POST"])
 def create_template_folder(service_id):
+    check_suspicious_id(service_id)
     data = request.get_json()
 
     validate(data, post_create_template_folder_schema)
@@ -72,6 +75,7 @@ def create_template_folder(service_id):
 
 @template_folder_blueprint.route("/<uuid:template_folder_id>", methods=["POST"])
 def update_template_folder(service_id, template_folder_id):
+    check_suspicious_id(service_id, template_folder_id)
     data = request.get_json()
 
     validate(data, post_update_template_folder_schema)
@@ -93,6 +97,7 @@ def update_template_folder(service_id, template_folder_id):
 
 @template_folder_blueprint.route("/<uuid:template_folder_id>", methods=["DELETE"])
 def delete_template_folder(service_id, template_folder_id):
+    check_suspicious_id(service_id, template_folder_id)
     template_folder = dao_get_template_folder_by_id_and_service_id(
         template_folder_id, service_id
     )
@@ -112,6 +117,8 @@ def delete_template_folder(service_id, template_folder_id):
 )
 @autocommit
 def move_to_template_folder(service_id, target_template_folder_id=None):
+    check_suspicious_id(service_id, target_template_folder_id)
+
     data = request.get_json()
 
     validate(data, post_move_template_folder_schema)

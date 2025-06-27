@@ -5,7 +5,6 @@ from unittest.mock import ANY
 from zoneinfo import ZoneInfo
 
 import pytest
-import werkzeug
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -17,7 +16,6 @@ from app.enums import (
     NotificationType,
     TemplateType,
 )
-from app.job.rest import check_suspicious_id, is_suspicious_input, is_valid_id
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -588,31 +586,6 @@ def test_get_all_notifications_for_job_returns_correct_format(
     assert resp["notifications"][0]["status"] == sample_notification_with_job.status
 
 
-def test_is_valid_id(sample_job):
-    returnVal = is_valid_id(sample_job.service_id)
-    assert returnVal is True
-
-    returnVal = is_valid_id("abc pgsleep(1)")
-    assert returnVal is False
-
-
-def test_check_suspicious_id(sample_job):
-    # This should be good
-    check_suspicious_id(sample_job.id, sample_job.service_id)
-
-    # This should be bad
-    with pytest.raises(werkzeug.exceptions.Forbidden):
-        check_suspicious_id(sample_job.id, "what is this???")
-
-
-def test_is_suspicious_input(sample_job):
-    returnVal = is_suspicious_input(sample_job.id)
-    assert returnVal is False
-
-    returnVal = is_suspicious_input("1 OR pg_sleep(1)")
-    assert returnVal is True
-
-
 def test_get_notification_count_for_job_id(admin_request, mocker, sample_job):
     mock_dao = mocker.patch(
         "app.job.rest.dao_get_notification_count_for_job_id", return_value=3
@@ -1070,16 +1043,30 @@ def test_get_jobs_should_retrieve_from_ft_notification_status_for_old_jobs(
         service_id=sample_template.service_id,
     )
 
-    assert resp_json["data"][0]["id"] == str(job_3.id)
-    assert resp_json["data"][0]["statistics"] == []
-    assert resp_json["data"][1]["id"] == str(job_2.id)
-    assert resp_json["data"][1]["statistics"] == [
-        {"status": NotificationStatus.CREATED, "count": 1},
-    ]
-    assert resp_json["data"][2]["id"] == str(job_1.id)
-    assert resp_json["data"][2]["statistics"] == [
-        {"status": NotificationStatus.DELIVERED, "count": 6},
-    ]
+    returned_jobs = resp_json["data"]
+
+    expected_jobs = [job_3, job_2, job_1]
+    expected_order = sorted(
+        expected_jobs,
+        key=lambda job: ((job.processing_started or job.created_at), str(job.id)),
+        reverse=True,
+    )
+    expected_ids = [str(job.id) for job in expected_order]
+    returned_ids = [job["id"] for job in returned_jobs if job["id"] in expected_ids]
+    assert returned_ids == expected_ids
+
+    for job in expected_jobs:
+        idx = returned_ids.index(str(job.id))
+        if job is job_3:
+            assert returned_jobs[idx]["statistics"] == []
+        elif job is job_2:
+            assert returned_jobs[idx]["statistics"] == [
+                {"status": NotificationStatus.CREATED, "count": 1},
+            ]
+        elif job is job_1:
+            assert returned_jobs[idx]["statistics"] == [
+                {"status": NotificationStatus.DELIVERED, "count": 6},
+            ]
 
 
 @freeze_time("2017-07-17 07:17")

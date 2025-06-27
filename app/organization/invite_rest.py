@@ -27,6 +27,7 @@ from app.organization.organization_schema import (
     post_update_invited_org_user_status_schema,
 )
 from app.schema_validation import validate
+from app.utils import check_suspicious_id
 from notifications_utils.url_safe_token import check_token, generate_token
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
@@ -38,6 +39,7 @@ register_errors(organization_invite_blueprint)
     "/organization/<uuid:organization_id>/invite", methods=["POST"]
 )
 def invite_user_to_org(organization_id):
+    check_suspicious_id(organization_id)
     data = request.get_json()
     validate(data, post_create_invited_org_user_status_schema)
 
@@ -98,6 +100,8 @@ def invite_user_to_org(organization_id):
     "/organization/<uuid:organization_id>/invite", methods=["GET"]
 )
 def get_invited_org_users_by_organization(organization_id):
+
+    check_suspicious_id(organization_id)
     invited_org_users = get_invited_org_users_for_organization(organization_id)
     return jsonify(data=[x.serialize() for x in invited_org_users]), 200
 
@@ -106,6 +110,7 @@ def get_invited_org_users_by_organization(organization_id):
     "/organization/<uuid:organization_id>/invite/<invited_org_user_id>", methods=["GET"]
 )
 def get_invited_org_user_by_organization(organization_id, invited_org_user_id):
+    check_suspicious_id(organization_id, invited_org_user_id)
     invited_org_user = dao_get_invited_org_user(organization_id, invited_org_user_id)
     return jsonify(data=invited_org_user.serialize()), 200
 
@@ -115,6 +120,7 @@ def get_invited_org_user_by_organization(organization_id, invited_org_user_id):
     methods=["POST"],
 )
 def update_org_invite_status(organization_id, invited_org_user_id):
+    check_suspicious_id(organization_id, invited_org_user_id)
     fetched = dao_get_invited_org_user(
         organization_id=organization_id, invited_org_user_id=invited_org_user_id
     )
@@ -129,6 +135,7 @@ def update_org_invite_status(organization_id, invited_org_user_id):
 
 
 def invited_org_user_url(invited_org_user_id, invite_link_host=None):
+
     token = generate_token(
         str(invited_org_user_id),
         current_app.config["SECRET_KEY"],
@@ -145,6 +152,7 @@ def invited_org_user_url(invited_org_user_id, invite_link_host=None):
     "/invite/organization/<uuid:invited_org_user_id>", methods=["GET"]
 )
 def get_invited_org_user(invited_org_user_id):
+    check_suspicious_id(invited_org_user_id)
     invited_user = get_invited_org_user_by_id(invited_org_user_id)
     return jsonify(data=invited_user.serialize()), 200
 

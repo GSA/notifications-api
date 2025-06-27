@@ -23,6 +23,7 @@ from app.schemas import (
 )
 from app.service.utils import service_allowed_to_send_to
 from app.utils import (
+    check_suspicious_id,
     get_public_notify_type_text,
     get_template_instance,
     pagination_links,
@@ -36,6 +37,7 @@ register_errors(notifications)
 
 @notifications.route("/notifications/<uuid:notification_id>", methods=["GET"])
 def get_notification_by_id(notification_id):
+    check_suspicious_id(notification_id)
     notification = notifications_dao.get_notification_with_personalisation(
         str(authenticated_service.id), notification_id, key_type=None
     )

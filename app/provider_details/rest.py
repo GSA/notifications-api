@@ -9,6 +9,7 @@ from app.dao.provider_details_dao import (
 from app.dao.users_dao import get_user_by_id
 from app.errors import InvalidRequest, register_errors
 from app.schemas import provider_details_history_schema, provider_details_schema
+from app.utils import check_suspicious_id
 
 provider_details = Blueprint("provider_details", __name__)
 register_errors(provider_details)
@@ -38,12 +39,14 @@ def get_providers():
 
 @provider_details.route("/<uuid:provider_details_id>", methods=["GET"])
 def get_provider_by_id(provider_details_id):
+    check_suspicious_id(provider_details_id)
     data = provider_details_schema.dump(get_provider_details_by_id(provider_details_id))
     return jsonify(provider_details=data)
 
 
 @provider_details.route("/<uuid:provider_details_id>/versions", methods=["GET"])
 def get_provider_versions(provider_details_id):
+    check_suspicious_id(provider_details_id)
     versions = dao_get_provider_versions(provider_details_id)
     data = provider_details_history_schema.dump(versions, many=True)
     return jsonify(data=data)
@@ -51,6 +54,7 @@ def get_provider_versions(provider_details_id):
 
 @provider_details.route("/<uuid:provider_details_id>", methods=["POST"])
 def update_provider_details(provider_details_id):
+    check_suspicious_id(provider_details_id)
     valid_keys = {"priority", "created_by", "active"}
     req_json = request.get_json()
 

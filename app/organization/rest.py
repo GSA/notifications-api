@@ -36,6 +36,7 @@ from app.organization.organization_schema import (
     post_update_organization_schema,
 )
 from app.schema_validation import validate
+from app.utils import check_suspicious_id
 
 organization_blueprint = Blueprint("organization", __name__)
 register_errors(organization_blueprint)
@@ -64,6 +65,7 @@ def get_organizations():
 
 @organization_blueprint.route("/<uuid:organization_id>", methods=["GET"])
 def get_organization_by_id(organization_id):
+    check_suspicious_id(organization_id)
     organization = dao_get_organization_by_id(organization_id)
     return jsonify(organization.serialize())
 
@@ -97,6 +99,7 @@ def create_organization():
 
 @organization_blueprint.route("/<uuid:organization_id>", methods=["POST"])
 def update_organization(organization_id):
+    check_suspicious_id(organization_id)
     data = request.get_json()
     validate(data, post_update_organization_schema)
 
@@ -115,6 +118,7 @@ def update_organization(organization_id):
 
 @organization_blueprint.route("/<uuid:organization_id>/service", methods=["POST"])
 def link_service_to_organization(organization_id):
+    check_suspicious_id(organization_id)
     data = request.get_json()
     validate(data, post_link_service_to_organization_schema)
     service = dao_fetch_service_by_id(data["service_id"])
@@ -129,6 +133,7 @@ def link_service_to_organization(organization_id):
 
 @organization_blueprint.route("/<uuid:organization_id>/services", methods=["GET"])
 def get_organization_services(organization_id):
+    check_suspicious_id(organization_id)
     services = dao_get_organization_services(organization_id)
     sorted_services = sorted(services, key=lambda s: (-s.active, s.name))
     return jsonify([s.serialize_for_org_dashboard() for s in sorted_services])
@@ -138,6 +143,7 @@ def get_organization_services(organization_id):
     "/<uuid:organization_id>/services-with-usage", methods=["GET"]
 )
 def get_organization_services_usage(organization_id):
+    check_suspicious_id(organization_id)
     try:
         year = int(request.args.get("year", "none"))
     except ValueError:
@@ -154,6 +160,7 @@ def get_organization_services_usage(organization_id):
     "/<uuid:organization_id>/users/<uuid:user_id>", methods=["POST"]
 )
 def add_user_to_organization(organization_id, user_id):
+    check_suspicious_id(organization_id, user_id)
     new_org_user = dao_add_user_to_organization(organization_id, user_id)
     return jsonify(data=new_org_user.serialize())
 
@@ -162,6 +169,7 @@ def add_user_to_organization(organization_id, user_id):
     "/<uuid:organization_id>/users/<uuid:user_id>", methods=["DELETE"]
 )
 def remove_user_from_organization(organization_id, user_id):
+    check_suspicious_id(organization_id, user_id)
     organization = dao_get_organization_by_id(organization_id)
     user = get_user_by_id(user_id=user_id)
 
@@ -176,6 +184,7 @@ def remove_user_from_organization(organization_id, user_id):
 
 @organization_blueprint.route("/<uuid:organization_id>/users", methods=["GET"])
 def get_organization_users(organization_id):
+    check_suspicious_id(organization_id)
     org_users = dao_get_users_for_organization(organization_id)
     return jsonify(data=[x.serialize() for x in org_users])
 

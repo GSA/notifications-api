@@ -26,7 +26,7 @@ from app.template.template_schemas import (
     post_create_template_schema,
     post_update_template_schema,
 )
-from app.utils import get_public_notify_type_text
+from app.utils import check_suspicious_id, get_public_notify_type_text
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
 from notifications_utils.template import SMSMessageTemplate
 
@@ -61,6 +61,7 @@ def validate_parent_folder(template_json):
 
 @template_blueprint.route("", methods=["POST"])
 def create_template(service_id):
+    check_suspicious_id(service_id)
     fetched_service = dao_fetch_service_by_id(service_id=service_id)
     # permissions needs to be placed here otherwise marshmallow will interfere with versioning
     permissions = [p.permission for p in fetched_service.permissions]
@@ -96,6 +97,7 @@ def create_template(service_id):
 
 @template_blueprint.route("/<uuid:template_id>", methods=["POST"])
 def update_template(service_id, template_id):
+    check_suspicious_id(service_id, template_id)
     fetched_template = dao_get_template_by_id_and_service_id(
         template_id=template_id, service_id=service_id
     )
@@ -146,6 +148,7 @@ def update_template(service_id, template_id):
 
 @template_blueprint.route("", methods=["GET"])
 def get_all_templates_for_service(service_id):
+    check_suspicious_id(service_id)
     templates = dao_get_all_templates_for_service(service_id=service_id)
     if str(request.args.get("detailed", True)) == "True":
         data = template_schema.dump(templates, many=True)
@@ -156,6 +159,7 @@ def get_all_templates_for_service(service_id):
 
 @template_blueprint.route("/<uuid:template_id>", methods=["GET"])
 def get_template_by_id_and_service_id(service_id, template_id):
+    check_suspicious_id(service_id, template_id)
     fetched_template = dao_get_template_by_id_and_service_id(
         template_id=template_id, service_id=service_id
     )
@@ -165,6 +169,7 @@ def get_template_by_id_and_service_id(service_id, template_id):
 
 @template_blueprint.route("/<uuid:template_id>/preview", methods=["GET"])
 def preview_template_by_id_and_service_id(service_id, template_id):
+    check_suspicious_id(service_id, template_id)
     fetched_template = dao_get_template_by_id_and_service_id(
         template_id=template_id, service_id=service_id
     )
@@ -193,6 +198,7 @@ def preview_template_by_id_and_service_id(service_id, template_id):
 
 @template_blueprint.route("/<uuid:template_id>/version/<int:version>")
 def get_template_version(service_id, template_id, version):
+    check_suspicious_id(service_id, template_id)
     data = template_history_schema.dump(
         dao_get_template_by_id_and_service_id(
             template_id=template_id, service_id=service_id, version=version
@@ -203,6 +209,7 @@ def get_template_version(service_id, template_id, version):
 
 @template_blueprint.route("/<uuid:template_id>/versions")
 def get_template_versions(service_id, template_id):
+    check_suspicious_id(service_id, template_id)
     data = template_history_schema.dump(
         dao_get_template_versions(service_id=service_id, template_id=template_id),
         many=True,

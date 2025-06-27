@@ -75,7 +75,9 @@ def dao_get_jobs_by_service_id(
     stmt = (
         select(Job)
         .where(*query_filter)
-        .order_by(Job.processing_started.desc(), Job.created_at.desc())
+        .order_by(
+            func.coalesce(Job.processing_started, Job.created_at).desc(), Job.id.desc()
+        )
         .limit(page_size)
         .offset(offset)
     )
