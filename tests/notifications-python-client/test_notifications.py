@@ -34,7 +34,7 @@ def test_send_sms_notification_basic(client):
 def test_send_sms_notification_full(client):
     client.send_sms_notification(
         "1234567890",
-        "templae-id",
+        "template-id",
         personalisation={"name": "Atlas"},
         reference="ref123",
         sms_sender_id="sender-001",
