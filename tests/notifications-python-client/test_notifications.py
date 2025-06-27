@@ -7,8 +7,11 @@ from notifications_python_client.notifications import NotificationsAPIClient
 
 @pytest.fixture
 def client():
+    fake_service_id = "12345678-1234-1234-1234-123456789abc"
+    fake_key_part = "abcdef12-3456-7890-abcd-ef1234567890"
+    api_key = "x" + fake_service_id + fake_key_part
     client = NotificationsAPIClient(
-        "api-key", base_url="https://api.notifications.service.gov.fake-uk"
+        api_key, base_url="https://api.notifications.service.gov.fake-uk"
     )
     client.post = Mock()
     client.get = Mock()
