@@ -69,17 +69,16 @@ def clean_cache():
 
 
 def get_s3_client():
-    global s3_client
-    if s3_client is None:
-        access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
-        secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
-        region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-        session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        )
-        s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
+
+    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
+    s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
     return s3_client
 
 
