@@ -601,3 +601,17 @@ def test_get_s3_files_handles_exception(mocker):
     mock_current_app.logger.exception.assert_called_with(
         "Trouble reading file2.csv which is # 1 during cache regeneration"
     )
+
+
+def test_get_s3_client_with_env_credentials():
+    with patch.dict(
+        os.environ,
+        {
+            "AWS_ACCESS_KEY_ID": "test-key",
+            "AWS_SECRET_ACCESS_ID": "test-sekret",
+            "AWS_DEFAULT_REGION": "us-north-1",
+        },
+    ):
+        client = get_s3_client()
+        assert client is not None, "Client should be created with env credentials"
+        assert client._client_config.region_name == "us-north-1"
