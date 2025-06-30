@@ -672,7 +672,7 @@ def test_generate_salt(notify_api):
     assert len(result.output.strip()) == 32
 
 
-def test_associate_services_to_organizations(mocker):
+def test_associate_services_to_organizations(notify_api, mocker):
     mock_service_history = MagicMock()
     mock_service_history.id = "service-id-123"
     mock_service_history.version = 1
@@ -701,7 +701,7 @@ def test_associate_services_to_organizations(mocker):
 
     mock_logger = mocker.patch("app.commands.current_app.logger")
 
-    associate_services_to_organizations()
+    notify_api.test_cli_runner().invoke(associate_services_to_organizations)
 
     mock_add_to_org.assert_called_once_with(
         service=mock_service, organization_id=mock_organization.id
