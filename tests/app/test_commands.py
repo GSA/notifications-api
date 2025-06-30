@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from app import db
 from app.commands import (
     _update_template,
+    associate_services_to_organizations,
     bulk_invite_user_to_service,
     create_new_service,
     create_test_user,
@@ -669,3 +670,43 @@ def test_generate_salt(notify_api):
     result = runner.invoke(generate_salt)
     assert result.exit_code == 0
     assert len(result.output.strip()) == 32
+
+
+def test_associate_services_to_organizations(mocker):
+    mock_service_history = MagicMock()
+    mock_service_history.id = "service-id-123"
+    mock_service_history.version = 1
+    mock_service_history.created_by_id = "user-id-456"
+
+    mock_user = MagicMock()
+    mock_user.email_address = "test@example.com"
+
+    mock_organization = MagicMock()
+    mock_organization.id = "org-id-789"
+
+    mock_service = MagicMock()
+
+    mock_stmt_result = MagicMock()
+    mock_stmt_result.scalars.return_value.all.return_value = [mock_service_history]
+    mocker.patch("app.commands.db.session.execute", return_value=mock_stmt_result)
+
+    mock_add_to_org = mocker.patch("app.commands.dao_add_service_to_organization")
+
+    mocker.patch(
+        "app.commands.dao_get_organization_by_email_address",
+        return_value=mock_organization,
+    )
+
+    mocker.patch("app.commands.dao_fetch_service_by_id", return_value=mock_service)
+
+    mock_logger = mocker.patch("app.commands.current_app.logger")
+
+    associate_services_to_organizations()
+
+    mock_add_to_org.assert_called_once_with(
+        service=mock_service, organization_id=mock_organization.id
+    )
+
+    mock_logger.info.assert_called_once_with(
+        "finished associating services to organizations"
+    )
