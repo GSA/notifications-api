@@ -4,7 +4,9 @@ import pytest
 
 from notifications_python_client.base import BaseAPIClient
 
-VALID_API_KEY = "key" + "-" * 68 + "service-id-uuid" + "-" * 32 # pragma: allowlist secret
+VALID_API_KEY = (
+    "key" + "-" * 68 + "service-id-uuid" + "-" * 32
+)  # pragma: allowlist secret
 FULL_API_KEY = VALID_API_KEY[-73:]
 
 
