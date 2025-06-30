@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import timedelta
 from os import getenv
 from unittest.mock import ANY, MagicMock, Mock, call, patch
@@ -7,6 +8,7 @@ import botocore
 import pytest
 from botocore.exceptions import ClientError
 
+from app import job_cache
 from app.aws import s3
 from app.aws.s3 import (
     cleanup_old_s3_objects,
@@ -607,6 +609,26 @@ def test_get_s3_files_handles_exception(mocker):
 def test_get_service_id_from_key_various_formats():
     assert s3.get_service_id_from_key("service-123-notify/abc.csv") == "123"
     assert s3.get_service_id_from_key("service-xyz-notify/def/ghi.csv") == "xyz"
-    assert s3.get_service_id_from_key("noservice-foo") == "noservice-foo".replace(
-        "-notify", ""
-    )
+    assert s3.get_service_id_from_key("noservice-foo") == "nofoo"
+
+
+def test_set_and_get_job_cache_and_expiry(monkeypatch):
+    # isolate time for test
+    fake_time = time.time()
+    monkeypatch.setattr(time, "time", lambda: fake_time)
+
+    # set cache entry
+    s3.set_job_cache("k", "v")
+    tup = s3.get_job_cache("k")
+    assert tup is not None
+    value, expiry = tup
+    assert value == "v"
+    assert expiry == fake_time + (8 * 24 * 60 * 60)
+
+    # fast forward beyond expiry
+    monkeypatch.setattr(time, "time", lambda: fake_time + (9 * 24 * 60 * 60))
+
+    # clean_cache should remove expired entries
+    job_cache["other"] = ("foo", fake_time + 10)
+    s3.clean_cache()
+    assert "k" not in job_cache
