@@ -670,5 +670,5 @@ def test_read_s3_file_populates_cache(monkeypatch):
     )
     s3.read_s3_file("bucket", "service-XX-notify/66.csv", s3res)
     assert job_cache.get("66")[0].startswith("Phone number")
-    assert job_cache.get("66_phones")[0] == {"15551234"}
+    assert job_cache.get("66_phones")[0] == {"0", "15551234"}
     assert job_cache.get("66_personalisation")[0] == {0: {"Name": "Alice"}}
