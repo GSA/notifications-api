@@ -1,3 +1,4 @@
+import datetime
 import os
 import time
 from datetime import timedelta
@@ -631,3 +632,23 @@ def test_set_and_get_job_cache_and_expiry(monkeypatch):
     job_cache["other"] = ("foo", fake_time + 10)
     s3.clean_cache()
     assert "k" not in job_cache
+
+
+def test_list_s3_objects_pagination_and_filtering(monkeypatch):
+    recent = aware_utcnow() - datetime.timedelta(days=1)
+    old = aware_utcnow() - datetime.timedelta(days=10)
+    client = MagicMock()
+    client.list_objectes_v2.side_effect = [
+        {
+            "Contents": [{"Key": "new", "LastModified": recent}],
+            "NextContinuationToken": "token",
+        },
+        {"Contents": [{"Key": "old", "LastModified": old}]},
+    ]
+    monkeypatch.setattr(s3, "get_s3_client", lambda: client)
+    monkeypatch.setenv = lambda *a, **k: None
+    # set bucket name config
+    s3.current_app = MagicMock()
+    s3.current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "b"}}
+    keys = list(s3.list_s3_objects())
+    assert "new" in keys and "old" not in keys
