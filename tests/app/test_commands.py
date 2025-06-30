@@ -717,7 +717,7 @@ def test_clear_templates_from_cache(mocker):
     mock_delete = mocker.patch(
         "app.commands.redis_store.delete_by_pattern", return_value=3
     )
-    mock_logger = mocker.patch("app.template.rest.current_app.logger")
+    mock_logger = mocker.patch("app.commands.current_app.logger")
 
     _clear_templates_from_cache()
 
