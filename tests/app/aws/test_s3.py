@@ -2,7 +2,7 @@ import os
 import time
 from datetime import timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, call
 
 import botocore
 import pytest
@@ -434,7 +434,6 @@ def test_get_s3_files_success(client, mocker):
     # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-debug-admin-1200")
 
 
-@patch("app.aws.s3.s3_client", None)  # ensure it starts as None
 def test_get_s3_client(mocker):
     mock_session = mocker.patch("app.aws.s3.Session")
     mock_current_app = mocker.patch("app.aws.s3.current_app")
@@ -456,7 +455,6 @@ def test_get_s3_client(mocker):
     )
 
 
-@patch("app.aws.s3.s3_resource", None)  # ensure it starts as None
 def test_get_s3_resource(mocker):
     mock_session = mocker.patch("app.aws.s3.Session")
     mock_current_app = mocker.patch("app.aws.s3.current_app")
