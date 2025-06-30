@@ -731,4 +731,4 @@ def test_clear_templates_from_cache(mocker):
     mock_delete.assert_has_calls(
         [mocker.call(p) for p in expected_patterns], any_order=True
     )
-    mock_logger.info.assert_called_once_with("number of templates deleted from cache 9")
+    mock_logger.info.assert_called_once_with("Number of templates deleted from cache 9")
