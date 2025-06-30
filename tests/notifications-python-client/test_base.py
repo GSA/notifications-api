@@ -1,8 +1,10 @@
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from notifications_python_client.base import BaseAPIClient
+from notifications_python_client.errors import HTTPError
 
 
 def get_api_key():
@@ -43,9 +45,38 @@ def test_get_request_success(mock_request, mock_jwt, client):
     assert mock_request.call_args[1]["headers"]["Authorization"] == "Bearer jwt-token"
 
 
+@patch("notifications_python_client.base.create_jwt_token")
+@patch("notifications_python_client.base.requests.Session.request")
+def test_post_request_with_data(mock_request, mock_jwt, client):
+    mock_jwt.return_value = "jwt-token"
+    mock_response = MagicMock()
+    mock_response.status_code = 201
+    mock_response.json.return_value = {"id": "123"}
+    mock_request.return_value = mock_response
+
+    result = client.post("/send", data={"message": "hello"})
+    assert result == {"id": "123"}
+    args, kwargs = mock_request.call_args
+    assert kwargs["data"] == json.dumps({"message": "hello"})
+    assert "Authorization" in kwargs["headers"]
+
+
+@patch("notifications_python_client.base.create_jwt_token")
+@patch("notifications_python_client.base.requests.Session.request")
+def test_request_raises_http_error(mock_request, mock_jwt, client):
+    from requests.exceptions import HTTPError as RequestsHTTPError
+
+    mock_jwt.return_value = "jwt-token"
+    error_response = MagicMock
+    error_response.status_code = 400
+    mock_exception = RequestsHTTPError("bad", response=error_response)
+    mock_request.side_effect = mock_exception
+    with pytest.raises(HTTPError):
+        client.get("/fail")
+
+
 def main():
-    test_init_sets_values_correctly()
-    test_get_request_success()
+    test_request_raises_http_error()
 
 
 if __name__ == "__main__":
