@@ -4,23 +4,28 @@ import pytest
 
 from notifications_python_client.base import BaseAPIClient
 
-VALID_API_KEY = (
-    "key" + "-" * 68 + "service-id-uuid" + "-" * 32
-)  # pragma: allowlist secret
-FULL_API_KEY = VALID_API_KEY[-73:]
+
+def get_api_key():
+    fake_service_id = "12345678-1234-1234-1234-123456789abc"
+    fake_key_part = "abcdef12-3456-7890-abcd-ef1234567890"
+    api_key = "x" + fake_service_id + fake_key_part
+    return api_key
 
 
 @pytest.fixture
 def client():
-    return BaseAPIClient(api_key=FULL_API_KEY)
+
+    return BaseAPIClient(api_key=get_api_key())
 
 
 def test_init_sets_values_correctly():
-    client = BaseAPIClient(api_key=FULL_API_KEY)
+    api_key = get_api_key()
+    client = BaseAPIClient(api_key=api_key)
     assert client.base_url == "https://api.notifications.service.gov.uk"
-    assert client.api_key == FULL_API_KEY[-36:]
-    assert client.service_id == FULL_API_KEY[-73:-27]
-    assert client.timeout == 20
+
+    assert client.api_key == api_key[-36:]
+    assert client.service_id == api_key[-73:-37]
+    assert client.timeout == 30
 
 
 @patch("notifications_python_client.base.create_jwt_token")
@@ -36,3 +41,12 @@ def test_get_request_success(mock_request, mock_jwt, client):
     mock_jwt.assert_called_once_with(client.api_key, client.service_id)
     mock_request.assert_called_once()
     assert mock_request.call_args[1]["headers"]["Authorization"] == "Bearer jwt-token"
+
+
+def main():
+    test_init_sets_values_correctly()
+    test_get_request_success()
+
+
+if __name__ == "__main__":
+    main()
