@@ -715,7 +715,7 @@ def test_associate_services_to_organizations(notify_api, mocker):
 
 def test_clear_templates_from_cache(mocker):
     mock_delete = mocker.patch(
-        "app.template.rest.redis_store.delete_by_pattern", return_value=3
+        "app.commands.redis_store.delete_by_pattern", return_value=3
     )
     mock_logger = mocker.patch("app.template.rest.current_app.logger")
 
