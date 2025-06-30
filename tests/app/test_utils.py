@@ -1,13 +1,17 @@
 from datetime import date, datetime
 
 import pytest
+import werkzeug
 from freezegun import freeze_time
 
 from app.enums import ServicePermissionType, TemplateType
 from app.utils import (
+    check_suspicious_id,
     get_midnight_in_utc,
     get_public_notify_type_text,
     get_template_instance,
+    is_suspicious_input,
+    is_valid_id,
     midnight_n_days_ago,
 )
 from notifications_utils.template import HTMLEmailTemplate, SMSMessageTemplate
@@ -141,3 +145,31 @@ def test_get_template_instance_comprehensive(template_type, values):
         assert isinstance(result, SMSMessageTemplate)
     else:
         assert isinstance(result, HTMLEmailTemplate)
+
+
+def test_is_valid_id(sample_job):
+    returnVal = is_valid_id(sample_job.service_id)
+    assert returnVal is True
+
+    returnVal = is_valid_id("abc pgsleep(1)")
+    assert returnVal is False
+
+
+def test_check_suspicious_id(sample_job):
+    # This should be good
+    check_suspicious_id(sample_job.id, sample_job.service_id)
+
+    # This should be bad
+    with pytest.raises(werkzeug.exceptions.Forbidden):
+        check_suspicious_id(sample_job.id, "what is this???")
+
+    # This should be good
+    check_suspicious_id(sample_job.id, None)
+
+
+def test_is_suspicious_input(sample_job):
+    returnVal = is_suspicious_input(sample_job.id)
+    assert returnVal is False
+
+    returnVal = is_suspicious_input("1 OR pg_sleep(1)")
+    assert returnVal is True

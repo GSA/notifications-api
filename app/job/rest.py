@@ -36,7 +36,7 @@ from app.schemas import (
     notification_with_template_schema,
     notifications_filter_schema,
 )
-from app.utils import midnight_n_days_ago, pagination_links
+from app.utils import check_suspicious_id, midnight_n_days_ago, pagination_links
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
@@ -46,6 +46,7 @@ register_errors(job_blueprint)
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
 def get_job_by_service_and_job_id(service_id, job_id):
+    check_suspicious_id(service_id, job_id)
     job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
     statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
     data = JobSchema(session=db.session).dump(job)
@@ -59,6 +60,8 @@ def get_job_by_service_and_job_id(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])
 def cancel_job(service_id, job_id):
+    check_suspicious_id(service_id, job_id)
+
     job = dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id)
     job.job_status = JobStatus.CANCELLED
     dao_update_job(job)
@@ -68,6 +71,8 @@ def cancel_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
 def get_all_notifications_for_service_job(service_id, job_id):
+    check_suspicious_id(service_id, job_id)
+
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
     page_size = (
@@ -129,6 +134,8 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
 def get_recent_notifications_for_service_job(service_id, job_id):
+    check_suspicious_id(service_id, job_id)
+
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
     page_size = (
@@ -194,6 +201,8 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
 def get_notification_count_for_job_id(service_id, job_id):
+    check_suspicious_id(service_id, job_id)
+
     dao_get_job_by_service_id_and_job_id(service_id, job_id)
     count = dao_get_notification_count_for_job_id(job_id=job_id)
     return jsonify(count=count), 200
@@ -201,6 +210,7 @@ def get_notification_count_for_job_id(service_id, job_id):
 
 @job_blueprint.route("", methods=["GET"])
 def get_jobs_by_service(service_id):
+    check_suspicious_id(service_id)
     if request.args.get("limit_days"):
         try:
             limit_days = int(request.args["limit_days"])
@@ -234,6 +244,8 @@ def get_jobs_by_service(service_id):
 
 @job_blueprint.route("", methods=["POST"])
 def create_job(service_id):
+    check_suspicious_id(service_id)
+
     """Entry point from UI for one-off messages as well as CSV uploads."""
     service = dao_fetch_service_by_id(service_id)
     if not service.active:
@@ -253,6 +265,7 @@ def create_job(service_id):
         )
 
     data["template"] = data.pop("template_id")
+    check_suspicious_id(data["template"])
     template = dao_get_template_by_id(data["template"])
 
     if data.get("valid") != "True":
@@ -277,6 +290,7 @@ def create_job(service_id):
     dao_create_job(job)
 
     sender_id = data.get("sender_id")
+    check_suspicious_id(sender_id)
     # Kick off job in tasks.py
     if job.job_status == JobStatus.PENDING:
         process_job.apply_async(
@@ -291,6 +305,8 @@ def create_job(service_id):
 
 @job_blueprint.route("/scheduled-job-stats", methods=["GET"])
 def get_scheduled_job_stats(service_id):
+    check_suspicious_id(service_id)
+
     count, soonest_scheduled_for = dao_get_scheduled_job_stats(service_id)
     return (
         jsonify(

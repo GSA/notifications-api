@@ -75,7 +75,9 @@ def dao_get_jobs_by_service_id(
     stmt = (
         select(Job)
         .where(*query_filter)
-        .order_by(Job.processing_started.desc(), Job.created_at.desc())
+        .order_by(
+            func.coalesce(Job.processing_started, Job.created_at).desc(), Job.id.desc()
+        )
         .limit(page_size)
         .offset(offset)
     )
@@ -157,17 +159,17 @@ def dao_create_job(job):
     orig_time = job.created_at
     now_time = utc_now()
     diff_time = now_time - orig_time
-    current_app.logger.info(
+    current_app.logger.warning(
         f"#notify-debug-admin-1859 dao_create_job orig created at {orig_time} and now {now_time}"
     )
     if diff_time.total_seconds() > 300:  # It should be only a few seconds diff at most
-        current_app.logger.error(
+        current_app.logger.warning(
             "#notify-debug-admin-1859 Something is wrong with job.created_at!"
         )
         if os.getenv("NOTIFY_ENVIRONMENT") not in ["test"]:
             job.created_at = now_time
             dao_update_job(job)
-            current_app.logger.error(
+            current_app.logger.warning(
                 f"#notify-debug-admin-1859 Job created_at reset to {job.created_at}"
             )
 

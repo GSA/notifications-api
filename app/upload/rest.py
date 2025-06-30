@@ -4,7 +4,7 @@ from app.dao.fact_notification_status_dao import fetch_notification_statuses_for
 from app.dao.jobs_dao import dao_get_notification_outcomes_for_job
 from app.dao.uploads_dao import dao_get_uploads_by_service_id
 from app.errors import register_errors
-from app.utils import midnight_n_days_ago, pagination_links
+from app.utils import check_suspicious_id, midnight_n_days_ago, pagination_links
 
 upload_blueprint = Blueprint(
     "upload", __name__, url_prefix="/service/<uuid:service_id>/upload"
@@ -15,6 +15,7 @@ register_errors(upload_blueprint)
 
 @upload_blueprint.route("", methods=["GET"])
 def get_uploads_by_service(service_id):
+    check_suspicious_id(service_id)
     return jsonify(
         **get_paginated_uploads(
             service_id,

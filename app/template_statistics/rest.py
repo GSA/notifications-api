@@ -6,7 +6,7 @@ from app.dao.fact_notification_status_dao import (
 from app.dao.notifications_dao import dao_get_last_date_template_was_used
 from app.dao.templates_dao import dao_get_template_by_id_and_service_id
 from app.errors import InvalidRequest, register_errors
-from app.utils import DATETIME_FORMAT
+from app.utils import DATETIME_FORMAT, check_suspicious_id
 
 template_statistics = Blueprint(
     "template_statistics",
@@ -19,6 +19,7 @@ register_errors(template_statistics)
 
 @template_statistics.route("")
 def get_template_statistics_for_service_by_day(service_id):
+    check_suspicious_id(service_id)
     whole_days = request.args.get("whole_days", request.args.get("limit_days", ""))
     try:
         whole_days = int(whole_days)
@@ -56,6 +57,7 @@ def get_template_statistics_for_service_by_day(service_id):
 
 @template_statistics.route("/last-used/<uuid:template_id>")
 def get_last_used_datetime_for_template(service_id, template_id):
+    check_suspicious_id(service_id, template_id)
     # Check the template and service exist
     dao_get_template_by_id_and_service_id(template_id, service_id)
 

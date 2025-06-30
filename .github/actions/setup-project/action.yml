@@ -9,10 +9,10 @@ runs:
         sudo apt-get update \
         && sudo apt-get install -y --no-install-recommends \
         libcurl4-openssl-dev
-    - name: Set up Python 3.12.2
+    - name: Set up Python 3.12.9
       uses: actions/setup-python@v4
       with:
-        python-version: "3.12.2"
+        python-version: "3.12.9"
     - name: Install poetry
       shell: bash
       run: pip install poetry==2.1.3

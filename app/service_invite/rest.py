@@ -25,7 +25,7 @@ from app.notifications.process_notifications import (
     send_notification_to_queue,
 )
 from app.schemas import InvitedUserSchema
-from app.utils import utc_now
+from app.utils import check_suspicious_id, utc_now
 from notifications_utils.url_safe_token import check_token, generate_token
 
 service_invite = Blueprint("service_invite", __name__)
@@ -121,6 +121,7 @@ def create_invited_user(service_id):
 
 @service_invite.route("/service/<service_id>/invite/expired", methods=["GET"])
 def get_expired_invited_users_by_service(service_id):
+    check_suspicious_id(service_id)
     expired_invited_users = get_expired_invited_users_for_service(service_id)
     return (
         jsonify(
@@ -134,6 +135,7 @@ def get_expired_invited_users_by_service(service_id):
 
 @service_invite.route("/service/<service_id>/invite", methods=["GET"])
 def get_invited_users_by_service(service_id):
+    check_suspicious_id(service_id)
     invited_users = get_invited_users_for_service(service_id)
     return (
         jsonify(
@@ -145,6 +147,7 @@ def get_invited_users_by_service(service_id):
 
 @service_invite.route("/service/<service_id>/invite/<invited_user_id>", methods=["GET"])
 def get_invited_user_by_service(service_id, invited_user_id):
+    check_suspicious_id(service_id, invited_user_id)
     invited_user = get_invited_user_by_service_and_id(service_id, invited_user_id)
     return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)), 200
 
@@ -153,6 +156,7 @@ def get_invited_user_by_service(service_id, invited_user_id):
     "/service/<service_id>/invite/<invited_user_id>", methods=["POST"]
 )
 def update_invited_user(service_id, invited_user_id):
+    check_suspicious_id(service_id, invited_user_id)
     fetched = get_invited_user_by_service_and_id(
         service_id=service_id, invited_user_id=invited_user_id
     )
@@ -168,6 +172,7 @@ def update_invited_user(service_id, invited_user_id):
     "/service/<service_id>/invite/<invited_user_id>/resend", methods=["POST"]
 )
 def resend_service_invite(service_id, invited_user_id):
+    check_suspicious_id(service_id, invited_user_id)
     """Resend an expired invite.
 
     This resets the invited user's created date and status to make it a new invite, and
@@ -228,6 +233,7 @@ def invited_user_url(invited_user_id, invite_link_host=None):
 
 @service_invite.route("/invite/service/<uuid:invited_user_id>", methods=["GET"])
 def get_invited_user(invited_user_id):
+    check_suspicious_id(invited_user_id)
     invited_user = get_invited_user_by_id(invited_user_id)
     return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)), 200
 

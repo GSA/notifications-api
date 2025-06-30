@@ -4,7 +4,6 @@ import uuid
 import jwt
 import pytest
 from flask import g, request
-from notifications_python_client.authentication import create_jwt_token
 
 from app import db
 from app.authentication.auth import (
@@ -18,6 +17,7 @@ from app.authentication.auth import (
 )
 from app.dao.api_key_dao import expire_api_key, get_model_api_keys, get_unsigned_secrets
 from app.dao.services_dao import dao_fetch_service_by_id
+from notifications_python_client.authentication import create_jwt_token
 from tests import create_admin_authorization_header, create_service_authorization_header
 from tests.conftest import set_config_values
 
