@@ -23,11 +23,6 @@ NEW_FILE_LOCATION_STRUCTURE = "{}-service-notify/{}.csv"
 ttl = 60 * 60 * 24 * 7
 
 
-# Global variable
-s3_client = None
-s3_resource = None
-
-
 def get_service_id_from_key(key):
     key = key.replace("service-", "")
     key = key.split("/")
@@ -86,17 +81,15 @@ def get_s3_client():
 
 
 def get_s3_resource():
-    global s3_resource
-    if s3_resource is None:
-        access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
-        secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
-        region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
-        session = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        )
-        s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
+    s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
     return s3_resource
 
 

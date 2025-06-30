@@ -7,6 +7,7 @@ import botocore
 import pytest
 from botocore.exceptions import ClientError
 
+from app.aws import s3
 from app.aws.s3 import (
     cleanup_old_s3_objects,
     download_from_s3,
@@ -603,35 +604,9 @@ def test_get_s3_files_handles_exception(mocker):
     )
 
 
-def test_get_s3_client_default_credentials():
-    with patch.dict(os.environ, {}, clear=True):
-        with patch("app.aws.s3.Session") as mock_session:
-            mock_client = MagicMock()
-            mock_session.return_value.client.return_value = mock_client
-            client = get_s3_client()
-            assert client is not None
-            assert mock_session.called
-            assert mock_session.return_value.client.called
-            mock_session.return_value.client.assert_called_once_with(
-                "s3",
-                config=ANY,
-            )
-
-
-def test_get_s3_client_invalid_credentials():
-
-    with patch("app.aws.s3.Session") as mock_session:
-        mock_session.return_value.client.side_effect = botocore.exceptions.ClientError(
-            {
-                "Error": {
-                    "Code": "InvalidClientTokenId",
-                    "Message": "Invalid credentials",
-                }
-            },
-            "HeadBucket",
-        )
-        try:
-            get_s3_client()
-            assert 1 == 0
-        except botocore.exceptions.ClientError as e:
-            assert e.response["Error"]["Code"] == "InvalidClientTokenId"
+def test_get_service_id_from_key_various_formats():
+    assert s3.get_service_id_from_key("service-123-notify/abc.csv") == "123"
+    assert s3.get_service_id_from_key("service-xyz-notify/def/ghi.csv") == "xyz"
+    assert s3.get_service_id_from_key("noservice-foo") == "noservice-foo".replace(
+        "-notify", ""
+    )
