@@ -1789,7 +1789,6 @@ def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
         "app.celery.tasks.current_app.logger.exception"
     ) as mock_exception:
 
-
         save_api_email_or_sms(mock_self, encrypted)
         mock_exception.assert_called_once()
         assert "Max retry failed" in mock_exception.call_args[0][0]
