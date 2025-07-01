@@ -1077,7 +1077,7 @@ def test_get_user_login_gov_user(notify_db_session, admin_request):
     )
 
     print(hilite(users["data"]))
-    assert users["data"][0]["email_address"] == "findel.mestro@foo.com"
+    assert users["data"]["email_address"] == "findel.mestro@foo.com"
 
 
 def test_find_users_by_email_handles_no_results(notify_db_session, admin_request):

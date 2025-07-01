@@ -73,11 +73,3 @@ def test_request_raises_http_error(mock_request, mock_jwt, client):
     mock_request.side_effect = mock_exception
     with pytest.raises(HTTPError):
         client.get("/fail")
-
-
-def main():
-    test_request_raises_http_error()
-
-
-if __name__ == "__main__":
-    main()
