@@ -1726,6 +1726,7 @@ def test_total_sending_limits_exceeded(mocker):
 
 
 def test_save_api_email_or_sms_integrity_error():
+    mock_self = MagicMock()
     encrypted = MagicMock()
     decrypted = {
         "id": "notif-id",
@@ -1750,6 +1751,7 @@ def test_save_api_email_or_sms_integrity_error():
         "app.celery.tasks.current_app.logger.warning"
     ) as mock_log:
 
-        save_api_email_or_sms(encrypted)
+        save_api_email_or_sms(mock_self, encrypted)
         mock_log.assert_called_once()
         assert "already exists" in mock_log.call_args[0][0]
+        mock_self.retry.assert_not_called()
