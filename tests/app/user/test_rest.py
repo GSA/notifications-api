@@ -775,6 +775,16 @@ def test_activate_user(admin_request, sample_user):
     assert sample_user.state == "active"
 
 
+def test_deactivate_user(admin_request, sample_user):
+    sample_user.state = "active"
+
+    resp = admin_request.post("user.deactivate_user", user_id=sample_user.id)
+
+    assert resp["data"]["id"] == str(sample_user.id)
+    assert resp["data"]["state"] == "pending"
+    assert sample_user.state == "pending"
+
+
 def test_activate_user_fails_if_already_active(admin_request, sample_user):
     resp = admin_request.post(
         "user.activate_user", user_id=sample_user.id, _expected_status=400
