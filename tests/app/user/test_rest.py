@@ -1071,7 +1071,7 @@ def test_get_user_login_gov_user(notify_db_session, admin_request):
     data = {"email": "findel.mestro@foo.com", "uuid": "123456"}
 
     users = admin_request.post(
-        "user.get_login_gov_user",
+        "user.get_user_login_gov_user",
         _data=data,
     )
 
