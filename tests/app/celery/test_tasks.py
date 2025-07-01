@@ -1741,12 +1741,13 @@ def test_save_api_email_or_sms_integrity_error():
         "document_download_count": 0,
     }
 
-    with patch("app.tasks.encyrption.decrypt", return_value=decrypted), patch(
-        "app.tasks.SerialisedService.from_id"
-    ), patch("app.tasks.get_notification", return_value=None), patch(
-        "app.tasks.persist_notification", side_effect=IntegrityError("msg", None, None)
+    with patch("app.celery.tasks.encryption.decrypt", return_value=decrypted), patch(
+        "app.celery.tasks.SerialisedService.from_id"
+    ), patch("app.celery.tasks.get_notification", return_value=None), patch(
+        "app.celery.tasks.persist_notification",
+        side_effect=IntegrityError("msg", None, None),
     ), patch(
-        "app.tasks.current_app.logger.warning"
+        "app.celery.tasks.current_app.logger.warning"
     ) as mock_log:
 
         save_api_email_or_sms(encrypted)
