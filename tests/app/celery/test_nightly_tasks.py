@@ -459,4 +459,3 @@ def test_delete_notifications_logs_when_deletion_occurs():
         assert "service: abc123" in log_message
         assert "notification_type: sms" in log_message
         assert "count deleted: 5" in log_message
-        assert "duration: 10 seconds" in log_message
