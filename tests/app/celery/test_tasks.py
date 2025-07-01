@@ -1756,3 +1756,40 @@ def test_save_api_email_or_sms_integrity_error():
             mock_log.assert_called_once()
             assert "already exists" in mock_log.call_args[0][0]
             mock_self.retry.assert_not_called()
+
+
+def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
+    encrypted = MagicMock()
+    decrypted = {
+        "id": "notif-id",
+        "service_id": "svc-id",
+        "notification_type": "sms",
+        "template_id": "template-id",
+        "template_version": 1,
+        "to": "+15555555",
+        "client_reference": None,
+        "created_at": "2025-01-01T00:00:00",
+        "reply_to_text": "",
+        "status": "created",
+        "deocument_download_count": 0,
+    }
+
+    class FakeMaxRetriesExceeded(Exception):
+        pass
+
+    mock_self = MagicMock()
+    mock_self.retry.side_effect = FakeMaxRetriesExceeded
+    mock_self.MaxRetriesExceededError = FakeMaxRetriesExceeded
+
+    with patch("app.celery.tasks.encryption.decrypt", return_value=decrypted), patch(
+        "app.celery.tasks.SerialisedService.from_id"
+    ), patch("app.celery.tasks.get_notification", return_value=None), patch(
+        "app.celery.tasks.persist_notification", side_effect=SQLAlchemyError("db issue")
+    ), patch(
+        "app.celery.tasks.current_app.logger.excepetion"
+    ) as mock_exception:
+
+        with pytest.raises(SQLAlchemyError):
+            save_api_email_or_sms(mock_self, encrypted)
+            mock_exception.assert_called_once()
+            assert "Max retry failed" in mock_exception.call_args[0][0]
