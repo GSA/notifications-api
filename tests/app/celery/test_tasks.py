@@ -1786,7 +1786,7 @@ def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
     ), patch("app.celery.tasks.get_notification", return_value=None), patch(
         "app.celery.tasks.persist_notification", side_effect=SQLAlchemyError("db issue")
     ), patch(
-        "app.celery.tasks.current_app.logger.excepetion"
+        "app.celery.tasks.current_app.logger.exception"
     ) as mock_exception:
 
         with pytest.raises(SQLAlchemyError):
