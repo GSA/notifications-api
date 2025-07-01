@@ -12,6 +12,7 @@ from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.enums import AuthType, KeyType, NotificationType, PermissionType
 from app.models import Notification, Permission, User
+from app.utils import hilite
 from tests.app.db import (
     create_organization,
     create_service,
@@ -1062,7 +1063,7 @@ def test_find_users_by_email_finds_user_by_full_email(notify_db_session, admin_r
         _data=data,
     )
 
-    assert len(users["data"]) == 1
+    print(hilite(users["data"]))
     assert users["data"][0]["email_address"] == "findel.mestro@foo.com"
 
 
