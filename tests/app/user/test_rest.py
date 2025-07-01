@@ -1068,7 +1068,7 @@ def test_find_users_by_email_finds_user_by_full_email(notify_db_session, admin_r
 
 def test_get_user_login_gov_user(notify_db_session, admin_request):
     create_user(email="findel.mestro@foo.com")
-    data = {"email": "findel.mestro@foo.com", "uuid": "123456"}
+    data = {"email": "findel.mestro@foo.com", "login_uuid": "123456"}
 
     users = admin_request.post(
         "user.get_user_login_gov_user",
