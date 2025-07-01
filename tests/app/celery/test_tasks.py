@@ -1771,7 +1771,7 @@ def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
         "created_at": "2025-01-01T00:00:00",
         "reply_to_text": "",
         "status": "created",
-        "deocument_download_count": 0,
+        "document_download_count": 0,
     }
 
     class FakeMaxRetriesExceeded(Exception):
