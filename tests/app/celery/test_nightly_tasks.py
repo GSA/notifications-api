@@ -440,7 +440,7 @@ def test_delete_notifications_logs_when_deletion_occurs():
     with patch(
         "app.utils.utc_now", side_effect=[fake_start_time, fake_end_time]
     ), patch(
-        "app.dao.notifications_dao.move_notifications_to_notification_history",
+        "app.celery.nightly_tasks.move_notifications_to_notification_history",
         return_value=5,
     ) as mock_move, patch(
         "app.celery.nightly_tasks.current_app.logger.info"
