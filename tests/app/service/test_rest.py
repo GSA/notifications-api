@@ -3874,7 +3874,7 @@ def test_check_request_args_success():
         ),
         (
             {"service_id": "abc123"},
-            [{"name": ["Can't be empty"]}, {"email_from", ["Can't be empty"]}],
+            [{"name": ["Can't be empty"]}, {"email_from": ["Can't be empty"]}],
         ),
         (
             {"service_id": "abc123", "name": "Test"},
