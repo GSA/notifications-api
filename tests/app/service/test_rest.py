@@ -3798,7 +3798,7 @@ def test_get_service_statistics_for_specific_days(
     )
 
 
-@patch("app.service.rest.dao_fetch_status_for_service_from_days_for_user")
+@patch("app.service.rest.dao_fetch_stats_for_service_from_days_for_user")
 @patch("app.service.rest.get_specific_hours_stats")
 def test_get_service_statistics_for_specific_days_by_user(
     mock_get_stats, mock_fetch_stats
