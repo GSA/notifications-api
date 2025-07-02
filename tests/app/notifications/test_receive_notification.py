@@ -420,7 +420,7 @@ def test_receive_sns_sms_success(client, app):
     ) as mock_fetch_service, mock.patch(
         "app.notifications.receive_notifications.create_inbound_sms_object"
     ) as mock_create_inbound, mock.patch(
-        "app.notifications.receive_notifications.send_inbound_sms_to_service.apply_async"
+        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async"
     ) as mock_task:
 
         mock_service = mock.MagicMock(id="service-id")
