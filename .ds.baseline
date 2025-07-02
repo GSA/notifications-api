@@ -295,7 +295,7 @@
         "filename": "tests/app/service/test_rest.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 1283,
+        "line_number": 1286,
         "is_secret": false
       }
     ],
@@ -374,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-07-02T15:07:48Z"
+  "generated_at": "2025-07-02T15:24:03Z"
 }

@@ -38,7 +38,10 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
-from app.service.rest import get_service_statistics_for_specific_days
+from app.service.rest import (
+    get_service_statistics_for_specific_days,
+    get_service_statistics_for_specific_days_by_user,
+)
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -3792,4 +3795,53 @@ def test_get_service_statistics_for_specific_days(
         expected_start,
         hours=48,
         total_notifications=fake_total_notifications,
+    )
+
+
+@patch("app.service.rest.dao_fetch_status_for_service_from_days_for_user")
+@patch("app.service.rest.get_specific_hours_stats")
+def test_get_service_statistics_for_specific_days_by_user(
+    mock_get_stats, mock_fetch_stats
+):
+    service_id = "service-abc"
+    user_id = "user-123"
+    start_date_str = "2025-07-01"
+    days = 3
+    expected_end = datetime(2025, 7, 1)
+    expected_start = expected_end - timedelta(days=days - 1)
+
+    mock_total_notifications = {
+        datetime(2025, 6, 29, 10): 5,
+        datetime(2025, 6, 30, 12): 8,
+    }
+    mock_results = [
+        MagicMock(
+            notification_type="email",
+            status="delivered",
+            hour=datetime(2025, 6, 29, 10),
+            count=5,
+        ),
+        MagicMock(
+            notification_type="sms",
+            status="sent",
+            hour=datetime(2025, 6, 30, 12),
+            count=8,
+        ),
+    ]
+
+    mock_fetch_stats.return_value = (mock_total_notifications, mock_results)
+    expected_stats = {"emails_delivered": 5, "sms_sent": 8}
+    mock_get_stats.return_value = expected_stats
+    result = get_service_statistics_for_specific_days_by_user(
+        service_id, user_id, start_date_str, days
+    )
+    assert result == expected_stats
+    mock_fetch_stats.assert_called_once_with(
+        service_id, expected_start, expected_end, user_id
+    )
+    mock_get_stats.assert_called_once_with(
+        mock_results,
+        expected_start,
+        hours=days * 24,
+        total_notifications=mock_total_notifications,
     )
