@@ -12,7 +12,6 @@ from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
 from app.enums import AuthType, KeyType, NotificationType, PermissionType
 from app.models import Notification, Permission, User
-from app.utils import hilite
 from tests.app.db import (
     create_organization,
     create_service,
@@ -1076,7 +1075,6 @@ def test_get_user_login_gov_user(notify_db_session, admin_request):
         _data=data,
     )
 
-    print(hilite(users["data"]))
     assert users["data"]["email_address"] == "findel.mestro@foo.com"
 
 

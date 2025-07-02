@@ -449,4 +449,6 @@ def test_receive_sns_sms_success(client, app):
             date_received="2025-07-01T10:00:00:000Z",
             provider_name="sns",
         )
-        mock_task.assert_called_once_with(["inbound-id", "service-id"], queue="notify-internal-tasks")
+        mock_task.assert_called_once_with(
+            ["inbound-id", "service-id"], queue="notify-internal-tasks"
+        )
