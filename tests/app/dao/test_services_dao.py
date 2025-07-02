@@ -1852,11 +1852,13 @@ def test_dao_fetch_stats_for_service_from_hours(mock_execute, mock_get_midnight)
         return datetime(dt.year, dt.month, dt.day)
 
     mock_get_midnight.side_effect = _mock_midnight
-    total_result = [
+    total_result_mock = MagicMock()
+    total_result_mock.all.return_value = [
         MagicMock(hour=datetime(2025, 7, 1, 16), total_notifications=100),
         MagicMock(hour=datetime(2025, 7, 1, 17), total_notifications=50),
     ]
-    detail_result = [
+    detail_result_mock = MagicMock()
+    detail_result_mock.all.return_value = [
         MagicMock(
             notification_type="email",
             status="delivered",
@@ -1870,7 +1872,7 @@ def test_dao_fetch_stats_for_service_from_hours(mock_execute, mock_get_midnight)
             count=20,
         ),
     ]
-    mock_execute.side_effect = [total_result, detail_result]
+    mock_execute.side_effect = [total_result_mock, detail_result_mock]
     total_notifications, data = dao_fetch_stats_for_service_from_hours(
         service_id, start, end
     )
