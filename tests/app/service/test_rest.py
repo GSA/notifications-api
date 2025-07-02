@@ -39,8 +39,8 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
-from app.organization.rest import check_request_args
 from app.service.rest import (
+    check_request_args,
     get_service_statistics_for_specific_days,
     get_service_statistics_for_specific_days_by_user,
 )
