@@ -446,7 +446,7 @@ def test_receive_sns_sms_success(client, app):
             content="Hello there!",
             from_number="+14255550182",
             provider_ref="abc-123",
-            date_received="2025-07-02T10:00:00:000Z",
+            date_received="2025-07-01T10:00:00:000Z",
             provider_name="sns",
         )
         mock_task.assert_called_once_with(["inbound-id", "service-id"], queue="notify")
