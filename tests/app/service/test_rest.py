@@ -3861,7 +3861,7 @@ def test_check_request_args_success():
     assert result == ("abc123", "test service", "test@example.com")
 
 
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
     "args_dict,expected_errors",
     [
         (
