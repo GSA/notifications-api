@@ -2202,7 +2202,7 @@ def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_re
     assert found.client_reference == "some-ref"
 
 
-@patch("app.dao.notification_dao.db.session.execute")
+@patch("app.dao.notifications_dao.db.session.execute")
 def test_dao_get_notification_count_for_service_message_ratio(mock_execute):
     service_id = "service-123"
     current_year = 2025
