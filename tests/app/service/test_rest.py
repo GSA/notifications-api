@@ -3734,27 +3734,6 @@ def test_get_service_notification_statistics_by_day(
     assert response == mock_data
 
 
-# def test_valid_request():
-#     request = MagicMock()
-#     request.args = {
-#         "service_id": "123",
-#         "name": "Test Name",
-#         "email_from": "test@example.com",
-#     }
-#     result = check_request_args(request)
-#     assert result == ("123", "Test Name", "test@example.com")
-
-
-# def test_missing_service_id():
-#     request = MagicMock()
-#     request.args = {"name": "Test Name", "email_from": "test@example.com"}
-#     try:
-#         check_request_args(request)
-#     except Exception as e:
-#         assert e.status_code == 400
-#         assert {"service_id": ["Can't be empty"] in e.errors}
-
-
 @patch("app.service.rest.check_suspicious_id")
 @patch("app.service.rest.dao_fetch_stats_for_service_from_hours")
 @patch("app.service.rest.get_specific_hours_stats")
@@ -3867,7 +3846,7 @@ def test_check_request_args_success():
         (
             {},
             [
-                {"service_id": ["Can't be empety"]},
+                {"service_id": ["Can't be empty"]},
                 {"name": ["Can't be empty"]},
                 {"email_from": ["Can't be empty"]},
             ],
