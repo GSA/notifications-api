@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from flask import current_app, url_for
@@ -38,6 +38,7 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
+from app.service.rest import get_service_statistics_for_specific_days
 from app.utils import utc_now
 from tests import create_admin_authorization_header
 from tests.app.db import (
@@ -3747,3 +3748,48 @@ def test_get_service_notification_statistics_by_day(
 #     except Exception as e:
 #         assert e.status_code == 400
 #         assert {"service_id": ["Can't be empty"] in e.errors}
+
+
+@patch("app.service.rest.check_suspicious_id")
+@patch("app.service.rest.dao_fetch_stats_for_service_from_hours")
+@patch("app.service.rest.get_specific_hours_stats")
+def test_get_service_statistics_for_specific_days(
+    mock_get_stats, mock_fetch_stats, mock_check_id
+):
+    service_id = "test-service"
+    start_date_str = "2025-07-01"
+    days = 2
+
+    fake_total_notifications = {
+        datetime(2025, 6, 30, 12): 100,
+        datetime(2025, 6, 30, 13): 200,
+    }
+    fake_results = [
+        MagicMock(
+            notification_type="email",
+            status="delivered",
+            hour=datetime(2025, 6, 30, 12),
+            count=50,
+        ),
+        MagicMock(
+            notification_type="sms",
+            status="failed",
+            hour=datetime(2025, 6, 30, 13),
+            count=150,
+        ),
+    ]
+    mock_fetch_stats.return_value = (fake_total_notifications, fake_results)
+    expected_output = {"emails_sent": 50, "sms_failed": 150}
+    mock_get_stats.return_value = expected_output
+    result = get_service_statistics_for_specific_days(service_id, start_date_str, days)
+    assert result == expected_output
+    mock_check_id.assert_called_once_with(service_id)
+    expected_start = datetime(2025, 6, 30)
+    expected_end = datetime(2025, 7, 1)
+    mock_fetch_stats.assert_called_once_with(service_id, expected_start, expected_end)
+    mock_get_stats.assert_called_once_with(
+        fake_results,
+        expected_start,
+        hours=48,
+        total_notifications=fake_total_notifications,
+    )
