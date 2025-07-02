@@ -267,7 +267,7 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
         "is_verified": false,
-        "line_number": 27,
+        "line_number": 28,
         "is_secret": false
       },
       {
@@ -275,7 +275,7 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
         "is_verified": false,
-        "line_number": 57,
+        "line_number": 58,
         "is_secret": false
       }
     ],
@@ -374,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-07-02T16:06:12Z"
+  "generated_at": "2025-07-02T17:46:10Z"
 }
