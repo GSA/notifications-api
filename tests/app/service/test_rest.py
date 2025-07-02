@@ -26,6 +26,7 @@ from app.enums import (
     StatisticsType,
     TemplateType,
 )
+from app.errors import InvalidRequest
 from app.models import (
     AnnualBilling,
     EmailBranding,
@@ -38,6 +39,7 @@ from app.models import (
     ServiceSmsSender,
     User,
 )
+from app.organization.rest import check_request_args
 from app.service.rest import (
     get_service_statistics_for_specific_days,
     get_service_statistics_for_specific_days_by_user,
@@ -3845,3 +3847,48 @@ def test_get_service_statistics_for_specific_days_by_user(
         hours=days * 24,
         total_notifications=mock_total_notifications,
     )
+
+
+def test_check_request_args_success():
+    mock_request = MagicMock()
+    mock_request.args.get.side_effect = lambda key, default=None: {
+        "service_id": "abc123",
+        "name": "test service",
+        "email_from": "test@example.com",
+    }.get(key, default)
+
+    result = check_request_args(mock_request)
+    assert result == ("abc123", "test service", "test@example.com")
+
+
+@pytest.mark.parameterize(
+    "args_dict,expected_errors",
+    [
+        (
+            {},
+            [
+                {"service_id": ["Can't be empety"]},
+                {"name": ["Can't be empty"]},
+                {"email_from": ["Can't be empty"]},
+            ],
+        ),
+        (
+            {"service_id": "abc123"},
+            [{"name": ["Can't be empty"]}, {"email_from", ["Can't be empty"]}],
+        ),
+        (
+            {"service_id": "abc123", "name": "Test"},
+            [{"email_from": ["Can't be empty"]}],
+        ),
+    ],
+)
+def test_check_request_args_missing_fields(args_dict, expected_errors):
+    mock_request = MagicMock()
+    mock_request.args.get.side_effect = lambda key, default=None: args_dict.get(
+        key, default
+    )
+    with pytest.raises(InvalidRequest) as exc:
+        check_request_args(mock_request)
+
+    assert exc.value.status_code == 400
+    assert exc.value.message == expected_errors
