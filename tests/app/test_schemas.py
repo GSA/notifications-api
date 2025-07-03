@@ -10,9 +10,9 @@ from app.dao.provider_details_dao import (
     dao_update_provider_details,
     get_provider_details_by_identifier,
 )
-from app.models import ProviderDetailsHistory
+from app.models import ProviderDetailsHistory, ServicePermission
 from app.schema_validation import validate_schema_date_with_hour
-from app.schemas import UserSchema
+from app.schemas import ServiceSchema, UserSchema
 from tests.app.db import create_api_key
 
 
@@ -222,3 +222,30 @@ def test_user_permissions_returns_correct_dict(sample_user):
     }
 
     assert result == expected
+
+
+def test_deserialize_with_permissions():
+    input_data = {"id": "service-123", "permissions": ["read", "write"]}
+
+    schema = ServiceSchema()
+    result = schema.deserialize_service_permissions(input_data)
+
+    assert isinstance(result["permissions"], list)
+    assert all(isinstance(p, ServicePermission) for p in result["permissions"])
+    assert result["permissions"][0].service_id == "service-123"
+    assert result["permissions"][0].permission == "read"
+    assert result["permissions"][1].permission == "write"
+
+
+def test_deserialize_with_no_permissions_key():
+    input_data = {"id": "service-123", "other_data": "value"}
+    schema = ServiceSchema()
+    result = schema.deserialize_service_permissions(input_data.copy())
+    assert result == input_data
+
+
+def test_deserialize_with_non_dict_input():
+    input_data = ["not", "a", "dict"]
+    schema = ServiceSchema()
+    result = schema.deserialize_service_permissions(input_data)
+    assert result == input_data
