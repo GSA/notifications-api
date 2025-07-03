@@ -133,7 +133,7 @@ def test_init_app_with_localstack(mock_cloud_config, mock_client):
     os.environ["LOCALSTACK_ENDPOINT_URL"] = "http://localhost:4566"
     mock_cloud_config.sns_region = "us-north-1"
     mock_cloud_config.sns_access_key = "key"
-    mock_cloud_config.sns_secret_key = "sekret" # pragma: allowlist secret
+    mock_cloud_config.sns_secret_key = "sekret"  # pragma: allowlist secret
     mock_app = MagicMock()
     client_instance = AwsCloudwatchClient()
     client_instance.init_app(mock_app)
@@ -148,7 +148,7 @@ def test_init_app_without_localstack(mock_cloud_config, mock_client):
         del os.environ["LOCALSTACK_ENDPOINT_URL"]
     mock_cloud_config.sns_region = "us-north-1"
     mock_cloud_config.sns_access_key = "key"
-    mock_cloud_config.sns_secret_key = "sekret" # pragma: allowlist secret
+    mock_cloud_config.sns_secret_key = "sekret"  # pragma: allowlist secret
     mock_app = MagicMock()
     client_instance = AwsCloudwatchClient()
     client_instance.init_app(mock_app)
