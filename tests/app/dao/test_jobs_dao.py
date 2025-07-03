@@ -562,6 +562,7 @@ def test_unique_key_on_job_id_and_job_row_number_no_error_if_row_number_for_diff
 
 def test_jobs_with_same_activity_time_are_sorted_by_id(sample_template):
     from datetime import datetime
+
     dt = datetime(2023, 1, 1, 12, 0, 0)
 
     job1 = create_job(sample_template, created_at=dt, processing_started=None)

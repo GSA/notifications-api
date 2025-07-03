@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import sqlalchemy
@@ -29,6 +29,7 @@ from app.dao.services_dao import (
     dao_fetch_service_by_id,
     dao_fetch_service_by_id_with_api_keys,
     dao_fetch_service_by_inbound_number,
+    dao_fetch_stats_for_service_from_hours,
     dao_fetch_todays_stats_for_all_services,
     dao_fetch_todays_stats_for_service,
     dao_find_services_sending_to_tv_numbers,
@@ -1838,3 +1839,56 @@ def test_get_specific_days(data, start_date, days, end_date, expected, is_error)
             total_notifications=total_notifications,
         )
         assert results == expected
+
+
+@patch("app.dao.services_dao.get_midnight_in_utc")
+@patch("app.dao.services_dao.db.session.execute")
+def test_dao_fetch_stats_for_service_from_hours(mock_execute, mock_get_midnight):
+    service_id = "service-xyz"
+    start = datetime(2025, 7, 1, 15, 30)
+    end = datetime(2025, 7, 1, 18, 45)
+
+    def _mock_midnight(dt):
+        return datetime(dt.year, dt.month, dt.day)
+
+    mock_get_midnight.side_effect = _mock_midnight
+    total_result_mock = MagicMock()
+    total_result_mock.all.return_value = [
+        MagicMock(hour=datetime(2025, 7, 1, 16), total_notifications=100),
+        MagicMock(hour=datetime(2025, 7, 1, 17), total_notifications=50),
+    ]
+    detail_result_mock = MagicMock()
+    detail_result_mock.all.return_value = [
+        MagicMock(
+            notification_type="email",
+            status="delivered",
+            hour=datetime(2025, 7, 1, 16),
+            count=60,
+        ),
+        MagicMock(
+            notification_type="sms",
+            status="failed",
+            hour=datetime(2025, 7, 1, 17),
+            count=20,
+        ),
+    ]
+    mock_execute.side_effect = [total_result_mock, detail_result_mock]
+    total_notifications, data = dao_fetch_stats_for_service_from_hours(
+        service_id, start, end
+    )
+    assert total_notifications == {
+        datetime(2025, 7, 1, 16): 100,
+        datetime(2025, 7, 1, 17): 50,
+    }
+    assert len(data) == 2
+    assert data[0].notification_type == "email"
+    assert data[0].status == "delivered"
+    assert data[0].hour == datetime(2025, 7, 1, 16)
+    assert data[0].count == 60
+
+    assert data[1].notification_type == "sms"
+    assert data[1].status == "failed"
+    assert data[1].hour == datetime(2025, 7, 1, 17)
+    assert data[1].count == 20
+
+    assert mock_execute.call_count == 2

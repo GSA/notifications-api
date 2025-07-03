@@ -18,6 +18,7 @@ from app.dao.notifications_dao import (
     dao_get_notification_by_reference,
     dao_get_notification_count_for_job_id,
     dao_get_notification_count_for_service,
+    dao_get_notification_count_for_service_message_ratio,
     dao_get_notification_history_by_reference,
     dao_get_notifications_by_recipient_or_reference,
     dao_timeout_notifications,
@@ -2199,3 +2200,22 @@ def test_dao_get_notifications_by_recipient_or_reference_covers_sms_search_by_re
     assert found.id == notification.id
     assert found.status == NotificationStatus.FAILED
     assert found.client_reference == "some-ref"
+
+
+@patch("app.dao.notifications_dao.db.session.execute")
+def test_dao_get_notification_count_for_service_message_ratio(mock_execute):
+    service_id = "service-123"
+    current_year = 2025
+    expected_recent_count = 10
+    expected_old_count = 15
+
+    mock_recent_result = MagicMock()
+    mock_recent_result.scalar_one.return_value = expected_recent_count
+    mock_old_result = MagicMock()
+    mock_old_result.scalar_one.return_value = expected_old_count
+    mock_execute.side_effect = [mock_recent_result, mock_old_result]
+    result = dao_get_notification_count_for_service_message_ratio(
+        service_id, current_year
+    )
+    assert result == expected_recent_count + expected_old_count
+    assert mock_execute.call_count == 2
