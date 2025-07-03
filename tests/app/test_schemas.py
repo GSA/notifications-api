@@ -212,7 +212,9 @@ def test_user_permissions_returns_correct_dict(sample_user):
         "app.schemas.permission_dao.get_permissions_by_user_id",
         return_value=mock_permissions,
     ):
-        result = UserSchema.user_permissions(sample_user)
+        schema = UserSchema()
+
+        result = schema.user_permissions(sample_user)
 
     expected = {
         "111": ["read", "write"],
