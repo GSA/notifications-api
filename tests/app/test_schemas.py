@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import ValidationError
@@ -11,6 +12,7 @@ from app.dao.provider_details_dao import (
 )
 from app.models import ProviderDetailsHistory
 from app.schema_validation import validate_schema_date_with_hour
+from app.schemas import UserSchema
 from tests.app.db import create_api_key
 
 
@@ -197,3 +199,24 @@ def test_date_more_than_24_hours_in_future(mocker):
         assert 1 == 0
     except Exception as e:
         assert "datetime can only be 24 hours in the future" in str(e)
+
+
+def test_user_permissions_returns_correct_dict(sample_user):
+    sample_user.id = 1
+    mock_permissions = [
+        MagicMock(service_id=111, permission="read"),
+        MagicMock(service_id=111, permission="write"),
+        MagicMock(service_id=222, permission="admin"),
+    ]
+    with patch(
+        "app.schemas.permission_dao.get_permissions_by_user_id",
+        return_value=mock_permissions,
+    ):
+        result = UserSchema.user_permissions(sample_user)
+
+    expected = {
+        "111": ["read", "write"],
+        "222": ["admin"],
+    }
+
+    assert result == expected
