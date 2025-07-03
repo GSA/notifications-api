@@ -156,16 +156,16 @@ def fake_event():
 #     assert client_instance.is_localstack() is False
 
 
-# @patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
-# def test_warn_if_dev_is_opted_out(current_app_mock):
-#     os.environ["NOTIFIY_ENVIRONMENT"] = "development"
-#     client = AwsCloudwatchClient()
-#     logline = client.warn_if_dev_is_opted_out("Number is opted out", "notif123")
-#     assert "OPTED OUT" in logline
-#     assert "notif123" in logline
-#     no_warning = client.warn_if_dev_is_opted_out("All good", "notif456")
-#     assert no_warning is None
-#     del os.environ["NOTIFY_ENVIRONMENT"]
+@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+def test_warn_if_dev_is_opted_out(current_app_mock):
+    # os.environ["NOTIFIY_ENVIRONMENT"] = "development"
+    client = AwsCloudwatchClient()
+    logline = client.warn_if_dev_is_opted_out("Number is opted out", "notif123")
+    assert "OPTED OUT" in logline
+    assert "notif123" in logline
+    no_warning = client.warn_if_dev_is_opted_out("All good", "notif456")
+    assert no_warning is None
+    # del os.environ["NOTIFY_ENVIRONMENT"]
 
 
 def test_event_to_db_format(fake_event):
