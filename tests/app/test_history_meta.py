@@ -67,15 +67,17 @@ def _col_copy(col):
 def test_handle_single_table_inheritance():
     col1 = MagicMock()
     col1.key = "id"
+    col1.name = "name_col1"
     col2 = MagicMock()
     col2.key = "new_column"
+    col2.name = "name_col2"
 
     local_mapper = MagicMock()
     local_mapper.local_table.c = [col1, col2]
 
     super_history_mapper = MagicMock()
     super_history_mapper.local_table.c = {"id": col1}
-    super_history_mapper.local_table.append_column = MagicMock()
+    super_history_mapper.local_table.append_column = col2
 
     _handle_single_table_inheritance(local_mapper, super_history_mapper)
 
