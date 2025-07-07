@@ -37,6 +37,7 @@ class AwsPinpointClient(Client):
             # TODO right now this will only print with AWS simulated numbers,
             # but remove this when that changes
             current_app.logger.info(hilite(response))
+            return response
         except ClientError:
             current_app.logger.exception(
                 "#notify-debug-validate-phone-number Could not validate with pinpoint"
