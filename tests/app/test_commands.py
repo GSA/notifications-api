@@ -13,6 +13,7 @@ from app.commands import (
     bulk_invite_user_to_service,
     create_new_service,
     create_test_user,
+    create_user_jwt,
     download_csv_file_by_name,
     dump_sms_senders,
     dump_user_info,
@@ -761,3 +762,12 @@ def test_get_service_sender_phones(mock_execute, notify_api):
     result = runner.invoke(get_service_sender_phones, ["-s", "service-id"])
     assert result.exit_code == 0
     mock_execute.assert_called_once()
+
+
+@patch("app.commands.current_app.logger.info")
+def test_create_user_jwt(mock_logger, notify_api, sample_api_key, sample_service):
+    token = f"{sample_service.id}{sample_api_key}"
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(create_user_jwt, ["-t", token])
+    assert result.exit_code == 0
+    mock_logger.assert_called_once()
