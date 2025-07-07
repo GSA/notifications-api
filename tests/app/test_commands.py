@@ -18,6 +18,7 @@ from app.commands import (
     dump_user_info,
     fix_billable_units,
     generate_salt,
+    get_service_sender_phones,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
@@ -752,3 +753,11 @@ def test_purge_csv_bucket(mock_current_app, mock_purge_bucket, notify_api):
     mock_purge_bucket.assert_called_once_with(
         "test-bucket", "FAKE_ACCESS_KEY", "FAKE_SECRET_KEY", "us-north-1"
     )
+
+
+@patch("app.commands.db.session.execute")
+def test_get_service_sender_phones(mock_execute, notify_api):
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(get_service_sender_phones, ["-s", "service-id"])
+    assert result.exit_code == 0
+    mock_execute.assert_called_once()
