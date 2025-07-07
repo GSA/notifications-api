@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from sqlalchemy import func, select
@@ -26,6 +26,7 @@ from app.commands import (
     populate_organizations_from_file,
     process_row_from_job,
     promote_user_to_platform_admin,
+    purge_csv_bucket,
     purge_functional_test_data,
     update_jobs_archived_flag,
 )
@@ -732,3 +733,21 @@ def test_clear_templates_from_cache(mocker):
         [mocker.call(p) for p in expected_patterns], any_order=True
     )
     mock_logger.info.assert_called_once_with("Number of templates deleted from cache 9")
+
+
+@patch("app.commands.s3.purge_bucket")
+@patch("app.commands.current_app")
+def test_purge_csv_bucket(mock_current_app, mock_purge_bucket):
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {
+            "bucket": "test-bucket",
+            "access_key_id": "FAKE_ACCESS_KEY",
+            "secret_access_key": "FAKE_SECRET_KEY",  # pragma: allowlist secret
+            "region": "us-north-1",
+        }
+    }
+    purge_csv_bucket()
+
+    mock_purge_bucket.assert_called_once_with(
+        "test-bucket", "FAKE_ACCESS_KEY", "FAKE_SECRET_KEY", "us-north-1"
+    )
