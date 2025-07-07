@@ -737,7 +737,7 @@ def test_clear_templates_from_cache(mocker):
 
 @patch("app.commands.s3.purge_bucket")
 @patch("app.commands.current_app")
-def test_purge_csv_bucket(mock_current_app, mock_purge_bucket):
+def test_purge_csv_bucket(mock_current_app, mock_purge_bucket, notify_api):
     mock_current_app.config = {
         "CSV_UPLOAD_BUCKET": {
             "bucket": "test-bucket",
@@ -746,7 +746,8 @@ def test_purge_csv_bucket(mock_current_app, mock_purge_bucket):
             "region": "us-north-1",
         }
     }
-    purge_csv_bucket()
+    runner = notify_api.test_cli_runner()
+    runner.invoke(purge_csv_bucket)
 
     mock_purge_bucket.assert_called_once_with(
         "test-bucket", "FAKE_ACCESS_KEY", "FAKE_SECRET_KEY", "us-north-1"
