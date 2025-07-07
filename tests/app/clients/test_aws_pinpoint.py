@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+import pytest
 from aiohttp import ClientError
 from flask import current_app
 
@@ -20,7 +21,7 @@ def test_validate_phone_number_success():
     result = client_instance.validate_phone_number("US", "+1234567890")
     assert result is not None
     client_instance._client.phone_number_validate.assert_called_once_with(
-        {"IsoCountryCode": "US", "PhoneNumber": "+1234567890"}
+        NumberValidateRequest={"IsoCountryCode": "US", "PhoneNumber": "+1234567890"}
     )
     current_app.logger.info.assert_called_once()
 
@@ -33,7 +34,8 @@ def test_validate_phone_number_client_error():
         "phone number validate",
     )
 
-    client_instance.validate_phone_number("US", "bad-number")
+    with pytest.raises(ClientError):
+        client_instance.validate_phone_number("US", "bad-number")
 
     current_app.logger.exception.assert_called_once_with(
         "#notify-debug-validate-phone-number Could not validate with pinpoint"
