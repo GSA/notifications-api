@@ -18,9 +18,7 @@ def test_get_bases_with_super_history_and_table():
         local_mapper=None,
     )
 
-    assert bases == [
-        object,
-    ]
+    assert bases == (object,)
     assert properties["changed"] == ("changed_col", "col1", "col2")
 
 
