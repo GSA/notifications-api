@@ -633,28 +633,6 @@ def test_set_and_get_job_cache_and_expiry(monkeypatch):
     assert "k" not in job_cache
 
 
-# def test_list_s3_objects_pagination_and_filtering(monkeypatch):
-#     fake_now = datetime.datetime(2025, 6, 29, tzinfo=timezone.utc)
-#     recent = fake_now - datetime.timedelta(days=1)
-#     old = fake_now - datetime.timedelta(days=10)
-#     client = MagicMock()
-#     client.list_objectes_v2.side_effect = [
-#         {
-#             "Contents": [{"Key": "new", "LastModified": recent}],
-#             "NextContinuationToken": "token",
-#         },
-#         {"Contents": [{"Key": "old", "LastModified": old}]},
-#     ]
-#     monkeypatch.setattr(s3, "get_s3_client", lambda: client)
-
-#     # set bucket name config
-#     s3.current_app = MagicMock()
-#     s3.current_app.config = {"CSV_UPLOAD_BUCKET": {"bucket": "b"}}
-#     s3.current_app.logger = MagicMock()
-#     keys = list(s3.list_s3_objects())
-#     assert "new" in keys and "old" not in keys
-
-
 def test_read_s3_file_populates_cache(monkeypatch):
     fake_csv = "Phone number,Name\r\n+1-555-1234,Alice"
     obj = MagicMock()

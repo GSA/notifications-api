@@ -2914,25 +2914,6 @@ def test_get_all_notifications_for_service_includes_template_redacted(
     assert resp["notifications"][1]["template"]["redact_personalisation"] is True
 
 
-# TODO: check whether all hidden templates are also precompiled letters
-# def test_get_all_notifications_for_service_includes_template_hidden(admin_request, sample_service):
-#     letter_template = create_template(sample_service, template_type=TemplateType.LETTER)
-
-#     with freeze_time('2000-01-01'):
-#         letter_noti = create_notification(letter_template)
-
-#     resp = admin_request.get(
-#         'service.get_all_notifications_for_service',
-#         service_id=sample_service.id
-#     )
-
-#     assert resp['notifications'][0]['id'] == str(precompiled_noti.id)
-#     assert resp['notifications'][0]['template']['is_precompiled_letter'] is True
-
-#     assert resp['notifications'][1]['id'] == str(letter_noti.id)
-#     assert resp['notifications'][1]['template']['is_precompiled_letter'] is False
-
-
 @pytest.mark.skip(
     reason="We can't search on recipient if recipient is not kept in the db"
 )

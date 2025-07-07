@@ -128,34 +128,6 @@ def fake_event():
     }
 
 
-# @patch("app.clients.cloudwatch.aws_cloudwatch.client")
-# @patch("app.clients.cloudwatch.aws_cloudwatch.cloud_config")
-# def test_init_app_with_localstack(mock_cloud_config, mock_client):
-#     os.environ["LOCALSTACK_ENDPOINT_URL"] = "http://localhost:4566"
-#     mock_cloud_config.sns_region = "us-north-1"
-#     mock_cloud_config.sns_access_key = "key"
-#     mock_cloud_config.sns_secret_key = "sekret"  # pragma: allowlist secret
-#     mock_app = MagicMock()
-#     client_instance = AwsCloudwatchClient()
-#     client_instance.init_app(mock_app)
-#     assert client_instance.is_localstack() is True
-#     del os.environ["LOCALSTACK_ENDPOINT_URL"]
-
-
-# @patch("app.clients.cloudwatch.aws_cloudwatch.client")
-# @patch("app.clients.cloudwatch.aws_cloudwatch.cloud_config")
-# def test_init_app_without_localstack(mock_cloud_config, mock_client):
-#     if "LOCALSTACK_ENDPOINT_URL" in os.environ:
-#         del os.environ["LOCALSTACK_ENDPOINT_URL"]
-#     mock_cloud_config.sns_region = "us-north-1"
-#     mock_cloud_config.sns_access_key = "key"
-#     mock_cloud_config.sns_secret_key = "sekret"  # pragma: allowlist secret
-#     mock_app = MagicMock()
-#     client_instance = AwsCloudwatchClient()
-#     client_instance.init_app(mock_app)
-#     assert client_instance.is_localstack() is False
-
-
 @patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
 def test_warn_if_dev_is_opted_out(current_app_mock):
     # os.environ["NOTIFIY_ENVIRONMENT"] = "development"
