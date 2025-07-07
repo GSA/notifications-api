@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import text
+from werkzeug.exceptions import ServiceUnavailable
 
 from app import db, version
 from app.dao.organization_dao import dao_count_organizations_with_live_services
@@ -28,7 +29,8 @@ def show_status():
         current_app.logger.error(
             f"Unexpected error in show_status: {str(e)}", exc_info=True
         )
-        raise Exception(status_code=503, detail="Service temporarily unavailable")
+        # raise Exception(status_code=503, detail="Service temporarily unavailable")
+        raise ServiceUnavailable("Service temporarily unavailable")
 
 
 @status.route("/_status/live-service-and-organization-counts")
@@ -46,7 +48,8 @@ def live_service_and_organization_counts():
             f"Unexpected error in live_service_and_organization_counts: {str(e)}",
             exc_info=True,
         )
-        raise Exception(status_code=503, detail="Service temporarily unavailable")
+        # raise Exception(status_code=503, detail="Service temporarily unavailable")
+        raise ServiceUnavailable("Service temporarily unavailable")
 
 
 def get_db_version():

@@ -1,9 +1,14 @@
 import json
 
+# import os
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
 import pytest
 from flask import current_app
 
 from app import aws_cloudwatch_client
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
@@ -54,27 +59,6 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
         return {"events": []}
 
 
-@pytest.mark.parametrize(
-    "response, notify_id, expected_message",
-    [
-        (
-            "Phone has blocked SMS",
-            "abc",
-            "\x1b[31mThe phone number for notification_id abc is OPTED OUT. You need to opt back in\x1b[0m",
-        ),
-        (
-            "Some phone is opted out",
-            "xyz",
-            "\x1b[31mThe phone number for notification_id xyz is OPTED OUT. You need to opt back in\x1b[0m",
-        ),
-        ("Phone is A-OK", "123", None),
-    ],
-)
-def test_warn_if_dev_is_opted_out(response, notify_id, expected_message):
-    result = aws_cloudwatch_client.warn_if_dev_is_opted_out(response, notify_id)
-    assert result == expected_message
-
-
 def test_extract_account_number_gov_cloud():
     domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
     actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
@@ -89,34 +73,6 @@ def test_extract_account_number_gov_staging():
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
-
-
-def test_check_delivery_receipts():
-    pass
-
-
-def test_aws_value_or_default():
-    event = {
-        "delivery": {"phoneCarrier": "AT&T"},
-        "notification": {"timestamp": "2024-01-01T:12:00:00Z"},
-    }
-    assert (
-        aws_cloudwatch_client._aws_value_or_default(event, "delivery", "phoneCarrier")
-        == "AT&T"
-    )
-    assert (
-        aws_cloudwatch_client._aws_value_or_default(
-            event, "delivery", "providerResponse"
-        )
-        == ""
-    )
-    assert (
-        aws_cloudwatch_client._aws_value_or_default(event, "notification", "timestamp")
-        == "2024-01-01T:12:00:00Z"
-    )
-    assert (
-        aws_cloudwatch_client._aws_value_or_default(event, "nonexistent", "field") == ""
-    )
 
 
 def test_event_to_db_format_with_missing_fields():
@@ -157,3 +113,134 @@ def test_event_to_db_format_with_string_input():
         "delivery.priceInUSD": 0.00881,
         "@timestamp": "2024-01-01T14:00:00Z",
     }
+
+
+@pytest.fixture
+def fake_event():
+    return {
+        "notification": {"messageId": "abc123", "timestamp": "2025-01-01T00:00:00"},
+        "status": "DELIVERED",
+        "delivery": {
+            "phoneCarrier": "Verizon",
+            "providerResponse": "Success",
+            "priceInUSD": "0.006",
+        },
+    }
+
+
+@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+def test_warn_if_dev_is_opted_out(current_app_mock):
+    # os.environ["NOTIFIY_ENVIRONMENT"] = "development"
+    client = AwsCloudwatchClient()
+    logline = client.warn_if_dev_is_opted_out("Number is opted out", "notif123")
+    assert "OPTED OUT" in logline
+    assert "notif123" in logline
+    no_warning = client.warn_if_dev_is_opted_out("All good", "notif456")
+    assert no_warning is None
+    # del os.environ["NOTIFY_ENVIRONMENT"]
+
+
+def test_event_to_db_format(fake_event):
+    client = AwsCloudwatchClient()
+    result = client.event_to_db_format(fake_event)
+    assert result["notification.messageId"] == "abc123"
+    assert result["status"] == "DELIVERED"
+    assert result["delivery.phoneCarrier"] == "Verizon"
+    assert result["delivery.providerResponse"] == "Success"
+    assert result["delivery.priceInUSD"] == 0.006
+
+
+def test_event_to_db_format_with_str(fake_event):
+    client = AwsCloudwatchClient()
+    event_str = json.dumps(fake_event)
+    result = client.event_to_db_format(event_str)
+    assert result["delivery.priceInUSD"] == 0.006
+
+
+def test_event_to_db_Format_missing_price(fake_event):
+    client = AwsCloudwatchClient()
+    fake_event["delivery"]["priceInUSD"] = ""
+    result = client.event_to_db_format(fake_event)
+    assert result["delivery.priceInUSD"] == 0.0
+
+
+def test_aws_value_or_default():
+    client = AwsCloudwatchClient()
+    event = {"delivery": {"foo": "bar"}}
+    assert client._aws_value_or_default(event, "delivery", "foo") == "bar"
+    assert client._aws_value_or_default(event, "delivery", "missing") == ""
+    assert client._aws_value_or_default(event, "nonexistent", "missing") == ""
+
+
+def test_extract_account_number():
+    client = AwsCloudwatchClient()
+    arn = "arn:aws:ses:us-north-1:123456789012:identity/example.com"
+    parts = client._extract_account_number(arn)
+    assert parts[4] == "123456789012"
+
+
+@patch("app.clients.cloudwatch.aws_cloudwatch.client")
+def test_get_log_with_pagination(mock_client):
+    client = AwsCloudwatchClient()
+    client._client = mock_client
+
+    mock_client.filter_log_events.side_effect = [
+        {"events": [{"message": "msg1"}], "nextToken": "abc"},
+        {"events": [{"message": "msg2"}]},
+    ]
+
+    start = datetime.utcnow() - timedelta(minutes=5)
+    end = datetime.utcnow()
+
+    logs = client._get_log("log-group", start, end)
+    assert len(logs) == 2
+    assert logs[0]["message"] == "msg1"
+    assert logs[1]["message"] == "msg2"
+
+
+@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+def test_get_receipts(mock_current_app):
+    client = AwsCloudwatchClient()
+    client._get_log = MagicMock(
+        return_value=[
+            {
+                "message": json.dumps(
+                    {
+                        "notification": {"messageId": "abc", "timestamp": "t"},
+                        "status": "DELIVERED",
+                        "delivery": {
+                            "phoneCarrier": "x",
+                            "providerResponse": "V",
+                            "priceInUSD": "0.1",
+                        },
+                    }
+                )
+            }
+        ]
+    )
+
+    result = client._get_receipts("group", datetime.utcnow(), datetime.utcnow())
+    assert len(result) == 1
+    event = json.loads(list(result)[0])
+    assert event["status"] == "DELIVERED"
+
+
+@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+@patch("app.clients.cloudwatch.aws_cloudwatch.cloud_config")
+def test_check_delivery_receipts(mock_cloud_config, current_app_mock):
+    client = AwsCloudwatchClient()
+    mock_cloud_config.sns_regions = "us-north-1"
+    mock_cloud_config.ses_domain_arn = (
+        "arn:aws:ses:us-north-1:123456789012:identity/example.com"
+    )
+    client._get_receipts = MagicMock(
+        side_effect=[{"delivered1", "delivered2"}, {"failed1"}]
+    )
+
+    start = datetime.utcnow() - timedelta(minutes=10)
+    end = datetime.utcnow()
+
+    delivered, failed = client.check_delivery_receipts(start, end)
+
+    assert delivered == {"delivered1", "delivered2"}
+    assert failed == {"failed1"}

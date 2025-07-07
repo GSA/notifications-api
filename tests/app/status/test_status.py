@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from flask import json
 
@@ -64,3 +66,17 @@ def test_populated_live_service_and_organization_counts(admin_request):
         "organizations": 1,
         "services": 4,
     }
+
+
+def test_live_service_and_org_counts_exception(admin_request):
+    with patch("app.status.healthcheck.jsonify") as mock_jsonify:
+        mock_jsonify.side_effect = ValueError("JSON serialization failed")
+        admin_request.get(
+            "status.live_service_and_organization_counts", _expected_status=503
+        )
+
+
+def test_show_status_exception(admin_request):
+    with patch("app.status.healthcheck.jsonify") as mock_jsonify:
+        mock_jsonify.side_effect = ValueError("JSON serialization failed")
+        admin_request.get("status.show_status", _expected_status=503)

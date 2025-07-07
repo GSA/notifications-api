@@ -775,6 +775,16 @@ def test_activate_user(admin_request, sample_user):
     assert sample_user.state == "active"
 
 
+def test_deactivate_user(admin_request, sample_user):
+    sample_user.state = "active"
+
+    resp = admin_request.post("user.deactivate_user", user_id=sample_user.id)
+
+    assert resp["data"]["id"] == str(sample_user.id)
+    assert resp["data"]["state"] == "pending"
+    assert sample_user.state == "pending"
+
+
 def test_activate_user_fails_if_already_active(admin_request, sample_user):
     resp = admin_request.post(
         "user.activate_user", user_id=sample_user.id, _expected_status=400
@@ -1054,6 +1064,18 @@ def test_find_users_by_email_finds_user_by_full_email(notify_db_session, admin_r
 
     assert len(users["data"]) == 1
     assert users["data"][0]["email_address"] == "findel.mestro@foo.com"
+
+
+def test_get_user_login_gov_user(notify_db_session, admin_request):
+    create_user(email="findel.mestro@foo.com")
+    data = {"email": "findel.mestro@foo.com", "login_uuid": "123456"}
+
+    users = admin_request.post(
+        "user.get_user_login_gov_user",
+        _data=data,
+    )
+
+    assert users["data"]["email_address"] == "findel.mestro@foo.com"
 
 
 def test_find_users_by_email_handles_no_results(notify_db_session, admin_request):
