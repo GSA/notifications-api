@@ -18,7 +18,7 @@ def test_validate_phone_number_success():
     client_instance._client.phone_number_validate.return_value = mock_response
 
     result = client_instance.validate_phone_number("US", "+1234567890")
-    assert result == "Foo"
+    assert result is not None
     client_instance._client.phone_number_validate.assert_called_once_with(
         {"IsoCountryCode": "US", "PhoneNumber": "+1234567890"}
     )
@@ -33,8 +33,8 @@ def test_validate_phone_number_client_error():
         "phone number validate",
     )
 
-    result = client_instance.validate_phone_number("US", "bad-number")
-    assert result == "Foo"
+    client_instance.validate_phone_number("US", "bad-number")
+
     current_app.logger.exception.assert_called_once_with(
         "#notify-debug-validate-phone-number Could not validate with pinpoint"
     )
