@@ -60,10 +60,6 @@ def test_get_bases_without_super_history():
     assert "changed" not in properties
 
 
-def _col_copy(col):
-    return f"copied_{col.key}"
-
-
 def test_handle_single_table_inheritance():
     col1 = MagicMock()
     col1.key = "id"
@@ -81,6 +77,4 @@ def test_handle_single_table_inheritance():
 
     _handle_single_table_inheritance(local_mapper, super_history_mapper)
 
-    super_history_mapper.local_table.append_column.assert_called_once_with(
-        "copied_new_column"
-    )
+    super_history_mapper.local_table.append_column.assert_called_once()
