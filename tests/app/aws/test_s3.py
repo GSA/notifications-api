@@ -678,5 +678,6 @@ def test_test_with_bom_header(mock_app):
     expected = {0: "15555555555"}
     assert result == expected
 
+
 if __name__ == "__main__":
     test_valid_csv()
