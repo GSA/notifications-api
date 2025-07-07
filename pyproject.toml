@@ -78,7 +78,7 @@ flask-socketio = "^5.5.1"
 virtualenv = "^20.31.2"
 marshmallow-enum = "^1.5.1"
 awscli = "^1.40.36"
-typing-extensions = "^4.14.0"
+typing-extensions = "^4.14.1"
 aiohttp = "^3.12.13"
 pytest = "^8.4.0"
 
