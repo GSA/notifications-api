@@ -843,7 +843,7 @@ def test_clear_redis_list(monkeypatch, notify_api):
         return 0
 
     mock_redis_store.llen = llen_side_effect
-    runner = notify_api.test_cli_runner
+    runner = notify_api.test_cli_runner()
     result = runner.invoke(clear_redis_list, ["-n", "foo"])
     assert result.exit_code == 0
     assert ltrim_calls == [("test_list", 1, 0)]
