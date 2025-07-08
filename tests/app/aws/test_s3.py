@@ -2,7 +2,7 @@ import os
 import time
 from datetime import timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 import botocore
 import pytest
@@ -13,6 +13,7 @@ from app.aws import s3
 from app.aws.s3 import (
     cleanup_old_s3_objects,
     download_from_s3,
+    extract_phones,
     file_exists,
     get_job_and_metadata_from_s3,
     get_job_from_s3,
@@ -650,3 +651,33 @@ def test_read_s3_file_populates_cache(monkeypatch):
     assert job_cache.get("66")[0].startswith("Phone number")
     assert job_cache.get("66_phones")[0] == {"0", "15551234"}
     assert job_cache.get("66_personalisation")[0] == {0: {"Name": "Alice"}}
+
+
+@patch("app.aws.s3.current_app")
+def test_valid_csv(mock_app):
+    csv_data = "Name,Phone Number\nAlice,+1 (555) 555-5555\nBob,555.555.1111"
+    result = extract_phones(csv_data, "service1", "job1")
+    expected = {0: "15555555555", 1: "5555551111"}
+    assert result == expected
+    mock_app.logger.error.assert_not_called()
+
+
+@patch("app.aws.s3.current_app")
+def test_missing_phone_column(mock_app):
+
+    csv_data = "Name,Phone Number\nAlice,\nBob"
+    result = extract_phones(csv_data, "service1", "job1")
+    assert result == {0: "", 1: "Unavailable"}
+    mock_app.logger.error.assert_called_once()
+
+
+@patch("app.aws.s3.current_app")
+def test_test_with_bom_header(mock_app):
+    csv_data = "\ufeffName,Phone Number\nAlice,1-555-555-5555"
+    result = extract_phones(csv_data, "service2", "job2")
+    expected = {0: "15555555555"}
+    assert result == expected
+
+
+if __name__ == "__main__":
+    test_valid_csv()

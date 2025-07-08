@@ -752,12 +752,13 @@ def create_admin_jwt():
 @notify_command(name="create-user-jwt")
 @click.option("-t", "--token", required=True, prompt=False)
 def create_user_jwt(token):
-    if getenv("NOTIFY_ENVIRONMENT", "") != "development":
+    if getenv("NOTIFY_ENVIRONMENT", "") not in ["development", "test"]:
         current_app.logger.error("Can only be run in development")
         return
     service_id = token[-73:-37]
     api_key = token[-36:]
-    current_app.logger.info(create_jwt_token(api_key, service_id))
+    token = create_jwt_token(api_key, service_id)
+    current_app.logger.info(token)
 
 
 def _update_template(id, name, template_type, content, subject):

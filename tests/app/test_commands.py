@@ -1,6 +1,7 @@
+import json
 import os
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from sqlalchemy import func, select
@@ -11,13 +12,16 @@ from app.commands import (
     _update_template,
     associate_services_to_organizations,
     bulk_invite_user_to_service,
+    clear_redis_list,
     create_new_service,
     create_test_user,
+    create_user_jwt,
     download_csv_file_by_name,
     dump_sms_senders,
     dump_user_info,
     fix_billable_units,
     generate_salt,
+    get_service_sender_phones,
     insert_inbound_numbers_from_file,
     populate_annual_billing_with_defaults,
     populate_annual_billing_with_the_previous_years_allowance,
@@ -26,8 +30,10 @@ from app.commands import (
     populate_organizations_from_file,
     process_row_from_job,
     promote_user_to_platform_admin,
+    purge_csv_bucket,
     purge_functional_test_data,
     update_jobs_archived_flag,
+    update_templates,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
@@ -732,3 +738,113 @@ def test_clear_templates_from_cache(mocker):
         [mocker.call(p) for p in expected_patterns], any_order=True
     )
     mock_logger.info.assert_called_once_with("Number of templates deleted from cache 9")
+
+
+@patch("app.commands.s3.purge_bucket")
+@patch("app.commands.current_app")
+def test_purge_csv_bucket(mock_current_app, mock_purge_bucket, notify_api):
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {
+            "bucket": "test-bucket",
+            "access_key_id": "FAKE_ACCESS_KEY",
+            "secret_access_key": "FAKE_SECRET_KEY",  # pragma: allowlist secret
+            "region": "us-north-1",
+        }
+    }
+    runner = notify_api.test_cli_runner()
+    runner.invoke(purge_csv_bucket)
+
+    mock_purge_bucket.assert_called_once_with(
+        "test-bucket", "FAKE_ACCESS_KEY", "FAKE_SECRET_KEY", "us-north-1"
+    )
+
+
+@patch("app.commands.db.session.execute")
+def test_get_service_sender_phones(mock_execute, notify_api):
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(get_service_sender_phones, ["-s", "service-id"])
+    assert result.exit_code == 0
+    mock_execute.assert_called_once()
+
+
+@patch("app.commands.current_app.logger.info")
+def test_create_user_jwt(mock_logger, notify_api, sample_api_key, sample_service):
+    token = f"{sample_service.id}{sample_api_key}"
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(create_user_jwt, ["-t", token])
+    assert result.exit_code == 0
+    mock_logger.assert_called_once()
+
+
+def test_update_templates_calls_update_and_clear(monkeypatch, notify_api):
+    templates_data = [
+        {
+            "id": 1,
+            "name": "Template1",
+            "type": "email",
+            "content": "Hello",
+            "subject": "Subject1",
+        },
+        {
+            "id": 2,
+            "name": "Template2",
+            "type": "sms",
+            "content": "Hi",
+            "subject": "Subject2",
+        },
+    ]
+    m = mock_open(read_data=json.dumps(templates_data))
+    monkeypatch.setattr(
+        "app.commands.current_app",
+        type("obj", (), {"config": {"CONFIG_FILES": "/fake/path"}}),
+    )
+    with patch("app.commands.open", m):
+        with patch("app.commands._update_template") as mock_update_template, patch(
+            "app.commands._clear_templates_from_cache"
+        ) as mock_clear_cache:
+
+            runner = notify_api.test_cli_runner()
+            result = runner.invoke(update_templates)
+            assert result.exit_code == 0
+
+            expected_calls = [
+                (1, "Template1", "email", "Hello", "Subject1"),
+                (2, "Template2", "sms", "Hi", "Subject2"),
+            ]
+            actual_calls = [call.args for call in mock_update_template.call_args_list]
+            assert actual_calls == expected_calls
+            mock_clear_cache.assert_called_once()
+
+
+def test_clear_redis_list(monkeypatch, notify_api):
+    mock_redis_store = type("RedisStoreMock", (), {})()
+    monkeypatch.setattr("app.commands.redis_store", mock_redis_store)
+    mock_redis_store.llen = lambda list_name: {"before_list": 5, "after_list": 0}[
+        list_name
+    ]
+    ltrim_calls = []
+
+    def fake_ltrim(name, start, end):
+        ltrim_calls.append((name, start, end))
+
+    mock_redis_store.ltrim = fake_ltrim
+    logger_info_calls = []
+    mock_logger = type(
+        "LoggerMock", (), {"info": lambda self, msg: logger_info_calls.append(msg)}
+    )()
+    mock_app = type("FlaskAppMock", (), {"logger": mock_logger})
+    monkeypatch.setattr("app.commands.current_app", mock_app)
+    call_count = {"count": 0}
+
+    def llen_side_effect(name):
+        if call_count["count"] == 0:
+            call_count["count"] += 1
+            return 5
+        return 0
+
+    mock_redis_store.llen = llen_side_effect
+    runner = notify_api.test_cli_runner()
+    result = runner.invoke(clear_redis_list, ["-n", "test_list"])
+    assert result.exit_code == 0
+    assert ltrim_calls == [("test_list", 1, 0)]
+    assert logger_info_calls == ["Cleared redis list test_list. Before: 5 after 0"]
