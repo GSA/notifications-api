@@ -807,8 +807,8 @@ def test_update_templates_calls_update_and_clear(monkeypatch, notify_api):
             assert result.exit_code == 0
 
             expected_calls = [
-                ((1, "Template1", "email", "Hello", "Subject1"),),
-                ((2, "Template2", "sms", "Hi", "Subject2"),),
+                (1, "Template1", "email", "Hello", "Subject1"),
+                (2, "Template2", "sms", "Hi", "Subject2"),
             ]
             actual_calls = [call.args for call in mock_update_template.call_args_list]
             assert actual_calls == expected_calls
