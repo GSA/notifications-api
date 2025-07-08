@@ -847,4 +847,4 @@ def test_clear_redis_list(monkeypatch, notify_api):
     result = runner.invoke(clear_redis_list, ["-n", "test_list"])
     assert result.exit_code == 0
     assert ltrim_calls == [("test_list", 1, 0)]
-    assert logger_info_calls == ["Cleared redis list test_list.  Before: 5 after 0"]
+    assert logger_info_calls == ["Cleared redis list test_list. Before: 5 after 0"]
