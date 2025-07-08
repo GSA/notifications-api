@@ -804,7 +804,7 @@ def test_update_templates_calls_update_and_clear(monkeypatch, notify_api):
 
             runner = notify_api.test_cli_runner()
             result = runner.invoke(update_templates)
-            assert result == 0
+            assert result.exit_code == 0
 
             expected_calls = [
                 ((1, "Template1", "email", "Hello", "Subject1"),),
