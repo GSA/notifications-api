@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open, patch
@@ -31,6 +32,7 @@ from app.commands import (
     purge_csv_bucket,
     purge_functional_test_data,
     update_jobs_archived_flag,
+    update_templates,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
 from app.dao.users_dao import get_user_by_email
@@ -771,3 +773,43 @@ def test_create_user_jwt(mock_logger, notify_api, sample_api_key, sample_service
     result = runner.invoke(create_user_jwt, ["-t", token])
     assert result.exit_code == 0
     mock_logger.assert_called_once()
+
+
+def test_update_templates_calls_update_and_clear(monkeypatch, notify_api):
+    templates_data = [
+        {
+            "id": 1,
+            "name": "Template1",
+            "type": "email",
+            "content": "Hello",
+            "subject": "Subject1",
+        },
+        {
+            "id": 2,
+            "name": "Template2",
+            "type": "sms",
+            "content": "Hi",
+            "subject": "Subject2",
+        },
+    ]
+    m = mock_open(read_data=json.dumps(templates_data))
+    monkeypatch.setattr(
+        "app.commands.current_app",
+        type("obj", (), {"config": {"CONFIG_FILES": "/fake/path"}}),
+    )
+    with patch("app.commands.open", m):
+        with patch("app.commands._update_template") as mock_update_template, patch(
+            "app.commands._clear_templates_from_cache"
+        ) as mock_clear_cache:
+
+            runner = notify_api.test_cli_runner()
+            result = runner.invoke(update_templates)
+            assert result == 0
+
+            expected_calls = [
+                ((1, "Template1", "email", "Hello", "Subject1"),),
+                ((2, "Template2", "sms", "Hi", "Subject2"),),
+            ]
+            actual_calls = [call.args for call in mock_update_template.call_args_list]
+            assert actual_calls == expected_calls
+            mock_clear_cache.assert_called_once()
