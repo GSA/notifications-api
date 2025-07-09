@@ -30,8 +30,8 @@ from app.models import FactProcessingTime
 from app.utils import get_midnight_in_utc, utc_now
 
 
-@notify_celery.task(name="remove_sms_email_jobs")
-@cronitor("remove_sms_email_jobs")
+@notify_celery.task(name="remove-sms-email-jobs")
+@cronitor("remove-sms-email-jobs")
 def remove_sms_email_csv_files():
     _remove_csv_files([NotificationType.EMAIL, NotificationType.SMS])
 

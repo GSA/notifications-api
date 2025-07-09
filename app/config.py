@@ -311,8 +311,8 @@ class Config(object):
                 "schedule": crontab(hour=4, minute=5),
                 "options": {"queue": QueueNames.PERIODIC},
             },
-            "remove_sms_email_jobs": {
-                "task": "remove_sms_email_jobs",
+            "remove-sms-email-jobs": {
+                "task": "remove-sms-email-jobs",
                 "schedule": crontab(hour=8, minute=0),
                 "options": {"queue": QueueNames.PERIODIC},
             },
