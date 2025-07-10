@@ -124,10 +124,6 @@ class Config(object):
     # Logging
     DEBUG = False
 
-    # Monitoring
-    CRONITOR_ENABLED = False
-    CRONITOR_KEYS = json.loads(getenv("CRONITOR_KEYS", "{}"))
-
     # Antivirus
     ANTIVIRUS_ENABLED = getenv("ANTIVIRUS_ENABLED", "1") == "1"
 
@@ -411,7 +407,6 @@ class Production(Config):
     )
 
     FROM_NUMBER = "Notify.gov"
-    CRONITOR_ENABLED = True
 
 
 class Staging(Production):
