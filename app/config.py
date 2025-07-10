@@ -316,6 +316,16 @@ class Config(object):
                 "schedule": crontab(hour=8, minute=0),
                 "options": {"queue": QueueNames.PERIODIC},
             },
+            "delete-sms-notifications": {
+                "task": "delete-sms-notifications",
+                "schedule": crontab(hour=8, minute=46),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
+            "delete-email-notifications": {
+                "task": "delete-sms-notifications",
+                "schedule": crontab(hour=8, minute=17),
+                "options": {"queue": QueueNames.PERIODIC},
+            },
             "check-for-services-with-high-failure-rates-or-sending-to-tv-numbers": {
                 "task": "check-for-services-with-high-failure-rates-or-sending-to-tv-numbers",
                 "schedule": crontab(day_of_week="mon-fri", hour=14, minute=30),
