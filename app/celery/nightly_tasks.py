@@ -73,14 +73,10 @@ def delete_notifications_older_than_retention():
     )
 
 
-@notify_celery.task(name="delete-sms-notifications")
-# @cronitor("delete-sms-notifications")
 def delete_sms_notifications_older_than_retention():
     _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
 
-@notify_celery.task(name="delete-email-notifications")
-# @cronitor("delete-email-notifications")
 def delete_email_notifications_older_than_retention():
     _delete_notifications_older_than_retention_by_type(NotificationType.EMAIL)
 
