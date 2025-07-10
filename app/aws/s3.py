@@ -5,7 +5,6 @@ import time
 from io import StringIO
 
 import botocore
-import eventlet
 from boto3 import Session
 from flask import current_app
 
@@ -250,7 +249,7 @@ def get_s3_files():
         for object_key in object_keys:
             read_s3_file(bucket_name, object_key, s3res)
             count = count + 1
-            eventlet.sleep(0.2)
+            time.sleep(0.2)
     except Exception:
         current_app.logger.exception(
             f"Trouble reading {object_key} which is # {count} during cache regeneration"
@@ -411,7 +410,7 @@ def get_job_from_s3(service_id, job_id):
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                eventlet.sleep(sleep_time)
+                time.sleep(sleep_time)
                 continue
             else:
                 # Typically this is "NoSuchKey"
