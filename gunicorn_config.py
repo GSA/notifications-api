@@ -6,6 +6,9 @@ import traceback
 import eventlet
 import gunicorn
 
+eventlet.monkey_patch()
+# This will give us a better stack trace if blocking occurs
+eventlet.debug.hub_blocking_detection(True)
 workers = 4
 worker_class = "eventlet"
 worker_connections = 256
