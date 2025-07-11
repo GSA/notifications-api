@@ -138,14 +138,14 @@ typing-extensions = {version = ">=4.2", markers = "python_version < \"3.13\""}
 
 [[package]]
 name = "alembic"
-version = "1.16.3"
+version = "1.16.4"
 description = "A database migration tool for SQLAlchemy."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "alembic-1.16.3-py3-none-any.whl", hash = "sha256:70a7c7829b792de52d08ca0e3aefaf060687cb8ed6bebfa557e597a1a5e5a481"},
-    {file = "alembic-1.16.3.tar.gz", hash = "sha256:18ad13c1f40a5796deee4b2346d1a9c382f44b8af98053897484fa6cf88025e4"},
+    {file = "alembic-1.16.4-py3-none-any.whl", hash = "sha256:b05e51e8e82efc1abd14ba2af6392897e145930c3e0a2faf2b0da2f7f7fd660d"},
+    {file = "alembic-1.16.4.tar.gz", hash = "sha256:efab6ada0dd0fae2c92060800e0bf5c1dc26af15a10e02fb4babff164b4725e2"},
 ]
 
 [package.dependencies]
@@ -5513,4 +5513,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.9"
-content-hash = "df64b18e46749c63c640146bca2f0f753e5af989584555fd97953d8b1ec2420d"
+content-hash = "1cf781b455b1eb0d911161850fbb3d91b6013e7341748ac2909efb4fcdf6e26f"
