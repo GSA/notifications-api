@@ -179,7 +179,7 @@ class JSONFormatter(BaseJSONFormatter):
             # for example, delivery receipts, where the formatting fails
             # This is not a huge problem, don't dump stack traces into the logs
             # for it.
-            logger.warning(f"failed to format log message: {e}")
+            logger.debug(f"failed to format log message: {e}")
         except IndexError as e:
-            logger.exception(f"failed to format log message: {e}")
+            logger.debug(f"failed to format log message: {e}")
         return log_record
