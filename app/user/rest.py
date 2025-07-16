@@ -89,6 +89,7 @@ def handle_integrity_error(exc):
 
 @user_blueprint.route("", methods=["POST"])
 def create_user():
+    current_app.logger.info("#invites: enter create_user()")
     req_json = request.get_json()
     user_to_create = create_user_schema.load(req_json)
 
@@ -96,6 +97,7 @@ def create_user():
         user_to_create, password=req_json.get("password"), validated_email_access=True
     )
     result = user_to_create.serialize()
+    current_app.logger.info("#invites: returning the new user")
     return jsonify(data=result), 201
 
 
@@ -597,14 +599,22 @@ def set_permissions(user_id, service_id):
 
 @user_blueprint.route("/get-login-gov-user", methods=["POST"])
 def get_user_login_gov_user():
+    current_app.logger.info("#invites: enter get_user_login_gov_user")
     request_args = request.get_json()
     login_uuid = request_args["login_uuid"]
     email = request_args["email"]
+    current_app.logger.info(
+        f"#invites: login_uuid {login_uuid} email is null? {email is None}"
+    )
+
     user = get_login_gov_user(login_uuid, email)
 
     if user is None:
+        current_app.logger.info("#invites: couldn't find user, returning empty data")
         return jsonify({})
+    current_app.logger.info("#invites: found the user, serializing")
     result = user.serialize()
+    current_app.logger.info("#invites: returning successfully")
     return jsonify(data=result)
 
 
@@ -615,9 +625,7 @@ def fetch_user_by_email():
             hilite(f"enter fetch_user_by_email with {request.get_json()}")
         )
         email = email_data_request_schema.load(request.get_json())
-        debug_not_production(hilite(f"request schema loads {email}"))
         fetched_user = get_user_by_email(email["email"])
-        debug_not_production(hilite(f"fetched user is {fetched_user}"))
         result = fetched_user.serialize()
         return jsonify(data=result)
     except Exception as e:
