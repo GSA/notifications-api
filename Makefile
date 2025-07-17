@@ -71,7 +71,7 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
 		--pool=eventlet
-		--concurrency=100
+		--concurrency=20
 
 
 .PHONY: dead-code
