@@ -10,8 +10,8 @@ import traceback  # noqa
 import eventlet.debug as debug  # noqa
 import gunicorn  # noqa
 
-# This will give us a better stack trace if blocking occurs
-debug.hub_blocking_detection(True)
+# This will give us a better stack trace if blocking occurs (if True)
+debug.hub_blocking_detection(False)
 workers = 4
 worker_class = "eventlet"
 worker_connections = 256
