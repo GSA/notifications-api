@@ -189,8 +189,9 @@ def preview_template_by_id_and_service_id(service_id, template_id):
             },
             status_code=400,
         )
-
-    data["subject"] = template_object.subject
+    # Only emails have subjects, SMS do not
+    if hasattr(template_object, "subject"):
+        data["subject"] = template_object.subject
     data["content"] = template_object.content_with_placeholders_filled_in
 
     return jsonify(data)
