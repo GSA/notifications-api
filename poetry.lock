@@ -4896,6 +4896,18 @@ files = [
 ]
 
 [[package]]
+name = "truststore"
+version = "0.10.1"
+description = "Verify certificates using native system trust stores"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "truststore-0.10.1-py3-none-any.whl", hash = "sha256:b64e6025a409a43ebdd2807b0c41c8bff49ea7ae6550b5087ac6df6619352d4c"},
+    {file = "truststore-0.10.1.tar.gz", hash = "sha256:eda021616b59021812e800fa0a071e51b266721bef3ce092db8a699e21c63539"},
+]
+
+[[package]]
 name = "types-python-dateutil"
 version = "2.9.0.20250708"
 description = "Typing stubs for python-dateutil"
@@ -5533,4 +5545,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.9"
-content-hash = "6abf626cf2fee8ccaaee2087f0cf37244b829e7cbcace1287c7807747e70bd5c"
+content-hash = "22349492b1a9f51489155a385d34be31490bba5d7a18dda853c556f4f4983829"
