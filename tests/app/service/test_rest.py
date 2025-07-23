@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from flask import current_app, url_for
@@ -26,6 +26,7 @@ from app.enums import (
     StatisticsType,
     TemplateType,
 )
+from app.errors import InvalidRequest
 from app.models import (
     AnnualBilling,
     EmailBranding,
@@ -37,6 +38,11 @@ from app.models import (
     ServicePermission,
     ServiceSmsSender,
     User,
+)
+from app.service.rest import (
+    check_request_args,
+    get_service_statistics_for_specific_days,
+    get_service_statistics_for_specific_days_by_user,
 )
 from app.utils import utc_now
 from tests import create_admin_authorization_header
@@ -2908,25 +2914,6 @@ def test_get_all_notifications_for_service_includes_template_redacted(
     assert resp["notifications"][1]["template"]["redact_personalisation"] is True
 
 
-# TODO: check whether all hidden templates are also precompiled letters
-# def test_get_all_notifications_for_service_includes_template_hidden(admin_request, sample_service):
-#     letter_template = create_template(sample_service, template_type=TemplateType.LETTER)
-
-#     with freeze_time('2000-01-01'):
-#         letter_noti = create_notification(letter_template)
-
-#     resp = admin_request.get(
-#         'service.get_all_notifications_for_service',
-#         service_id=sample_service.id
-#     )
-
-#     assert resp['notifications'][0]['id'] == str(precompiled_noti.id)
-#     assert resp['notifications'][0]['template']['is_precompiled_letter'] is True
-
-#     assert resp['notifications'][1]['id'] == str(letter_noti.id)
-#     assert resp['notifications'][1]['template']['is_precompiled_letter'] is False
-
-
 @pytest.mark.skip(
     reason="We can't search on recipient if recipient is not kept in the db"
 )
@@ -3728,22 +3715,140 @@ def test_get_service_notification_statistics_by_day(
     assert response == mock_data
 
 
-# def test_valid_request():
-#     request = MagicMock()
-#     request.args = {
-#         "service_id": "123",
-#         "name": "Test Name",
-#         "email_from": "test@example.com",
-#     }
-#     result = check_request_args(request)
-#     assert result == ("123", "Test Name", "test@example.com")
+@patch("app.service.rest.check_suspicious_id")
+@patch("app.service.rest.dao_fetch_stats_for_service_from_hours")
+@patch("app.service.rest.get_specific_hours_stats")
+def test_get_service_statistics_for_specific_days(
+    mock_get_stats, mock_fetch_stats, mock_check_id
+):
+    service_id = "test-service"
+    start_date_str = "2025-07-01"
+    days = 2
+
+    fake_total_notifications = {
+        datetime(2025, 6, 30, 12): 100,
+        datetime(2025, 6, 30, 13): 200,
+    }
+    fake_results = [
+        MagicMock(
+            notification_type="email",
+            status="delivered",
+            hour=datetime(2025, 6, 30, 12),
+            count=50,
+        ),
+        MagicMock(
+            notification_type="sms",
+            status="failed",
+            hour=datetime(2025, 6, 30, 13),
+            count=150,
+        ),
+    ]
+    mock_fetch_stats.return_value = (fake_total_notifications, fake_results)
+    expected_output = {"emails_sent": 50, "sms_failed": 150}
+    mock_get_stats.return_value = expected_output
+    result = get_service_statistics_for_specific_days(service_id, start_date_str, days)
+    assert result == expected_output
+    mock_check_id.assert_called_once_with(service_id)
+    expected_start = datetime(2025, 6, 30)
+    expected_end = datetime(2025, 7, 1)
+    mock_fetch_stats.assert_called_once_with(service_id, expected_start, expected_end)
+    mock_get_stats.assert_called_once_with(
+        fake_results,
+        expected_start,
+        hours=48,
+        total_notifications=fake_total_notifications,
+    )
 
 
-# def test_missing_service_id():
-#     request = MagicMock()
-#     request.args = {"name": "Test Name", "email_from": "test@example.com"}
-#     try:
-#         check_request_args(request)
-#     except Exception as e:
-#         assert e.status_code == 400
-#         assert {"service_id": ["Can't be empty"] in e.errors}
+@patch("app.service.rest.dao_fetch_stats_for_service_from_days_for_user")
+@patch("app.service.rest.get_specific_hours_stats")
+def test_get_service_statistics_for_specific_days_by_user(
+    mock_get_stats, mock_fetch_stats
+):
+    service_id = "service-abc"
+    user_id = "user-123"
+    start_date_str = "2025-07-01"
+    days = 3
+    expected_end = datetime(2025, 7, 1)
+    expected_start = expected_end - timedelta(days=days - 1)
+
+    mock_total_notifications = {
+        datetime(2025, 6, 29, 10): 5,
+        datetime(2025, 6, 30, 12): 8,
+    }
+    mock_results = [
+        MagicMock(
+            notification_type="email",
+            status="delivered",
+            hour=datetime(2025, 6, 29, 10),
+            count=5,
+        ),
+        MagicMock(
+            notification_type="sms",
+            status="sent",
+            hour=datetime(2025, 6, 30, 12),
+            count=8,
+        ),
+    ]
+
+    mock_fetch_stats.return_value = (mock_total_notifications, mock_results)
+    expected_stats = {"emails_delivered": 5, "sms_sent": 8}
+    mock_get_stats.return_value = expected_stats
+    result = get_service_statistics_for_specific_days_by_user(
+        service_id, user_id, start_date_str, days
+    )
+    assert result == expected_stats
+    mock_fetch_stats.assert_called_once_with(
+        service_id, expected_start, expected_end, user_id
+    )
+    mock_get_stats.assert_called_once_with(
+        mock_results,
+        expected_start,
+        hours=days * 24,
+        total_notifications=mock_total_notifications,
+    )
+
+
+def test_check_request_args_success():
+    mock_request = MagicMock()
+    mock_request.args.get.side_effect = lambda key, default=None: {
+        "service_id": "abc123",
+        "name": "test service",
+        "email_from": "test@example.com",
+    }.get(key, default)
+
+    result = check_request_args(mock_request)
+    assert result == ("abc123", "test service", "test@example.com")
+
+
+@pytest.mark.parametrize(
+    "args_dict,expected_errors",
+    [
+        (
+            {},
+            [
+                {"service_id": ["Can't be empty"]},
+                {"name": ["Can't be empty"]},
+                {"email_from": ["Can't be empty"]},
+            ],
+        ),
+        (
+            {"service_id": "abc123"},
+            [{"name": ["Can't be empty"]}, {"email_from": ["Can't be empty"]}],
+        ),
+        (
+            {"service_id": "abc123", "name": "Test"},
+            [{"email_from": ["Can't be empty"]}],
+        ),
+    ],
+)
+def test_check_request_args_missing_fields(args_dict, expected_errors):
+    mock_request = MagicMock()
+    mock_request.args.get.side_effect = lambda key, default=None: args_dict.get(
+        key, default
+    )
+    with pytest.raises(InvalidRequest) as exc:
+        check_request_args(mock_request)
+
+    assert exc.value.status_code == 400
+    assert exc.value.message == expected_errors

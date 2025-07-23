@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from unittest.mock import ANY, call
+from unittest.mock import ANY, call, patch
 
 import pytest
 from freezegun import freeze_time
@@ -13,6 +13,7 @@ from app.celery.nightly_tasks import (
     cleanup_unfinished_jobs,
     delete_email_notifications_older_than_retention,
     delete_inbound_sms,
+    delete_notifications_for_service_and_type,
     delete_sms_notifications_older_than_retention,
     remove_sms_email_csv_files,
     s3,
@@ -431,3 +432,30 @@ def test_cleanup_unfinished_jobs(mocker):
     cleanup_unfinished_jobs()
     mock_s3.assert_called_once_with("blah")
     mock_dao_archive.assert_called_once_with(mock_job_unfinished)
+
+
+def test_delete_notifications_logs_when_deletion_occurs():
+    fake_start_time = datetime(2025, 1, 1, 12, 0, 0)
+    fake_end_time = fake_start_time + timedelta(seconds=10)
+    with patch(
+        "app.utils.utc_now", side_effect=[fake_start_time, fake_end_time]
+    ), patch(
+        "app.celery.nightly_tasks.move_notifications_to_notification_history",
+        return_value=5,
+    ) as mock_move, patch(
+        "app.celery.nightly_tasks.current_app.logger.info"
+    ) as mock_logger:
+
+        delete_notifications_for_service_and_type(
+            service_id="abc123",
+            notification_type="sms",
+            datetime_to_delete_before=datetime(2025, 1, 1, 0, 0, 0),
+        )
+        mock_move.assert_called_once_with(
+            "sms", "abc123", datetime(2025, 1, 1, 0, 0, 0)
+        )
+        mock_logger.assert_called_once()
+        log_message = mock_logger.call_args[0][0]
+        assert "service: abc123" in log_message
+        assert "notification_type: sms" in log_message
+        assert "count deleted: 5" in log_message

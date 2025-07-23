@@ -1,12 +1,13 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import ANY, MagicMock, Mock, call
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
 import requests_mock
 from celery.exceptions import Retry
 from freezegun import freeze_time
+from psycopg2 import IntegrityError
 from requests import RequestException
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,6 +23,7 @@ from app.celery.tasks import (
     process_row,
     s3,
     save_api_email,
+    save_api_email_or_sms,
     save_api_sms,
     save_email,
     save_sms,
@@ -1721,3 +1723,72 @@ def test_total_sending_limits_exceeded(mocker):
     assert mock_job.job_status == "sending limits exceeded"
     assert mock_job.processing_finished == datetime(2024, 11, 10, 12, 0, 0)
     mock_dao_update_job.assert_called_once_with(mock_job)
+
+
+def test_save_api_email_or_sms_integrity_error():
+    mock_self = MagicMock()
+    encrypted = MagicMock()
+    decrypted = {
+        "id": "notif-id",
+        "service_id": "service-id",
+        "notification_type": "email",
+        "template_id": "template-id",
+        "template_version": 1,
+        "to": "test@example.com",
+        "client_reference": None,
+        "created_at": "2025-01-01T00:00:00",
+        "reply_to_text": None,
+        "status": "created",
+        "document_download_count": 0,
+    }
+
+    with patch("app.celery.tasks.encryption.decrypt", return_value=decrypted), patch(
+        "app.celery.tasks.SerialisedService.from_id"
+    ), patch("app.celery.tasks.get_notification", return_value=None), patch(
+        "app.celery.tasks.persist_notification",
+        side_effect=IntegrityError("msg", None, None),
+    ), patch(
+        "app.celery.tasks.current_app.logger.warning"
+    ) as mock_log:
+
+        with pytest.raises(IntegrityError):
+            save_api_email_or_sms(mock_self, encrypted)
+            mock_log.assert_called_once()
+            assert "already exists" in mock_log.call_args[0][0]
+            mock_self.retry.assert_not_called()
+
+
+def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
+    encrypted = MagicMock()
+    decrypted = {
+        "id": "notif-id",
+        "service_id": "svc-id",
+        "notification_type": "sms",
+        "template_id": "template-id",
+        "template_version": 1,
+        "to": "+15555555",
+        "client_reference": None,
+        "created_at": "2025-01-01T00:00:00",
+        "reply_to_text": "",
+        "status": "created",
+        "document_download_count": 0,
+    }
+
+    class FakeMaxRetriesExceeded(Exception):
+        pass
+
+    mock_self = MagicMock()
+    mock_self.retry.side_effect = FakeMaxRetriesExceeded
+    mock_self.MaxRetriesExceededError = FakeMaxRetriesExceeded
+
+    with patch("app.celery.tasks.encryption.decrypt", return_value=decrypted), patch(
+        "app.celery.tasks.SerialisedService.from_id"
+    ), patch("app.celery.tasks.get_notification", return_value=None), patch(
+        "app.celery.tasks.persist_notification", side_effect=SQLAlchemyError("db issue")
+    ), patch(
+        "app.celery.tasks.current_app.logger.exception"
+    ) as mock_exception:
+
+        save_api_email_or_sms(mock_self, encrypted)
+        mock_exception.assert_called_once()
+        assert "Max retry failed" in mock_exception.call_args[0][0]

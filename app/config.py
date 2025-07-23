@@ -124,10 +124,6 @@ class Config(object):
     # Logging
     DEBUG = False
 
-    # Monitoring
-    CRONITOR_ENABLED = False
-    CRONITOR_KEYS = json.loads(getenv("CRONITOR_KEYS", "{}"))
-
     # Antivirus
     ANTIVIRUS_ENABLED = getenv("ANTIVIRUS_ENABLED", "1") == "1"
 
@@ -311,8 +307,8 @@ class Config(object):
                 "schedule": crontab(hour=4, minute=5),
                 "options": {"queue": QueueNames.PERIODIC},
             },
-            "remove_sms_email_jobs": {
-                "task": "remove_sms_email_jobs",
+            "remove-sms-email-jobs": {
+                "task": "remove-sms-email-jobs",
                 "schedule": crontab(hour=8, minute=0),
                 "options": {"queue": QueueNames.PERIODIC},
             },
@@ -411,7 +407,6 @@ class Production(Config):
     )
 
     FROM_NUMBER = "Notify.gov"
-    CRONITOR_ENABLED = True
 
 
 class Staging(Production):

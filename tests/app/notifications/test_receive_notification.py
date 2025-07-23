@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from flask import current_app, json
+from flask import Flask, current_app, json
 from sqlalchemy import func, select
 
 from app import db
@@ -13,6 +13,7 @@ from app.notifications.receive_notifications import (
     create_inbound_sms_object,
     fetch_potential_service,
     has_inbound_sms_permissions,
+    receive_notifications_blueprint,
     receive_sns_sms,
     unescape_string,
 )
@@ -388,3 +389,66 @@ def test_receive_sns_sms_inbound_disabled(mocker):
         "result": "success",
         "message": "SMS-SNS callback succeeded",
     }
+
+
+@pytest.fixture
+def app():
+    app = Flask(__name__)
+    app.register_blueprint(receive_notifications_blueprint)
+    app.config["RECEIVE_INBOUND_SMS"] = True
+    return app
+
+
+def test_receive_sns_sms_success(client, app):
+    sns_payload = {
+        "Message": json.dumps(
+            {
+                "originationNumber": "+14255550182",
+                "destinationNumber": "+12125550001",
+                "messageKeyword": "JOIN",
+                "messageBody": "Hello there!",
+                "inboundMessageId": "abc-123",
+            }
+        ),
+        "Timestamp": "2025-07-01T10:00:00:000Z",
+    }
+    headers = {"x-amz-sns-message-type": "Notification"}
+    with mock.patch(
+        "app.notifications.receive_notifications.sns_notification_handler"
+    ) as mock_sns_handler, mock.patch(
+        "app.notifications.receive_notifications.fetch_potential_service"
+    ) as mock_fetch_service, mock.patch(
+        "app.notifications.receive_notifications.create_inbound_sms_object"
+    ) as mock_create_inbound, mock.patch(
+        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async"
+    ) as mock_task:
+
+        mock_service = mock.MagicMock(id="service-id")
+        mock_inbound = mock.MagicMock(id="inbound-id", provider_reference="abc-123")
+        mock_sns_handler.return_value = sns_payload
+        mock_fetch_service.return_value = mock_service
+        mock_create_inbound.return_value = mock_inbound
+
+        response = app.test_client().post(
+            "/notifications/sms/receive/sns",
+            data=json.dumps(sns_payload),
+            headers=headers,
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200
+        assert response.json["result"] == "success"
+
+        mock_sns_handler.assert_called_once()
+        mock_fetch_service.assert_called_once()
+        mock_create_inbound.assert_called_once_with(
+            mock_service,
+            content="Hello there!",
+            from_number="+14255550182",
+            provider_ref="abc-123",
+            date_received="2025-07-01T10:00:00:000Z",
+            provider_name="sns",
+        )
+        mock_task.assert_called_once_with(
+            ["inbound-id", "service-id"], queue="notify-internal-tasks"
+        )

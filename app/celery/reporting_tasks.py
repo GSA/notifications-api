@@ -4,7 +4,6 @@ from flask import current_app
 
 from app import notify_celery
 from app.config import QueueNames
-from app.cronitor import cronitor
 from app.dao.fact_billing_dao import fetch_billing_data_for_day, update_fact_billing
 from app.dao.fact_notification_status_dao import update_fact_notification_status
 from app.dao.notifications_dao import get_service_ids_with_notifications_on_date
@@ -13,7 +12,6 @@ from app.utils import utc_now
 
 
 @notify_celery.task(name="create-nightly-billing")
-@cronitor("create-nightly-billing")
 def create_nightly_billing(day_start=None):
     # day_start is a datetime.date() object. e.g.
     # up to 4 days of data counting back from day_start is consolidated
@@ -58,7 +56,6 @@ def create_nightly_billing_for_day(process_day):
 
 
 @notify_celery.task(name="create-nightly-notification-status")
-@cronitor("create-nightly-notification-status")
 def create_nightly_notification_status():
     """
     Aggregate notification statuses into rows in ft_notification_status.

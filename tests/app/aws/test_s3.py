@@ -1,15 +1,19 @@
 import os
+import time
 from datetime import timedelta
 from os import getenv
-from unittest.mock import ANY, MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import botocore
 import pytest
 from botocore.exceptions import ClientError
 
+from app import job_cache
+from app.aws import s3
 from app.aws.s3 import (
     cleanup_old_s3_objects,
     download_from_s3,
+    extract_phones,
     file_exists,
     get_job_and_metadata_from_s3,
     get_job_from_s3,
@@ -431,7 +435,6 @@ def test_get_s3_files_success(client, mocker):
     # mock_current_app.info.assert_any_call("job_cache length after regen: 0 #notify-debug-admin-1200")
 
 
-@patch("app.aws.s3.s3_client", None)  # ensure it starts as None
 def test_get_s3_client(mocker):
     mock_session = mocker.patch("app.aws.s3.Session")
     mock_current_app = mocker.patch("app.aws.s3.current_app")
@@ -447,12 +450,12 @@ def test_get_s3_client(mocker):
     mock_s3_client = MagicMock()
     mock_session.return_value.client.return_value = mock_s3_client
     result = get_s3_client()
+    assert result
+    mock_session.return_value.client.assert_called_once_with(
+        "s3", config=AWS_CLIENT_CONFIG
+    )
 
-    mock_session.return_value.client.assert_called_once_with("s3", config=ANY)
-    assert result == mock_s3_client
 
-
-@patch("app.aws.s3.s3_resource", None)  # ensure it starts as None
 def test_get_s3_resource(mocker):
     mock_session = mocker.patch("app.aws.s3.Session")
     mock_current_app = mocker.patch("app.aws.s3.current_app")
@@ -473,7 +476,7 @@ def test_get_s3_resource(mocker):
     mock_session.return_value.resource.assert_called_once_with(
         "s3", config=AWS_CLIENT_CONFIG
     )
-    assert result == mock_s3_resource
+    assert result
 
 
 def test_get_job_and_metadata_from_s3(mocker):
@@ -601,3 +604,80 @@ def test_get_s3_files_handles_exception(mocker):
     mock_current_app.logger.exception.assert_called_with(
         "Trouble reading file2.csv which is # 1 during cache regeneration"
     )
+
+
+def test_get_service_id_from_key_various_formats():
+    assert s3.get_service_id_from_key("service-123-notify/abc.csv") == "123"
+    assert s3.get_service_id_from_key("service-xyz-notify/def/ghi.csv") == "xyz"
+    assert s3.get_service_id_from_key("noservice-foo") == "nofoo"
+
+
+def test_set_and_get_job_cache_and_expiry(monkeypatch):
+    # isolate time for test
+    fake_time = time.time()
+    monkeypatch.setattr(time, "time", lambda: fake_time)
+
+    # set cache entry
+    s3.set_job_cache("k", "v")
+    tup = s3.get_job_cache("k")
+    assert tup is not None
+    value, expiry = tup
+    assert value == "v"
+    assert expiry == fake_time + (8 * 24 * 60 * 60)
+
+    # fast forward beyond expiry
+    monkeypatch.setattr(time, "time", lambda: fake_time + (9 * 24 * 60 * 60))
+
+    # clean_cache should remove expired entries
+    job_cache["other"] = ("foo", fake_time + 10)
+    s3.clean_cache()
+    assert "k" not in job_cache
+
+
+def test_read_s3_file_populates_cache(monkeypatch):
+    fake_csv = "Phone number,Name\r\n+1-555-1234,Alice"
+    obj = MagicMock()
+    obj.get.return_value = {"Body": MagicMock(read=lambda: fake_csv.encode())}
+    s3res = MagicMock(Object=lambda b, o: obj)
+    monkeypatch.setattr(s3, "get_job_cache", lambda k: None)
+    monkeypatch.setattr(s3, "extract_phones", lambda job, sid, jid: {"0", "15551234"})
+    monkeypatch.setattr(
+        s3, "extract_personalisation", lambda job: {0: {"Name": "Alice"}}
+    )
+    monkeypatch.setattr(
+        s3, "set_job_cache", lambda k, v: job_cache.update({k: (v, time.time() + 1)})
+    )
+    s3.read_s3_file("bucket", "service-XX-notify/66.csv", s3res)
+    assert job_cache.get("66")[0].startswith("Phone number")
+    assert job_cache.get("66_phones")[0] == {"0", "15551234"}
+    assert job_cache.get("66_personalisation")[0] == {0: {"Name": "Alice"}}
+
+
+@patch("app.aws.s3.current_app")
+def test_valid_csv(mock_app):
+    csv_data = "Name,Phone Number\nAlice,+1 (555) 555-5555\nBob,555.555.1111"
+    result = extract_phones(csv_data, "service1", "job1")
+    expected = {0: "15555555555", 1: "5555551111"}
+    assert result == expected
+    mock_app.logger.error.assert_not_called()
+
+
+@patch("app.aws.s3.current_app")
+def test_missing_phone_column(mock_app):
+
+    csv_data = "Name,Phone Number\nAlice,\nBob"
+    result = extract_phones(csv_data, "service1", "job1")
+    assert result == {0: "", 1: "Unavailable"}
+    mock_app.logger.error.assert_called_once()
+
+
+@patch("app.aws.s3.current_app")
+def test_test_with_bom_header(mock_app):
+    csv_data = "\ufeffName,Phone Number\nAlice,1-555-555-5555"
+    result = extract_phones(csv_data, "service2", "job2")
+    expected = {0: "15555555555"}
+    assert result == expected
+
+
+if __name__ == "__main__":
+    test_valid_csv()

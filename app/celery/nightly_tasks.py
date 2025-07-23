@@ -8,7 +8,6 @@ from app.aws import s3
 from app.aws.s3 import remove_csv_object
 from app.celery.process_ses_receipts_tasks import check_and_queue_callback_task
 from app.config import QueueNames
-from app.cronitor import cronitor
 from app.dao.fact_processing_time_dao import insert_update_processing_time
 from app.dao.inbound_sms_dao import delete_inbound_sms_older_than_retention
 from app.dao.jobs_dao import (
@@ -30,8 +29,7 @@ from app.models import FactProcessingTime
 from app.utils import get_midnight_in_utc, utc_now
 
 
-@notify_celery.task(name="remove_sms_email_jobs")
-@cronitor("remove_sms_email_jobs")
+@notify_celery.task(name="remove-sms-email-jobs")
 def remove_sms_email_csv_files():
     _remove_csv_files([NotificationType.EMAIL, NotificationType.SMS])
 
@@ -51,6 +49,7 @@ def cleanup_unfinished_jobs():
     for job in jobs:
         # The query already checks that the processing_finished time is null, so here we are saying
         # if it started more than 4 hours ago, that's too long
+        acceptable_finish_time = None
         try:
             if job.processing_started is not None:
                 acceptable_finish_time = job.processing_started + timedelta(minutes=5)
@@ -59,7 +58,7 @@ def cleanup_unfinished_jobs():
                 f"Job ID {job.id} processing_started is {job.processing_started}.",
             )
             raise
-        if now > acceptable_finish_time:
+        if acceptable_finish_time and now > acceptable_finish_time:
             remove_csv_object(job.original_file_name)
             dao_archive_job(job)
 
@@ -74,14 +73,12 @@ def delete_notifications_older_than_retention():
     )
 
 
-@notify_celery.task(name="delete-sms-notifications")
-@cronitor("delete-sms-notifications")
+@notify_celery.task(name="delete-sms-notifications-older-than-retention")
 def delete_sms_notifications_older_than_retention():
     _delete_notifications_older_than_retention_by_type(NotificationType.SMS)
 
 
-@notify_celery.task(name="delete-email-notifications")
-@cronitor("delete-email-notifications")
+@notify_celery.task(name="delete-email-notifications-older-than-retention")
 def delete_email_notifications_older_than_retention():
     _delete_notifications_older_than_retention_by_type(NotificationType.EMAIL)
 
@@ -161,7 +158,6 @@ def delete_notifications_for_service_and_type(
 
 
 @notify_celery.task(name="timeout-sending-notifications")
-@cronitor("timeout-sending-notifications")
 def timeout_notifications():
     notifications = ["dummy value so len() > 0"]
 
@@ -183,7 +179,6 @@ def timeout_notifications():
 
 
 @notify_celery.task(name="delete-inbound-sms")
-@cronitor("delete-inbound-sms")
 def delete_inbound_sms():
     try:
         start = utc_now()
@@ -199,7 +194,6 @@ def delete_inbound_sms():
 
 
 @notify_celery.task(name="save-daily-notification-processing-time")
-@cronitor("save-daily-notification-processing-time")
 def save_daily_notification_processing_time(local_date=None):
     # local_date is a string in the format of "YYYY-MM-DD"
     if local_date is None:
