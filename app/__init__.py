@@ -1,7 +1,3 @@
-import truststore
-
-truststore.inject_into_ssl()  # noqa
-
 import logging as real_logging  # noqa
 import os  # noqa
 import secrets  # noqa
