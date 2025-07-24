@@ -359,15 +359,15 @@ def setup_sqlalchemy_events(app):
     with app.app_context():
 
         @event.listens_for(db.engine, "connect")
-        def connect(dbapi_connection, connection_record):
+        def connect():
             pass
 
         @event.listens_for(db.engine, "close")
-        def close(dbapi_connection, connection_record):
+        def close():
             pass
 
         @event.listens_for(db.engine, "checkout")
-        def checkout(dbapi_connection, connection_record, connection_proxy):
+        def checkout(connection_record):
             try:
                 # this will overwrite any previous checkout_at timestamp
                 connection_record.info["checkout_at"] = time.monotonic()
@@ -408,7 +408,7 @@ def setup_sqlalchemy_events(app):
                 )
 
         @event.listens_for(db.engine, "checkin")
-        def checkin(dbapi_connection, connection_record):
+        def checkin():
             pass
 
 
@@ -448,7 +448,7 @@ def make_task(app):
                     )
                 )
 
-        def on_failure(self, exc, task_id, args, kwargs, einfo):
+        def on_failure(self, exc, task_id, args, kwargs):
             # enables request id tracing for these logs
             with self.app_context():
                 app.logger.exception(
