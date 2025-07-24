@@ -1,15 +1,15 @@
-import logging as real_logging  # noqa
-import os  # noqa
-import secrets  # noqa
-import string  # noqa
-import time  # noqa
-import uuid  # noqa
-from contextlib import contextmanager  # noqa
-from threading import Lock  # noqa
-from time import monotonic  # noqa
+import logging as real_logging
+import os
+import secrets
+import string
+import time
+import uuid
+from contextlib import contextmanager
+from threading import Lock
+from time import monotonic
 
-from celery import Celery, Task, current_task  # noqa
-from flask import (  # noqa
+from celery import Celery, Task, current_task
+from flask import (
     current_app,
     g,
     has_request_context,
@@ -17,26 +17,26 @@ from flask import (  # noqa
     make_response,
     request,
 )
-from flask.ctx import has_app_context  # noqa
-from flask_migrate import Migrate  # noqa
-from flask_socketio import SocketIO  # noqa
-from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy  # noqa
-from sqlalchemy import event  # noqa
-from werkzeug.exceptions import HTTPException as WerkzeugHTTPException  # noqa
-from werkzeug.local import LocalProxy  # noqa
+from flask.ctx import has_app_context
+from flask_migrate import Migrate
+from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
+from sqlalchemy import event
+from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
+from werkzeug.local import LocalProxy
 
-from app import config  # noqa
-from app.clients import NotificationProviderClients  # noqa
-from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient  # noqa
-from app.clients.document_download import DocumentDownloadClient  # noqa
-from app.clients.email.aws_ses import AwsSesClient  # noqa
-from app.clients.email.aws_ses_stub import AwsSesStubClient  # noqa
-from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient  # noqa
-from app.clients.sms.aws_sns import AwsSnsClient  # noqa
-from notifications_utils import logging, request_helper  # noqa
-from notifications_utils.clients.encryption.encryption_client import Encryption  # noqa
-from notifications_utils.clients.redis.redis_client import RedisClient  # noqa
-from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient  # noqa
+from app import config
+from app.clients import NotificationProviderClients
+from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
+from app.clients.document_download import DocumentDownloadClient
+from app.clients.email.aws_ses import AwsSesClient
+from app.clients.email.aws_ses_stub import AwsSesStubClient
+from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
+from app.clients.sms.aws_sns import AwsSnsClient
+from notifications_utils import logging, request_helper
+from notifications_utils.clients.encryption.encryption_client import Encryption
+from notifications_utils.clients.redis.redis_client import RedisClient
+from notifications_utils.clients.zendesk.zendesk_client import ZendeskClient
 
 job_cache = {}
 job_cache_lock = Lock()
@@ -359,15 +359,15 @@ def setup_sqlalchemy_events(app):
     with app.app_context():
 
         @event.listens_for(db.engine, "connect")
-        def connect(dbapi_connection, connection_record):  # noqa
+        def connect(dbapi_connection, connection_record):
             pass
 
         @event.listens_for(db.engine, "close")
-        def close(dbapi_connection, connection_record):  # noqa
+        def close(dbapi_connection, connection_record):
             pass
 
         @event.listens_for(db.engine, "checkout")
-        def checkout(dbapi_connection, connection_record, connection_proxy):  # noqa
+        def checkout(dbapi_connection, connection_record, connection_proxy):
             try:
                 # this will overwrite any previous checkout_at timestamp
                 connection_record.info["checkout_at"] = time.monotonic()
@@ -408,7 +408,7 @@ def setup_sqlalchemy_events(app):
                 )
 
         @event.listens_for(db.engine, "checkin")
-        def checkin(dbapi_connection, connection_record):  # noqa
+        def checkin(dbapi_connection, connection_record):
             pass
 
 
@@ -435,7 +435,7 @@ def make_task(app):
                 g.request_id = self.request_id
                 yield
 
-        def on_success(self, retval, task_id, args, kwargs):  # noqa
+        def on_success(self, retval, task_id, args, kwargs):
             # enables request id tracing for these logs
             with self.app_context():
                 elapsed_time = time.monotonic() - self.start
@@ -448,7 +448,7 @@ def make_task(app):
                     )
                 )
 
-        def on_failure(self, exc, task_id, args, kwargs, einfo):  # noqa
+        def on_failure(self, exc, task_id, args, kwargs, einfo):
             # enables request id tracing for these logs
             with self.app_context():
                 app.logger.exception(

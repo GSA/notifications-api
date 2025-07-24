@@ -1,15 +1,12 @@
 ##!/usr/bin/env python
 
+
 from __future__ import print_function
 
-import truststore
+from flask import Flask
+from werkzeug.serving import WSGIRequestHandler
 
-truststore.inject_into_ssl()  # noqa
-
-from flask import Flask  # noqa
-from werkzeug.serving import WSGIRequestHandler  # noqa
-
-from app import create_app, socketio  # noqa
+from app import create_app, socketio  # noqa: F401
 
 WSGIRequestHandler.version_string = lambda self: "SecureServer"
 
