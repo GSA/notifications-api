@@ -128,7 +128,7 @@ def _delete_inbound_sms(datetime_to_delete_from, query_filter):
     while number_deleted > 0:
         _insert_inbound_sms_history(subquery, query_limit=query_limit)
 
-        stmt = delete(InboundSms).where(InboundSms.id.in_(subquery))
+        stmt = delete(InboundSms).where(InboundSms.id.in_(select(subquery.c.id)))
         number_deleted = db.session.execute(stmt).rowcount
         db.session.commit()
         deleted += number_deleted
