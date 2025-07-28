@@ -70,7 +70,7 @@ run-celery: ## Run celery, TODO remove purge for staging/prod
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
-		--pool=eventlet
+		--pool=gevent
 		--concurrency=20
 
 
