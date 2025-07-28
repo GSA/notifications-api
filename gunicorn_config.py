@@ -1,7 +1,3 @@
-from gevent import monkey
-
-monkey.patch_all()  # this has to be called before other imports or monkey patching doesn't happen
-
 import os  # noqa
 import socket  # noqa
 import sys  # noqa
