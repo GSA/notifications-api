@@ -2,11 +2,6 @@
 
 from __future__ import print_function
 
-from gevent import monkey
-
-monkey.patch_all()  # this has to be called before other imports or monkey patching doesn't happen
-
-
 from flask import Flask  # noqa
 from werkzeug.serving import WSGIRequestHandler  # noqa
 
