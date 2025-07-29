@@ -3,6 +3,8 @@ import logging
 import time
 import urllib.parse
 
+from os import getenv
+
 import requests
 
 from notifications_python_client import __version__
@@ -10,6 +12,8 @@ from notifications_python_client.authentication import create_jwt_token
 from notifications_python_client.errors import HTTPError, InvalidResponse
 
 logger = logging.getLogger(__name__)
+
+API_PUBLIC_URL = getenv("API_PUBLIC_URL", "localhost")
 
 
 class BaseAPIClient:
@@ -20,7 +24,7 @@ class BaseAPIClient:
     """
 
     def __init__(
-        self, api_key, base_url="https://api.notifications.service.gov.uk", timeout=30
+        self, api_key, base_url=API_PUBLIC_URL, timeout=30
     ):
         """
         Initialise the client
