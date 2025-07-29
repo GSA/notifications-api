@@ -264,7 +264,7 @@ git clone git@github.com:GSA/notifications-api.git
 
 Now go into the project directory (`notifications-api` by default), create a
 virtual environment, and set the local Python version to point to the virtual
-environment (assumes version Python `3.13.9` is what is installed on your
+environment (assumes version Python `3.13.2` is what is installed on your
 machine):
 
 ```sh
