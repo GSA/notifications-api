@@ -335,7 +335,7 @@ environment with the newer version of Python you just installed:
 
 ```sh
 cd notifications-api
-pyenv virtualenv 3.13.9 notify-api
+pyenv virtualenv 3.13.2 notify-api
 pyenv local notify-api
 ```
 
