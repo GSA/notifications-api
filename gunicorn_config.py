@@ -7,7 +7,7 @@ import gunicorn  # noqa
 
 # This will give us a better stack trace if
 workers = 4
-worker_class = "sync"
+worker_class = "gevent"
 worker_connections = 256
 bind = "0.0.0.0:{}".format(os.getenv("PORT"))
 statsd_host = "{}:8125".format(os.getenv("STATSD_HOST"))
