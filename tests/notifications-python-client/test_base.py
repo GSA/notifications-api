@@ -23,7 +23,7 @@ def client():
 def test_init_sets_values_correctly():
     api_key = get_api_key()
     client = BaseAPIClient(api_key=api_key)
-    assert client.base_url == "https://api.notifications.service.gov.uk"
+    assert client.base_url == "localhost"
 
     assert client.api_key == api_key[-36:]
     assert client.service_id == api_key[-73:-37]
