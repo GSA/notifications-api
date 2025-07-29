@@ -1,5 +1,6 @@
-from gevent import monkey
+# from gevent import monkey
 
-monkey.patch_all()
+# commenting out while we disable gevent
+# monkey.patch_all()
 
 from application import application  # noqa

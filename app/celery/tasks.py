@@ -1,6 +1,5 @@
 import json
 
-import gevent
 from celery.signals import task_postrun
 from flask import current_app
 from requests import HTTPError, RequestException, request
@@ -84,7 +83,7 @@ def process_job(job_id, sender_id=None):
         process_row(row, template, job, service, sender_id=sender_id)
         count = count + 1
         if count % 3 == 0:
-            gevent.sleep(1)
+            time.sleep(1)
 
     # End point/Exit point for message send flow.
     job_complete(job, start=start)

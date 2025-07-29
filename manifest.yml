@@ -26,7 +26,7 @@ applications:
       - type: worker
         instances: ((worker_instances))
         memory: ((worker_memory))
-        command: newrelic-admin run-program celery -A run_celery.notify_celery worker --loglevel=INFO --pool=gevent --concurrency=20 --prefetch-multiplier=2
+        command: newrelic-admin run-program celery -A run_celery.notify_celery worker --loglevel=INFO --pool=solo --concurrency=20 --prefetch-multiplier=2
       - type: scheduler
         instances: 1
         memory: ((scheduler_memory))
