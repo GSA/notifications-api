@@ -1,6 +1,7 @@
-from gevent import monkey
+# from gevent import monkey
 
-monkey.patch_all()
+# commenting out while we disable gevent
+# monkey.patch_all()
 
 import newrelic.agent  # noqa
 
