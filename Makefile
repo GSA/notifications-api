@@ -61,12 +61,12 @@ too-complex:
 
 .PHONY: run-flask
 run-flask:
-	poetry run newrelic-admin run-program flask run -p 6011 --host=0.0.0.0
+	poetry run flask run -p 6011 --host=0.0.0.0
 
 .PHONY: run-celery
 run-celery: ## Run celery, TODO remove purge for staging/prod
 	poetry run celery -A run_celery.notify_celery purge -f
-	poetry run newrelic-admin run-program celery \
+	poetry run celery \
 		-A run_celery.notify_celery worker \
 		--pidfile="/tmp/celery.pid" \
 		--loglevel=INFO \
