@@ -1,4 +1,4 @@
-import logging
+# import logging
 import os  # noqa
 import socket  # noqa
 import sys  # noqa
@@ -12,9 +12,9 @@ from app.utils import hilite  # noqa
 workers = 4
 worker_class = "gevent"
 worker_connections = 256
-logging.basicConfig(level=logging.INFO)
-timeout = 60
-logging.info(hilite(f"Gunicorn timeout set to {timeout} seconds"))
+# logging.basicConfig(level=logging.INFO)
+# timeout = 240
+# logging.info(hilite(f"Gunicorn timeout set to {timeout} seconds"))
 bind = "0.0.0.0:{}".format(os.getenv("PORT"))
 statsd_host = "{}:8125".format(os.getenv("STATSD_HOST"))
 gunicorn.SERVER_SOFTWARE = "None"
