@@ -286,7 +286,7 @@ def process_delivery_receipts(self):
             raise self.retry(ex=ex, countdown=wait_time)
         except self.MaxRetriesExceededError:
             current_app.logger.error(
-                "Failed process delivery receipts after max retries"
+                f"Failed process delivery receipts after max retries: {str(ex)}"
             )
 
 
