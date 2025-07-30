@@ -13,7 +13,7 @@ from notifications_python_client.errors import HTTPError, InvalidResponse
 
 logger = logging.getLogger(__name__)
 
-API_PUBLIC_URL = getenv("API_PUBLIC_URL", "localhost")
+API_HOST_NAME = getenv("API_HOST_NAME", "http://localhost:6011")
 
 
 class BaseAPIClient:
@@ -24,7 +24,7 @@ class BaseAPIClient:
     """
 
     def __init__(
-        self, api_key, base_url=API_PUBLIC_URL, timeout=30
+        self, api_key, base_url=API_HOST_NAME, timeout=30
     ):
         """
         Initialise the client
