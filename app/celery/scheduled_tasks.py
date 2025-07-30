@@ -288,6 +288,7 @@ def process_delivery_receipts(self):
             current_app.logger.error(
                 f"Failed process delivery receipts after max retries: {str(ex)}"
             )
+            raise ex
 
 
 @notify_celery.task(
