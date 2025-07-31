@@ -14,6 +14,7 @@ statsd_host = "{}:8125".format(os.getenv("STATSD_HOST"))
 gunicorn.SERVER_SOFTWARE = "None"
 timeout = 240
 
+
 def on_starting(server):
     server.log.info("Starting Notifications API")
 
