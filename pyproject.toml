@@ -79,7 +79,7 @@ virtualenv = "^20.32.0"
 marshmallow-enum = "^1.5.1"
 awscli = "^1.40.36"
 typing-extensions = "^4.14.1"
-aiohttp = "^3.12.14"
+aiohttp = "^3.12.15"
 pytest = "^8.4.0"
 
 
