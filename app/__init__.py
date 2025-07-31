@@ -301,15 +301,44 @@ def init_app(app):
         g.start = monotonic()
         g.endpoint = request.endpoint
 
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            response = make_response("", 204)
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, PUT, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization"
+            )
+            response.headers["Access-Control-Max-Age"] = "3600"
+            return response
+
     @app.after_request
     def after_request(response):
+        # Security headers for government compliance
         response.headers.add("X-Content-Type-Options", "nosniff")
+        response.headers.add("X-Frame-Options", "DENY")
+        response.headers.add("X-XSS-Protection", "1; mode=block")
+        response.headers.add("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.add(
+            "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
+        )
 
-        # Some dynamic scan findings
+        # CORS-related security headers
         response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
         response.headers.add("Cross-Origin-Embedder-Policy", "require-corp")
         response.headers.add("Cross-Origin-Resource-Policy", "same-origin")
-        response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
+
+        if not request.path.startswith("/docs"):
+            response.headers.add(
+                "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';"
+            )
+
+        response.headers.add(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
 
         return response
 

@@ -14,17 +14,20 @@ status = Blueprint("status", __name__)
 def show_status():
     try:
         if request.args.get("simple", None):
-            return jsonify(status="ok"), 200
+            response = jsonify(status="ok")
         else:
-            return (
-                jsonify(
-                    status="ok",  # This should be considered part of the public API
-                    git_commit=version.__git_commit__,
-                    build_time=version.__time__,
-                    db_version=get_db_version(),
-                ),
-                200,
+            response = jsonify(
+                status="ok",  # This should be considered part of the public API
+                git_commit=version.__git_commit__,
+                build_time=version.__time__,
+                db_version=get_db_version(),
             )
+
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+        return response, 200
     except Exception as e:
         current_app.logger.error(
             f"Unexpected error in show_status: {str(e)}", exc_info=True
@@ -36,13 +39,16 @@ def show_status():
 @status.route("/_status/live-service-and-organization-counts")
 def live_service_and_organization_counts():
     try:
-        return (
-            jsonify(
-                organizations=dao_count_organizations_with_live_services(),
-                services=dao_count_live_services(),
-            ),
-            200,
+        response = jsonify(
+            organizations=dao_count_organizations_with_live_services(),
+            services=dao_count_live_services(),
         )
+
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+        return response, 200
     except Exception as e:
         current_app.logger.error(
             f"Unexpected error in live_service_and_organization_counts: {str(e)}",
