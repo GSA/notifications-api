@@ -1,5 +1,6 @@
 import itertools
 import time
+import uuid
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -10,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import MultiDict
 
-from app import db
+from app import db, notify_celery
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.config import QueueNames
 from app.dao import fact_notification_status_dao, notifications_dao
@@ -116,7 +117,12 @@ from app.service.service_senders_schema import (
 )
 from app.service.utils import get_guest_list_objects
 from app.user.users_schema import post_set_permissions_schema
-from app.utils import check_suspicious_id, get_prev_next_pagination_links, utc_now
+from app.utils import (
+    check_suspicious_id,
+    get_prev_next_pagination_links,
+    hilite,
+    utc_now,
+)
 
 service_blueprint = Blueprint("service", __name__)
 
@@ -511,27 +517,12 @@ def get_service_history(service_id):
     return jsonify(data=data)
 
 
-@service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
-def get_all_notifications_for_service(service_id):
-    check_suspicious_id(service_id)
-    current_app.logger.debug("enter get_all_notifications_for_service")
-    if request.method == "GET":
-        data = notifications_filter_schema.load(request.args)
-        current_app.logger.debug(
-            f"use GET, request.args {request.args} and data {data}"
-        )
-    elif request.method == "POST":
-        # Must transform request.get_json() to MultiDict as NotificationsFilterSchema expects a MultiDict.
-        # Unlike request.args, request.get_json() does not return a MultiDict but instead just a dict.
-        data = notifications_filter_schema.load(MultiDict(request.get_json()))
-        current_app.logger.debug(f"use POST, request {request.get_json()} data {data}")
-
+@notify_celery.task(name="generate-notifications-report")
+def generate_notifications_report(service_id, report_id, data, request_method):
+    current_app.logger.debug(hilite("ENTER generate_notifications_report"))
     page = data["page"] if "page" in data else 1
-    page_size = (
-        data["page_size"]
-        if "page_size" in data
-        else current_app.config.get("PAGE_SIZE")
-    )
+    page_size = data["page_size"] if "page_size" in data else 100
+    current_app.logger.debug(hilite("PAGE SIZE 100"))
     # HARD CODE TO 100 for now.  1000 or 10000 causes reports to time out before they complete (if big)
     # Tests are relying on the value in config (20), whereas the UI seems to pass 10000
     if page_size > 100:
@@ -544,7 +535,7 @@ def get_all_notifications_for_service(service_id):
     # count_pages is not being used for whether to count the number of pages, but instead as a flag
     # for whether to show pagination links
     count_pages = data.get("count_pages", True)
-
+    current_app.logger.debug(hilite("GET ALL PARAMS"))
     current_app.logger.debug(
         f"get pagination with {service_id} service_id filters {data} \
                              limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}"
@@ -591,7 +582,8 @@ def get_all_notifications_for_service(service_id):
     kwargs = request.args.to_dict()
     kwargs["service_id"] = service_id
 
-    if data.get("format_for_csv"):
+    if True:
+        # if data.get("format_for_csv"):
         notifications = [
             notification.serialize_for_csv() for notification in pagination.items
         ]
@@ -599,7 +591,9 @@ def get_all_notifications_for_service(service_id):
         notifications = notification_with_template_schema.dump(
             pagination.items, many=True
         )
-    current_app.logger.debug(f"number of notifications are {len(notifications)}")
+    current_app.logger.debug(
+        hilite(f"number of notifications are {len(notifications)}")
+    )
 
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
@@ -607,6 +601,7 @@ def get_all_notifications_for_service(service_id):
     # this way is much more performant for services with many results (unlike Flask SqlAlchemy, this approach
     # doesn't do an additional query to count all the results of which there could be millions but instead only
     # asks for a single extra page of results).
+    current_app.logger.debug(hilite("ABOUT TO CALL NOTIFICATIONS DAO"))
     next_page_of_pagination = notifications_dao.get_notifications_for_service(
         service_id,
         filter_dict=data,
@@ -619,8 +614,9 @@ def get_all_notifications_for_service(service_id):
         include_one_off=include_one_off,
         error_out=False,  # False so that if there are no results, it doesn't end in aborting with a 404
     )
+    current_app.logger.debug(hilite("NOTIFICATIONS_DAO CALLED SUCCESSFULLY"))
 
-    return (
+    x = (
         jsonify(
             notifications=notifications,
             page_size=page_size,
@@ -637,6 +633,26 @@ def get_all_notifications_for_service(service_id):
         ),
         200,
     )
+    current_app.logger.debug(hilite(x))
+
+
+@service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
+def get_all_notifications_for_service(service_id):
+    current_app.logger.debug(hilite("ENTER GET ALL NOTIFICATIONS FOR SERVICE@"))
+    check_suspicious_id(service_id)
+    report_id = str(uuid.uuid4())
+    request_method = request.method
+    if request_method == "GET":
+        data = notifications_filter_schema.load(request.args)
+    else:
+        data = notifications_filter_schema.load(
+            MultiDict(request.get_json(silent=True))
+        )
+    current_app.logger.debug(hilite("INVOKE APPLY_ASYNC"))
+    generate_notifications_report.apply_async(
+        args=[service_id, report_id, data, request_method], queue=QueueNames.NOTIFY
+    )
+    return jsonify({"report_id": report_id}), 200
 
 
 @service_blueprint.route(

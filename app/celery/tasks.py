@@ -33,6 +33,122 @@ from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT, hilite, utc_now
 from notifications_utils.recipients import RecipientCSV
 
+# @notify_celery.task(name="process-job")
+# def generate_notifications_report(service_id, report_id, data, request_method):
+#     current_app.logger.debug(hilite("ENTER generate_notifications_report"))
+#     page = data["page"] if "page" in data else 1
+#     page_size = (
+#         data["page_size"]
+#         if "page_size" in data
+#         else current_app.config.get("PAGE_SIZE")
+#     )
+#     # HARD CODE TO 100 for now.  1000 or 10000 causes reports to time out before they complete (if big)
+#     # Tests are relying on the value in config (20), whereas the UI seems to pass 10000
+#     if page_size > 100:
+#         page_size = 100
+#     limit_days = data.get("limit_days")
+#     include_jobs = data.get("include_jobs", True)
+#     include_from_test_key = data.get("include_from_test_key", False)
+#     include_one_off = data.get("include_one_off", True)
+
+#     # count_pages is not being used for whether to count the number of pages, but instead as a flag
+#     # for whether to show pagination links
+#     count_pages = data.get("count_pages", True)
+
+#     current_app.logger.debug(
+#         f"get pagination with {service_id} service_id filters {data} \
+#                              limit_days {limit_days} include_jobs {include_jobs} include_one_off {include_one_off}"
+#     )
+#     start_time = time.time()
+#     current_app.logger.debug(f"Start report generation  with page.size {page_size}")
+#     pagination = notifications_dao.get_notifications_for_service(
+#         service_id,
+#         filter_dict=data,
+#         page=page,
+#         page_size=page_size,
+#         count_pages=False,
+#         limit_days=limit_days,
+#         include_jobs=include_jobs,
+#         include_from_test_key=include_from_test_key,
+#         include_one_off=include_one_off,
+#     )
+#     current_app.logger.debug(f"Query complete at {int(time.time()-start_time)*1000}")
+
+#     for notification in pagination.items:
+#         if notification.job_id is not None:
+#             current_app.logger.debug(
+#                 f"Processing job_id {notification.job_id} at {int(time.time()-start_time)*1000}"
+#             )
+#             notification.personalisation = get_personalisation_from_s3(
+#                 notification.service_id,
+#                 notification.job_id,
+#                 notification.job_row_number,
+#             )
+
+#             recipient = get_phone_number_from_s3(
+#                 notification.service_id,
+#                 notification.job_id,
+#                 notification.job_row_number,
+#             )
+
+#             notification.to = recipient
+#             notification.normalised_to = recipient
+
+#         else:
+#             notification.to = ""
+#             notification.normalised_to = ""
+
+#     kwargs = request.args.to_dict()
+#     kwargs["service_id"] = service_id
+
+#     if data.get("format_for_csv"):
+#         notifications = [
+#             notification.serialize_for_csv() for notification in pagination.items
+#         ]
+#     else:
+#         notifications = notification_with_template_schema.dump(
+#             pagination.items, many=True
+#         )
+#     current_app.logger.debug(f"number of notifications are {len(notifications)}")
+
+#     # We try and get the next page of results to work out if we need provide a pagination link to the next page
+#     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
+#     # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
+#     # this way is much more performant for services with many results (unlike Flask SqlAlchemy, this approach
+#     # doesn't do an additional query to count all the results of which there could be millions but instead only
+#     # asks for a single extra page of results).
+#     next_page_of_pagination = notifications_dao.get_notifications_for_service(
+#         service_id,
+#         filter_dict=data,
+#         page=page + 1,
+#         page_size=page_size,
+#         count_pages=False,
+#         limit_days=limit_days,
+#         include_jobs=include_jobs,
+#         include_from_test_key=include_from_test_key,
+#         include_one_off=include_one_off,
+#         error_out=False,  # False so that if there are no results, it doesn't end in aborting with a 404
+#     )
+
+#     x = (
+#         jsonify(
+#             notifications=notifications,
+#             page_size=page_size,
+#             links=(
+#                 get_prev_next_pagination_links(
+#                     page,
+#                     len(next_page_of_pagination.items),
+#                     ".get_all_notifications_for_service",
+#                     **kwargs,
+#                 )
+#                 if count_pages
+#                 else {}
+#             ),
+#         ),
+#         200,
+#     )
+#     current_app.logger.debug(x)
+
 
 @notify_celery.task(name="process-job")
 def process_job(job_id, sender_id=None):
