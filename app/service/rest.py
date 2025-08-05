@@ -567,12 +567,14 @@ def generate_notifications_report(
         include_one_off=include_one_off,
     )
     current_app.logger.debug(f"Query complete at {int(time.time()-start_time)*1000}")
-
+    current_app.logger.debug(f"HOW MANY ITEMS IN PAGINATION? {len(pagination.items)}")
+    count = 1
     for notification in pagination.items:
         if notification.job_id is not None:
             current_app.logger.debug(
-                f"Processing job_id {notification.job_id} at {int(time.time()-start_time)*1000}"
+                f"Processing job_id {notification.job_id} which is row {count}"
             )
+            count = count + 1
             notification.personalisation = get_personalisation_from_s3(
                 notification.service_id,
                 notification.job_id,
@@ -638,7 +640,7 @@ def generate_notifications_report(
 
 
 @service_blueprint.route(
-    "/<uuid:service_id>/notifications-report", methods=["GET", "POST"]
+    "/<uuid:service_id>/notifications", methods=["GET", "POST"]
 )
 def get_notifications_report_for_service(service_id):
     current_app.logger.debug(hilite("ENTER GET ALL NOTIFICATIONS FOR SERVICE@"))
@@ -660,7 +662,7 @@ def get_notifications_report_for_service(service_id):
     return jsonify({"report_id": report_id}), 200
 
 
-@service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
+@service_blueprint.route("/<uuid:service_id>/notificationsx", methods=["GET", "POST"])
 def get_all_notifications_for_service(service_id):
     check_suspicious_id(service_id)
     current_app.logger.debug("enter get_all_notifications_for_service")
