@@ -518,7 +518,7 @@ def get_service_history(service_id):
     return jsonify(data=data)
 
 
-@service_blueprint.route("/<uuid:service_id>/notificationsx", methods=["GET", "POST"])
+@service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
 def get_all_notifications_for_service(service_id):
     check_suspicious_id(service_id)
     current_app.logger.debug("enter get_all_notifications_for_service")
