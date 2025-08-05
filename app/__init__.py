@@ -480,8 +480,7 @@ def make_task(app):
                     )
                 )
 
-        def on_failure(self, exc, task_id, args, kwargs, einfo):
-            current_app.logger.debug(f"Using {einfo}")
+        def on_failure(self, exc, task_id, args, kwargs, einfo=None):
 
             # enables request id tracing for these logs
             with self.app_context():
