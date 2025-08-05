@@ -639,9 +639,7 @@ def generate_notifications_report(
     current_app.logger.debug(hilite("FINITO"))
 
 
-@service_blueprint.route(
-    "/<uuid:service_id>/notifications", methods=["GET", "POST"]
-)
+@service_blueprint.route("/<uuid:service_id>/notifications-report", methods=["GET", "POST"])
 def get_notifications_report_for_service(service_id):
     current_app.logger.debug(hilite("ENTER GET ALL NOTIFICATIONS FOR SERVICE@"))
     check_suspicious_id(service_id)
@@ -662,7 +660,7 @@ def get_notifications_report_for_service(service_id):
     return jsonify({"report_id": report_id}), 200
 
 
-@service_blueprint.route("/<uuid:service_id>/notificationsx", methods=["GET", "POST"])
+@service_blueprint.route("/<uuid:service_id>/notifications", methods=["GET", "POST"])
 def get_all_notifications_for_service(service_id):
     check_suspicious_id(service_id)
     current_app.logger.debug("enter get_all_notifications_for_service")
