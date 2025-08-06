@@ -17,23 +17,19 @@ AWS_CLIENT_CONFIG = Config(
     use_fips_endpoint=True,
 )
 
-# Global variable
-noti_s3_resource = None
 
-default_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-default_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-default_region = os.environ.get("AWS_REGION")
+default_access_key_id = os.environ.get("CSV_AWS_ACCESS_KEY_ID")
+default_secret_access_key = os.environ.get("CSV_AWS_SECRET_ACCESS_KEY")
+default_region = os.environ.get("CSV_AWS_REGION")
 
 
 def get_s3_resource():
-    global noti_s3_resource
-    if noti_s3_resource is None:
-        session = Session(
-            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-            region_name=os.environ.get("AWS_REGION"),
-        )
-        noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    session = Session(
+        aws_access_key_id=os.environ.get("CSV_AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.environ.get("CSV_AWS_SECRET_ACCESS_KEY"),
+        region_name=os.environ.get("CSV_AWS_REGION"),
+    )
+    noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
     return noti_s3_resource
 
 
@@ -72,6 +68,7 @@ def s3upload(
         current_app.logger.exception(
             f"Unable to upload {key} to S3 bucket because of {e}"
         )
+        raise e
     except botocore.exceptions.ClientError as e:
         current_app.logger.exception(
             f"Unable to upload {key}to S3 bucket because of {e}"
