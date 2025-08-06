@@ -481,10 +481,10 @@ def make_task(app):
                 )
 
         def on_failure(self, exc, task_id, args, kwargs, einfo):
-            current_app.logger.debug(f"Using {einfo}")
 
             # enables request id tracing for these logs
             with self.app_context():
+                app.logger.debug(f"einfo is {einfo}")
                 app.logger.exception(
                     "Celery task {task_name} (queue: {queue_name}) failed".format(
                         task_name=self.name,

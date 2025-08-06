@@ -1,4 +1,7 @@
+import csv
+import io
 import json
+import os
 
 import gevent
 from celery.signals import task_postrun
@@ -10,6 +13,7 @@ from app import create_uuid, encryption, notify_celery
 from app.aws import s3
 from app.celery import provider_tasks
 from app.config import Config, QueueNames
+from app.dao import notifications_dao
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
@@ -19,7 +23,7 @@ from app.dao.notifications_dao import (
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
-from app.dao.services_dao import dao_fetch_service_by_id
+from app.dao.services_dao import dao_fetch_all_services, dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
@@ -32,6 +36,7 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT, hilite, utc_now
 from notifications_utils.recipients import RecipientCSV
+from notifications_utils.s3 import s3upload
 
 
 @notify_celery.task(name="process-job")
@@ -546,3 +551,128 @@ def process_incomplete_job(job_id):
             process_row(row, template, job, job.service, sender_id=sender_id)
 
     job_complete(job, resumed=True)
+
+
+def _generate_notifications_report(service_id, report_id, limit_days):
+
+    # Hard code these values for now
+    page = 1
+    page_size = 20000
+    include_jobs = True
+    include_from_test_key = False
+    include_one_off = True
+
+    data = {
+        "limit_days": limit_days,
+        "include_jobs": True,
+        "include_from_test_key": False,
+        "include_one_off": True,
+    }
+    pagination = notifications_dao.get_notifications_for_service(
+        service_id,
+        filter_dict=data,
+        page=page,
+        page_size=page_size,
+        count_pages=False,
+        limit_days=limit_days,
+        include_jobs=include_jobs,
+        include_from_test_key=include_from_test_key,
+        include_one_off=include_one_off,
+    )
+    count = 1
+    for notification in pagination.items:
+        if notification.job_id is not None:
+            current_app.logger.debug(
+                f"Processing job_id {notification.job_id} which is row {count}"
+            )
+            count = count + 1
+            notification.personalisation = s3.get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
+            recipient = s3.get_phone_number_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
+            notification.to = recipient
+            notification.normalised_to = recipient
+
+        else:
+            notification.to = ""
+            notification.normalised_to = ""
+
+    notifications = [
+        notification.serialize_for_csv() for notification in pagination.items
+    ]
+    current_app.logger.debug(
+        hilite(f"Number of notifications in report: {len(notifications)}")
+    )
+
+    # We try and get the next page of results to work out if we need provide a pagination link to the next page
+    # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
+    # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
+    # this way is much more performant for services with many results (unlike Flask SqlAlchemy, this approach
+    # doesn't do an additional query to count all the results of which there could be millions but instead only
+    # asks for a single extra page of results).
+
+    csv_bytes = io.BytesIO()
+    text_wrapper = io.TextIOWrapper(csv_bytes, encoding="utf-8", newline="")
+    writer = csv.writer(text_wrapper)
+    writer.writerows(notifications)
+    text_wrapper.flush()
+    csv_bytes.seek(0)
+
+    bucket_name, file_location, access_key, secret_key, region = get_csv_location(
+        service_id, report_id
+    )
+    if bucket_name == "":
+        exp_bucket = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+        exp_region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+        tier = os.getenv("NOTIFY_ENVIRONMENT")
+        raise Exception(
+            f"No bucket name should be: {exp_bucket} with region {exp_region} and tier {tier}"
+        )
+
+    # Delete yesterday's version of this report
+    s3.delete_s3_object(file_location)
+
+    s3upload(
+        filedata=csv_bytes,
+        region=region,
+        bucket_name=bucket_name,
+        file_location=file_location,
+        access_key=access_key,
+        secret_key=secret_key,
+    )
+    current_app.logger.info(f"generate-notifications-report uploaded {file_location}")
+
+
+@notify_celery.task(name="generate-notifications-reports")
+def generate_notification_reports_task():
+    services = dao_fetch_all_services(only_active=True)
+    for service in services:
+
+        current_app.logger.debug(hilite("INVOKE APPLY_ASYNC"))
+        limit_days = [1, 3, 5, 7]
+        for limit_day in limit_days:
+
+            report_id = f"{limit_day}-day-report"
+            _generate_notifications_report(service.id, report_id, limit_day)
+    current_app.logger.info("Notifications report generation complete")
+
+
+NEW_FILE_LOCATION_STRUCTURE = "{}-service-notify/{}.csv"
+
+
+def get_csv_location(service_id, upload_id):
+    return (
+        current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
+        NEW_FILE_LOCATION_STRUCTURE.format(service_id, upload_id),
+        current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],
+        current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],
+        current_app.config["CSV_UPLOAD_BUCKET"]["region"],
+    )

@@ -123,8 +123,46 @@ def list_s3_objects():
         )
 
 
+def get_notification_reports(service_id):
+
+    bucket_name = _get_bucket_name()
+    s3_client = get_s3_client()
+    # Our reports only support 7 days, but pull 8 days to avoid
+    # any edge cases
+    time_limit = aware_utcnow() - datetime.timedelta(days=8)
+    reports = []
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
+        while True:
+            for obj in response.get("Contents", []):
+                if obj["LastModified"] >= time_limit:
+                    if service_id in obj["Key"] and "report" in obj["Key"]:
+                        reports.append(obj)
+            if "NextContinuationToken" in response:
+                response = s3_client.list_objects_v2(
+                    Bucket=bucket_name,
+                    ContinuationToken=response["NextContinuationToken"],
+                )
+            else:
+                break
+    except Exception as e:
+        current_app.logger.exception(
+            f"An error occurred while regenerating cache #notify-debug-admin-1200: {str(e)}",
+        )
+    return reports
+
+
 def get_bucket_name():
     return current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+
+
+def delete_s3_object(key):
+
+    try:
+        remove_csv_object(key)
+        current_app.logger.debug(f"#delete-s3-object Deleted: {key}")
+    except botocore.exceptions.ClientError:
+        current_app.logger.exception(f"Couldn't delete {key}")
 
 
 def cleanup_old_s3_objects():

@@ -18,7 +18,10 @@ from sqlalchemy.orm.exc import NoResultFound
 from app import db, redis_store
 from app.aws import s3
 from app.celery.nightly_tasks import cleanup_unfinished_jobs
-from app.celery.tasks import process_row
+from app.celery.tasks import (
+    generate_notification_reports_task,
+    process_row,
+)
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     set_default_free_allowance_for_service,
@@ -808,6 +811,11 @@ def update_templates():
         for d in data:
             _update_template(d["id"], d["name"], d["type"], d["content"], d["subject"])
     _clear_templates_from_cache()
+
+
+@notify_command(name="generate-notification-reports")
+def generate_notification_reports():
+    generate_notification_reports_task()
 
 
 def _clear_templates_from_cache():
