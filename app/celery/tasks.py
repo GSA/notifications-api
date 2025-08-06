@@ -36,7 +36,6 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT, hilite, utc_now
 from notifications_utils.recipients import RecipientCSV
-from notifications_utils.s3 import s3upload
 
 
 @notify_celery.task(name="process-job")
@@ -640,7 +639,7 @@ def _generate_notifications_report(service_id, report_id, limit_days):
     # Delete yesterday's version of this report
     s3.delete_s3_object(file_location)
 
-    s3upload(
+    s3.s3upload(
         filedata=csv_bytes,
         region=region,
         bucket_name=bucket_name,
@@ -654,7 +653,6 @@ def generate_notification_reports_task():
     services = dao_fetch_all_services(only_active=True)
     for service in services:
 
-        current_app.logger.debug(hilite("INVOKE APPLY_ASYNC"))
         limit_days = [1, 3, 5, 7]
         for limit_day in limit_days:
 

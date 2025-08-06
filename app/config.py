@@ -289,7 +289,7 @@ class Config(object):
             },
             "generate-notifications-reports": {
                 "task": "generate-notifications-reports",
-                "schedule": crontab(hour=1, minute=0),
+                "schedule": crontab(minute="*/2"),
                 "options": {"queue": QueueNames.PERIODIC},
             },
             "regenerate-job-cache-on-startup": {
