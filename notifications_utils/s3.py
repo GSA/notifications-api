@@ -6,7 +6,6 @@ from botocore.config import Config
 from flask import current_app
 
 from app.config import _s3_credentials_from_env
-from app.utils import hilite
 
 AWS_CLIENT_CONFIG = Config(
     # This config is required to enable S3 to connect to FIPS-enabled
@@ -24,7 +23,6 @@ default_regions = "us-gov-west-1"
 def get_s3_resource():
 
     credentials = _s3_credentials_from_env("CSV")
-    current_app.logger.info(hilite(f"CREDENTIALS {credentials}"))
     session = Session(
         aws_access_key_id=credentials["access_key_id"],
         aws_secret_access_key=credentials["secret_access_key"],
