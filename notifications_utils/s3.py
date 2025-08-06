@@ -1,10 +1,12 @@
-import os
 import urllib
 
 import botocore
 from boto3 import Session
 from botocore.config import Config
 from flask import current_app
+
+from app.config import _s3_credentials_from_env
+from app.utils import hilite
 
 AWS_CLIENT_CONFIG = Config(
     # This config is required to enable S3 to connect to FIPS-enabled
@@ -16,18 +18,17 @@ AWS_CLIENT_CONFIG = Config(
     max_pool_connections=50,
     use_fips_endpoint=True,
 )
-
-
-default_access_key_id = os.environ.get("CSV_AWS_ACCESS_KEY_ID")
-default_secret_access_key = os.environ.get("CSV_AWS_SECRET_ACCESS_KEY")
-default_region = os.environ.get("CSV_AWS_REGION")
+default_regions = "us-gov-west-1"
 
 
 def get_s3_resource():
+
+    credentials = _s3_credentials_from_env("CSV")
+    current_app.logger.info(hilite(f"CREDENTIALS {credentials}"))
     session = Session(
-        aws_access_key_id=os.environ.get("CSV_AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.environ.get("CSV_AWS_SECRET_ACCESS_KEY"),
-        region_name=os.environ.get("CSV_AWS_REGION"),
+        aws_access_key_id=credentials["access_key_id"],
+        aws_secret_access_key=credentials["secret_access_key"],
+        region_name=credentials["region"],
     )
     noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
     return noti_s3_resource
@@ -41,8 +42,6 @@ def s3upload(
     content_type="binary/octet-stream",
     tags=None,
     metadata=None,
-    access_key=default_access_key_id,
-    secret_key=default_secret_access_key,
 ):
     _s3 = get_s3_resource()
 
@@ -83,9 +82,6 @@ class S3ObjectNotFound(botocore.exceptions.ClientError):
 def s3download(
     bucket_name,
     filename,
-    region=default_region,
-    access_key=default_access_key_id,
-    secret_key=default_secret_access_key,
 ):
     try:
         s3 = get_s3_resource()
