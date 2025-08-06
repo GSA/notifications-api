@@ -66,9 +66,16 @@ def s3upload(
         metadata = put_args["Metadata"] = metadata
 
     try:
+        current_app.logger.info(f"Going to try to upload this {key}")
         key.put(**put_args)
+    except botocore.exceptions.NoCredentialsError as e:
+        current_app.logger.exception(
+            f"Unable to upload {key} to S3 bucket because of {e}"
+        )
     except botocore.exceptions.ClientError as e:
-        current_app.logger.exception("Unable to upload file to S3 bucket")
+        current_app.logger.exception(
+            f"Unable to upload {key}to S3 bucket because of {e}"
+        )
         raise e
 
 
