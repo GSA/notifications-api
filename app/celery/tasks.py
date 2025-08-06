@@ -2,7 +2,6 @@ import csv
 import io
 import json
 import os
-import uuid
 
 import gevent
 from celery.signals import task_postrun
@@ -555,7 +554,8 @@ def process_incomplete_job(job_id):
 
 
 def _generate_notifications_report(service_id, report_id, limit_days):
-    current_app.logger.debug(hilite("ENTER _generate_notifications_report()"))
+
+    # Hard code these values for now
     page = 1
     page_size = 20000
     include_jobs = True
@@ -608,7 +608,9 @@ def _generate_notifications_report(service_id, report_id, limit_days):
     notifications = [
         notification.serialize_for_csv() for notification in pagination.items
     ]
-    current_app.logger.debug(hilite(f"NUMBER OF NOTFICIATIONS IS {len(notifications)}"))
+    current_app.logger.debug(
+        hilite(f"Number of notifications in report: {len(notifications)}")
+    )
 
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
@@ -632,10 +634,12 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         exp_region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
         tier = os.getenv("NOTIFY_ENVIRONMENT")
         raise Exception(
-            f"NO BUCKET NAME SHOULD BE: {exp_bucket} WITH REGION {exp_region} TIER {tier}"
+            f"No bucket name should be: {exp_bucket} with region {exp_region} and tier {tier}"
         )
 
-    current_app.logger.debug(hilite(f"UPLOADING THIS {file_location}"))
+    # Delete yesterday's version of this report
+    s3.delete_s3_object(file_location)
+
     s3upload(
         filedata=csv_bytes,
         region=region,
@@ -644,12 +648,11 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         access_key=access_key,
         secret_key=secret_key,
     )
-    current_app.logger.debug(hilite("FINITO"))
+    current_app.logger.info(f"generate-notifications-report uploaded {file_location}")
 
 
 @notify_celery.task(name="generate-notifications-reports")
 def generate_notification_reports_task():
-    current_app.logger.debug(hilite("ENTER GET ALL NOTIFICATIONS FOR SERVICE@"))
     services = dao_fetch_all_services(only_active=True)
     for service in services:
 
@@ -657,7 +660,7 @@ def generate_notification_reports_task():
         limit_days = [1, 3, 5, 7]
         for limit_day in limit_days:
 
-            report_id = f"{str(uuid.uuid4())}-{limit_day}-day"
+            report_id = f"{limit_day}-day-report"
             _generate_notifications_report(service.id, report_id, limit_day)
     current_app.logger.info("Notifications report generation complete")
 
