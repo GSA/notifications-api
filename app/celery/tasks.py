@@ -645,8 +645,6 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         region=region,
         bucket_name=bucket_name,
         file_location=file_location,
-        access_key=access_key,
-        secret_key=secret_key,
     )
     current_app.logger.info(f"generate-notifications-report uploaded {file_location}")
 
