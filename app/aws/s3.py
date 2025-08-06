@@ -2,6 +2,7 @@ import csv
 import datetime
 import re
 import time
+import urllib
 from io import StringIO
 
 import botocore
@@ -613,3 +614,44 @@ def remove_csv_object(object_key):
         current_app.config["CSV_UPLOAD_BUCKET"]["region"],
     )
     return obj.delete()
+
+
+def s3upload(
+    filedata,
+    region,
+    bucket_name,
+    file_location,
+    content_type="binary/octet-stream",
+    tags=None,
+    metadata=None,
+):
+    _s3 = get_s3_resource()
+
+    key = _s3.Object(bucket_name, file_location)
+
+    put_args = {
+        "Body": filedata,
+        "ServerSideEncryption": "AES256",
+        "ContentType": content_type,
+    }
+
+    if tags:
+        tags = urllib.parse.urlencode(tags)
+        put_args["Tagging"] = tags
+
+    if metadata:
+        metadata = put_args["Metadata"] = metadata
+
+    try:
+        current_app.logger.info(hilite(f"Going to try to upload this {key}"))
+        key.put(**put_args)
+    except botocore.exceptions.NoCredentialsError as e:
+        current_app.logger.exception(
+            f"Unable to upload {key} to S3 bucket because of {e}"
+        )
+        raise e
+    except botocore.exceptions.ClientError as e:
+        current_app.logger.exception(
+            f"Unable to upload {key}to S3 bucket because of {e}"
+        )
+        raise e
