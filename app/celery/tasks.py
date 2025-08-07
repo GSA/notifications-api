@@ -617,7 +617,7 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         notification.serialize_for_csv() for notification in pagination.items
     ]
 
-    current_app.logger.info(hilite(f"RAW: {notifications}"))
+    current_app.logger.debug(hilite(f"RAW: {notifications}"))
 
     # We try and get the next page of results to work out if we need provide a pagination link to the next page
     # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
@@ -666,7 +666,7 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         service_id, report_id
     )
 
-    current_app.logger.info(
+    current_app.logger.debug(
         hilite(f"REPORT {file_location} {csv_bytes.getvalue().decode('utf-8')}")
     )
     if bucket_name == "":

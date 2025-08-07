@@ -76,9 +76,7 @@ def get_s3_client():
         aws_secret_access_key=secret_key,
         region_name=region,
     )
-    current_app.logger.info(hilite("About to call session.client"))
     s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
-    current_app.logger.info(hilite("SESSION CALLED"))
     return s3_client
 
 
