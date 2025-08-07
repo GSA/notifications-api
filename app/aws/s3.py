@@ -531,7 +531,6 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
-        current_app.logger.info(f"HAD TO SET JOB CACHE for {job_id}")
     else:
         # skip expiration date from cache, we don't need it here
         job = job[0]
@@ -591,7 +590,6 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     personalisation = get_job_cache(f"{job_id}_personalisation")
     if personalisation is None:
         set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
-        current_app.logger.info("HAD TO EXTRACT PERSONALIZATION")
 
     return get_job_cache(f"{job_id}_personalisation")[0].get(job_row_number)
 
