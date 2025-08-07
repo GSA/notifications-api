@@ -686,11 +686,11 @@ def _generate_notifications_report(service_id, report_id, limit_days):
         bucket_name=bucket_name,
         file_location=file_location,
     )
-    elapsed_time = str(start_time - time.time())
+    elapsed_time = str(time.time() - start_time)
     elapsed_time = elapsed_time.split(".")
     current_app.logger.info(
         hilite(
-            f"generate-notifications-report uploaded {file_location} elapsed_time = {elapsed_time[0]}"
+            f"generate-notifications-report uploaded {file_location} elapsed_time = {elapsed_time[0]} seconds"
         )
     )
 
