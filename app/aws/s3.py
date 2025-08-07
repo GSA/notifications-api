@@ -288,17 +288,18 @@ def get_s3_files():
     )
     count = 0
     try:
-        for object_key in object_keys:
-            read_s3_file(bucket_name, object_key, s3res)
-            count = count + 1
-            gevent.sleep(0.2)
+        greenlets = [
+            gevent.spawn(read_s3_file, bucket_name, object_key, s3res)
+            for object_key in object_keys
+        ]
+        gevent.joinall(greenlets)
     except Exception:
         current_app.logger.exception(
-            f"Trouble reading {object_key} which is # {count} during cache regeneration"
+            f"Trouble reading object_key which is # {count} during cache regeneration"
         )
     except OSError as e:
         current_app.logger.exception(
-            f"Egress proxy issue reading {object_key} which is # {count}"
+            f"Egress proxy issue reading object_key which is # {count}"
         )
         raise e
 
