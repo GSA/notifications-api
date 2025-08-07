@@ -39,7 +39,7 @@ def set_job_cache(key, value):
 
 
 def get_job_cache(key):
-
+    key = str(key)
     ret = job_cache.get(key)
     return ret
 
@@ -53,14 +53,15 @@ def len_job_cache():
 def clean_cache():
     current_time = time.time()
     keys_to_delete = []
-    for key, (_, expiry_time) in job_cache.items():
-        if expiry_time < current_time:
-            keys_to_delete.append(key)
 
-    current_app.logger.debug(
-        f"Deleting the following keys from the job_cache: {keys_to_delete}"
-    )
     with job_cache_lock:
+        for key, (_, expiry_time) in job_cache.items():
+            if expiry_time < current_time:
+                keys_to_delete.append(key)
+
+        current_app.logger.debug(
+            f"Deleting the following keys from the job_cache: {keys_to_delete}"
+        )
         for key in keys_to_delete:
             del job_cache[key]
 
@@ -524,11 +525,13 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
+
     job = get_job_cache(job_id)
     if job is None:
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
         set_job_cache(job_id, job)
+        current_app.logger.info(f"HAD TO SET JOB CACHE for {job_id}")
     else:
         # skip expiration date from cache, we don't need it here
         job = job[0]
@@ -566,6 +569,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = get_job_cache(job_id)
+
     if job is None:
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
@@ -587,6 +591,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     personalisation = get_job_cache(f"{job_id}_personalisation")
     if personalisation is None:
         set_job_cache(f"{job_id}_personalisation", extract_personalisation(job))
+        current_app.logger.info("HAD TO EXTRACT PERSONALIZATION")
 
     return get_job_cache(f"{job_id}_personalisation")[0].get(job_row_number)
 
