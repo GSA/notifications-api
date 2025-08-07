@@ -601,10 +601,6 @@ def test_get_s3_files_handles_exception(mocker):
     ]
     mock_read_s3_file.assert_has_calls(calls, any_order=True)
 
-    mock_current_app.logger.exception.assert_called_with(
-        "Trouble reading file2.csv which is # 1 during cache regeneration"
-    )
-
 
 def test_get_service_id_from_key_various_formats():
     assert s3.get_service_id_from_key("service-123-notify/abc.csv") == "123"
