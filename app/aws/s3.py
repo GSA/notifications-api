@@ -267,9 +267,11 @@ def read_s3_file(bucket_name, object_key, s3res):
                 f"{job_id}_personalisation",
                 extract_personalisation(job),
             )
-
-    except Exception as e:
-        current_app.logger.exception(str(e))
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            current_app.logger.error(f"NoSuchKey: {object_key}")
+        else:
+            raise
 
 
 def get_s3_files():
