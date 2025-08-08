@@ -220,6 +220,8 @@ def get_jobs_by_service(service_id):
     else:
         limit_days = None
 
+    use_processing_time = request.args.get("use_processing_time", "false").lower() == "true"
+
     valid_statuses = set(JobStatus)
     statuses_arg = request.args.get("statuses", "")
     if statuses_arg == "":
@@ -236,6 +238,7 @@ def get_jobs_by_service(service_id):
         **get_paginated_jobs(
             service_id,
             limit_days=limit_days,
+            use_processing_time=use_processing_time,
             statuses=statuses,
             page=int(request.args.get("page", 1)),
         )
@@ -325,12 +328,14 @@ def get_paginated_jobs(
     service_id,
     *,
     limit_days,
+    use_processing_time,
     statuses,
     page,
 ):
     pagination = dao_get_jobs_by_service_id(
         service_id,
         limit_days=limit_days,
+        use_processing_time=use_processing_time,
         page=page,
         page_size=current_app.config["PAGE_SIZE"],
         statuses=statuses,
