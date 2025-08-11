@@ -1,3 +1,4 @@
+import io
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from app import db, encryption
 from app.celery import provider_tasks, tasks
 from app.celery.tasks import (
     __total_sending_limits_for_job_exceeded,
+    _generate_notifications_report,
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_job,
     process_incomplete_jobs,
@@ -1792,3 +1794,75 @@ def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
         save_api_email_or_sms(mock_self, encrypted)
         mock_exception.assert_called_once()
         assert "Max retry failed" in mock_exception.call_args[0][0]
+
+
+def get_mock_notification():
+    notif = MagicMock()
+    notif.job_id = "job-id"
+    notif.service_id = "service-id"
+    notif.job_row_number = 5
+    notif.serialize_for_csv.return_value = {
+        "recipient": "1234567890",
+        "template_name": "Test Template",
+        "created_by_name": "Tester",
+        "carrier": "TestCarrier",
+        "status": "delivered",
+        "created_at": "2025-08-10T12:00:00",
+        "job_name": "Job A",
+        "provider_response": "Success",
+    }
+    return notif
+
+
+@patch("app.dao.notifications_dao.get_notifications_for_service")
+@patch("app.aws.s3.get_personalisation_from_s3")
+@patch("app.aws.s3.get_phone_number_from_s3")
+@patch("app.celery.tasks.get_csv_location")
+@patch("app.aws.s3.s3upload")
+@patch("app.aws.s3.delete_s3_object")
+@patch("app.celery.tasks.current_app")
+def test_generate_notifications_report_normal_case(
+    mock_current_app,
+    mock_delete,
+    mock_upload,
+    mock_get_csv_location,
+    mock_get_phone_number,
+    mock_get_personalisation,
+    mock_get_notifications,
+):
+
+    mock_get_notifications.return_value.items = [get_mock_notification()]
+    mock_get_phone_number.return_value = "1234567890"
+    mock_get_personalisation.return_value = {"name": "John"}
+    mock_get_csv_location.return_value = (
+        "my-bucket",
+        "some/file/location.csv",
+        "access",
+        "sekret",
+        "region",
+    )
+
+    mock_current_app.config = {
+        "CSV_UPLOAD_BUCKET": {"bucket": "my-bucket", "region": "region"}
+    }
+
+    _generate_notifications_report("service-id", "report-id", 7)
+
+    mock_get_personalisation.assert_called_once()
+    mock_get_phone_number.assert_called_once()
+
+    mock_upload.assert_called_once()
+    args, kwargs = mock_upload.call_args
+    assert kwargs["bucket_name"] == "my-bucket"
+    assert kwargs["file_location"] == "some/file/location.csv"
+    assert isinstance(kwargs["filedata"], io.BytesIO)
+
+
+@patch("app.dao.notifications_dao.get_notifications_for_service")
+@patch("app.celery.tasks.current_app")
+def test_generate_notifications_report_no_notifications(
+    mock_current_app, mock_get_notifications
+):
+    mock_get_notifications.return_value.items = []
+    _generate_notifications_report("service-id", "report-id", 7)
+    mock_current_app.logger.info.assert_called_with("SKIP service-id")
