@@ -1796,8 +1796,7 @@ def test_save_api_email_or_sms_sqlalchemy_error_with_max_retries():
         assert "Max retry failed" in mock_exception.call_args[0][0]
 
 
-@pytest.fixture
-def mock_notification():
+def get_mock_notification():
     notif = MagicMock()
     notif.job_id = "job-id"
     notif.service_id = "service-id"
@@ -1812,6 +1811,7 @@ def mock_notification():
         "job_name": "Job A",
         "provider_response": "Success",
     }
+    return notif
 
 
 @patch("app.dao.notifications_dao.get_notifications_for_service")
@@ -1829,10 +1829,9 @@ def test_generate_notifications_report_normal_case(
     mock_get_phone_number,
     mock_get_personalisation,
     mock_get_notifications,
-    mock_notification,
 ):
 
-    mock_get_notifications.return_value.items = [mock_notification]
+    mock_get_notifications.return_value.items = [get_mock_notification()]
     mock_get_phone_number.return_value = "1234567890"
     mock_get_personalisation.return_value = {"name": "John"}
     mock_get_csv_location.return_value = (
