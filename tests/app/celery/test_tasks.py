@@ -1814,7 +1814,7 @@ def mock_notification():
     }
 
 
-@patch("app.notifications_dao.get_notifications_for_service")
+@patch("app.dao.notifications_dao.get_notifications_for_service")
 @patch("app.aws.s3.get_personalisation_from_s3")
 @patch("app.aws.s3.get_phone_number_from_s3")
 @patch("app.celery.tasks.get_csv_location")
