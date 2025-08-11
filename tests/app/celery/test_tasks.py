@@ -1815,11 +1815,11 @@ def mock_notification():
 
 
 @patch("app.notifications_dao.get_notifications_for_service")
-@patch("app.s3.get_personalisation_from_s3")
-@patch("app.s3.get_phone_number_from_s3")
+@patch("app.aws.s3.get_personalisation_from_s3")
+@patch("app.aws.s3.get_phone_number_from_s3")
 @patch("app.get_csv_location")
-@patch("app.s3.s3upload")
-@patch("app.s3.delete_s3_object")
+@patch("app.aws.s3.s3upload")
+@patch("app.aws.s3.delete_s3_object")
 @patch("app.current_app")
 def test_generate_notifications_report_normal_case(
     mock_current_app,
