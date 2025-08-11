@@ -1829,7 +1829,7 @@ def test_generate_notifications_report_normal_case(
     mock_get_phone_number,
     mock_get_personalisation,
     mock_get_notifications,
-    mock_notifications,
+    mock_notification,
 ):
 
     mock_get_notifications.return_value.items = [mock_notification]
