@@ -180,7 +180,15 @@ top!).
 
 |                             ADR                              |                                               TITLE                                               | CURRENT STATUS | IMPLEMENTED | LAST MODIFIED |
 |:------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------:|:-----------:|:-------------:|
-| [ADR-0009](./0009-adr-implement-backstopjs-to-improve-qa.md) | [Use backstopJS for QA Improvement within Admin Project](./0006-use-for-dependency-management.md) |    Accepted    |     No      |  08/27/2024   |
+| [ADR-0015](./0015-async-report-generation.md) | [Improve API stability when processing job data and generating reports](./0015-async-report-generation.md) |    Accepted    |     Yes      |  08/11/2025   |
+| [ADR-0014](./0014-adr-localize-notifications-python-client.md) | [Bring in the notifications-python-client directly to the API and Admin apps](./0014-adr-localize-notifications-python-client.md) |    Accepted    |     Yes      |  06/10/2025   |
+| [ADR-0013](./0013-log-debug-tags.md) | [Use of debug search tags for cloudwatch logs](./0013-log-debug-tags.md) |    Accepted    |     Yes      |  02/27/2025   |
+| [ADR-0012](./0012-adr-report-generation.md) | [Optimize processing of delivery receipts](./0012-adr-report-generation.md) |    Accepted    |     Yes      |  02/12/2025   |
+| [ADR-0011](./0011-adr-delivery-receipts-updates.md) | [Optimize processing of delivery receipts](./0011-adr-delivery-receipts-updates.md) |    Accepted    |     Yes      |  01/22/2025   |
+| [ADR-0010](./0010-adr-celery-pool-support-best-practice.md) | [Make best use of celery worker pools](./0010-adr-celery-pool-support-best-practice.md) |    Accepted    |     Yes      |  01/07/2025   |
+| [ADR-0009](./0009-adr-implement-backstopjs-to-improve-qa.md) | [Use backstopJS for QA Improvement within Admin Project](./0009-adr-implement-backstopjs-to-improve-qa.md) |    Accepted    |     Yes      |  08/27/2024   |
+| [ADR-0008](./0008-adr-handle-paid-quotas-at-the-organization-level.md) | [Handle paid quotas at the organization level](./0008-adr-handle-paid-quotas-at-the-organization-level.md) |    Accepted    |     No      |  09/30/2023   |
+| [ADR-0007](./0007-adr-manage-total-record-retention-dynamically.md) | [Manage total record retention dynamically](./0007-adr-manage-total-record-retention-dynamically.md) |    Accepted    |     Yes      |  11/07/203   |
 |     [ADR-0006](./0006-use-for-dependency-management.md)      |         [Use `poetry` for Dependency Management](./0006-use-for-dependency-management.md)         |    Accepted    |     Yes     |  09/08/2023   |
 |          [ADR-0005](./0005-agreement-data-model.md)          |                  [Agreement info in data model](./0005-agreement-data-model.md)                   |    Accepted    |     No      |  07/05/2023   |
 |   [ADR-0004](./0004-designing-pilot-content-visibility.md)   |        [Designing Pilot Content Visibility](./0004-designing-pilot-content-visibility.md)         |    Proposed    |     No      |  06/20/2023   |
