@@ -1853,6 +1853,6 @@ def test_generate_notifications_report_normal_case(
 
     mock_upload.assert_called_once()
     args, kwargs = mock_upload.call_args
-    assert kwargs["bucket_name"] == ["my-bucket"]
+    assert kwargs["bucket_name"] == "my-bucket"
     assert kwargs["file_location"] == "some/file/location.csv"
     assert isinstance(kwargs["filedata"], io.BytesIO)
