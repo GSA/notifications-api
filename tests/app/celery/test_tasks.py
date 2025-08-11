@@ -1856,3 +1856,13 @@ def test_generate_notifications_report_normal_case(
     assert kwargs["bucket_name"] == "my-bucket"
     assert kwargs["file_location"] == "some/file/location.csv"
     assert isinstance(kwargs["filedata"], io.BytesIO)
+
+
+@patch("app.dao.notifications_dao.get_notifications_for_service")
+@patch("app.celery.tasks.current_app")
+def test_generate_notifications_report_no_notifications(
+    mock_current_app, mock_get_notifications
+):
+    mock_get_notifications.return_value.items = []
+    _generate_notifications_report("service-id", "report-id", 7)
+    mock_current_app.logger.info.assert_called_with("SKIP service-id")
