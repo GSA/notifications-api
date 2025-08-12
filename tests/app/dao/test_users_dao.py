@@ -133,7 +133,7 @@ def test_get_user_by_email(sample_user):
 
 
 def test_get_login_gov_user(sample_user):
-    user_from_db = get_login_gov_user("fake_login_gov_uuid", sample_user.email_address)
+    user_from_db = get_login_gov_user("123456", sample_user.email_address)
     assert sample_user.email_address == user_from_db.email_address
     assert user_from_db.login_uuid is not None
 

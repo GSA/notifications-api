@@ -53,9 +53,6 @@ def get_login_gov_user(login_uuid, email_address):
                 db.session.rollback()
 
         return user
-    # Remove this 1 July 2025, all users should have login.gov uuids by now
-    stmt = select(User).where(User.email_address.ilike(email_address))
-    user = db.session.execute(stmt).scalars().first()
 
     if user:
         save_user_attribute(user, {"login_uuid": login_uuid})
