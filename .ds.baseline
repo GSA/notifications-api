@@ -257,7 +257,7 @@
         "filename": "tests/app/db.py",
         "hashed_secret": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
         "is_verified": false,
-        "line_number": 90,
+        "line_number": 91,
         "is_secret": false
       }
     ],
@@ -374,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-07-02T18:56:01Z"
+  "generated_at": "2025-08-12T18:08:49Z"
 }
