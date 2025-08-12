@@ -15,13 +15,9 @@ We've tried thinking through other ways we might be able to make this work, but 
 
 ### Decision
 
-At this point, we will move away from the shared dictionary cache and instead rely solely on using asynchronous tasks with Celery to perform these actions.  In other words, instead of trying to cache anything, we will simply let Celery tasks handle the workloads and poll their status so that once they're finished, we update the UI to let the user know that their requested data is ready.
+At this point, we will move away from the shared dictionary cache and convert it to a regular Python dictionary that is regenerated at app startup and refreshed every 30 minutes; this will continue to be used as a cache for phone numbers and personalization.  Furthermore, the reports themselves will be switched to being regenerated each night via asynchronous tasks.  The generated reports are stored in an S3 bucket for a maximum of 7 days.
 
-The message sending jobs already function this way, but the report generation will need to change slightly to be entirely task based instead of trying to read and utilize the job cache first.  Additionally, we'll need a bit of UI work to provide an area or overlay that informs the user that their request report(s) is being generated and once it is, update it to provide a link to download the generated report.
-
-This approach is nearly identical to how [FEC.gov](https://fec.gov/) handles its data export feature, which are analogous to our 1, 3, 5, and 7 day reports.  You can see an example of how this works by [going here](https://www.fec.gov/data/receipts/?data_type=processed&two_year_transaction_period=2024&min_date=10%2F12%2F2024&max_date=10%2F12%2F2024) and clicking on the `Export` button toward the top right.
-
-The full implementation is largely found in [this module within the FEC API code base](https://github.com/fecgov/openFEC/blob/develop/webservices/tasks/download.py).
+Additionally, we'll need a bit of UI work to update the links to the reports and some additional language to indicate that they are regenerated on a 24 hour basis and won't contain any of the current day's send information until the following day.
 
 We did try shifting the creation and management of the shared dictionary for the job cache to the main application instances and this initially improved things, but it fell over fast once a few reports were generated.  A host of connection refused errors started cropping up, and any action that touched the job cache, including sending messages, resulted in an error being displayed to users (despite the action still succeeded in the case of sending messages).
 
@@ -29,11 +25,11 @@ Further investigation into using anything with [`multiprocessing`](https://docs.
 
 ### Consequences
 
-By making this switch to using Celery itself for our longer-running actions performed by users, we trade off some performance for reduced complexity and stability.  Asynchronous tasks aren't necessarily simple either, but it's a known paradigm and by simply leveraging them and not trying to do additional processing for performance gains, we can go with a tried and true approach.
+By making this switch to using Celery itself for our longer-running actions performed by users, we trade off some data freshness for improved performance and stability.  Asynchronous tasks aren't necessarily simple either, but it's a known paradigm and by simply leveraging them and not trying to do additional processing for performance gains, we can go with a tried and true approach.
 
-We will need to do some additional UI work to support the switch to using tasks directly, but this is minimal in nature compared to trying to fully support a shared cache solely within a running app process(es).
+We will need to do some additional UI work to support the switch to using the nightly-generated reports, but this is minimal in nature compared to trying to fully support a shared cache solely within a running app process(es).
 
-However, we will gain a significant amount of application stability and resiliency without having to increase our resource usage by taking this approach.  We will also buy ourselves time and breathing room to take another look at the performance afterward and see what we can do to improve the report generation in the future with other approaches to how we process the data under the hood.
+Again, we will gain a significant amount of application stability and resiliency without having to increase our resource usage by taking this approach.  We will also buy ourselves time and breathing room to take another look at the performance afterward and see what we can do to improve the report generation in the future with other approaches to how we process the data under the hood.
 
 ### Author
 
