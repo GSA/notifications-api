@@ -1075,7 +1075,7 @@ def test_get_user_login_gov_user(notify_db_session, admin_request):
         _data=data,
     )
 
-    assert users["data"]["login_uuid"] == "123456"
+    assert users["data"]["email_address"] == "findel.mestro@foo.com"
 
 
 def test_find_users_by_email_handles_no_results(notify_db_session, admin_request):
