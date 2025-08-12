@@ -187,7 +187,7 @@ def service_factory(sample_user):
 
 @pytest.fixture(scope="function")
 def sample_user(notify_db_session):
-    return create_user(email="notify@digital.fake.gov")
+    return create_user(email="notify@digital.fake.gov", login_uuid="123456")
 
 
 @pytest.fixture(scope="function")
