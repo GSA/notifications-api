@@ -222,6 +222,7 @@ class User(db.Model):
             "id": self.id,
             "name": self.name,
             "email_address": self.email_address,
+            "login_uuid": self.login_uuid,
             "auth_type": self.auth_type,
             "current_session_id": self.current_session_id,
             "failed_login_count": self.failed_login_count,
@@ -247,6 +248,7 @@ class User(db.Model):
             "id": self.id,
             "name": self.name,
             "email_address": self.email_address,
+            "login_uuid": self.login_uuid,
             "mobile_number": self.mobile_number,
         }
 
