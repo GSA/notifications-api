@@ -122,7 +122,7 @@ class User(db.Model):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     _password = db.Column(db.String, index=False, unique=False, nullable=False)
@@ -376,7 +376,7 @@ class Organization(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     agreement_signed = db.Column(db.Boolean, nullable=True)
@@ -499,7 +499,7 @@ class Service(db.Model, Versioned):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     active = db.Column(
@@ -640,7 +640,7 @@ class AnnualBilling(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     created_at = db.Column(
@@ -719,7 +719,7 @@ class InboundNumber(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -775,7 +775,7 @@ class ServiceSmsSender(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -998,7 +998,7 @@ class ApiKey(db.Model, Versioned):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     created_by = db.relationship("User")
@@ -1267,7 +1267,7 @@ class TemplateRedacted(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     updated_by_id = db.Column(
@@ -1322,7 +1322,7 @@ class ProviderDetails(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     created_by_id = db.Column(
@@ -1345,7 +1345,7 @@ class ProviderDetailsHistory(db.Model, HistoryModel):
     active = db.Column(db.Boolean, nullable=False)
     version = db.Column(db.Integer, primary_key=True, nullable=False)
     updated_at = db.Column(
-        db.DateTime, nullable=True, default=utc_now, onupdate=utc_now
+        db.DateTime, nullable=True, default=None, onupdate=utc_now
     )
     created_by_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("users.id"), index=True, nullable=True
@@ -1384,7 +1384,7 @@ class Job(db.Model):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     notification_count = db.Column(db.Integer, nullable=False)
@@ -1528,7 +1528,7 @@ class Notification(db.Model):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     status = enum_column(
@@ -1835,7 +1835,7 @@ class NotificationHistory(db.Model, HistoryModel):
         index=False,
         unique=False,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
     status = enum_column(
@@ -2122,7 +2122,7 @@ class ServiceEmailReplyTo(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -2169,7 +2169,7 @@ class FactBilling(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -2207,7 +2207,7 @@ class FactNotificationStatus(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -2226,7 +2226,7 @@ class FactProcessingTime(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -2294,7 +2294,7 @@ class ServiceDataRetention(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
@@ -2349,7 +2349,7 @@ class WebauthnCredential(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=True,
-        default=utc_now,
+        default=None,
         onupdate=utc_now,
     )
 
