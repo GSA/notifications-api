@@ -29,7 +29,7 @@ def test_get_webauthn_credentials_returns_all_credentials_for_user(
         "name": "1",
         "credential_data": "ABC123",
         "created_at": ANY,
-        "updated_at": None,
+        "updated_at": ANY,
     }
 
     assert creds[1]["name"] == "2"
