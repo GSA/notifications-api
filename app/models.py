@@ -1268,7 +1268,7 @@ class TemplateRedacted(db.Model):
         db.DateTime,
         nullable=False,
         default=utc_now,
-        default=utc_now,
+        onupdate=utc_now,
     )
     updated_by_id = db.Column(
         UUID(as_uuid=True),
