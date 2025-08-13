@@ -4,7 +4,7 @@ applications:
     buildpack: python_buildpack
     stack: cflinuxfs4
     instances: 1
-    disk_quota: 1G
+    disk_quota: 2G
     routes:
     - route: ((public_api_route))
     - route: notify-api-((env)).apps.internal
