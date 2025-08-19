@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.dao_utils import autocommit
-from app.dao.service_user_dao import dao_get_active_service_users, dao_get_service_user
+from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.template_folder_dao import (
     dao_create_template_folder,
