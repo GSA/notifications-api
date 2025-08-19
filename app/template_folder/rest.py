@@ -60,7 +60,11 @@ def create_template_folder(service_id):
         except NoResultFound:
             raise InvalidRequest("parent_id not found", status_code=400)
     else:
-        users_with_permission = dao_get_active_service_users(service_id)
+        users_with_permission = []
+        if data.get("created_by_id"):
+            creator = dao_get_service_user(data["created_by_id"], service_id)
+            if creator:
+                users_with_permission = [creator]
     template_folder = TemplateFolder(
         service_id=service_id,
         name=data["name"].strip(),
