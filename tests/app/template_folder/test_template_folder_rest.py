@@ -125,9 +125,25 @@ def test_create_template_folder_sets_user_permissions(
     if has_parent:
         assert resp["data"]["users_with_permission"] == [str(user_1.id)]
     else:
-        assert sorted(resp["data"]["users_with_permission"]) == sorted(
-            [str(user_1.id), str(user_2.id)]
-        )
+        assert resp["data"]["users_with_permission"] == []
+
+
+def test_create_template_folder_with_creator_id_grants_permission_to_creator(
+    admin_request, sample_service
+):
+    user_1 = create_user(email="creator@gsa.gov")
+    user_2 = create_user(email="other@gsa.gov")
+    sample_service.users = [user_1, user_2]
+
+    resp = admin_request.post(
+        "template_folder.create_template_folder",
+        service_id=sample_service.id,
+        _data={"name": "creator folder", "parent_id": None, "created_by_id": str(user_1.id)},
+        _expected_status=201,
+    )
+
+    assert resp["data"]["name"] == "creator folder"
+    assert resp["data"]["users_with_permission"] == [str(user_1.id)]
 
 
 @pytest.mark.parametrize("missing_field", ["name", "parent_id"])
