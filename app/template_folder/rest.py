@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.dao_utils import autocommit
-from app.dao.service_user_dao import dao_get_active_service_users, dao_get_service_user
+from app.dao.service_user_dao import dao_get_service_user
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.template_folder_dao import (
     dao_create_template_folder,
@@ -60,7 +60,11 @@ def create_template_folder(service_id):
         except NoResultFound:
             raise InvalidRequest("parent_id not found", status_code=400)
     else:
-        users_with_permission = dao_get_active_service_users(service_id)
+        users_with_permission = []
+        if data.get("created_by_id"):
+            creator = dao_get_service_user(data["created_by_id"], service_id)
+            if creator:
+                users_with_permission = [creator]
     template_folder = TemplateFolder(
         service_id=service_id,
         name=data["name"].strip(),
