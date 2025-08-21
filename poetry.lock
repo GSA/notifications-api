@@ -947,14 +947,14 @@ testing = ["pytest (>=7.2.1)", "pytest-cov (>=4.0.0)", "tox (>=4.4.3)"]
 
 [[package]]
 name = "cloudfoundry-client"
-version = "1.38.6"
+version = "1.39.0"
 description = "A client library for CloudFoundry"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "cloudfoundry_client-1.38.6-py3-none-any.whl", hash = "sha256:a04b64dd23aa67069664bc5e28ed2618b0523bc064a8cc4214eb4caa3d2ae48a"},
-    {file = "cloudfoundry_client-1.38.6.tar.gz", hash = "sha256:9c6b4518000226e480b39d873319836716b939f9f72ef411e00a8a8f6b32a63b"},
+    {file = "cloudfoundry_client-1.39.0-py3-none-any.whl", hash = "sha256:4b20e44499d6dfd1fb178dcb38de5a78df5d4ad3015e89ffac41ba38ba0d4d50"},
+    {file = "cloudfoundry_client-1.39.0.tar.gz", hash = "sha256:2af1f9ed2a35792b856c6ef0d30111f987199541bedb8fd4219fe688e2499d40"},
 ]
 
 [package.dependencies]
