@@ -54,6 +54,11 @@ def get_login_gov_user(login_uuid, email_address):
 
         return user
 
+    # Handle the case of the brand new user.  We know their email from the
+    # invitation but need to related the login_uuid to it.
+    stmt = select(User).where(User.email_address.ilike(email_address))
+    user = db.session.execute(stmt).scalars().first()
+
     if user:
         save_user_attribute(user, {"login_uuid": login_uuid})
         return user
