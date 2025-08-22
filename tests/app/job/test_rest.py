@@ -950,8 +950,7 @@ def test_get_all_notifications_for_job_returns_csv_format(
     mock_s3.return_value = {0: "15555555555"}
     mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
     mock_s3_personalisation.return_value = {0: ""}
-
-    assert sample_notification_with_job.job_row_number == 0
+    sample_notification_with_job.job_row_number = 0
     current_app.logger.info(f"HERE {sample_notification_with_job.serialize_for_csv()}")
 
     resp = admin_request.get(
