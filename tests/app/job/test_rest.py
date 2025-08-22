@@ -533,12 +533,17 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
 
 
 @pytest.mark.parametrize(
-    "expected_notification_count, status_args",
+    "expected_notification_count, status_args, expected_phones, expected_personalisation",
     [
-        (1, [NotificationStatus.CREATED]),
-        (0, [NotificationStatus.SENDING]),
-        (1, [NotificationStatus.CREATED, NotificationStatus.SENDING]),
-        (0, [NotificationStatus.SENDING, NotificationStatus.DELIVERED]),
+        (1, [NotificationStatus.CREATED], {0: "15555555555"}, {0: ""}),
+        (0, [NotificationStatus.SENDING], {}, {}),
+        (
+            1,
+            [NotificationStatus.CREATED, NotificationStatus.SENDING],
+            {0: "15555555555"},
+            {0: ""},
+        ),
+        (0, [NotificationStatus.SENDING, NotificationStatus.DELIVERED], {}, {}),
     ],
 )
 def test_get_all_notifications_for_job_filtered_by_status(
@@ -546,15 +551,17 @@ def test_get_all_notifications_for_job_filtered_by_status(
     sample_job,
     expected_notification_count,
     status_args,
+    expected_phones,
+    expected_personalisation,
     mocker,
 ):
 
     mock_job = mocker.patch("app.job.rest.get_job_from_s3")
     mock_job.return_value = None
     mock_s3 = mocker.patch("app.job.rest.extract_phones")
-    mock_s3.return_value = {0: "15555555555"}
+    mock_s3.return_value = expected_phones
     mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
-    mock_s3_personalisation.return_value = {0: ""}
+    mock_s3_personalisation.return_value = expected_personalisation
     sample_job.job_row_number = 0
 
     create_notification(job=sample_job, to_field="1", status=NotificationStatus.CREATED)
