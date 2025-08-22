@@ -76,13 +76,11 @@ def cancel_job(service_id, job_id):
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
 def get_all_notifications_for_service_job(service_id, job_id):
 
-    current_app.logger.info(hilite("ENTER get_all_notifications_for_service_job"))
     check_suspicious_id(service_id, job_id)
 
     job = get_job_from_s3(service_id, job_id)
     phones = extract_phones(job, service_id, job_id)
     personalisation = extract_personalisation(job)
-    current_app.logger.info(hilite(f"PHONES {phones}"))
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
     page_size = (
@@ -93,7 +91,6 @@ def get_all_notifications_for_service_job(service_id, job_id):
     paginated_notifications = get_notifications_for_job(
         service_id, job_id, filter_dict=data, page=page, page_size=page_size
     )
-    current_app.logger.info(hilite("Got paginated notifications"))
 
     kwargs = request.args.to_dict()
     kwargs["service_id"] = service_id
