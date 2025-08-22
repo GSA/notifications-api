@@ -562,9 +562,9 @@ def test_get_all_notifications_for_job_filtered_by_status(
     mock_s3.return_value = expected_phones
     mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
     mock_s3_personalisation.return_value = expected_personalisation
-    sample_job.job_row_number = 0
 
-    create_notification(job=sample_job, to_field="1", status=NotificationStatus.CREATED)
+
+    create_notification(job=sample_job, job_row_number=0, to_field="1", status=NotificationStatus.CREATED)
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
