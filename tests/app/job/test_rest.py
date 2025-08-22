@@ -943,6 +943,8 @@ def create_10_jobs(template):
 def test_get_all_notifications_for_job_returns_csv_format(
     admin_request, sample_notification_with_job, mocker
 ):
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
     mock_s3 = mocker.patch("app.job.rest.extract_phones")
     mock_s3.return_value = {0: "15555555555"}
 
