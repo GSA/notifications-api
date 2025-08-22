@@ -5,7 +5,6 @@ from unittest.mock import ANY
 from zoneinfo import ZoneInfo
 
 import pytest
-from flask import current_app
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -460,11 +459,13 @@ def _setup_jobs(template, number_of_jobs=5):
 def test_get_all_notifications_for_job_in_order_of_job_number(
     admin_request, sample_template, mocker
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {0: "15555555555", 1: "15555555555", 2: "15555555555"}
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: "", 1: "", 2: ""}
 
     main_job = create_job(sample_template)
     another_job = create_job(sample_template)
@@ -547,11 +548,14 @@ def test_get_all_notifications_for_job_filtered_by_status(
     status_args,
     mocker,
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {0: "15555555555"}
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: ""}
+    sample_job.job_row_number = 0
 
     create_notification(job=sample_job, to_field="1", status=NotificationStatus.CREATED)
 
@@ -567,11 +571,14 @@ def test_get_all_notifications_for_job_filtered_by_status(
 def test_get_all_notifications_for_job_returns_correct_format(
     admin_request, sample_notification_with_job, mocker
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {0: "15555555555"}
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: ""}
+    sample_notification_with_job.job_row_number = 0
 
     service_id = sample_notification_with_job.service_id
     job_id = sample_notification_with_job.job_id
@@ -951,7 +958,6 @@ def test_get_all_notifications_for_job_returns_csv_format(
     mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
     mock_s3_personalisation.return_value = {0: ""}
     sample_notification_with_job.job_row_number = 0
-    current_app.logger.info(f"HERE {sample_notification_with_job.serialize_for_csv()}")
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
