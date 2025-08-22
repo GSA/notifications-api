@@ -9,7 +9,14 @@ from threading import Lock
 from time import monotonic
 
 from celery import Celery, Task, current_task
-from flask import current_app, g, has_request_context, jsonify, make_response, request
+from flask import (
+    current_app,
+    g,
+    has_request_context,
+    jsonify,
+    make_response,
+    request,
+)
 from flask.ctx import has_app_context
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
@@ -294,15 +301,44 @@ def init_app(app):
         g.start = monotonic()
         g.endpoint = request.endpoint
 
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            response = make_response("", 204)
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, PUT, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization"
+            )
+            response.headers["Access-Control-Max-Age"] = "3600"
+            return response
+
     @app.after_request
     def after_request(response):
+        # Security headers for government compliance
         response.headers.add("X-Content-Type-Options", "nosniff")
+        response.headers.add("X-Frame-Options", "DENY")
+        response.headers.add("X-XSS-Protection", "1; mode=block")
+        response.headers.add("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.add(
+            "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
+        )
 
-        # Some dynamic scan findings
+        # CORS-related security headers
         response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
         response.headers.add("Cross-Origin-Embedder-Policy", "require-corp")
         response.headers.add("Cross-Origin-Resource-Policy", "same-origin")
-        response.headers.add("Cross-Origin-Opener-Policy", "same-origin")
+
+        if not request.path.startswith("/docs"):
+            response.headers.add(
+                "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';"
+            )
+
+        response.headers.add(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
 
         return response
 
@@ -352,15 +388,18 @@ def setup_sqlalchemy_events(app):
     with app.app_context():
 
         @event.listens_for(db.engine, "connect")
-        def connect(dbapi_connection, connection_record):  # noqa
+        def connect(dbapi_connection, connection_record):
+            current_app.logger.debug(f"Using {dbapi_connection} {connection_record}")
             pass
 
         @event.listens_for(db.engine, "close")
-        def close(dbapi_connection, connection_record):  # noqa
+        def close(dbapi_connection, connection_record):
             pass
 
         @event.listens_for(db.engine, "checkout")
-        def checkout(dbapi_connection, connection_record, connection_proxy):  # noqa
+        def checkout(dbapi_connection, connection_record, connection_proxy):
+            current_app.logger.debug(f"Using {dbapi_connection} {connection_proxy}")
+
             try:
                 # this will overwrite any previous checkout_at timestamp
                 connection_record.info["checkout_at"] = time.monotonic()
@@ -401,7 +440,7 @@ def setup_sqlalchemy_events(app):
                 )
 
         @event.listens_for(db.engine, "checkin")
-        def checkin(dbapi_connection, connection_record):  # noqa
+        def checkin(dbapi_connection, connection_record):
             pass
 
 
@@ -428,7 +467,7 @@ def make_task(app):
                 g.request_id = self.request_id
                 yield
 
-        def on_success(self, retval, task_id, args, kwargs):  # noqa
+        def on_success(self, retval, task_id, args, kwargs):
             # enables request id tracing for these logs
             with self.app_context():
                 elapsed_time = time.monotonic() - self.start
@@ -441,9 +480,11 @@ def make_task(app):
                     )
                 )
 
-        def on_failure(self, exc, task_id, args, kwargs, einfo):  # noqa
+        def on_failure(self, exc, task_id, args, kwargs, einfo):
+
             # enables request id tracing for these logs
             with self.app_context():
+                app.logger.debug(f"einfo is {einfo}")
                 app.logger.exception(
                     "Celery task {task_name} (queue: {queue_name}) failed".format(
                         task_name=self.name,

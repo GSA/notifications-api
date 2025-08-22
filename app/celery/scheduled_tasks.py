@@ -282,6 +282,9 @@ def process_delivery_receipts(self):
     except Exception as ex:
         retry_count = self.request.retries
         wait_time = 3600 * 2**retry_count
+
+        current_app.logger.exception(str(ex))
+
         try:
             raise self.retry(ex=ex, countdown=wait_time)
         except self.MaxRetriesExceededError:

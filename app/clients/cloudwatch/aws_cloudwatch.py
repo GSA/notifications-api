@@ -151,7 +151,7 @@ class AwsCloudwatchClient(Client):
     #         result = temp_client.get_query_results(queryId=query_id)
     #         if result['status'] == 'Complete':
     #             break
-    #         eventlet.sleep(1)
+    #         time.sleep(1)
 
     #     delivery_receipts = []
     #     for log in result['results']:

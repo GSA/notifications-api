@@ -1,3 +1,4 @@
+import gevent
 from flask import Blueprint, current_app, jsonify, request
 
 from app import api_user, authenticated_service
@@ -87,7 +88,7 @@ def get_all_notifications():
     page = data.get("page", 1)
     page_size = data.get("page_size", current_app.config.get("API_PAGE_SIZE"))
     limit_days = data.get("limit_days")
-
+    gevent.sleep(0)  # keep this connection alive
     pagination = notifications_dao.get_notifications_for_service(
         str(authenticated_service.id),
         personalisation=True,
@@ -98,6 +99,7 @@ def get_all_notifications():
         key_type=api_user.key_type,
         include_jobs=include_jobs,
     )
+    gevent.sleep(0)  # keep this connection alive
 
     serialized = []
     for notification in pagination.items:
@@ -137,6 +139,7 @@ def get_all_notifications():
             notification_data["subject"] = subject
 
         serialized.append(notification_data)
+        gevent.sleep(0)  # keep this connection alive
 
     result = jsonify(
         notifications=serialized,

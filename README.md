@@ -39,7 +39,7 @@ You will need the following items:
 This project currently works with these major versions of the following main
 components:
 
-- Python 3.13.x
+- Python 3.12.x
 - PostgreSQL 15.x (version 12.x is used in the hosted environments)
 
 These instructions will walk you through how to set your machine up with all of
@@ -117,7 +117,7 @@ configuration after installation to get working out of the box:
 - [jq](https://stedolan.github.io/jq/) - for working with JSON in the command
   line
 - [git](https://git-scm.com/) - for version control management
-- [tfenv](https://github.com/tfutils/tfenv) - for managing
+- [tenv](https://github.com/tofuutils/tenv) - for managing
   [Terraform](https://www.terraform.io/) installations
 - [cf-cli@8](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html) - for
   working with a Cloud Foundry platform (e.g., cloud.gov)
@@ -136,14 +136,18 @@ brew install jq git tfenv cloudfoundry/tap/cf-cli@8 redis vim wget
 
 #### Terraform Installation
 
-As a part of the installation above, you just installed `tfenv` to manage
+As a part of the installation above, you just installed `tenv` to manage
 Terraform installations. This is great, but you still need to install Terraform
 itself, which can be done with this command:
 
 ```sh
-tfenv install "latest:^1.7"
-tfenv use 1.7.x # x = the patch version installed
+tenv
 ```
+
+This will open a menu for you; choose Terraform, then choose the latest stable
+version.
+
+_NOTE: This project currently uses the latest `1.12.x release of Terraform._
 
 #### Python Installation
 
@@ -174,12 +178,12 @@ session to make the changes take effect.
 Now we're ready to install the Python version we need with `pyenv`, like so:
 
 ```sh
-pyenv install 3.13
+pyenv install 3.12
 ```
 
-This will install the latest version of Python 3.13.
+This will install the latest version of Python 3.12.
 
-_NOTE: This project currently runs on Python 3.13.x._
+_NOTE: This project currently runs on Python 3.12.x._
 
 #### Python Dependency Installation
 
@@ -313,10 +317,10 @@ If you're upgrading an existing project to a newer version of Python, you can
 follow these steps to get yourself up-to-date.
 
 First, use `pyenv` to install the newer version of Python you'd like to use;
-we'll use `3.13` in our example here since we recently upgraded to this version:
+we'll use `3.12` in our example here since we recently upgraded to this version:
 
 ```sh
-pyenv install 3.13
+pyenv install 3.12
 ```
 
 Next, delete the virtual environment you previously had set up. If you followed

@@ -2,10 +2,11 @@ import csv
 import datetime
 import re
 import time
+import urllib
 from io import StringIO
 
 import botocore
-import eventlet
+import gevent
 from boto3 import Session
 from flask import current_app
 
@@ -38,7 +39,7 @@ def set_job_cache(key, value):
 
 
 def get_job_cache(key):
-
+    key = str(key)
     ret = job_cache.get(key)
     return ret
 
@@ -52,14 +53,15 @@ def len_job_cache():
 def clean_cache():
     current_time = time.time()
     keys_to_delete = []
-    for key, (_, expiry_time) in job_cache.items():
-        if expiry_time < current_time:
-            keys_to_delete.append(key)
 
-    current_app.logger.debug(
-        f"Deleting the following keys from the job_cache: {keys_to_delete}"
-    )
     with job_cache_lock:
+        for key, (_, expiry_time) in job_cache.items():
+            if expiry_time < current_time:
+                keys_to_delete.append(key)
+
+        current_app.logger.debug(
+            f"Deleting the following keys from the job_cache: {keys_to_delete}"
+        )
         for key in keys_to_delete:
             del job_cache[key]
 
@@ -74,9 +76,7 @@ def get_s3_client():
         aws_secret_access_key=secret_key,
         region_name=region,
     )
-    current_app.logger.info(hilite("About to call session.client"))
     s3_client = session.client("s3", config=AWS_CLIENT_CONFIG)
-    current_app.logger.info(hilite("SESSION CALLED"))
     return s3_client
 
 
@@ -123,8 +123,46 @@ def list_s3_objects():
         )
 
 
+def get_notification_reports(service_id):
+
+    bucket_name = _get_bucket_name()
+    s3_client = get_s3_client()
+    # Our reports only support 7 days, but pull 8 days to avoid
+    # any edge cases
+    time_limit = aware_utcnow() - datetime.timedelta(days=8)
+    reports = []
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket_name)
+        while True:
+            for obj in response.get("Contents", []):
+                if obj["LastModified"] >= time_limit:
+                    if service_id in obj["Key"] and "report" in obj["Key"]:
+                        reports.append(obj)
+            if "NextContinuationToken" in response:
+                response = s3_client.list_objects_v2(
+                    Bucket=bucket_name,
+                    ContinuationToken=response["NextContinuationToken"],
+                )
+            else:
+                break
+    except Exception as e:
+        current_app.logger.exception(
+            f"An error occurred while regenerating cache #notify-debug-admin-1200: {str(e)}",
+        )
+    return reports
+
+
 def get_bucket_name():
     return current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+
+
+def delete_s3_object(key):
+
+    try:
+        remove_csv_object(key)
+        current_app.logger.debug(f"#delete-s3-object Deleted: {key}")
+    except botocore.exceptions.ClientError:
+        current_app.logger.exception(f"Couldn't delete {key}")
 
 
 def cleanup_old_s3_objects():
@@ -228,9 +266,11 @@ def read_s3_file(bucket_name, object_key, s3res):
                 f"{job_id}_personalisation",
                 extract_personalisation(job),
             )
-
-    except Exception as e:
-        current_app.logger.exception(str(e))
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            current_app.logger.error(f"NoSuchKey: {object_key}")
+        else:
+            raise
 
 
 def get_s3_files():
@@ -247,17 +287,18 @@ def get_s3_files():
     )
     count = 0
     try:
-        for object_key in object_keys:
-            read_s3_file(bucket_name, object_key, s3res)
-            count = count + 1
-            eventlet.sleep(0.2)
+        greenlets = [
+            gevent.spawn(read_s3_file, bucket_name, object_key, s3res)
+            for object_key in object_keys
+        ]
+        gevent.joinall(greenlets)
     except Exception:
         current_app.logger.exception(
-            f"Trouble reading {object_key} which is # {count} during cache regeneration"
+            f"Trouble reading object_key which is # {count} during cache regeneration"
         )
     except OSError as e:
         current_app.logger.exception(
-            f"Egress proxy issue reading {object_key} which is # {count}"
+            f"Egress proxy issue reading object_key which is # {count}"
         )
         raise e
 
@@ -411,7 +452,7 @@ def get_job_from_s3(service_id, job_id):
                 )
                 retries += 1
                 sleep_time = backoff_factor * (2**retries)  # Exponential backoff
-                eventlet.sleep(sleep_time)
+                gevent.sleep(sleep_time)
                 continue
             else:
                 # Typically this is "NoSuchKey"
@@ -482,6 +523,7 @@ def extract_personalisation(job):
 
 
 def get_phone_number_from_s3(service_id, job_id, job_row_number):
+
     job = get_job_cache(job_id)
     if job is None:
         job = get_job_from_s3(service_id, job_id)
@@ -524,6 +566,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
     # At the same time we don't want to store it in redis or the db
     # So this is a little recycling mechanism to reduce the number of downloads.
     job = get_job_cache(job_id)
+
     if job is None:
         job = get_job_from_s3(service_id, job_id)
         # Even if it is None, put it here to avoid KeyErrors
@@ -575,3 +618,44 @@ def remove_csv_object(object_key):
         current_app.config["CSV_UPLOAD_BUCKET"]["region"],
     )
     return obj.delete()
+
+
+def s3upload(
+    filedata,
+    region,
+    bucket_name,
+    file_location,
+    content_type="binary/octet-stream",
+    tags=None,
+    metadata=None,
+):
+    _s3 = get_s3_resource()
+
+    key = _s3.Object(bucket_name, file_location)
+
+    put_args = {
+        "Body": filedata,
+        "ServerSideEncryption": "AES256",
+        "ContentType": content_type,
+    }
+
+    if tags:
+        tags = urllib.parse.urlencode(tags)
+        put_args["Tagging"] = tags
+
+    if metadata:
+        metadata = put_args["Metadata"] = metadata
+
+    try:
+        current_app.logger.info(hilite(f"Going to try to upload this {key}"))
+        key.put(**put_args)
+    except botocore.exceptions.NoCredentialsError as e:
+        current_app.logger.exception(
+            f"Unable to upload {key} to S3 bucket because of {e}"
+        )
+        raise e
+    except botocore.exceptions.ClientError as e:
+        current_app.logger.exception(
+            f"Unable to upload {key}to S3 bucket because of {e}"
+        )
+        raise e

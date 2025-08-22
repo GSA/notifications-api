@@ -1,6 +1,3 @@
-import os
-import urllib
-
 import botocore
 from boto3 import Session
 from botocore.config import Config
@@ -16,60 +13,20 @@ AWS_CLIENT_CONFIG = Config(
     max_pool_connections=50,
     use_fips_endpoint=True,
 )
-
-# Global variable
-noti_s3_resource = None
-
-default_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-default_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-default_region = os.environ.get("AWS_REGION")
+default_regions = "us-gov-west-1"
 
 
 def get_s3_resource():
-    global noti_s3_resource
-    if noti_s3_resource is None:
-        session = Session(
-            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-            region_name=os.environ.get("AWS_REGION"),
-        )
-        noti_s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
-    return noti_s3_resource
-
-
-def s3upload(
-    filedata,
-    region,
-    bucket_name,
-    file_location,
-    content_type="binary/octet-stream",
-    tags=None,
-    metadata=None,
-    access_key=default_access_key_id,
-    secret_key=default_secret_access_key,
-):
-    _s3 = get_s3_resource()
-
-    key = _s3.Object(bucket_name, file_location)
-
-    put_args = {
-        "Body": filedata,
-        "ServerSideEncryption": "AES256",
-        "ContentType": content_type,
-    }
-
-    if tags:
-        tags = urllib.parse.urlencode(tags)
-        put_args["Tagging"] = tags
-
-    if metadata:
-        metadata = put_args["Metadata"] = metadata
-
-    try:
-        key.put(**put_args)
-    except botocore.exceptions.ClientError as e:
-        current_app.logger.exception("Unable to upload file to S3 bucket")
-        raise e
+    access_key = current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"]
+    secret_key = current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"]
+    region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
+    s3_resource = session.resource("s3", config=AWS_CLIENT_CONFIG)
+    return s3_resource
 
 
 class S3ObjectNotFound(botocore.exceptions.ClientError):
@@ -79,9 +36,6 @@ class S3ObjectNotFound(botocore.exceptions.ClientError):
 def s3download(
     bucket_name,
     filename,
-    region=default_region,
-    access_key=default_access_key_id,
-    secret_key=default_secret_access_key,
 ):
     try:
         s3 = get_s3_resource()

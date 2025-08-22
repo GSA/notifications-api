@@ -4,7 +4,7 @@ applications:
     buildpack: python_buildpack
     stack: cflinuxfs4
     instances: 1
-    disk_quota: 1G
+    disk_quota: 2G
     routes:
     - route: ((public_api_route))
     - route: notify-api-((env)).apps.internal
@@ -26,7 +26,7 @@ applications:
       - type: worker
         instances: ((worker_instances))
         memory: ((worker_memory))
-        command: newrelic-admin run-program celery -A run_celery.notify_celery worker --loglevel=INFO --pool=eventlet --concurrency=20 --prefetch-multiplier=2
+        command: newrelic-admin run-program celery -A run_celery.notify_celery worker --loglevel=INFO --pool=gevent --concurrency=20 --prefetch-multiplier=2
       - type: scheduler
         instances: 1
         memory: ((scheduler_memory))

@@ -1,6 +1,10 @@
+import csv
+import io
 import json
+import os
+import time
 
-import eventlet
+import gevent
 from celery.signals import task_postrun
 from flask import current_app
 from requests import HTTPError, RequestException, request
@@ -10,6 +14,7 @@ from app import create_uuid, encryption, notify_celery
 from app.aws import s3
 from app.celery import provider_tasks
 from app.config import Config, QueueNames
+from app.dao import notifications_dao
 from app.dao.inbound_sms_dao import dao_get_inbound_sms_by_id
 from app.dao.jobs_dao import dao_get_job_by_id, dao_update_job
 from app.dao.notifications_dao import (
@@ -19,7 +24,7 @@ from app.dao.notifications_dao import (
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_inbound_api_dao import get_service_inbound_api_for_service
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
-from app.dao.services_dao import dao_fetch_service_by_id
+from app.dao.services_dao import dao_fetch_all_services, dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
 from app.enums import JobStatus, KeyType, NotificationType
 from app.errors import TotalRequestsError
@@ -84,7 +89,7 @@ def process_job(job_id, sender_id=None):
         process_row(row, template, job, service, sender_id=sender_id)
         count = count + 1
         if count % 3 == 0:
-            eventlet.sleep(1)
+            gevent.sleep(1)
 
     # End point/Exit point for message send flow.
     job_complete(job, start=start)
@@ -546,3 +551,171 @@ def process_incomplete_job(job_id):
             process_row(row, template, job, job.service, sender_id=sender_id)
 
     job_complete(job, resumed=True)
+
+
+def _generate_notifications_report(service_id, report_id, limit_days):
+
+    # Hard code these values for now
+    page = 1
+    page_size = 20000
+    include_jobs = True
+    include_from_test_key = False
+    include_one_off = True
+
+    data = {
+        "limit_days": limit_days,
+        "include_jobs": True,
+        "include_from_test_key": False,
+        "include_one_off": True,
+    }
+    pagination = notifications_dao.get_notifications_for_service(
+        service_id,
+        filter_dict=data,
+        page=page,
+        page_size=page_size,
+        count_pages=False,
+        limit_days=limit_days,
+        include_jobs=include_jobs,
+        include_from_test_key=include_from_test_key,
+        include_one_off=include_one_off,
+    )
+    count = 0
+    if len(pagination.items) == 0:
+        current_app.logger.info(f"SKIP {service_id}")
+        return
+    start_time = time.time()
+    for notification in pagination.items:
+        count = count + 1
+        if notification.job_id is not None:
+
+            notification.personalisation = s3.get_personalisation_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
+            recipient = s3.get_phone_number_from_s3(
+                notification.service_id,
+                notification.job_id,
+                notification.job_row_number,
+            )
+
+            notification.to = recipient
+            notification.normalised_to = recipient
+
+        else:
+            notification.to = ""
+            notification.normalised_to = ""
+
+        current_app.logger.debug(
+            hilite(
+                f"Processing  row {count} for service {service_id} and days {limit_days}"
+            )
+        )
+
+    notifications = [
+        notification.serialize_for_csv() for notification in pagination.items
+    ]
+
+    current_app.logger.debug(hilite(f"RAW: {notifications}"))
+
+    # We try and get the next page of results to work out if we need provide a pagination link to the next page
+    # in our response if it exists. Note, this could be done instead by changing `count_pages` in the previous
+    # call to be True which will enable us to use Flask-Sqlalchemy to tell if there is a next page of results but
+    # this way is much more performant for services with many results (unlike Flask SqlAlchemy, this approach
+    # doesn't do an additional query to count all the results of which there could be millions but instead only
+    # asks for a single extra page of results).
+
+    # These columns are in the raw data but we don't show them in the report
+    columns_to_remove = {
+        "created_by_email_address",
+        "row_number",
+        "client_reference",
+        "template_type",
+    }
+
+    # cleanup for report presentation
+    header_renames = {
+        "recipient": "Phone Number",
+        "template_name": "Template",
+        "created_by_name": "Sent By",
+        "carrier": "Carrier",
+        "status": "Status",
+        "created_at": "Time",
+        "job_name": "Batch File",
+        "provider_response": "Carrier Response",
+    }
+
+    processed_notifications = []
+    for notification in notifications:
+        new_notification = {}
+        for old_key, new_key in header_renames.items():
+            if old_key not in columns_to_remove and old_key in notification:
+                new_notification[new_key] = notification[old_key]
+        processed_notifications.append(new_notification)
+
+    csv_bytes = io.BytesIO()
+    text_stream = io.TextIOWrapper(csv_bytes, encoding="utf-8", newline="")
+    writer = csv.DictWriter(text_stream, fieldnames=header_renames.values())
+    writer.writeheader()
+    writer.writerows(processed_notifications)
+    text_stream.flush()
+    csv_bytes.seek(0)
+
+    bucket_name, file_location, access_key, secret_key, region = get_csv_location(
+        service_id, report_id
+    )
+
+    current_app.logger.debug(
+        hilite(f"REPORT {file_location} {csv_bytes.getvalue().decode('utf-8')}")
+    )
+    if bucket_name == "":
+        exp_bucket = current_app.config["CSV_UPLOAD_BUCKET"]["bucket"]
+        exp_region = current_app.config["CSV_UPLOAD_BUCKET"]["region"]
+        tier = os.getenv("NOTIFY_ENVIRONMENT")
+        raise Exception(
+            f"No bucket name should be: {exp_bucket} with region {exp_region} and tier {tier}"
+        )
+
+    # Delete yesterday's version of this report
+    s3.delete_s3_object(file_location)
+
+    s3.s3upload(
+        filedata=csv_bytes,
+        region=region,
+        bucket_name=bucket_name,
+        file_location=file_location,
+    )
+    elapsed_time = str(time.time() - start_time)
+    elapsed_time = elapsed_time.split(".")
+    current_app.logger.info(
+        hilite(
+            f"generate-notifications-report uploaded {file_location} elapsed_time = {elapsed_time[0]} seconds"
+        )
+    )
+
+
+@notify_celery.task(name="generate-notifications-reports")
+def generate_notification_reports_task():
+    services = dao_fetch_all_services(only_active=True)
+    for service in services:
+
+        limit_days = [1, 3, 5, 7]
+        for limit_day in limit_days:
+
+            report_id = f"{limit_day}-day-report"
+            _generate_notifications_report(service.id, report_id, limit_day)
+    current_app.logger.info("Notifications report generation complete")
+
+
+NEW_FILE_LOCATION_STRUCTURE = "{}-service-notify/{}.csv"
+
+
+def get_csv_location(service_id, upload_id):
+    return (
+        current_app.config["CSV_UPLOAD_BUCKET"]["bucket"],
+        NEW_FILE_LOCATION_STRUCTURE.format(service_id, upload_id),
+        current_app.config["CSV_UPLOAD_BUCKET"]["access_key_id"],
+        current_app.config["CSV_UPLOAD_BUCKET"]["secret_access_key"],
+        current_app.config["CSV_UPLOAD_BUCKET"]["region"],
+    )

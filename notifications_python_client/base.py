@@ -3,6 +3,8 @@ import logging
 import time
 import urllib.parse
 
+from os import getenv
+
 import requests
 
 from notifications_python_client import __version__
@@ -10,6 +12,8 @@ from notifications_python_client.authentication import create_jwt_token
 from notifications_python_client.errors import HTTPError, InvalidResponse
 
 logger = logging.getLogger(__name__)
+
+API_HOST_NAME = getenv("API_HOST_NAME", "http://localhost:6011")
 
 
 class BaseAPIClient:
@@ -19,9 +23,7 @@ class BaseAPIClient:
     This class is not thread-safe.
     """
 
-    def __init__(
-        self, api_key, base_url="https://api.notifications.service.gov.uk", timeout=30
-    ):
+    def __init__(self, api_key, base_url=API_HOST_NAME, timeout=30):
         """
         Initialise the client
         Error if either of base_url or secret missing

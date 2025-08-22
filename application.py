@@ -1,10 +1,11 @@
 ##!/usr/bin/env python
+
 from __future__ import print_function
 
-from flask import Flask
-from werkzeug.serving import WSGIRequestHandler
+from flask import Flask  # noqa
+from werkzeug.serving import WSGIRequestHandler  # noqa
 
-from app import create_app, socketio  # noqa: F401
+from app import create_app, socketio  # noqa
 
 WSGIRequestHandler.version_string = lambda self: "SecureServer"
 

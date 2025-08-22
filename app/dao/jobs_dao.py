@@ -53,6 +53,7 @@ def dao_get_jobs_by_service_id(
     service_id,
     *,
     limit_days=None,
+    use_processing_time=False,
     page=1,
     page_size=50,
     statuses=None,
@@ -63,7 +64,12 @@ def dao_get_jobs_by_service_id(
         Job.original_file_name != current_app.config["ONE_OFF_MESSAGE_FILENAME"],
     ]
     if limit_days is not None:
-        query_filter.append(Job.created_at >= midnight_n_days_ago(limit_days))
+        if use_processing_time:
+            query_filter.append(
+                func.coalesce(Job.processing_started, Job.created_at) >= midnight_n_days_ago(limit_days)
+            )
+        else:
+            query_filter.append(Job.created_at >= midnight_n_days_ago(limit_days))
     if statuses is not None and statuses != [""]:
         query_filter.append(Job.job_status.in_(statuses))
 

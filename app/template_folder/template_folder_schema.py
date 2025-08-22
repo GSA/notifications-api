@@ -7,6 +7,7 @@ post_create_template_folder_schema = {
     "properties": {
         "name": {"type": "string", "minLength": 1},
         "parent_id": nullable_uuid,
+        "created_by_id": uuid,
     },
     "required": ["name", "parent_id"],
 }

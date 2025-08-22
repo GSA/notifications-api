@@ -53,7 +53,9 @@ def get_login_gov_user(login_uuid, email_address):
                 db.session.rollback()
 
         return user
-    # Remove this 1 July 2025, all users should have login.gov uuids by now
+
+    # Handle the case of the brand new user.  We know their email from the
+    # invitation but need to related the login_uuid to it.
     stmt = select(User).where(User.email_address.ilike(email_address))
     user = db.session.execute(stmt).scalars().first()
 

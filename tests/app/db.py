@@ -82,6 +82,7 @@ def create_user(
     id_=None,
     name="Test User",
     platform_admin=False,
+    login_uuid=None,
 ):
     data = {
         "id": id_ or uuid.uuid4(),
@@ -91,6 +92,7 @@ def create_user(
         "mobile_number": mobile_number,
         "state": state,
         "platform_admin": platform_admin,
+        "login_uuid": login_uuid,
     }
     stmt = select(User).where(User.email_address == email)
     user = db.session.execute(stmt).scalars().first()
