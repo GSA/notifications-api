@@ -5,6 +5,7 @@ from unittest.mock import ANY
 from zoneinfo import ZoneInfo
 
 import pytest
+from flask import current_app
 from freezegun import freeze_time
 
 import app.celery.tasks
@@ -946,10 +947,10 @@ def test_get_all_notifications_for_job_returns_csv_format(
     mock_job = mocker.patch("app.job.rest.get_job_from_s3")
     mock_job.return_value = None
     mock_s3 = mocker.patch("app.job.rest.extract_phones")
-    mock_s3.return_value = {0: "15555555555"}
+    mock_s3.return_value = {"0": "15555555555"}
 
     mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
-    mock_s3_personalisation.return_value = {0: ""}
+    mock_s3_personalisation.return_value = {"0": ""}
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
@@ -957,7 +958,7 @@ def test_get_all_notifications_for_job_returns_csv_format(
         job_id=sample_notification_with_job.job_id,
         format_for_csv=True,
     )
-
+    current_app.logger.info(f"NOTIFICATIONS {resp['notifications']}")
     assert len(resp["notifications"]) == 1
     assert set(resp["notifications"][0].keys()) == {
         "created_at",
