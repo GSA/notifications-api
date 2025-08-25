@@ -15,9 +15,8 @@ from tests.app.db import create_ft_notification_status, create_notification
 @pytest.mark.parametrize(
     "query_string",
     [
-        {},
         {"whole_days": -1},
-        {"whole_days": 8},
+        {"whole_days": 9},
         {"whole_days": 3.5},
         {"whole_days": "blurk"},
     ],

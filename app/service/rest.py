@@ -230,7 +230,7 @@ def get_service_notification_statistics(service_id):
         data=get_service_statistics(
             service_id,
             request.args.get("today_only") == "True",
-            int(request.args.get("limit_days", 7)),
+            int(request.args.get("limit_days", 8)),
         )
     )
 
@@ -794,7 +794,7 @@ def get_detailed_service(service_id, today_only=False):
     return detailed_service_schema.dump(service)
 
 
-def get_service_statistics(service_id, today_only, limit_days=7):
+def get_service_statistics(service_id, today_only, limit_days=8):
     check_suspicious_id(service_id)
     # today_only flag is used by the send page to work out if the service will exceed their daily usage by sending a job
     if today_only:
