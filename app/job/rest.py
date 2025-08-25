@@ -220,7 +220,9 @@ def get_jobs_by_service(service_id):
     else:
         limit_days = None
 
-    use_processing_time = request.args.get("use_processing_time", "false").lower() == "true"
+    use_processing_time = (
+        request.args.get("use_processing_time", "false").lower() == "true"
+    )
 
     valid_statuses = set(JobStatus)
     statuses_arg = request.args.get("statuses", "")
