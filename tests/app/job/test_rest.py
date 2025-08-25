@@ -459,11 +459,18 @@ def _setup_jobs(template, number_of_jobs=5):
 def test_get_all_notifications_for_job_in_order_of_job_number(
     admin_request, sample_template, mocker
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {
+        0: "15555555555",
+        1: "15555555555",
+        2: "15555555555",
+        3: "15555555555",
+    }
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: "", 1: "", 2: "", 3: ""}
 
     main_job = create_job(sample_template)
     another_job = create_job(sample_template)
@@ -531,12 +538,17 @@ def test_get_recent_notifications_for_job_in_reverse_order_of_job_number(
 
 
 @pytest.mark.parametrize(
-    "expected_notification_count, status_args",
+    "expected_notification_count, status_args, expected_phones, expected_personalisation",
     [
-        (1, [NotificationStatus.CREATED]),
-        (0, [NotificationStatus.SENDING]),
-        (1, [NotificationStatus.CREATED, NotificationStatus.SENDING]),
-        (0, [NotificationStatus.SENDING, NotificationStatus.DELIVERED]),
+        (1, [NotificationStatus.CREATED], {0: "15555555555"}, {0: ""}),
+        (0, [NotificationStatus.SENDING], {}, {}),
+        (
+            1,
+            [NotificationStatus.CREATED, NotificationStatus.SENDING],
+            {0: "15555555555"},
+            {0: ""},
+        ),
+        (0, [NotificationStatus.SENDING, NotificationStatus.DELIVERED], {}, {}),
     ],
 )
 def test_get_all_notifications_for_job_filtered_by_status(
@@ -544,15 +556,24 @@ def test_get_all_notifications_for_job_filtered_by_status(
     sample_job,
     expected_notification_count,
     status_args,
+    expected_phones,
+    expected_personalisation,
     mocker,
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = expected_phones
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = expected_personalisation
 
-    create_notification(job=sample_job, to_field="1", status=NotificationStatus.CREATED)
+    create_notification(
+        job=sample_job,
+        job_row_number=0,
+        to_field="1",
+        status=NotificationStatus.CREATED,
+    )
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
@@ -566,11 +587,14 @@ def test_get_all_notifications_for_job_filtered_by_status(
 def test_get_all_notifications_for_job_returns_correct_format(
     admin_request, sample_notification_with_job, mocker
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
 
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {0: "15555555555"}
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: ""}
+    sample_notification_with_job.job_row_number = 0
 
     service_id = sample_notification_with_job.service_id
     job_id = sample_notification_with_job.job_id
@@ -943,11 +967,13 @@ def create_10_jobs(template):
 def test_get_all_notifications_for_job_returns_csv_format(
     admin_request, sample_notification_with_job, mocker
 ):
-    mock_s3 = mocker.patch("app.job.rest.get_phone_number_from_s3")
-    mock_s3.return_value = "15555555555"
-
-    mock_s3_personalisation = mocker.patch("app.job.rest.get_personalisation_from_s3")
-    mock_s3_personalisation.return_value = {}
+    mock_job = mocker.patch("app.job.rest.get_job_from_s3")
+    mock_job.return_value = None
+    mock_s3 = mocker.patch("app.job.rest.extract_phones")
+    mock_s3.return_value = {0: "15555555555"}
+    mock_s3_personalisation = mocker.patch("app.job.rest.extract_personalisation")
+    mock_s3_personalisation.return_value = {0: ""}
+    sample_notification_with_job.job_row_number = 0
 
     resp = admin_request.get(
         "job.get_all_notifications_for_service_job",
@@ -955,7 +981,6 @@ def test_get_all_notifications_for_job_returns_csv_format(
         job_id=sample_notification_with_job.job_id,
         format_for_csv=True,
     )
-
     assert len(resp["notifications"]) == 1
     assert set(resp["notifications"][0].keys()) == {
         "created_at",

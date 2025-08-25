@@ -5,6 +5,9 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app import db
 from app.aws.s3 import (
+    extract_personalisation,
+    extract_phones,
+    get_job_from_s3,
     get_job_metadata_from_s3,
     get_personalisation_from_s3,
     get_phone_number_from_s3,
@@ -36,7 +39,7 @@ from app.schemas import (
     notification_with_template_schema,
     notifications_filter_schema,
 )
-from app.utils import check_suspicious_id, midnight_n_days_ago, pagination_links
+from app.utils import check_suspicious_id, hilite, midnight_n_days_ago, pagination_links
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
@@ -46,6 +49,7 @@ register_errors(job_blueprint)
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
 def get_job_by_service_and_job_id(service_id, job_id):
+    current_app.logger.info(hilite("ENTER get_job_by_service_and_job_id"))
     check_suspicious_id(service_id, job_id)
     job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
     statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
@@ -71,8 +75,12 @@ def cancel_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
 def get_all_notifications_for_service_job(service_id, job_id):
+
     check_suspicious_id(service_id, job_id)
 
+    job = get_job_from_s3(service_id, job_id)
+    phones = extract_phones(job, service_id, job_id)
+    personalisation = extract_personalisation(job)
     data = notifications_filter_schema.load(request.args)
     page = data["page"] if "page" in data else 1
     page_size = (
@@ -90,21 +98,13 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
     for notification in paginated_notifications.items:
         if notification.job_id is not None:
-            recipient = get_phone_number_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
+            recipient = phones[notification.job_row_number]
             notification.to = recipient
             notification.normalised_to = recipient
 
     for notification in paginated_notifications.items:
         if notification.job_id is not None:
-            notification.personalisation = get_personalisation_from_s3(
-                notification.service_id,
-                notification.job_id,
-                notification.job_row_number,
-            )
+            notification.personalisation = personalisation[notification.job_row_number]
 
     notifications = None
     if data.get("format_for_csv"):
@@ -116,6 +116,7 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
+        current_app.logger.info(hilite("Got the dumped notifications and returning"))
 
     return (
         jsonify(
@@ -134,6 +135,8 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
 def get_recent_notifications_for_service_job(service_id, job_id):
+
+    current_app.logger.info(hilite("ENTER get_recent_notifications_for_service_job"))
     check_suspicious_id(service_id, job_id)
 
     data = notifications_filter_schema.load(request.args)
@@ -220,7 +223,9 @@ def get_jobs_by_service(service_id):
     else:
         limit_days = None
 
-    use_processing_time = request.args.get("use_processing_time", "false").lower() == "true"
+    use_processing_time = (
+        request.args.get("use_processing_time", "false").lower() == "true"
+    )
 
     valid_statuses = set(JobStatus)
     statuses_arg = request.args.get("statuses", "")
@@ -332,6 +337,8 @@ def get_paginated_jobs(
     statuses,
     page,
 ):
+
+    current_app.logger.info(hilite("ENTER get_paginated_jobs"))
     pagination = dao_get_jobs_by_service_id(
         service_id,
         limit_days=limit_days,
