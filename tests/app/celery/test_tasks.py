@@ -1829,6 +1829,7 @@ def test_generate_notifications_report_normal_case(
     mock_get_phone_number,
     mock_get_personalisation,
     mock_get_notifications,
+    notify_api,
 ):
 
     mock_get_notifications.return_value.items = [get_mock_notification()]
@@ -1858,11 +1859,30 @@ def test_generate_notifications_report_normal_case(
     assert isinstance(kwargs["filedata"], io.BytesIO)
 
 
+@patch("app.aws.s3.delete_s3_object")
+@patch("app.celery.tasks.get_csv_location")
 @patch("app.dao.notifications_dao.get_notifications_for_service")
 @patch("app.celery.tasks.current_app")
 def test_generate_notifications_report_no_notifications(
-    mock_current_app, mock_get_notifications
+    mock_current_app,
+    mock_get_notifications,
+    mock_get_csv_location,
+    mock_delete_s3,
+    notify_api,
 ):
     mock_get_notifications.return_value.items = []
+    mock_get_csv_location.return_value = (
+        "bucket",
+        "service-id-service-notify/report-id.csv",
+        "access",
+        "secret",
+        "region",
+    )
+
     _generate_notifications_report("service-id", "report-id", 7)
-    mock_current_app.logger.info.assert_called_with("SKIP service-id")
+
+    mock_current_app.logger.info.assert_any_call("SKIP service-id")
+    mock_delete_s3.assert_called_once_with("service-id-service-notify/report-id.csv")
+    mock_current_app.logger.info.assert_any_call(
+        "Deleted stale report service-id-service-notify/report-id.csv - no new data"
+    )
