@@ -44,6 +44,7 @@ from app.enums import (
     NotificationType,
     OrganizationType,
     TemplateType,
+    UserState,
 )
 from app.models import (
     AnnualBilling,
@@ -273,7 +274,7 @@ def test_create_test_user_command(notify_db_session, notify_api):
     user = db.session.execute(stmt).scalars().first()
     assert user.email_address == "somebody@fake.gov"
     assert user.auth_type == AuthType.SMS
-    assert user.state == "active"
+    assert user.state == UserState.ACTIVE
 
 
 def test_insert_inbound_numbers_from_file(notify_db_session, notify_api, tmpdir):

@@ -10,7 +10,7 @@ from sqlalchemy import delete, func, select
 
 from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
-from app.enums import AuthType, KeyType, NotificationType, PermissionType
+from app.enums import AuthType, KeyType, NotificationType, PermissionType, UserState
 from app.models import Notification, Permission, User
 from tests.app.db import (
     create_organization,
@@ -766,23 +766,23 @@ def test_send_user_confirm_new_email_returns_400_when_email_missing(
 
 
 def test_activate_user(admin_request, sample_user):
-    sample_user.state = "pending"
+    sample_user.state = UserState.PENDING
 
     resp = admin_request.post("user.activate_user", user_id=sample_user.id)
 
     assert resp["data"]["id"] == str(sample_user.id)
     assert resp["data"]["state"] == "active"
-    assert sample_user.state == "active"
+    assert sample_user.state == UserState.ACTIVE
 
 
 def test_deactivate_user(admin_request, sample_user):
-    sample_user.state = "active"
+    sample_user.state = UserState.ACTIVE
 
     resp = admin_request.post("user.deactivate_user", user_id=sample_user.id)
 
     assert resp["data"]["id"] == str(sample_user.id)
     assert resp["data"]["state"] == "pending"
-    assert sample_user.state == "pending"
+    assert sample_user.state == UserState.PENDING
 
 
 def test_activate_user_fails_if_already_active(admin_request, sample_user):
@@ -790,7 +790,7 @@ def test_activate_user_fails_if_already_active(admin_request, sample_user):
         "user.activate_user", user_id=sample_user.id, _expected_status=400
     )
     assert resp["message"] == "User already active"
-    assert sample_user.state == "active"
+    assert sample_user.state == UserState.ACTIVE
 
 
 def test_update_user_auth_type(admin_request, sample_user):
