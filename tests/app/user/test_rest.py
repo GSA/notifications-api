@@ -110,7 +110,7 @@ def test_post_user(admin_request, notify_db_session):
         "password": "password",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
         "auth_type": AuthType.EMAIL,
@@ -167,7 +167,7 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
         "password": "password",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
     }
