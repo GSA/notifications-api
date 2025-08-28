@@ -19,8 +19,8 @@ from app.enums import (
     AuthType,
 )
 
-revision = "0410_enums_for_everything"
-down_revision = "0409_fix_service_name"
+revision = "0418_user_state_enum"
+down_revision = "0417_change_total_message_limit"
 
 
 user_state_enum = postgresql.ENUM(
