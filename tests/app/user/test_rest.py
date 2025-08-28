@@ -6,7 +6,8 @@ from unittest import mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from sqlalchemy import delete, func, select
+from sqlalchemy import cast, delete, func, select
+import sqlalchemy
 
 from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -191,12 +192,13 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
 
     db.session.execute(delete(User))
     db.session.commit()
+    enum_type = sqlalchemy.dialects.postgresql.ENUM("active", "inactive", "pending", name="user_state")
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": cast(UserState.ACTIVE.value, enum_type),
         "failed_login_count": 0,
         "permissions": {},
     }
