@@ -61,7 +61,7 @@ module "ses_email" {
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-ses-${local.env}"
   aws_region          = "us-west-2"
-  email_domain        = "notify.sandbox.10x.gsa.gov"
+  mail_from_subdomain = "mail"
   email_receipt_error = "notify-support@gsa.gov"
 }
 
@@ -71,6 +71,6 @@ module "sns_sms" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-sns-${local.env}"
-  aws_region          = "us-east-1"
+  aws_region          = "us-west-2"
   monthly_spend_limit = 25
 }

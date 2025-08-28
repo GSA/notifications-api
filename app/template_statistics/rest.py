@@ -20,7 +20,7 @@ register_errors(template_statistics)
 @template_statistics.route("")
 def get_template_statistics_for_service_by_day(service_id):
     check_suspicious_id(service_id)
-    whole_days = request.args.get("whole_days", request.args.get("limit_days", ""))
+    whole_days = request.args.get("whole_days", request.args.get("limit_days", "8"))
     try:
         whole_days = int(whole_days)
     except ValueError:
@@ -28,9 +28,9 @@ def get_template_statistics_for_service_by_day(service_id):
         message = {"whole_days": [error]}
         raise InvalidRequest(message, status_code=400)
 
-    if whole_days < 0 or whole_days > 7:
+    if whole_days < 0 or whole_days > 8:
         raise InvalidRequest(
-            {"whole_days": ["whole_days must be between 0 and 7"]}, status_code=400
+            {"whole_days": ["whole_days must be between 0 and 8"]}, status_code=400
         )
     data = fetch_notification_status_for_service_for_today_and_7_previous_days(
         service_id, by_template=True, limit_days=whole_days

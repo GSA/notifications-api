@@ -66,7 +66,8 @@ def dao_get_jobs_by_service_id(
     if limit_days is not None:
         if use_processing_time:
             query_filter.append(
-                func.coalesce(Job.processing_started, Job.created_at) >= midnight_n_days_ago(limit_days)
+                func.coalesce(Job.processing_started, Job.created_at)
+                >= midnight_n_days_ago(limit_days)
             )
         else:
             query_filter.append(Job.created_at >= midnight_n_days_ago(limit_days))

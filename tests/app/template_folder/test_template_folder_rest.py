@@ -138,7 +138,11 @@ def test_create_template_folder_with_creator_id_grants_permission_to_creator(
     resp = admin_request.post(
         "template_folder.create_template_folder",
         service_id=sample_service.id,
-        _data={"name": "creator folder", "parent_id": None, "created_by_id": str(user_1.id)},
+        _data={
+            "name": "creator folder",
+            "parent_id": None,
+            "created_by_id": str(user_1.id),
+        },
         _expected_status=201,
     )
 

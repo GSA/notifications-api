@@ -582,6 +582,12 @@ def _generate_notifications_report(service_id, report_id, limit_days):
     count = 0
     if len(pagination.items) == 0:
         current_app.logger.info(f"SKIP {service_id}")
+
+        # Delete stale report when there's no new data
+        _, file_location, _, _, _ = get_csv_location(service_id, report_id)
+        s3.delete_s3_object(file_location)
+        current_app.logger.info(f"Deleted stale report {file_location} - no new data")
+
         return
     start_time = time.time()
     for notification in pagination.items:
