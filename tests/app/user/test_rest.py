@@ -196,12 +196,12 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
         "email_address": "user@digital.fake.gov",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": UserState.ACTIVE,
+        "state": "active",
         "failed_login_count": 0,
         "permissions": {},
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
-    assert json_resp == "Foo"
+
     assert _get_user_count() == 0
     assert {"password": ["Missing data for required field."]} == json_resp["message"]
 
