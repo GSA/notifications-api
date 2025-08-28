@@ -135,7 +135,7 @@ def upgrade():
             existing_type=sa.VARCHAR(length=255),
             type_=enum_type(UserState),
             existing_nullable=True,
-            postgresql_using=enum_using("user_states", UserState),
+            postgresql_using=enum_using("state", UserState),
         )
 
 
