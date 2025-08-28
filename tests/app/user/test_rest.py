@@ -200,7 +200,7 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
         "email_address": "user@digital.fake.gov",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": cast(UserState.ACTIVE.value, enum_type),
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
     }
