@@ -5,10 +5,10 @@ Revises: 0417_change_total_message_limit
 Create Date: 2025-08-28 12:34:32.857422
 
 """
-
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
+
 
 revision = "0418_user_state_enum"
 down_revision = "0417_change_total_message_limit"
@@ -20,25 +20,23 @@ user_state_enum = postgresql.ENUM(
 
 
 def upgrade():
-    # user_state_enum.create(op.get_bind(), checkfirst=True)
-    # op.alter_column(
-    #     "user",
-    #     "state",
-    #     existing_type=sa.String(),
-    #     type_=user_state_enum,
-    #     existing_nullable=False,
-    # )
-    pass
+    user_state_enum.create(op.get_bind(), checkfirst=True)
+    op.alter_column(
+        "users",
+        "state",
+        existing_type=sa.String(),
+        type_=user_state_enum,
+        existing_nullable=False,
+    )
 
 
 def downgrade():
-    # op.alter_column(
-    #     "user",
-    #     "state",
-    #     existing_type=user_state_enum,
-    #     type_=sa.String,
-    #     existing_nullable=False,
-    # )
+    op.alter_column(
+        "users",
+        "state",
+        existing_type=user_state_enum,
+        type_=sa.String,
+        existing_nullable=False,
+    )
 
-    # user_state_enum.drop(op.get_bind(), checkfirst=True)
-    pass
+    user_state_enum.drop(op.get_bind(), checkfirst=True)
