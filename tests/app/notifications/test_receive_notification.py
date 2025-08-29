@@ -250,7 +250,8 @@ def test_receive_notification_error_if_not_single_matching_service(
     response = sns_post(client, data)
 
     assert response.status_code == 200
-    assert response.result == "success"
+    parsed_response = json.loads(response.get_data(as_text=True))
+    assert parsed_response["result"] == "success"
 
     stmt = select(func.count()).select_from(InboundSms)
     count = db.session.execute(stmt).scalar() or 0
