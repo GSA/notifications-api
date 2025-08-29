@@ -39,7 +39,7 @@ def sns_post(client, data, auth=True, password="testkey"):
     )
 
 
-@pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
+# @pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
 def test_receive_notification_returns_received_to_sns(
     client, mocker, sample_service_full_permissions
 ):
