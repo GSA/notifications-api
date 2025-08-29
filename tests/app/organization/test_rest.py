@@ -376,7 +376,7 @@ def test_update_other_organization_attributes_doesnt_clear_domains(
 def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
     admin_request, nhs_email_branding, notify_db_session, new_org_type
 ):
-    org = create_organization(organization_type="central")
+    org = create_organization(organization_type=OrganizationType.FEDERAL)
     data = {
         "organization_type": new_org_type,
     }
@@ -404,7 +404,8 @@ def test_post_update_organization_to_nhs_type_does_not_update_branding_if_defaul
 ):
     current_branding = create_email_branding(logo="example.png", name="custom branding")
     org = create_organization(
-        organization_type="central", email_branding_id=current_branding.id
+        organization_type=OrganizationType.FEDERAL,
+        email_branding_id=current_branding.id,
     )
     data = {
         "organization_type": new_org_type,
