@@ -372,60 +372,6 @@ def test_update_other_organization_attributes_doesnt_clear_domains(
     assert [domain.domain for domain in org.domains] == ["example.gov.uk"]
 
 
-@pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
-    admin_request, nhs_email_branding, notify_db_session, new_org_type
-):
-    org = create_organization(organization_type=OrganizationType.FEDERAL)
-    data = {
-        "organization_type": new_org_type,
-    }
-
-    admin_request.post(
-        "organization.update_organization",
-        _data=data,
-        organization_id=org.id,
-        _expected_status=204,
-    )
-
-    organization = _get_organizations()
-
-    assert len(organization) == 1
-    assert organization[0].id == org.id
-    assert organization[0].organization_type == new_org_type
-    assert organization[0].email_branding_id == uuid.UUID(
-        current_app.config["NHS_EMAIL_BRANDING_ID"]
-    )
-
-
-@pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-def test_post_update_organization_to_nhs_type_does_not_update_branding_if_default_branding_set(
-    admin_request, nhs_email_branding, notify_db_session, new_org_type
-):
-    current_branding = create_email_branding(logo="example.png", name="custom branding")
-    org = create_organization(
-        organization_type=OrganizationType.FEDERAL,
-        email_branding_id=current_branding.id,
-    )
-    data = {
-        "organization_type": new_org_type,
-    }
-
-    admin_request.post(
-        "organization.update_organization",
-        _data=data,
-        organization_id=org.id,
-        _expected_status=204,
-    )
-
-    organization = _get_organizations()
-
-    assert len(organization) == 1
-    assert organization[0].id == org.id
-    assert organization[0].organization_type == new_org_type
-    assert organization[0].email_branding_id == current_branding.id
-
-
 def test_update_organization_default_branding(
     admin_request,
     notify_db_session,
