@@ -16,7 +16,7 @@ from app.dao.organization_dao import (
     dao_get_users_for_organization,
     dao_update_organization,
 )
-from app.enums import OrganizationType
+from app.enums import OrganizationType, UserState
 from app.models import Organization, Service
 from app.utils import utc_now
 from tests.app.db import (
@@ -310,7 +310,7 @@ def test_dao_get_users_for_organization_only_returns_active_users(sample_organiz
         organization_id=sample_organization.id, user_id=second.id
     )
 
-    second.state = "inactive"
+    second.state = UserState.INACTIVE
 
     results = dao_get_users_for_organization(organization_id=sample_organization.id)
     assert len(results) == 1

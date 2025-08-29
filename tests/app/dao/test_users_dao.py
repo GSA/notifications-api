@@ -26,7 +26,7 @@ from app.dao.users_dao import (
     update_user_password,
     user_can_be_archived,
 )
-from app.enums import AuthType, CodeType, PermissionType
+from app.enums import AuthType, CodeType, PermissionType, UserState
 from app.errors import InvalidRequest
 from app.models import User, VerifyCode
 from app.utils import utc_now
@@ -271,7 +271,7 @@ def test_dao_archive_user(sample_user, sample_organization, fake_uuid):
     assert sample_user.current_session_id == uuid.UUID(
         "00000000-0000-0000-0000-000000000000"
     )
-    assert sample_user.state == "inactive"
+    assert sample_user.state == UserState.INACTIVE
     assert not sample_user.check_password("password")
 
 
@@ -329,8 +329,8 @@ def test_user_cannot_be_archived_if_they_belong_to_a_service_with_no_other_activ
     sample_service,
 ):
     active_user = create_user(email="1@test.com")
-    pending_user = create_user(email="2@test.com", state="pending")
-    inactive_user = create_user(email="3@test.com", state="inactive")
+    pending_user = create_user(email="2@test.com", state=UserState.PENDING)
+    inactive_user = create_user(email="3@test.com", state=UserState.INACTIVE)
 
     sample_service.users = [active_user, pending_user, inactive_user]
 

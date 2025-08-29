@@ -22,6 +22,7 @@ from app.enums import (
     NotificationStatus,
     NotificationType,
     ServicePermissionType,
+    UserState,
 )
 from app.models import (
     AnnualBilling,
@@ -738,7 +739,9 @@ def dao_resume_service(service_id):
 
 def dao_fetch_active_users_for_service(service_id):
 
-    stmt = select(User).where(User.services.any(id=service_id), User.state == "active")
+    stmt = select(User).where(
+        User.services.any(id=service_id), User.state == UserState.ACTIVE
+    )
     result = db.session.execute(stmt)
     return result.scalars().all()
 
