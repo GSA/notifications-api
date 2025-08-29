@@ -2,7 +2,6 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
-from flask import current_app
 from freezegun import freeze_time
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -191,28 +190,6 @@ def test_post_create_organization(admin_request, notify_db_session):
 def _get_organizations():
     stmt = select(Organization)
     return db.session.execute(stmt).scalars().all()
-
-
-@pytest.mark.parametrize("org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-def test_post_create_organization_sets_default_nhs_branding_for_nhs_orgs(
-    admin_request, notify_db_session, nhs_email_branding, org_type
-):
-    data = {
-        "name": "test organization",
-        "active": True,
-        "organization_type": org_type,
-    }
-
-    admin_request.post(
-        "organization.create_organization", _data=data, _expected_status=201
-    )
-
-    organizations = _get_organizations()
-
-    assert len(organizations) == 1
-    assert organizations[0].email_branding_id == uuid.UUID(
-        current_app.config["NHS_EMAIL_BRANDING_ID"]
-    )
 
 
 def test_post_create_organization_existing_name_raises_400(
