@@ -269,14 +269,6 @@
         "is_verified": false,
         "line_number": 28,
         "is_secret": false
-      },
-      {
-        "type": "Base64 High Entropy String",
-        "filename": "tests/app/notifications/test_receive_notification.py",
-        "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
-        "is_verified": false,
-        "line_number": 58,
-        "is_secret": false
       }
     ],
     "tests/app/notifications/test_validators.py": [
@@ -374,5 +366,5 @@
       }
     ]
   },
-  "generated_at": "2025-08-29T15:59:40Z"
+  "generated_at": "2025-08-29T18:23:29Z"
 }

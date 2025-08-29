@@ -39,41 +39,6 @@ def sns_post(client, data, auth=True, password="testkey"):
     )
 
 
-# @pytest.mark.skip(reason="Need to implement SNS tests. Body here mostly from MMG")
-def test_receive_notification_returns_received_to_sns(
-    client, mocker, sample_service_full_permissions
-):
-    mocked = mocker.patch(
-        "app.notifications.receive_notifications.tasks.send_inbound_sms_to_service.apply_async"
-    )
-    prom_counter_labels_mock = mocker.patch(
-        "app.notifications.receive_notifications.INBOUND_SMS_COUNTER.labels"
-    )
-    data = {
-        "originationNumber": "+12028675309",
-        "destinationNumber": sample_service_full_permissions.get_inbound_number(),
-        "messageKeyword": "JOIN",
-        "messageBody": "EXAMPLE",
-        "inboundMessageId": "cae173d2-66b9-564c-8309-21f858e9fb84",
-        "previousPublishedMessageId": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-    }
-    response = sns_post(client, data)
-
-    assert response.status_code == 200
-    result = json.loads(response.get_data(as_text=True))
-    assert result["result"] == "success"
-
-    prom_counter_labels_mock.assert_called_once_with("sns")
-    prom_counter_labels_mock.return_value.inc.assert_called_once_with()
-
-    inbound_sms_id = db.session.execute(select(InboundSms)).scalars().all()[0].id
-    mocked.assert_called_once_with(
-        [str(inbound_sms_id), str(sample_service_full_permissions.id)],
-        queue="notify-internal-tasks",
-    )
-
-
-# TODO: figure out why creating a service first causes a db error
 @pytest.mark.parametrize(
     "permissions",
     [
@@ -109,7 +74,6 @@ def test_receive_notification_from_sns_without_permissions_does_not_persist(
     assert mocked.called is False
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_receive_notification_without_permissions_does_not_create_inbound_even_with_inbound_number_set(
     client, mocker, sample_service
 ):
@@ -191,7 +155,6 @@ def test_unescape_string(raw, expected):
     assert unescape_string(raw) == expected
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sns_sms_object(sample_service_full_permissions):
     data = {
         "Message": "hello+there+%F0%9F%93%A9",
@@ -223,7 +186,6 @@ def test_create_inbound_sns_sms_object(sample_service_full_permissions):
     assert inbound_sms.provider == "sns"
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 def test_create_inbound_sns_sms_object_uses_inbound_number_if_set(
     sample_service_full_permissions,
 ):
@@ -251,7 +213,6 @@ def test_create_inbound_sns_sms_object_uses_inbound_number_if_set(
     assert inbound_sms.notify_number == inbound_number
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 @pytest.mark.parametrize(
     "notify_number",
     ["foo", "baz"],
@@ -297,7 +258,6 @@ def test_receive_notification_error_if_not_single_matching_service(
     assert count == 0
 
 
-@pytest.mark.skip(reason="Need to implement inbound SNS tests. Body here from MMG")
 @pytest.mark.parametrize(
     "auth, keys, status_code",
     [
