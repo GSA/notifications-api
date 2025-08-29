@@ -499,7 +499,6 @@ def test_send_user_email_code(
     )
 
 
-# @pytest.mark.skip(reason="Broken email functionality")
 def test_send_user_email_code_with_urlencoded_next_param(
     admin_request, mocker, sample_user, email_2fa_code_template
 ):

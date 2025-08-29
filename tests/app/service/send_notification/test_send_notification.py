@@ -1153,7 +1153,6 @@ def test_should_allow_store_original_number_on_sms_notification(
     assert "1" == notifications[0].to
 
 
-# @pytest.mark.skip("We don't support international at moment")
 def test_should_not_allow_sending_to_international_number_without_international_permission(
     client, sample_template, mocker
 ):
@@ -1178,7 +1177,6 @@ def test_should_not_allow_sending_to_international_number_without_international_
     assert error_json["message"] == "Cannot send to international mobile numbers"
 
 
-# @pytest.mark.skip("We don't support international at the moment")
 def test_should_allow_sending_to_international_number_with_international_permission(
     client, sample_service_full_permissions, mocker
 ):
