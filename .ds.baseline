@@ -285,7 +285,7 @@
         "filename": "tests/app/notifications/test_validators.py",
         "hashed_secret": "6c1a8443963d02d13ffe575a71abe19ea731fb66",
         "is_verified": false,
-        "line_number": 670,
+        "line_number": 668,
         "is_secret": false
       }
     ],
@@ -374,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-08-29T15:48:27Z"
+  "generated_at": "2025-08-29T15:59:40Z"
 }

@@ -194,7 +194,6 @@ def _get_organizations():
 
 
 @pytest.mark.parametrize("org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
 def test_post_create_organization_sets_default_nhs_branding_for_nhs_orgs(
     admin_request, notify_db_session, nhs_email_branding, org_type
 ):
@@ -374,7 +373,6 @@ def test_update_other_organization_attributes_doesnt_clear_domains(
 
 
 @pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
 def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
     admin_request, nhs_email_branding, notify_db_session, new_org_type
 ):
@@ -401,7 +399,6 @@ def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
 
 
 @pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
 def test_post_update_organization_to_nhs_type_does_not_update_branding_if_default_branding_set(
     admin_request, nhs_email_branding, notify_db_session, new_org_type
 ):
