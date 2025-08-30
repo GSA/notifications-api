@@ -13,3 +13,7 @@ updates:
       - "dependabot" # Custom label to identify Dependabot PRs
     assignees:
       - "alexjanousekGSA"
+    ignore:
+      # gevent 25.8+ breaks Celery/Kombu compatibility
+      - dependency-name: "gevent"
+        versions: [">=25.8.0"]
