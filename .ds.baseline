@@ -267,7 +267,7 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
         "is_verified": false,
-        "line_number": 28,
+        "line_number": 27,
         "is_secret": false
       }
     ],
@@ -366,5 +366,5 @@
       }
     ]
   },
-  "generated_at": "2025-08-29T18:23:29Z"
+  "generated_at": "2025-09-02T14:14:52Z"
 }
