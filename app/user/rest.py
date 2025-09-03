@@ -32,7 +32,7 @@ from app.dao.users_dao import (
     save_user_attribute,
     use_user_code,
 )
-from app.enums import CodeType, KeyType, NotificationType, TemplateType
+from app.enums import CodeType, KeyType, NotificationType, TemplateType, UserState
 from app.errors import InvalidRequest, register_errors
 from app.models import Permission, Service
 from app.notifications.process_notifications import (
@@ -179,10 +179,10 @@ def archive_user(user_id):
 def activate_user(user_id):
     check_suspicious_id(user_id)
     user = get_user_by_id(user_id=user_id)
-    if user.state == "active":
+    if user.state == UserState.ACTIVE:
         raise InvalidRequest("User already active", status_code=400)
 
-    user.state = "active"
+    user.state = UserState.ACTIVE
     save_model_user(user)
     return jsonify(data=user.serialize()), 200
 
@@ -191,10 +191,10 @@ def activate_user(user_id):
 def deactivate_user(user_id):
     check_suspicious_id(user_id)
     user = get_user_by_id(user_id=user_id)
-    if user.state == "pending":
+    if user.state == UserState.PENDING:
         raise InvalidRequest("User already inactive", status_code=400)
 
-    user.state = "pending"
+    user.state = UserState.PENDING
     save_model_user(user)
     return jsonify(data=user.serialize()), 200
 

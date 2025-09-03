@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from app import db
 from app.dao.dao_utils import autocommit
+from app.enums import UserState
 from app.models import ServiceUser, User
 
 
@@ -17,7 +18,7 @@ def dao_get_active_service_users(service_id):
     stmt = (
         select(ServiceUser)
         .join(User, User.id == ServiceUser.user_id)
-        .where(User.state == "active", ServiceUser.service_id == service_id)
+        .where(User.state == UserState.ACTIVE, ServiceUser.service_id == service_id)
     )
     return db.session.execute(stmt).scalars().all()
 

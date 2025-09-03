@@ -28,6 +28,7 @@ from app.enums import (
     ServicePermissionType,
     TemplateProcessType,
     TemplateType,
+    UserState,
 )
 from app.hashing import check_hash, hashpw
 from app.history_meta import Versioned
@@ -70,6 +71,7 @@ _enum_column_names = {
     PermissionType: "permission_types",
     AgreementType: "agreement_types",
     AgreementStatus: "agreement_statuses",
+    UserState: "user_states",
 }
 
 
@@ -135,7 +137,9 @@ class User(db.Model):
     )
     logged_in_at = db.Column(db.DateTime, nullable=True)
     failed_login_count = db.Column(db.Integer, nullable=False, default=0)
-    state = db.Column(db.String, nullable=False, default="pending")
+    state = enum_column(
+        UserState, index=True, nullable=False, default=UserState.PENDING
+    )
     platform_admin = db.Column(db.Boolean, nullable=False, default=False)
     current_session_id = db.Column(UUID(as_uuid=True), nullable=True)
     auth_type = enum_column(AuthType, index=True, nullable=False, default=AuthType.SMS)
