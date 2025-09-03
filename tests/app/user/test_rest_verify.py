@@ -499,7 +499,6 @@ def test_send_user_email_code(
     )
 
 
-@pytest.mark.skip(reason="Broken email functionality")
 def test_send_user_email_code_with_urlencoded_next_param(
     admin_request, mocker, sample_user, email_2fa_code_template
 ):
@@ -579,7 +578,6 @@ def test_user_verify_email_code_fails_if_code_already_used(
     assert sample_user.current_session_id is None
 
 
-@pytest.mark.skip("We don't support international at the moment")
 def test_send_user_2fa_code_sends_from_number_for_international_numbers(
     client, sample_user, mocker, sms_code_template
 ):

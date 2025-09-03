@@ -342,7 +342,6 @@ def test_post_user_attribute_with_updated_by(
         mock_persist_notification.assert_not_called()
 
 
-@pytest.mark.skip("We don't support international at the moment")
 def test_post_user_attribute_with_updated_by_sends_notification_to_international_from_number(
     admin_request, mocker, sample_user, team_member_mobile_edit_template
 ):

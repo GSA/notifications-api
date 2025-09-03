@@ -473,9 +473,6 @@ def test_validate_template_calls_all_validators_exception_message_too_long(
 
 
 @pytest.mark.parametrize("key_type", [KeyType.TEST, KeyType.NORMAL])
-@pytest.mark.skip(
-    "We currently don't support international numbers, our validation fails before here"
-)
 def test_validate_and_format_recipient_fails_when_international_number_and_service_does_not_allow_int_sms(
     key_type,
     notify_db_session,
@@ -495,7 +492,6 @@ def test_validate_and_format_recipient_fails_when_international_number_and_servi
 
 
 @pytest.mark.parametrize("key_type", [KeyType.TEST, KeyType.NORMAL])
-@pytest.mark.skip("We currently don't support international numbers")
 def test_validate_and_format_recipient_succeeds_with_international_numbers_if_service_does_allow_int_sms(
     key_type, sample_service_full_permissions
 ):
