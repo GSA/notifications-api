@@ -647,7 +647,7 @@ def s3upload(
         metadata = put_args["Metadata"] = metadata
 
     try:
-        current_app.logger.info(hilite(f"Going to try to upload this {key}"))
+        current_app.logger.debug(hilite(f"Going to try to upload this {key}"))
         key.put(**put_args)
     except botocore.exceptions.NoCredentialsError as e:
         current_app.logger.exception(

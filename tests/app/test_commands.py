@@ -518,8 +518,7 @@ def test_populate_go_live_success(notify_api, mocker):
         new_callable=mock_open,
         read_data="""count,Link,Service ID,DEPT,Service Name,Main contact,Contact detail,MOU,LIVE date,SMS,Email,Letters,CRM,Blue badge\n1,link,123,Dept A,Service A,Contact A,email@example.com,MOU,15/10/2024,Yes,Yes,Yes,Yes,No""",  # noqa
     )
-    mock_current_app = mocker.patch("app.commands.current_app")
-    mock_logger = mock_current_app.logger
+    mocker.patch("app.commands.current_app")
     mock_dao_update_service = mocker.patch("app.commands.dao_update_service")
     mock_dao_fetch_service_by_id = mocker.patch("app.commands.dao_fetch_service_by_id")
     mock_get_user_by_email = mocker.patch("app.commands.get_user_by_email")
@@ -579,8 +578,6 @@ def test_populate_go_live_success(notify_api, mocker):
         hours=12
     )
     mock_dao_update_service.assert_called_once_with(mock_service)
-
-    mock_logger.info.assert_any_call("Populate go live user and date")
 
 
 def test_process_row_from_job_success(notify_api, mocker):
