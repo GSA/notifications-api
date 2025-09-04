@@ -83,8 +83,10 @@ class RecipientCSV:
     def guestlist(self, value):
         try:
             self._guestlist = list(value)
-        except TypeError as te:
-            current_app.logger.exception(f"Type error setting the guest list to {value}")
+        except TypeError:
+            current_app.logger.exception(
+                f"Type error setting the guest list to {value}"
+            )
             self._guestlist = []
 
     @property
@@ -112,7 +114,9 @@ class RecipientCSV:
         try:
             self._placeholders = list(value) + self.recipient_column_headers
         except TypeError:
-            current_app.logger.exception(f"TypeError setting the placeholders to {value}")
+            current_app.logger.exception(
+                f"TypeError setting the placeholders to {value}"
+            )
             self._placeholders = self.recipient_column_headers
         self.placeholders_as_column_keys = [
             InsensitiveDict.make_key(placeholder) for placeholder in self._placeholders
@@ -514,7 +518,9 @@ def is_us_phone_number(number):
     try:
         return _get_country_code(number) == us_prefix
     except NumberParseException:
-        current_app.logger.exception("NumberParseException checking if phone number is US number")
+        current_app.logger.exception(
+            "NumberParseException checking if phone number is US number"
+        )
         return False
 
 
@@ -660,7 +666,9 @@ def try_validate_and_format_phone_number(number, international=None, log_msg=Non
     try:
         return validate_and_format_phone_number(number, international)
     except InvalidPhoneError as exc:
-        current_app.logger.exception("InvalidPhoneNumber while trying to validate and format phone number")
+        current_app.logger.exception(
+            "InvalidPhoneNumber while trying to validate and format phone number"
+        )
         if log_msg:
             current_app.logger.warning("{}: {}".format(log_msg, exc))
         return number
@@ -738,7 +746,9 @@ def format_phone_number_human_readable(phone_number):
         phone_number = validate_phone_number(phone_number, international=True)
     except InvalidPhoneError:
         # if there was a validation error, we want to shortcut out here, but still display the number on the front end
-        current_app.logger.exception("InvalidPhoneError trying to format_phone_number_human_readable()")
+        current_app.logger.exception(
+            "InvalidPhoneError trying to format_phone_number_human_readable()"
+        )
         return phone_number
     international_phone_info = get_international_phone_info(phone_number)
 

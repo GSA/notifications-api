@@ -455,8 +455,6 @@ def send_new_user_email_verification(user_id):
     )
     service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
 
-    current_app.logger.info("template.id is {}".format(template.id))
-    current_app.logger.info("service.id is {}".format(service.id))
     personalisation = {
         "name": user_to_send_to.name,
         "url": _create_verification_url(
@@ -487,11 +485,11 @@ def send_new_user_email_verification(user_id):
         json.dumps(personalisation),
         ex=60 * 60,
     )
-    current_app.logger.info("Sending notification to queue")
+    current_app.logger.debug("Sending notification to queue")
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
 
-    current_app.logger.info("Sent notification to queue")
+    current_app.logger.debug("Sent notification to queue")
 
     return jsonify({}), 204
 
@@ -499,18 +497,16 @@ def send_new_user_email_verification(user_id):
 @user_blueprint.route("/<uuid:user_id>/email-already-registered", methods=["POST"])
 def send_already_registered_email(user_id):
     check_suspicious_id(user_id)
-    current_app.logger.info("Email already registered for user {}".format(user_id))
+    current_app.logger.debug("Email already registered for user {}".format(user_id))
     to = email_data_request_schema.load(request.get_json())
 
-    current_app.logger.info("To email is {}".format(to["email"]))
+    current_app.logger.debug("To email is {}".format(to["email"]))
 
     template = dao_get_template_by_id(
         current_app.config["ALREADY_REGISTERED_EMAIL_TEMPLATE_ID"]
     )
     service = db.session.get(Service, current_app.config["NOTIFY_SERVICE_ID"])
 
-    current_app.logger.info("template.id is {}".format(template.id))
-    current_app.logger.info("service.id is {}".format(service.id))
     personalisation = {
         "signin_url": current_app.config["ADMIN_BASE_URL"] + "/sign-in",
         "forgot_password_url": current_app.config["ADMIN_BASE_URL"]
@@ -530,8 +526,6 @@ def send_already_registered_email(user_id):
     )
     saved_notification.personalisation = personalisation
 
-    current_app.logger.info("Sending notification to queue")
-
     redis_store.set(
         f"email-personalisation-{saved_notification.id}",
         json.dumps(personalisation),
@@ -539,8 +533,6 @@ def send_already_registered_email(user_id):
     )
 
     send_notification_to_queue(saved_notification, queue=QueueNames.NOTIFY)
-
-    current_app.logger.info("Sent notification to queue")
 
     return jsonify({}), 204
 
@@ -612,7 +604,7 @@ def get_user_login_gov_user():
     if user is None:
         current_app.logger.info("#invites: couldn't find user, returning empty data")
         return jsonify({})
-    current_app.logger.info("#invites: found the user, serializing")
+    current_app.logger.debug("#invites: found the user, serializing")
     result = user.serialize()
     current_app.logger.info("#invites: returning successfully")
     return jsonify(data=result)
