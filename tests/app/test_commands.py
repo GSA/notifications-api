@@ -579,7 +579,7 @@ def test_populate_go_live_success(notify_api, mocker):
     )
     mock_dao_update_service.assert_called_once_with(mock_service)
 
-    mock_logger.info.assert_any_call("Populate go live user and date")
+    mock_logger.debug.assert_any_call("Populate go live user and date")
 
 
 def test_process_row_from_job_success(notify_api, mocker):
