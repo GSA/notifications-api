@@ -169,7 +169,7 @@
         "filename": "app/enums.py",
         "hashed_secret": "12322e07b94ee3c7cd65a2952ece441538b53eb3",
         "is_verified": false,
-        "line_number": 123,
+        "line_number": 129,
         "is_secret": false
       }
     ],
@@ -267,7 +267,15 @@
         "filename": "tests/app/notifications/test_receive_notification.py",
         "hashed_secret": "913a73b565c8e2c8ed94497580f619397709b8b6",
         "is_verified": false,
-        "line_number": 27,
+        "line_number": 28,
+        "is_secret": false
+      },
+      {
+        "type": "Base64 High Entropy String",
+        "filename": "tests/app/notifications/test_receive_notification.py",
+        "hashed_secret": "d70eab08607a4d05faa2d0d6647206599e9abc65",
+        "is_verified": false,
+        "line_number": 58,
         "is_secret": false
       }
     ],
@@ -277,7 +285,7 @@
         "filename": "tests/app/notifications/test_validators.py",
         "hashed_secret": "6c1a8443963d02d13ffe575a71abe19ea731fb66",
         "is_verified": false,
-        "line_number": 668,
+        "line_number": 672,
         "is_secret": false
       }
     ],
@@ -331,7 +339,7 @@
         "filename": "tests/app/user/test_rest.py",
         "hashed_secret": "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
         "is_verified": false,
-        "line_number": 873,
+        "line_number": 875,
         "is_secret": false
       }
     ],
@@ -366,5 +374,5 @@
       }
     ]
   },
-  "generated_at": "2025-09-02T14:14:52Z"
+  "generated_at": "2025-09-05T01:27:41Z"
 }

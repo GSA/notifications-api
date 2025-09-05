@@ -10,7 +10,7 @@ from sqlalchemy import delete, func, select
 
 from app import db
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
-from app.enums import AuthType, KeyType, NotificationType, PermissionType
+from app.enums import AuthType, KeyType, NotificationType, PermissionType, UserState
 from app.models import Notification, Permission, User
 from tests.app.db import (
     create_organization,
@@ -110,7 +110,7 @@ def test_post_user(admin_request, notify_db_session):
         "password": "password",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
         "auth_type": AuthType.EMAIL,
@@ -167,7 +167,7 @@ def test_post_user_missing_attribute_email(admin_request, notify_db_session):
         "password": "password",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
     }
@@ -191,16 +191,18 @@ def test_create_user_missing_attribute_password(admin_request, notify_db_session
 
     db.session.execute(delete(User))
     db.session.commit()
+
     data = {
         "name": "Test User",
         "email_address": "user@digital.fake.gov",
         "mobile_number": "+12028675309",
         "logged_in_at": None,
-        "state": "active",
+        "state": "ACTIVE",
         "failed_login_count": 0,
         "permissions": {},
     }
     json_resp = admin_request.post("user.create_user", _data=data, _expected_status=400)
+
     assert _get_user_count() == 0
     assert {"password": ["Missing data for required field."]} == json_resp["message"]
 
@@ -765,23 +767,23 @@ def test_send_user_confirm_new_email_returns_400_when_email_missing(
 
 
 def test_activate_user(admin_request, sample_user):
-    sample_user.state = "pending"
+    sample_user.state = UserState.PENDING
 
     resp = admin_request.post("user.activate_user", user_id=sample_user.id)
 
     assert resp["data"]["id"] == str(sample_user.id)
     assert resp["data"]["state"] == "active"
-    assert sample_user.state == "active"
+    assert sample_user.state == UserState.ACTIVE
 
 
 def test_deactivate_user(admin_request, sample_user):
-    sample_user.state = "active"
+    sample_user.state = UserState.ACTIVE
 
     resp = admin_request.post("user.deactivate_user", user_id=sample_user.id)
 
     assert resp["data"]["id"] == str(sample_user.id)
     assert resp["data"]["state"] == "pending"
-    assert sample_user.state == "pending"
+    assert sample_user.state == UserState.PENDING
 
 
 def test_activate_user_fails_if_already_active(admin_request, sample_user):
@@ -789,7 +791,7 @@ def test_activate_user_fails_if_already_active(admin_request, sample_user):
         "user.activate_user", user_id=sample_user.id, _expected_status=400
     )
     assert resp["message"] == "User already active"
-    assert sample_user.state == "active"
+    assert sample_user.state == UserState.ACTIVE
 
 
 def test_update_user_auth_type(admin_request, sample_user):
