@@ -97,7 +97,6 @@ def test_send_one_off_notification_calls_persist_correctly_for_sms(
     )
 
 
-@pytest.mark.skip("We currently don't support international")
 def test_send_one_off_notification_calls_persist_correctly_for_international_sms(
     persist_mock, celery_mock, notify_db_session
 ):
