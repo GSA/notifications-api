@@ -476,7 +476,11 @@ def get_job_from_s3(service_id, job_id):
 def extract_phones(job, service_id, job_id):
     job_csv_data = StringIO(job)
     csv_reader = csv.reader(job_csv_data)
-    first_row = next(csv_reader)
+    try:
+        first_row = next(csv_reader)
+    except StopIteration:
+        current_app.logger.warning(f"Empty CSV file for job {job_id} in service {service_id}")
+        return {}
 
     phone_index = 0
     for i, item in enumerate(first_row):
@@ -506,9 +510,18 @@ def extract_phones(job, service_id, job_id):
 
 
 def extract_personalisation(job):
+    if job is None:
+        current_app.logger.warning("No job data provided for personalisation extraction")
+        return {}
     if isinstance(job, dict):
         job = job[0]
+    if not job:
+        current_app.logger.warning("Empty job data for personalisation extraction")
+        return {}
     job = job.split("\r\n")
+    if not job or not job[0]:
+        current_app.logger.warning("Empty job data after split for personalisation extraction")
+        return {}
     first_row = job[0]
     job.pop(0)
     first_row = first_row.split(",")
