@@ -56,6 +56,8 @@ def test_create_invited_org_user(
         organization_id=sample_organization.id,
         _data=data,
         _expected_status=201,
+        nonce="nonce",
+        state="state",
     )
 
     assert json_resp["data"]["organization"] == str(sample_organization.id)
