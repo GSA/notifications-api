@@ -8,8 +8,10 @@ import pytest
 from freezegun import freeze_time
 from hypothesis import given
 from hypothesis import strategies as st
+from sqlalchemy.exc import SQLAlchemyError
 
 import app.celery.tasks
+from app import db
 from app.dao.templates_dao import dao_update_template
 from app.enums import (
     JobStatus,
@@ -89,7 +91,12 @@ def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
 
     path = f"/service/{service_id}/job/{job_id}/cancel"
     auth_header = create_admin_authorization_header()
-    response = client.post(path, headers=[auth_header])
+    try:
+        response = client.post(path, headers=[auth_header])
+    except SQLAlchemyError:
+        db.session.rollback()
+        raise
+
     status = response.status_code
     # 400 Bad Request, 403 Forbidden, 404 Not Found
     assert status in (
