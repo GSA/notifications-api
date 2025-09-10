@@ -77,27 +77,34 @@ uuid_str_strategy = st.one_of(
 )
 
 
-@pytest.mark.usefixtures("client", "service_id", "job_id")
-def test_fuzz_cancel_job(client, service_id, job_id):
-    @given(service_id=uuid_str_strategy, job_id=uuid_str_strategy)
-    def inner(service_id, job_id):
-        path = f"/service/{service_id}/job/{job_id}/cancel"
-        auth_header = create_admin_authorization_header()
-        response = client.post(path, headers=[auth_header])
-        status = response.status_code
-        assert status in (
-            200,
-            400,
-            401,
-            403,
-            404,
-        ), f"Unexpected status: {status} for path: {path}"
-        if status == 200:
-            resp_json = json.loads(response.get_data(as_text=True))
-            assert resp_json["data"]["id"] == job_id
-            assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
+@pytest.mark.usefixtures("client", "sample_scheduled_job")
+@given(fuzzed_job_id=uuid_str_strategy, fuzzed_service_id=uuid_str_strategy)
+def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
+    client = request.getfixturevalue("client")
+    sample_scheduled_job = request.getfixturevalue("sample_scheduled_job")
+    valid_job_id = str(sample_scheduled_job.id)
+    valid_service_id = str(sample_scheduled_job.service.id)
+    job_id = fuzzed_job_id
+    service_id = fuzzed_service_id
 
-    inner()
+    path = f"/service/{service_id}/job/{job_id}/cancel"
+    auth_header = create_admin_authorization_header()
+    response = client.post(path, headers=[auth_header])
+    status = response.status_code
+    # 400 Bad Request, 403 Forbidden, 404 Not Found
+    assert status in (
+        200,
+        400,
+        403,
+        404,
+    ), f"Unexpected status: {status} for path: {path}"
+    # This will only happen once every trillion years
+    if status == 200:
+        assert job_id == valid_job_id
+        assert service_id == valid_service_id
+        resp_json = json.loads(response.get_data(as_text=True))
+        assert resp_json["data"]["id"] == valid_job_id
+        assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
 
 
 def test_cant_cancel_normal_job(client, sample_job, mocker):
