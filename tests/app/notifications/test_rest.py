@@ -24,9 +24,6 @@ def test_fuzz_send_email_notification(
     sample_service,
     sample_template,
     notify_db_session,
-    email_address,
-    personalisation,
-    reference,
 ):
     @given(
         st.emails(),
