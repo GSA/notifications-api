@@ -99,11 +99,13 @@ def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
 
     status = response.status_code
     # 400 Bad Request, 403 Forbidden, 404 Not Found
+    # 405 Method Not Allowed (if ids are not ascii)
     assert status in (
         200,
         400,
         403,
         404,
+        405,
     ), f"Unexpected status: {status} for path: {path}"
     # This will only happen once every trillion years
     if status == 200:
