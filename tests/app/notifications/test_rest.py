@@ -24,6 +24,7 @@ def test_fuzz_send_email_notification(
     sample_service,
     sample_template,
     notify_db_session,
+    sample_email_notification,
 ):
     @given(
         st.emails(),
@@ -44,7 +45,12 @@ def test_fuzz_send_email_notification(
             "personalisation": personalisation,
             "reference": reference,
         }
-        response = client.post("/notifications/email", json=payload)
+        auth_header = create_service_authorization_header(
+            service_id=sample_email_notification.service_id
+        )
+        response = client.post(
+            "/notifications/email", json=payload, headers=[auth_header]
+        )
         assert response.status_code in (
             201,
             400,
