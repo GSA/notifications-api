@@ -37,9 +37,9 @@ def test_fuzz_send_email_notification(
     def inner(email_address, personalisation, reference):
 
         template_id = str(sample_template.id)
-        # auth_header = {
-        #    "Authorization": "ApiKey-v1 {}".format(sample_service.api_keys[0].secret)
-        # }
+        auth_header = {
+            "Authorization": "ApiKey-v1 {}".format(sample_service.api_keys[0].secret)
+        }
         payload = {
             "template_id": template_id,
             "email_address": email_address,
