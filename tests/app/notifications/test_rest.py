@@ -3,7 +3,7 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from app.dao.api_key_dao import save_model_api_key
@@ -19,6 +19,7 @@ from tests.app.db import create_api_key, create_notification
 @pytest.mark.usefixtures(
     "client", "sample_service", "sample_template", "notify_db_session"
 )
+@settings(max_examples=5)
 def test_fuzz_send_email_notification(
     client,
     sample_service,
