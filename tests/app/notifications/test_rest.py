@@ -19,7 +19,6 @@ from tests.app.db import create_api_key, create_notification
 @pytest.mark.usefixtures(
     "client", "sample_service", "sample_template", "notify_db_session"
 )
-@settings(max_examples=5)
 def test_fuzz_send_email_notification(
     client,
     sample_service,
@@ -27,6 +26,7 @@ def test_fuzz_send_email_notification(
     notify_db_session,
     sample_email_notification,
 ):
+    @settings(max_examples=5)
     @given(
         st.emails(),
         st.dictionaries(
