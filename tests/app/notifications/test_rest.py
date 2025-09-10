@@ -16,14 +16,8 @@ from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
-@given(
-    st.emails(),
-    st.dictionaries(
-        keys=st.text(min_size=1, max_size=20),
-        values=st.text(min_size=0, max_size=100),
-        max_size=5,
-    ),
-    st.one_of(st.none(), st.text(min_size=0, max_size=50)),
+@pytest.mark.usefixtures(
+    "client", "sample_service", "sample_template", "notify_db_session"
 )
 def test_fuzz_send_email_notification(
     client,
@@ -34,21 +28,36 @@ def test_fuzz_send_email_notification(
     personalisation,
     reference,
 ):
-    template_id = str(sample_template.id)
-    auth_header = {
-        "Authorization": "ApiKey-v1 {}".format(sample_service.api_keys[0].secret)
-    }
-    payload = {
-        "template_id": template_id,
-        "email_address": email_address,
-        "personalisation": personalisation,
-        "reference": reference,
-    }
-    response = client.post("/v2/notifications/email", json=payload, headers=auth_header)
-    assert response.status_code in (
-        201,
-        400,
-    ), f"Unexpected status: {response.status_code}, body: {response.json}"
+    @given(
+        st.emails(),
+        st.dictionaries(
+            keys=st.text(min_size=1, max_size=20),
+            values=st.text(min_size=0, max_size=100),
+            max_size=5,
+        ),
+        st.one_of(st.none(), st.text(min_size=0, max_size=50)),
+    )
+    def inner(email_address, personalisation, reference):
+
+        template_id = str(sample_template.id)
+        auth_header = {
+            "Authorization": "ApiKey-v1 {}".format(sample_service.api_keys[0].secret)
+        }
+        payload = {
+            "template_id": template_id,
+            "email_address": email_address,
+            "personalisation": personalisation,
+            "reference": reference,
+        }
+        response = client.post(
+            "/v2/notifications/email", json=payload, headers=auth_header
+        )
+        assert response.status_code in (
+            201,
+            400,
+        ), f"Unexpected status: {response.status_code}, body: {response.json}"
+
+    inner()
 
 
 @pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))
