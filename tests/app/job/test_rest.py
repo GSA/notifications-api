@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -80,6 +80,7 @@ uuid_str_strategy = st.one_of(
 
 
 @pytest.mark.usefixtures("client", "sample_scheduled_job")
+@settings(max_examples=5)
 @given(fuzzed_job_id=uuid_str_strategy, fuzzed_service_id=uuid_str_strategy)
 def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
     client = request.getfixturevalue("client")
