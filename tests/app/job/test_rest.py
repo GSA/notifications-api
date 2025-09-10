@@ -6,6 +6,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import given
+from hypothesis import strategies as st
 
 import app.celery.tasks
 from app.dao.templates_dao import dao_update_template
@@ -68,6 +70,30 @@ def test_cancel_job(client, sample_scheduled_job):
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["data"]["id"] == job_id
     assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
+
+
+uuid_str_strategy = st.one_of(
+    st.just(str(uuid.uuid4())), st.text(min_size=1, max_size=36)
+)
+
+
+@given(service_id=uuid_str_strategy, job_id=uuid_str_strategy)
+def test_fuzz_cancel_job(client, service_id, job_id):
+    path = f"/service/{service_id}/job/{job_id}/cancel"
+    auth_header = create_admin_authorization_header()
+    response = client.post(path, headers=[auth_header])
+    status = response.status_code
+    assert status in (
+        200,
+        400,
+        401,
+        403,
+        404,
+    ), f"Unexpected status: {status} for path: {path}"
+    if status == 200:
+        resp_json = json.loads(response.get_data(as_text=True))
+        assert resp_json["data"]["id"] == job_id
+        assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
 
 
 def test_cant_cancel_normal_job(client, sample_job, mocker):
