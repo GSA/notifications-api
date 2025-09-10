@@ -77,23 +77,27 @@ uuid_str_strategy = st.one_of(
 )
 
 
-@given(service_id=uuid_str_strategy, job_id=uuid_str_strategy)
+@pytest.mark.usefixtures("client", "service_id", "job_id")
 def test_fuzz_cancel_job(client, service_id, job_id):
-    path = f"/service/{service_id}/job/{job_id}/cancel"
-    auth_header = create_admin_authorization_header()
-    response = client.post(path, headers=[auth_header])
-    status = response.status_code
-    assert status in (
-        200,
-        400,
-        401,
-        403,
-        404,
-    ), f"Unexpected status: {status} for path: {path}"
-    if status == 200:
-        resp_json = json.loads(response.get_data(as_text=True))
-        assert resp_json["data"]["id"] == job_id
-        assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
+    @given(service_id=uuid_str_strategy, job_id=uuid_str_strategy)
+    def inner(service_id, job_id):
+        path = f"/service/{service_id}/job/{job_id}/cancel"
+        auth_header = create_admin_authorization_header()
+        response = client.post(path, headers=[auth_header])
+        status = response.status_code
+        assert status in (
+            200,
+            400,
+            401,
+            403,
+            404,
+        ), f"Unexpected status: {status} for path: {path}"
+        if status == 200:
+            resp_json = json.loads(response.get_data(as_text=True))
+            assert resp_json["data"]["id"] == job_id
+            assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
+
+    inner()
 
 
 def test_cant_cancel_normal_job(client, sample_job, mocker):
