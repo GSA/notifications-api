@@ -104,6 +104,7 @@ redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 
 socketio = SocketIO(
+    async_mode='gevent',
     cors_allowed_origins=[
         config.Config.ADMIN_BASE_URL,
     ],
