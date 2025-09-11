@@ -6,6 +6,8 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 from flask import current_app, url_for
 from freezegun import freeze_time
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -3130,6 +3132,40 @@ def test_update_service_sms_sender(client, notify_db_session):
     assert resp_json["sms_sender"] == "second"
     assert not resp_json["inbound_number_id"]
     assert not resp_json["is_default"]
+
+
+@pytest.mark.usefixtures("client", "notify_db_session")
+@settings(max_examples=10)
+@pytest.mark.parametrize("client", [True], indirect=True)
+@given(sms_sender=st.text(min_size=0, max_size=50), is_default=st.booleans())
+def test_fuzz_update_service_sms_sender(
+    client, notify_db_session, sms_sender, is_default
+):
+    service = create_service()
+    service_sms_sender = create_service_sms_sender(
+        service=service, sms_sender="1235", is_default=False
+    )
+    data = {
+        "sms_sender": sms_sender,
+        "is_default": is_default,
+    }
+    response = client.post(
+        f"/service/{service.id}/sms-sender/{service_sms_sender.id}",
+        data=json.dumps(data),
+        headers=[
+            ("Content-Type", "application/json"),
+            create_admin_authorization_header(),
+        ],
+    )
+    assert response.status_code in [
+        200,
+        400,
+    ], f"Unexpected status: {response.status_code}, body: {response.get_data(as_text=True)}"
+
+    if response.status_code == 200:
+        resp_json = json.loads(response.get_data(as_text=True))
+        assert resp_json["sms_sender"] == sms_sender
+        assert resp_json["is_default"] == is_default
 
 
 def test_update_service_sms_sender_switches_default(client, notify_db_session):

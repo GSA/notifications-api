@@ -80,7 +80,7 @@ uuid_str_strategy = st.one_of(
 
 
 @pytest.mark.usefixtures("client", "sample_scheduled_job")
-@settings(max_examples=5)
+@settings(max_examples=10)
 @given(fuzzed_job_id=uuid_str_strategy, fuzzed_service_id=uuid_str_strategy)
 def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
     client = request.getfixturevalue("client")
