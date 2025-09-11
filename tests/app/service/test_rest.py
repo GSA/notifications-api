@@ -3134,9 +3134,7 @@ def test_update_service_sms_sender(client, notify_db_session):
     assert not resp_json["is_default"]
 
 
-@pytest.mark.usefixtures("client")
 @settings(max_examples=10)
-@pytest.mark.parametrize("client", [True], indirect=True)
 @given(
     fuzzed_sms_sender=st.text(min_size=0, max_size=50), fuzzed_is_default=st.booleans()
 )
@@ -3166,12 +3164,6 @@ def test_fuzz_update_service_sms_sender(client, fuzzed_sms_sender, fuzzed_is_def
         resp_json = json.loads(response.get_data(as_text=True))
         assert resp_json["sms_sender"] == fuzzed_sms_sender
         assert resp_json["is_default"] == fuzzed_is_default
-
-    client.post(
-        "service.delete_service_sms_sender",
-        service_id=service.id,
-        sms_sender_id=service_sms_sender.id,
-    )
 
 
 def test_update_service_sms_sender_switches_default(client, notify_db_session):
