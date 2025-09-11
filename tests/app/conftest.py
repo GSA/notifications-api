@@ -216,7 +216,7 @@ def sample_sms_code(notify_db_session):
     return code
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def sample_service(sample_user):
     service_name = "Sample service"
     email_from = service_name.lower().replace(" ", ".")
