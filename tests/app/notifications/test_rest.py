@@ -16,9 +16,7 @@ from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
-@pytest.mark.usefixtures(
-    "client", "sample_service", "sample_template", "notify_db_session"
-)
+@pytest.mark.usefixtures("client", "sample_template")
 @settings(max_examples=10)
 @given(
     fuzzed_email_address=st.emails(),
@@ -31,9 +29,7 @@ from tests.app.db import create_api_key, create_notification
 )
 def test_fuzz_send_email_notification(
     client,
-    sample_service,
     sample_template,
-    notify_db_session,
     sample_email_notification,
     fuzzed_email_address,
     fuzzed_personalisation,

@@ -38,7 +38,7 @@ def notify_api(notify_app):
     ctx.pop()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def client(notify_api):
     with notify_api.test_request_context(), notify_api.test_client() as client:
         yield client
