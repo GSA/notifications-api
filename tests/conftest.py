@@ -38,7 +38,7 @@ def notify_api(notify_app):
     ctx.pop()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def client(notify_api):
     with notify_api.test_request_context(), notify_api.test_client() as client:
         yield client
@@ -83,7 +83,7 @@ def sms_providers(_notify_db):
     # get_provider_details_by_identifier("sns").priority = 100
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def notify_db_session(_notify_db, sms_providers):
     """
     This fixture clears down all non static data after your test run. It yields the sqlalchemy session variable

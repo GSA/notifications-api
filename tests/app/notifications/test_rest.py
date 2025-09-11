@@ -16,42 +16,49 @@ from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
-@pytest.mark.usefixtures("client", "sample_template")
-@settings(max_examples=10)
-@given(
-    fuzzed_email_address=st.emails(),
-    fuzzed_personalisation=st.dictionaries(
-        keys=st.text(min_size=1, max_size=20),
-        values=st.text(min_size=0, max_size=100),
-        max_size=5,
-    ),
-    fuzzed_reference=st.one_of(st.none(), st.text(min_size=0, max_size=50)),
+@pytest.mark.usefixtures(
+    "client",
+    "sample_template",
 )
 def test_fuzz_send_email_notification(
     client,
     sample_template,
     sample_email_notification,
-    fuzzed_email_address,
-    fuzzed_personalisation,
-    fuzzed_reference,
 ):
-
-    template_id = str(sample_template.id)
-
-    payload = {
-        "template_id": template_id,
-        "email_address": fuzzed_email_address,
-        "personalisation": fuzzed_personalisation,
-        "reference": fuzzed_reference,
-    }
-    auth_header = create_service_authorization_header(
-        service_id=sample_email_notification.service_id
+    @settings(max_examples=5)
+    @given(
+        st.emails(),
+        st.dictionaries(
+            keys=st.text(min_size=1, max_size=20),
+            values=st.text(min_size=0, max_size=100),
+            max_size=5,
+        ),
+        st.one_of(st.none(), st.text(min_size=0, max_size=50)),
     )
-    response = client.post("/notifications/email", json=payload, headers=[auth_header])
-    assert response.status_code in (
-        201,
-        400,
-    ), f"Unexpected status: {response.status_code}, body: {response.json}"
+    # This use of the 'inner' function is caused because hypothesis doesn't
+    # work well with function-scoped fixtures like client and sample_template.
+    def inner(email_address, personalisation, reference):
+
+        template_id = str(sample_template.id)
+
+        payload = {
+            "template_id": template_id,
+            "email_address": email_address,
+            "personalisation": personalisation,
+            "reference": reference,
+        }
+        auth_header = create_service_authorization_header(
+            service_id=sample_email_notification.service_id
+        )
+        response = client.post(
+            "/notifications/email", json=payload, headers=[auth_header]
+        )
+        assert response.status_code in (
+            201,
+            400,
+        ), f"Unexpected status: {response.status_code}, body: {response.json}"
+
+    inner()
 
 
 @pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))

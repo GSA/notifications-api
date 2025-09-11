@@ -252,7 +252,7 @@ def _sample_service_full_permissions(notify_db_session):
     return service
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def sample_template(sample_user):
     service = create_service(
         service_permissions=[ServicePermissionType.EMAIL, ServicePermissionType.SMS],
