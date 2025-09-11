@@ -299,9 +299,17 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert json_resp["message"] == "No result found"
 
 
+@st.composite
+def maybe_invalid_uuid(draw):
+    if draw(st.booleans()):
+        return str(draw(st.uuids()))
+    else:
+        return draw(st.text(min_size=1, max_size=36))
+
+
 @given(
-    fuzzed_service_id=st.uuids(),
-    fuzzed_template_id=st.uuids(),
+    fuzzed_service_id=maybe_invalid_uuid(),
+    fuzzed_template_id=maybe_invalid_uuid(),
     fuzzed_template_name=st.text(min_size=1, max_size=100),
 )
 def test_fuzz_should_be_error_if_service_does_not_exist_on_update(
@@ -315,7 +323,7 @@ def test_fuzz_should_be_error_if_service_does_not_exist_on_update(
     data = json.dumps(data)
     auth_header = create_admin_authorization_header()
     response = client.post(
-        f"/service/{fuzzed_service_id}/tempalte/{fuzzed_template_id}",
+        f"/service/{fuzzed_service_id}/template/{fuzzed_template_id}",
         headers=[("Content-Type", "application/json"), auth_header],
         data=data,
     )
@@ -323,10 +331,8 @@ def test_fuzz_should_be_error_if_service_does_not_exist_on_update(
 
     assert response.status_code == 404
     assert json_resp["result"] == "error"
-    assert (
-        json_resp["message"]
-        == "The requested URL was not found on the server. \
-            If you entered the URL manually please check your spelling and try again."
+    assert json_resp["message"].startswith(
+        "The requested URL was not found on the server."
     )
 
 
