@@ -83,7 +83,7 @@ def sms_providers(_notify_db):
     # get_provider_details_by_identifier("sns").priority = 100
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def notify_db_session(_notify_db, sms_providers):
     """
     This fixture clears down all non static data after your test run. It yields the sqlalchemy session variable
