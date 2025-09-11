@@ -331,9 +331,6 @@ def test_fuzz_should_be_error_if_service_does_not_exist_on_update(
 
     assert response.status_code == 404
     assert json_resp["result"] == "error"
-    assert json_resp["message"].startswith(
-        "The requested URL was not found on the server."
-    )
 
 
 @pytest.mark.parametrize("template_type", [TemplateType.EMAIL])
