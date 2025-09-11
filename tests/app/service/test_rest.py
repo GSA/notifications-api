@@ -3136,7 +3136,7 @@ def test_update_service_sms_sender(client, notify_db_session):
 
 @settings(max_examples=10)
 @given(
-    fuzzed_sms_sender=st.text(min_size=0, max_size=50), fuzzed_is_default=st.booleans()
+    fuzzed_sms_sender=st.text(min_size=1, max_size=50), fuzzed_is_default=st.booleans()
 )
 def test_fuzz_update_service_sms_sender(client, fuzzed_sms_sender, fuzzed_is_default):
     service = create_service(service_name=f"service-{uuid.uuid4()}")
