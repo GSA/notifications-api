@@ -244,7 +244,7 @@ def test_fuzz_create_org_with_edge_cases(
 
     @settings(max_examples=5)
     @given(
-        name=str(uuid.uuid4()),
+        name=st.uuids().map(str),
         active=st.booleans(),
         organization_type=st.sampled_from(
             [OrganizationType.FEDERAL, OrganizationType.STATE, OrganizationType.OTHER]
