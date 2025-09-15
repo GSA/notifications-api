@@ -245,7 +245,7 @@ def test_fuzz_create_org_with_edge_cases(
     @settings(max_examples=10)
     @given(
         name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
-        active=st.one_of(st.none(), st.booleans()),
+        active=st.booleans(),
         organization_type=st.one_of(
             st.none(),
             st.sampled_from(list(OrganizationType)),
@@ -277,7 +277,6 @@ def test_fuzz_create_org_with_edge_cases(
             isinstance(name, str)
             and name.strip() != ""
             and isinstance(organization_type, OrganizationType)
-            and isinstance(active, bool)
         }
         expected_status = 201 if is_valid else 400
         try:
