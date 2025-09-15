@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
+from flask import current_app
 from freezegun import freeze_time
 from hypothesis import given
 from hypothesis import strategies as st
@@ -264,6 +265,10 @@ def test_fuzz_create_org_with_edge_cases(
             "active": active,
             "organization_type": {org_type_serialized},
         }
+        current_app.logger.info(f"DATA IS A {type(data)}")
+        current_app.logger.info(f"ORG TYPE IS A {type(org_type_serialized)}")
+
+        assert data == "FOO"
         try:
             response = admin_request.post(
                 "organization.create_organization", _data=data, _expected_status=None
