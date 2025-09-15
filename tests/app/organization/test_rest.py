@@ -263,7 +263,7 @@ def test_fuzz_create_org_with_edge_cases(
         data = {
             "name": name,
             "active": active,
-            "organization_type": {org_type_serialized},
+            "organization_type": org_type_serialized,
         }
         current_app.logger.info(f"DATA IS A {type(data)}")
         current_app.logger.info(f"ORG TYPE IS A {type(org_type_serialized)}")
