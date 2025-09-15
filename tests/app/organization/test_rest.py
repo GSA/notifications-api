@@ -3,6 +3,8 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import given
+from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -231,6 +233,49 @@ def test_post_create_organization_works(admin_request, sample_organization):
     organization = _get_organizations()
 
     assert len(organization) == 2
+
+
+@given(
+    name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
+    active=st.one_of(st.none(), st.boolean()),
+    organization_type=st.one_of(
+        st.none(),
+        st.sampled_from(list(OrganizationType)),
+        st.integers(min_value=100, max_value=999),
+    ),
+)
+def test_fuzz_create_org_with_edge_cases(
+    admin_request, sample_organization, name, active, organization_type
+):
+    existing = _get_organizations()
+    initial_count = len(existing)
+    data = {
+        "name": name,
+        "active": active,
+        "organization_type": {
+            (
+                organization_type.value
+                if isinstance(organization_type, OrganizationType)
+                else organization_type
+            )
+        },
+    }
+    try:
+        response = admin_request.post(
+            "organization.create_organization", _data=data, _expected_status=None
+        )
+        if (
+            name
+            and organization_type is not None
+            and isinstance(organization_type, OrganizationType)
+        ):
+            assert response.status_code == 201
+            assert len(_get_organizations()) == initial_count + 1
+        else:
+            assert response.status_code in (400, 422)
+            assert len(_get_organizations()) == initial_count
+    except Exception as e:
+        pytest.fail(f"Unexpected error durring fuzz test: {e}")
 
 
 @pytest.mark.parametrize(
@@ -776,7 +821,7 @@ def test_get_organization_services_usage(admin_request, notify_db_session):
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 1
@@ -814,7 +859,7 @@ def test_get_organization_services_usage_sort_active_first(
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 2
@@ -831,7 +876,7 @@ def test_get_organization_services_usage_sort_active_first(
     response_after_archive = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     first_service = response_after_archive["services"][0]
     assert first_service["service_id"] == str(service.id)
@@ -848,7 +893,7 @@ def test_get_organization_services_usage_returns_400_if_year_is_invalid(admin_re
         "organization.get_organization_services_usage",
         organization_id=uuid.uuid4(),
         **{"year": "not-a-valid-year"},
-        _expected_status=400
+        _expected_status=400,
     )
     assert response["message"] == "No valid year provided"
 
