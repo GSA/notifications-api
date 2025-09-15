@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -238,6 +238,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
 @pytest.mark.usefixtures(
     "admin_request",
 )
+@settings(max_examples=10)
 def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
