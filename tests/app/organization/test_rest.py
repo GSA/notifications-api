@@ -293,9 +293,9 @@ def test_fuzz_create_org_with_edge_cases(
                 assert len(_get_organizations()) == initial_count
         except AssertionError:
             if is_valid:
-                pytest.fail(f"Expected success but got error. Data: {data}")
+                pytest.fail(f"Expected success but got error. Data: {data} {response}")
         except Exception as e:
-            pytest.fail(f"Unexpected error durring fuzz test: {e} {data}")
+            pytest.fail(f"Unexpected error durring fuzz test: {e} {data} {response}")
 
     inner()
 
