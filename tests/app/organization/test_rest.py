@@ -239,7 +239,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
     "admin_request",
 )
 def test_fuzz_create_org_with_edge_cases(
-    admin_request, name, active, organization_type
+    admin_request,
 ):
     @given(
         name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
