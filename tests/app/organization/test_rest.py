@@ -1,3 +1,4 @@
+import json
 import uuid
 from unittest.mock import Mock
 
@@ -268,7 +269,10 @@ def test_fuzz_create_org_with_edge_cases(
         current_app.logger.info(f"DATA IS A {type(data)}")
         current_app.logger.info(f"ORG TYPE IS A {type(org_type_serialized)}")
 
-        assert data == "FOO"
+        try:
+            json.dumps(data)
+        except TypeError as e:
+            pytest.fail(f"Test generated non-serializable data: {data} {e}")
         try:
             response = admin_request.post(
                 "organization.create_organization", _data=data, _expected_status=None
