@@ -241,7 +241,6 @@ def test_post_create_organization_works(admin_request, sample_organization):
 def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
-    list_of_names = []
 
     @settings(max_examples=10)
     @given(
@@ -262,6 +261,9 @@ def test_fuzz_create_org_with_edge_cases(
 
         existing = _get_organizations()
         initial_count = len(existing)
+        # We are doing this so replays don't generate inconsistent results,
+        # resulting in a FlakyFailure
+        name += str(uuid.uuid4())
         data = {
             "name": name,
             "active": active,
@@ -275,26 +277,25 @@ def test_fuzz_create_org_with_edge_cases(
             and isinstance(active, bool)
         }
         expected_status = 201 if is_valid else 400
-        if name not in list_of_names:
-            try:
-                response = admin_request.post(
-                    "organization.create_organization",
-                    _data=data,
-                    _expected_status=expected_status,
-                )
-                list_of_names.append(name)
-                if (
-                    name
-                    and organization_type is not None
-                    and isinstance(organization_type, OrganizationType)
-                ):
-                    assert response.status_code == 201
-                    assert len(_get_organizations()) == initial_count + 1
-                else:
-                    assert response.status_code in (400, 422)
-                    assert len(_get_organizations()) == initial_count
-            except Exception as e:
-                pytest.fail(f"Unexpected error durring fuzz test: {e}")
+        try:
+            response = admin_request.post(
+                "organization.create_organization",
+                _data=data,
+                _expected_status=expected_status,
+            )
+            assert response == "FOO"
+            if (
+                name
+                and organization_type is not None
+                and isinstance(organization_type, OrganizationType)
+            ):
+                assert response.status_code == 201
+                assert len(_get_organizations()) == initial_count + 1
+            else:
+                assert response.status_code in (400, 422)
+                assert len(_get_organizations()) == initial_count
+        except Exception as e:
+            pytest.fail(f"Unexpected error durring fuzz test: {e}")
 
     inner()
 
