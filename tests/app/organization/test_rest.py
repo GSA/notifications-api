@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -242,7 +242,6 @@ def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
 
-    @settings(max_examples=5)
     @given(
         name=st.uuids().map(str),
         active=st.booleans(),
@@ -279,6 +278,7 @@ def test_fuzz_create_org_with_edge_cases(
                 _expected_status=expected_status,
             )
             if is_valid:
+                assert response == "FOO"
                 assert response.status_code == 201
                 assert len(_get_organizations()) == initial_count + 1
             else:
