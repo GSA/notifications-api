@@ -237,7 +237,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
 
 @given(
     name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
-    active=st.one_of(st.none(), st.boolean()),
+    active=st.one_of(st.none(), st.booleans()),
     organization_type=st.one_of(
         st.none(),
         st.sampled_from(list(OrganizationType)),
