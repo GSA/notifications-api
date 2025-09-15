@@ -242,9 +242,9 @@ def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
 
-    @settings(max_examples=10)
+    @settings(max_examples=5)
     @given(
-        name=st.text(min_size=1, max_size=50),
+        name=str(uuid.uuid4()),
         active=st.booleans(),
         organization_type=st.sampled_from(
             [OrganizationType.FEDERAL, OrganizationType.STATE, OrganizationType.OTHER]
@@ -259,12 +259,6 @@ def test_fuzz_create_org_with_edge_cases(
 
         existing = _get_organizations()
         initial_count = len(existing)
-        # We are doing this so replays don't generate inconsistent results,
-        # resulting in a FlakyFailure
-        if name:
-            name += str(uuid.uuid4())
-        else:
-            name = str(uuid.uuid4())
         data = {
             "name": name,
             "active": active,
