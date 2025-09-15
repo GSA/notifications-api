@@ -92,11 +92,11 @@ def create_organization():
     data = request.get_json()
     try:
         validate(data, post_create_organization_schema)
+        organization = Organization(**data)
+        dao_create_organization(organization)
     except Exception:
         current_app.logger.exception("Validation error creating organization")
         return jsonify({"Error": "Validation error"}), 400
-    organization = Organization(**data)
-    dao_create_organization(organization)
 
     return jsonify(organization.serialize()), 201
 
