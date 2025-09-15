@@ -238,10 +238,11 @@ def test_post_create_organization_works(admin_request, sample_organization):
 @pytest.mark.usefixtures(
     "admin_request",
 )
-@settings(max_examples=10)
+
 def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
+    @settings(max_examples=10)
     @given(
         name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
         active=st.one_of(st.none(), st.booleans()),
