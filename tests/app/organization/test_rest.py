@@ -263,7 +263,10 @@ def test_fuzz_create_org_with_edge_cases(
         initial_count = len(existing)
         # We are doing this so replays don't generate inconsistent results,
         # resulting in a FlakyFailure
-        name += str(uuid.uuid4())
+        if name:
+            name += str(uuid.uuid4())
+        else:
+            name = str(uuid.uuid4())
         data = {
             "name": name,
             "active": active,
