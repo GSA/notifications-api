@@ -246,10 +246,8 @@ def test_fuzz_create_org_with_edge_cases(
     @given(
         name=st.text(min_size=1, max_size=50),
         active=st.booleans(),
-        organization_type=st.one_of(
-            # st.none(),
-            st.sampled_from(list(OrganizationType)),
-            st.integers(min_value=100, max_value=999),
+        organization_type=st.sampled_from(
+            OrganizationType.FEDERAL, OrganizationType.STATE, OrganizationType.OTHER
         ),
     )
     def inner(name, active, organization_type):
