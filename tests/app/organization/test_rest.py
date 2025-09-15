@@ -279,6 +279,7 @@ def test_fuzz_create_org_with_edge_cases(
             and isinstance(organization_type, OrganizationType)
         }
         expected_status = 201 if is_valid else 400
+        response = None
         try:
             response = admin_request.post(
                 "organization.create_organization",
