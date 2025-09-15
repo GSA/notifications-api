@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
+from flask import current_app
 from freezegun import freeze_time
 from hypothesis import given
 from hypothesis import strategies as st
@@ -17,7 +18,7 @@ from app.dao.services_dao import dao_archive_service
 from app.enums import OrganizationType
 from app.models import AnnualBilling, Organization
 from app.organization.rest import check_request_args
-from app.utils import utc_now
+from app.utils import hilite, utc_now
 from tests.app.db import (
     create_annual_billing,
     create_domain,
@@ -250,6 +251,10 @@ def test_fuzz_create_org_with_edge_cases(
         ),
     )
     def inner(name, active, organization_type):
+        print(hilite(f"name {name} active {active} org {organization_type}"))
+        current_app.logger.info(
+            hilite(f"name {name} active {active} org {organization_type}")
+        )
 
         if isinstance(organization_type, OrganizationType):
             org_type_serialized = organization_type.value
@@ -278,7 +283,6 @@ def test_fuzz_create_org_with_edge_cases(
                 _expected_status=expected_status,
             )
             if is_valid:
-                assert response == "FOO"
                 assert response.status_code == 201
                 assert len(_get_organizations()) == initial_count + 1
             else:
