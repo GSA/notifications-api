@@ -251,18 +251,18 @@ def test_fuzz_create_org_with_edge_cases(
         ),
     )
     def inner(name, active, organization_type):
+
+        if isinstance(organization_type, OrganizationType):
+            org_type_serialized = organization_type.value
+        else:
+            org_type_serialized = organization_type
+
         existing = _get_organizations()
         initial_count = len(existing)
         data = {
             "name": name,
             "active": active,
-            "organization_type": {
-                (
-                    organization_type.value
-                    if isinstance(organization_type, OrganizationType)
-                    else organization_type
-                )
-            },
+            "organization_type": {org_type_serialized},
         }
         try:
             response = admin_request.post(
