@@ -283,7 +283,6 @@ def test_fuzz_create_org_with_edge_cases(
                 _data=data,
                 _expected_status=expected_status,
             )
-            assert response == "FOO"
             if (
                 name
                 and organization_type is not None
