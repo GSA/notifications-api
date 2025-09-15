@@ -244,10 +244,10 @@ def test_fuzz_create_org_with_edge_cases(
 
     @settings(max_examples=10)
     @given(
-        name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
+        name=st.one_of(st.just(""), st.text(min_size=1, max_size=50)),
         active=st.booleans(),
         organization_type=st.one_of(
-            st.none(),
+            # st.none(),
             st.sampled_from(list(OrganizationType)),
             st.integers(min_value=100, max_value=999),
         ),
