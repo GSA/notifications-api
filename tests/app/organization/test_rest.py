@@ -235,47 +235,53 @@ def test_post_create_organization_works(admin_request, sample_organization):
     assert len(organization) == 2
 
 
-@given(
-    name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
-    active=st.one_of(st.none(), st.booleans()),
-    organization_type=st.one_of(
-        st.none(),
-        st.sampled_from(list(OrganizationType)),
-        st.integers(min_value=100, max_value=999),
-    ),
+@pytest.mark.usefixtures(
+    "admin_request",
 )
 def test_fuzz_create_org_with_edge_cases(
-    admin_request, sample_organization, name, active, organization_type
+    admin_request, name, active, organization_type
 ):
-    existing = _get_organizations()
-    initial_count = len(existing)
-    data = {
-        "name": name,
-        "active": active,
-        "organization_type": {
-            (
-                organization_type.value
-                if isinstance(organization_type, OrganizationType)
-                else organization_type
+    @given(
+        name=st.one_of(st.none(), st.just(""), st.text(min_size=1, max_size=50)),
+        active=st.one_of(st.none(), st.booleans()),
+        organization_type=st.one_of(
+            st.none(),
+            st.sampled_from(list(OrganizationType)),
+            st.integers(min_value=100, max_value=999),
+        ),
+    )
+    def inner(name, active, organization_type):
+        existing = _get_organizations()
+        initial_count = len(existing)
+        data = {
+            "name": name,
+            "active": active,
+            "organization_type": {
+                (
+                    organization_type.value
+                    if isinstance(organization_type, OrganizationType)
+                    else organization_type
+                )
+            },
+        }
+        try:
+            response = admin_request.post(
+                "organization.create_organization", _data=data, _expected_status=None
             )
-        },
-    }
-    try:
-        response = admin_request.post(
-            "organization.create_organization", _data=data, _expected_status=None
-        )
-        if (
-            name
-            and organization_type is not None
-            and isinstance(organization_type, OrganizationType)
-        ):
-            assert response.status_code == 201
-            assert len(_get_organizations()) == initial_count + 1
-        else:
-            assert response.status_code in (400, 422)
-            assert len(_get_organizations()) == initial_count
-    except Exception as e:
-        pytest.fail(f"Unexpected error durring fuzz test: {e}")
+            if (
+                name
+                and organization_type is not None
+                and isinstance(organization_type, OrganizationType)
+            ):
+                assert response.status_code == 201
+                assert len(_get_organizations()) == initial_count + 1
+            else:
+                assert response.status_code in (400, 422)
+                assert len(_get_organizations()) == initial_count
+        except Exception as e:
+            pytest.fail(f"Unexpected error durring fuzz test: {e}")
+
+    inner()
 
 
 @pytest.mark.parametrize(
