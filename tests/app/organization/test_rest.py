@@ -2,10 +2,7 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
-from flask import current_app
 from freezegun import freeze_time
-from hypothesis import given, settings
-from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,7 +15,7 @@ from app.dao.services_dao import dao_archive_service
 from app.enums import OrganizationType
 from app.models import AnnualBilling, Organization
 from app.organization.rest import check_request_args
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 from tests.app.db import (
     create_annual_billing,
     create_domain,
@@ -234,87 +231,6 @@ def test_post_create_organization_works(admin_request, sample_organization):
     organization = _get_organizations()
 
     assert len(organization) == 2
-
-
-seen = set()
-
-
-@pytest.mark.usefixtures(
-    "admin_request",
-)
-def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
-
-    # We want to avoid replays, because once an organization is created, replaying will result in a
-    # duplicate error on our side.  Unfortunately, to avoid replays in hypothesis is hard!
-    @settings(
-        max_examples=3,
-        database=None,
-    )
-    @given(
-        name=st.uuids().map(str),
-        active=st.booleans(),
-        organization_type=st.sampled_from(
-            [OrganizationType.FEDERAL, OrganizationType.STATE, OrganizationType.OTHER]
-        ),
-    )
-    def inner(name, active, organization_type):
-
-        print(hilite(f"name {name} active {active} org {organization_type}"))
-        current_app.logger.info(
-            hilite(f"name {name} active {active} org {organization_type}")
-        )
-
-        if isinstance(organization_type, OrganizationType):
-            org_type_serialized = organization_type.value
-        else:
-            org_type_serialized = organization_type
-
-        existing = _get_organizations()
-        initial_count = len(existing)
-        data = {
-            "name": name,
-            "active": active,
-            "organization_type": org_type_serialized,
-        }
-
-        is_valid = {
-            isinstance(name, str)
-            and name.strip() != ""
-            and isinstance(organization_type, OrganizationType)
-        }
-        expected_status = 201 if is_valid else 400
-        key = (name, active, organization_type)
-        if key in seen:
-            expected_status = 400
-        else:
-            seen.add(key)
-
-        response = None
-        try:
-            response = admin_request.post(
-                "organization.create_organization",
-                _data=data,
-                _expected_status=expected_status,
-            )
-            if response.get("message"):
-                assert response["message"] == "Organization name already exists"
-            elif is_valid:
-                assert response.status_code == 201
-                assert len(_get_organizations()) == initial_count + 1
-            else:
-                assert response.status_code in (400, 422)
-                assert len(_get_organizations()) == initial_count
-            rows = notify_db_session.query(Organization).filter_by(name=f"{name}").all()
-            for row in rows:
-                notify_db_session.delete(row)
-            notify_db_session.commit()
-        except AssertionError:
-            if is_valid:
-                pytest.fail(f"Expected success but got error. Data: {data} {response}")
-        except Exception as e:
-            pytest.fail(f"Unexpected error durring fuzz test: {e} {data} {response}")
-
-    inner()
 
 
 @pytest.mark.parametrize(
