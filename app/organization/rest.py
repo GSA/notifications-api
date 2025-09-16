@@ -90,17 +90,11 @@ def get_organization_by_domain():
 @organization_blueprint.route("", methods=["POST"])
 def create_organization():
     data = request.get_json()
-    try:
-        validate(data, post_create_organization_schema)
-        organization = Organization(**data)
-        dao_create_organization(organization)
-        return jsonify(organization.serialize()), 201
-    except Exception:
-        current_app.logger.exception("Validation error creating organization")
-        return (
-            jsonify(result="error", message="Validation error creating organization"),
-            400,
-        )
+    validate(data, post_create_organization_schema)
+    organization = Organization(**data)
+    dao_create_organization(organization)
+
+    return jsonify(organization.serialize()), 201
 
 
 @organization_blueprint.route("/<uuid:organization_id>", methods=["POST"])
