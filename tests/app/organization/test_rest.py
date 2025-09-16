@@ -296,7 +296,9 @@ def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
                 _data=data,
                 _expected_status=expected_status,
             )
-            if is_valid:
+            if response.get("message"):
+                assert response["message"] == "Organization name already exists"
+            elif is_valid:
                 assert response.status_code == 201
                 assert len(_get_organizations()) == initial_count + 1
             else:
