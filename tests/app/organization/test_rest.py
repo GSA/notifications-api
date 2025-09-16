@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from hypothesis import given
+from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -243,6 +243,7 @@ def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
 
+    @settings(database=None, phases=[Phase.generate])
     @given(
         name=st.uuids().map(str),
         active=st.booleans(),
