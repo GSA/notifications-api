@@ -281,7 +281,7 @@ def test_post_create_organization_with_missing_data_gives_validation_error(
 @given(
     fuzzed_name=st.one_of(st.none(), st.text(min_size=1, max_size=2000)),
     fuzzed_active=st.one_of(st.none(), st.booleans()),
-    fuzzed_organization_type=st.one_of(st.none, st.sampled_from(list(OrganizationType))),
+    fuzzed_organization_type=st.one_of(st.none(), st.sampled_from(list(OrganizationType))),
 )
 def test_fuzz_post_create_organization_with_missing_data_gives_validation_error(
     admin_request, fuzzed_name, fuzzed_active, fuzzed_organization_type
