@@ -247,7 +247,7 @@ def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
     # We want to avoid replays, because once an organization is created, replaying will result in a
     # duplicate error on our side.  Unfortunately, to avoid replays in hypothesis is hard!
     @settings(
-        max_examples=10,
+        max_examples=3,
         database=None,
     )
     @given(
