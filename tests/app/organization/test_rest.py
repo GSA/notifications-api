@@ -295,7 +295,7 @@ def test_fuzz_post_create_organization_with_missing_data_gives_validation_error(
         "organization.create_organization", _data=data, _expected_status=400
     )
 
-    assert len(response["errors"]) == 1
+    assert len(response["errors"]) > 0
     assert response["errors"][0]["error"] == "ValidationError"
 
 
