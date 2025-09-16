@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from hypothesis import HealthCheck, Phase, given, settings
+from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -236,7 +236,8 @@ def test_post_create_organization_works(admin_request, sample_organization):
     assert len(organization) == 2
 
 
-seen = set()
+settings.register_profile("no_replay", phases=[Phase.explicit, Phase.generate])
+settings.load_profile("no_replay")
 
 
 @pytest.mark.usefixtures(
@@ -246,13 +247,9 @@ def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
 
     # We want to avoid replays, because once an organization is created, replaying will result in a
     # duplicate error on our side.  Unfortunately, to avoid replays in hypothesis is hard!
-    # Tell it not to use its database, use Phase.generate, and set report_multiple_bugs=False
     @settings(
         max_examples=100,
         database=None,
-        phases=[Phase.generate],
-        suppress_health_check=[HealthCheck.too_slow],
-        report_multiple_bugs=False,
     )
     @given(
         name=st.uuids().map(str),
@@ -262,11 +259,6 @@ def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
         ),
     )
     def inner(name, active, organization_type):
-        # We don't want hypothesis running replays
-        key = (name, active, organization_type)
-        if key in seen:
-            return
-        seen.add(key)
 
         print(hilite(f"name {name} active {active} org {organization_type}"))
         current_app.logger.info(
