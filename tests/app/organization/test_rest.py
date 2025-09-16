@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from flask import current_app
 from freezegun import freeze_time
-from hypothesis import Phase, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -236,8 +236,7 @@ def test_post_create_organization_works(admin_request, sample_organization):
     assert len(organization) == 2
 
 
-settings.register_profile("no_replay", phases=[Phase.explicit, Phase.generate])
-settings.load_profile("no_replay")
+seen = set()
 
 
 @pytest.mark.usefixtures(
@@ -284,6 +283,12 @@ def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
             and isinstance(organization_type, OrganizationType)
         }
         expected_status = 201 if is_valid else 400
+        key = (name, active, organization_type)
+        if key in seen:
+            expected_status = 400
+        else:
+            seen.add(key)
+
         response = None
         try:
             response = admin_request.post(
