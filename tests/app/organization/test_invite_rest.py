@@ -4,7 +4,7 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 
@@ -177,6 +177,7 @@ def test_update_org_invited_user_set_status_to_cancelled(
     assert json_resp["data"]["status"] == InvitedUserStatus.CANCELLED
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(random_user_id=st.uuids(), random_org_id=st.uuids())
 def test_fuzz_update_org_invited_user_for_wrong_service_returns_404(
     admin_request, random_user_id, random_org_id
