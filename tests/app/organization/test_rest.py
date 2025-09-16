@@ -236,6 +236,9 @@ def test_post_create_organization_works(admin_request, sample_organization):
     assert len(organization) == 2
 
 
+seen = set()
+
+
 @pytest.mark.usefixtures(
     "admin_request",
 )
@@ -243,7 +246,7 @@ def test_fuzz_create_org_with_edge_cases(
     admin_request,
 ):
 
-    @settings(database=None, phases=[Phase.generate])
+    @settings(max_examples=100, database=None, phases=[Phase.generate])
     @given(
         name=st.uuids().map(str),
         active=st.booleans(),
@@ -252,6 +255,12 @@ def test_fuzz_create_org_with_edge_cases(
         ),
     )
     def inner(name, active, organization_type):
+        # We don't want hypothesis running replays
+        key = (name, active, organization_type)
+        if key in seen:
+            return
+        seen.add(key)
+
         print(hilite(f"name {name} active {active} org {organization_type}"))
         current_app.logger.info(
             hilite(f"name {name} active {active} org {organization_type}")
