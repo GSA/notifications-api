@@ -3,6 +3,8 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -273,6 +275,28 @@ def test_post_create_organization_with_missing_data_gives_validation_error(
     assert len(response["errors"]) == 1
     assert response["errors"][0]["error"] == "ValidationError"
     assert response["errors"][0]["message"] == expected_error
+
+
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(
+    fuzzed_name=st.one_of(st.none(), st.text(min_size=1, max_size=2000)),
+    fuzzed_active=st.one_of(st.none(), st.booleans()),
+    fuzzed_organization_type=st.one_of(st.none(), st.text(min_size=1, max_size=2000)),
+)
+def test_fuzz_post_create_organization_with_missing_data_gives_validation_error(
+    admin_request, fuzzed_name, fuzzed_active, fuzzed_organization_type
+):
+    data = {
+        "name": fuzzed_name,
+        "active": fuzzed_active,
+        "organization_type": fuzzed_organization_type,
+    }
+    response = admin_request.post(
+        "organization.create_organization", _data=data, _expected_status=400
+    )
+
+    assert len(response["errors"]) > 0
+    assert response["errors"][0]["error"] == "ValidationError"
 
 
 def test_post_update_organization_updates_fields(
@@ -776,7 +800,7 @@ def test_get_organization_services_usage(admin_request, notify_db_session):
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 1
@@ -814,7 +838,7 @@ def test_get_organization_services_usage_sort_active_first(
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 2
@@ -831,7 +855,7 @@ def test_get_organization_services_usage_sort_active_first(
     response_after_archive = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     first_service = response_after_archive["services"][0]
     assert first_service["service_id"] == str(service.id)
@@ -848,7 +872,7 @@ def test_get_organization_services_usage_returns_400_if_year_is_invalid(admin_re
         "organization.get_organization_services_usage",
         organization_id=uuid.uuid4(),
         **{"year": "not-a-valid-year"},
-        _expected_status=400
+        _expected_status=400,
     )
     assert response["message"] == "No valid year provided"
 
