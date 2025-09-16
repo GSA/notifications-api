@@ -242,9 +242,7 @@ seen = set()
 @pytest.mark.usefixtures(
     "admin_request",
 )
-def test_fuzz_create_org_with_edge_cases(
-    admin_request,
-):
+def test_fuzz_create_org_with_edge_cases(admin_request, notify_db_session):
 
     # We want to avoid replays, because once an organization is created, replaying will result in a
     # duplicate error on our side.  Unfortunately, to avoid replays in hypothesis is hard!
@@ -307,6 +305,10 @@ def test_fuzz_create_org_with_edge_cases(
             else:
                 assert response.status_code in (400, 422)
                 assert len(_get_organizations()) == initial_count
+            rows = notify_db_session.query(Organization).filter_by(name=f"{name}").all()
+            for row in rows:
+                notify_db_session.delete(row)
+            notify_db_session.commit()
         except AssertionError:
             if is_valid:
                 pytest.fail(f"Expected success but got error. Data: {data} {response}")
