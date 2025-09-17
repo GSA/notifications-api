@@ -144,6 +144,7 @@ def test_govuk_banner(show_banner):
         }
     )
     email.govuk_banner = show_banner
+    print(f"HERE IS EMAIL {email}")
     if show_banner:
         assert "beta.notify.gov" in str(email)
     else:
