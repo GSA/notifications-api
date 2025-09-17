@@ -149,6 +149,7 @@ def get_invited_users_by_service(service_id):
 def get_invited_user_by_service(service_id, invited_user_id):
     check_suspicious_id(service_id, invited_user_id)
     invited_user = get_invited_user_by_service_and_id(service_id, invited_user_id)
+
     return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)), 200
 
 
@@ -234,8 +235,14 @@ def invited_user_url(invited_user_id, invite_link_host=None):
 @service_invite.route("/invite/service/<uuid:invited_user_id>", methods=["GET"])
 def get_invited_user(invited_user_id):
     check_suspicious_id(invited_user_id)
-    invited_user = get_invited_user_by_id(invited_user_id)
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)), 200
+    try:
+        invited_user = get_invited_user_by_id(invited_user_id)
+        return (
+            jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)),
+            200,
+        )
+    except Exception:
+        raise InvalidRequest("Invited user not found", status_code=404)
 
 
 @service_invite.route("/invite/service/<token>", methods=["GET"])
@@ -262,8 +269,14 @@ def validate_service_invitation_token(token):
         }
         raise InvalidRequest(errors, status_code=400)
 
-    invited_user = get_invited_user_by_id(invited_user_id)
-    return jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)), 200
+    try:
+        invited_user = get_invited_user_by_id(invited_user_id)
+        return (
+            jsonify(data=InvitedUserSchema(session=db.session).dump(invited_user)),
+            200,
+        )
+    except Exception:
+        raise InvalidRequest("Invited user not found", status_code=404)
 
 
 def get_user_data_url_safe(data):
