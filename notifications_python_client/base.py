@@ -103,18 +103,12 @@ class BaseAPIClient:
         except requests.RequestException as e:
             api_error = HTTPError.create(e)
             logger.warning(
-                "API %s request on %s failed with %s '%s'",
-                method,
-                url,
-                api_error.status_code,
-                api_error.message,
+                f"API {method} request failed with {api_error.status_code} {api_error.message}"
             )
             raise api_error from e
         finally:
             elapsed_time = time.monotonic() - start_time
-            logger.debug(
-                "API %s request on %s finished in %s", method, url, elapsed_time
-            )
+            logger.debug(f"API {method} request finished in {elapsed_time}")
 
     def _process_json_response(self, response):
         try:
