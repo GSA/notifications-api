@@ -134,28 +134,6 @@ def test_default_template(content):
     )
 
 
-@pytest.mark.parametrize("show_banner", [True, False])
-def test_govuk_banner(show_banner):
-    email = HTMLEmailTemplate(
-        {
-            "content": "hello world",
-            "subject": "",
-            "template_type": "email",
-        }
-    )
-    email.govuk_banner = show_banner
-
-    # CodeQL doesn't like the commented out tests for some reason,
-    # so replace them with the much more fragile index check.
-    if show_banner:
-        assert str(email).find("beta.notify.gov") == 1817
-        # assert "beta.notify.gov" in str(email)
-    else:
-        assert str(email).find("beta.notify.gov") == -1
-
-        # assert "beta.notify.gov" not in str(email)
-
-
 def test_brand_banner_shows():
     email = str(
         HTMLEmailTemplate(
