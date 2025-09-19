@@ -25,6 +25,12 @@ class AuthType(StrEnum):
     WEBAUTHN = "webauthn_auth"
 
 
+class UserState(StrEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING = "pending"
+
+
 class CallbackType(StrEnum):
     DELIVERY_STATUS = "delivery_status"
     COMPLAINT = "complaint"

@@ -4,6 +4,8 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from sqlalchemy import select
 
 from app import db
@@ -48,6 +50,8 @@ def test_create_invited_org_user(
         organization=str(sample_organization.id),
         email_address=email_address,
         invited_by=str(sample_user.id),
+        nonce="dummy-nonce",
+        state="dummy-state",
         **extra_args
     )
 
@@ -173,15 +177,17 @@ def test_update_org_invited_user_set_status_to_cancelled(
     assert json_resp["data"]["status"] == InvitedUserStatus.CANCELLED
 
 
-def test_update_org_invited_user_for_wrong_service_returns_404(
-    admin_request, sample_invited_org_user, fake_uuid
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(random_user_id=st.uuids(), random_org_id=st.uuids())
+def test_fuzz_update_org_invited_user_for_wrong_service_returns_404(
+    admin_request, random_user_id, random_org_id
 ):
     data = {"status": InvitedUserStatus.CANCELLED}
 
     json_resp = admin_request.post(
         "organization_invite.update_org_invite_status",
-        organization_id=fake_uuid,
-        invited_org_user_id=sample_invited_org_user.id,
+        organization_id=random_org_id,
+        invited_org_user_id=random_user_id,
         _data=data,
         _expected_status=404,
     )

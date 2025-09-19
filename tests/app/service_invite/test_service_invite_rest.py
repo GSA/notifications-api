@@ -5,6 +5,8 @@ from functools import partial
 import pytest
 from flask import current_app
 from freezegun import freeze_time
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from sqlalchemy import select
 
 from app import db
@@ -264,11 +266,13 @@ def test_update_invited_user_set_status_to_cancelled(client, sample_invited_user
     assert json_resp["status"] == InvitedUserStatus.CANCELLED
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(random_user_id=st.uuids(), random_service_id=st.uuids())
 def test_update_invited_user_for_wrong_service_returns_404(
-    client, sample_invited_user, fake_uuid
+    client, random_user_id, random_service_id
 ):
     data = {"status": InvitedUserStatus.CANCELLED}
-    url = f"/service/{fake_uuid}/invite/{sample_invited_user.id}"
+    url = f"/service/{random_service_id}/invite/{random_user_id}"
     auth_header = create_admin_authorization_header()
     response = client.post(
         url,

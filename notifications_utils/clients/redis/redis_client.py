@@ -80,6 +80,9 @@ class RedisClient:
             try:
                 return self.scripts["delete-keys-by-pattern"](args=[pattern])
             except Exception as e:
+                current_app.logger.exception(
+                    f"Exception in delete_by_pattern pattern={pattern}"
+                )
                 self.__handle_exception(
                     e, raise_exception, "delete-by-pattern", pattern
                 )
@@ -129,6 +132,9 @@ class RedisClient:
                 result = pipe.execute()
                 return result[2] > limit
             except Exception as e:
+                current_app.logger.exception(
+                    f"Exception in exceeded_rate_limit cache_key {cache_key} limit = {limit}"
+                )
                 self.__handle_exception(
                     e, raise_exception, "rate-limit-pipeline", cache_key
                 )

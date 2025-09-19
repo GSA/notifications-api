@@ -3,6 +3,8 @@ import uuid
 import pytest
 from flask import current_app, json
 from freezegun import freeze_time
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from app.dao.api_key_dao import save_model_api_key
 from app.dao.notifications_dao import dao_update_notification
@@ -12,6 +14,51 @@ from app.models import ApiKey
 from notifications_python_client.authentication import create_jwt_token
 from tests import create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
+
+
+@pytest.mark.usefixtures(
+    "client",
+    "sample_template",
+)
+def test_fuzz_send_email_notification(
+    client,
+    sample_template,
+    sample_email_notification,
+):
+    @settings(max_examples=5)
+    @given(
+        st.emails(),
+        st.dictionaries(
+            keys=st.text(min_size=1, max_size=20),
+            values=st.text(min_size=0, max_size=100),
+            max_size=5,
+        ),
+        st.one_of(st.none(), st.text(min_size=0, max_size=50)),
+    )
+    # This use of the 'inner' function is caused because hypothesis doesn't
+    # work well with function-scoped fixtures like client and sample_template.
+    def inner(email_address, personalisation, reference):
+
+        template_id = str(sample_template.id)
+
+        payload = {
+            "template_id": template_id,
+            "email_address": email_address,
+            "personalisation": personalisation,
+            "reference": reference,
+        }
+        auth_header = create_service_authorization_header(
+            service_id=sample_email_notification.service_id
+        )
+        response = client.post(
+            "/notifications/email", json=payload, headers=[auth_header]
+        )
+        assert response.status_code in (
+            201,
+            400,
+        ), f"Unexpected status: {response.status_code}, body: {response.json}"
+
+    inner()
 
 
 @pytest.mark.parametrize("type", (NotificationType.EMAIL, NotificationType.SMS))

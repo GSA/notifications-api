@@ -6,8 +6,12 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from sqlalchemy.exc import SQLAlchemyError
 
 import app.celery.tasks
+from app import db
 from app.dao.templates_dao import dao_update_template
 from app.enums import (
     JobStatus,
@@ -68,6 +72,49 @@ def test_cancel_job(client, sample_scheduled_job):
     resp_json = json.loads(response.get_data(as_text=True))
     assert resp_json["data"]["id"] == job_id
     assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
+
+
+uuid_str_strategy = st.one_of(
+    st.just(str(uuid.uuid4())), st.text(min_size=1, max_size=36)
+)
+
+
+@pytest.mark.usefixtures("client", "sample_scheduled_job")
+@settings(max_examples=10)
+@given(fuzzed_job_id=uuid_str_strategy, fuzzed_service_id=uuid_str_strategy)
+def test_fuzz_cancel_job(fuzzed_job_id, fuzzed_service_id, request):
+    client = request.getfixturevalue("client")
+    sample_scheduled_job = request.getfixturevalue("sample_scheduled_job")
+    valid_job_id = str(sample_scheduled_job.id)
+    valid_service_id = str(sample_scheduled_job.service.id)
+    job_id = fuzzed_job_id
+    service_id = fuzzed_service_id
+
+    path = f"/service/{service_id}/job/{job_id}/cancel"
+    auth_header = create_admin_authorization_header()
+    try:
+        response = client.post(path, headers=[auth_header])
+    except SQLAlchemyError:
+        db.session.rollback()
+        raise
+
+    status = response.status_code
+    # 400 Bad Request, 403 Forbidden, 404 Not Found
+    # 405 Method Not Allowed (if ids are not ascii)
+    assert status in (
+        200,
+        400,
+        403,
+        404,
+        405,
+    ), f"Unexpected status: {status} for path: {path}"
+    # This will only happen once every trillion years
+    if status == 200:
+        assert job_id == valid_job_id
+        assert service_id == valid_service_id
+        resp_json = json.loads(response.get_data(as_text=True))
+        assert resp_json["data"]["id"] == valid_job_id
+        assert resp_json["data"]["job_status"] == JobStatus.CANCELLED
 
 
 def test_cant_cancel_normal_job(client, sample_job, mocker):

@@ -304,14 +304,6 @@ def cleanup_delivery_receipts(self):
 def batch_insert_notifications(self):
     batch = []
 
-    # TODO We probably need some way to clear the list if
-    # things go haywire.  A command?
-
-    # with redis_store.pipeline():
-    #     while redis_store.llen("message_queue") > 0:
-    #         redis_store.lpop("message_queue")
-    #     current_app.logger.info("EMPTY!")
-    #     return
     current_len = redis_store.llen("message_queue")
     with redis_store.pipeline():
         # since this list is being fed by other processes, just grab what is available when

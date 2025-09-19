@@ -43,6 +43,18 @@ def invite_user_to_org(organization_id):
     data = request.get_json()
     validate(data, post_create_invited_org_user_status_schema)
 
+    request_json = request.get_json()
+    try:
+        nonce = request_json.pop("nonce")
+    except KeyError:
+        current_app.logger.exception("nonce not found in submitted data.")
+        raise
+    try:
+        state = request_json.pop("state")
+    except KeyError:
+        current_app.logger.exception("state not found in submitted data.")
+        raise
+
     invited_org_user = InvitedOrganizationUser(
         email_address=data["email_address"],
         invited_by_id=data["invited_by"],
@@ -53,15 +65,9 @@ def invite_user_to_org(organization_id):
     template = dao_get_template_by_id(
         current_app.config["ORGANIZATION_INVITATION_EMAIL_TEMPLATE_ID"]
     )
-
-    token = generate_token(
-        str(invited_org_user.email_address),
-        current_app.config["SECRET_KEY"],
-        current_app.config["DANGEROUS_SALT"],
-    )
     url = os.environ["LOGIN_DOT_GOV_REGISTRATION_URL"]
-    url = url.replace("NONCE", token)
-    url = url.replace("STATE", token)
+    url = url.replace("NONCE", nonce)
+    url = url.replace("STATE", state)
 
     personalisation = {
         "user_name": (
