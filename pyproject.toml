@@ -86,7 +86,7 @@ pytest = "^8.4.2"
 [tool.poetry.group.dev.dependencies]
 awscli = "^1.33.32"
 bandit = "*"
-black = "^25.1.0"
+black = "^25.9.0"
 cyclonedx-python-lib = "^11.1.0"
 cloudfoundry-client = "*"
 exceptiongroup = "==1.3.0"
