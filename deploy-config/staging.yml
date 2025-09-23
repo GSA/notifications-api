@@ -1,6 +1,6 @@
 env: staging
 web_instances: 2
-web_memory: 1G
+web_memory: 1.5G
 worker_instances: 2
 worker_memory: 1G
 scheduler_memory: 256M
