@@ -3,6 +3,7 @@ from sqlalchemy.sql.expression import func
 
 from app import db
 from app.dao.dao_utils import VersionOptions, autocommit, version_class
+from app.enums import UserState
 from app.models import Domain, Organization, Service, User
 
 
@@ -125,7 +126,7 @@ def dao_get_users_for_organization(organization_id):
     return (
         db.session.query(User)
         .join(User.organizations)
-        .where(Organization.id == organization_id, User.state == "active")
+        .where(Organization.id == organization_id, User.state == UserState.ACTIVE)
         .order_by(User.created_at)
         .all()
     )

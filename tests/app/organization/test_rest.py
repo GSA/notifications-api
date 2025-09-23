@@ -2,8 +2,9 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
-from flask import current_app
 from freezegun import freeze_time
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -193,29 +194,6 @@ def _get_organizations():
     return db.session.execute(stmt).scalars().all()
 
 
-@pytest.mark.parametrize("org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
-def test_post_create_organization_sets_default_nhs_branding_for_nhs_orgs(
-    admin_request, notify_db_session, nhs_email_branding, org_type
-):
-    data = {
-        "name": "test organization",
-        "active": True,
-        "organization_type": org_type,
-    }
-
-    admin_request.post(
-        "organization.create_organization", _data=data, _expected_status=201
-    )
-
-    organizations = _get_organizations()
-
-    assert len(organizations) == 1
-    assert organizations[0].email_branding_id == uuid.UUID(
-        current_app.config["NHS_EMAIL_BRANDING_ID"]
-    )
-
-
 def test_post_create_organization_existing_name_raises_400(
     admin_request, sample_organization
 ):
@@ -299,6 +277,28 @@ def test_post_create_organization_with_missing_data_gives_validation_error(
     assert response["errors"][0]["message"] == expected_error
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(
+    fuzzed_name=st.one_of(st.none(), st.text(min_size=1, max_size=2000)),
+    fuzzed_active=st.one_of(st.none(), st.booleans()),
+    fuzzed_organization_type=st.one_of(st.none(), st.text(min_size=1, max_size=2000)),
+)
+def test_fuzz_post_create_organization_with_missing_data_gives_validation_error(
+    admin_request, fuzzed_name, fuzzed_active, fuzzed_organization_type
+):
+    data = {
+        "name": fuzzed_name,
+        "active": fuzzed_active,
+        "organization_type": fuzzed_organization_type,
+    }
+    response = admin_request.post(
+        "organization.create_organization", _data=data, _expected_status=400
+    )
+
+    assert len(response["errors"]) > 0
+    assert response["errors"][0]["error"] == "ValidationError"
+
+
 def test_post_update_organization_updates_fields(
     admin_request,
     notify_db_session,
@@ -371,61 +371,6 @@ def test_update_other_organization_attributes_doesnt_clear_domains(
     )
 
     assert [domain.domain for domain in org.domains] == ["example.gov.uk"]
-
-
-@pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
-def test_post_update_organization_to_nhs_type_updates_branding_if_none_present(
-    admin_request, nhs_email_branding, notify_db_session, new_org_type
-):
-    org = create_organization(organization_type="central")
-    data = {
-        "organization_type": new_org_type,
-    }
-
-    admin_request.post(
-        "organization.update_organization",
-        _data=data,
-        organization_id=org.id,
-        _expected_status=204,
-    )
-
-    organization = _get_organizations()
-
-    assert len(organization) == 1
-    assert organization[0].id == org.id
-    assert organization[0].organization_type == new_org_type
-    assert organization[0].email_branding_id == uuid.UUID(
-        current_app.config["NHS_EMAIL_BRANDING_ID"]
-    )
-
-
-@pytest.mark.parametrize("new_org_type", ["nhs_central", "nhs_local", "nhs_gp"])
-@pytest.mark.skip(reason="Update for TTS")
-def test_post_update_organization_to_nhs_type_does_not_update_branding_if_default_branding_set(
-    admin_request, nhs_email_branding, notify_db_session, new_org_type
-):
-    current_branding = create_email_branding(logo="example.png", name="custom branding")
-    org = create_organization(
-        organization_type="central", email_branding_id=current_branding.id
-    )
-    data = {
-        "organization_type": new_org_type,
-    }
-
-    admin_request.post(
-        "organization.update_organization",
-        _data=data,
-        organization_id=org.id,
-        _expected_status=204,
-    )
-
-    organization = _get_organizations()
-
-    assert len(organization) == 1
-    assert organization[0].id == org.id
-    assert organization[0].organization_type == new_org_type
-    assert organization[0].email_branding_id == current_branding.id
 
 
 def test_update_organization_default_branding(
@@ -855,7 +800,7 @@ def test_get_organization_services_usage(admin_request, notify_db_session):
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 1
@@ -893,7 +838,7 @@ def test_get_organization_services_usage_sort_active_first(
     response = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     assert len(response) == 1
     assert len(response["services"]) == 2
@@ -910,7 +855,7 @@ def test_get_organization_services_usage_sort_active_first(
     response_after_archive = admin_request.get(
         "organization.get_organization_services_usage",
         organization_id=org.id,
-        **{"year": 2019}
+        **{"year": 2019},
     )
     first_service = response_after_archive["services"][0]
     assert first_service["service_id"] == str(service.id)
@@ -927,7 +872,7 @@ def test_get_organization_services_usage_returns_400_if_year_is_invalid(admin_re
         "organization.get_organization_services_usage",
         organization_id=uuid.uuid4(),
         **{"year": "not-a-valid-year"},
-        _expected_status=400
+        _expected_status=400,
     )
     assert response["message"] == "No valid year provided"
 

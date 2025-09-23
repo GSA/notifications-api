@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import given
+from hypothesis import strategies as st
 from sqlalchemy import select
 
 from app import db
@@ -295,6 +297,40 @@ def test_should_be_error_if_service_does_not_exist_on_update(client, fake_uuid):
     assert response.status_code == 404
     assert json_resp["result"] == "error"
     assert json_resp["message"] == "No result found"
+
+
+@st.composite
+def maybe_invalid_uuid(draw):
+    if draw(st.booleans()):
+        return str(draw(st.uuids()))
+    else:
+        return draw(st.text(min_size=1, max_size=36))
+
+
+@given(
+    fuzzed_service_id=maybe_invalid_uuid(),
+    fuzzed_template_id=maybe_invalid_uuid(),
+    fuzzed_template_name=st.text(min_size=1, max_size=100),
+)
+def test_fuzz_should_be_error_if_service_does_not_exist_on_update(
+    client, fuzzed_service_id, fuzzed_template_id, fuzzed_template_name
+):
+    """
+    Hypothesis-based fuzz test to ensure that when updating a template
+    for a non-existent service, the API returns a 404 with the correct error message
+    """
+    data = {"name": fuzzed_template_name}
+    data = json.dumps(data)
+    auth_header = create_admin_authorization_header()
+    response = client.post(
+        f"/service/{fuzzed_service_id}/template/{fuzzed_template_id}",
+        headers=[("Content-Type", "application/json"), auth_header],
+        data=data,
+    )
+    json_resp = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 404
+    assert json_resp["result"] == "error"
 
 
 @pytest.mark.parametrize("template_type", [TemplateType.EMAIL])

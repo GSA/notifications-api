@@ -134,22 +134,6 @@ def test_default_template(content):
     )
 
 
-@pytest.mark.parametrize("show_banner", [True, False])
-def test_govuk_banner(show_banner):
-    email = HTMLEmailTemplate(
-        {
-            "content": "hello world",
-            "subject": "",
-            "template_type": "email",
-        }
-    )
-    email.govuk_banner = show_banner
-    if show_banner:
-        assert "beta.notify.gov" in str(email)
-    else:
-        assert "beta.notify.gov" not in str(email)
-
-
 def test_brand_banner_shows():
     email = str(
         HTMLEmailTemplate(

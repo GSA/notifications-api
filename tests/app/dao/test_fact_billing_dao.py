@@ -437,7 +437,6 @@ def test_fetch_monthly_billing_for_year(notify_db_session):
     results = fetch_monthly_billing_for_year(service.id, 2016)
 
     assert len(results) == 4  # 3 billed months for each type
-    print(f"RESULTS {results}")
 
     assert str(results[0].month) == "2016-01-01"
     assert results[0].notification_type == NotificationType.EMAIL

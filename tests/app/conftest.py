@@ -612,7 +612,7 @@ def sample_user_service_permission(sample_user):
     return p_model
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def fake_uuid():
     return "6ce466d0-fd6a-11e5-82f5-e0accb9d11a6"
 

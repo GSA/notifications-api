@@ -51,7 +51,7 @@ def make_request(notification_type, provider, data, headers):
         )
         raise e
     finally:
-        current_app.logger.info("Mocked provider callback request finished")
+        current_app.logger.debug("Mocked provider callback request finished")
     return response.json()
 
 

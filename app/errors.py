@@ -49,24 +49,24 @@ def register_errors(blueprint):
 
     @blueprint.errorhandler(ValidationError)
     def marshmallow_validation_error(error):
-        current_app.logger.info(error)
+        current_app.logger.error(error, exc_info=True)
         return jsonify(result="error", message=error.messages), 400
 
     @blueprint.errorhandler(JsonSchemaValidationError)
     def jsonschema_validation_error(error):
-        current_app.logger.info(error)
+        current_app.logger.error(error, exc_info=True)
         return jsonify(json.loads(error.message)), 400
 
     @blueprint.errorhandler(ArchiveValidationError)
     def archive_validation_error(error):
-        current_app.logger.info(error)
+        current_app.logger.error(error, exc_info=True)
         return jsonify(result="error", message=str(error)), 400
 
     @blueprint.errorhandler(InvalidRequest)
     def invalid_data(error):
         response = jsonify(error.to_dict())
         response.status_code = error.status_code
-        current_app.logger.info(error)
+        current_app.logger.error(error, exc_info=True)
         return response
 
     @blueprint.errorhandler(400)
