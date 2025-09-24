@@ -2,7 +2,7 @@ env: staging
 web_instances: 2
 web_memory: 1.5G
 worker_instances: 2
-worker_memory: 1G
+worker_memory: 1.5G
 scheduler_memory: 256M
 public_api_route: notify-api-staging.app.cloud.gov
 admin_base_url: https://notify-staging.app.cloud.gov
