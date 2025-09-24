@@ -35,7 +35,7 @@ flask-sqlalchemy = "^3.1.1"
 gunicorn = {version = "==23.0.0", extras = ["gevent"]}
 iso8601 = "==2.1.0"
 jsonschema = {version = "==4.25.1", extras = ["format"]}
-lxml = "==6.0.1"
+lxml = "==6.0.2"
 marshmallow = "^4.0.1"
 marshmallow-sqlalchemy = "^1.4.2"
 newrelic = "^10.17.0"
