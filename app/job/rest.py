@@ -1,8 +1,8 @@
+import json
 from zoneinfo import ZoneInfo
 
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
-import json
 
 from app import db, redis_store
 from app.aws.s3 import (
