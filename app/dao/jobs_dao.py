@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import timedelta
 
+from cachetools import TTLCache, cached
 from flask import current_app
 from sqlalchemy import and_, asc, desc, func, select, update
 
@@ -16,6 +17,8 @@ from app.models import (
     Template,
 )
 from app.utils import midnight_n_days_ago, utc_now
+
+dao_cache = TTLCache(maxsize=128, ttl=30)
 
 
 def dao_get_notification_outcomes_for_job(service_id, job_id):
@@ -38,17 +41,20 @@ def dao_get_notification_outcomes_for_job(service_id, job_id):
     return notification_statuses
 
 
+@cached(dao_cache)
 def dao_get_job_by_service_id_and_job_id(service_id, job_id):
     stmt = select(Job).where(Job.service_id == service_id, Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
 
 
+@cached(dao_cache)
 def dao_get_unfinished_jobs():
 
     stmt = select(Job).filter(Job.processing_finished.is_(None))
     return db.session.execute(stmt).scalars().all()
 
 
+@cached(dao_cache)
 def dao_get_jobs_by_service_id(
     service_id,
     *,
@@ -92,6 +98,7 @@ def dao_get_jobs_by_service_id(
     return Pagination(items, page, page_size, total_items)
 
 
+@cached(dao_cache)
 def dao_get_scheduled_job_stats(
     service_id,
 ):
@@ -106,6 +113,7 @@ def dao_get_scheduled_job_stats(
     return db.session.execute(stmt).one()
 
 
+@cached(dao_cache)
 def dao_get_job_by_id(job_id):
     stmt = select(Job).where(Job.id == job_id)
     return db.session.execute(stmt).scalars().one()
@@ -145,6 +153,7 @@ def dao_set_scheduled_jobs_to_pending():
     return jobs
 
 
+@cached(dao_cache)
 def dao_get_future_scheduled_job_by_id_and_service_id(job_id, service_id):
     stmt = select(Job).where(
         Job.service_id == service_id,
@@ -192,6 +201,7 @@ def dao_update_job_status_to_error(job):
     db.session.commit()
 
 
+@cached(dao_cache)
 def dao_get_jobs_older_than_data_retention(notification_types):
     stmt = select(ServiceDataRetention).where(
         ServiceDataRetention.notification_type.in_(notification_types)
