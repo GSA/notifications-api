@@ -1,7 +1,8 @@
 from zoneinfo import ZoneInfo
 
 import dateutil
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, app, current_app, jsonify, request
+from flask_caching import Cache
 
 from app import db
 from app.aws.s3 import (
@@ -43,11 +44,13 @@ from app.utils import check_suspicious_id, hilite, midnight_n_days_ago, paginati
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
-
+cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
+cache.init_app(app)
 register_errors(job_blueprint)
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
+@cache.cached(timeout=30)
 def get_job_by_service_and_job_id(service_id, job_id):
     current_app.logger.info(hilite("ENTER get_job_by_service_and_job_id"))
     check_suspicious_id(service_id, job_id)
