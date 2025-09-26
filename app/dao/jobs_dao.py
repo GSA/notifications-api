@@ -202,7 +202,6 @@ def dao_update_job_status_to_error(job):
     db.session.commit()
 
 
-@cached(dao_cache)
 def dao_get_jobs_older_than_data_retention(notification_types):
     stmt = select(ServiceDataRetention).where(
         ServiceDataRetention.notification_type.in_(notification_types)
