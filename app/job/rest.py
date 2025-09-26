@@ -2,8 +2,9 @@ from zoneinfo import ZoneInfo
 
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
+import json
 
-from app import db
+from app import db, redis_store
 from app.aws.s3 import (
     extract_personalisation,
     extract_phones,
@@ -60,6 +61,73 @@ def get_job_by_service_and_job_id(service_id, job_id):
     ]
 
     return jsonify(data=data)
+
+
+@job_blueprint.route("/<job_id>/status", methods=["GET"])
+def get_job_status(service_id, job_id):
+    """Lightweight endpoint for polling job status with aggressive caching."""
+    current_app.logger.info(f"Getting job status for service_id={service_id}, job_id={job_id}")
+    check_suspicious_id(service_id, job_id)
+
+    # Check cache first (10 second TTL)
+    cache_key = f"job_status:{service_id}:{job_id}"
+    cached_status = redis_store.get(cache_key)
+
+    if cached_status:
+        current_app.logger.info(f"Returning cached status for job {job_id}")
+        return jsonify(json.loads(cached_status))
+
+    job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
+
+    statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
+
+    sent_count = 0
+    failed_count = 0
+    pending_count = 0
+
+    status_mapping = {
+        'sent': ['sent'],
+        'delivered': ['sent'],
+        'failed': ['failed', 'permanent-failure', 'temporary-failure', 'technical-failure', 'virus-scan-failed'],
+        'pending': ['created', 'sending', 'pending', 'pending-virus-check']
+    }
+
+    for stat in statistics:
+        count = stat[0] if isinstance(stat, tuple) else stat.count
+        status = stat[1] if isinstance(stat, tuple) else stat.status
+
+        if status in status_mapping.get('delivered', []) or status in status_mapping.get('sent', []):
+            sent_count += count
+        elif status in status_mapping.get('failed', []):
+            failed_count += count
+        elif status in status_mapping.get('pending', []):
+            pending_count += count
+        else:
+            if job.processing_finished:
+                sent_count += count
+            else:
+                pending_count += count
+
+    response_data = {
+        "sent_count": sent_count,
+        "failed_count": failed_count,
+        "pending_count": pending_count,
+        "total_count": job.notification_count,
+        "job_status": job.job_status,
+        "processing_finished": job.processing_finished is not None
+    }
+
+    if job.processing_finished:
+        # Finished jobs can be cached for 5 minutes since they won't change
+        cache_ttl = 300
+    else:
+        # Active jobs cached for 10 seconds
+        cache_ttl = 10
+
+    redis_store.set(cache_key, json.dumps(response_data), ex=cache_ttl)
+    current_app.logger.info(f"Cached status for job {job_id} with TTL={cache_ttl}s")
+
+    return jsonify(response_data)
 
 
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])

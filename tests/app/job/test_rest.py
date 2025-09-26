@@ -1213,3 +1213,60 @@ def test_get_scheduled_job_stats(admin_request):
         "count": 1,
         "soonest_scheduled_for": "2017-07-17T11:00:00+00:00",
     }
+
+
+def test_get_job_status_returns_lightweight_response(admin_request, sample_job):
+    """Test that the new status endpoint returns only essential fields."""
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+    create_notification(job=sample_job, status=NotificationStatus.FAILED)
+    create_notification(job=sample_job, status=NotificationStatus.PENDING)
+    create_notification(job=sample_job, status=NotificationStatus.CREATED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert set(resp_json.keys()) == {
+        "sent_count",
+        "failed_count",
+        "pending_count",
+        "total_count",
+        "job_status",
+        "processing_finished"
+    }
+
+    # Verify counts are correct
+    assert resp_json["sent_count"] == 2
+    assert resp_json["failed_count"] == 1
+    assert resp_json["pending_count"] == 2
+    assert resp_json["total_count"] == sample_job.notification_count
+    assert resp_json["job_status"] == sample_job.job_status
+    assert resp_json["processing_finished"] == (sample_job.processing_finished is not None)
+
+
+def test_get_job_status_caches_response(admin_request, sample_job, mocker):
+    """Test that the status endpoint uses caching."""
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+
+    mock_redis_get = mocker.patch("app.job.rest.redis_store.get", return_value=None)
+    mock_redis_set = mocker.patch("app.job.rest.redis_store.set")
+
+    # First request should cache the result
+    admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    cache_key = f"job_status:{service_id}:{job_id}"
+    mock_redis_get.assert_called_once_with(cache_key)
+    mock_redis_set.assert_called_once()
