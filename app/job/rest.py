@@ -1,3 +1,4 @@
+import os
 from zoneinfo import ZoneInfo
 
 import dateutil
@@ -48,9 +49,11 @@ cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 cache.init_app(app)
 register_errors(job_blueprint)
 
+cache_timeout = os.getenv("REST_CACHE_TIMEOUT", 10)
+
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
-@cache.cached(timeout=30)
+@cache.cached(timeout=cache_timeout)
 def get_job_by_service_and_job_id(service_id, job_id):
     current_app.logger.info(hilite("ENTER get_job_by_service_and_job_id"))
     check_suspicious_id(service_id, job_id)
@@ -77,6 +80,7 @@ def cancel_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
+@cache.cached(timeout=cache_timeout)
 def get_all_notifications_for_service_job(service_id, job_id):
 
     check_suspicious_id(service_id, job_id)
@@ -137,6 +141,7 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
+@cache.cached(timeout=cache_timeout)
 def get_recent_notifications_for_service_job(service_id, job_id):
 
     current_app.logger.info(hilite("ENTER get_recent_notifications_for_service_job"))
@@ -206,6 +211,7 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
+@cache.cached(timeout=cache_timeout)
 def get_notification_count_for_job_id(service_id, job_id):
     check_suspicious_id(service_id, job_id)
 
@@ -215,6 +221,7 @@ def get_notification_count_for_job_id(service_id, job_id):
 
 
 @job_blueprint.route("", methods=["GET"])
+@cache.cached(timeout=cache_timeout)
 def get_jobs_by_service(service_id):
     check_suspicious_id(service_id)
     if request.args.get("limit_days"):
