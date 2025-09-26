@@ -3,9 +3,7 @@ from zoneinfo import ZoneInfo
 
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
-from flask_caching import Cache
 
-import application
 from app import db
 from app.aws.s3 import (
     extract_personalisation,
@@ -43,18 +41,18 @@ from app.schemas import (
     notifications_filter_schema,
 )
 from app.utils import check_suspicious_id, hilite, midnight_n_days_ago, pagination_links
+from application import rest_cache
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
-cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
-cache.init_app(application)
+
 register_errors(job_blueprint)
 
 cache_timeout = os.getenv("REST_CACHE_TIMEOUT", 10)
 
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
-@cache.cached(timeout=cache_timeout)
+@rest_cache.cached(timeout=cache_timeout)
 def get_job_by_service_and_job_id(service_id, job_id):
     current_app.logger.info(hilite("ENTER get_job_by_service_and_job_id"))
     check_suspicious_id(service_id, job_id)
@@ -81,7 +79,7 @@ def cancel_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/notifications", methods=["GET"])
-@cache.cached(timeout=cache_timeout)
+@rest_cache.cached(timeout=cache_timeout)
 def get_all_notifications_for_service_job(service_id, job_id):
 
     check_suspicious_id(service_id, job_id)
@@ -142,7 +140,7 @@ def get_all_notifications_for_service_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/recent_notifications", methods=["GET"])
-@cache.cached(timeout=cache_timeout)
+@rest_cache.cached(timeout=cache_timeout)
 def get_recent_notifications_for_service_job(service_id, job_id):
 
     current_app.logger.info(hilite("ENTER get_recent_notifications_for_service_job"))
@@ -212,7 +210,7 @@ def get_recent_notifications_for_service_job(service_id, job_id):
 
 
 @job_blueprint.route("/<job_id>/notification_count", methods=["GET"])
-@cache.cached(timeout=cache_timeout)
+@rest_cache.cached(timeout=cache_timeout)
 def get_notification_count_for_job_id(service_id, job_id):
     check_suspicious_id(service_id, job_id)
 
@@ -222,7 +220,7 @@ def get_notification_count_for_job_id(service_id, job_id):
 
 
 @job_blueprint.route("", methods=["GET"])
-@cache.cached(timeout=cache_timeout)
+@rest_cache.cached(timeout=cache_timeout)
 def get_jobs_by_service(service_id):
     check_suspicious_id(service_id)
     if request.args.get("limit_days"):
