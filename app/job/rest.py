@@ -2,9 +2,10 @@ import os
 from zoneinfo import ZoneInfo
 
 import dateutil
-from flask import Blueprint, app, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_caching import Cache
 
+import application
 from app import db
 from app.aws.s3 import (
     extract_personalisation,
@@ -46,7 +47,7 @@ from app.utils import check_suspicious_id, hilite, midnight_n_days_ago, paginati
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
 
 cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
-cache.init_app(app)
+cache.init_app(application)
 register_errors(job_blueprint)
 
 cache_timeout = os.getenv("REST_CACHE_TIMEOUT", 10)
