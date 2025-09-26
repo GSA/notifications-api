@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 from time import time
 
+from cachetools import TTLCache, cached
 from flask import current_app
 from sqlalchemy import (
     TIMESTAMP,
@@ -43,7 +44,10 @@ from notifications_utils.recipients import (
     validate_and_format_email_address,
 )
 
+dao_cache = TTLCache(maxsize=256, ttl=30)
 
+
+@cached(dao_cache)
 def dao_get_last_date_template_was_used(template_id, service_id):
     last_date_from_notifications = (
         db.session.query(functions.max(Notification.created_at))
@@ -248,6 +252,7 @@ def dao_update_notification(notification):
     db.session.add(notification)
 
 
+# TODO not cachable because of filter_dict not hashable
 def get_notifications_for_job(
     service_id, job_id, filter_dict=None, page=1, page_size=None
 ):
@@ -269,6 +274,7 @@ def get_notifications_for_job(
     return pagination
 
 
+# TODO not cachable because of filter_dict not hashable
 def get_recent_notifications_for_job(
     service_id, job_id, filter_dict=None, page=1, page_size=None
 ):
@@ -292,11 +298,13 @@ def get_recent_notifications_for_job(
     return pagination
 
 
+@cached(dao_cache)
 def dao_get_notification_count_for_job_id(*, job_id):
     stmt = select(func.count(Notification.id)).where(Notification.job_id == job_id)
     return db.session.execute(stmt).scalar()
 
 
+@cached(dao_cache)
 def dao_get_notification_count_for_service(*, service_id):
     stmt = select(func.count(Notification.id)).where(
         Notification.service_id == service_id
@@ -304,6 +312,7 @@ def dao_get_notification_count_for_service(*, service_id):
     return db.session.execute(stmt).scalar()
 
 
+@cached(dao_cache)
 def dao_get_notification_count_for_service_message_ratio(service_id, current_year):
     start_date = datetime(current_year, 6, 16)
     end_date = datetime(current_year + 1, 6, 16)
@@ -342,6 +351,7 @@ def dao_get_notification_count_for_service_message_ratio(service_id, current_yea
     return recent_count + old_count
 
 
+@cached(dao_cache)
 def dao_get_failed_notification_count():
     stmt = select(func.count(Notification.id)).where(
         Notification.status == NotificationStatus.FAILED

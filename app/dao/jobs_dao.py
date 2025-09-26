@@ -18,9 +18,10 @@ from app.models import (
 )
 from app.utils import midnight_n_days_ago, utc_now
 
-dao_cache = TTLCache(maxsize=128, ttl=30)
+dao_cache = TTLCache(maxsize=256, ttl=30)
 
 
+@cached(dao_cache)
 def dao_get_notification_outcomes_for_job(service_id, job_id):
     stmt = (
         select(func.count(Notification.status).label("count"), Notification.status)
@@ -54,7 +55,7 @@ def dao_get_unfinished_jobs():
     return db.session.execute(stmt).scalars().all()
 
 
-# @cached(dao_cache)
+# TODO can't cache yet because statuses is list, which is not hashable
 def dao_get_jobs_by_service_id(
     service_id,
     *,
