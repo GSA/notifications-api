@@ -54,7 +54,7 @@ def dao_get_unfinished_jobs():
     return db.session.execute(stmt).scalars().all()
 
 
-@cached(dao_cache)
+# @cached(dao_cache)
 def dao_get_jobs_by_service_id(
     service_id,
     *,
