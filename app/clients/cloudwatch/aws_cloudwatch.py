@@ -181,12 +181,15 @@ class AwsCloudwatchClient(Client):
         current_app.logger.info((f"Failed message count: {len(failed_event_set)}"))
         raise_exception = False
         for failure in failed_event_set:
-            failure = json.loads(failure)
-            if "No quota left for account" == failure["delivery.providerResponse"]:
-                current_app.logger.warning(
-                    hilite("**********NO QUOTA LEFT TO SEND MESSAGES!!!**********")
-                )
-                raise_exception = True
+            try:
+                failure = json.loads(failure)
+                if "No quota left for account" == failure["delivery.providerResponse"]:
+                    current_app.logger.warning(
+                        hilite("**********NO QUOTA LEFT TO SEND MESSAGES!!!**********")
+                    )
+                    raise_exception = True
+            except Exception:
+                current_app.logger.exception("Malformed delivery receipt")
         if raise_exception:
             raise Exception("No Quota Left")
 
