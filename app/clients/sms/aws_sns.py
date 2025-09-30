@@ -5,10 +5,12 @@ from time import monotonic
 import botocore
 import phonenumbers
 from boto3 import client
+from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG
 from app.clients.sms import SmsClient
 from app.cloudfoundry_config import cloud_config
+from app.utils import hilite
 
 
 class AwsSnsClient(SmsClient):
@@ -66,32 +68,13 @@ class AwsSnsClient(SmsClient):
                 }
             }
 
-            default_num = " ".join(self.current_app.config["AWS_US_TOLL_FREE_NUMBER"])
-            if isinstance(sender, str):
-                non_scrubbable = " ".join(sender)
-
-                self.current_app.logger.info(
-                    f"notify-debug-api-1385 sender {non_scrubbable} is a {type(sender)} \
-                        default is a {type(default_num)}"
-                )
-            else:
-                self.current_app.logger.warning(
-                    f"notify-debug-api-1385 sender is type {type(sender)}!! {sender}"
-                )
             if self._valid_sender_number(sender):
-                self.current_app.logger.info(
-                    f"notify-debug-api-1385 use valid sender {non_scrubbable} instead of default {default_num}"
-                )
 
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": sender,
                 }
             else:
-                self.current_app.logger.info(
-                    f"notify-debug-api-1385 use default {default_num} instead of invalid sender"
-                )
-
                 attributes["AWS.MM.SMS.OriginationNumber"] = {
                     "DataType": "String",
                     "StringValue": self.current_app.config["AWS_US_TOLL_FREE_NUMBER"],
@@ -102,6 +85,7 @@ class AwsSnsClient(SmsClient):
                 response = self._client.publish(
                     PhoneNumber=to, Message=content, MessageAttributes=attributes
                 )
+                current_app.logger.info(hilite(f"send response = {response}"))
             except botocore.exceptions.ClientError as e:
                 self.current_app.logger.exception("An error occurred sending sms")
                 raise str(e)

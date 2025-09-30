@@ -389,16 +389,31 @@ def setup_sqlalchemy_events(app):
 
         @event.listens_for(db.engine, "connect")
         def connect(dbapi_connection, connection_record):
-            current_app.logger.debug(f"Using {dbapi_connection} {connection_record}")
+            if dbapi_connection is None or connection_record is None:
+                current_app.logger.warning(
+                    f"Something wrong with sqalalchemy \
+                        dbapi_connection {dbapi_connection} connection_record {connection_record}"
+                )
             pass
 
         @event.listens_for(db.engine, "close")
         def close(dbapi_connection, connection_record):
+
+            if dbapi_connection is None or connection_record is None:
+                current_app.logger.warning(
+                    f"Something wrong with sqalalchemy \
+                        dbapi_connection {dbapi_connection} connection_record {connection_record}"
+                )
             pass
 
         @event.listens_for(db.engine, "checkout")
         def checkout(dbapi_connection, connection_record, connection_proxy):
-            current_app.logger.debug(f"Using {dbapi_connection} {connection_proxy}")
+
+            if dbapi_connection is None or connection_proxy is None:
+                current_app.logger.warning(
+                    f"Something wrong with sqalalchemy \
+                        dbapi_connection {dbapi_connection} connection_record {connection_proxy}"
+                )
 
             try:
                 # this will overwrite any previous checkout_at timestamp
@@ -441,6 +456,12 @@ def setup_sqlalchemy_events(app):
 
         @event.listens_for(db.engine, "checkin")
         def checkin(dbapi_connection, connection_record):
+
+            if dbapi_connection is None or connection_record is None:
+                current_app.logger.warning(
+                    f"Something wrong with sqalalchemy \
+                        dbapi_connection {dbapi_connection} connection_record {connection_record}"
+                )
             pass
 
 

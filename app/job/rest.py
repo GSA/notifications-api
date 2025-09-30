@@ -66,7 +66,9 @@ def get_job_by_service_and_job_id(service_id, job_id):
 @job_blueprint.route("/<job_id>/status", methods=["GET"])
 def get_job_status(service_id, job_id):
     """Lightweight endpoint for polling job status with aggressive caching."""
-    current_app.logger.info(f"Getting job status for service_id={service_id}, job_id={job_id}")
+    current_app.logger.info(
+        f"Getting job status for service_id={service_id}, job_id={job_id}"
+    )
     check_suspicious_id(service_id, job_id)
 
     # Check cache first (10 second TTL)
@@ -86,21 +88,29 @@ def get_job_status(service_id, job_id):
     pending_count = 0
 
     status_mapping = {
-        'sent': ['sent'],
-        'delivered': ['sent'],
-        'failed': ['failed', 'permanent-failure', 'temporary-failure', 'technical-failure', 'virus-scan-failed'],
-        'pending': ['created', 'sending', 'pending', 'pending-virus-check']
+        "sent": ["sent"],
+        "delivered": ["sent"],
+        "failed": [
+            "failed",
+            "permanent-failure",
+            "temporary-failure",
+            "technical-failure",
+            "virus-scan-failed",
+        ],
+        "pending": ["created", "sending", "pending", "pending-virus-check"],
     }
 
     for stat in statistics:
         count = stat[0] if isinstance(stat, tuple) else stat.count
         status = stat[1] if isinstance(stat, tuple) else stat.status
 
-        if status in status_mapping.get('delivered', []) or status in status_mapping.get('sent', []):
+        if status in status_mapping.get(
+            "delivered", []
+        ) or status in status_mapping.get("sent", []):
             sent_count += count
-        elif status in status_mapping.get('failed', []):
+        elif status in status_mapping.get("failed", []):
             failed_count += count
-        elif status in status_mapping.get('pending', []):
+        elif status in status_mapping.get("pending", []):
             pending_count += count
         else:
             if job.processing_finished:
@@ -114,7 +124,7 @@ def get_job_status(service_id, job_id):
         "pending_count": pending_count,
         "total_count": job.notification_count,
         "job_status": job.job_status,
-        "processing_finished": job.processing_finished is not None
+        "processing_finished": job.processing_finished is not None,
     }
 
     if job.processing_finished:
@@ -331,9 +341,6 @@ def create_job(service_id):
     original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
-        current_app.logger.info(
-            f"#notify-debug-s3-partitioning DATA IN CREATE_JOB: {data}"
-        )
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
     except KeyError:
         raise InvalidRequest(

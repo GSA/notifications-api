@@ -1238,7 +1238,7 @@ def test_get_job_status_returns_lightweight_response(admin_request, sample_job):
         "pending_count",
         "total_count",
         "job_status",
-        "processing_finished"
+        "processing_finished",
     }
 
     # Verify counts are correct
@@ -1247,7 +1247,9 @@ def test_get_job_status_returns_lightweight_response(admin_request, sample_job):
     assert resp_json["pending_count"] == 2
     assert resp_json["total_count"] == sample_job.notification_count
     assert resp_json["job_status"] == sample_job.job_status
-    assert resp_json["processing_finished"] == (sample_job.processing_finished is not None)
+    assert resp_json["processing_finished"] == (
+        sample_job.processing_finished is not None
+    )
 
 
 def test_get_job_status_caches_response(admin_request, sample_job, mocker):
