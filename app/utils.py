@@ -149,7 +149,6 @@ def debug_not_production(msg):
 def emit_job_update_summary(job):
     from app import socketio
 
-    current_app.logger.info(f"Emitting summary for job {job.id}")
     socketio.emit(
         "job_updated",
         {

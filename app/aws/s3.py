@@ -412,6 +412,10 @@ def get_job_from_s3(service_id, job_id):
     that indicates things are permanently broken, we want to give up right away
     to save time.
     """
+
+    job = get_job_cache(job_id)
+    if job:
+        return job
     # We have to make sure the retries don't take up to much time, because
     # we might be retrieving dozens of jobs.  So max time is:
     # 0.2 + 0.4 + 0.8 + 1.6 = 3.0 seconds
@@ -479,7 +483,9 @@ def extract_phones(job, service_id, job_id):
     try:
         first_row = next(csv_reader)
     except StopIteration:
-        current_app.logger.warning(f"Empty CSV file for job {job_id} in service {service_id}")
+        current_app.logger.warning(
+            f"Empty CSV file for job {job_id} in service {service_id}"
+        )
         return {}
 
     phone_index = 0
@@ -511,7 +517,9 @@ def extract_phones(job, service_id, job_id):
 
 def extract_personalisation(job):
     if job is None:
-        current_app.logger.warning("No job data provided for personalisation extraction")
+        current_app.logger.warning(
+            "No job data provided for personalisation extraction"
+        )
         return {}
     if isinstance(job, dict):
         job = job[0]
@@ -520,7 +528,9 @@ def extract_personalisation(job):
         return {}
     job = job.split("\r\n")
     if not job or not job[0]:
-        current_app.logger.warning("Empty job data after split for personalisation extraction")
+        current_app.logger.warning(
+            "Empty job data after split for personalisation extraction"
+        )
         return {}
     first_row = job[0]
     job.pop(0)
@@ -554,10 +564,8 @@ def get_phone_number_from_s3(service_id, job_id, job_row_number):
 
     phones = get_job_cache(f"{job_id}_phones")
     if phones is None:
-        current_app.logger.debug("HAVE TO REEXTRACT PHONES!")
         phones = extract_phones(job, service_id, job_id)
         set_job_cache(f"{job_id}_phones", phones)
-        current_app.logger.debug(f"SETTING PHONES TO {phones}")
     else:
         phones = phones[
             0
@@ -606,9 +614,7 @@ def get_personalisation_from_s3(service_id, job_id, job_row_number):
 
 
 def get_job_metadata_from_s3(service_id, job_id):
-    current_app.logger.debug(
-        f"#notify-debug-s3-partitioning CALLING GET_JOB_METADATA with {service_id}, {job_id}"
-    )
+
     obj = get_s3_object(*get_job_location(service_id, job_id))
     return obj.get()["Metadata"]
 
