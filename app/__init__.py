@@ -176,7 +176,6 @@ def get_redis_store():
     global redis_store
     if redis_store is None:
         raise RuntimeError(f"Celery not initialized redis_store: {redis_store}")
-    assert redis_store is not None
     return redis_store
 
 

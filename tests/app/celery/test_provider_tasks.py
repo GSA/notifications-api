@@ -1,5 +1,5 @@
 import json
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from botocore.exceptions import ClientError
@@ -119,7 +119,10 @@ def test_should_call_send_email_to_provider_from_deliver_email_task(
     sample_notification, mocker
 ):
     mocker.patch("app.delivery.send_to_providers.send_email_to_provider")
-    mocker.patch("app.redis_store.get", return_value=json.dumps({}))
+    mock_redis = mocker.patch(
+        "app.delivery.send_to_providers.get_redis_store", MagicMock()
+    )
+    mock_redis.get.return_value = json.dumps({})
     deliver_email(sample_notification.id)
     app.delivery.send_to_providers.send_email_to_provider.assert_called_with(
         sample_notification
@@ -178,7 +181,11 @@ def test_should_technical_error_and_not_retry_if_EmailClientNonRetryableExceptio
         "app.delivery.send_to_providers.send_email_to_provider",
         side_effect=EmailClientNonRetryableException("bad email"),
     )
-    mocker.patch("app.redis_store.get", return_value=json.dumps({}))
+
+    mock_redis = mocker.patch(
+        "app.delivery.send_to_providers.get_redis_store", MagicMock()
+    )
+    mock_redis.get.return_value = json.dumps({})
     mocker.patch("app.celery.provider_tasks.deliver_email.retry")
 
     deliver_email(sample_notification.id)
@@ -226,7 +233,11 @@ def test_if_ses_send_rate_throttle_then_should_retry_and_log_warning(
         }
     }
     ex = ClientError(error_response=error_response, operation_name="opname")
-    mocker.patch("app.redis_store.get", return_value=json.dumps({}))
+
+    mock_redis = mocker.patch(
+        "app.delivery.send_to_providers.get_redis_store", MagicMock()
+    )
+    mock_redis.get.return_value = json.dumps({})
     mocker.patch(
         "app.delivery.send_to_providers.send_email_to_provider",
         side_effect=AwsSesClientThrottlingSendRateException(str(ex)),
