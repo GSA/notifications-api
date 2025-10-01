@@ -4,7 +4,7 @@ import os
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import notify_celery, redis_store
+from app import get_redis_store, notify_celery
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import AwsSesClientThrottlingSendRateException
 from app.clients.sms import SmsClientResponseException
@@ -15,6 +15,8 @@ from app.delivery import send_to_providers
 from app.enums import NotificationStatus
 from app.exceptions import NotificationTechnicalFailureException
 from notifications_utils.clients.redis import total_limit_cache_key
+
+redis_store = get_redis_store()
 
 
 @notify_celery.task(

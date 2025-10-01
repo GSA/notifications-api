@@ -9,8 +9,8 @@ from flask import current_app
 from app import (
     create_uuid,
     db,
+    get_redis_store,
     notification_provider_clients,
-    redis_store,
 )
 from app.aws.s3 import get_personalisation_from_s3, get_phone_number_from_s3
 from app.celery.test_key_tasks import send_email_response, send_sms_response
@@ -31,6 +31,8 @@ from notifications_utils.template import (
     PlainTextEmailTemplate,
     SMSMessageTemplate,
 )
+
+redis_store = get_redis_store()
 
 
 def send_sms_to_provider(notification):

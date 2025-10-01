@@ -15,7 +15,7 @@ from sqlalchemy import and_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import db, redis_store
+from app import db, get_redis_store
 from app.aws import s3
 from app.celery.nightly_tasks import cleanup_unfinished_jobs
 from app.celery.tasks import (
@@ -71,6 +71,8 @@ from tests.app.db import (
     create_template,
     create_user,
 )
+
+redis_store = get_redis_store
 
 # used in add-test-* commands
 fake = Faker(["en_US"])

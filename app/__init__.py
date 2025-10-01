@@ -7,6 +7,7 @@ import uuid
 from contextlib import contextmanager
 from threading import Lock
 from time import monotonic
+from typing import Optional
 
 from celery import Celery, Task, current_task
 from flask import (
@@ -31,7 +32,6 @@ from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
-from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -97,10 +97,10 @@ aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = AwsCloudwatchClient()
-aws_pinpoint_client = AwsPinpointClient()
 encryption = Encryption()
+redis_store: Optional[RedisClient]  # type: ignore
+redis_store = None
 zendesk_client = ZendeskClient()
-redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 
 socketio = SocketIO(
@@ -143,7 +143,6 @@ def create_app(application):
     aws_ses_client.init_app()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
-    aws_pinpoint_client.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
@@ -156,6 +155,7 @@ def create_app(application):
 
     notify_celery.init_app(application)
     encryption.init_app(application)
+    redis_store = RedisClient()
     redis_store.init_app(application)
     document_download_client.init_app(application)
 
@@ -170,6 +170,14 @@ def create_app(application):
     setup_sqlalchemy_events(application)
 
     return application
+
+
+def get_redis_store():
+    global redis_store
+    if redis_store is None:
+        raise RuntimeError(f"Celery not initialized redis_store: {redis_store}")
+    assert redis_store is not None
+    return redis_store
 
 
 def register_blueprint(application):

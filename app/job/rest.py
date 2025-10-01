@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
 
-from app import db, redis_store
+from app import db, get_redis_store
 from app.aws.s3 import (
     extract_personalisation,
     extract_phones,
@@ -43,7 +43,7 @@ from app.schemas import (
 from app.utils import check_suspicious_id, hilite, midnight_n_days_ago, pagination_links
 
 job_blueprint = Blueprint("job", __name__, url_prefix="/service/<uuid:service_id>/job")
-
+redis_store = get_redis_store()
 
 register_errors(job_blueprint)
 

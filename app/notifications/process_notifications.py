@@ -16,7 +16,7 @@ from app.dao.notifications_dao import (
 from app.enums import NotificationStatus, NotificationType
 from app.errors import BadRequestError
 from app.models import Notification
-from app.utils import hilite, utc_now
+from app.utils import utc_now
 from notifications_utils.recipients import (
     format_email_address,
     get_international_phone_info,
@@ -89,8 +89,6 @@ def persist_notification(
     if not notification_id:
         notification_id = uuid.uuid4()
 
-    current_app.logger.info(f"Persisting notification with id {notification_id}")
-
     notification = Notification(
         id=notification_id,
         template_id=template_id,
@@ -117,11 +115,6 @@ def persist_notification(
     if notification_type == NotificationType.SMS:
         formatted_recipient = validate_and_format_phone_number(
             recipient, international=True
-        )
-        current_app.logger.info(
-            hilite(
-                f"Persisting notification with job_id: {job_id} row_number: {job_row_number}"
-            )
         )
         recipient_info = get_international_phone_info(formatted_recipient)
         notification.normalised_to = formatted_recipient

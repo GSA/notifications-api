@@ -5,7 +5,7 @@ from flask import current_app
 from sqlalchemy import between, select, union
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db, notify_celery, redis_store, zendesk_client
+from app import db, get_redis_store, notify_celery, zendesk_client
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -42,6 +42,7 @@ from app.utils import utc_now
 from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
+redis_store = get_redis_store()
 MAX_NOTIFICATION_FAILS = 10000
 
 
