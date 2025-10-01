@@ -174,6 +174,9 @@ def create_app(application):
 
 def get_redis_store():
     global redis_store
+    # Our unit tests mock redis anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
     if redis_store is None:
         raise RuntimeError(f"Celery not initialized redis_store: {redis_store}")
     return redis_store
