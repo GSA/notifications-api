@@ -1295,10 +1295,10 @@ def test_get_job_status_counts_all_failed_statuses(admin_request, sample_job):
     assert resp_json["pending"] == 0
 
 
-def test_get_job_status_finished_when_processing_complete_and_no_pending(admin_request, sample_job):
+def test_get_job_status_finished_when_processing_complete_and_no_pending(
+    admin_request, sample_job
+):
     """Test that finished is True only when processing_finished is set and pending is 0."""
-    from datetime import datetime
-
     from app.utils import utc_now
 
     job_id = str(sample_job.id)
@@ -1339,4 +1339,6 @@ def test_get_job_status_not_finished_when_pending_exists(admin_request, sample_j
     )
 
     assert resp_json["pending"] == 4
-    assert resp_json["finished"] is False  # Still has pending even though processing_finished is set
+    assert (
+        resp_json["finished"] is False
+    )  # Still has pending even though processing_finished is set

@@ -1,10 +1,9 @@
-import json
 from zoneinfo import ZoneInfo
 
 import dateutil
 from flask import Blueprint, current_app, jsonify, request
 
-from app import db, redis_store
+from app import db
 from app.aws.s3 import (
     extract_personalisation,
     extract_phones,
@@ -87,11 +86,11 @@ def get_job_status(service_id, job_id):
     is_finished = job.processing_finished is not None and pending_calculated == 0
 
     response_data = {
-        'total': total_count,
-        'delivered': delivered_count,
-        'failed': failed_count,
-        'pending': pending_calculated,
-        'finished': is_finished
+        "total": total_count,
+        "delivered": delivered_count,
+        "failed": failed_count,
+        "pending": pending_calculated,
+        "finished": is_finished,
     }
 
     return jsonify(response_data)
