@@ -84,9 +84,6 @@ class RecipientCSV:
         try:
             self._guestlist = list(value)
         except TypeError:
-            current_app.logger.exception(
-                f"Type error setting the guest list to {value}"
-            )
             self._guestlist = []
 
     @property

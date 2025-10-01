@@ -14,7 +14,6 @@ from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
 from app.delivery import send_to_providers
 from app.delivery.send_to_providers import (
-    _experimentally_validate_phone_numbers,
     get_html_email_options,
     get_logo_url,
 )
@@ -1045,18 +1044,3 @@ def test_get_html_email_options_add_email_branding_from_service(sample_service):
         "brand_text": branding.text,
         "brand_name": branding.name,
     }
-
-
-@pytest.mark.parametrize(
-    ("recipient", "expected_invoke"),
-    [
-        ("15555555555", False),
-    ],
-)
-def test_experimentally_validate_phone_numbers(recipient, expected_invoke, mocker):
-    mock_pinpoint = mocker.patch("app.delivery.send_to_providers.aws_pinpoint_client")
-    _experimentally_validate_phone_numbers(recipient)
-    if expected_invoke:
-        mock_pinpoint.phone_number_validate.assert_called_once_with("foo")
-    else:
-        mock_pinpoint.phone_number_validate.assert_not_called()

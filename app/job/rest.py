@@ -31,7 +31,7 @@ from app.dao.notifications_dao import (
 )
 from app.dao.services_dao import dao_fetch_service_by_id
 from app.dao.templates_dao import dao_get_template_by_id
-from app.enums import JobStatus
+from app.enums import JobStatus, NotificationStatus
 from app.errors import InvalidRequest, register_errors
 from app.schemas import (
     JobSchema,
@@ -60,6 +60,40 @@ def get_job_by_service_and_job_id(service_id, job_id):
     ]
 
     return jsonify(data=data)
+
+
+@job_blueprint.route("/<job_id>/status", methods=["GET"])
+def get_job_status(service_id, job_id):
+    """Fast job status endpoint for real-time polling. No S3 calls, no caching."""
+    check_suspicious_id(service_id, job_id)
+
+    job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
+    statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
+
+    delivered_statuses = (NotificationStatus.DELIVERED, NotificationStatus.SENT)
+    failed_statuses = (NotificationStatus.FAILED,) + NotificationStatus.failed_types()
+
+    delivered_count = failed_count = 0
+    for stat in statistics:
+        if stat.status in delivered_statuses:
+            delivered_count += stat.count
+        elif stat.status in failed_statuses:
+            failed_count += stat.count
+
+    total_count = job.notification_count or 0
+    pending_calculated = max(0, total_count - delivered_count - failed_count)
+
+    is_finished = job.processing_finished is not None and pending_calculated == 0
+
+    response_data = {
+        "total": total_count,
+        "delivered": delivered_count,
+        "failed": failed_count,
+        "pending": pending_calculated,
+        "finished": is_finished,
+    }
+
+    return jsonify(response_data)
 
 
 @job_blueprint.route("/<job_id>/cancel", methods=["POST"])
@@ -263,9 +297,6 @@ def create_job(service_id):
     original_file_name = data.get("original_file_name")
     data.update({"service": service_id})
     try:
-        current_app.logger.info(
-            f"#notify-debug-s3-partitioning DATA IN CREATE_JOB: {data}"
-        )
         data.update(**get_job_metadata_from_s3(service_id, data["id"]))
     except KeyError:
         raise InvalidRequest(

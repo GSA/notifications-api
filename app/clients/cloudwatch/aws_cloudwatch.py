@@ -7,6 +7,7 @@ from flask import current_app
 
 from app.clients import AWS_CLIENT_CONFIG, Client
 from app.cloudfoundry_config import cloud_config
+from app.utils import hilite
 
 
 class AwsCloudwatchClient(Client):
@@ -178,6 +179,19 @@ class AwsCloudwatchClient(Client):
         )
         failed_event_set = self._get_receipts(log_group_name, start, end)
         current_app.logger.info((f"Failed message count: {len(failed_event_set)}"))
+        raise_exception = False
+        for failure in failed_event_set:
+            try:
+                failure = json.loads(failure)
+                if "No quota left for account" == failure["delivery.providerResponse"]:
+                    current_app.logger.warning(
+                        hilite("**********NO QUOTA LEFT TO SEND MESSAGES!!!**********")
+                    )
+                    raise_exception = True
+            except Exception:
+                current_app.logger.exception("Malformed delivery receipt")
+        if raise_exception:
+            raise Exception("No Quota Left")
 
         return delivered_event_set, failed_event_set
 

@@ -7,7 +7,6 @@ from cachetools import TTLCache, cached
 from flask import current_app
 
 from app import (
-    aws_pinpoint_client,
     create_uuid,
     db,
     notification_provider_clients,
@@ -101,10 +100,6 @@ def send_sms_to_provider(notification):
                         notification.job_row_number,
                     )
 
-                # TODO This is temporary to test the capability of validating phone numbers
-                # The future home of the validation is TBD
-                _experimentally_validate_phone_numbers(recipient)
-
                 # TODO current we allow US phone numbers to be uploaded without the country code (1)
                 # This will break certain international phone numbers (Norway, Denmark, East Timor)
                 # When we officially announce support for international numbers, US numbers must contain
@@ -134,9 +129,6 @@ def send_sms_to_provider(notification):
                 # interleave spaces to bypass PII scrubbing since sender number is not PII
                 arr = list(real_sender_number)
                 real_sender_number = " ".join(arr)
-                current_app.logger.info(
-                    f"#notify-debug-api-1701 real sender number going to AWS is {real_sender_number}"
-                )
                 message_id = provider.send_sms(**send_sms_kwargs)
 
                 update_notification_message_id(notification.id, message_id)
@@ -160,18 +152,6 @@ def send_sms_to_provider(notification):
                 redis_store.incr(cache_key)
 
     return message_id
-
-
-def _experimentally_validate_phone_numbers(recipient):
-    if "+" not in recipient:
-        recipient_lookup = f"+{recipient}"
-    else:
-        recipient_lookup = recipient
-    if recipient_lookup in current_app.config["SIMULATED_SMS_NUMBERS"] and os.getenv(
-        "NOTIFY_ENVIRONMENT"
-    ) in ["development", "test"]:
-        current_app.logger.info(hilite("#notify-debug-validate-phone-number fired"))
-        aws_pinpoint_client.validate_phone_number("01", recipient)
 
 
 def _get_verify_code(notification):

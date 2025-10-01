@@ -23,9 +23,6 @@ from notifications_utils.clients.redis import total_limit_cache_key
 def deliver_sms(self, notification_id):
     """Branch off to the final step in delivering the notification to sns and get delivery receipts."""
     try:
-        current_app.logger.info(
-            "Start sending SMS for notification id: {}".format(notification_id)
-        )
         notification = notifications_dao.get_notification_by_id(notification_id)
         ansi_green = "\033[32m"
         ansi_reset = "\033[0m"

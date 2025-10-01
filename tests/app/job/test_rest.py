@@ -1213,3 +1213,132 @@ def test_get_scheduled_job_stats(admin_request):
         "count": 1,
         "soonest_scheduled_for": "2017-07-17T11:00:00+00:00",
     }
+
+
+def test_get_job_status_returns_light_response(admin_request, sample_job):
+    """Test that the status endpoint returns only required fields."""
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    sample_job.notification_count = 5
+
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+    create_notification(job=sample_job, status=NotificationStatus.FAILED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert set(resp_json.keys()) == {
+        "total",
+        "delivered",
+        "failed",
+        "pending",
+        "finished",
+    }
+
+    assert resp_json["total"] == 5
+    assert resp_json["delivered"] == 2  # sent + delivered
+    assert resp_json["failed"] == 1
+    assert resp_json["pending"] == 2  # total - delivered - failed
+    assert resp_json["finished"] is False
+
+
+def test_get_job_status_counts_all_delivered_statuses(admin_request, sample_job):
+    """Test that delivered count includes both 'delivered' and 'sent' statuses."""
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    sample_job.notification_count = 4
+
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+    create_notification(job=sample_job, status=NotificationStatus.SENT)
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert resp_json["delivered"] == 4
+    assert resp_json["failed"] == 0
+    assert resp_json["pending"] == 0
+
+
+def test_get_job_status_counts_all_failed_statuses(admin_request, sample_job):
+    """Test that failed count includes all failure status types."""
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    sample_job.notification_count = 6
+
+    create_notification(job=sample_job, status=NotificationStatus.FAILED)
+    create_notification(job=sample_job, status=NotificationStatus.TECHNICAL_FAILURE)
+    create_notification(job=sample_job, status=NotificationStatus.TEMPORARY_FAILURE)
+    create_notification(job=sample_job, status=NotificationStatus.PERMANENT_FAILURE)
+    create_notification(job=sample_job, status=NotificationStatus.VALIDATION_FAILED)
+    create_notification(job=sample_job, status=NotificationStatus.VIRUS_SCAN_FAILED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert resp_json["delivered"] == 0
+    assert resp_json["failed"] == 6
+    assert resp_json["pending"] == 0
+
+
+def test_get_job_status_finished_when_processing_complete_and_no_pending(
+    admin_request, sample_job
+):
+    """Test that finished is True only when processing_finished is set and pending is 0."""
+    from app.utils import utc_now
+
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    sample_job.notification_count = 2
+    sample_job.processing_finished = utc_now()
+
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert resp_json["pending"] == 0
+    assert resp_json["finished"] is True
+
+
+def test_get_job_status_not_finished_when_pending_exists(admin_request, sample_job):
+    """Test that finished is False when there are still pending notifications."""
+    from app.utils import utc_now
+
+    job_id = str(sample_job.id)
+    service_id = sample_job.service.id
+
+    sample_job.notification_count = 5
+    sample_job.processing_finished = utc_now()
+
+    create_notification(job=sample_job, status=NotificationStatus.DELIVERED)
+
+    resp_json = admin_request.get(
+        "job.get_job_status",
+        service_id=service_id,
+        job_id=job_id,
+    )
+
+    assert resp_json["pending"] == 4
+    assert (
+        resp_json["finished"] is False
+    )  # Still has pending even though processing_finished is set
