@@ -1298,6 +1298,7 @@ def test_get_job_status_counts_all_failed_statuses(admin_request, sample_job):
 def test_get_job_status_finished_when_processing_complete_and_no_pending(admin_request, sample_job):
     """Test that finished is True only when processing_finished is set and pending is 0."""
     from datetime import datetime
+
     from app.utils import utc_now
 
     job_id = str(sample_job.id)
