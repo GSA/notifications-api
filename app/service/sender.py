@@ -2,7 +2,7 @@ import json
 
 from flask import current_app
 
-from app import redis_store
+from app import get_redis_store
 from app.config import QueueNames
 from app.dao.services_dao import (
     dao_fetch_active_users_for_service,
@@ -14,6 +14,8 @@ from app.notifications.process_notifications import (
     persist_notification,
     send_notification_to_queue,
 )
+
+redis_store = get_redis_store()
 
 
 def send_notification_to_service_users(

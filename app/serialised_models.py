@@ -6,7 +6,7 @@ import cachetools
 from flask import current_app
 from werkzeug.utils import cached_property
 
-from app import db, redis_store
+from app import db, get_redis_store
 from app.dao.api_key_dao import get_model_api_keys
 from app.dao.services_dao import dao_fetch_service_by_id
 from notifications_utils.clients.redis import RequestCache
@@ -15,6 +15,7 @@ from notifications_utils.serialised_model import (
     SerialisedModelCollection,
 )
 
+redis_store = get_redis_store()
 caches = defaultdict(partial(cachetools.TTLCache, maxsize=1024, ttl=2))
 locks = defaultdict(RLock)
 redis_cache = RequestCache(redis_store)

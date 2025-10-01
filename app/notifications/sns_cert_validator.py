@@ -9,12 +9,13 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from app import redis_store
+from app import get_redis_store
 from app.config import Config
 
 VALIDATE_SNS_TOPICS = Config.VALIDATE_SNS_TOPICS
 VALID_SNS_TOPICS = Config.VALID_SNS_TOPICS
 
+redis_store = get_redis_store()
 
 _signing_cert_cache = {}
 _cert_url_re = re.compile(

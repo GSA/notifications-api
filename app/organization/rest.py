@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, abort, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
-from app import redis_store
+from app import get_redis_store
 from app.config import QueueNames
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
 from app.dao.dao_utils import transaction
@@ -40,6 +40,8 @@ from app.utils import check_suspicious_id
 
 organization_blueprint = Blueprint("organization", __name__)
 register_errors(organization_blueprint)
+
+redis_store = get_redis_store()
 
 
 @organization_blueprint.errorhandler(IntegrityError)

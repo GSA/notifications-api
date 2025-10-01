@@ -6,7 +6,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import db, redis_store
+from app import db, get_redis_store
 from app.config import QueueNames
 from app.dao.permissions_dao import permission_dao
 from app.dao.service_user_dao import dao_get_service_user, dao_update_service_user
@@ -62,6 +62,7 @@ from app.utils import (
 )
 from notifications_utils.recipients import is_us_phone_number, use_numeric_sender
 
+redis_store = get_redis_store()
 user_blueprint = Blueprint("user", __name__)
 register_errors(user_blueprint)
 

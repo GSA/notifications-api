@@ -4,7 +4,7 @@ import uuid
 
 from flask import current_app
 
-from app import redis_store
+from app import get_redis_store
 from app.celery import provider_tasks
 from app.config import QueueNames
 from app.dao.notifications_dao import (
@@ -23,6 +23,8 @@ from notifications_utils.recipients import (
     validate_and_format_phone_number,
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
+
+redis_store = get_redis_store()
 
 
 def create_content_for_notification(template, personalisation):

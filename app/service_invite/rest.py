@@ -6,7 +6,7 @@ from urllib.parse import unquote
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 
-from app import db, redis_store
+from app import db, get_redis_store
 from app.config import QueueNames
 from app.dao.invited_user_dao import (
     get_expired_invite_by_service_and_id,
@@ -28,6 +28,7 @@ from app.schemas import InvitedUserSchema
 from app.utils import check_suspicious_id, utc_now
 from notifications_utils.url_safe_token import check_token, generate_token
 
+redis_store = get_redis_store()
 service_invite = Blueprint("service_invite", __name__)
 
 register_errors(service_invite)

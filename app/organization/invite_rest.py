@@ -4,7 +4,7 @@ import os
 from flask import Blueprint, current_app, jsonify, request
 from itsdangerous import BadData, SignatureExpired
 
-from app import redis_store
+from app import get_redis_store
 from app.config import QueueNames
 from app.dao.invited_org_user_dao import (
     get_invited_org_user as dao_get_invited_org_user,
@@ -31,6 +31,7 @@ from app.utils import check_suspicious_id
 from notifications_utils.url_safe_token import check_token, generate_token
 
 organization_invite_blueprint = Blueprint("organization_invite", __name__)
+redis_store = get_redis_store()
 
 register_errors(organization_invite_blueprint)
 

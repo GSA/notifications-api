@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from flask import current_app
 from sqlalchemy.orm.exc import NoResultFound
 
-from app import redis_store
+from app import get_redis_store
 from app.dao.notifications_dao import dao_get_notification_count_for_service
 from app.dao.service_email_reply_to_dao import dao_get_reply_to_by_id
 from app.dao.service_sms_sender_dao import dao_get_service_sms_senders_by_id
@@ -22,6 +22,8 @@ from notifications_utils.recipients import (
     validate_and_format_email_address,
     validate_and_format_phone_number,
 )
+
+redis_store = get_redis_store()
 
 
 def check_service_over_total_message_limit(key_type, service):
