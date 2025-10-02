@@ -16,7 +16,6 @@ from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.enums import NotificationStatus, StatisticsType
 
 
-
 def test_should_return_correct_details_for_delivery():
     response_dict = get_aws_responses("Delivery")
     assert response_dict["message"] == "Delivered"
