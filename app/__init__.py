@@ -90,10 +90,10 @@ db = SQLAlchemy(
         "pool_pre_ping": True,
     }
 )
-migrate = Migrate()
+migrate = None
 notify_celery = NotifyCelery()
 aws_ses_client = AwsSesClient()
-aws_ses_stub_client = AwsSesStubClient()
+aws_ses_stub_client = None
 aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = AwsCloudwatchClient()
 encryption = Encryption()
@@ -155,19 +155,22 @@ def create_app(application):
     register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
-    migrate.init_app(application, db=db)
     logging.init_app(application)
     aws_sns_client.init_app(application)
 
     aws_ses_client.init_app()
-    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
 
     # start lazy initialization for gevent
+    migrate = Migrate()
+    migrate.init_app(application, db=db)
     zendesk_client = ZendeskClient()
     zendesk_client.init_app(application)
     document_download_client = DocumentDownloadClient()
     document_download_client.init_app(application)
+
+    aws_ses_stub_client = AwsSesStubClient()
+    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
 
     # end lazy initialization
 
@@ -184,7 +187,6 @@ def create_app(application):
     notify_celery.init_app(application)
     encryption.init_app(application)
     redis_store.init_app(application)
-    document_download_client.init_app(application)
 
     register_blueprint(application)
 
