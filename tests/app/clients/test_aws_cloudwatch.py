@@ -9,11 +9,11 @@ from flask import current_app
 
 from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 
-aws_cloudwatch_client = MagicMock()
-
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
-    boto_mock = mocker.patch.object(aws_cloudwatch_client, "_client", create=True)
+    client = AwsCloudwatchClient()
+
+    boto_mock = mocker.patch.object(client, "_client", create=True)
     # TODO
     #  we do this to get the AWS account number, and it seems like unit tests locally have
     #  access to the env variables but when we push the PR they do not.  Is there a better way to get it?
@@ -22,9 +22,9 @@ def test_check_sms_no_event_error_condition(notify_api, mocker):
     notification_id = "bbb"
     boto_mock.filter_log_events.return_value = []
     with notify_api.app_context():
-        aws_cloudwatch_client.init_app(current_app)
+        client.init_app(current_app)
         try:
-            aws_cloudwatch_client.check_sms(message_id, notification_id)
+            client.check_sms(message_id, notification_id)
             assert 1 == 0
         except Exception:
             assert 1 == 1
@@ -62,7 +62,9 @@ def side_effect(filterPattern, logGroupName, startTime, endTime):
 
 def test_extract_account_number_gov_cloud():
     domain_arn = "arn:aws-us-gov:ses:us-gov-west-1:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    client = AwsCloudwatchClient()
+    client.init_app(current_app)
+    actual_account_number = client._extract_account_number(domain_arn)
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
@@ -70,19 +72,24 @@ def test_extract_account_number_gov_cloud():
 
 def test_extract_account_number_gov_staging():
     domain_arn = "arn:aws:ses:us-south-14:12345:identity/ses-abc.xxx.xxx.xxx"
-    actual_account_number = aws_cloudwatch_client._extract_account_number(domain_arn)
+    client = AwsCloudwatchClient()
+    client.init_app(current_app)
+    actual_account_number = client._extract_account_number(domain_arn)
     assert len(actual_account_number) == 6
     expected_account_number = "12345"
     assert actual_account_number[4] == expected_account_number
 
 
 def test_event_to_db_format_with_missing_fields():
+    client = AwsCloudwatchClient()
+    client.init_app(current_app)
+
     event = {
         "notification": {"messageId": "12345"},
         "status": "UNKNOWN",
         "delivery": {},
     }
-    result = aws_cloudwatch_client.event_to_db_format(event)
+    result = client.event_to_db_format(event)
     assert result == {
         "notification.messageId": "12345",
         "status": "UNKNOWN",
@@ -105,7 +112,10 @@ def test_event_to_db_format_with_string_input():
             },
         }
     )
-    result = aws_cloudwatch_client.event_to_db_format(event)
+    client = AwsCloudwatchClient()
+    client.init_app(current_app)
+
+    result = client.event_to_db_format(event)
     assert result == {
         "notification.messageId": "67890",
         "status": "FAILED",
@@ -129,8 +139,7 @@ def fake_event():
     }
 
 
-@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
-def test_warn_if_dev_is_opted_out(current_app_mock):
+def test_warn_if_dev_is_opted_out():
     # os.environ["NOTIFIY_ENVIRONMENT"] = "development"
     client = AwsCloudwatchClient()
     logline = client.warn_if_dev_is_opted_out("Number is opted out", "notif123")
@@ -183,8 +192,8 @@ def test_extract_account_number():
 @patch("app.clients.cloudwatch.aws_cloudwatch.client")
 def test_get_log_with_pagination(mock_client):
     client = AwsCloudwatchClient()
+    client.init_app(current_app)
     client._client = mock_client
-
     mock_client.filter_log_events.side_effect = [
         {"events": [{"message": "msg1"}], "nextToken": "abc"},
         {"events": [{"message": "msg2"}]},
@@ -199,8 +208,8 @@ def test_get_log_with_pagination(mock_client):
     assert logs[1]["message"] == "msg2"
 
 
-@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
-def test_get_receipts(mock_current_app):
+# @patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+def test_get_receipts():
     client = AwsCloudwatchClient()
     client._get_log = MagicMock(
         return_value=[
@@ -226,9 +235,9 @@ def test_get_receipts(mock_current_app):
     assert event["status"] == "DELIVERED"
 
 
-@patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
+# @patch("app.clients.cloudwatch.aws_cloudwatch.current_app")
 @patch("app.clients.cloudwatch.aws_cloudwatch.cloud_config")
-def test_check_delivery_receipts(mock_cloud_config, current_app_mock):
+def test_check_delivery_receipts(mock_cloud_config):
     client = AwsCloudwatchClient()
     mock_cloud_config.sns_regions = "us-north-1"
     mock_cloud_config.ses_domain_arn = (
