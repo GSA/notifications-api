@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 import app
 from app import aws_sns_client, db, notification_provider_clients
+from app.clients.email.aws_ses import AwsSesClient
 from app.cloudfoundry_config import cloud_config
 from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
@@ -142,6 +143,11 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
         template=sample_email_template_with_html,
     )
     db_notification.personalisation = {"name": "Jo"}
+
+    mock_client = AwsSesClient()
+    mock_client.init_app()
+    mocker.patch("app.aws_ses.client", mock_client)
+
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     send_to_providers.send_email_to_provider(db_notification)
     app.aws_ses_client.send_email.assert_called_once_with(
