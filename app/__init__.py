@@ -99,7 +99,7 @@ aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = AwsCloudwatchClient()
 aws_pinpoint_client = AwsPinpointClient()
 encryption = Encryption()
-zendesk_client = ZendeskClient()
+zendesk_client = None
 redis_store = RedisClient()
 document_download_client = DocumentDownloadClient()
 
@@ -116,6 +116,16 @@ notification_provider_clients = NotificationProviderClients()
 
 api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
+
+
+def get_zendesk_client():
+    global zendesk_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if zendesk_client is None:
+        raise RuntimeError(f"Celery not initialized zendesk_client: {zendesk_client}")
+    return zendesk_client
 
 
 def create_app(application):
@@ -136,7 +146,6 @@ def create_app(application):
     request_helper.init_app(application)
     db.init_app(application)
     migrate.init_app(application, db=db)
-    zendesk_client.init_app(application)
     logging.init_app(application)
     aws_sns_client.init_app(application)
 
@@ -144,6 +153,12 @@ def create_app(application):
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
     aws_pinpoint_client.init_app(application)
+
+    # start lazy initialization for gevent
+    zendesk_client = ZendeskClient()
+    zendesk_client.init_app(application)
+    # end lazy initialization
+
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
