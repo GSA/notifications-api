@@ -92,7 +92,7 @@ db = SQLAlchemy(
 )
 migrate = None
 notify_celery = NotifyCelery()
-aws_ses_client = AwsSesClient()
+aws_ses_client = None
 aws_ses_stub_client = None
 aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = None
@@ -158,8 +158,6 @@ def create_app(application):
     logging.init_app(application)
     aws_sns_client.init_app(application)
 
-    aws_ses_client.init_app()
-
     # start lazy initialization for gevent
     migrate = Migrate()
     migrate.init_app(application, db=db)
@@ -169,6 +167,8 @@ def create_app(application):
     document_download_client.init_app(application)
     aws_cloudwatch_client = AwsCloudwatchClient()
     aws_cloudwatch_client.init_app(application)
+    aws_ses_client = AwsSesClient()
+    aws_ses_client.init_app()
     aws_ses_stub_client = AwsSesStubClient()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
 

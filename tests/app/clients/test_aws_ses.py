@@ -1,18 +1,21 @@
 import json
 from unittest import mock
-from unittest.mock import ANY, Mock
+from unittest.mock import ANY, MagicMock, Mock
 
 import botocore
 import pytest
 
-from app import AwsSesStubClient, aws_ses_client
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import (
     AwsSesClientException,
     AwsSesClientThrottlingSendRateException,
     get_aws_responses,
 )
+from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.enums import NotificationStatus, StatisticsType
+
+# comes from app/__init__.py but we mock it for the tests
+aws_ses_client = MagicMock()
 
 
 def test_should_return_correct_details_for_delivery():
