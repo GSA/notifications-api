@@ -146,7 +146,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
 
     mock_client = AwsSesClient()
     mock_client.init_app()
-    mocker.patch("app.aws_ses.client", mock_client)
+    mocker.patch("app.aws_ses_client", mock_client)
 
     mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     send_to_providers.send_email_to_provider(db_notification)
