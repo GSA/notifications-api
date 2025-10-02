@@ -973,6 +973,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
 
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
+
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
@@ -1017,9 +1021,16 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
         "app.dao.templates_dao.dao_get_template_by_id_and_service_id"
     )
     mock_get_service = mocker.patch("app.dao.services_dao.dao_fetch_service_by_id")
+
     mock_ses_client = MagicMock()
     mock_ses_client.send_email.return_value = "reference"
     send_mock = mocker.patch("app.aws_ses_client", mock_ses_client)
+    mock_ses_client.name = "ses"
+    mocker.patch(
+        "app.notification_provider_clients.get_client_by_name_and_type",
+        return_value=mock_ses_client,
+    )
+
     notification = create_notification(
         template=sample_email_template,
     )
