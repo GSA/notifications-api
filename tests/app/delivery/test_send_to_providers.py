@@ -142,9 +142,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
         template=sample_email_template_with_html,
     )
     db_notification.personalisation = {"name": "Jo"}
-    mock_ses_client = MagicMock()
-    mock_ses_client.send_email.return_value = "reference"
-    mocker.patch("app.aws_ses_client", mock_ses_client)
+    mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     send_to_providers.send_email_to_provider(db_notification)
     app.aws_ses_client.send_email.assert_called_once_with(
         f'"Sample service" <sample.service@{cloud_config.ses_email_domain}>',
@@ -178,9 +176,7 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     sample_service, sample_notification, mocker
 ):
     sample_service.active = False
-    mock_ses_client = MagicMock()
-    mock_ses_client.send_email.return_value = "reference"
-    send_mock = mocker.patch("app.aws_ses_client", mock_ses_client)
+    send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
