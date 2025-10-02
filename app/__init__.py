@@ -126,6 +126,15 @@ def get_zendesk_client():
     return zendesk_client
 
 
+def get_aws_ses_client():
+    global aws_ses_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSesClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_ses_client: {aws_ses_client}")
+    return aws_ses_client
+
+
 def get_document_download_client():
     global document_download_client
     # Our unit tests mock anyway
