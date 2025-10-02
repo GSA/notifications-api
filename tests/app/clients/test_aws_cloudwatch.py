@@ -7,8 +7,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import current_app
 
-from app import aws_cloudwatch_client
 from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
+
+aws_cloudwatch_client = MagicMock()
 
 
 def test_check_sms_no_event_error_condition(notify_api, mocker):
