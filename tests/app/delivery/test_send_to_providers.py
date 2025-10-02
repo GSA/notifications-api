@@ -143,12 +143,17 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     )
     db_notification.personalisation = {"name": "Jo"}
 
-    mock_client = MagicMock()
-    mock_client.send_email.return_value = "reference"
-    mocker.patch("app.aws_ses_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mocker.patch(
+        "app.notification_provider_clients.get_client_by_name_and_type",
+        return_value=mock_ses,
+    )
 
     send_to_providers.send_email_to_provider(db_notification)
-    app.aws_ses_client.send_email.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         f'"Sample service" <sample.service@{cloud_config.ses_email_domain}>',
         "jo.smith@example.com",
         "Jo <em>some HTML</em>",
@@ -427,8 +432,10 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     notification = create_notification(
         template=sample_email_template, status=NotificationStatus.SENDING
     )
-    mock_ses_client = MagicMock()
-    mocker.patch("app.aws_ses_client", mock_ses_client)
+
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
     mocker.patch("app.delivery.send_to_providers.send_email_response")
 
     mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
