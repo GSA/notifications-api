@@ -182,7 +182,10 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     sample_service, sample_notification, mocker
 ):
     sample_service.active = False
-    send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
@@ -205,7 +208,7 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_email_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
-    send_mock.assert_not_called()
+    mock_client.send_email.assert_not_called()
     assert (
         db.session.get(Notification, sample_notification.id).status
         == NotificationStatus.TECHNICAL_FAILURE
