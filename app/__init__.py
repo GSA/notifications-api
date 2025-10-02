@@ -31,7 +31,6 @@ from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
-from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -97,11 +96,10 @@ aws_ses_client = AwsSesClient()
 aws_ses_stub_client = AwsSesStubClient()
 aws_sns_client = AwsSnsClient()
 aws_cloudwatch_client = AwsCloudwatchClient()
-aws_pinpoint_client = AwsPinpointClient()
 encryption = Encryption()
 zendesk_client = None
 redis_store = RedisClient()
-document_download_client = DocumentDownloadClient()
+document_download_client = None
 
 socketio = SocketIO(
     cors_allowed_origins=[
@@ -128,6 +126,18 @@ def get_zendesk_client():
     return zendesk_client
 
 
+def get_document_download_client():
+    global document_download_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if document_download_client is None:
+        raise RuntimeError(
+            f"Celery not initialized document_download_client: {document_download_client}"
+        )
+    return document_download_client
+
+
 def create_app(application):
     from app.config import configs
 
@@ -152,11 +162,13 @@ def create_app(application):
     aws_ses_client.init_app()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_cloudwatch_client.init_app(application)
-    aws_pinpoint_client.init_app(application)
 
     # start lazy initialization for gevent
     zendesk_client = ZendeskClient()
     zendesk_client.init_app(application)
+    document_download_client = DocumentDownloadClient()
+    document_download_client.init_app(application)
+
     # end lazy initialization
 
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
