@@ -149,7 +149,7 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
     mock_ses.send_email.return_value = "reference"
     mock_ses.name = "ses"
     mocker.patch(
-        "app.notification_provider_clients.get_client_by_name_and_type",
+        "app.delivery.send_to_providers.provider_to_use",
         return_value=mock_ses,
     )
 
