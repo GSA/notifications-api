@@ -49,7 +49,6 @@ register_errors(job_blueprint)
 
 @job_blueprint.route("/<job_id>", methods=["GET"])
 def get_job_by_service_and_job_id(service_id, job_id):
-    current_app.logger.info(hilite("ENTER get_job_by_service_and_job_id"))
     check_suspicious_id(service_id, job_id)
     job = dao_get_job_by_service_id_and_job_id(service_id, job_id)
     statistics = dao_get_notification_outcomes_for_job(service_id, job_id)
@@ -150,7 +149,6 @@ def get_all_notifications_for_service_job(service_id, job_id):
         notifications = notification_with_template_schema.dump(
             paginated_notifications.items, many=True
         )
-        current_app.logger.info(hilite("Got the dumped notifications and returning"))
 
     return (
         jsonify(

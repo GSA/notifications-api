@@ -31,7 +31,6 @@ from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
-from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -91,17 +90,16 @@ db = SQLAlchemy(
         "pool_pre_ping": True,
     }
 )
-migrate = Migrate()
+migrate = None
 notify_celery = NotifyCelery()
-aws_ses_client = AwsSesClient()
-aws_ses_stub_client = AwsSesStubClient()
+aws_ses_client = None
+aws_ses_stub_client = None
 aws_sns_client = AwsSnsClient()
-aws_cloudwatch_client = AwsCloudwatchClient()
-aws_pinpoint_client = AwsPinpointClient()
+aws_cloudwatch_client = None
 encryption = Encryption()
-zendesk_client = ZendeskClient()
+zendesk_client = None
 redis_store = RedisClient()
-document_download_client = DocumentDownloadClient()
+document_download_client = None
 
 socketio = SocketIO(
     cors_allowed_origins=[
@@ -118,7 +116,39 @@ api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
 
 
+def get_zendesk_client():
+    global zendesk_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if zendesk_client is None:
+        zendesk_client = ZendeskClient()
+    return zendesk_client
+
+
+def get_aws_ses_client():
+    global aws_ses_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSesClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_ses_client: {aws_ses_client}")
+    return aws_ses_client
+
+
+def get_document_download_client():
+    global document_download_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if document_download_client is None:
+        raise RuntimeError(
+            f"Celery not initialized document_download_client: {document_download_client}"
+        )
+    return document_download_client
+
+
 def create_app(application):
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -135,15 +165,26 @@ def create_app(application):
     register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
-    migrate.init_app(application, db=db)
-    zendesk_client.init_app(application)
     logging.init_app(application)
     aws_sns_client.init_app(application)
 
-    aws_ses_client.init_app()
-    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+    # start lazy initialization for gevent
+    migrate = Migrate()
+    migrate.init_app(application, db=db)
+    if zendesk_client is None:
+        zendesk_client = ZendeskClient()
+    zendesk_client.init_app(application)
+    document_download_client = DocumentDownloadClient()
+    document_download_client.init_app(application)
+    aws_cloudwatch_client = AwsCloudwatchClient()
     aws_cloudwatch_client.init_app(application)
-    aws_pinpoint_client.init_app(application)
+    aws_ses_client = AwsSesClient()
+    aws_ses_client.init_app()
+    aws_ses_stub_client = AwsSesStubClient()
+    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+
+    # end lazy initialization
+
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
@@ -157,7 +198,6 @@ def create_app(application):
     notify_celery.init_app(application)
     encryption.init_app(application)
     redis_store.init_app(application)
-    document_download_client.init_app(application)
 
     register_blueprint(application)
 

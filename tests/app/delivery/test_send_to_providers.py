@@ -1,6 +1,6 @@
 import json
 from collections import namedtuple
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from flask import current_app
@@ -142,9 +142,19 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
         template=sample_email_template_with_html,
     )
     db_notification.personalisation = {"name": "Jo"}
-    mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
+
     send_to_providers.send_email_to_provider(db_notification)
-    app.aws_ses_client.send_email.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         f'"Sample service" <sample.service@{cloud_config.ses_email_domain}>',
         "jo.smith@example.com",
         "Jo <em>some HTML</em>",
@@ -153,10 +163,10 @@ def test_should_send_personalised_template_to_correct_email_provider_and_persist
         reply_to_address=None,
     )
 
-    assert "<!DOCTYPE html" in app.aws_ses_client.send_email.call_args[1]["html_body"]
+    assert "<!DOCTYPE html" in mock_ses.send_email.call_args[1]["html_body"]
     assert (
         "&lt;em&gt;some HTML&lt;/em&gt;"
-        in app.aws_ses_client.send_email.call_args[1]["html_body"]
+        in mock_ses.send_email.call_args[1]["html_body"]
     )
 
     notification = (
@@ -176,7 +186,11 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     sample_service, sample_notification, mocker
 ):
     sample_service.active = False
-    send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
+
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
 
@@ -199,7 +213,7 @@ def test_should_not_send_email_message_when_service_is_inactive_notifcation_is_i
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_email_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
-    send_mock.assert_not_called()
+    mock_client.send_email.assert_not_called()
     assert (
         db.session.get(Notification, sample_notification.id).status
         == NotificationStatus.TECHNICAL_FAILURE
@@ -419,7 +433,10 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
     notification = create_notification(
         template=sample_email_template, status=NotificationStatus.SENDING
     )
-    mocker.patch("app.aws_ses_client.send_email")
+
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
     mocker.patch("app.delivery.send_to_providers.send_email_response")
 
     mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
@@ -438,7 +455,15 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
 def test_send_email_should_use_service_reply_to_email(
     sample_service, sample_email_template, mocker
 ):
-    mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
 
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
@@ -458,7 +483,7 @@ def test_send_email_should_use_service_reply_to_email(
 
     send_to_providers.send_email_to_provider(db_notification)
 
-    app.aws_ses_client.send_email.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         ANY,
         ANY,
@@ -819,8 +844,15 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
         "test@example.com".encode("utf-8"),
         json.dumps({}).encode("utf-8"),
     ]
-
-    mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
 
     db_notification = create_notification(
         template=sample_email_template,
@@ -829,7 +861,7 @@ def test_send_email_to_provider_uses_reply_to_from_notification(
 
     send_to_providers.send_email_to_provider(db_notification)
 
-    app.aws_ses_client.send_email.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         ANY,
         ANY,
@@ -875,10 +907,18 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
 
 
-def test_send_email_to_provider_should_user_normalised_to(
+def test_send_email_to_provider_should_use_normalised_to(
     mocker, client, sample_email_template
 ):
-    send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
     notification = create_notification(
         template=sample_email_template,
     )
@@ -895,7 +935,7 @@ def test_send_email_to_provider_should_user_normalised_to(
     mock_redis.get.side_effect = [email, personalisation]
 
     send_to_providers.send_email_to_provider(notification)
-    send_mock.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         "test@example.com",
         ANY,
@@ -951,6 +991,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
 
+    mock_client = MagicMock()
+    mock_client.send_email.return_value = "reference"
+    mocker.patch("app.aws_ses_client", mock_client)
+
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
@@ -995,7 +1039,17 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
         "app.dao.templates_dao.dao_get_template_by_id_and_service_id"
     )
     mock_get_service = mocker.patch("app.dao.services_dao.dao_fetch_service_by_id")
-    send_mock = mocker.patch("app.aws_ses_client.send_email", return_value="reference")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
+
     notification = create_notification(
         template=sample_email_template,
     )
@@ -1003,7 +1057,7 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     send_to_providers.send_email_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
-    send_mock.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         "test@example.com",
         ANY,

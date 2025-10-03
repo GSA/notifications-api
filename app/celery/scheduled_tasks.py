@@ -5,7 +5,7 @@ from flask import current_app
 from sqlalchemy import between, select, union
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db, notify_celery, redis_store, zendesk_client
+from app import db, get_zendesk_client, notify_celery, redis_store
 from app.celery.tasks import (
     get_recipient_csv_and_template_and_sender_id,
     process_incomplete_jobs,
@@ -43,6 +43,8 @@ from notifications_utils import aware_utcnow
 from notifications_utils.clients.zendesk.zendesk_client import NotifySupportTicket
 
 MAX_NOTIFICATION_FAILS = 10000
+
+zendesk_client = get_zendesk_client()
 
 
 @notify_celery.task(name="run-scheduled-jobs")
