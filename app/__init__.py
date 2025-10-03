@@ -122,7 +122,7 @@ def get_zendesk_client():
     if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
         return None
     if zendesk_client is None:
-        raise RuntimeError(f"Celery not initialized zendesk_client: {zendesk_client}")
+        zendesk_client = ZendeskClient()
     return zendesk_client
 
 
@@ -148,6 +148,7 @@ def get_document_download_client():
 
 
 def create_app(application):
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -170,7 +171,8 @@ def create_app(application):
     # start lazy initialization for gevent
     migrate = Migrate()
     migrate.init_app(application, db=db)
-    zendesk_client = ZendeskClient()
+    if zendesk_client is None:
+        zendesk_client = ZendeskClient()
     zendesk_client.init_app(application)
     document_download_client = DocumentDownloadClient()
     document_download_client.init_app(application)
