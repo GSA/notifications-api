@@ -907,7 +907,7 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
 
 
-def test_send_email_to_provider_should_user_normalised_to(
+def test_send_email_to_provider_should_use_normalised_to(
     mocker, client, sample_email_template
 ):
     mock_boto_client = mocker.patch("boto3.client")
@@ -935,7 +935,7 @@ def test_send_email_to_provider_should_user_normalised_to(
     mock_redis.get.side_effect = [email, personalisation]
 
     send_to_providers.send_email_to_provider(notification)
-    mock_ses.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         "test@example.com",
         ANY,
@@ -1057,7 +1057,7 @@ def test_send_email_to_provider_should_return_template_if_found_in_redis(
     send_to_providers.send_email_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
-    mock_ses.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         "test@example.com",
         ANY,
