@@ -455,9 +455,15 @@ def test_send_email_to_provider_should_not_send_to_provider_when_status_is_not_c
 def test_send_email_should_use_service_reply_to_email(
     sample_service, sample_email_template, mocker
 ):
-    mock_ses_client = MagicMock()
-    mock_ses_client.send_email.return_value = "reference"
-    mocker.patch("app.aws_ses_client", mock_ses_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_ses = MagicMock()
+    mock_boto_client.return_value = mock_ses
+    mock_ses.send_email.return_value = "reference"
+    mock_ses.name = "ses"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_ses,
+    )
 
     mock_redis = mocker.patch("app.delivery.send_to_providers.redis_store")
     mock_redis.get.return_value = "test@example.com".encode("utf-8")
@@ -477,7 +483,7 @@ def test_send_email_should_use_service_reply_to_email(
 
     send_to_providers.send_email_to_provider(db_notification)
 
-    app.aws_ses_client.send_email.assert_called_once_with(
+    mock_ses.send_email.assert_called_once_with(
         ANY,
         ANY,
         ANY,
