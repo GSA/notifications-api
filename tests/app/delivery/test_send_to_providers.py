@@ -277,9 +277,15 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     )
     mock_s3_p.return_value = {"ignore": "ignore"}
 
-    mock_client = MagicMock()
-    mock_client.send_sms.return_value = "reference"
-    send_mock = mocker.patch("app.aws_sns_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     version_on_notification = sample_template.version
     expected_template_id = sample_template.id
@@ -296,7 +302,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    send_mock.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="2028675309",
         content="Sample service: This is a template:\nwith a newline",
         reference=str(db_notification.id),
