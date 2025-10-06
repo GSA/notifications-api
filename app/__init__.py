@@ -96,7 +96,7 @@ aws_ses_client = None
 aws_ses_stub_client = None
 aws_sns_client = None
 aws_cloudwatch_client = None
-encryption = Encryption()
+encryption = None
 zendesk_client = None
 redis_store = RedisClient()
 document_download_client = None
@@ -144,6 +144,15 @@ def get_aws_sns_client():
     return aws_sns_client
 
 
+def get_encryption():
+    global encryption
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return Encryption()
+    if encryption is None:
+        raise RuntimeError(f"Celery not initialized encryption: {encryption}")
+    return encryption
+
+
 def get_document_download_client():
     global document_download_client
     # Our unit tests mock anyway
@@ -157,7 +166,7 @@ def get_document_download_client():
 
 
 def create_app(application):
-    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client, aws_sns_client
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client, aws_sns_client, encryption  # noqa
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -192,6 +201,8 @@ def create_app(application):
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
     aws_sns_client = AwsSnsClient()
     aws_sns_client.init_app(application)
+    encryption = Encryption()
+    encryption.init_app(application)
 
     # end lazy initialization
 
@@ -206,7 +217,6 @@ def create_app(application):
     )
 
     notify_celery.init_app(application)
-    encryption.init_app(application)
     redis_store.init_app(application)
 
     register_blueprint(application)

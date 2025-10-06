@@ -3,9 +3,11 @@ import json
 from flask import current_app
 from requests import HTTPError, RequestException, request
 
-from app import encryption, notify_celery
+from app import get_encryption, notify_celery
 from app.config import QueueNames
 from app.utils import DATETIME_FORMAT
+
+encryption = get_encryption()
 
 
 @notify_celery.task(
