@@ -88,9 +88,15 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
     )
 
-    mock_client = MagicMock()
-    mock_client.send_sms.return_value = "reference"
-    send_mock = mocker.patch("app.aws_sns_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
@@ -103,7 +109,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    send_mock.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="2028675309",
         content="Sample service: Hello Jo\nHere is <em>some HTML</em> & entities",
         reference=str(db_notification.id),
