@@ -163,7 +163,7 @@ def get_encryption():
         print(hilite(f"FAKE CONFIG is {fake_config}"))
         fake_app.init_fake_encryption_app(fake_config)
         encryption.init_app(fake_app)
-        return encryption()
+        return encryption
     if encryption is None:
         raise RuntimeError(f"Celery not initialized encryption: {encryption}")
     return encryption
