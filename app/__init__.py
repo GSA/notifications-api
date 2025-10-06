@@ -94,7 +94,7 @@ migrate = None
 notify_celery = NotifyCelery()
 aws_ses_client = None
 aws_ses_stub_client = None
-aws_sns_client = AwsSnsClient()
+aws_sns_client = None
 aws_cloudwatch_client = None
 encryption = Encryption()
 zendesk_client = None
@@ -135,6 +135,15 @@ def get_aws_ses_client():
     return aws_ses_client
 
 
+def get_aws_sns_client():
+    global aws_sns_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSnsClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_sns_client: {aws_sns_client}")
+    return aws_sns_client
+
+
 def get_document_download_client():
     global document_download_client
     # Our unit tests mock anyway
@@ -148,7 +157,7 @@ def get_document_download_client():
 
 
 def create_app(application):
-    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client, aws_sns_client
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -166,7 +175,6 @@ def create_app(application):
     request_helper.init_app(application)
     db.init_app(application)
     logging.init_app(application)
-    aws_sns_client.init_app(application)
 
     # start lazy initialization for gevent
     migrate = Migrate()
@@ -182,6 +190,8 @@ def create_app(application):
     aws_ses_client.init_app()
     aws_ses_stub_client = AwsSesStubClient()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+    aws_sns_client = AwsSnsClient()
+    aws_sns_client.init_app(application)
 
     # end lazy initialization
 

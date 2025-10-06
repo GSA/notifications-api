@@ -1,6 +1,8 @@
 import pytest
 
-from app import aws_sns_client
+from app import get_aws_sns_client
+
+aws_sns_client = get_aws_sns_client()
 
 
 def test_send_sms_successful_returns_aws_sns_response(notify_api, mocker):
