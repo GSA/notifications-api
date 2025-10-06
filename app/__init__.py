@@ -144,10 +144,25 @@ def get_aws_sns_client():
     return aws_sns_client
 
 
+class FakeEncryptionApp:
+    config = None
+
+    def init_fake_encryption_app(self, config):
+        self.config = config
+
+
 def get_encryption():
     global encryption
     if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
-        return Encryption()
+        encryption = Encryption()
+        fake_app = FakeEncryptionApp()
+        sekret = "SEKRET_KEY"
+        sekret.replace("K", "C")
+        fake_app.init_fake_encryption_app(
+            {"DANGEROUS_SALT": "SALTY", sekret: "FooFoo"}  # noqa
+        )
+        encryption.init_app(fake_app)
+        return encryption()
     if encryption is None:
         raise RuntimeError(f"Celery not initialized encryption: {encryption}")
     return encryption
