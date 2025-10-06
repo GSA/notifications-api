@@ -980,7 +980,7 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
     send_to_providers.send_sms_to_provider(notification)
-    mock_sns.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="12028675309",
         content=ANY,
         reference=str(notification.id),
@@ -1081,14 +1081,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
 
-    mock_client = MagicMock()
-    mock_client.send_email.return_value = "reference"
-    mocker.patch("app.aws_ses_client", mock_client)
-
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
-    mock_sns.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="447700900855",
         content=ANY,
         reference=str(notification.id),
