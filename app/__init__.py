@@ -32,6 +32,7 @@ from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.clients.sms.aws_sns import AwsSnsClient
+from app.utils import hilite
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
@@ -157,10 +158,10 @@ def get_encryption():
         encryption = Encryption()
         fake_app = FakeEncryptionApp()
         sekret = "SEKRET_KEY"
-        sekret.replace("K", "C")
-        fake_app.init_fake_encryption_app(
-            {"DANGEROUS_SALT": "SALTY", sekret: "FooFoo"}  # noqa
-        )
+        sekret = sekret.replace("K", "C")
+        fake_config = {"DANGEROUS_SALT": "SALTY", sekret: "FooFoo"}  # noqa
+        current_app.logger.info(hilite(f"FAKE CONFIG is {fake_config}"))
+        fake_app.init_fake_encryption_app(fake_config)
         encryption.init_app(fake_app)
         return encryption()
     if encryption is None:
