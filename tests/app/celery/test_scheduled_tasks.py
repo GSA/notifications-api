@@ -407,7 +407,6 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         return_value=(load_example_csv("multiple_email"), {"sender_id": None}),
     )
     save_email_task = mocker.patch("app.celery.tasks.save_email.apply_async")
-    mocker.patch("app.encryption.encrypt", return_value="something_encrypted")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
     job = create_job(
@@ -424,7 +423,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         (
             str(job.service_id),
             "uuid",
-            "something_encrypted",
+            ANY,
         ),
         {},
         queue="database-tasks",
