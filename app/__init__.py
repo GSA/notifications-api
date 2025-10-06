@@ -159,9 +159,7 @@ def get_encryption():
         fake_app = FakeEncryptionApp()
         sekret = "SEKRET_KEY"
         sekret = sekret.replace("KR", "CR")
-        ds = os.environ.get("DANGEROUS_SALT")
-        sk = os.environ.get(sekret)
-        fake_config = {"DANGEROUS_SALT": ds, sekret: sk}  # noqa
+        fake_config = {"DANGEROUS_SALT": "SALTYSALTYSALTYSALTY", sekret: "FooFoo"}  # noqa
         print(hilite(f"FAKE CONFIG is {fake_config}"))
         fake_app.init_fake_encryption_app(fake_config)
         encryption.init_app(fake_app)
