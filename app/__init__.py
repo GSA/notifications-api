@@ -160,7 +160,7 @@ def get_encryption():
         sekret = "SEKRET_KEY"
         sekret = sekret.replace("K", "C")
         fake_config = {"DANGEROUS_SALT": "SALTY", sekret: "FooFoo"}  # noqa
-        current_app.logger.info(hilite(f"FAKE CONFIG is {fake_config}"))
+        print(hilite(f"FAKE CONFIG is {fake_config}"))
         fake_app.init_fake_encryption_app(fake_config)
         encryption.init_app(fake_app)
         return encryption()
