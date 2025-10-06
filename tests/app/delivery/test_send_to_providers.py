@@ -393,9 +393,15 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     db_notification.personalisation = {"misc": placeholder}
     db_notification.reply_to_text = "testing"
 
-    mock_client = MagicMock()
-    mock_client.send_sms.return_value = "reference"
-    send_mock = mocker.patch("app.aws_sns_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
@@ -407,7 +413,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    send_mock.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to=ANY, content=gsm_message, reference=ANY, sender=ANY, international=False
     )
 
@@ -418,9 +424,15 @@ def test_send_sms_should_use_service_sms_sender(
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
 
-    mock_client = MagicMock()
-    mock_client.send_sms.return_value = "reference"
-    send_mock = mocker.patch("app.aws_sns_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
 
     sms_sender = create_service_sms_sender(
@@ -442,7 +454,7 @@ def test_send_sms_should_use_service_sms_sender(
         db_notification,
     )
 
-    send_mock.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to=ANY,
         content=ANY,
         reference=ANY,
@@ -717,9 +729,15 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         return_value=None,
     )
 
-    mock_client = MagicMock()
-    mock_client.send_sms.return_value = "reference"
-    mocker.patch("app.aws_sns_client", mock_client)
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     mocker.patch(
         "app.delivery.send_to_providers.send_sms_response",
         side_effect=__update_notification(notification, research_mode, expected_status),
