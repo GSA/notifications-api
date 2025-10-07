@@ -101,23 +101,22 @@ def test_should_process_sms_job(sample_job, mocker):
         return_value=(load_example_csv("sms"), {"sender_id": None}),
     )
     mocker.patch("app.celery.tasks.save_sms.apply_async")
-    mocker.patch("app.celery.tasks.encryption.encrypt", return_value="something_encrypted")
+    mock_encrypt = mocker.patch("app.celery.tasks.encryption.encrypt")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
     process_job(sample_job.id)
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(sample_job.service.id), job_id=str(sample_job.id)
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
-    assert encryption.encrypt.call_args[0][0]["template"] == str(sample_job.template.id)
+    assert mock_encrypt.call_args[0][0]["to"] == "+14254147755"
+    assert mock_encrypt.call_args[0][0]["template"] == str(sample_job.template.id)
     assert (
-        encryption.encrypt.call_args[0][0]["template_version"]
-        == sample_job.template.version
+        mock_encrypt.call_args[0][0]["template_version"] == sample_job.template.version
     )
-    assert encryption.encrypt.call_args[0][0]["personalisation"] == {
+    assert mock_encrypt.call_args[0][0]["personalisation"] == {
         "phonenumber": "+14254147755"
     }
-    assert encryption.encrypt.call_args[0][0]["row_number"] == 0
+    assert mock_encrypt.call_args[0][0]["row_number"] == 0
     tasks.save_sms.apply_async.assert_called_once_with(
         (str(sample_job.service_id), "uuid", ANY),
         {},
@@ -218,21 +217,23 @@ def test_should_process_email_job(email_job_with_placeholders, mocker):
     mocker.patch("app.celery.tasks.save_email.apply_async")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
+    mock_encrypt = mocker.patch("app.celery.tasks.encryption.encrypt")
+
     process_job(email_job_with_placeholders.id)
 
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(email_job_with_placeholders.service.id),
         job_id=str(email_job_with_placeholders.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "test@test.com"
-    assert encryption.encrypt.call_args[0][0]["template"] == str(
+    assert mock_encrypt.call_args[0][0]["to"] == "test@test.com"
+    assert mock_encrypt.call_args[0][0]["template"] == str(
         email_job_with_placeholders.template.id
     )
     assert (
-        encryption.encrypt.call_args[0][0]["template_version"]
+        mock_encrypt.call_args[0][0]["template_version"]
         == email_job_with_placeholders.template.version
     )
-    assert encryption.encrypt.call_args[0][0]["personalisation"] == {
+    assert mock_encrypt.call_args[0][0]["personalisation"] == {
         "emailaddress": "test@test.com",
         "name": "foo",
     }
@@ -281,21 +282,23 @@ def test_should_process_all_sms_job(sample_job_with_placeholdered_template, mock
     mocker.patch("app.celery.tasks.save_sms.apply_async")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
+    mock_encrypt = mocker.patch("app.celery.tasks.encryption.encrypt")
+
     process_job(sample_job_with_placeholdered_template.id)
 
     s3.get_job_and_metadata_from_s3.assert_called_once_with(
         service_id=str(sample_job_with_placeholdered_template.service.id),
         job_id=str(sample_job_with_placeholdered_template.id),
     )
-    assert encryption.encrypt.call_args[0][0]["to"] == "+14254147755"
-    assert encryption.encrypt.call_args[0][0]["template"] == str(
+    assert mock_encrypt.call_args[0][0]["to"] == "+14254147755"
+    assert mock_encrypt.call_args[0][0]["template"] == str(
         sample_job_with_placeholdered_template.template.id
     )
     assert (
-        encryption.encrypt.call_args[0][0]["template_version"]
+        mock_encrypt.call_args[0][0]["template_version"]
         == sample_job_with_placeholdered_template.template.version
     )  # noqa
-    assert encryption.encrypt.call_args[0][0]["personalisation"] == {
+    assert mock_encrypt.call_args[0][0]["personalisation"] == {
         "phonenumber": "+14254147755",
         "name": "chris",
     }
