@@ -318,7 +318,7 @@ def test_process_row_sends_letter_task(
 ):
     mocker.patch("app.celery.tasks.create_uuid", return_value="noti_uuid")
     task_mock = mocker.patch(f"app.celery.tasks.{expected_function}.apply_async")
-    encrypt_mock = mocker.patch("app.celery.tasks.encrypt")
+    encrypt_mock = mocker.patch("app.celery.tasks.encryption.encrypt")
     template = Mock(id="template_id", template_type=template_type)
     job = Mock(id="job_id", template_version="temp_vers")
     service = Mock(id="service_id")
