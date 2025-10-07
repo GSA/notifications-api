@@ -77,18 +77,7 @@ class SQLAlchemy(_SQLAlchemy):
         return (sa_url, options)
 
 
-# Set db engine settings here for now.
-# They were not being set previous (despite environmental variables with appropriate
-# sounding names) and were defaulting to low values
-db = SQLAlchemy(
-    engine_options={
-        "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
-        "max_overflow": 10,
-        "pool_timeout": config.Config.SQLALCHEMY_POOL_TIMEOUT,
-        "pool_recycle": config.Config.SQLALCHEMY_POOL_RECYCLE,
-        "pool_pre_ping": True,
-    }
-)
+db = None
 migrate = None
 notify_celery = NotifyCelery()
 aws_ses_client = None
@@ -189,10 +178,24 @@ def create_app(application):
     init_app(application)
 
     request_helper.init_app(application)
-    db.init_app(application)
     logging.init_app(application)
 
     # start lazy initialization for gevent
+
+    # Set db engine settings here for now.
+    # They were not being set previous (despite environmental variables with appropriate
+    # sounding names) and were defaulting to low values
+    db = SQLAlchemy(
+        engine_options={
+            "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
+            "max_overflow": 10,
+            "pool_timeout": config.Config.SQLALCHEMY_POOL_TIMEOUT,
+            "pool_recycle": config.Config.SQLALCHEMY_POOL_RECYCLE,
+            "pool_pre_ping": True,
+        }
+    )
+    db.init_app(application)
+
     migrate = Migrate()
     migrate.init_app(application, db=db)
     if zendesk_client is None:
