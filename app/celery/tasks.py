@@ -10,7 +10,7 @@ from flask import current_app
 from requests import HTTPError, RequestException, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from app import create_uuid, encryption, notify_celery
+from app import create_uuid, get_encryption, notify_celery
 from app.aws import s3
 from app.celery import provider_tasks
 from app.config import Config, QueueNames
@@ -37,6 +37,8 @@ from app.serialised_models import SerialisedService, SerialisedTemplate
 from app.service.utils import service_allowed_to_send_to
 from app.utils import DATETIME_FORMAT, hilite, utc_now
 from notifications_utils.recipients import RecipientCSV
+
+encryption = get_encryption()
 
 
 @notify_celery.task(name="process-job")

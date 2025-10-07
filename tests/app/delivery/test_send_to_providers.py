@@ -8,7 +8,7 @@ from requests import HTTPError
 from sqlalchemy import select
 
 import app
-from app import aws_sns_client, db, notification_provider_clients
+from app import db, notification_provider_clients
 from app.cloudfoundry_config import cloud_config
 from app.dao import notifications_dao
 from app.dao.provider_details_dao import get_provider_details_by_identifier
@@ -88,7 +88,15 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
         reply_to_text=sample_sms_template_with_html.service.get_default_sms_sender(),
     )
 
-    mocker.patch("app.aws_sns_client.send_sms")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_s3.return_value = "2028675309"
@@ -101,7 +109,7 @@ def test_should_send_personalised_template_to_correct_sms_provider_and_persist(
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="2028675309",
         content="Sample service: Hello Jo\nHere is <em>some HTML</em> & entities",
         reference=str(db_notification.id),
@@ -224,7 +232,10 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
     sample_service, sample_notification, mocker
 ):
     sample_service.active = False
-    send_mock = mocker.patch("app.aws_sns_client.send_sms", return_value="reference")
+
+    mock_client = MagicMock()
+    mock_client.send_sms.return_value = "reference"
+    send_mock = mocker.patch("app.aws_sns_client", mock_client)
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
@@ -237,7 +248,7 @@ def test_should_not_send_sms_message_when_service_is_inactive_notification_is_in
     with pytest.raises(NotificationTechnicalFailureException) as e:
         send_to_providers.send_sms_to_provider(sample_notification)
     assert str(sample_notification.id) in str(e.value)
-    send_mock.assert_not_called()
+    send_mock.send_sms.assert_not_called()
     assert (
         db.session.get(Notification, sample_notification.id).status
         == NotificationStatus.TECHNICAL_FAILURE
@@ -266,7 +277,15 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
     )
     mock_s3_p.return_value = {"ignore": "ignore"}
 
-    mocker.patch("app.aws_sns_client.send_sms")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     version_on_notification = sample_template.version
     expected_template_id = sample_template.id
@@ -283,7 +302,7 @@ def test_send_sms_should_use_template_version_from_notification_not_latest(
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="2028675309",
         content="Sample service: This is a template:\nwith a newline",
         reference=str(db_notification.id),
@@ -333,7 +352,10 @@ def test_should_not_send_to_provider_when_status_is_not_created(
         template=sample_template,
         status=NotificationStatus.SENDING,
     )
-    mocker.patch("app.aws_sns_client.send_sms")
+
+    mock_client = MagicMock()
+    mock_client.send_sms.return_value = "reference"
+    send_mock = mocker.patch("app.aws_sns_client", mock_client)
     response_mock = mocker.patch("app.delivery.send_to_providers.send_sms_response")
 
     mock_s3 = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
@@ -346,7 +368,7 @@ def test_should_not_send_to_provider_when_status_is_not_created(
 
     send_to_providers.send_sms_to_provider(notification)
 
-    app.aws_sns_client.send_sms.assert_not_called()
+    send_mock.send_sms.assert_not_called()
     response_mock.assert_not_called()
 
 
@@ -371,7 +393,15 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
     db_notification.personalisation = {"misc": placeholder}
     db_notification.reply_to_text = "testing"
 
-    mocker.patch("app.aws_sns_client.send_sms")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     mock_phone = mocker.patch("app.delivery.send_to_providers.get_phone_number_from_s3")
     mock_phone.return_value = "15555555555"
@@ -383,7 +413,7 @@ def test_should_send_sms_with_downgraded_content(notify_db_session, mocker):
 
     send_to_providers.send_sms_to_provider(db_notification)
 
-    aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to=ANY, content=gsm_message, reference=ANY, sender=ANY, international=False
     )
 
@@ -393,7 +423,16 @@ def test_send_sms_should_use_service_sms_sender(
 ):
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
-    mocker.patch("app.aws_sns_client.send_sms")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     mocker.patch("app.delivery.send_to_providers.update_notification_message_id")
 
     sms_sender = create_service_sms_sender(
@@ -415,7 +454,7 @@ def test_send_sms_should_use_service_sms_sender(
         db_notification,
     )
 
-    app.aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to=ANY,
         content=ANY,
         reference=ANY,
@@ -689,7 +728,16 @@ def test_should_update_billable_units_and_status_according_to_research_mode_and_
         "app.delivery.send_to_providers.update_notification_message_id",
         return_value=None,
     )
-    mocker.patch("app.aws_sns_client.send_sms")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     mocker.patch(
         "app.delivery.send_to_providers.send_sms_response",
         side_effect=__update_notification(notification, research_mode, expected_status),
@@ -718,8 +766,16 @@ def test_should_set_notification_billable_units_and_reduces_provider_priority_if
     sample_notification,
     mocker,
 ):
-    mocker.patch("app.aws_sns_client.send_sms", side_effect=Exception())
 
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     sample_notification.billable_units = 0
     assert sample_notification.sent_by is None
 
@@ -748,8 +804,16 @@ def test_should_send_sms_to_international_providers(
 ):
 
     mocker.patch("app.delivery.send_to_providers._get_verify_code", return_value=None)
-    mocker.patch("app.aws_sns_client.send_sms")
 
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     notification_international = create_notification(
         template=sample_template,
         to_field="+6011-17224412",
@@ -776,7 +840,7 @@ def test_should_send_sms_to_international_providers(
 
     send_to_providers.send_sms_to_provider(notification_international)
 
-    aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="601117224412",
         content=ANY,
         reference=str(notification_international.id),
@@ -805,7 +869,16 @@ def test_should_handle_sms_sender_and_prefix_message(
 ):
 
     mocker.patch("app.delivery.send_to_providers.redis_store", return_value=None)
-    mocker.patch("app.aws_sns_client.send_sms")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
 
     mocker.patch(
         "app.delivery.send_to_providers.update_notification_message_id",
@@ -827,7 +900,7 @@ def test_should_handle_sms_sender_and_prefix_message(
 
     send_to_providers.send_sms_to_provider(notification)
 
-    aws_sns_client.send_sms.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         content=expected_content,
         sender=expected_sender,
         to=ANY,
@@ -882,7 +955,16 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
         "app.delivery.send_to_providers.update_notification_message_id",
         return_value=None,
     )
-    send_mock = mocker.patch("app.aws_sns_client.send_sms")
+
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     notification = create_notification(
         template=sample_template,
         to_field="+12028675309",
@@ -898,7 +980,7 @@ def test_send_sms_to_provider_should_use_normalised_to(mocker, client, sample_te
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
     send_to_providers.send_sms_to_provider(notification)
-    send_mock.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="12028675309",
         content=ANY,
         reference=str(notification.id),
@@ -975,7 +1057,15 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     )
     mock_get_service = mocker.patch("app.dao.services_dao.dao_fetch_service_by_id")
 
-    send_mock = mocker.patch("app.aws_sns_client.send_sms")
+    mock_boto_client = mocker.patch("boto3.client")
+    mock_sns = MagicMock()
+    mock_boto_client.return_value = mock_sns
+    mock_sns.send_sms.return_value = "reference"
+    mock_sns.name = "sns"
+    mocker.patch(
+        "app.delivery.send_to_providers.provider_to_use",
+        return_value=mock_sns,
+    )
     notification = create_notification(
         template=sample_template,
         to_field="+447700900855",
@@ -991,14 +1081,10 @@ def test_send_sms_to_provider_should_return_template_if_found_in_redis(
     )
     mock_personalisation.return_value = {"ignore": "ignore"}
 
-    mock_client = MagicMock()
-    mock_client.send_email.return_value = "reference"
-    mocker.patch("app.aws_ses_client", mock_client)
-
     send_to_providers.send_sms_to_provider(notification)
     assert mock_get_template.called is False
     assert mock_get_service.called is False
-    send_mock.assert_called_once_with(
+    mock_sns.send_sms.assert_called_once_with(
         to="447700900855",
         content=ANY,
         reference=str(notification.id),

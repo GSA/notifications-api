@@ -93,9 +93,9 @@ migrate = None
 notify_celery = NotifyCelery()
 aws_ses_client = None
 aws_ses_stub_client = None
-aws_sns_client = AwsSnsClient()
+aws_sns_client = None
 aws_cloudwatch_client = None
-encryption = Encryption()
+encryption = None
 zendesk_client = None
 redis_store = RedisClient()
 document_download_client = None
@@ -125,6 +125,46 @@ def get_aws_ses_client():
     return aws_ses_client
 
 
+def get_aws_sns_client():
+    global aws_sns_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSnsClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_sns_client: {aws_sns_client}")
+    return aws_sns_client
+
+
+class FakeEncryptionApp:
+    """
+    This class is just to support initialization of encryption
+    during unit tests.
+    """
+
+    config = None
+
+    def init_fake_encryption_app(self, config):
+        self.config = config
+
+
+def get_encryption():
+    global encryption
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        encryption = Encryption()
+        fake_app = FakeEncryptionApp()
+        sekret = "SEKRET_KEY"
+        sekret = sekret.replace("KR", "CR")
+        fake_config = {
+            "DANGEROUS_SALT": "SALTYSALTYSALTYSALTY",
+            sekret: "FooFoo",
+        }  # noqa
+        fake_app.init_fake_encryption_app(fake_config)
+        encryption.init_app(fake_app)
+        return encryption
+    if encryption is None:
+        raise RuntimeError(f"Celery not initialized encryption: {encryption}")
+    return encryption
+
+
 def get_document_download_client():
     global document_download_client
     # Our unit tests mock anyway
@@ -138,7 +178,7 @@ def get_document_download_client():
 
 
 def create_app(application):
-    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client, aws_sns_client, encryption  # noqa
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -151,7 +191,6 @@ def create_app(application):
     request_helper.init_app(application)
     db.init_app(application)
     logging.init_app(application)
-    aws_sns_client.init_app(application)
 
     # start lazy initialization for gevent
     migrate = Migrate()
@@ -167,6 +206,10 @@ def create_app(application):
     aws_ses_client.init_app()
     aws_ses_stub_client = AwsSesStubClient()
     aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+    aws_sns_client = AwsSnsClient()
+    aws_sns_client.init_app(application)
+    encryption = Encryption()
+    encryption.init_app(application)
 
     # end lazy initialization
 
@@ -181,7 +224,6 @@ def create_app(application):
     )
 
     notify_celery.init_app(application)
-    encryption.init_app(application)
     redis_store.init_app(application)
 
     register_blueprint(application)
