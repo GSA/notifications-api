@@ -2,8 +2,7 @@ import pytest
 from freezegun import freeze_time
 from sqlalchemy import select
 
-import application
-from app import create_app, db
+from app import db
 from app.dao.annual_billing_dao import (
     dao_create_or_update_annual_billing_for_year,
     dao_get_all_free_sms_fragment_limit,
@@ -19,7 +18,6 @@ from tests.app.db import create_annual_billing, create_service
 
 
 def test_dao_update_free_sms_fragment_limit(notify_db_session, sample_service):
-    create_app(application)
     new_limit = 9999
     year = get_current_calendar_year_start_year()
     dao_create_or_update_annual_billing_for_year(sample_service.id, new_limit, year)
