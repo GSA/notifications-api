@@ -31,7 +31,6 @@ from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.clients.sms.aws_sns import AwsSnsClient
-from app.utils import hilite
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
 from notifications_utils.clients.redis.redis_client import RedisClient
@@ -136,6 +135,11 @@ def get_aws_sns_client():
 
 
 class FakeEncryptionApp:
+    """
+    This class is just to support initialization of encryption
+    during unit tests.
+    """
+
     config = None
 
     def init_fake_encryption_app(self, config):
@@ -153,7 +157,6 @@ def get_encryption():
             "DANGEROUS_SALT": "SALTYSALTYSALTYSALTY",
             sekret: "FooFoo",
         }  # noqa
-        print(hilite(f"FAKE CONFIG is {fake_config}"))
         fake_app.init_fake_encryption_app(fake_config)
         encryption.init_app(fake_app)
         return encryption
