@@ -101,6 +101,7 @@ def test_should_process_sms_job(sample_job, mocker):
         return_value=(load_example_csv("sms"), {"sender_id": None}),
     )
     mocker.patch("app.celery.tasks.save_sms.apply_async")
+    mocker.patch("app.celery.tasks.encryption.encrypt", return_value="something_encrypted")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
     process_job(sample_job.id)
