@@ -19,7 +19,6 @@ from flask import (
 )
 from flask.ctx import has_app_context
 from flask_migrate import Migrate
-from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
@@ -101,15 +100,6 @@ zendesk_client = None
 redis_store = RedisClient()
 document_download_client = None
 
-socketio = SocketIO(
-    cors_allowed_origins=[
-        config.Config.ADMIN_BASE_URL,
-    ],
-    message_queue=config.Config.REDIS_URL,
-    logger=True,
-    engineio_logger=True,
-)
-
 notification_provider_clients = NotificationProviderClients()
 
 api_user = LocalProxy(lambda: g.api_user)
@@ -158,11 +148,6 @@ def create_app(application):
     application.config["NOTIFY_APP_NAME"] = application.name
     init_app(application)
 
-    socketio.init_app(application)
-
-    from app.socket_handlers import register_socket_handlers
-
-    register_socket_handlers(socketio)
     request_helper.init_app(application)
     db.init_app(application)
     logging.init_app(application)
