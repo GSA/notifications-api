@@ -5,7 +5,7 @@ from __future__ import print_function
 from flask import Flask  # noqa
 from werkzeug.serving import WSGIRequestHandler  # noqa
 
-from app import create_app, socketio  # noqa
+from app import create_app  # noqa
 
 WSGIRequestHandler.version_string = lambda self: "SecureServer"
 

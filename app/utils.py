@@ -146,20 +146,6 @@ def debug_not_production(msg):
         current_app.logger.info(msg)
 
 
-def emit_job_update_summary(job):
-    from app import socketio
-
-    socketio.emit(
-        "job_updated",
-        {
-            "job_id": str(job.id),
-            "job_status": job.job_status,
-            "notification_count": job.notification_count,
-        },
-        room=f"job-{job.id}",
-    )
-
-
 def is_suspicious_input(input_str):
     if not isinstance(input_str, str):
         return False
