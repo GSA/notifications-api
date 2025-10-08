@@ -99,7 +99,9 @@ encryption = None
 zendesk_client = None
 redis_store = RedisClient()
 document_download_client = None
-notification_provider_clients = None
+
+
+notification_provider_clients = NotificationProviderClients()
 
 # LocalProxy doesn't evaluate the target immediately, but defers
 # resolution to runtime.  So there is no monkeypatching concern.
@@ -218,7 +220,6 @@ def create_app(application):
     aws_sns_client.init_app(application)
     encryption = Encryption()
     encryption.init_app(application)
-    notification_provider_clients = NotificationProviderClients()
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
