@@ -90,6 +90,9 @@ db = SQLAlchemy(
     }
 )
 migrate = None
+
+# safe to do this for monkeypatching because all real work happens in notify_celery.init_app()
+# called in create_app()
 notify_celery = NotifyCelery()
 aws_ses_client = None
 aws_ses_stub_client = None
@@ -97,10 +100,13 @@ aws_sns_client = None
 aws_cloudwatch_client = None
 encryption = None
 zendesk_client = None
+# safe to do this for monkeypatching because all real work happens in redis_store.init_app()
+# called in create_app()
 redis_store = RedisClient()
 document_download_client = None
 
-
+# safe for monkey patching, all work down in
+# notification_provider_clients.init_app() in create_app()
 notification_provider_clients = NotificationProviderClients()
 
 # LocalProxy doesn't evaluate the target immediately, but defers
