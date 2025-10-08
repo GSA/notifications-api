@@ -77,7 +77,18 @@ class SQLAlchemy(_SQLAlchemy):
         return (sa_url, options)
 
 
-db = None
+# no monkey patching issue here.  All the real work to set the db up
+# is done in db.init_app() which is called in create_app.  But we need
+# to instantiate the db object here, because it's used in models.py
+db = SQLAlchemy(
+    engine_options={
+        "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
+        "max_overflow": 10,
+        "pool_timeout": config.Config.SQLALCHEMY_POOL_TIMEOUT,
+        "pool_recycle": config.Config.SQLALCHEMY_POOL_RECYCLE,
+        "pool_pre_ping": True,
+    }
+)
 migrate = None
 notify_celery = NotifyCelery()
 aws_ses_client = None
@@ -188,15 +199,6 @@ def create_app(application):
     # Do NOT access or use them before create_app() is called and don't
     # call create_app() in multiple places.
 
-    db = SQLAlchemy(
-        engine_options={
-            "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
-            "max_overflow": 10,
-            "pool_timeout": config.Config.SQLALCHEMY_POOL_TIMEOUT,
-            "pool_recycle": config.Config.SQLALCHEMY_POOL_RECYCLE,
-            "pool_pre_ping": True,
-        }
-    )
     db.init_app(application)
 
     migrate = Migrate()
