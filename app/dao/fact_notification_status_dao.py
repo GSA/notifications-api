@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import Date, case, cast, delete, func, select, union_all
+from sqlalchemy import Date, case, cast, delete, desc, func, select, union_all
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import extract, literal
@@ -108,6 +108,7 @@ def fetch_notification_status_for_service_by_month(start_date, end_date, service
             NotificationAllTimeView.notification_type,
             NotificationAllTimeView.status,
         )
+        .order_by(desc(func.date_trunc("month", NotificationAllTimeView.created_at)))
     )
     return db.session.execute(stmt).all()
 
