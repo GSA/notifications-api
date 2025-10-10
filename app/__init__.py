@@ -77,9 +77,9 @@ class SQLAlchemy(_SQLAlchemy):
         return (sa_url, options)
 
 
-# Set db engine settings here for now.
-# They were not being set previous (despite environmental variables with appropriate
-# sounding names) and were defaulting to low values
+# no monkey patching issue here.  All the real work to set the db up
+# is done in db.init_app() which is called in create_app.  But we need
+# to instantiate the db object here, because it's used in models.py
 db = SQLAlchemy(
     engine_options={
         "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
@@ -90,6 +90,9 @@ db = SQLAlchemy(
     }
 )
 migrate = None
+
+# safe to do this for monkeypatching because all real work happens in notify_celery.init_app()
+# called in create_app()
 notify_celery = NotifyCelery()
 aws_ses_client = None
 aws_ses_stub_client = None
@@ -97,11 +100,17 @@ aws_sns_client = None
 aws_cloudwatch_client = None
 encryption = None
 zendesk_client = None
+# safe to do this for monkeypatching because all real work happens in redis_store.init_app()
+# called in create_app()
 redis_store = RedisClient()
 document_download_client = None
 
+# safe for monkey patching, all work down in
+# notification_provider_clients.init_app() in create_app()
 notification_provider_clients = NotificationProviderClients()
 
+# LocalProxy doesn't evaluate the target immediately, but defers
+# resolution to runtime.  So there is no monkeypatching concern.
 api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
 
@@ -189,10 +198,17 @@ def create_app(application):
     init_app(application)
 
     request_helper.init_app(application)
-    db.init_app(application)
     logging.init_app(application)
 
     # start lazy initialization for gevent
+    # NOTE: notify_celery and redis_store are safe to construct here
+    # because all entry points (gunicorn_entry.py, run_celery.py) apply
+    # monkey.patch_all() first.
+    # Do NOT access or use them before create_app() is called and don't
+    # call create_app() in multiple places.
+
+    db.init_app(application)
+
     migrate = Migrate()
     migrate.init_app(application, db=db)
     if zendesk_client is None:
@@ -210,9 +226,6 @@ def create_app(application):
     aws_sns_client.init_app(application)
     encryption = Encryption()
     encryption.init_app(application)
-
-    # end lazy initialization
-
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
@@ -222,6 +235,7 @@ def create_app(application):
     notification_provider_clients.init_app(
         sms_clients=[aws_sns_client], email_clients=email_clients
     )
+    # end lazy initialization
 
     notify_celery.init_app(application)
     redis_store.init_app(application)
