@@ -94,7 +94,7 @@ flake8-bugbear = "^24.12.12"
 freezegun = "^1.5.5"
 hypothesis = "^6.140.2"
 honcho = "*"
-isort = "^6.1.0"
+isort = "^7.0.0"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
 moto = "==5.1.14"
 pip-audit = "*"
