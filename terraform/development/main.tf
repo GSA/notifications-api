@@ -1,7 +1,7 @@
 locals {
-  cf_org_name      = "gsa-tts-benefits-studio"
-  cf_space_name    = "notify-local-dev"
-  key_name         = "${var.username}-api-dev-key"
+  cf_org_name   = "gsa-tts-benefits-studio"
+  cf_space_name = "notify-local-dev"
+  key_name      = "${var.username}-api-dev-key"
 }
 
 module "csv_upload_bucket" {
