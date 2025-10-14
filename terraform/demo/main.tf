@@ -71,6 +71,6 @@ module "sns_sms" {
   cf_org_name         = local.cf_org_name
   cf_space_name       = local.cf_space_name
   name                = "${local.app_name}-sns-${local.env}"
-  aws_region          = "us-east-1"
+  aws_region          = "us-west-2"
   monthly_spend_limit = 25
 }
