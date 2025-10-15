@@ -5,13 +5,14 @@ from unittest.mock import ANY, Mock
 import botocore
 import pytest
 
-from app import AwsSesStubClient, aws_ses_client
 from app.clients.email import EmailClientNonRetryableException
 from app.clients.email.aws_ses import (
+    AwsSesClient,
     AwsSesClientException,
     AwsSesClientThrottlingSendRateException,
     get_aws_responses,
 )
+from app.clients.email.aws_ses_stub import AwsSesStubClient
 from app.enums import NotificationStatus, StatisticsType
 
 
@@ -65,6 +66,8 @@ def test_should_be_none_if_unrecognised_status_code():
 def test_send_email_handles_reply_to_address(
     notify_api, mocker, reply_to_address, expected_value
 ):
+    aws_ses_client = AwsSesClient()
+
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
 
     with notify_api.app_context():
@@ -82,6 +85,7 @@ def test_send_email_handles_reply_to_address(
 
 
 def test_send_email_handles_punycode_to_address(notify_api, mocker):
+    aws_ses_client = AwsSesClient()
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
 
     with notify_api.app_context():
@@ -104,6 +108,7 @@ def test_send_email_handles_punycode_to_address(notify_api, mocker):
 def test_send_email_raises_invalid_parameter_value_error_as_EmailClientNonRetryableException(
     mocker,
 ):
+    aws_ses_client = AwsSesClient()
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
     error_response = {
         "Error": {
@@ -130,6 +135,7 @@ def test_send_email_raises_invalid_parameter_value_error_as_EmailClientNonRetrya
 def test_send_email_raises_send_rate_throttling_as_AwsSesClientThrottlingSendRateException(
     mocker,
 ):
+    aws_ses_client = AwsSesClient()
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
     error_response = {
         "Error": {
@@ -151,6 +157,7 @@ def test_send_email_raises_send_rate_throttling_as_AwsSesClientThrottlingSendRat
 def test_send_email_does_not_raise_AwsSesClientThrottlingSendRateException_if_non_send_rate_throttling(
     mocker,
 ):
+    aws_ses_client = AwsSesClient()
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
     error_response = {
         "Error": {
@@ -170,6 +177,7 @@ def test_send_email_does_not_raise_AwsSesClientThrottlingSendRateException_if_no
 
 
 def test_send_email_raises_other_errs_as_AwsSesClientException(mocker):
+    aws_ses_client = AwsSesClient()
     boto_mock = mocker.patch.object(aws_ses_client, "_client", create=True)
     error_response = {
         "Error": {

@@ -19,7 +19,6 @@ from flask import (
 )
 from flask.ctx import has_app_context
 from flask_migrate import Migrate
-from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException as WerkzeugHTTPException
@@ -31,7 +30,6 @@ from app.clients.cloudwatch.aws_cloudwatch import AwsCloudwatchClient
 from app.clients.document_download import DocumentDownloadClient
 from app.clients.email.aws_ses import AwsSesClient
 from app.clients.email.aws_ses_stub import AwsSesStubClient
-from app.clients.pinpoint.aws_pinpoint import AwsPinpointClient
 from app.clients.sms.aws_sns import AwsSnsClient
 from notifications_utils import logging, request_helper
 from notifications_utils.clients.encryption.encryption_client import Encryption
@@ -79,9 +77,9 @@ class SQLAlchemy(_SQLAlchemy):
         return (sa_url, options)
 
 
-# Set db engine settings here for now.
-# They were not being set previous (despite environmental variables with appropriate
-# sounding names) and were defaulting to low values
+# no monkey patching issue here.  All the real work to set the db up
+# is done in db.init_app() which is called in create_app.  But we need
+# to instantiate the db object here, because it's used in models.py
 db = SQLAlchemy(
     engine_options={
         "pool_size": config.Config.SQLALCHEMY_POOL_SIZE,
@@ -91,34 +89,105 @@ db = SQLAlchemy(
         "pool_pre_ping": True,
     }
 )
-migrate = Migrate()
+migrate = None
+
+# safe to do this for monkeypatching because all real work happens in notify_celery.init_app()
+# called in create_app()
 notify_celery = NotifyCelery()
-aws_ses_client = AwsSesClient()
-aws_ses_stub_client = AwsSesStubClient()
-aws_sns_client = AwsSnsClient()
-aws_cloudwatch_client = AwsCloudwatchClient()
-aws_pinpoint_client = AwsPinpointClient()
-encryption = Encryption()
-zendesk_client = ZendeskClient()
+aws_ses_client = None
+aws_ses_stub_client = None
+aws_sns_client = None
+aws_cloudwatch_client = None
+encryption = None
+zendesk_client = None
+# safe to do this for monkeypatching because all real work happens in redis_store.init_app()
+# called in create_app()
 redis_store = RedisClient()
-document_download_client = DocumentDownloadClient()
+document_download_client = None
 
-socketio = SocketIO(
-    cors_allowed_origins=[
-        config.Config.ADMIN_BASE_URL,
-    ],
-    message_queue=config.Config.REDIS_URL,
-    logger=True,
-    engineio_logger=True,
-)
-
+# safe for monkey patching, all work down in
+# notification_provider_clients.init_app() in create_app()
 notification_provider_clients = NotificationProviderClients()
 
+# LocalProxy doesn't evaluate the target immediately, but defers
+# resolution to runtime.  So there is no monkeypatching concern.
 api_user = LocalProxy(lambda: g.api_user)
 authenticated_service = LocalProxy(lambda: g.authenticated_service)
 
 
+def get_zendesk_client():
+    global zendesk_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if zendesk_client is None:
+        zendesk_client = ZendeskClient()
+    return zendesk_client
+
+
+def get_aws_ses_client():
+    global aws_ses_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSesClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_ses_client: {aws_ses_client}")
+    return aws_ses_client
+
+
+def get_aws_sns_client():
+    global aws_sns_client
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return AwsSnsClient()
+    if aws_ses_client is None:
+        raise RuntimeError(f"Celery not initialized aws_sns_client: {aws_sns_client}")
+    return aws_sns_client
+
+
+class FakeEncryptionApp:
+    """
+    This class is just to support initialization of encryption
+    during unit tests.
+    """
+
+    config = None
+
+    def init_fake_encryption_app(self, config):
+        self.config = config
+
+
+def get_encryption():
+    global encryption
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        encryption = Encryption()
+        fake_app = FakeEncryptionApp()
+        sekret = "SEKRET_KEY"
+        sekret = sekret.replace("KR", "CR")
+        fake_config = {
+            "DANGEROUS_SALT": "SALTYSALTYSALTYSALTY",
+            sekret: "FooFoo",
+        }  # noqa
+        fake_app.init_fake_encryption_app(fake_config)
+        encryption.init_app(fake_app)
+        return encryption
+    if encryption is None:
+        raise RuntimeError(f"Celery not initialized encryption: {encryption}")
+    return encryption
+
+
+def get_document_download_client():
+    global document_download_client
+    # Our unit tests mock anyway
+    if os.environ.get("NOTIFY_ENVIRONMENT") == "test":
+        return None
+    if document_download_client is None:
+        raise RuntimeError(
+            f"Celery not initialized document_download_client: {document_download_client}"
+        )
+    return document_download_client
+
+
 def create_app(application):
+    global zendesk_client, migrate, document_download_client, aws_ses_client, aws_ses_stub_client, aws_sns_client, encryption  # noqa
     from app.config import configs
 
     notify_environment = os.environ["NOTIFY_ENVIRONMENT"]
@@ -128,22 +197,35 @@ def create_app(application):
     application.config["NOTIFY_APP_NAME"] = application.name
     init_app(application)
 
-    socketio.init_app(application)
-
-    from app.socket_handlers import register_socket_handlers
-
-    register_socket_handlers(socketio)
     request_helper.init_app(application)
-    db.init_app(application)
-    migrate.init_app(application, db=db)
-    zendesk_client.init_app(application)
     logging.init_app(application)
-    aws_sns_client.init_app(application)
 
-    aws_ses_client.init_app()
-    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+    # start lazy initialization for gevent
+    # NOTE: notify_celery and redis_store are safe to construct here
+    # because all entry points (gunicorn_entry.py, run_celery.py) apply
+    # monkey.patch_all() first.
+    # Do NOT access or use them before create_app() is called and don't
+    # call create_app() in multiple places.
+
+    db.init_app(application)
+
+    migrate = Migrate()
+    migrate.init_app(application, db=db)
+    if zendesk_client is None:
+        zendesk_client = ZendeskClient()
+    zendesk_client.init_app(application)
+    document_download_client = DocumentDownloadClient()
+    document_download_client.init_app(application)
+    aws_cloudwatch_client = AwsCloudwatchClient()
     aws_cloudwatch_client.init_app(application)
-    aws_pinpoint_client.init_app(application)
+    aws_ses_client = AwsSesClient()
+    aws_ses_client.init_app()
+    aws_ses_stub_client = AwsSesStubClient()
+    aws_ses_stub_client.init_app(stub_url=application.config["SES_STUB_URL"])
+    aws_sns_client = AwsSnsClient()
+    aws_sns_client.init_app(application)
+    encryption = Encryption()
+    encryption.init_app(application)
     # If a stub url is provided for SES, then use the stub client rather than the real SES boto client
     email_clients = (
         [aws_ses_stub_client]
@@ -153,11 +235,10 @@ def create_app(application):
     notification_provider_clients.init_app(
         sms_clients=[aws_sns_client], email_clients=email_clients
     )
+    # end lazy initialization
 
     notify_celery.init_app(application)
-    encryption.init_app(application)
     redis_store.init_app(application)
-    document_download_client.init_app(application)
 
     register_blueprint(application)
 

@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta, declared_attr
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
-from app import db, encryption
+from app import db, get_encryption
 from app.enums import (
     AgreementStatus,
     AgreementType,
@@ -47,6 +47,8 @@ from notifications_utils.recipients import (
     validate_phone_number,
 )
 from notifications_utils.template import PlainTextEmailTemplate, SMSMessageTemplate
+
+encryption = get_encryption()
 
 
 def filter_null_value_fields(obj):

@@ -407,7 +407,6 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         return_value=(load_example_csv("multiple_email"), {"sender_id": None}),
     )
     save_email_task = mocker.patch("app.celery.tasks.save_email.apply_async")
-    mocker.patch("app.encryption.encrypt", return_value="something_encrypted")
     mocker.patch("app.celery.tasks.create_uuid", return_value="uuid")
 
     job = create_job(
@@ -424,7 +423,7 @@ def test_check_for_missing_rows_in_completed_jobs_calls_save_email(
         (
             str(job.service_id),
             "uuid",
-            "something_encrypted",
+            ANY,
         ),
         {},
         queue="database-tasks",
@@ -498,10 +497,9 @@ def test_check_for_services_with_high_failure_rates_or_sending_to_tv_numbers(
 ):
     mock_logger = mocker.patch("app.celery.tasks.current_app.logger.warning")
     mock_create_ticket = mocker.spy(NotifySupportTicket, "__init__")
-    mock_send_ticket_to_zendesk = mocker.patch(
-        "app.celery.scheduled_tasks.zendesk_client.send_ticket_to_zendesk",
-        autospec=True,
-    )
+    mock_zendesk_client = MagicMock()
+    mocker.patch("app.celery.scheduled_tasks.zendesk_client", mock_zendesk_client)
+    mock_send_ticket_to_zendesk = mock_zendesk_client.send_ticket_to_zendesk
     mock_failure_rates = mocker.patch(
         "app.celery.scheduled_tasks.dao_find_services_with_high_failure_rates",
         return_value=failure_rates,
