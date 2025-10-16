@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +10,7 @@ from app.config import QueueNames
 from app.dao.annual_billing_dao import set_default_free_allowance_for_service
 from app.dao.dao_utils import transaction
 from app.dao.fact_billing_dao import fetch_usage_year_for_organization
+from app.dao.notifications_dao import dao_get_notification_counts_for_organization
 from app.dao.organization_dao import (
     dao_add_service_to_organization,
     dao_add_user_to_organization,
@@ -259,3 +262,37 @@ def send_notifications_on_mou_signed(organization_id):
         organization.agreement_signed_by.email_address,
         personalisation,
     )
+
+
+@organization_blueprint.route("/<uuid:organization_id>/message-allowance", methods=["GET"])
+def get_organization_message_allowance(organization_id):
+
+    check_suspicious_id(organization_id)
+
+    dao_get_organization_by_id(organization_id)
+
+    services = dao_get_organization_services(organization_id)
+
+    if not services:
+        return jsonify({
+            "messages_sent": 0,
+            "messages_remaining": 0,
+            "total_message_limit": 0,
+        }), 200
+
+    current_year = datetime.now(tz=ZoneInfo("UTC")).year
+    service_ids = [service.id for service in services]
+
+    messages_by_service = dao_get_notification_counts_for_organization(
+        service_ids, current_year
+    )
+
+    total_messages_sent = sum(messages_by_service.get(s.id, 0) for s in services)
+    total_message_limit = sum(s.total_message_limit for s in services)
+    total_messages_remaining = total_message_limit - total_messages_sent
+
+    return jsonify({
+        "messages_sent": total_messages_sent,
+        "messages_remaining": total_messages_remaining,
+        "total_message_limit": total_message_limit,
+    }), 200

@@ -928,3 +928,57 @@ def test_missing_both():
             {"org_id": ["Can't be empty"]},
             {"name": ["Can't be empty"]},
         ]
+
+
+@freeze_time("2025-01-15 10:00:00")
+def test_get_organization_message_allowance(admin_request, sample_organization, mocker):
+    service_1 = create_service(service_name="Service 1")
+    service_2 = create_service(service_name="Service 2")
+
+    service_1.total_message_limit = 100000
+    service_2.total_message_limit = 50000
+
+    dao_add_service_to_organization(service_1, sample_organization.id)
+    dao_add_service_to_organization(service_2, sample_organization.id)
+
+    mock_get_counts = mocker.patch(
+        "app.organization.rest.dao_get_notification_counts_for_organization"
+    )
+    mock_get_counts.return_value = {
+        service_1.id: 30000,
+        service_2.id: 20000,
+    }
+
+    response = admin_request.get(
+        "organization.get_organization_message_allowance",
+        organization_id=sample_organization.id,
+        _expected_status=200,
+    )
+
+    assert response["messages_sent"] == 50000
+    assert response["messages_remaining"] == 100000
+    assert response["total_message_limit"] == 150000
+
+    assert mock_get_counts.call_count == 1
+    mock_get_counts.assert_called_once_with([service_1.id, service_2.id], 2025)
+
+
+def test_get_organization_message_allowance_no_services(admin_request, sample_organization):
+    response = admin_request.get(
+        "organization.get_organization_message_allowance",
+        organization_id=sample_organization.id,
+        _expected_status=200,
+    )
+
+    assert response["messages_sent"] == 0
+    assert response["messages_remaining"] == 0
+    assert response["total_message_limit"] == 0
+
+
+def test_get_organization_message_allowance_invalid_org_id(admin_request):
+    fake_uuid = "00000000-0000-0000-0000-000000000000"
+    admin_request.get(
+        "organization.get_organization_message_allowance",
+        organization_id=fake_uuid,
+        _expected_status=404,
+    )
