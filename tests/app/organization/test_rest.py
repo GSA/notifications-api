@@ -931,7 +931,7 @@ def test_missing_both():
 
 
 @freeze_time("2025-01-15 10:00:00")
-def test_get_organization_message_totals(admin_request, sample_organization, mocker):
+def test_get_organization_message_allowance(admin_request, sample_organization, mocker):
     service_1 = create_service(service_name="Service 1")
     service_2 = create_service(service_name="Service 2")
 
@@ -950,7 +950,7 @@ def test_get_organization_message_totals(admin_request, sample_organization, moc
     }
 
     response = admin_request.get(
-        "organization.get_organization_message_totals",
+        "organization.get_organization_message_allowance",
         organization_id=sample_organization.id,
         _expected_status=200,
     )
@@ -963,9 +963,9 @@ def test_get_organization_message_totals(admin_request, sample_organization, moc
     mock_get_counts.assert_called_once_with([service_1.id, service_2.id], 2025)
 
 
-def test_get_organization_message_totals_no_services(admin_request, sample_organization):
+def test_get_organization_message_allowance_no_services(admin_request, sample_organization):
     response = admin_request.get(
-        "organization.get_organization_message_totals",
+        "organization.get_organization_message_allowance",
         organization_id=sample_organization.id,
         _expected_status=200,
     )
@@ -975,10 +975,10 @@ def test_get_organization_message_totals_no_services(admin_request, sample_organ
     assert response["total_message_limit"] == 0
 
 
-def test_get_organization_message_totals_invalid_org_id(admin_request):
+def test_get_organization_message_allowance_invalid_org_id(admin_request):
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     admin_request.get(
-        "organization.get_organization_message_totals",
+        "organization.get_organization_message_allowance",
         organization_id=fake_uuid,
         _expected_status=404,
     )
