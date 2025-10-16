@@ -264,8 +264,8 @@ def send_notifications_on_mou_signed(organization_id):
     )
 
 
-@organization_blueprint.route("/<uuid:organization_id>/message-totals", methods=["GET"])
-def get_organization_message_totals(organization_id):
+@organization_blueprint.route("/<uuid:organization_id>/message-allowance", methods=["GET"])
+def get_organization_message_allowance(organization_id):
 
     check_suspicious_id(organization_id)
 
