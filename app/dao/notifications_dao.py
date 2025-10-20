@@ -340,6 +340,67 @@ def dao_get_notification_count_for_service_message_ratio(service_id, current_yea
     return recent_count + old_count
 
 
+def dao_get_notification_counts_for_organization(service_ids, current_year):
+    """
+    Get notification counts for multiple services in a single organization.
+    """
+    if not service_ids:
+        return {}
+
+    start_date = datetime(current_year, 6, 16)
+    end_date = datetime(current_year + 1, 6, 16)
+
+    stmt1 = (
+        select(
+            Notification.service_id,
+            func.count().label("count")
+        )
+        .where(
+            Notification.service_id.in_(service_ids),
+            Notification.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            Notification.created_at >= start_date,
+            Notification.created_at < end_date,
+        )
+        .group_by(Notification.service_id)
+    )
+
+    stmt2 = (
+        select(
+            NotificationHistory.service_id,
+            func.count().label("count")
+        )
+        .where(
+            NotificationHistory.service_id.in_(service_ids),
+            NotificationHistory.status
+            not in [
+                NotificationStatus.CANCELLED,
+                NotificationStatus.CREATED,
+                NotificationStatus.SENDING,
+            ],
+            NotificationHistory.created_at >= start_date,
+            NotificationHistory.created_at < end_date,
+        )
+        .group_by(NotificationHistory.service_id)
+    )
+
+    result_dict = {}
+
+    recent_results = db.session.execute(stmt1).all()
+    for service_id, count in recent_results:
+        result_dict[service_id] = count
+
+    history_results = db.session.execute(stmt2).all()
+    for service_id, count in history_results:
+        result_dict[service_id] = result_dict.get(service_id, 0) + count
+
+    return result_dict
+
+
 def dao_get_failed_notification_count():
     stmt = select(func.count(Notification.id)).where(
         Notification.status == NotificationStatus.FAILED
