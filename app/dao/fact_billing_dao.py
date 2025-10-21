@@ -7,7 +7,10 @@ from sqlalchemy.sql.expression import case, literal
 
 from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
-from app.dao.organization_dao import dao_get_organization_live_services
+from app.dao.organization_dao import (
+    dao_get_organization_live_services,
+    dao_get_organization_services,
+)
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
     AnnualBilling,
@@ -700,7 +703,6 @@ def fetch_usage_year_for_organization(organization_id, year, include_all_service
     today = utc_now().date()
 
     if include_all_services:
-        from app.dao.organization_dao import dao_get_organization_services
         services = dao_get_organization_services(organization_id)
     else:
         services = dao_get_organization_live_services(organization_id)
