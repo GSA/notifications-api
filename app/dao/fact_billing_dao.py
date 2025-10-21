@@ -18,7 +18,7 @@ from app.models import (
     Rate,
     Service,
 )
-from app.utils import get_midnight_in_utc, utc_now
+from app.utils import DATETIME_FORMAT, get_midnight_in_utc, utc_now
 
 
 def fetch_sms_free_allowance_remainder_until_date(end_date):
@@ -695,10 +695,15 @@ def query_organization_sms_usage_for_year(organization_id, year):
     )
 
 
-def fetch_usage_year_for_organization(organization_id, year):
+def fetch_usage_year_for_organization(organization_id, year, include_all_services=False):
     year_start, year_end = get_calendar_year_dates(year)
     today = utc_now().date()
-    services = dao_get_organization_live_services(organization_id)
+
+    if include_all_services:
+        from app.dao.organization_dao import dao_get_organization_services
+        services = dao_get_organization_services(organization_id)
+    else:
+        services = dao_get_organization_live_services(organization_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:
@@ -719,12 +724,15 @@ def fetch_usage_year_for_organization(organization_id, year):
             "sms_cost": 0.0,
             "emails_sent": 0,
             "active": service.active,
+            "restricted": service.restricted,
+            "created_at": service.created_at.strftime(DATETIME_FORMAT),
         }
     sms_usages = fetch_sms_billing_for_organization(organization_id, year)
     email_usages = fetch_email_usage_for_organization(
         organization_id, year_start, year_end
     )
     for usage in sms_usages:
+        service = next(s for s in services if s.id == usage.service_id)
         service_with_usage[str(usage.service_id)] = {
             "service_id": usage.service_id,
             "service_name": usage.service_name,
@@ -735,6 +743,8 @@ def fetch_usage_year_for_organization(organization_id, year):
             "sms_cost": float(usage.sms_cost),
             "emails_sent": 0,
             "active": usage.active,
+            "restricted": service.restricted,
+            "created_at": service.created_at.strftime(DATETIME_FORMAT),
         }
     for email_usage in email_usages:
         service_with_usage[str(email_usage.service_id)][
