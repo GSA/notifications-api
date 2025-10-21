@@ -616,6 +616,8 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
             func.coalesce(chargeable_sms, 0).label("chargeable_billable_sms"),
             func.coalesce(sms_cost, 0).label("sms_cost"),
             Service.active,
+            Service.restricted,
+            Service.created_at,
         )
         .select_from(Service)
         .outerjoin(
@@ -734,7 +736,6 @@ def fetch_usage_year_for_organization(organization_id, year, include_all_service
         organization_id, year_start, year_end
     )
     for usage in sms_usages:
-        service = next(s for s in services if s.id == usage.service_id)
         service_with_usage[str(usage.service_id)] = {
             "service_id": usage.service_id,
             "service_name": usage.service_name,
@@ -745,8 +746,8 @@ def fetch_usage_year_for_organization(organization_id, year, include_all_service
             "sms_cost": float(usage.sms_cost),
             "emails_sent": 0,
             "active": usage.active,
-            "restricted": service.restricted,
-            "created_at": service.created_at.strftime(DATETIME_FORMAT),
+            "restricted": usage.restricted,
+            "created_at": usage.created_at.strftime(DATETIME_FORMAT),
         }
     for email_usage in email_usages:
         service_with_usage[str(email_usage.service_id)][
