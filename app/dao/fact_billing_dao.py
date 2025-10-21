@@ -21,7 +21,7 @@ from app.models import (
     Rate,
     Service,
 )
-from app.utils import DATETIME_FORMAT, get_midnight_in_utc, utc_now
+from app.utils import get_midnight_in_utc, utc_now
 
 
 def fetch_sms_free_allowance_remainder_until_date(end_date):
@@ -617,7 +617,6 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
             func.coalesce(sms_cost, 0).label("sms_cost"),
             Service.active,
             Service.restricted,
-            Service.created_at,
         )
         .select_from(Service)
         .outerjoin(
@@ -729,7 +728,6 @@ def fetch_usage_year_for_organization(organization_id, year, include_all_service
             "emails_sent": 0,
             "active": service.active,
             "restricted": service.restricted,
-            "created_at": service.created_at.strftime(DATETIME_FORMAT),
         }
     sms_usages = fetch_sms_billing_for_organization(organization_id, year)
     email_usages = fetch_email_usage_for_organization(
@@ -747,7 +745,6 @@ def fetch_usage_year_for_organization(organization_id, year, include_all_service
             "emails_sent": 0,
             "active": usage.active,
             "restricted": usage.restricted,
-            "created_at": usage.created_at.strftime(DATETIME_FORMAT),
         }
     for email_usage in email_usages:
         service_with_usage[str(email_usage.service_id)][
