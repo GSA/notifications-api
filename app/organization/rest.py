@@ -151,7 +151,9 @@ def get_organization_services_usage(organization_id):
         year = int(request.args.get("year", "none"))
     except ValueError:
         return jsonify(result="error", message="No valid year provided"), 400
-    services = fetch_usage_year_for_organization(organization_id, year)
+    include_all = request.args.get("include_all_services", "false").lower() == "true"
+
+    services = fetch_usage_year_for_organization(organization_id, year, include_all_services=include_all)
     list_services = services.values()
     sorted_services = sorted(
         list_services, key=lambda s: (-s["active"], s["service_name"].lower())
