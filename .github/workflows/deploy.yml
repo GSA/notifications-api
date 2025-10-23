@@ -48,22 +48,31 @@ jobs:
     # 2. Go back to main.tf and update the module syntax and parameters for the new provider
     # 3. Go through the CI/CD again, at this point it should work.
     #
-    # - name: Terraform change provider
-    #   working-directory: terraform/staging
-    #   env:
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
-    #     TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
-    #     TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
-    #   run: |
-    #     terraform state pull | jq '
-    #       .resources |= map(select(.module == "module.csv_upload_bucket"))
-    #     ' > module-csv_upload_bucket.tfstate
-    #     terraform state replace-provider \
-    #       -state=module-csv_upload_bucket.tfstate \
-    #       'registry.terraform.io/cloudfoundry-community/cloudfoundry' \
-    #       'registry.terraform.io/cloudfoundry/cloudfoundry'
-    #     terraform state push module-csv_upload_bucket.tfstate
+    - name: Terraform change provider
+      working-directory: terraform/staging
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+        TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+        TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+      run: |
+        set -euo pipefail
+        echo "Finding all resources in module.csv_upload_bucket..."
+        resources=$(terraform state list | grep '^module.csv_upload_bucket' || true)
+        if [ -z "$resources" ]; then
+          echo "No resources found under module.csv_upload_bucket -- skipping migration."
+          exit 0
+        fi
+        echo "Migrating provider for these resources:"
+        echo "$resources"
+        terraform state replace-provider \
+          'registry.terraform.io/cloudfoundry-community/cloudfoundry' \
+          'registry.terraform.io/cloudfoundry/cloudfoundry' \
+          $resources
+
+        echo "Provider migration complete."
+        echo "Verifying..."
+        terraform state show $(echo "$resources" | head -n 1) | grep 'provider'
 
     - name: Terraform apply
       working-directory: terraform/staging
