@@ -36,6 +36,35 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
       run: terraform init
+
+
+    # Some excitement for later.  When we have a module we cannot just delete
+    # (db, csv_bucket) we need to modify the state in the tfstate file.
+    #
+    # Once both providers are defined in the providers.tf, the order of operations should be
+    #
+    # 1. Uncomment this command and let it run as part of CI/CD.  This alters the state,
+    #    but the module will be temporarily unusable
+    # 2. Go back to main.tf and update the module syntax and parameters for the new provider
+    # 3. Go through the CI/CD again, at this point it should work.
+    #
+    # - name: Terraform change provider
+    #   working-directory: terraform/staging
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
+    #     TF_VAR_cf_user: ${{ secrets.CLOUDGOV_USERNAME }}
+    #     TF_VAR_cf_password: ${{ secrets.CLOUDGOV_PASSWORD }}
+    #   run: |
+    #     terraform state pull | jq '
+    #       .resources |= map(select(.module == "module.csv_upload_bucket"))
+    #     ' > module-csv_upload_bucket.tfstate
+    #     terraform state replace-provider \
+    #       -state=module-csv_upload_bucket.tfstate \
+    #       'registry.terraform.io/cloudfoundry-community/cloudfoundry' \
+    #       'registry.terraform.io/cloudfoundry/cloudfoundry'
+    #     terraform state push module-csv_upload_bucket.tfstate
+
     - name: Terraform apply
       working-directory: terraform/staging
       env:
