@@ -13,7 +13,7 @@ terraform {
 
   backend "s3" {
     bucket       = "cg-6b759c13-6253-4a64-9bda-dd1f620185b0"
-    key          = "admin.tfstate.stage"
+    key          = "api.tfstate.stage"
     encrypt      = "true"
     region       = "us-gov-west-1"
     use_lockfile = "true"
