@@ -45,22 +45,13 @@ module "redis-v70" {
   )
 }
 
-module "csv_upload_bucket_old" {
+module "csv_upload_bucket" {
   source = "github.com/GSA-TTS/terraform-cloudgov//s3?ref=v1.0.0"
 
   cf_org_name   = local.cf_org_name
   cf_space_name = local.cf_space_name
   name          = "${local.app_name}-csv-upload-bucket-${local.env}"
 }
-
-# module "csv_upload_bucket_new" {
-# source = "github.com/GSA-TTS/terraform-cloudgov//s3?ref=v2.4.0"
-# providers = {
-# cloudfoundry = cloudfoundry.official
-# }
-# cf_space_id     = data.cloudfoundry_space.space.id
-# name          = "${local.app_name}-csv-upload-bucket-${local.env}"
-# }
 
 module "egress-space" {
   source = "../shared/egress_space"
