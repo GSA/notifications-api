@@ -12,6 +12,13 @@ resource "null_resource" "prevent_destroy" {
   }
 }
 
+
+data "cloudfoundry_space" "space" {
+  provider = cloudfoundry.official
+  org      = "9e428562-a2d9-41b4-9c23-1ef5237fb44e"
+  name     = local.cf_space_name
+}
+
 module "database" {
   source = "github.com/GSA-TTS/terraform-cloudgov//database?ref=v1.0.0"
 
@@ -20,6 +27,7 @@ module "database" {
   name          = "${local.app_name}-rds-${local.env}"
   rds_plan_name = "small-psql"
 }
+
 
 module "redis-v70" {
   source = "github.com/GSA-TTS/terraform-cloudgov//redis?ref=v2.4.0"
