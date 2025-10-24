@@ -64,18 +64,18 @@ module "egress-space" {
   ]
 }
 
-# module "ses_email" {
-# source = "../shared/ses"
-# providers = {
-# cloudfoundry = cloudfoundry.official
-# }
-# cf_space_id = data.cloudfoundry_space.space.id
+module "ses_email" {
+  source = "../shared/ses"
+  providers = {
+    cloudfoundry = cloudfoundry.official
+  }
+  cf_space_id = data.cloudfoundry_space.space.id
 
-# name                = "${local.app_name}-ses-${local.env}"
-# aws_region          = "us-west-2"
-# mail_from_subdomain = "mail"
-# email_receipt_error = "notify-support@gsa.gov"
-# }
+  name                = "${local.app_name}-ses-${local.env}"
+  aws_region          = "us-west-2"
+  mail_from_subdomain = "mail"
+  email_receipt_error = "notify-support@gsa.gov"
+}
 
 # module "ses_email_old" {
 # source = "../shared/ses"
