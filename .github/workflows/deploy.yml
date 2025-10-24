@@ -36,6 +36,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_STATE_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_STATE_SECRET_ACCESS_KEY }}
       run: terraform init
+
     - name: Terraform apply
       working-directory: terraform/staging
       env:

@@ -41,6 +41,7 @@ jobs:
         id: validation
         run: terraform validate -no-color
 
+
       - name: Terraform plan
         id: plan
         env:
