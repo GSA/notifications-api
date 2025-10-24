@@ -699,7 +699,9 @@ def query_organization_sms_usage_for_year(organization_id, year):
     )
 
 
-def fetch_usage_year_for_organization(organization_id, year, include_all_services=False):
+def fetch_usage_year_for_organization(
+    organization_id, year, include_all_services=False
+):
     year_start, year_end = get_calendar_year_dates(year)
     today = utc_now().date()
 

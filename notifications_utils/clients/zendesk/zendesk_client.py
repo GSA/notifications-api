@@ -4,6 +4,7 @@ from flask import current_app
 
 class ZendeskError(Exception):
     def __init__(self, response):
+        super().__init__(str(response))
         self.response = response
 
 

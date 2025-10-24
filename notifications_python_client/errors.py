@@ -18,6 +18,7 @@ class TokenError(Exception):
             else TOKEN_ERROR_DEFAULT_ERROR_MESSAGE
         )
         self.token = token
+        super().__init__(self.message, token)
 
 
 class TokenExpiredError(TokenError):
@@ -48,6 +49,7 @@ class APIError(Exception):
     def __init__(self, response: Response = None, message: str = None):
         self.response = response
         self._message = message
+        super().__init__(response, message)
 
     def __str__(self):
         return f"{self.status_code} - {self.message}"

@@ -963,7 +963,9 @@ def test_get_organization_message_allowance(admin_request, sample_organization, 
     mock_get_counts.assert_called_once_with([service_1.id, service_2.id], 2025)
 
 
-def test_get_organization_message_allowance_no_services(admin_request, sample_organization):
+def test_get_organization_message_allowance_no_services(
+    admin_request, sample_organization
+):
     response = admin_request.get(
         "organization.get_organization_message_allowance",
         organization_id=sample_organization.id,

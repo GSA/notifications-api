@@ -351,10 +351,7 @@ def dao_get_notification_counts_for_organization(service_ids, current_year):
     end_date = datetime(current_year + 1, 6, 16)
 
     stmt1 = (
-        select(
-            Notification.service_id,
-            func.count().label("count")
-        )
+        select(Notification.service_id, func.count().label("count"))
         .where(
             Notification.service_id.in_(service_ids),
             Notification.status
@@ -370,10 +367,7 @@ def dao_get_notification_counts_for_organization(service_ids, current_year):
     )
 
     stmt2 = (
-        select(
-            NotificationHistory.service_id,
-            func.count().label("count")
-        )
+        select(NotificationHistory.service_id, func.count().label("count"))
         .where(
             NotificationHistory.service_id.in_(service_ids),
             NotificationHistory.status
