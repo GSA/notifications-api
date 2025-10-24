@@ -1257,14 +1257,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "cyclonedx-python-lib"
-version = "11.3.0"
+version = "11.4.0"
 description = "Python library for CycloneDX"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "cyclonedx_python_lib-11.3.0-py3-none-any.whl", hash = "sha256:08094495d0cbbaddbe605f60f6e48ae98d29263386d7926df83ffe9bdea55f78"},
-    {file = "cyclonedx_python_lib-11.3.0.tar.gz", hash = "sha256:ee3135a59ead90397339ea585b341a7ea9c53e734ad13f48a9865cfcf0f1139a"},
+    {file = "cyclonedx_python_lib-11.4.0-py3-none-any.whl", hash = "sha256:98a2b05da0f203379bd169b8d369075db7b3b5d5c812c05c1b5ebe40ad0305bc"},
+    {file = "cyclonedx_python_lib-11.4.0.tar.gz", hash = "sha256:1de90231a600340cc6a7bacb35fbe97c75241b39788beaa33a0f49bf4afd4e6c"},
 ]
 
 [package.dependencies]
@@ -5926,4 +5926,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13.2"
-content-hash = "b7242d3b5d7c73eba207cd5c5485bc8db8fcf5380de34ea66328508d71981693"
+content-hash = "e1ba17c41840dd10a0a5df04eb6aec45ef9cd3f9da4db1b7144f5ae4ce3cb4af"
