@@ -27,7 +27,12 @@ from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
-from app.models import FactNotificationStatus, Notification, NotificationHistory, Template
+from app.models import (
+    FactNotificationStatus,
+    Notification,
+    NotificationHistory,
+    Template,
+)
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
