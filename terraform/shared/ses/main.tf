@@ -29,7 +29,9 @@ data "cloudfoundry_service" "ses" {
 #}
 
 resource "cloudfoundry_service_instance" "ses" {
-  provider     = cloudfoundry.official
+  providers = {
+    cloudfoundry = cloudfoundry.official
+  }
   name         = var.name
   space        = data.cloudfoundry_space.space.id
   service_plan = data.cloudfoundry_service.ses.service_plans["base"]
