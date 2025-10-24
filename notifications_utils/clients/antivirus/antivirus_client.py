@@ -4,6 +4,7 @@ from flask import current_app
 
 class AntivirusError(Exception):
     def __init__(self, message=None, status_code=None):
+        super().__init__(message, status_code)
         self.message = message
         self.status_code = status_code
 

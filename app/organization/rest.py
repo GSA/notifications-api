@@ -153,7 +153,9 @@ def get_organization_services_usage(organization_id):
         return jsonify(result="error", message="No valid year provided"), 400
     include_all = request.args.get("include_all_services", "false").lower() == "true"
 
-    services = fetch_usage_year_for_organization(organization_id, year, include_all_services=include_all)
+    services = fetch_usage_year_for_organization(
+        organization_id, year, include_all_services=include_all
+    )
     list_services = services.values()
     sorted_services = sorted(
         list_services, key=lambda s: (-s["active"], s["service_name"].lower())
@@ -266,7 +268,9 @@ def send_notifications_on_mou_signed(organization_id):
     )
 
 
-@organization_blueprint.route("/<uuid:organization_id>/message-allowance", methods=["GET"])
+@organization_blueprint.route(
+    "/<uuid:organization_id>/message-allowance", methods=["GET"]
+)
 def get_organization_message_allowance(organization_id):
 
     check_suspicious_id(organization_id)
@@ -276,11 +280,16 @@ def get_organization_message_allowance(organization_id):
     services = dao_get_organization_services(organization_id)
 
     if not services:
-        return jsonify({
-            "messages_sent": 0,
-            "messages_remaining": 0,
-            "total_message_limit": 0,
-        }), 200
+        return (
+            jsonify(
+                {
+                    "messages_sent": 0,
+                    "messages_remaining": 0,
+                    "total_message_limit": 0,
+                }
+            ),
+            200,
+        )
 
     current_year = datetime.now(tz=ZoneInfo("UTC")).year
     service_ids = [service.id for service in services]
@@ -293,8 +302,13 @@ def get_organization_message_allowance(organization_id):
     total_message_limit = sum(s.total_message_limit for s in services)
     total_messages_remaining = total_message_limit - total_messages_sent
 
-    return jsonify({
-        "messages_sent": total_messages_sent,
-        "messages_remaining": total_messages_remaining,
-        "total_message_limit": total_message_limit,
-    }), 200
+    return (
+        jsonify(
+            {
+                "messages_sent": total_messages_sent,
+                "messages_remaining": total_messages_remaining,
+                "total_message_limit": total_message_limit,
+            }
+        ),
+        200,
+    )
