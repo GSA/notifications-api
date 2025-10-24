@@ -27,7 +27,7 @@ from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
-from app.models import FactNotificationStatus, Notification, NotificationHistory
+from app.models import FactNotificationStatus, Notification, NotificationHistory, Template
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
@@ -340,7 +340,7 @@ def dao_get_notification_count_for_service_message_ratio(service_id, current_yea
     return recent_count + old_count
 
 
-def dao_get_notification_counts_for_organization(service_ids, current_year):
+def dao_get_notification_counts_per_service(service_ids, current_year):
     """
     Get notification counts for multiple services in a single organization.
     """
@@ -393,6 +393,31 @@ def dao_get_notification_counts_for_organization(service_ids, current_year):
         result_dict[service_id] = result_dict.get(service_id, 0) + count
 
     return result_dict
+
+
+def dao_get_recent_sms_template_per_service(service_ids):
+
+    if not service_ids:
+        return {}
+
+    stmt = (
+        select(
+            Notification.service_id,
+            Template.name.label("template_name"),
+        )
+        .join(Template, Template.id == Notification.template_id)
+        .where(
+            Notification.service_id.in_(service_ids),
+            Notification.notification_type == NotificationType.SMS,
+            Notification.key_type != KeyType.TEST,
+        )
+        .distinct(Notification.service_id)
+        .order_by(Notification.service_id, desc(Notification.created_at))
+    )
+
+    results = db.session.execute(stmt).all()
+
+    return {service_id: template_name for service_id, template_name in results}
 
 
 def dao_get_failed_notification_count():
