@@ -7,7 +7,10 @@ from sqlalchemy.sql.expression import case, literal
 
 from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
-from app.dao.organization_dao import dao_get_organization_services
+from app.dao.organization_dao import (
+    dao_get_organization_live_services,
+    dao_get_organization_services,
+)
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
     AnnualBilling,
@@ -696,11 +699,16 @@ def query_organization_sms_usage_for_year(organization_id, year):
     )
 
 
-def fetch_usage_year_for_organization(organization_id, year):
+def fetch_usage_year_for_organization(
+    organization_id, year, include_all_services=False
+):
     year_start, year_end = get_calendar_year_dates(year)
     today = utc_now().date()
 
-    services = dao_get_organization_services(organization_id)
+    if include_all_services:
+        services = dao_get_organization_services(organization_id)
+    else:
+        services = dao_get_organization_live_services(organization_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:

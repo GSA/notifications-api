@@ -27,7 +27,12 @@ from app import create_uuid, db
 from app.dao.dao_utils import autocommit
 from app.dao.inbound_sms_dao import Pagination
 from app.enums import KeyType, NotificationStatus, NotificationType
-from app.models import FactNotificationStatus, Notification, NotificationHistory, Template
+from app.models import (
+    FactNotificationStatus,
+    Notification,
+    NotificationHistory,
+    Template,
+)
 from app.utils import (
     escape_special_characters,
     get_midnight_in_utc,
@@ -351,10 +356,7 @@ def dao_get_notification_counts_per_service(service_ids, current_year):
     end_date = datetime(current_year + 1, 6, 16)
 
     stmt1 = (
-        select(
-            Notification.service_id,
-            func.count().label("count")
-        )
+        select(Notification.service_id, func.count().label("count"))
         .where(
             Notification.service_id.in_(service_ids),
             Notification.status
@@ -370,10 +372,7 @@ def dao_get_notification_counts_per_service(service_ids, current_year):
     )
 
     stmt2 = (
-        select(
-            NotificationHistory.service_id,
-            func.count().label("count")
-        )
+        select(NotificationHistory.service_id, func.count().label("count"))
         .where(
             NotificationHistory.service_id.in_(service_ids),
             NotificationHistory.status

@@ -259,13 +259,10 @@ def dao_get_service_primary_contacts(service_ids):
     if not service_ids:
         return {}
 
-    stmt = (
-        select(
-            Service.id.label("service_id"),
-            Service.billing_contact_email_addresses.label("email_address"),
-        )
-        .where(Service.id.in_(service_ids))
-    )
+    stmt = select(
+        Service.id.label("service_id"),
+        Service.billing_contact_email_addresses.label("email_address"),
+    ).where(Service.id.in_(service_ids))
 
     results = db.session.execute(stmt).all()
 
