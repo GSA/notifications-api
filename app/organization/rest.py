@@ -15,7 +15,6 @@ from app.dao.notifications_dao import (
     dao_get_notification_counts_per_service,
     dao_get_recent_sms_template_per_service,
 )
-from app.dao.services_dao import dao_get_service_primary_contacts
 from app.dao.organization_dao import (
     dao_add_service_to_organization,
     dao_add_user_to_organization,
@@ -28,7 +27,10 @@ from app.dao.organization_dao import (
     dao_remove_user_from_organization,
     dao_update_organization,
 )
-from app.dao.services_dao import dao_fetch_service_by_id
+from app.dao.services_dao import (
+    dao_fetch_service_by_id,
+    dao_get_service_primary_contacts,
+)
 from app.dao.templates_dao import dao_get_template_by_id
 from app.dao.users_dao import get_user_by_id
 from app.enums import KeyType
