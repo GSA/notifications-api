@@ -64,15 +64,14 @@ module "egress-space" {
   ]
 }
 
-module "ses_email" {
-  source              = "../shared/ses"
-  cf_org_name         = local.cf_org_name
-  cf_space_name       = local.cf_space_name
-  name                = "${local.app_name}-ses-${local.env}"
-  aws_region          = "us-west-2"
-  mail_from_subdomain = "mail"
-  email_receipt_error = "notify-support@gsa.gov"
-}
+# module "ses_email" {
+#  cf_org_name         = local.cf_org_name
+#  cf_space_name       = local.cf_space_name
+#  name                = "${local.app_name}-ses-${local.env}"
+#  aws_region          = "us-west-2"
+#  mail_from_subdomain = "mail"
+#  email_receipt_error = "notify-support@gsa.gov"
+# }
 
 module "sns_sms" {
   source = "../shared/sns"
@@ -83,3 +82,32 @@ module "sns_sms" {
   aws_region          = "us-west-2"
   monthly_spend_limit = 25
 }
+
+
+
+data "cloudfoundry_space" "space" {
+  org_name = var.cf_org_name
+  name     = var.cf_space_name
+}
+
+
+data "cloudfoundry_service" "ses_official" {
+  name = "datagov-smtp"
+}
+
+# resource "cloudfoundry_service_instance" "ses_official" {
+# Right now the default is cfcommunity, remove this when default is cloudfoundry
+# providers = {
+#  cloudfoundry = cloudfoundry.official
+# }
+#  name         = var.name
+#  space        = data.cloudfoundry_space.space.id
+#  service_plan = data.cloudfoundry_service.ses.service_plans["base"]
+#  json_params = jsonencode({
+#    region                        = var.aws_region
+#    domain                        = var.email_domain
+#    mail_from_subdomain           = var.mail_from_subdomain
+#    email_receipt_error           = var.email_receipt_error
+#    enable_feedback_notifications = true
+#  })
+# }
