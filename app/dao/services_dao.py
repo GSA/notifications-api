@@ -254,6 +254,24 @@ def dao_fetch_all_services_created_by_user(user_id):
     return db.session.execute(stmt).scalars().all()
 
 
+def dao_get_service_primary_contacts(service_ids):
+
+    if not service_ids:
+        return {}
+
+    stmt = (
+        select(
+            Service.id.label("service_id"),
+            Service.billing_contact_email_addresses.label("email_address"),
+        )
+        .where(Service.id.in_(service_ids))
+    )
+
+    results = db.session.execute(stmt).all()
+
+    return {service_id: email_address for service_id, email_address in results}
+
+
 @autocommit
 @version_class(
     VersionOptions(ApiKey, must_write_history=False),
