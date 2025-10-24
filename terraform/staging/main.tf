@@ -65,7 +65,7 @@ module "egress-space" {
 }
 
 module "ses_email" {
-  source = "../shared/ses_official"
+  source = "../shared/ses"
   providers = {
     cloudfoundry = cloudfoundry.official
   }
