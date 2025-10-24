@@ -53,15 +53,6 @@ module "csv_upload_bucket" {
   name          = "${local.app_name}-csv-upload-bucket-${local.env}"
 }
 
-# module "csv_upload_bucket_new" {
-# source = "github.com/GSA-TTS/terraform-cloudgov//s3?ref=v2.4.0"
-# providers = {
-# cloudfoundry = cloudfoundry.official
-# }
-# cf_space_id     = data.cloudfoundry_space.space.id
-# name          = "${local.app_name}-csv-upload-bucket-${local.env}"
-# }
-
 module "egress-space" {
   source = "../shared/egress_space"
 
@@ -73,16 +64,29 @@ module "egress-space" {
   ]
 }
 
-module "ses_email" {
-  source = "../shared/ses"
+# module "ses_email" {
+# source = "../shared/ses"
+# providers = {
+# cloudfoundry = cloudfoundry.official
+# }
+# cf_space_id = data.cloudfoundry_space.space.id
 
-  cf_org_name         = local.cf_org_name
-  cf_space_name       = local.cf_space_name
-  name                = "${local.app_name}-ses-${local.env}"
-  aws_region          = "us-west-2"
-  mail_from_subdomain = "mail"
-  email_receipt_error = "notify-support@gsa.gov"
-}
+# name                = "${local.app_name}-ses-${local.env}"
+# aws_region          = "us-west-2"
+# mail_from_subdomain = "mail"
+# email_receipt_error = "notify-support@gsa.gov"
+# }
+
+# module "ses_email_old" {
+# source = "../shared/ses"
+
+# cf_org_name         = local.cf_org_name
+# cf_space_name       = local.cf_space_name
+# name                = "${local.app_name}-ses-${local.env}"
+# aws_region          = "us-west-2"
+# mail_from_subdomain = "mail"
+# email_receipt_error = "notify-support@gsa.gov"
+# }
 
 module "sns_sms" {
   source = "../shared/sns"
