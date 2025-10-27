@@ -1024,7 +1024,7 @@ def test_get_organization_dashboard(admin_request, mocker):
     assert len(response["services"]) == 1
     service_data = response["services"][0]
 
-    assert service_data["service_id"] == service_id
+    assert service_data["service_id"] == str(service_id)
     assert service_data["service_name"] == "Test Service"
     assert service_data["active"] is True
     assert service_data["restricted"] is False
