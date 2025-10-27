@@ -515,9 +515,6 @@ def is_us_phone_number(number):
     try:
         return _get_country_code(number) == us_prefix
     except NumberParseException:
-        current_app.logger.exception(
-            "NumberParseException checking if phone number is US number"
-        )
         return False
 
 
@@ -606,7 +603,6 @@ def validate_us_phone_number(number):
             raise InvalidPhoneError("Phone number range is not in use")
         raise InvalidPhoneError("Phone number is not possible")
     except NumberParseException as exc:
-        current_app.logger.exception("NumberParseException validating US phone number")
         raise InvalidPhoneError(exc._msg) from exc
 
 
@@ -663,9 +659,6 @@ def try_validate_and_format_phone_number(number, international=None, log_msg=Non
     try:
         return validate_and_format_phone_number(number, international)
     except InvalidPhoneError as exc:
-        current_app.logger.exception(
-            "InvalidPhoneNumber while trying to validate and format phone number"
-        )
         if log_msg:
             current_app.logger.warning("{}: {}".format(log_msg, exc))
         return number
