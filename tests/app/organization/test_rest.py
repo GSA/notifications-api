@@ -960,7 +960,10 @@ def test_get_organization_message_allowance(admin_request, sample_organization, 
     assert response["total_message_limit"] == 150000
 
     assert mock_get_counts.call_count == 1
-    mock_get_counts.assert_called_once_with([service_1.id, service_2.id], 2025)
+    mock_get_counts.assert_called_once()
+    args, _ = mock_get_counts.call_args
+    assert set(args[0]) == {service_1.id, service_2.id}
+    assert args[1] == 2025
 
 
 def test_get_organization_message_allowance_no_services(
