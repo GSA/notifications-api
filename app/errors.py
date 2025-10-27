@@ -15,7 +15,7 @@ class InvalidRequest(Exception):
     fields = []
 
     def __init__(self, message, status_code):
-        super().__init__()
+        super().__init__(message, status_code)
         self.message = message
         self.status_code = status_code
 
@@ -115,16 +115,20 @@ class TooManyRequestsError(InvalidRequest):
     status_code = 429
     message_template = "Exceeded send limits ({}) for today"
 
-    def __init__(self, sending_limit):
+    def __init__(self, sending_limit):  # noqa: B042
         self.message = self.message_template.format(sending_limit)
+        self.sending_limit = sending_limit
+        super().__init__(self.message, self.status_code)
 
 
 class TotalRequestsError(InvalidRequest):
     status_code = 429
     message_template = "Exceeded total application limits ({}) for today"
 
-    def __init__(self, sending_limit):
+    def __init__(self, sending_limit):  # noqa: B042
         self.message = self.message_template.format(sending_limit)
+        self.sending_limit = sending_limit
+        super().__init__(self.message, self.status_code)
 
 
 class RateLimitError(InvalidRequest):
@@ -133,7 +137,7 @@ class RateLimitError(InvalidRequest):
         "Exceeded rate limit for key type {} of {} requests per {} seconds"
     )
 
-    def __init__(self, sending_limit, interval, key_type):
+    def __init__(self, sending_limit, interval, key_type):  # noqa: B042
         # normal keys are spoken of as "live" in the documentation
         # so using this in the error messaging
         if key_type == KeyType.NORMAL:
@@ -142,12 +146,17 @@ class RateLimitError(InvalidRequest):
         self.message = self.message_template.format(
             key_type.upper(), sending_limit, interval
         )
+        self.sending_limit = sending_limit
+        self.interval = interval
+        self.key_type = key_type
+        super().__init__(self.message, self.status_code)
 
 
 class BadRequestError(InvalidRequest):
     message = "An error occurred"
 
-    def __init__(self, fields=None, message=None, status_code=400):
-        self.status_code = status_code
+    def __init__(self, fields=None, message=None, status_code=400):  # noqa: B042
         self.fields = fields or []
         self.message = message if message else self.message
+        self.status_code = status_code
+        super().__init__(self.message, self.status_code)
