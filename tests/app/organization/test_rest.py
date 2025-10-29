@@ -995,7 +995,7 @@ def test_get_organization_dashboard(admin_request, mocker):
 
     mock_usage = mocker.patch("app.organization.rest.fetch_usage_year_for_organization")
     mock_usage.return_value = {
-        str(service_id): {
+        service_id: {
             "service_id": service_id,
             "service_name": "Test Service",
             "active": True,

@@ -719,7 +719,7 @@ def fetch_usage_year_for_organization(
     service_with_usage = {}
     # initialise results
     for service in services:
-        service_with_usage[str(service.id)] = {
+        service_with_usage[service.id] = {
             "service_id": service.id,
             "service_name": service.name,
             "free_sms_limit": 0,
@@ -736,7 +736,7 @@ def fetch_usage_year_for_organization(
         organization_id, year_start, year_end
     )
     for usage in sms_usages:
-        service_with_usage[str(usage.service_id)] = {
+        service_with_usage[usage.service_id] = {
             "service_id": usage.service_id,
             "service_name": usage.service_name,
             "free_sms_limit": usage.free_sms_fragment_limit,
@@ -749,7 +749,7 @@ def fetch_usage_year_for_organization(
             "restricted": usage.restricted,
         }
     for email_usage in email_usages:
-        service_with_usage[str(email_usage.service_id)][
+        service_with_usage[email_usage.service_id][
             "emails_sent"
         ] = email_usage.emails_sent
 
