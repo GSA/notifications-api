@@ -1,5 +1,4 @@
 import json
-import uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -181,7 +180,7 @@ def get_organization_dashboard(organization_id):
         organization_id, year, include_all_services=True
     )
 
-    service_ids = [uuid.UUID(service_id) for service_id in services_with_usage.keys()]
+    service_ids = [service_data["service_id"] for service_data in services_with_usage.values()]
 
     if not service_ids:
         return jsonify(services=[]), 200
@@ -189,14 +188,20 @@ def get_organization_dashboard(organization_id):
     recent_templates = dao_get_recent_sms_template_per_service(service_ids)
     primary_contacts = dao_get_service_primary_contacts(service_ids)
 
-    for service_id_str, service_data in services_with_usage.items():
-        service_uuid = uuid.UUID(service_id_str)
+    for service_data in services_with_usage.values():
+        service_uuid = service_data["service_id"]
         service_data["recent_sms_template_name"] = recent_templates.get(service_uuid)
         service_data["primary_contact"] = primary_contacts.get(service_uuid)
 
     services_list = list(services_with_usage.values())
     sorted_services = sorted(
-        services_list, key=lambda s: (-s["active"], s["service_name"].lower())
+        services_list,
+        key=lambda s: (
+            0 if (s["active"] and not s["restricted"]) else
+            1 if (s["active"] and s["restricted"]) else
+            2,
+            s["service_name"].lower()
+        )
     )
 
     return jsonify(services=sorted_services)
