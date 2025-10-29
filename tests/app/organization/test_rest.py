@@ -942,7 +942,7 @@ def test_get_organization_message_allowance(admin_request, sample_organization, 
     dao_add_service_to_organization(service_2, sample_organization.id)
 
     mock_get_counts = mocker.patch(
-        "app.organization.rest.dao_get_notification_counts_for_organization"
+        "app.organization.rest.dao_get_notification_counts_per_service"
     )
     mock_get_counts.return_value = {
         service_1.id: 30000,
@@ -987,3 +987,53 @@ def test_get_organization_message_allowance_invalid_org_id(admin_request):
         organization_id=fake_uuid,
         _expected_status=404,
     )
+
+
+def test_get_organization_dashboard(admin_request, mocker):
+    org_id = uuid.uuid4()
+    service_id = uuid.uuid4()
+
+    mock_usage = mocker.patch("app.organization.rest.fetch_usage_year_for_organization")
+    mock_usage.return_value = {
+        service_id: {
+            "service_id": service_id,
+            "service_name": "Test Service",
+            "active": True,
+            "restricted": False,
+            "emails_sent": 100,
+            "sms_billable_units": 5,
+            "sms_remainder": 245,
+            "sms_cost": 1.50,
+            "free_sms_limit": 250,
+            "chargeable_billable_sms": 0,
+        }
+    }
+
+    mock_templates = mocker.patch("app.organization.rest.dao_get_recent_sms_template_per_service")
+    mock_templates.return_value = {service_id: "Welcome SMS"}
+
+    mock_contacts = mocker.patch("app.organization.rest.dao_get_service_primary_contacts")
+    mock_contacts.return_value = {service_id: "billing@example.com"}
+
+    response = admin_request.get(
+        "organization.get_organization_dashboard",
+        organization_id=org_id,
+        **{"year": 2025},
+    )
+
+    assert len(response["services"]) == 1
+    service_data = response["services"][0]
+
+    assert service_data["service_id"] == str(service_id)
+    assert service_data["service_name"] == "Test Service"
+    assert service_data["active"] is True
+    assert service_data["restricted"] is False
+    assert service_data["sms_billable_units"] == 5
+    assert service_data["free_sms_limit"] == 250
+    assert service_data["sms_remainder"] == 245
+    assert service_data["recent_sms_template_name"] == "Welcome SMS"
+    assert service_data["primary_contact"] == "billing@example.com"
+
+    mock_usage.assert_called_once_with(org_id, 2025, include_all_services=True)
+    mock_templates.assert_called_once_with([service_id])
+    mock_contacts.assert_called_once_with([service_id])

@@ -924,7 +924,7 @@ def test_fetch_usage_year_for_organization(notify_db_session):
     results = fetch_usage_year_for_organization(fixtures["org_1"].id, 2019)
 
     assert len(results) == 3
-    first_row = results[str(fixtures["service_1_sms_and_letter"].id)]
+    first_row = results[fixtures["service_1_sms_and_letter"].id]
     assert first_row["service_id"] == fixtures["service_1_sms_and_letter"].id
     assert first_row["service_name"] == fixtures["service_1_sms_and_letter"].name
     assert first_row["free_sms_limit"] == 10
@@ -933,7 +933,7 @@ def test_fetch_usage_year_for_organization(notify_db_session):
     assert first_row["sms_cost"] == 0.0
     assert first_row["emails_sent"] == 0
 
-    second_row = results[str(service_with_emails_for_org.id)]
+    second_row = results[service_with_emails_for_org.id]
     assert second_row["service_id"] == service_with_emails_for_org.id
     assert second_row["service_name"] == service_with_emails_for_org.name
     assert second_row["free_sms_limit"] == 0
@@ -942,7 +942,7 @@ def test_fetch_usage_year_for_organization(notify_db_session):
     assert second_row["sms_cost"] == 0
     assert second_row["emails_sent"] == 1100
 
-    third_row = results[str(fixtures["service_with_out_ft_billing_this_year"].id)]
+    third_row = results[fixtures["service_with_out_ft_billing_this_year"].id]
     assert (
         third_row["service_id"] == fixtures["service_with_out_ft_billing_this_year"].id
     )
@@ -1025,11 +1025,11 @@ def test_fetch_usage_year_for_organization_calculates_cost_from_multiple_rates(
     )
 
     assert len(results) == 1
-    assert results[str(service_1.id)]["free_sms_limit"] == 3
-    assert results[str(service_1.id)]["sms_remainder"] == 0
-    assert results[str(service_1.id)]["sms_billable_units"] == 6
-    assert results[str(service_1.id)]["chargeable_billable_sms"] == 3
-    assert results[str(service_1.id)]["sms_cost"] == 8.0
+    assert results[service_1.id]["free_sms_limit"] == 3
+    assert results[service_1.id]["sms_remainder"] == 0
+    assert results[service_1.id]["sms_billable_units"] == 6
+    assert results[service_1.id]["chargeable_billable_sms"] == 3
+    assert results[service_1.id]["sms_cost"] == 8.0
 
 
 @freeze_time("2022-05-01 13:30")
@@ -1051,11 +1051,11 @@ def test_fetch_usage_year_for_organization_when_no_usage(notify_db_session):
     )
 
     assert len(results) == 1
-    assert results[str(service_1.id)]["free_sms_limit"] == 3
-    assert results[str(service_1.id)]["sms_remainder"] == 3
-    assert results[str(service_1.id)]["sms_billable_units"] == 0
-    assert results[str(service_1.id)]["chargeable_billable_sms"] == 0
-    assert results[str(service_1.id)]["sms_cost"] == 0.0
+    assert results[service_1.id]["free_sms_limit"] == 3
+    assert results[service_1.id]["sms_remainder"] == 3
+    assert results[service_1.id]["sms_billable_units"] == 0
+    assert results[service_1.id]["chargeable_billable_sms"] == 0
+    assert results[service_1.id]["sms_cost"] == 0.0
 
 
 @freeze_time("2022-05-01 13:30")
@@ -1112,9 +1112,9 @@ def test_fetch_usage_year_for_organization_only_queries_present_year(notify_db_s
     results = fetch_usage_year_for_organization(organization_id=org.id, year=last_year)
 
     assert len(results) == 1
-    assert results[str(service_1.id)]["sms_billable_units"] == 2
-    assert results[str(service_1.id)]["chargeable_billable_sms"] == 2
-    assert results[str(service_1.id)]["sms_cost"] == 2.0
+    assert results[service_1.id]["sms_billable_units"] == 2
+    assert results[service_1.id]["chargeable_billable_sms"] == 2
+    assert results[service_1.id]["sms_cost"] == 2.0
 
 
 @freeze_time("2020-02-27 13:30")
@@ -1165,8 +1165,8 @@ def test_fetch_usage_year_for_organization_only_returns_data_for_live_services(
     results = fetch_usage_year_for_organization(organization_id=org.id, year=2020)
 
     assert len(results) == 1
-    assert results[str(live_service.id)]["sms_billable_units"] == 19
-    assert results[str(live_service.id)]["emails_sent"] == 0
+    assert results[live_service.id]["sms_billable_units"] == 19
+    assert results[live_service.id]["emails_sent"] == 0
 
 
 @freeze_time("2022-04-27 13:30")
