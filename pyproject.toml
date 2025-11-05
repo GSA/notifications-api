@@ -38,7 +38,7 @@ jsonschema = {version = "==4.25.1", extras = ["format"]}
 lxml = "==6.0.2"
 marshmallow = "^4.1.0"
 marshmallow-sqlalchemy = "^1.4.2"
-newrelic = "^11.0.1"
+newrelic = "^11.1.0"
 packaging = "==25.0"
 poetry-dotenv-plugin = "==0.2.0"
 psycopg2-binary = "==2.9.11"
