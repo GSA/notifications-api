@@ -98,7 +98,7 @@ isort = "^7.0.0"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
 moto = "==5.1.16"
 pip-audit = "*"
-pre-commit = "^4.3.0"
+pre-commit = "^4.4.0"
 pytest = "^8.4.2"
 pytest-env = "^1.2.0"
 pytest-mock = "^3.15.1"
