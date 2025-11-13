@@ -29,6 +29,7 @@ GENERAL_TOKEN_ERROR_MESSAGE = TOKEN_MESSAGE_ONE + TOKEN_MESSAGE_TWO
 
 class AuthError(Exception):
     def __init__(self, message, code, service_id=None, api_key_id=None):
+        super().__init__(message, code, service_id, api_key_id)
         self.message = {"token": [message]}
         self.short_message = message
         self.code = code

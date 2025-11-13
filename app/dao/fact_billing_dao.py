@@ -7,7 +7,10 @@ from sqlalchemy.sql.expression import case, literal
 
 from app import db
 from app.dao.date_util import get_calendar_year_dates, get_calendar_year_for_datetime
-from app.dao.organization_dao import dao_get_organization_live_services
+from app.dao.organization_dao import (
+    dao_get_organization_live_services,
+    dao_get_organization_services,
+)
 from app.enums import KeyType, NotificationStatus, NotificationType
 from app.models import (
     AnnualBilling,
@@ -613,6 +616,7 @@ def fetch_sms_billing_for_organization(organization_id, financial_year):
             func.coalesce(chargeable_sms, 0).label("chargeable_billable_sms"),
             func.coalesce(sms_cost, 0).label("sms_cost"),
             Service.active,
+            Service.restricted,
         )
         .select_from(Service)
         .outerjoin(
@@ -695,10 +699,16 @@ def query_organization_sms_usage_for_year(organization_id, year):
     )
 
 
-def fetch_usage_year_for_organization(organization_id, year):
+def fetch_usage_year_for_organization(
+    organization_id, year, include_all_services=False
+):
     year_start, year_end = get_calendar_year_dates(year)
     today = utc_now().date()
-    services = dao_get_organization_live_services(organization_id)
+
+    if include_all_services:
+        services = dao_get_organization_services(organization_id)
+    else:
+        services = dao_get_organization_live_services(organization_id)
 
     # if year end date is less than today, we are calculating for data in the past and have no need for deltas.
     if year_end >= today:
@@ -709,7 +719,7 @@ def fetch_usage_year_for_organization(organization_id, year):
     service_with_usage = {}
     # initialise results
     for service in services:
-        service_with_usage[str(service.id)] = {
+        service_with_usage[service.id] = {
             "service_id": service.id,
             "service_name": service.name,
             "free_sms_limit": 0,
@@ -719,13 +729,14 @@ def fetch_usage_year_for_organization(organization_id, year):
             "sms_cost": 0.0,
             "emails_sent": 0,
             "active": service.active,
+            "restricted": service.restricted,
         }
     sms_usages = fetch_sms_billing_for_organization(organization_id, year)
     email_usages = fetch_email_usage_for_organization(
         organization_id, year_start, year_end
     )
     for usage in sms_usages:
-        service_with_usage[str(usage.service_id)] = {
+        service_with_usage[usage.service_id] = {
             "service_id": usage.service_id,
             "service_name": usage.service_name,
             "free_sms_limit": usage.free_sms_fragment_limit,
@@ -735,9 +746,10 @@ def fetch_usage_year_for_organization(organization_id, year):
             "sms_cost": float(usage.sms_cost),
             "emails_sent": 0,
             "active": usage.active,
+            "restricted": usage.restricted,
         }
     for email_usage in email_usages:
-        service_with_usage[str(email_usage.service_id)][
+        service_with_usage[email_usage.service_id][
             "emails_sent"
         ] = email_usage.emails_sent
 
