@@ -96,7 +96,7 @@ hypothesis = "^6.148.5"
 honcho = "*"
 isort = "^7.0.0"
 jinja2-cli = {version = "==0.8.2", extras = ["yaml"]}
-moto = "==5.1.17"
+moto = "==5.1.18"
 pip-audit = "*"
 pre-commit = "^4.5.0"
 pytest = "^9.0.1"
