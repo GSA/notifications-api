@@ -2,8 +2,8 @@ terraform {
   required_version = "~> 1.7"
   required_providers {
     cloudfoundry = {
-      source  = "cloudfoundry-community/cloudfoundry"
-      version = "0.53.1"
+      source  = "cloudfoundry/cloudfoundry"
+      version = "1.9.0"
     }
     cfcommunity = {
       source  = "cloudfoundry-community/cloudfoundry"
