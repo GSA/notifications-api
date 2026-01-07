@@ -2353,14 +2353,14 @@ files = [
 
 [[package]]
 name = "jsonschema"
-version = "4.25.1"
+version = "4.26.0"
 description = "An implementation of JSON Schema validation for Python"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "jsonschema-4.25.1-py3-none-any.whl", hash = "sha256:3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63"},
-    {file = "jsonschema-4.25.1.tar.gz", hash = "sha256:e4a9655ce0da0c0b67a085847e00a3a51449e1157f4f75e9fb5aa545e122eb85"},
+    {file = "jsonschema-4.26.0-py3-none-any.whl", hash = "sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"},
+    {file = "jsonschema-4.26.0.tar.gz", hash = "sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326"},
 ]
 
 [package.dependencies]
@@ -2373,7 +2373,7 @@ jsonschema-specifications = ">=2023.03.6"
 referencing = ">=0.28.4"
 rfc3339-validator = {version = "*", optional = true, markers = "extra == \"format\""}
 rfc3987 = {version = "*", optional = true, markers = "extra == \"format\""}
-rpds-py = ">=0.7.1"
+rpds-py = ">=0.25.0"
 uri-template = {version = "*", optional = true, markers = "extra == \"format\""}
 webcolors = {version = ">=1.11", optional = true, markers = "extra == \"format\""}
 
@@ -6005,4 +6005,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13.2"
-content-hash = "72886efb13d11e7de7f08e603a1655c77a2b8cf9272b938e7f34ce9df722338e"
+content-hash = "566dc0831e2343d00663deb999440a91b99b5242d977e71ee8881f9e9fee0ae9"
