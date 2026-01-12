@@ -2307,25 +2307,26 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jinja2-cli"
-version = "0.8.2"
-description = "A CLI interface to Jinja2"
+version = "1.0.0"
+description = "The CLI interface to Jinja2"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "jinja2-cli-0.8.2.tar.gz", hash = "sha256:a16bb1454111128e206f568c95938cdef5b5a139929378f72bb8cf6179e18e50"},
-    {file = "jinja2_cli-0.8.2-py2.py3-none-any.whl", hash = "sha256:b91715c79496beaddad790171e7258a87db21c1a0b6d2b15bca3ba44b74aac5d"},
+    {file = "jinja2_cli-1.0.0-py3-none-any.whl", hash = "sha256:003da79bdddce82a186d98687c77bdecacdb1a5d40d1962df500003d4f4ad03c"},
+    {file = "jinja2_cli-1.0.0.tar.gz", hash = "sha256:e7dadec3f908602669b1518245c90a0c08bceecc2c40d35011e3bcb54bcdf52f"},
 ]
 
 [package.dependencies]
-jinja2 = "*"
+jinja2 = ">=3.1"
 pyyaml = {version = "*", optional = true, markers = "extra == \"yaml\""}
 
 [package.extras]
-tests = ["flake8", "jinja2", "pytest"]
-toml = ["jinja2", "toml"]
-xml = ["jinja2", "xmltodict"]
-yaml = ["jinja2", "pyyaml"]
+hjson = ["hjson"]
+json5 = ["json5"]
+toml = ["tomli ; python_full_version < \"3.11.0\""]
+xml = ["xmltodict"]
+yaml = ["pyyaml"]
 
 [[package]]
 name = "jmespath"
@@ -6005,4 +6006,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13.2"
-content-hash = "566dc0831e2343d00663deb999440a91b99b5242d977e71ee8881f9e9fee0ae9"
+content-hash = "c7ecd60154928aaa25735b509213c32d41d7c319f83768de3588a13b400a812b"
