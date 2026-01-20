@@ -9,10 +9,10 @@ class CloudfoundryConfig:
         self.s3_buckets = {bucket["name"]: bucket["credentials"] for bucket in buckets}
         self._empty_bucket_credentials = {
             "bucket": "",
-            "access_key_id": "",   # pragma: allowlist secret
-            "secret_access_key": "",   # pragma: allowlist secret
+            "access_key_id": "",   # nosec B105
+            "secret_access_key": "",   # nosec B105
             "region": "",
-        }  # pragma: allowlist secret
+        }
 
     @property
     def database_url(self):
