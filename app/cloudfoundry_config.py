@@ -12,7 +12,7 @@ class CloudfoundryConfig:
             "access_key_id": "",   # pragma: allowlist secret
             "secret_access_key": "",   # pragma: allowlist secret
             "region": "",
-        }
+        }  # pragma: allowlist secret
 
     @property
     def database_url(self):
