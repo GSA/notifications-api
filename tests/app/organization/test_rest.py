@@ -1009,10 +1009,14 @@ def test_get_organization_dashboard(admin_request, mocker):
         }
     }
 
-    mock_templates = mocker.patch("app.organization.rest.dao_get_recent_sms_template_per_service")
+    mock_templates = mocker.patch(
+        "app.organization.rest.dao_get_recent_sms_template_per_service"
+    )
     mock_templates.return_value = {service_id: "Welcome SMS"}
 
-    mock_contacts = mocker.patch("app.organization.rest.dao_get_service_primary_contacts")
+    mock_contacts = mocker.patch(
+        "app.organization.rest.dao_get_service_primary_contacts"
+    )
     mock_contacts.return_value = {service_id: "billing@example.com"}
 
     response = admin_request.get(

@@ -35,11 +35,12 @@ def check_service_over_total_message_limit(key_type, service):
     # For now we are using calendar year
     # Switch to using service agreement dates when the Agreement model is ready
     # If the service stat has never been set before, compute the remaining seconds for 2025
-    # and set it (all services) to expire on 12/31/2025.
+    # and set it (all services) to expire on 12/31/2026.
     if service_stats is None:
         now_et = datetime.now(ZoneInfo("America/New_York"))
+
         target_time = datetime(
-            2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("America/New_York")
+            2026, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("America/New_York")
         )
         time_difference = target_time - now_et
         seconds_difference = int(time_difference.total_seconds())
