@@ -308,8 +308,8 @@ def dao_get_notification_count_for_service(*, service_id):
 
 
 def dao_get_notification_count_for_service_message_ratio(service_id, current_year):
-    start_date = datetime(current_year, 1, 1)
-    end_date = datetime(current_year + 1, 1, 1)
+    start_date = datetime(current_year - 1, 6, 16)
+    end_date = datetime(current_year, 6, 16)
     stmt1 = (
         select(func.count())
         .select_from(Notification)
