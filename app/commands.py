@@ -8,6 +8,7 @@ from os import getenv
 
 import click
 import flask
+
 # from click_datetime import Datetime as click_dt
 from faker import Faker
 from flask import current_app, json
@@ -59,7 +60,8 @@ from app.models import (
     TemplateHistory,
     User,
 )
-from app.utils import utc_now
+
+# from app.utils import utc_now
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
