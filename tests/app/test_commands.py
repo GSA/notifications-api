@@ -53,7 +53,6 @@ from app.models import (  # Job,
     Template,
     User,
 )
-from app.utils import utc_now
 from tests.app.db import (  # create_job,; create_template,
     create_annual_billing,
     create_notification,
