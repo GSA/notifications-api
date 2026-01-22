@@ -8,7 +8,8 @@ from os import getenv
 
 import click
 import flask
-from click_datetime import Datetime as click_dt
+
+# from click_datetime import Datetime as click_dt
 from faker import Faker
 from flask import current_app, json
 from sqlalchemy import and_, select, text, update
@@ -59,7 +60,8 @@ from app.models import (
     TemplateHistory,
     User,
 )
-from app.utils import utc_now
+
+# from app.utils import utc_now
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils.recipients import RecipientCSV
 from notifications_utils.template import SMSMessageTemplate
@@ -260,50 +262,55 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
     file.close()
 
 
-@notify_command(name="archive-jobs-created-between-dates")
-@click.option(
-    "-s",
-    "--start_date",
-    required=True,
-    help="start date inclusive",
-    type=click_dt(format="%Y-%m-%d"),
-)
-@click.option(
-    "-e",
-    "--end_date",
-    required=True,
-    help="end date inclusive",
-    type=click_dt(format="%Y-%m-%d"),
-)
-def update_jobs_archived_flag(start_date, end_date):
-    current_app.logger.info(
-        f"Archiving jobs created between {start_date} to {end_date}"
-    )
+# TODO this is commented out because there is a conflict between
+# the version of wheel we need to be on (0.46.2 or greater) and
+# the click-datetime dependency, which insists wheel be 0.45.0 or lower.
+# So need to rewrite this command to not use click-datetime, or see
+# if the owners of click-datetime updated it (not as of 1/22/2026).
+# @notify_command(name="archive-jobs-created-between-dates")
+# @click.option(
+#     "-s",
+#     "--start_date",
+#     required=True,
+#     help="start date inclusive",
+#     type=click_dt(format="%Y-%m-%d"),
+# )
+# @click.option(
+#     "-e",
+#     "--end_date",
+#     required=True,
+#     help="end date inclusive",
+#     type=click_dt(format="%Y-%m-%d"),
+# )
+# def update_jobs_archived_flag(start_date, end_date):
+#     current_app.logger.info(
+#         f"Archiving jobs created between {start_date} to {end_date}"
+#     )
 
-    process_date = start_date
-    total_updated = 0
+#     process_date = start_date
+#     total_updated = 0
 
-    while process_date < end_date:
-        start_time = utc_now()
-        sql = """update
-                    jobs set archived = true
-                where
-                    created_at >= (date :start + time '00:00:00')
-                    and created_at < (date :end + time '00:00:00')
-        """
-        result = db.session.execute(
-            text(sql), {"start": process_date, "end": process_date + timedelta(days=1)}
-        )
-        db.session.commit()
-        current_app.logger.info(
-            f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived "
-            f"{result.rowcount} jobs for {process_date}"
-        )
+#     while process_date < end_date:
+#         start_time = utc_now()
+#         sql = """update
+#                     jobs set archived = true
+#                 where
+#                     created_at >= (date :start + time '00:00:00')
+#                     and created_at < (date :end + time '00:00:00')
+#         """
+#         result = db.session.execute(
+#             text(sql), {"start": process_date, "end": process_date + timedelta(days=1)}
+#         )
+#         db.session.commit()
+#         current_app.logger.info(
+#             f"jobs: --- Completed took {datetime.now() - start_time}ms. Archived "
+#             f"{result.rowcount} jobs for {process_date}"
+#         )
 
-        process_date += timedelta(days=1)
+#         process_date += timedelta(days=1)
 
-        total_updated += result.rowcount
-    current_app.logger.info(f"Total archived jobs = {total_updated}")
+#         total_updated += result.rowcount
+#     current_app.logger.info(f"Total archived jobs = {total_updated}")
 
 
 @notify_command(name="populate-organizations-from-file")

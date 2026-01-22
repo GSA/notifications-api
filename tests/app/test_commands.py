@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import func, select
 
 from app import db
-from app.commands import (
+from app.commands import (  # update_jobs_archived_flag,
     _clear_templates_from_cache,
     _update_template,
     associate_services_to_organizations,
@@ -32,7 +32,6 @@ from app.commands import (
     promote_user_to_platform_admin,
     purge_csv_bucket,
     purge_functional_test_data,
-    update_jobs_archived_flag,
     update_templates,
 )
 from app.dao.inbound_numbers_dao import dao_get_available_inbound_numbers
@@ -46,23 +45,19 @@ from app.enums import (
     TemplateType,
     UserState,
 )
-from app.models import (
+from app.models import (  # Job,
     AnnualBilling,
-    Job,
     Notification,
     Organization,
     Service,
     Template,
     User,
 )
-from app.utils import utc_now
-from tests.app.db import (
+from tests.app.db import (  # create_job,; create_template,
     create_annual_billing,
-    create_job,
     create_notification,
     create_organization,
     create_service,
-    create_template,
 )
 
 
@@ -120,35 +115,35 @@ def test_purge_functional_test_data_bad_mobile(notify_db_session, notify_api):
     assert user_count == 0
 
 
-def test_update_jobs_archived_flag(notify_db_session, notify_api):
-    service = create_service()
+# def test_update_jobs_archived_flag(notify_db_session, notify_api):
+#     service = create_service()
 
-    sms_template = create_template(service=service, template_type=TemplateType.SMS)
-    create_job(sms_template)
+#     sms_template = create_template(service=service, template_type=TemplateType.SMS)
+#     create_job(sms_template)
 
-    right_now = utc_now()
-    tomorrow = right_now + timedelta(days=1)
+#     right_now = utc_now()
+#     tomorrow = right_now + timedelta(days=1)
 
-    right_now = right_now.strftime("%Y-%m-%d")
-    tomorrow = tomorrow.strftime("%Y-%m-%d")
+#     right_now = right_now.strftime("%Y-%m-%d")
+#     tomorrow = tomorrow.strftime("%Y-%m-%d")
 
-    stmt = select(Job).where(Job.archived is True)
-    archived_jobs = db.session.execute(stmt).scalar() or 0
-    assert archived_jobs == 0
+#     stmt = select(Job).where(Job.archived is True)
+#     archived_jobs = db.session.execute(stmt).scalar() or 0
+#     assert archived_jobs == 0
 
-    notify_api.test_cli_runner().invoke(
-        update_jobs_archived_flag,
-        [
-            "-e",
-            tomorrow,
-            "-s",
-            right_now,
-        ],
-    )
-    jobs = db.session.execute(select(Job)).scalars().all()
-    assert len(jobs) == 1
-    for job in jobs:
-        assert job.archived is True
+#     notify_api.test_cli_runner().invoke(
+#         update_jobs_archived_flag,
+#         [
+#             "-e",
+#             tomorrow,
+#             "-s",
+#             right_now,
+#         ],
+#     )
+#     jobs = db.session.execute(select(Job)).scalars().all()
+#     assert len(jobs) == 1
+#     for job in jobs:
+#         assert job.archived is True
 
 
 def _get_organization_query_count():
