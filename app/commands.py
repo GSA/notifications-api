@@ -262,6 +262,11 @@ def bulk_invite_user_to_service(file_name, service_id, user_id, auth_type, permi
     file.close()
 
 
+# TODO this is commented out because there is a conflict between
+# the version of wheel we need to be on (0.46.2 or greater) and
+# the click-datetime dependency, which insists wheel be 0.45.0 or lower.
+# So need to rewrite this command to not use click-datetime, or see
+# if the owners of click-datetime updated it (not as of 1/22/2026).
 # @notify_command(name="archive-jobs-created-between-dates")
 # @click.option(
 #     "-s",
