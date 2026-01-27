@@ -20,13 +20,11 @@ def upgrade():
     conn = op.get_bind()
     input_params = {"id": current_app.config["NOTIFY_SERVICE_ID"]}
     conn.execute(
-        text(
-            """
+        text("""
         update services
         set prefix_sms = false
         where id = :id
-    """
-        ),
+    """),
         input_params,
     )
 
@@ -49,12 +47,10 @@ def downgrade():
     conn = op.get_bind()
     input_params = {"id": current_app.config["NOTIFY_SERVICE_ID"]}
     conn.execute(
-        text(
-            """
+        text("""
         update services
         set prefix_sms = null
         where id = :id
-    """
-        ),
+    """),
         input_params,
     )

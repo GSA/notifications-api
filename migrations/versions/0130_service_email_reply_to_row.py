@@ -25,14 +25,12 @@ def upgrade():
         "notify_service_id": NOTIFY_SERVICE_ID,
     }
     conn.execute(
-        text(
-            """
+        text("""
         INSERT INTO service_email_reply_to
         (id, service_id, email_address, is_default, created_at)
         VALUES
         (:email_reply_to, :notify_service_id, 'testsender@dispostable.com', 'f', NOW())
-    """
-        ),
+    """),
         input_params,
     )
 
@@ -43,11 +41,9 @@ def downgrade():
         "email_reply_to": EMAIL_REPLY_TO_ID,
     }
     conn.execute(
-        text(
-            """
+        text("""
         DELETE FROM service_email_reply_to
         WHERE id = :email_reply_to
-    """
-        ),
+    """),
         input_params,
     )

@@ -115,8 +115,7 @@ def upgrade():
         unique=False,
     )
 
-    op.execute(
-        """
+    op.execute("""
     INSERT INTO notification_history
     (
       id,
@@ -154,8 +153,7 @@ def upgrade():
       status,
       reference
     FROM notifications
-    """
-    )
+    """)
     ### end Alembic commands ###
 
 

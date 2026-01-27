@@ -24,13 +24,11 @@ def upgrade():
     )
 
     # insert initial values - HMG and Land Reg
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO dvla_organisation VALUES
         ('001', 'HM Government'),
         ('500', 'Land Registry')
-    """
-    )
+    """)
 
     op.add_column(
         "services",

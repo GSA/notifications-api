@@ -13,8 +13,7 @@ down_revision = "0316_int_letters_permission"
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO
             service_permissions (service_id, permission, created_at)
         SELECT
@@ -30,8 +29,7 @@ def upgrade():
                     service_id = services.id and
                     permission = 'upload_letters'
            )
-    """
-    )
+    """)
 
 
 def downgrade():

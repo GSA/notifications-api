@@ -16,26 +16,22 @@ def upgrade():
     op.drop_constraint(
         "notifications_template_id_fkey", "notifications", type_="foreignkey"
     )
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE notifications ADD CONSTRAINT "notifications_templates_history_fkey"
         FOREIGN KEY ("template_id", "template_version") REFERENCES "templates_history" ("id", "version")
         NOT VALID
-    """
-    )
+    """)
 
     op.drop_constraint(
         "notification_history_template_id_fkey",
         "notification_history",
         type_="foreignkey",
     )
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE notification_history ADD CONSTRAINT "notification_history_templates_history_fkey"
         FOREIGN KEY ("template_id", "template_version") REFERENCES "templates_history" ("id", "version")
         NOT VALID
-    """
-    )
+    """)
 
 
 def downgrade():

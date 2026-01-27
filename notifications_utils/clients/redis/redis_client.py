@@ -52,16 +52,14 @@ class RedisClient:
         # delete keys matching a pattern supplied as a parameter. Does so in batches of 5000 to prevent unpack from
         # exceeding lua's stack limit, and also to prevent errors if no keys match the pattern.
         # Inspired by https://gist.github.com/ddre54/0a4751676272e0da8186
-        self.scripts["delete-keys-by-pattern"] = self.redis_store.register_script(
-            """
+        self.scripts["delete-keys-by-pattern"] = self.redis_store.register_script("""
             local keys = redis.call('keys', ARGV[1])
             local deleted = 0
             for i=1, #keys, 5000 do
                 deleted = deleted + redis.call('del', unpack(keys, i, math.min(i + 4999, #keys)))
             end
             return deleted
-            """
-        )
+            """)
 
     def delete_by_pattern(self, pattern, raise_exception=False):
         r"""

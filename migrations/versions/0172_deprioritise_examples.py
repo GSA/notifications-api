@@ -15,8 +15,7 @@ down_revision = "0171_add_org_invite_template"
 
 def upgrade():
     op.get_bind()
-    op.execute(
-        """
+    op.execute("""
         update templates
         set process_type = 'normal'
         where templates.id in (
@@ -24,8 +23,7 @@ def upgrade():
             join templates_history on templates.id=templates_history.id
             where templates_history.name = 'Example text message template'
         )
-    """
-    )
+    """)
 
 
 def downgrade():

@@ -27,8 +27,7 @@ def upgrade():
 def downgrade():
     conn = op.get_bind()
     conn.execute(
-        text(
-            """
+        text("""
         INSERT INTO
         provider_details
         (id, display_name, identifier, priority, notification_type, active, version, supports_international)
@@ -39,7 +38,6 @@ def downgrade():
         (id, display_name, identifier, priority, notification_type, active, version, supports_international)
         VALUES
         (:uuid, 'Loadtesting', 'loadtesting', 100, 'sms', true, 1, false)
-        """
-        ),
+        """),
         {"uuid": str(uuid.uuid4())},
     )

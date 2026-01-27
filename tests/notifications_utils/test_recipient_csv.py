@@ -1014,9 +1014,7 @@ def test_multiple_sms_recipient_columns_with_missing_data(column_name):
         """
             names, phone number, {}
             "Joanna and Steve", 07900 900111
-        """.format(
-            column_name
-        ),
+        """.format(column_name),
         template=_sample_template("sms"),
         allow_international_sms=True,
     )
