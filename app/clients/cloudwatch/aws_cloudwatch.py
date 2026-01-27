@@ -197,15 +197,19 @@ class AwsCloudwatchClient(Client):
 
     def _get_receipts(self, log_group_name, start, end):
         event_set = set()
-        all_events = self._get_log(log_group_name, start, end)
-        for event in all_events:
-            try:
-                actual_event = self.event_to_db_format(event["message"])
-                event_set.add(json.dumps(actual_event))
-            except Exception:
-                current_app.logger.exception(
-                    f"Could not format delivery receipt {event} for db insert"
-                )
+        try:
+            all_events = self._get_log(log_group_name, start, end)
+            for event in all_events:
+                try:
+                    actual_event = self.event_to_db_format(event["message"])
+                    event_set.add(json.dumps(actual_event))
+                except Exception:
+                    current_app.logger.exception(
+                        f"Could not format delivery receipt {event} for db insert"
+                    )
+        except Exception as e:
+            current_app.logger.error(f"Could not find log group {log_group_name}")
+            raise e
         return event_set
 
     def _aws_value_or_default(self, event, top_level, second_level):

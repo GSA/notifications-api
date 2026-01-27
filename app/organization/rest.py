@@ -180,7 +180,9 @@ def get_organization_dashboard(organization_id):
         organization_id, year, include_all_services=True
     )
 
-    service_ids = [service_data["service_id"] for service_data in services_with_usage.values()]
+    service_ids = [
+        service_data["service_id"] for service_data in services_with_usage.values()
+    ]
 
     if not service_ids:
         return jsonify(services=[]), 200
@@ -197,11 +199,13 @@ def get_organization_dashboard(organization_id):
     sorted_services = sorted(
         services_list,
         key=lambda s: (
-            0 if (s["active"] and not s["restricted"]) else
-            1 if (s["active"] and s["restricted"]) else
-            2,
-            s["service_name"].lower()
-        )
+            (
+                0
+                if (s["active"] and not s["restricted"])
+                else 1 if (s["active"] and s["restricted"]) else 2
+            ),
+            s["service_name"].lower(),
+        ),
     )
 
     return jsonify(services=sorted_services)
