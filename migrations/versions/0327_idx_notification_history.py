@@ -43,24 +43,18 @@ def upgrade():
 
 def downgrade():
     if environment not in ["live", "production"]:
-        op.execute(
-            """
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notifications_service_id_created_at
             ON notifications(service_id, date(created_at))
-            """
-        )
-        op.execute(
-            """
+            """)
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notification_history_created_at
             on notification_history(created_at)
-            """
-        )
-        op.execute(
-            """
+            """)
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notification_history_service_id_created_at
             on notification_history(created_at)
-            """
-        )
+            """)
 
         op.execute("DROP INDEX IF EXISTS ix_notification_history_service_id_composite")
 
@@ -70,20 +64,14 @@ def downgrade():
         op.execute(
             "CREATE INDEX IF NOT EXISTS ix_notification_history_service_id on notification_history (service_id)"
         )
-        op.execute(
-            """
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notification_history_template_id on notification_history (template_id)
-            """
-        )
-        op.execute(
-            """
+            """)
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notification_history_notification_status
             on notification_history (notification_status)
-            """
-        )
-        op.execute(
-            """
+            """)
+        op.execute("""
             CREATE INDEX IF NOT EXISTS ix_notification_history_notification_type
             on notification_history (notification_type)
-            """
-        )
+            """)

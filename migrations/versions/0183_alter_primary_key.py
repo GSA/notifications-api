@@ -16,14 +16,11 @@ down_revision = "0182_add_upload_document_perm"
 
 def upgrade():
     # Drop the old dm_datetime table and create a new one
-    op.execute(
-        """
+    op.execute("""
         delete from dm_datetime where 1=1;
-        """
-    )
+        """)
 
-    op.execute(
-        """
+    op.execute("""
         INSERT into dm_datetime (
         SELECT
         datum AS bst_date,
@@ -55,8 +52,7 @@ def upgrade():
         ) DQ
         ORDER BY bst_date
         );
-        """
-    )
+        """)
 
     op.drop_constraint("ft_billing_pkey", "ft_billing", type_="primary")
 

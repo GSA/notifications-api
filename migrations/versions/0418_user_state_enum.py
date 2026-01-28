@@ -63,8 +63,7 @@ def view_handler() -> Iterator[None]:
 
     yield
 
-    op.execute(
-        """
+    op.execute("""
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -118,8 +117,7 @@ def view_handler() -> Iterator[None]:
                 document_download_count
             FROM notification_history
         )
-    """
-    )
+    """)
 
 
 def upgrade():

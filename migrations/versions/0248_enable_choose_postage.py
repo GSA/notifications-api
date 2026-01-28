@@ -18,8 +18,7 @@ def upgrade():
     op.execute("INSERT INTO service_permission_types VALUES ('choose_postage')")
     op.add_column("templates", sa.Column("postage", sa.String(), nullable=True))
     op.add_column("templates_history", sa.Column("postage", sa.String(), nullable=True))
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE templates ADD CONSTRAINT "chk_templates_postage_null"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -29,10 +28,8 @@ def upgrade():
                 postage is null
             END
         )
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates_history ADD CONSTRAINT "chk_templates_history_postage_null"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -42,8 +39,7 @@ def upgrade():
                 postage is null
             END
         )
-    """
-    )
+    """)
     # ### end Alembic commands ###
 
 

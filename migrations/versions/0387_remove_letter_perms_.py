@@ -22,8 +22,7 @@ def upgrade():
 
 def downgrade():
     # this is the inverse of migration 0317
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO
             service_permissions (service_id, permission, created_at)
         SELECT
@@ -39,8 +38,7 @@ def downgrade():
                     service_id = services.id and
                     permission = 'upload_letters'
            )
-    """
-    )
+    """)
 
 
 # ### end Alembic commands ###

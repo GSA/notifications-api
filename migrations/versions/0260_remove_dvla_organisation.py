@@ -33,8 +33,7 @@ def downgrade():
         sa.PrimaryKeyConstraint("id", name="dvla_organisation_pkey"),
     )
     # can't repopulate the services, but we can put the static data back in dvla_organisation
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO dvla_organisation VALUES
         ('001', 'HM Government', 'hm-government'),
         ('002', 'Office of the Public Guardian', 'opg'),
@@ -77,8 +76,7 @@ def downgrade():
         ('528', 'North Yorkshire Council', 'north-yorkshire'),
         ('529', 'Redbridge Council', 'redbridge'),
         ('530', 'Wigan Council', 'wigan')
-    """
-    )
+    """)
 
     op.add_column(
         "services_history",

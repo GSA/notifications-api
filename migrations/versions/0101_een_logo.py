@@ -20,14 +20,12 @@ def upgrade():
     input_params = {"network_id": ENTERPRISE_EUROPE_NETWORK_ID}
     conn = op.get_bind()
     conn.execute(
-        text(
-            """INSERT INTO organisation VALUES (
+        text("""INSERT INTO organisation VALUES (
         :network_id,
         '',
         'een_x2.png',
         'een'
-    )"""
-        ),
+    )"""),
         input_params,
     )
 
@@ -36,10 +34,8 @@ def downgrade():
     input_params = {"network_id": ENTERPRISE_EUROPE_NETWORK_ID}
     conn = op.get_bind()
     conn.execute(
-        text(
-            """
+        text("""
         DELETE FROM organisation WHERE "id" = :network_id
-    """
-        ),
+    """),
         input_params,
     )

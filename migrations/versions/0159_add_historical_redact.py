@@ -22,8 +22,7 @@ def upgrade():
     conn = op.get_bind()
     input_params = {"notify_user": current_app.config["NOTIFY_USER_ID"]}
     conn.execute(
-        text(
-            """
+        text("""
         INSERT INTO template_redacted
         (
             template_id,
@@ -40,8 +39,7 @@ def upgrade():
             templates
         LEFT JOIN template_redacted on template_redacted.template_id = templates.id
         WHERE template_redacted.template_id IS NULL
-        """
-        ),
+        """),
         input_params,
     )
 

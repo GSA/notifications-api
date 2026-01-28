@@ -25,8 +25,7 @@ def downgrade():
     op.execute("INSERT INTO service_permission_types values('precompiled_letter')")
     input_params = {"permission": "precompiled_letter"}
     conn.execute(
-        text(
-            """
+        text("""
            INSERT INTO
                service_permissions (service_id, permission, created_at)
            SELECT
@@ -42,7 +41,6 @@ def downgrade():
                        service_id = services.id and
                        permission = :permission
                )
-       """
-        ),
+       """),
         input_params,
     )

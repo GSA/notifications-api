@@ -29,41 +29,33 @@ def upgrade():
         nullable=True,
         server_default=sa.null(),
     )
-    op.execute(
-        """
+    op.execute("""
         UPDATE
             services
         SET
             consent_to_research = null
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         UPDATE
             services_history
         SET
             consent_to_research = null
-    """
-    )
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
         UPDATE
             services
         SET
             consent_to_research = false
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         UPDATE
             services_history
         SET
             consent_to_research = false
-    """
-    )
+    """)
     op.alter_column(
         "services_history",
         "consent_to_research",

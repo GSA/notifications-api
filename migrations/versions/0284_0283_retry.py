@@ -15,8 +15,7 @@ from alembic import op
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         UPDATE
             services
         SET
@@ -28,17 +27,14 @@ def upgrade():
             services_history.version = 1 and
             services_history.created_by_id = users.id
         ;
-    """
-    )
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
         UPDATE
             services
         SET
             count_as_live = true
         ;
-    """
-    )
+    """)

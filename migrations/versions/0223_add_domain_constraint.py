@@ -11,16 +11,14 @@ down_revision = "0222_drop_service_branding"
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         update
             email_branding
         set
             domain = null
         where
             domain = ''
-    """
-    )
+    """)
     op.create_unique_constraint(
         "uq_email_branding_domain", "email_branding", ["domain"]
     )

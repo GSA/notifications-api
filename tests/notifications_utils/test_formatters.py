@@ -395,20 +395,16 @@ def test_strip_and_remove_obscure_whitespace_only_removes_normal_whitespace_from
 
 def test_remove_smart_quotes_from_email_addresses():
     assert (
-        remove_smart_quotes_from_email_addresses(
-            """
+        remove_smart_quotes_from_email_addresses("""
         line one’s quote
         first.o’last@example.com is someone’s email address
         line ‘three’
-    """
-        )
-        == (
-            """
+    """)
+        == ("""
         line one’s quote
         first.o'last@example.com is someone’s email address
         line ‘three’
-    """
-        )
+    """)
     )
 
 

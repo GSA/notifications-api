@@ -18,27 +18,23 @@ environment = os.environ["NOTIFY_ENVIRONMENT"]
 
 def upgrade():
     if environment not in ["live", "production"]:
-        op.execute(
-            """
+        op.execute("""
             UPDATE
                 organisation
             SET
                 organisation_type = 'nhs_local'
             WHERE
                 organisation.organisation_type = 'nhs'
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
             UPDATE
                 services
             SET
                 organisation_type = 'nhs_local'
             WHERE
                 services.organisation_type = 'nhs'
-        """
-        )
+        """)
 
     op.alter_column(
         "organisation_types",
@@ -81,24 +77,20 @@ def downgrade():
     )
 
     if environment not in ["live", "production"]:
-        op.execute(
-            """
+        op.execute("""
             UPDATE
                 organisation
             SET
                 organisation_type = 'nhs'
             WHERE
                 organisation_type = 'nhs_local'
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
             UPDATE
                 services
             SET
                 organisation_type = 'nhs'
             WHERE
                 organisation_type = 'nhs_local'
-        """
-        )
+        """)
