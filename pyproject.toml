@@ -35,7 +35,7 @@ gunicorn = {version = "==25.0.1", extras = ["gevent"]}
 iso8601 = "==2.1.0"
 jsonschema = {version = "==4.26.0", extras = ["format"]}
 lxml = "==6.0.2"
-marshmallow = "^4.2.1"
+marshmallow = "^4.2.2"
 marshmallow-sqlalchemy = "^1.4.2"
 newrelic = "^11.4.0"
 packaging = "==26.0"
