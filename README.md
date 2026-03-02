@@ -6,7 +6,7 @@ This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
 It's cloned from the brilliant work of the team at
 [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
 
-This repo contains :
+This repo contains  :
 
 - A public-facing REST API for Notify.gov, which teams can integrate with using
   [API clients built by UK](https://www.notifications.service.gov.uk/documentation).
