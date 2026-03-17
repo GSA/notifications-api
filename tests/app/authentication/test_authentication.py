@@ -238,12 +238,11 @@ def test_decode_jwt_token_returns_error_with_no_secrets(client):
     assert exc.value.short_message == "Invalid token: API key not found"
 
 
-@pytest.mark.parametrize("service_id", ["not-a-valid-id", 1234])
 def test_requires_auth_should_not_allow_service_id_with_the_wrong_data_type(
-    client, service_jwt_secret, service_id
+    client, service_jwt_secret
 ):
     token = create_jwt_token(
-        client_id=service_id,
+        client_id="not-a-valid-id",
         secret=service_jwt_secret,
     )
 
@@ -254,6 +253,16 @@ def test_requires_auth_should_not_allow_service_id_with_the_wrong_data_type(
         exc.value.short_message
         == "Invalid token: service id is not the right data type"
     )
+
+
+def test_requires_auth_should_not_allow_service_id_with_a_non_string(
+    client, service_jwt_secret
+):
+    with pytest.raises(TypeError):
+        create_jwt_token(
+            client_id=1234,
+            secret=service_jwt_secret,
+        )
 
 
 def test_requires_auth_returns_error_when_service_doesnt_exist(client, sample_api_key):
