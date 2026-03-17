@@ -242,12 +242,11 @@ def test_decode_jwt_token_returns_error_with_no_secrets(client):
 def test_requires_auth_should_not_allow_service_id_with_the_wrong_data_type(
     client, service_jwt_secret, service_id
 ):
-    with pytest.raises(TypeError) as exc:
-        create_jwt_token(
-            client_id=service_id,
-            secret=service_jwt_secret,
-        )
-    assert exc.value.short_message == "Foo"
+    create_jwt_token(
+        client_id=service_id,
+        secret=service_jwt_secret,
+    )
+    assert 1 == 0
 
     # request.headers = {"Authorization": "Bearer {}".format(token)}
     # with pytest.raises(AuthError) as exc:
