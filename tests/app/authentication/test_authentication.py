@@ -239,7 +239,7 @@ def test_decode_jwt_token_returns_error_with_no_secrets(client):
 
 
 def test_requires_auth_should_not_allow_service_id_with_the_wrong_data_type(
-    client, service_jwt_secret, service_id
+    client, service_jwt_secret
 ):
     token = create_jwt_token(
         client_id="not-a-valid-id",
@@ -256,7 +256,7 @@ def test_requires_auth_should_not_allow_service_id_with_the_wrong_data_type(
 
 
 def test_requires_auth_should_not_allow_service_id_with_a_non_string(
-    client, service_jwt_secret, service_id
+    client, service_jwt_secret
 ):
     with pytest.raises(TypeError):
         create_jwt_token(
