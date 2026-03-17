@@ -80,7 +80,7 @@ typing-extensions = "^4.15.0"
 aiohttp = "^3.13.3"
 pytest = "^9.0.2"
 filelock = ">=3.20.3"
-pyasn1 = ">=0.6.2"
+pyasn1 = ">=0.6.3"
 jaraco-context = ">=6.1.0"
 wheel = ">=0.46.2"
 
