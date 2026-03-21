@@ -10,7 +10,8 @@ workers = 4
 worker_class = "gevent"
 worker_connections = 256
 bind = "0.0.0.0:{}".format(os.getenv("PORT"))
-statsd_host = "{}:8125".format(os.getenv("STATSD_HOST"))
+_statsd = os.getenv("STATSD_HOST")
+statsd_host = "{}:8125".format(_statsd) if _statsd else None
 gunicorn.SERVER_SOFTWARE = "None"
 timeout = 240
 

@@ -406,9 +406,12 @@ class Test(Development):
 
 
 class Production(Config):
-    # buckets
-    CSV_UPLOAD_BUCKET = cloud_config.s3_credentials(
+    # buckets — on Render, S3 credentials come from env vars; on CF, from VCAP_SERVICES
+    _cf_bucket = cloud_config.s3_credentials(
         f"notify-api-csv-upload-bucket-{Config.NOTIFY_ENVIRONMENT}"
+    )
+    CSV_UPLOAD_BUCKET = (
+        _s3_credentials_from_env("CSV") if _cf_bucket.get("bucket") == "" else _cf_bucket
     )
 
     FROM_NUMBER = "Notify.gov"

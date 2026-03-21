@@ -107,4 +107,19 @@ class CloudfoundryConfig:
         return self.parsed_services["ttsnotify-sms"][0]["credentials"][key]
 
 
-cloud_config = CloudfoundryConfig()
+def _build_cloud_config():
+    """Select config adapter based on runtime environment.
+
+    On Render.com the RENDER env var is set to 'true'.
+    Everywhere else (Cloud Foundry, local dev) the original
+    CloudfoundryConfig is used — it already falls back to
+    env vars when VCAP_SERVICES is absent.
+    """
+    if getenv("RENDER"):
+        from app.render_config import RenderConfig
+
+        return RenderConfig()
+    return CloudfoundryConfig()
+
+
+cloud_config = _build_cloud_config()

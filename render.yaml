@@ -1,0 +1,140 @@
+databases:
+  - name: notify-db
+    plan: starter
+    databaseName: notification_api
+    postgresMajorVersion: "15"
+    region: oregon
+
+envVarGroups:
+  # Shared secrets and config — set once, inherited by all services.
+  # After first deploy, copy the web service's generated values for
+  # SECRET_KEY, DANGEROUS_SALT, and ADMIN_CLIENT_SECRET into this group
+  # via the Render dashboard so all services share them.
+  - name: notify-shared
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2
+      - key: RENDER
+        value: "true"
+      - key: FLASK_APP
+        value: application.py
+      - key: NOTIFY_APP_NAME
+        value: api
+      - key: NOTIFY_ENVIRONMENT
+        value: production
+      - key: REDIS_ENABLED
+        value: "1"
+      - key: ANTIVIRUS_ENABLED
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DANGEROUS_SALT
+        generateValue: true
+      - key: ADMIN_CLIENT_SECRET
+        generateValue: true
+      - key: API_HOST_NAME
+        sync: false
+      - key: ADMIN_BASE_URL
+        sync: false
+      - key: AWS_US_TOLL_FREE_NUMBER
+        sync: false
+      - key: SES_AWS_ACCESS_KEY_ID
+        sync: false
+      - key: SES_AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: SES_AWS_REGION
+        value: us-west-2
+      - key: SES_DOMAIN_ARN
+        sync: false
+      - key: SNS_AWS_ACCESS_KEY_ID
+        sync: false
+      - key: SNS_AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: SNS_AWS_REGION
+        value: us-west-2
+      - key: SNS_TOPIC_ARNS
+        sync: false
+      - key: CSV_AWS_ACCESS_KEY_ID
+        sync: false
+      - key: CSV_AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: CSV_AWS_REGION
+        value: us-west-2
+      - key: CSV_BUCKET_NAME
+        sync: false
+
+services:
+  - type: redis
+    name: notify-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    region: oregon
+
+  - type: web
+    name: notify-api
+    runtime: python
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt && flask db upgrade
+    startCommand: gunicorn -c gunicorn_config.py gunicorn_entry:application
+    healthCheckPath: /_status?simple=true
+    envVarGroups:
+      - notify-shared
+    envVars:
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: notify-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: notify-redis
+          type: redis
+          property: connectionString
+      - key: NOTIFY_E2E_TEST_EMAIL
+        value: e2e-test@example.gov
+      - key: NOTIFY_E2E_TEST_PASSWORD
+        generateValue: true
+
+  - type: worker
+    name: notify-worker
+    runtime: python
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A run_celery.notify_celery worker --loglevel=INFO --pool=gevent --concurrency=10 --prefetch-multiplier=2
+    envVarGroups:
+      - notify-shared
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: notify-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: notify-redis
+          type: redis
+          property: connectionString
+
+  - type: worker
+    name: notify-beat
+    runtime: python
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A run_celery.notify_celery beat --loglevel=INFO
+    envVarGroups:
+      - notify-shared
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: notify-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: notify-redis
+          type: redis
+          property: connectionString
