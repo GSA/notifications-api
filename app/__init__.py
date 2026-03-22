@@ -315,7 +315,7 @@ def register_blueprint(application):
     application.register_blueprint(receive_notifications_blueprint)
 
     notifications_blueprint.before_request(requires_auth)
-    application.register_blueprint(notifications_blueprint)
+    application.register_blueprint(notifications_blueprint, url_prefix="/v2")
 
     job_blueprint.before_request(requires_admin_auth)
     application.register_blueprint(job_blueprint)

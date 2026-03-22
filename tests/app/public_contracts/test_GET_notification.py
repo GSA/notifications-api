@@ -27,7 +27,7 @@ def test_get_api_sms_contract(client, sample_notification):
         _get_notification(
             client,
             sample_notification,
-            "/notifications/{}".format(sample_notification.id),
+            "/v2/notifications/{}".format(sample_notification.id),
         )
     )
     validate_v0(response_json, "GET_notification_return_sms.json")
@@ -38,7 +38,7 @@ def test_get_job_sms_contract(client, sample_notification):
         _get_notification(
             client,
             sample_notification,
-            "/notifications/{}".format(sample_notification.id),
+            "/v2/notifications/{}".format(sample_notification.id),
         )
     )
     validate_v0(response_json, "GET_notification_return_sms.json")
@@ -48,7 +48,7 @@ def test_get_notifications_contract(
     client, sample_notification, sample_email_notification
 ):
     response_json = return_json_from_response(
-        _get_notification(client, sample_notification, "/notifications")
+        _get_notification(client, sample_notification, "/v2/notifications")
     )
     notifications = response_json["notifications"]
     assert notifications, "No notifications returned"
