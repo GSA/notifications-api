@@ -1,6 +1,8 @@
 import uuid
 
 from flask import current_app
+
+V2_NOTIFICATIONS = "/v2/notifications"
 from sqlalchemy import select
 
 from app import db

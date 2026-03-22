@@ -18,7 +18,7 @@ from app.authentication.auth import (
 from app.dao.api_key_dao import expire_api_key, get_model_api_keys, get_unsigned_secrets
 from app.dao.services_dao import dao_fetch_service_by_id
 from notifications_python_client.authentication import create_jwt_token
-from tests import create_admin_authorization_header, create_service_authorization_header
+from tests import V2_NOTIFICATIONS, create_admin_authorization_header, create_service_authorization_header
 from tests.conftest import set_config_values
 
 
@@ -62,7 +62,7 @@ def service_jwt_token(sample_api_key, service_jwt_secret):
 
 def test_requires_auth_should_allow_valid_token_for_request(client, sample_api_key):
     header = create_service_authorization_header(sample_api_key.service_id)
-    response = client.get("/v2/notifications", headers=[header])
+    response = client.get(V2_NOTIFICATIONS, headers=[header])
     assert response.status_code == 200
 
 

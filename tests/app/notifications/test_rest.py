@@ -12,7 +12,7 @@ from app.dao.templates_dao import dao_update_template
 from app.enums import KeyType, NotificationStatus, NotificationType, TemplateType
 from app.models import ApiKey
 from notifications_python_client.authentication import create_jwt_token
-from tests import create_service_authorization_header
+from tests import V2_NOTIFICATIONS, create_service_authorization_header
 from tests.app.db import create_api_key, create_notification
 
 
@@ -51,7 +51,7 @@ def test_fuzz_send_email_notification(
             service_id=sample_email_notification.service_id
         )
         response = client.post(
-            "/v2/notifications/email", json=payload, headers=[auth_header]
+            f"{V2_NOTIFICATIONS}/email", json=payload, headers=[auth_header]
         )
         assert response.status_code in (
             201,
@@ -82,7 +82,7 @@ def test_get_notification_by_id(
         service_id=notification_to_get.service_id
     )
     response = client.get(
-        "/v2/notifications/{}".format(notification_to_get.id), headers=[auth_header]
+        f"{V2_NOTIFICATIONS}/{notification_to_get.id}", headers=[auth_header]
     )
 
     assert response.status_code == 200
@@ -113,7 +113,7 @@ def test_get_notification_by_invalid_id(
         service_id=notification_to_get.service_id
     )
 
-    response = client.get("/v2/notifications/{}".format(id), headers=[auth_header])
+    response = client.get(f"{V2_NOTIFICATIONS}/{id}", headers=[auth_header])
 
     assert response.status_code == 405
 
@@ -124,7 +124,7 @@ def test_get_notifications_empty_result(client, sample_api_key):
     )
 
     response = client.get(
-        path="/v2/notifications/{}".format(uuid.uuid4()), headers=[auth_header]
+        path=f"{V2_NOTIFICATIONS}/{uuid.uuid4()}", headers=[auth_header]
     )
 
     notification = json.loads(response.get_data(as_text=True))
@@ -157,7 +157,7 @@ def test_get_notification_from_different_api_key_works(
     save_model_api_key(api_key)
 
     response = client.get(
-        path="/v2/notifications/{}".format(sample_notification.id),
+        path=f"{V2_NOTIFICATIONS}/{sample_notification.id}",
         headers=_create_auth_header_from_key(api_key),
     )
     assert response.status_code == 200
@@ -188,7 +188,7 @@ def test_get_notification_from_different_api_key_of_same_type_succeeds(
     dao_update_notification(sample_notification)
 
     response = client.get(
-        path="/v2/notifications/{}".format(sample_notification.id),
+        path=f"{V2_NOTIFICATIONS}/{sample_notification.id}",
         headers=_create_auth_header_from_key(querying_api_key),
     )
 
@@ -203,7 +203,7 @@ def test_get_all_notifications(client, sample_notification):
         service_id=sample_notification.service_id
     )
 
-    response = client.get("/v2/notifications", headers=[auth_header])
+    response = client.get(V2_NOTIFICATIONS, headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
@@ -233,7 +233,7 @@ def test_normal_api_key_returns_notifications_created_from_jobs_and_from_api(
     )
 
     response = client.get(
-        path="/v2/notifications", headers=_create_auth_header_from_key(sample_api_key)
+        path=V2_NOTIFICATIONS, headers=_create_auth_header_from_key(sample_api_key)
     )
 
     assert response.status_code == 200
@@ -272,7 +272,7 @@ def test_get_all_notifications_only_returns_notifications_of_matching_type(
     }
 
     response = client.get(
-        path="/v2/notifications",
+        path=V2_NOTIFICATIONS,
         headers=_create_auth_header_from_key(notification_objs[key_type].api_key),
     )
 
@@ -303,7 +303,7 @@ def test_do_not_return_job_notifications_by_default(
     }
 
     response = client.get(
-        path="/v2/notifications",
+        path=V2_NOTIFICATIONS,
         headers=_create_auth_header_from_key(notification_objs[key_type].api_key),
     )
 
@@ -358,7 +358,7 @@ def test_only_normal_api_keys_can_return_job_notifications(
     }
 
     response = client.get(
-        path="/v2/notifications?include_jobs=true",
+        path=f"{V2_NOTIFICATIONS}?include_jobs=true",
         headers=_create_auth_header_from_key(notification_objs[key_type[0]].api_key),
     )
 
@@ -377,7 +377,7 @@ def test_get_all_notifications_newest_first(client, sample_email_template):
         service_id=sample_email_template.service_id
     )
 
-    response = client.get("/v2/notifications", headers=[auth_header])
+    response = client.get(V2_NOTIFICATIONS, headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 3
@@ -392,7 +392,7 @@ def test_should_reject_invalid_page_param(client, sample_email_template):
         service_id=sample_email_template.service_id
     )
 
-    response = client.get("/v2/notifications?page=invalid", headers=[auth_header])
+    response = client.get(f"{V2_NOTIFICATIONS}?page=invalid", headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert response.status_code == 400
@@ -410,7 +410,7 @@ def test_valid_page_size_param(notify_api, sample_email_template):
             )
 
             response = client.get(
-                "/v2/notifications?page=1&page_size=1", headers=[auth_header]
+                f"{V2_NOTIFICATIONS}?page=1&page_size=1", headers=[auth_header]
             )
 
             notifications = json.loads(response.get_data(as_text=True))
@@ -429,7 +429,7 @@ def test_invalid_page_size_param(client, sample_email_template):
     )
 
     response = client.get(
-        "/v2/notifications?page=1&page_size=invalid", headers=[auth_header]
+        f"{V2_NOTIFICATIONS}?page=1&page_size=invalid", headers=[auth_header]
     )
 
     notifications = json.loads(response.get_data(as_text=True))
@@ -452,7 +452,7 @@ def test_should_return_pagination_links(client, sample_email_template):
             service_id=sample_email_template.service_id
         )
 
-        response = client.get("/v2/notifications?page=2", headers=[auth_header])
+        response = client.get(f"{V2_NOTIFICATIONS}?page=2", headers=[auth_header])
 
         notifications = json.loads(response.get_data(as_text=True))
         assert len(notifications["notifications"]) == 1
@@ -471,7 +471,7 @@ def test_get_all_notifications_returns_empty_list(client, sample_api_key):
         service_id=sample_api_key.service.id
     )
 
-    response = client.get("/v2/notifications", headers=[auth_header])
+    response = client.get(V2_NOTIFICATIONS, headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
@@ -486,7 +486,7 @@ def test_filter_by_template_type(client, sample_template, sample_email_template)
         service_id=sample_email_template.service_id
     )
 
-    response = client.get("/v2/notifications?template_type=sms", headers=[auth_header])
+    response = client.get(f"{V2_NOTIFICATIONS}?template_type=sms", headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 1
@@ -508,7 +508,7 @@ def test_filter_by_multiple_template_types(
     )
 
     response = client.get(
-        "/v2/notifications?template_type=sms&template_type=email", headers=[auth_header]
+        f"{V2_NOTIFICATIONS}?template_type=sms&template_type=email", headers=[auth_header]
     )
 
     assert response.status_code == 200
@@ -527,7 +527,7 @@ def test_filter_by_status(client, sample_email_template):
         service_id=sample_email_template.service_id
     )
 
-    response = client.get("/v2/notifications?status=delivered", headers=[auth_header])
+    response = client.get(f"{V2_NOTIFICATIONS}?status=delivered", headers=[auth_header])
 
     notifications = json.loads(response.get_data(as_text=True))
     assert len(notifications["notifications"]) == 1
@@ -544,7 +544,7 @@ def test_filter_by_multiple_statuses(client, sample_email_template):
     )
 
     response = client.get(
-        "/v2/notifications?status=delivered&status=sending", headers=[auth_header]
+        f"{V2_NOTIFICATIONS}?status=delivered&status=sending", headers=[auth_header]
     )
 
     assert response.status_code == 200
@@ -567,7 +567,7 @@ def test_filter_by_status_and_template_type(
     )
 
     response = client.get(
-        "/v2/notifications?template_type=email&status=delivered", headers=[auth_header]
+        f"{V2_NOTIFICATIONS}?template_type=email&status=delivered", headers=[auth_header]
     )
 
     notifications = json.loads(response.get_data(as_text=True))
@@ -592,7 +592,7 @@ def test_get_notification_by_id_returns_merged_template_content(
     )
 
     response = client.get(
-        "/v2/notifications/{}".format(sample_notification.id), headers=[auth_header]
+        f"{V2_NOTIFICATIONS}/{sample_notification.id}", headers=[auth_header]
     )
 
     notification = json.loads(response.get_data(as_text=True))["data"]["notification"]
@@ -615,7 +615,7 @@ def test_get_notification_by_id_returns_merged_template_content_for_email(
     )
 
     response = client.get(
-        "/v2/notifications/{}".format(sample_notification.id), headers=[auth_header]
+        f"{V2_NOTIFICATIONS}/{sample_notification.id}", headers=[auth_header]
     )
 
     notification = json.loads(response.get_data(as_text=True))["data"]["notification"]
@@ -646,7 +646,7 @@ def test_get_notifications_for_service_returns_merged_template_content(
         service_id=sample_template_with_placeholders.service_id
     )
 
-    response = client.get(path="/v2/notifications", headers=[auth_header])
+    response = client.get(path=V2_NOTIFICATIONS, headers=[auth_header])
     assert response.status_code == 200
 
     assert {
@@ -676,7 +676,7 @@ def test_get_notification_selects_correct_template_for_personalisation(
         service_id=sample_template.service_id
     )
 
-    response = client.get(path="/v2/notifications", headers=[auth_header])
+    response = client.get(path=V2_NOTIFICATIONS, headers=[auth_header])
 
     assert response.status_code == 200
 

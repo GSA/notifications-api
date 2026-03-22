@@ -1,7 +1,7 @@
 from app.dao.api_key_dao import save_model_api_key
 from app.enums import KeyType
 from app.models import ApiKey
-from tests import create_service_authorization_header
+from tests import V2_NOTIFICATIONS, create_service_authorization_header
 
 from . import return_json_from_response, validate_v0
 
@@ -27,7 +27,7 @@ def test_get_api_sms_contract(client, sample_notification):
         _get_notification(
             client,
             sample_notification,
-            "/v2/notifications/{}".format(sample_notification.id),
+            f"{V2_NOTIFICATIONS}/{sample_notification.id}",
         )
     )
     validate_v0(response_json, "GET_notification_return_sms.json")
@@ -38,7 +38,7 @@ def test_get_job_sms_contract(client, sample_notification):
         _get_notification(
             client,
             sample_notification,
-            "/v2/notifications/{}".format(sample_notification.id),
+            f"{V2_NOTIFICATIONS}/{sample_notification.id}",
         )
     )
     validate_v0(response_json, "GET_notification_return_sms.json")
@@ -48,7 +48,7 @@ def test_get_notifications_contract(
     client, sample_notification, sample_email_notification
 ):
     response_json = return_json_from_response(
-        _get_notification(client, sample_notification, "/v2/notifications")
+        _get_notification(client, sample_notification, V2_NOTIFICATIONS)
     )
     notifications = response_json["notifications"]
     assert notifications, "No notifications returned"

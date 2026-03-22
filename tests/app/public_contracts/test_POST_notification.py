@@ -1,6 +1,6 @@
 from flask import json
 
-from tests import create_service_authorization_header
+from tests import V2_NOTIFICATIONS, create_service_authorization_header
 
 from . import return_json_from_response, validate_v0
 
@@ -22,7 +22,7 @@ def test_post_sms_contract(client, mocker, sample_template):
 
     response_json = return_json_from_response(
         _post_notification(
-            client, sample_template, url="/v2/notifications/sms", to="202-867-5309"
+            client, sample_template, url=f"{V2_NOTIFICATIONS}/sms", to="202-867-5309"
         )
     )
     validate_v0(response_json, "POST_notification_return_sms.json")
@@ -33,7 +33,7 @@ def test_post_email_contract(client, mocker, sample_email_template):
 
     response_json = return_json_from_response(
         _post_notification(
-            client, sample_email_template, url="/v2/notifications/email", to="foo@bar.com"
+            client, sample_email_template, url=f"{V2_NOTIFICATIONS}/email", to="foo@bar.com"
         )
     )
     validate_v0(response_json, "POST_notification_return_email.json")

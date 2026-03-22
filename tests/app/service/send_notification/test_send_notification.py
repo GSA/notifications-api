@@ -17,7 +17,7 @@ from app.errors import InvalidRequest
 from app.models import ApiKey, Notification, NotificationHistory, Template
 from notifications_python_client.authentication import create_jwt_token
 from notifications_utils import SMS_CHAR_COUNT_LIMIT
-from tests import create_service_authorization_header
+from tests import V2_NOTIFICATIONS, create_service_authorization_header
 from tests.app.db import (
     create_api_key,
     create_notification,
@@ -43,7 +43,7 @@ def test_create_notification_should_reject_if_missing_required_fields(
             )
 
             response = client.post(
-                path=f"/v2/notifications/{template_type}",
+                path=f"{V2_NOTIFICATIONS}/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -70,7 +70,7 @@ def test_should_reject_bad_phone_numbers(notify_api, sample_template, mocker):
             )
 
             response = client.post(
-                path="/v2/notifications/sms",
+                path=f"{V2_NOTIFICATIONS}/sms",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -108,7 +108,7 @@ def test_send_notification_invalid_template_id(
             )
 
             response = client.post(
-                path=f"/v2/notifications/{template_type}",
+                path=f"{V2_NOTIFICATIONS}/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -138,7 +138,7 @@ def test_send_notification_with_placeholders_replaced(
             )
 
             response = client.post(
-                path="/v2/notifications/email",
+                path=f"{V2_NOTIFICATIONS}/email",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -189,7 +189,7 @@ def test_send_notification_with_placeholders_replaced_with_unusual_types(
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(
             {
                 "to": "ok@ok.com",
@@ -232,7 +232,7 @@ def test_send_notification_with_placeholders_replaced_with_unusual_types_no_pers
     mocker.patch("app.celery.provider_tasks.deliver_email.apply_async")
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(
             {
                 "to": "ok@ok.com",
@@ -266,7 +266,7 @@ def test_should_not_send_notification_for_archived_template(
             )
 
             resp = client.post(
-                path="/v2/notifications/sms",
+                path=f"{V2_NOTIFICATIONS}/sms",
                 data=json_data,
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -304,7 +304,7 @@ def test_should_not_send_notification_if_restricted_and_not_a_service_user(
             )
 
             response = client.post(
-                path=f"/v2/notifications/{template_type}",
+                path=f"{V2_NOTIFICATIONS}/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -350,7 +350,7 @@ def test_should_send_notification_if_restricted_and_a_service_user(
             )
 
             response = client.post(
-                path=f"/v2/notifications/{template_type}",
+                path=f"{V2_NOTIFICATIONS}/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -388,7 +388,7 @@ def test_should_not_allow_template_from_another_service(
             auth_header = create_service_authorization_header(service_id=service_1.id)
 
             response = client.post(
-                path=f"/v2/notifications/{template_type}",
+                path=f"{V2_NOTIFICATIONS}/{template_type}",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -413,7 +413,7 @@ def test_should_allow_valid_sms_notification(notify_api, sample_template, mocker
             )
 
             response = client.post(
-                path="/v2/notifications/sms",
+                path=f"{V2_NOTIFICATIONS}/sms",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -444,7 +444,7 @@ def test_should_reject_email_notification_with_bad_email(
             )
 
             response = client.post(
-                path="/v2/notifications/email",
+                path=f"{V2_NOTIFICATIONS}/email",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -471,7 +471,7 @@ def test_should_allow_valid_email_notification(
             )
 
             response = client.post(
-                path="/v2/notifications/email",
+                path=f"{V2_NOTIFICATIONS}/email",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -508,7 +508,7 @@ def test_should_allow_api_call_if_under_day_limit_regardless_of_type(
             auth_header = create_service_authorization_header(service_id=service.id)
 
             response = client.post(
-                path="/v2/notifications/sms",
+                path=f"{V2_NOTIFICATIONS}/sms",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -530,7 +530,7 @@ def test_should_not_return_html_in_body(notify_api, sample_service, mocker):
                 service_id=email_template.service_id
             )
             response = client.post(
-                path="/v2/notifications/email",
+                path=f"{V2_NOTIFICATIONS}/email",
                 data=json.dumps(data),
                 headers=[("Content-Type", "application/json"), auth_header],
             )
@@ -556,7 +556,7 @@ def test_should_not_send_email_if_team_api_key_and_not_a_service_user(
     )
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -586,7 +586,7 @@ def test_should_not_send_sms_if_team_api_key_and_not_a_service_user(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -617,7 +617,7 @@ def test_should_send_email_if_team_api_key_and_a_service_user(
     )
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -653,7 +653,7 @@ def test_should_send_sms_to_anyone_with_test_key(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -691,7 +691,7 @@ def test_should_send_email_to_anyone_with_test_key(
     )
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -729,7 +729,7 @@ def test_should_send_sms_if_team_api_key_and_a_service_user(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -787,7 +787,7 @@ def test_should_persist_notification(
     )
 
     response = client.post(
-        path=f"/v2/notifications/{template_type}",
+        path=f"{V2_NOTIFICATIONS}/{template_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -847,7 +847,7 @@ def test_should_delete_notification_and_return_error_if_redis_fails(
 
     with pytest.raises(expected_exception=Exception) as e:
         client.post(
-            path=f"/v2/notifications/{template_type}",
+            path=f"{V2_NOTIFICATIONS}/{template_type}",
             data=json.dumps(data),
             headers=[
                 ("Content-Type", "application/json"),
@@ -881,7 +881,7 @@ def test_should_not_persist_notification_or_send_email_if_simulated_email(
     )
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -906,7 +906,7 @@ def test_should_not_persist_notification_or_send_sms_if_simulated_number(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -951,7 +951,7 @@ def test_should_not_send_notification_to_non_guest_list_recipient_in_trial_mode(
     )
 
     response = client.post(
-        path=f"/v2/notifications/{notification_type}",
+        path=f"{V2_NOTIFICATIONS}/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -1021,7 +1021,7 @@ def test_should_send_notification_to_guest_list_recipient(
     )
 
     response = client.post(
-        path=f"/v2/notifications/{notification_type}",
+        path=f"{V2_NOTIFICATIONS}/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
@@ -1051,7 +1051,7 @@ def test_should_error_if_notification_type_does_not_match_template_type(
     data = {"to": to, "template": template.id}
     auth_header = create_service_authorization_header(service_id=template.service_id)
     response = client.post(
-        f"/v2/notifications/{notification_type}",
+        f"{V2_NOTIFICATIONS}/{notification_type}",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1135,7 +1135,7 @@ def test_should_allow_store_original_number_on_sms_notification(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1165,7 +1165,7 @@ def test_should_not_allow_sending_to_international_number_without_international_
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1190,7 +1190,7 @@ def test_should_allow_sending_to_international_number_with_international_permiss
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1215,7 +1215,7 @@ def test_should_not_allow_sms_notifications_if_service_permission_not_set(
     )
 
     response = client.post(
-        path="/v2/notifications/sms",
+        path=f"{V2_NOTIFICATIONS}/sms",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1245,7 +1245,7 @@ def test_should_not_allow_email_notifications_if_service_permission_not_set(
     )
 
     response = client.post(
-        path="/v2/notifications/email",
+        path=f"{V2_NOTIFICATIONS}/email",
         data=json.dumps(data),
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1267,7 +1267,7 @@ def test_should_throw_exception_if_notification_type_is_invalid(
 ):
     auth_header = create_service_authorization_header(service_id=sample_service.id)
     response = client.post(
-        path=f"/v2/notifications/{notification_type}",
+        path=f"{V2_NOTIFICATIONS}/{notification_type}",
         data={},
         headers=[("Content-Type", "application/json"), auth_header],
     )
@@ -1299,7 +1299,7 @@ def test_post_notification_should_set_reply_to_text(
 
     data = {"to": recipient, "template": str(template.id)}
     response = client.post(
-        f"/v2/notifications/{notification_type}",
+        f"{V2_NOTIFICATIONS}/{notification_type}",
         data=json.dumps(data),
         headers=[
             ("Content-Type", "application/json"),
