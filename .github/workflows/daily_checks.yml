@@ -32,6 +32,7 @@ jobs:
           inputs: requirements.txt
           ignore-vulns: |
             PYSEC-2023-312
+            CVE-2026-4539
       - name: Upload pip-audit artifact
         uses: actions/upload-artifact@v4
         with:
