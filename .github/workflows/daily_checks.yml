@@ -26,7 +26,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-project
       - name: Create requirements.txt
-        run: poetry export --output requirements.txt
+        # Currently there is an unresolved vulnerability in 2.19.2 of pygments
+        # which is used by pytest.  Ignore dev dependencies vulnerabilities for now
+        run: poetry export --only main --output requirements.txt
       - uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           inputs: requirements.txt
