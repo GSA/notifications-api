@@ -40,7 +40,7 @@ The system currently has a data model for capturing an invited user
 (`InvitedUser`), which is based on an authorized user of the system having the
 permission to invite others to it.
 
-These changes should not deviate from the existing structures and contraints
+These changes should not deviate from the existing structures and constraints
 that are already in place, which prevent the following:
 
 - Unauthorized users from accessing the system
@@ -108,7 +108,7 @@ value for the effort.
 
 ## VALIDATION AND NEXT STEPS
 
-Once a decision is made though, a seperate issue should be written up for the
+Once a decision is made though, a separate issue should be written up for the
 API changes that need to take place, and then follow-on work will be needed on
 the admin side in https://github.com/GSA/notifications-admin/issues/96 to make
 the UI adjustments.

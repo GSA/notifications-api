@@ -42,7 +42,7 @@ First, we have an ADR issue template that folks can use to start. Select the
 "Create a new ADR" option when creating a new issue.
 
 By following the template, we ensure that our ADRs are consistent in language
-and structure.  This allows us to easily review the documentions and discuss
+and structure.  This allows us to easily review the documentation and discuss
 them as a team.  It also guarantees that the ADR has all of the required
 information.
 
@@ -54,7 +54,7 @@ active discussion and research taking place.  This is also why there is a
 Once an ADR has been reviewed and is ready to be finalized (either as accepted,
 rejected, or some other status), some final edits are made to update the ADR
 with decision details and next steps.  After this, future PRs can be opened to
-make additional updates, especially if an ADR becomes deprecated or superceded
+make additional updates, especially if an ADR becomes deprecated or superseded
 by another one.
 
 

@@ -42,7 +42,7 @@ Q: How did we set ourselves for success? What factors contributed to it? 
 
     -   We leveraged American Rescue Plan money and the TTS BPA to get a full development team onboard quickly.
 
-    -   Leveraging Customer Experience/Life Exeriences and Office of Evaluation Sciences priorities and people
+    -   Leveraging Customer Experience/Life Experiences and Office of Evaluation Sciences priorities and people
 
     -   We had a full team (product, UX, content, front-end and back-end engineering) from the beginning
 
