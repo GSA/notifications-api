@@ -99,7 +99,7 @@ Pros of converting parts of the frontend now:
 Cons of converting parts of the frontend now:
 
 - There is a lot of additional work involved, not all touch points are known,
-  and there is a signficant effort underway at the moment to update the
+  and there is a significant effort underway at the moment to update the
   frontend design and information architecture.
 
 - We're still not entirely sure at which level of granularity we'd like to offer
@@ -140,7 +140,7 @@ We also need to update the frontend to account for these changes.  This will be
 done in two parts:
 
 1. We'll update the UI to make sure everything reflects ET where necessary for
-   any timzone displays.
+   any timezone displays.
 
 1. We need to create an ADR for future frontend work for how we'd like to handle
    timezones in the UI going forward.  This is currently noted in this issue:

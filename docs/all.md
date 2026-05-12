@@ -265,14 +265,14 @@ We do not maintain any hooks in this repository.
 
 ## detect-secrets pre-commit plugin
 
-One of the pre-commit hooks we use is [`detect-secrets`](https://github.com/Yelp/detect-secrets), which checks for all sorts of things that might be committed accidently that should not be.  The project is already set up with a baseline file (`.ds.baseline`) and this should just work out of the box, but occasionally it will flag something new when you try and commit something; or, the file may need a refresh after a while.  In either case, to get things back on track and update the `.ds.baseline` file, run these two commands:
+One of the pre-commit hooks we use is [`detect-secrets`](https://github.com/Yelp/detect-secrets), which checks for all sorts of things that might be committed accidentally that should not be.  The project is already set up with a baseline file (`.ds.baseline`) and this should just work out of the box, but occasionally it will flag something new when you try and commit something; or, the file may need a refresh after a while.  In either case, to get things back on track and update the `.ds.baseline` file, run these two commands:
 
 ```sh
 detect-secrets scan --baseline .ds.baseline
 detect-secrets audit .ds.baseline
 ```
 
-The second command will walk you through all of the new detected secrets and ask you to validate if they actually are or if they're false positives.  Mark off each one as apppropriate (they should all be false positives - if they're not please stop and check in with the team!), then commit the updates to the `.ds.baseline` file and push them remotely so the project stays up-to-date.
+The second command will walk you through all of the new detected secrets and ask you to validate if they actually are or if they're false positives.  Mark off each one as appropriate (they should all be false positives - if they're not please stop and check in with the team!), then commit the updates to the `.ds.baseline` file and push them remotely so the project stays up-to-date.
 
 # Testing
 
@@ -413,7 +413,7 @@ As part of the deploy, we create an
 application to a select list of allowed domains.
 
 Update the allowed domains by updating `deploy-config/egress_proxy/notify-api-<env>.allow.acl`
-and deploying an updated version of the application throught he normal deploy process.
+and deploying an updated version of the application through the normal deploy process.
 
 ## Managing environment variables
 
@@ -618,7 +618,7 @@ cf run-task <CLOUD_GOV_APP from cf apps see above> --command "flask command upda
 
 # Commands for test loading the local dev database
 
-All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always defult to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
+All commands use the `-g` or `--generate` to determine how many instances to load to the db. The `-g` or `--generate` option is required and will always default to 1. An example: `flask command add-test-uses-to-db -g 6` will generate 6 random users and insert them into the db.
 
 ## Test commands list
 
@@ -877,7 +877,7 @@ Notify.gov is comprised of two applications both running on cloud.gov:
 Notify.gov utilizes several cloud.gov-provided services:
 
 - S3 buckets for temporary file storage
-- Elasticache (redis) for cacheing data and enqueueing background tasks
+- Elasticache (redis) for caching data and enqueueing background tasks
 - RDS (PostgreSQL) for system data storage
 
 Notify.gov also provisions and uses two AWS services via a [supplemental service broker](https://github.com/GSA/usnotify-ssb):
@@ -1170,7 +1170,7 @@ Add a title in the format of `<current date>` Production Deploy, e.g., `9/9/2024
 
 Lastly, uncheck the `Set as the latest release` checkbox and check the `Set as a pre-release` checkbox instead.
 
-Once everything is complete, cick on the `Publish release` button and then link to the new release notes in the corresponding production deploy pull request.
+Once everything is complete, click on the `Publish release` button and then link to the new release notes in the corresponding production deploy pull request.
 
 ### Review and approve the pull request(s)
 
@@ -1218,7 +1218,7 @@ Also known as: **How to move code from my machine to production**
 
 ### Common Policies and Procedures
 
-1. All changes must be made in a feature branch and opened as a PR targetting the `main` branch.
+1. All changes must be made in a feature branch and opened as a PR targeting the `main` branch.
 1. All PRs must be approved by another developer
 1. PRs to `main` and `production` branches must be merged by a someone with the `Administrator` role.
 1. PR documentation includes a Security Impact Analysis
@@ -1241,7 +1241,7 @@ Also known as: **How to move code from my machine to production**
 
 ### datagov-brokerpak-smtp
 
-1. To include new verisons of the SMTP brokerpak in released SSB code, create a PR in the `usnotify-ssb` repo updating the version in use in `app-setup-smtp.sh`
+1. To include new versions of the SMTP brokerpak in released SSB code, create a PR in the `usnotify-ssb` repo updating the version in use in `app-setup-smtp.sh`
 
 ### Vulnerability Mitigation Changes
 
@@ -1287,7 +1287,7 @@ If you're removing existing domains:
 
 Restage or redeploy the `notify-admin-production` app.  To restage, you can trigger the action in GitHub or run the command directly: `cf restage notify-admin-production --strategy rolling`.
 
-Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propogate.
+Test that the changes took effect properly by going to the domain(s) that were adjusted and seeing if they resolve correctly and/or no longer resolve as expected. Note that this may take up to 72 hours, depending on how long it takes for the DNS changes to propagate.
 
 ## Exporting daily scan results for compliance monitoring
 
@@ -1630,7 +1630,7 @@ cf add-network-policy notify-admin-sandbox notify-api-sandbox --protocol tcp --p
 
 ### Service instance not found
 
-This error encounted after `cf push` indicates you may be using the wrong CloudFoundry target
+This error encountered after `cf push` indicates you may be using the wrong CloudFoundry target
 
 ```
 For application 'notify-api-sandbox': Service instance 'notify-api-rds-sandbox' not found

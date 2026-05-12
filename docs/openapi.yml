@@ -548,7 +548,7 @@ paths:
       requestBody:
         required: true
         description: |
-          The request body is a JSON object giving at least the phone nubmer to
+          The request body is a JSON object giving at least the phone number to
           deliver the message to and the template ID to send to that number.
 
           If the template has variables, provide them in the `personalisation`
