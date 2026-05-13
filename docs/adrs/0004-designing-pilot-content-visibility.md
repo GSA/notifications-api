@@ -45,7 +45,7 @@ List all options that have either been discussed or thought of as a potential so
 
 **Pros:**
 
-- Allows for public vistors to know more about what the product is intended to do
+- Allows for public visitors to know more about what the product is intended to do
 - No need to scope a gated self-service solution
 
  **Cons:**
@@ -58,7 +58,7 @@ List all options that have either been discussed or thought of as a potential so
 
 **Pros:**
 
-- Invited users would go throught the `service creation wizard` flow and content
+- Invited users would go through the `service creation wizard` flow and content
 - A Studio team member would not need to create the initial account/service
 
 **Cons:**
