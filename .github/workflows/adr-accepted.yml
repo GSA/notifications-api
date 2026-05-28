@@ -43,8 +43,10 @@ jobs:
     - name: build filename
       id: filename
       shell: bash
+      env:
+        ISSUE_TITLE: ${{ github.event.issue.title }}
       run: |
-        SLUG=$(printf '%q\n' "${{ github.event.issue.title }}" | tr A-Z a-z)
+        SLUG=$(printf '%q\n' "$ISSUE_TITLE" | tr A-Z a-z)
         SLUG=$(printf '%q\n' "$SLUG" | iconv -c -t ascii//TRANSLIT)
         SLUG=$(printf '%q\n' "$SLUG" | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-+|-+$//g')
 
@@ -69,13 +71,14 @@ jobs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_TITLE: ${{ github.event.issue.title }}
       run: |
         BRANCH="adr/auto/${{ steps.filename.outputs.slug }}"
         git config --global user.email "tts@gsa.gov"
         git config --global user.name "Notify ADR Automation"
         git checkout -b $BRANCH
         git add docs/adrs/*.md
-        git commit -m "add ADR ${{ steps.next.outputs.number }}: ${{ github.event.issue.title }}"
+        git commit -m "add ADR ${{ steps.next.outputs.number }}: $ISSUE_TITLE"
         git push -f origin $BRANCH
         gh pr create \
           --title "Add ADR ${{ steps.next.outputs.number }} to the repo" \
