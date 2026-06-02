@@ -13,7 +13,7 @@ jobs:
     environment: staging
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Looks like we need to install Terraform ourselves now!
       # https://github.com/actions/runner-images/issues/10796#issuecomment-2417064348
@@ -50,7 +50,7 @@ jobs:
   #   environment: demo
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #       with:
   #         ref: 'production'
 
@@ -89,7 +89,7 @@ jobs:
     environment: production
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: 'production'
 
