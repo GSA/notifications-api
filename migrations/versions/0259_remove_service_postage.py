@@ -19,13 +19,10 @@ def upgrade():
     op.drop_column("services_history", "postage")
     op.execute("DELETE FROM service_permissions WHERE permission = 'choose_postage'")
     op.execute("DELETE FROM service_permission_types WHERE name = 'choose_postage'")
-    op.execute(
-        """UPDATE templates_history SET postage = templates.postage
+    op.execute("""UPDATE templates_history SET postage = templates.postage
         FROM templates WHERE templates_history.id = templates.id AND templates_history.template_type = 'letter'
-        AND templates_history.postage is null"""
-    )
-    op.execute(
-        """
+        AND templates_history.postage is null""")
+    op.execute("""
         ALTER TABLE templates ADD CONSTRAINT "chk_templates_postage"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -34,10 +31,8 @@ def upgrade():
                 postage is null
             END
         )
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates_history ADD CONSTRAINT "chk_templates_history_postage"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -46,18 +41,13 @@ def upgrade():
                 postage is null
             END
         )
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates DROP CONSTRAINT "chk_templates_postage_null"
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates_history DROP CONSTRAINT "chk_templates_history_postage_null"
-    """
-    )
+    """)
     # ### end Alembic commands ###
 
 
@@ -76,8 +66,7 @@ def downgrade():
         ),
     )
     op.execute("INSERT INTO service_permission_types VALUES ('choose_postage')")
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE templates ADD CONSTRAINT "chk_templates_postage_null"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -87,10 +76,8 @@ def downgrade():
                 postage is null
             END
         )
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates_history ADD CONSTRAINT "chk_templates_history_postage_null"
         CHECK (
             CASE WHEN template_type = 'letter' THEN
@@ -100,16 +87,11 @@ def downgrade():
                 postage is null
             END
         )
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates DROP CONSTRAINT "chk_templates_postage"
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         ALTER TABLE templates_history DROP CONSTRAINT "chk_templates_history_postage"
-    """
-    )
+    """)
     # ### end Alembic commands ###

@@ -15,45 +15,33 @@ down_revision = "0148_add_letters_as_pdf_svc_perm"
 
 def upgrade():
     op.add_column("services", sa.Column("crown", sa.Boolean(), nullable=True))
-    op.execute(
-        """
+    op.execute("""
         update services set crown = True
         where organisation_type = 'central'
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         update services set crown = True
         where organisation_type is null
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         update services set crown = False
         where crown is null
-    """
-    )
+    """)
     op.alter_column("services", "crown", nullable=False)
 
     op.add_column("services_history", sa.Column("crown", sa.Boolean(), nullable=True))
-    op.execute(
-        """
+    op.execute("""
         update services_history set crown = True
         where organisation_type = 'central'
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         update services_history set crown = True
         where organisation_type is null
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         update services_history set crown = False
         where crown is null
-    """
-    )
+    """)
     op.alter_column("services_history", "crown", nullable=False)
 
 

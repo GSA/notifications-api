@@ -151,8 +151,7 @@ def view_handler() -> Iterator[None]:
 
     yield
 
-    op.execute(
-        """
+    op.execute("""
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -206,8 +205,7 @@ def view_handler() -> Iterator[None]:
                 document_download_count
             FROM notification_history
         )
-    """
-    )
+    """)
 
 
 def upgrade():
@@ -470,8 +468,7 @@ def upgrade():
             postgresql_using=enum_using("notification_type", NotificationType),
         )
         # Clobbering bad data here. These are values we don't use any more, and anything with them is unnecessary.
-        op.execute(
-            """
+        op.execute("""
             delete from
                 service_permissions
             where
@@ -482,8 +479,7 @@ def upgrade():
                     'international_letters',
                     'broadcast'
                 );
-        """
-        )
+        """)
         op.alter_column(
             "service_permissions",
             "permission",

@@ -17,28 +17,24 @@ from sqlalchemy.dialects import postgresql
 
 
 def upgrade():
-    query = text(
-        """
+    query = text("""
         UPDATE job_statistics
         SET sent = sms_sent + emails_sent + letters_sent,
         delivered = sms_delivered + emails_delivered,
         failed = sms_failed + emails_failed + letters_failed
-    """
-    )
+    """)
 
     conn = op.get_bind()
     conn.execute(query)
 
 
 def downgrade():
-    query = text(
-        """
+    query = text("""
         UPDATE job_statistics
         SET sent = 0,
         delivered = 0,
         failed = 0
-    """
-    )
+    """)
 
     conn = op.get_bind()
     conn.execute(query)

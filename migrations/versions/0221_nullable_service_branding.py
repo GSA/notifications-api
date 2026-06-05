@@ -19,25 +19,21 @@ def upgrade():
     op.alter_column("services_history", "branding", nullable=True)
     op.alter_column("services", "branding", nullable=True)
 
-    op.execute(
-        """
+    op.execute("""
         update
             email_branding
         set
             brand_type = 'org'
         where
             brand_type = 'govuk'
-    """
-    )
+    """)
 
-    op.execute(
-        """
+    op.execute("""
         delete from
             branding_type
         where
             name = 'govuk'
-    """
-    )
+    """)
 
 
 def downgrade():
@@ -56,12 +52,10 @@ def downgrade():
     op.alter_column("services", "branding", nullable=False)
     op.alter_column("services_history", "branding", nullable=False)
 
-    op.execute(
-        """
+    op.execute("""
         insert into
             branding_type
                 (name)
             values
                 ('govuk')
-    """
-    )
+    """)

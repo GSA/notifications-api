@@ -34,8 +34,7 @@ def upgrade():
 
     # we need to replace the entire notifications_all_time_view in order to update it
     op.execute("DROP VIEW notifications_all_time_view;")
-    op.execute(
-        """
+    op.execute("""
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -89,8 +88,7 @@ def upgrade():
                 document_download_count
             FROM notification_history
         )
-    """
-    )
+    """)
 
     op.drop_column("notification_history", "postage")
     op.drop_column("notifications", "postage")
@@ -141,8 +139,7 @@ def downgrade():
     )
 
     op.execute("DROP VIEW notifications_all_time_view;")
-    op.execute(
-        """
+    op.execute("""
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -198,6 +195,5 @@ def downgrade():
                 document_download_count
             FROM notification_history
         )
-    """
-    )
+    """)
     # ### end Alembic commands ###

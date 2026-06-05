@@ -15,8 +15,7 @@ down_revision = "0364_drop_old_column"
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         CREATE VIEW notifications_all_time_view AS
         (
             SELECT
@@ -72,8 +71,7 @@ def upgrade():
                 document_download_count
             FROM notification_history
         )
-    """
-    )
+    """)
 
 
 def downgrade():

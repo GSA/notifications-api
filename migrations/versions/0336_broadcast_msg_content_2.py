@@ -20,9 +20,7 @@ down_revision = "0335_broadcast_msg_content"
 def upgrade():
     conn = op.get_bind()
 
-    results = conn.execute(
-        sa.text(
-            """
+    results = conn.execute(sa.text("""
         UPDATE
             broadcast_message
         SET
@@ -34,9 +32,7 @@ def upgrade():
             broadcast_message.template_id = templates_history.id and
             broadcast_message.template_version = templates_history.version
         ;
-    """
-        )
-    )
+    """))
 
 
 def downgrade():

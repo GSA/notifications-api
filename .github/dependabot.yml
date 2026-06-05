@@ -3,16 +3,19 @@
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
+# Note: Setting open-pull-requests-limit to 0 disables automatic version update PRs.
+# Security updates are still active and managed separately in repository settings under
+# "Security & analysis" > "Dependabot security updates"
+
 version: 2
 updates:
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 0 # Disable version update PRs; security updates still active
     labels:
       - "dependabot" # Custom label to identify Dependabot PRs
-    assignees:
-      - "alexjanousekGSA"
     ignore:
       # gevent 25.8+ breaks Celery/Kombu compatibility (potentially)
       - dependency-name: "gevent"

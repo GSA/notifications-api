@@ -13,8 +13,7 @@ down_revision = "0230_noti_postage_constraint_1"
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE notification_history ADD CONSTRAINT "chk_notification_history_postage_null"
         CHECK (
             CASE WHEN notification_type = 'letter' THEN
@@ -24,8 +23,7 @@ def upgrade():
             END
         )
         NOT VALID
-    """
-    )
+    """)
 
 
 def downgrade():

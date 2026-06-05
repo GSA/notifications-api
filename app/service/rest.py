@@ -1240,12 +1240,10 @@ def get_service_message_ratio():
     messages_remaining = my_service.total_message_limit - messages_sent
 
     if my_service.total_message_limit - messages_sent < 0:
-        raise Exception(
-            f"Math error get_service_message_ratio(), \
+        raise Exception(f"Math error get_service_message_ratio(), \
                         total {my_service.total_message_limit} \
                         messages_sent {messages_sent} remaining {messages_remaining} \
-                        service_id {service_id} current_year {current_year}"
-        )
+                        service_id {service_id} current_year {current_year}")
 
     return {
         "messages_sent": messages_sent,

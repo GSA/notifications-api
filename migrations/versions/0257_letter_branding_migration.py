@@ -13,21 +13,17 @@ from alembic import op
 
 
 def upgrade():
-    op.execute(
-        """INSERT INTO letter_branding (id, name, filename, domain)
+    op.execute("""INSERT INTO letter_branding (id, name, filename, domain)
                 SELECT uuid_in(md5(random()::text)::cstring), name, filename, null
-                from dvla_organisation"""
-    )
+                from dvla_organisation""")
 
-    op.execute(
-        """INSERT INTO service_letter_branding (service_id, letter_branding_id)
+    op.execute("""INSERT INTO service_letter_branding (service_id, letter_branding_id)
                SELECT S.id, LB.id
                  FROM services s
                  JOIN dvla_organisation d on (s.dvla_organisation_id = d.id)
                  JOIN letter_branding lb on (lb.filename = d.filename)
                  WHERE d.id != '001'
-                 """
-    )
+                 """)
 
 
 def downgrade():

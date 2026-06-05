@@ -71,8 +71,7 @@ def upgrade():
     )
 
     # Insert data into table
-    op.execute(
-        """
+    op.execute("""
         INSERT into dm_datetime (
         SELECT
         datum AS bst_date,
@@ -104,8 +103,7 @@ def upgrade():
         ) DQ
         ORDER BY bst_date
         );
-        """
-    )
+        """)
 
 
 def downgrade():

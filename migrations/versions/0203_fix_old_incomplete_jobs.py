@@ -14,8 +14,7 @@ from alembic import op
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         UPDATE
             jobs
         SET
@@ -24,8 +23,7 @@ def upgrade():
             processing_started IS NULL
             AND
             job_status = 'in progress'
-    """
-    )
+    """)
 
 
 def downgrade():

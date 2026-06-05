@@ -23,14 +23,12 @@ def upgrade():
     conn = op.get_bind()
     input_params = {"tfl_dar_id": TFL_DAR_ID}
     conn.execute(
-        text(
-            """INSERT INTO organisation VALUES (
+        text("""INSERT INTO organisation VALUES (
         :tfl_dar_id,
         '',
         'tfl_dar_x2.png',
         'tfl'
-    )"""
-        ),
+    )"""),
         input_params,
     )
 
@@ -39,10 +37,8 @@ def downgrade():
     conn = op.get_bind()
     input_params = {"tfl_dar_id": TFL_DAR_ID}
     conn.execute(
-        text(
-            """
+        text("""
         DELETE FROM organisation WHERE "id" = :tfl_dar_id
-    """
-        ),
+    """),
         input_params,
     )

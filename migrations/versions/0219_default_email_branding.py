@@ -17,16 +17,14 @@ def upgrade():
     conn = op.get_bind()
     input_params = {"branding_org": BrandType.ORG.value}
     conn.execute(
-        text(
-            """
+        text("""
         update
             email_branding
         set
             brand_type = :branding_org
         where
             brand_type is null
-    """
-        ),
+    """),
         input_params,
     )
 

@@ -12,14 +12,12 @@ down_revision = "0226_service_postage"
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
             update
                 services
             set
                 postage = 'second'
-        """
-    )
+        """)
 
     op.create_check_constraint(
         "ck_services_postage", "services", "postage in ('second', 'first')"

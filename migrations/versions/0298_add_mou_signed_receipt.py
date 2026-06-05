@@ -136,8 +136,7 @@ def upgrade():
             "user_id": current_app.config["NOTIFY_USER_ID"],
         }
         conn.execute(
-            text(
-                """
+            text("""
             INSERT INTO template_redacted
             (
                 template_id,
@@ -145,8 +144,7 @@ def upgrade():
                 updated_at,
                 updated_by_id
             ) VALUES ( :template_id, false, current_timestamp, :user_id )
-            """
-            ),
+            """),
             input_params,
         )
 
