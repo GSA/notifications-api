@@ -2,6 +2,10 @@
 
 # Notify.gov API
 
+> [!WARNING]
+>
+> This repository has been archived and dependencies are out of date. If being revived in the future, we recommend starting from https://workshop.cloud.gov/cloud-gov/notifications/api which has had some updates completed.
+
 This project is the core of [Notify.gov](https://notify-demo.app.cloud.gov).
 It's cloned from the brilliant work of the team at
 [GOV.UK Notify](https://github.com/alphagov/notifications-api), cheers!
