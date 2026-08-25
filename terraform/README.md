@@ -112,7 +112,7 @@ These steps assume shared [Terraform state credentials](#terraform-state-credent
 These version numbers are hardcoded in Terraform or shell scripts. We should periodically check them for upgrades.
 
 * Cloud Foundry Terraform plugin in every module in the API and Admin apps, [here for example](sandbox/providers.tf#L6).
-* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to serveral times in most modules, [here for example](sandbox/main.tf#L16).
+* The [terraform-cloudgov module](https://github.com/GSA-TTS/terraform-cloudgov/), the version of which is referred to several times in most modules, [here for example](sandbox/main.tf#L16).
 * Cloud Service Broker (CSB) version in [the SMS](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-sms.sh) and [the SMTP](https://github.com/GSA/usnotify-ssb/blob/main/app-setup-smtp.sh) download scripts of the usnotify-ssb repo.
 * SMS and SMTP brokerpak versions, also in the download scripts of the usnotify-ssb repo. (And we may have to help maintain the [SMTP brokerpak project](https://github.com/GSA-TTS/datagov-brokerpak-smtp) itself.)
 * The version of Redis used in deployed environment modules, [here for example](sandbox/main.tf#L33). To upgrade, the resource must be destroyed and replaced. The versions supported are limited by Cloud.gov.
@@ -137,7 +137,7 @@ The `development` module is rather different from the other environment modules.
 
 The `bootstrap` directory is not an environment module. Instead, it sets up infrastructure needed to deploy Terraform in any of the environments. If you are new to the project, [this is where you should start](#retrieving-existing-bucket-credentials).
 
-Similarly, `shared` is not an environment. It is a module that lends code to all the environments. Please note that changes to `shared` codebase will be applied to all envrionments the next time CI/CD (or a user) runs Terraform in that environment.
+Similarly, `shared` is not an environment. It is a module that lends code to all the environments. Please note that changes to `shared` codebase will be applied to all environments the next time CI/CD (or a user) runs Terraform in that environment.
 
 > [!WARNING]
 > Editing `shared` code is risky because it will be applied to production
